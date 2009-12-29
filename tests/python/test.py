@@ -12,7 +12,7 @@ import getopt
 
 import cv
 
-class TestDirected(unittest.TestCase):
+class OpenCVTests(unittest.TestCase):
 
     depths = [ cv.IPL_DEPTH_8U, cv.IPL_DEPTH_8S, cv.IPL_DEPTH_16U, cv.IPL_DEPTH_16S, cv.IPL_DEPTH_32S, cv.IPL_DEPTH_32F, cv.IPL_DEPTH_64F ]
 
@@ -65,9 +65,6 @@ class TestDirected(unittest.TestCase):
                  cv.IPL_DEPTH_32F : 4,
                  cv.IPL_DEPTH_64F : 8 }[d]
 
-    def setUp(self):
-        self.image_cache = {}
-
     def get_sample(self, filename, iscolor = cv.CV_LOAD_IMAGE_COLOR):
         if not filename in self.image_cache:
             filedata = urllib.urlopen("https://code.ros.org/svn/opencv/trunk/opencv/" + filename).read()
@@ -75,6 +72,13 @@ class TestDirected(unittest.TestCase):
             cv.SetData(imagefiledata, filedata, len(filedata))
             self.image_cache[filename] = cv.DecodeImageM(imagefiledata, iscolor)
         return self.image_cache[filename]
+
+    def setUp(self):
+        self.image_cache = {}
+
+# Tests to run first; check the handful of basic operations that the later tests rely on
+
+class PreliminaryTests(OpenCVTests):
 
     def test_lena(self):
         # Check that the lena jpg image has loaded correctly
@@ -92,27 +96,6 @@ class TestDirected(unittest.TestCase):
         self.assertRaises(TypeError, lambda: cv.LoadImage('foo.jpg', 1, 1))
         self.assertRaises(TypeError, lambda: cv.LoadImage('foo.jpg', xiscolor=cv.CV_LOAD_IMAGE_COLOR))
 
-    def test_CreateMat(self):
-        for rows in [1, 2, 4, 16, 64, 512, 640]:
-            for cols in [1, 2, 4, 16, 64, 512, 640]:
-                for t in self.mat_types:
-                    m = cv.CreateMat(rows, cols, t)
-                    self.assertEqual(cv.GetElemType(m), t)
-                    self.assertEqual(m.type, t)
-
-    def test_CreateImage(self):
-        for w in [ 1, 4, 64, 512, 640]:
-            for h in [ 1, 4, 64, 480, 512]:
-                for c in [1, 2, 3, 4]:
-                    for d in self.depths:
-                        a = cv.CreateImage((w,h), d, c);
-                        self.assert_(a.width == w)
-                        self.assert_(a.height == h)
-                        self.assert_(a.nChannels == c)
-                        self.assert_(a.depth == d)
-                        self.assert_(cv.GetSize(a) == (w, h))
-                        # self.assert_(cv.GetElemType(a) == d)
-
     def test_types(self):
         self.assert_(type(cv.CreateImage((7,5), cv.IPL_DEPTH_8U, 1)) == cv.iplimage)
         self.assert_(type(cv.CreateMat(5, 7, cv.CV_32FC1)) == cv.cvmat)
@@ -128,9 +111,319 @@ class TestDirected(unittest.TestCase):
             ][i / 4]
             self.assertEqual(basefunc(1 + (i % 4)), t)
 
-    def test_GetSize(self):
-        self.assert_(cv.GetSize(cv.CreateMat(5, 7, cv.CV_32FC1)) == (7,5))
-        self.assert_(cv.GetSize(cv.CreateImage((7,5), cv.IPL_DEPTH_8U, 1)) == (7,5))
+    def test_tostring(self):
+
+        for w in [ 1, 4, 64, 512, 640]:
+            for h in [ 1, 4, 64, 480, 512]:
+                for c in [1, 2, 3, 4]:
+                    for d in self.depths:
+                        a = cv.CreateImage((w,h), d, c);
+                        self.assert_(len(a.tostring()) == w * h * c * self.depthsize(d))
+
+        for w in [ 32, 96, 480 ]:
+            for h in [ 32, 96, 480 ]:
+                depth_size = {
+                    cv.IPL_DEPTH_8U : 1,
+                    cv.IPL_DEPTH_8S : 1,
+                    cv.IPL_DEPTH_16U : 2,
+                    cv.IPL_DEPTH_16S : 2,
+                    cv.IPL_DEPTH_32S : 4,
+                    cv.IPL_DEPTH_32F : 4,
+                    cv.IPL_DEPTH_64F : 8
+                }
+                for f in  self.depths:
+                    for channels in (1,2,3,4):
+                        img = cv.CreateImage((w, h), f, channels)
+                        esize = (w * h * channels * depth_size[f])
+                        self.assert_(len(img.tostring()) == esize)
+                        cv.SetData(img, " " * esize, w * channels * depth_size[f])
+                        self.assert_(len(img.tostring()) == esize)
+
+                mattype_size = {
+                    cv.CV_8UC1 : 1,
+                    cv.CV_8UC2 : 1,
+                    cv.CV_8UC3 : 1,
+                    cv.CV_8UC4 : 1,
+                    cv.CV_8SC1 : 1,
+                    cv.CV_8SC2 : 1,
+                    cv.CV_8SC3 : 1,
+                    cv.CV_8SC4 : 1,
+                    cv.CV_16UC1 : 2,
+                    cv.CV_16UC2 : 2,
+                    cv.CV_16UC3 : 2,
+                    cv.CV_16UC4 : 2,
+                    cv.CV_16SC1 : 2,
+                    cv.CV_16SC2 : 2,
+                    cv.CV_16SC3 : 2,
+                    cv.CV_16SC4 : 2,
+                    cv.CV_32SC1 : 4,
+                    cv.CV_32SC2 : 4,
+                    cv.CV_32SC3 : 4,
+                    cv.CV_32SC4 : 4,
+                    cv.CV_32FC1 : 4,
+                    cv.CV_32FC2 : 4,
+                    cv.CV_32FC3 : 4,
+                    cv.CV_32FC4 : 4,
+                    cv.CV_64FC1 : 8,
+                    cv.CV_64FC2 : 8,
+                    cv.CV_64FC3 : 8,
+                    cv.CV_64FC4 : 8
+                }
+
+                for t in self.mat_types:
+                    for im in [cv.CreateMat(h, w, t), cv.CreateMatND([h, w], t)]:
+                        elemsize = cv.CV_MAT_CN(cv.GetElemType(im)) * mattype_size[cv.GetElemType(im)]
+                        cv.SetData(im, " " * (w * h * elemsize), (w * elemsize))
+                        esize = (w * h * elemsize)
+                        self.assert_(len(im.tostring()) == esize)
+                        cv.SetData(im, " " * esize, w * elemsize)
+                        self.assert_(len(im.tostring()) == esize)
+
+# Tests for specific OpenCV functions
+
+class FunctionTests(OpenCVTests):
+
+    def test_AvgSdv(self):
+        m = cv.CreateMat(1, 8, cv.CV_32FC1)
+        for i,v in enumerate([2, 4, 4, 4, 5, 5, 7, 9]):
+            m[0,i] = (v,)
+        self.assertAlmostEqual(cv.Avg(m)[0], 5.0, 3)
+        avg,sdv = cv.AvgSdv(m)
+        self.assertAlmostEqual(avg[0], 5.0, 3)
+        self.assertAlmostEqual(sdv[0], 2.0, 3)
+
+    def test_CalcEMD2(self):
+        cc = {}
+        for r in [ 5, 10, 37, 38 ]:
+            scratch = cv.CreateImage((100,100), 8, 1)
+            cv.SetZero(scratch)
+            cv.Circle(scratch, (50,50), r, 255, -1)
+            storage = cv.CreateMemStorage()
+            seq = cv.FindContours(scratch, storage, cv.CV_RETR_TREE, cv.CV_CHAIN_APPROX_SIMPLE)
+            arr = cv.CreateMat(len(seq), 3, cv.CV_32FC1)
+            for i,e in enumerate(seq):
+                arr[i,0] = 1
+                arr[i,1] = e[0]
+                arr[i,2] = e[1]
+            cc[r] = arr
+        def myL1(A, B, D):
+            return abs(A[0]-B[0]) + abs(A[1]-B[1])
+        def myL2(A, B, D):
+            return math.sqrt((A[0]-B[0])**2 + (A[1]-B[1])**2)
+        def myC(A, B, D):
+            return max(abs(A[0]-B[0]), abs(A[1]-B[1]))
+        contours = set(cc.values())
+        for c0 in contours:
+            for c1 in contours:
+                self.assert_(abs(cv.CalcEMD2(c0, c1, cv.CV_DIST_L1) - cv.CalcEMD2(c0, c1, cv.CV_DIST_USER, myL1)) < 1e-3)
+                self.assert_(abs(cv.CalcEMD2(c0, c1, cv.CV_DIST_L2) - cv.CalcEMD2(c0, c1, cv.CV_DIST_USER, myL2)) < 1e-3)
+                self.assert_(abs(cv.CalcEMD2(c0, c1, cv.CV_DIST_C) - cv.CalcEMD2(c0, c1, cv.CV_DIST_USER, myC)) < 1e-3)
+
+    def test_CalcOpticalFlowBM(self):
+        a = self.get_sample("samples/c/lena.jpg", 0)
+        b = self.get_sample("samples/c/lena.jpg", 0)
+        (w,h) = cv.GetSize(a)
+        vel_size = (w - 8, h - 8)
+        velx = cv.CreateImage(vel_size, cv.IPL_DEPTH_32F, 1)
+        vely = cv.CreateImage(vel_size, cv.IPL_DEPTH_32F, 1)
+        cv.CalcOpticalFlowBM(a, b, (8,8), (1,1), (8,8), 0, velx, vely)
+
+    def test_Circle(self):
+        for w,h in [(2,77), (77,2), (256, 256), (640,480)]:
+            img = cv.CreateImage((w,h), cv.IPL_DEPTH_8U, 1)
+            cv.SetZero(img)
+            tricky = [ -8000, -2, -1, 0, 1, h/2, h-1, h, h+1, w/2, w-1, w, w+1, 8000]
+            for x0 in tricky:
+                for y0 in tricky:
+                    for r in [ 0, 1, 2, 3, 4, 5, w/2, w-1, w, w+1, h/2, h-1, h, h+1, 8000 ]:
+                        for thick in [1, 2, 10]:
+                            for t in [0, 8, 4, cv.CV_AA]:
+                                cv.Circle(img, (x0,y0), r, 255, thick, t)
+        # just check that something was drawn
+        self.assert_(cv.Sum(img)[0] > 0)
+
+    def test_ConvexHull2(self):
+        # Draw a series of N-pointed stars, find contours, assert the contour is not convex,
+        # assert the hull has N segments, assert that there are N convexity defects.
+
+        def polar2xy(th, r):
+            return (int(400 + r * math.cos(th)), int(400 + r * math.sin(th)))
+        storage = cv.CreateMemStorage(0)
+        for way in ['CvSeq', 'CvMat', 'list']:
+            for points in range(3,20):
+                scratch = cv.CreateImage((800,800), 8, 1)
+                cv.SetZero(scratch)
+                sides = 2 * points
+                cv.FillPoly(scratch, [ [ polar2xy(i * 2 * math.pi / sides, [100,350][i&1]) for i in range(sides) ] ], 255)
+
+                seq = cv.FindContours(scratch, storage, cv.CV_RETR_TREE, cv.CV_CHAIN_APPROX_SIMPLE)
+
+                if way == 'CvSeq':
+                    # pts is a CvSeq
+                    pts = seq
+                elif way == 'CvMat':
+                    # pts is a CvMat
+                    arr = cv.CreateMat(len(seq), 1, cv.CV_32SC2)
+                    for i,e in enumerate(seq):
+                        arr[i,0] = e
+                    pts = arr
+                elif way == 'list':
+                    # pts is a list of 2-tuples
+                    pts = list(seq)
+                else:
+                    assert False
+
+                self.assert_(cv.CheckContourConvexity(pts) == 0)
+                hull = cv.ConvexHull2(pts, storage, return_points = 1)
+                self.assert_(cv.CheckContourConvexity(hull) == 1)
+                self.assert_(len(hull) == points)
+
+                if way in [ 'CvSeq', 'CvMat' ]:
+                    defects = cv.ConvexityDefects(pts, cv.ConvexHull2(pts, storage), storage)
+                    self.assert_(len([depth for (_,_,_,depth) in defects if (depth > 5)]) == points)
+
+    def test_CreateImage(self):
+        for w in [ 1, 4, 64, 512, 640]:
+            for h in [ 1, 4, 64, 480, 512]:
+                for c in [1, 2, 3, 4]:
+                    for d in self.depths:
+                        a = cv.CreateImage((w,h), d, c);
+                        self.assert_(a.width == w)
+                        self.assert_(a.height == h)
+                        self.assert_(a.nChannels == c)
+                        self.assert_(a.depth == d)
+                        self.assert_(cv.GetSize(a) == (w, h))
+                        # self.assert_(cv.GetElemType(a) == d)
+
+    def test_CreateMat(self):
+        for rows in [1, 2, 4, 16, 64, 512, 640]:
+            for cols in [1, 2, 4, 16, 64, 512, 640]:
+                for t in self.mat_types:
+                    m = cv.CreateMat(rows, cols, t)
+                    self.assertEqual(cv.GetElemType(m), t)
+                    self.assertEqual(m.type, t)
+
+
+    def test_DrawChessboardCorners(self):
+        im = cv.CreateImage((512,512), cv.IPL_DEPTH_8U, 3)
+        cv.SetZero(im)
+        cv.DrawChessboardCorners(im, (5, 5), [ (100,100) for i in range(5 * 5) ], 1)
+        self.assert_(cv.Sum(im)[0] > 0)
+
+        self.assertRaises(TypeError, lambda: cv.DrawChessboardCorners(im, (4, 5), [ (100,100) for i in range(5 * 5) ], 1))
+
+    def test_ExtractSURF(self):
+        img = self.get_sample("samples/c/lena.jpg", 0)
+        w,h = cv.GetSize(img)
+        for hessthresh in [ 300,400,500]:
+            for dsize in [0,1]:
+                for layers in [1,3,10]:
+                    kp,desc = cv.ExtractSURF(img, None, cv.CreateMemStorage(), (dsize, hessthresh, 3, layers))
+                    self.assert_(len(kp) == len(desc))
+                    for d in desc:
+                        self.assert_(len(d) == {0:64, 1:128}[dsize])
+                    for pt,laplacian,size,dir,hessian in kp:
+                        self.assert_((0 <= pt[0]) and (pt[0] <= w))
+                        self.assert_((0 <= pt[1]) and (pt[1] <= h))
+                        self.assert_(laplacian in [-1, 0, 1])
+                        self.assert_((0 <= dir) and (dir <= 360))
+                        self.assert_(hessian >= hessthresh)
+
+    def test_FillPoly(self):
+        scribble = cv.CreateImage((640,480), cv.IPL_DEPTH_8U, 1)
+        random.seed(0)
+        for i in range(50):
+            cv.SetZero(scribble)
+            self.assert_(cv.CountNonZero(scribble) == 0)
+            cv.FillPoly(scribble, [ [ (random.randrange(640), random.randrange(480)) for i in range(100) ] ], (255,))
+            self.assert_(cv.CountNonZero(scribble) != 0)
+
+    def test_FindChessboardCorners(self):
+        im = cv.CreateImage((512,512), cv.IPL_DEPTH_8U, 1)
+        cv.Set(im, 128)
+
+        # Empty image run
+        status,corners = cv.FindChessboardCorners( im, (7,7) )
+
+        # Perfect checkerboard
+        def xf(i,j, o):
+            return ((96 + o) + 40 * i, (96 + o) + 40 * j)
+        for i in range(8):
+            for j in range(8):
+                color = ((i ^ j) & 1) * 255
+                cv.Rectangle(im, xf(i,j, 0), xf(i,j, 39), color, cv.CV_FILLED)
+        status,corners = cv.FindChessboardCorners( im, (7,7) )
+        self.assert_(status)
+        self.assert_(len(corners) == (7 * 7))
+
+        # Exercise corner display
+        im3 = cv.CreateImage(cv.GetSize(im), cv.IPL_DEPTH_8U, 3)
+        cv.Merge(im, im, im, None, im3)
+        cv.DrawChessboardCorners(im3, (7,7), corners, status)
+
+        if 0:
+            self.snap(im3)
+
+        # Run it with too many corners
+        cv.Set(im, 128)
+        for i in range(40):
+            for j in range(40):
+                color = ((i ^ j) & 1) * 255
+                x = 30 + 6 * i
+                y = 30 + 4 * j
+                cv.Rectangle(im, (x, y), (x+4, y+4), color, cv.CV_FILLED)
+        status,corners = cv.FindChessboardCorners( im, (7,7) )
+
+        # XXX - this is very slow
+        if 0:
+            rng = cv.RNG(0)
+            cv.RandArr(rng, im, cv.CV_RAND_UNI, 0, 255.0)
+            self.snap(im)
+            status,corners = cv.FindChessboardCorners( im, (7,7) )
+
+    def test_FindContours(self):
+        random.seed(0)
+
+        storage = cv.CreateMemStorage()
+        for trial in range(10):
+            scratch = cv.CreateImage((800,800), 8, 1)
+            cv.SetZero(scratch)
+            def plot(center, radius, mode):
+                cv.Circle(scratch, center, radius, mode, -1)
+                if radius < 20:
+                    return 0
+                else:
+                    newmode = 255 - mode
+                    subs = random.choice([1,2,3])
+                    if subs == 1:
+                        return [ plot(center, radius - 5, newmode) ]
+                    else:
+                        newradius = int({ 2: radius / 2, 3: radius / 2.3 }[subs] - 5)
+                        r = radius / 2
+                        ret = []
+                        for i in range(subs):
+                            th = i * (2 * math.pi) / subs
+                            ret.append(plot((int(center[0] + r * math.cos(th)), int(center[1] + r * math.sin(th))), newradius, newmode))
+                        return sorted(ret)
+
+            actual = plot((400,400), 390, 255 )
+
+            seq = cv.FindContours(scratch, storage, cv.CV_RETR_TREE, cv.CV_CHAIN_APPROX_SIMPLE)
+
+            def traverse(s):
+                if s == None:
+                    return 0
+                else:
+                    self.assert_(abs(cv.ContourArea(s)) > 0.0)
+                    ((x,y),(w,h),th) = cv.MinAreaRect2(s, cv.CreateMemStorage())
+                    self.assert_(((w / h) - 1.0) < 0.01)
+                    self.assert_(abs(cv.ContourArea(s)) > 0.0)
+                    r = []
+                    while s:
+                        r.append(traverse(s.v_next()))
+                        s = s.h_next()
+                    return sorted(r)
+            self.assert_(traverse(seq.v_next()) == actual)
 
     def test_GetAffineTransform(self):
         mapping = cv.CreateMat(2, 3, cv.CV_32FC1)
@@ -151,6 +444,130 @@ class TestDirected(unittest.TestCase):
                             e = 0.0
                         self.assertAlmostEqual(mapping[r, c], e, 2)
 
+    def test_GetSize(self):
+        self.assert_(cv.GetSize(cv.CreateMat(5, 7, cv.CV_32FC1)) == (7,5))
+        self.assert_(cv.GetSize(cv.CreateImage((7,5), cv.IPL_DEPTH_8U, 1)) == (7,5))
+
+    def test_GetStarKeypoints(self):
+        src = self.get_sample("samples/c/lena.jpg", 0)
+        storage = cv.CreateMemStorage()
+        kp = cv.GetStarKeypoints(src, storage)
+        self.assert_(len(kp) > 0)
+        for (x,y),scale,r in kp:
+            self.assert_(0 <= x)
+            self.assert_(x <= cv.GetSize(src)[0])
+            self.assert_(0 <= y)
+            self.assert_(y <= cv.GetSize(src)[1])
+        return
+        scribble = cv.CreateImage(cv.GetSize(src), 8, 3)
+        cv.CvtColor(src, scribble, cv.CV_GRAY2BGR)
+        for (x,y),scale,r in kp:
+            print x,y,scale,r
+            cv.Circle(scribble, (x,y), scale, cv.RGB(255,0,0))
+        self.snap(scribble)
+
+    def test_GetSubRect(self):
+        src = cv.CreateImage((100,100), 8, 1)
+        data = "z" * (100 * 100)
+
+        cv.SetData(src, data, 100)
+        start_count = sys.getrefcount(data)
+
+        iter = 77
+        subs = []
+        for i in range(iter):
+            sub = cv.GetSubRect(src, (0, 0, 10, 10))
+            subs.append(sub)
+        self.assert_(sys.getrefcount(data) == (start_count + iter))
+
+        src = self.get_sample("samples/c/lena.jpg", 0)
+        made = cv.CreateImage(cv.GetSize(src), 8, 1)
+        sub = cv.CreateMat(32, 32, cv.CV_8UC1)
+        for x in range(0, 512, 32):
+            for y in range(0, 512, 32):
+                sub = cv.GetSubRect(src, (x, y, 32, 32))
+                cv.SetImageROI(made, (x, y, 32, 32))
+                cv.Copy(sub, made)
+        cv.ResetImageROI(made)
+        cv.AbsDiff(made, src, made)
+        self.assert_(cv.CountNonZero(made) == 0)
+
+    def test_HoughLines2_PROBABILISTIC(self):
+        li = cv.HoughLines2(self.yield_line_image(),
+                                                cv.CreateMemStorage(),
+                                                cv.CV_HOUGH_PROBABILISTIC,
+                                                1,
+                                                math.pi/180,
+                                                50,
+                                                50,
+                                                10)
+        self.assert_(len(li) > 0)
+        self.assert_(li[0] != None)
+
+    def test_HoughLines2_STANDARD(self):
+        li = cv.HoughLines2(self.yield_line_image(),
+                                                cv.CreateMemStorage(),
+                                                cv.CV_HOUGH_STANDARD,
+                                                1,
+                                                math.pi/180,
+                                                100,
+                                                0,
+                                                0)
+        self.assert_(len(li) > 0)
+        self.assert_(li[0] != None)
+
+    def test_InPaint(self):
+        src = self.get_sample("doc/pics/building.jpg")
+        msk = cv.CreateImage(cv.GetSize(src), cv.IPL_DEPTH_8U, 1)
+        damaged = cv.CloneMat(src)
+        repaired = cv.CreateImage(cv.GetSize(src), cv.IPL_DEPTH_8U, 3)
+        difference = cv.CloneImage(repaired)
+        cv.SetZero(msk)
+        for method in [ cv.CV_INPAINT_NS, cv.CV_INPAINT_TELEA ]:
+            for (p0,p1) in [ ((10,10), (400,400)) ]:
+                cv.Line(damaged, p0, p1, cv.RGB(255, 0, 255), 2)
+                cv.Line(msk, p0, p1, 255, 2)
+            cv.Inpaint(damaged, msk, repaired, 10., cv.CV_INPAINT_NS)
+        cv.AbsDiff(src, repaired, difference)
+        #self.snapL([src, damaged, repaired, difference])
+
+    def test_InitLineIterator(self):
+        scribble = cv.CreateImage((640,480), cv.IPL_DEPTH_8U, 1)
+        self.assert_(len(list(cv.InitLineIterator(scribble, (20,10), (30,10)))) == 11)
+
+    def test_InRange(self):
+
+        sz = (256,256)
+        Igray1 = cv.CreateImage(sz,cv.IPL_DEPTH_32F,1)
+        Ilow1 = cv.CreateImage(sz,cv.IPL_DEPTH_32F,1)
+        Ihi1 = cv.CreateImage(sz,cv.IPL_DEPTH_32F,1)
+        Igray2 = cv.CreateImage(sz,cv.IPL_DEPTH_32F,1)
+        Ilow2 = cv.CreateImage(sz,cv.IPL_DEPTH_32F,1)
+        Ihi2 = cv.CreateImage(sz,cv.IPL_DEPTH_32F,1)
+
+        Imask = cv.CreateImage(sz, cv.IPL_DEPTH_8U,1)
+        Imaskt = cv.CreateImage(sz,cv.IPL_DEPTH_8U,1)
+
+        cv.InRange(Igray1, Ilow1, Ihi1, Imask);
+        cv.InRange(Igray2, Ilow2, Ihi2, Imaskt);
+
+        cv.Or(Imask, Imaskt, Imask);
+
+    def test_Line(self):
+        w,h = 640,480
+        img = cv.CreateImage((w,h), cv.IPL_DEPTH_8U, 1)
+        cv.SetZero(img)
+        tricky = [ -8000, -2, -1, 0, 1, h/2, h-1, h, h+1, w/2, w-1, w, w+1, 8000]
+        for x0 in tricky:
+            for y0 in tricky:
+                for x1 in tricky:
+                    for y1 in tricky:
+                        for thickness in [ 0, 1, 8 ]:
+                            for line_type in [0, 4, 8, cv.CV_AA ]:
+                                cv.Line(img, (x0,y0), (x1,y1), 255, thickness, line_type)
+        # just check that something was drawn
+        self.assert_(cv.Sum(img)[0] > 0)
+
     def test_MinMaxLoc(self):
         scribble = cv.CreateImage((640,480), cv.IPL_DEPTH_8U, 1)
         los = [ (random.randrange(480), random.randrange(640)) for i in range(100) ]
@@ -161,6 +578,82 @@ class TestDirected(unittest.TestCase):
             scribble[hi] = 255
             r = cv.MinMaxLoc(scribble)
             self.assert_(r == (0, 255, tuple(reversed(lo)), tuple(reversed(hi))))
+
+    def test_Reshape(self):
+        # 97 rows
+        # 12 cols
+        rows = 97
+        cols = 12
+        im = cv.CreateMat( rows, cols, cv.CV_32FC1 )
+        elems = rows * cols * 1
+        def crd(im):
+            return cv.GetSize(im) + (cv.CV_MAT_CN(cv.GetElemType(im)),)
+
+        for c in (1, 2, 3, 4):
+            nc,nr,nd = crd(cv.Reshape(im, c))
+            self.assert_(nd == c)
+            self.assert_((nc * nr * nd) == elems)
+
+        nc,nr,nd = crd(cv.Reshape(im, 0, 97*2))
+        self.assert_(nr == 97*2)
+        self.assert_((nc * nr * nd) == elems)
+
+        nc,nr,nd = crd(cv.Reshape(im, 3, 97*2))
+        self.assert_(nr == 97*2)
+        self.assert_(nd == 3)
+        self.assert_((nc * nr * nd) == elems)
+
+    def test_Save(self):
+        for o in [ cv.CreateImage((128,128), cv.IPL_DEPTH_8U, 1), cv.CreateMat(16, 16, cv.CV_32FC1) ]:
+            cv.Save("test.save", o)
+            loaded = cv.Load("test.save", cv.CreateMemStorage())
+            self.assert_(type(o) == type(loaded))
+
+    def test_SetIdentity(self):
+        for r in range(1,16):
+            for c in range(1, 16):
+                for t in self.mat_types_single:
+                    M = cv.CreateMat(r, c, t)
+                    cv.SetIdentity(M)
+                    for rj in range(r):
+                        for cj in range(c):
+                            if rj == cj:
+                                expected = 1.0
+                            else:
+                                expected = 0.0
+                            self.assertEqual(M[rj,cj], expected)
+
+    def test_Sum(self):
+        for r in range(1,11):
+            for c in range(1, 11):
+                for t in self.mat_types_single:
+                    M = cv.CreateMat(r, c, t)
+                    cv.Set(M, 1)
+                    self.assertEqual(cv.Sum(M)[0], r * c)
+
+    def test_Threshold(self):
+        """ directed test for bug 2790622 """
+        src = self.get_sample("samples/c/lena.jpg", 0)
+        results = set()
+        for i in range(10):
+            dst = cv.CreateImage(cv.GetSize(src), cv.IPL_DEPTH_8U, 1)
+            cv.Threshold(src, dst, 128, 128, cv.CV_THRESH_BINARY)
+            results.add(dst.tostring())
+        # Should have produced the same answer every time, so results set should have size 1
+        self.assert_(len(results) == 1)
+
+    ##############################################################################
+
+    def yield_line_image(self):
+        """ Needed by HoughLines tests """
+        src = self.get_sample("doc/pics/building.jpg", 0)
+        dst = cv.CreateImage(cv.GetSize(src), 8, 1)
+        cv.Canny(src, dst, 50, 200, 3)
+        return dst
+
+# Tests for functional areas
+
+class AreaTests(OpenCVTests):
 
     def failing_test_exception(self):
         a = cv.CreateImage((640,480), cv.IPL_DEPTH_8U, 1)
@@ -181,18 +674,9 @@ class TestDirected(unittest.TestCase):
         for i in range(4000):
             a = cv.CreateMat(1024, 1024, cv.CV_8UC1)
 
-    def test_avg(self):
-        m = cv.CreateMat(1, 8, cv.CV_32FC1)
-        for i,v in enumerate([2, 4, 4, 4, 5, 5, 7, 9]):
-            m[0,i] = (v,)
-        self.assertAlmostEqual(cv.Avg(m)[0], 5.0, 3)
-        avg,sdv = cv.AvgSdv(m)
-        self.assertAlmostEqual(avg[0], 5.0, 3)
-        self.assertAlmostEqual(sdv[0], 2.0, 3)
-
     def test_histograms(self):
         def split(im):
-            nchans = cv.CV_MAT_CN(cv.GetElemType(im)) 
+            nchans = cv.CV_MAT_CN(cv.GetElemType(im))
             c = [ cv.CreateImage(cv.GetSize(im), cv.IPL_DEPTH_8U, 1) for i in range(nchans) ] + [None] * (4 - nchans)
             cv.Split(im, c[0], c[1], c[2], c[3])
             return c[:nchans]
@@ -202,11 +686,9 @@ class TestDirected(unittest.TestCase):
             cv.CalcHist(s, hist, 0)
             return hist
 
-        dims = [180] 
-        ranges = [(0,180)] 
-        a = cv.CreateHist(dims, cv.CV_HIST_ARRAY , ranges, 1) 
-        print dims
-        print ranges
+        dims = [180]
+        ranges = [(0,180)]
+        a = cv.CreateHist(dims, cv.CV_HIST_ARRAY , ranges, 1)
         src = self.get_sample("samples/c/lena.jpg", 0)
         h = imh(src)
         (minv, maxv, minl, maxl) = cv.GetMinMaxHistValue(h)
@@ -220,71 +702,6 @@ class TestDirected(unittest.TestCase):
         for meth,expected in [(cv.CV_COMP_CORREL, 1.0), (cv.CV_COMP_CHISQR, 0.0), (cv.CV_COMP_INTERSECT, 1.0), (cv.CV_COMP_BHATTACHARYYA, 0.0)]:
             self.assertEqual(cv.CompareHist(h, h, meth), expected)
 
-    def checker(self):
-
-        raw = cv.CreateImage((640, 480), cv.IPL_DEPTH_8U, 1)
-        for x in range(0, 640, 20):
-            cv.Line(raw, (x,0), (x,480), 255, 1)
-        for y in range(0, 480, 20):
-            cv.Line(raw, (0,y), (640,y), 255, 1)
-        intrinsic_mat = cv.CreateMat(3, 3, cv.CV_32FC1);
-        distortion_coeffs = cv.CreateMat(1, 4, cv.CV_32FC1);
-
-        cv.SetZero(intrinsic_mat)
-        intrinsic_mat[0,2] = 320.0
-        intrinsic_mat[1,2] = 240.0
-        intrinsic_mat[0,0] = 320.0
-        intrinsic_mat[1,1] = 320.0
-        intrinsic_mat[2,2] = 1.0
-        cv.SetZero(distortion_coeffs)
-        distortion_coeffs[0,0] = 1e-1
-        mapx = cv.CreateImage((640, 480), cv.IPL_DEPTH_32F, 1)
-        mapy = cv.CreateImage((640, 480), cv.IPL_DEPTH_32F, 1)
-        cv.SetZero(mapx)
-        cv.SetZero(mapy)
-        cv.InitUndistortMap(intrinsic_mat, distortion_coeffs, mapx, mapy)
-        rect = cv.CreateImage((640, 480), cv.IPL_DEPTH_8U, 1)
-
-        (w,h) = (640,480)
-        rMapxy = cv.CreateMat(h, w, cv.CV_16SC2)
-        rMapa  = cv.CreateMat(h, w, cv.CV_16UC1)
-        cv.ConvertMaps(mapx,mapy,rMapxy,rMapa);
-
-        cv.Remap(raw, rect, mapx, mapy)
-        cv.Remap(raw, rect, rMapxy, rMapa)
-        cv.Undistort2(raw, rect, intrinsic_mat, distortion_coeffs)
-
-        for w in [1, 4, 4095, 4096, 4097, 4100]:
-            p = cv.CreateImage((w,256), 8, 1)
-            cv.Undistort2(p, p, intrinsic_mat, distortion_coeffs);
-        #print p
-
-        fptypes = [cv.CV_32FC1, cv.CV_64FC1]
-        for t0 in fptypes:
-            for t1 in fptypes:
-                for t2 in fptypes:
-                    for t3 in fptypes:
-                        rotation_vector = cv.CreateMat(1, 3, t0)
-                        translation_vector = cv.CreateMat(1, 3, t1)
-                        object_points = cv.CreateMat(7, 3, t2)
-                        image_points = cv.CreateMat(7, 2, t3)
-                        cv.ProjectPoints2(object_points, rotation_vector, translation_vector, intrinsic_mat, distortion_coeffs, image_points)
-
-        return
-
-        started = time.time()
-        for i in range(10):
-            if 1:
-                cv.Remap(raw, rect, mapx, mapy)
-            else:
-                cv.Remap(raw,rect,rMapxy,rMapa)
-        print "took", time.time() - started
-
-        print
-        print "mapx", mapx[0,0]
-        print "mapy", mapx[0,0]
-        self.snap(rect)
-
     def test_arithmetic(self):
         a = cv.CreateMat(4, 4, cv.CV_8UC1)
         a[0,0] = 50.0
@@ -295,24 +712,7 @@ class TestDirected(unittest.TestCase):
         self.assertEqual(d[0,0], 54.0)
         cv.Mul(a, b, d)
         self.assertEqual(d[0,0], 200.0)
-        
-    def test_inrange(self):
 
-        sz = (256,256)
-        Igray1 = cv.CreateImage(sz,cv.IPL_DEPTH_32F,1)
-        Ilow1 = cv.CreateImage(sz,cv.IPL_DEPTH_32F,1)
-        Ihi1 = cv.CreateImage(sz,cv.IPL_DEPTH_32F,1)
-        Igray2 = cv.CreateImage(sz,cv.IPL_DEPTH_32F,1)
-        Ilow2 = cv.CreateImage(sz,cv.IPL_DEPTH_32F,1)
-        Ihi2 = cv.CreateImage(sz,cv.IPL_DEPTH_32F,1)
-
-        Imask = cv.CreateImage(sz, cv.IPL_DEPTH_8U,1)
-        Imaskt = cv.CreateImage(sz,cv.IPL_DEPTH_8U,1)
-
-        cv.InRange(Igray1, Ilow1, Ihi1, Imask);
-        cv.InRange(Igray2, Ilow2, Ihi2, Imaskt);
-
-        cv.Or(Imask, Imaskt, Imask);
 
     def failing_test_cvtcolor(self):
         src3 = self.get_sample("samples/c/lena.jpg")
@@ -326,7 +726,7 @@ class TestDirected(unittest.TestCase):
                 cv.CvtColor(src3, dst8u[3], eval("cv.CV_%s2%s" % (srcf, dstf)))
                 cv.CvtColor(src3, dst32f[3], eval("cv.CV_%s2%s" % (srcf, dstf)))
                 cv.CvtColor(src3, dst8u[3], eval("cv.CV_%s2%s" % (dstf, srcf)))
-            
+
         for srcf in ["BayerBG", "BayerGB", "BayerGR"]:
             for dstf in ["RGB", "BGR"]:
                 cv.CvtColor(src1, dst8u[3], eval("cv.CV_%s2%s" % (srcf, dstf)))
@@ -379,62 +779,6 @@ class TestDirected(unittest.TestCase):
                 if cv.WaitKey(10) > 0:
                     break
 
-    def test_lineclip(self):
-        w,h = 640,480
-        img = cv.CreateImage((w,h), cv.IPL_DEPTH_8U, 1)
-        cv.SetZero(img)
-        tricky = [ -8000, -2, -1, 0, 1, h/2, h-1, h, h+1, w/2, w-1, w, w+1, 8000]
-        for x0 in tricky:
-            for y0 in tricky:
-                for x1 in tricky:
-                    for y1 in tricky:
-                        for thickness in [ 0, 1, 8 ]:
-                            for line_type in [0, 4, 8, cv.CV_AA ]:
-                                cv.Line(img, (x0,y0), (x1,y1), 255, thickness, line_type)
-        # just check that something was drawn
-        self.assert_(cv.Sum(img)[0] > 0)
-
-    def test_inpaint(self):
-        src = self.get_sample("doc/pics/building.jpg")
-        msk = cv.CreateImage(cv.GetSize(src), cv.IPL_DEPTH_8U, 1)
-        damaged = cv.CloneMat(src)
-        repaired = cv.CreateImage(cv.GetSize(src), cv.IPL_DEPTH_8U, 3)
-        difference = cv.CloneImage(repaired)
-        cv.SetZero(msk)
-        for method in [ cv.CV_INPAINT_NS, cv.CV_INPAINT_TELEA ]:
-            for (p0,p1) in [ ((10,10), (400,400)) ]:
-                cv.Line(damaged, p0, p1, cv.RGB(255, 0, 255), 2)
-                cv.Line(msk, p0, p1, 255, 2)
-            cv.Inpaint(damaged, msk, repaired, 10., cv.CV_INPAINT_NS)
-        cv.AbsDiff(src, repaired, difference)
-        #self.snapL([src, damaged, repaired, difference])
-
-    def test_GetSubRect(self):
-        src = cv.CreateImage((100,100), 8, 1)
-        data = "z" * (100 * 100)
-
-        cv.SetData(src, data, 100)
-        start_count = sys.getrefcount(data)
-
-        iter = 77
-        subs = []
-        for i in range(iter):
-            sub = cv.GetSubRect(src, (0, 0, 10, 10))
-            subs.append(sub)
-        self.assert_(sys.getrefcount(data) == (start_count + iter))
-
-        src = self.get_sample("samples/c/lena.jpg", 0)
-        made = cv.CreateImage(cv.GetSize(src), 8, 1)
-        sub = cv.CreateMat(32, 32, cv.CV_8UC1)
-        for x in range(0, 512, 32):
-            for y in range(0, 512, 32):
-                sub = cv.GetSubRect(src, (x, y, 32, 32))
-                cv.SetImageROI(made, (x, y, 32, 32))
-                cv.Copy(sub, made)
-        cv.ResetImageROI(made)
-        cv.AbsDiff(made, src, made)
-        self.assert_(cv.CountNonZero(made) == 0)
-
     def perf_test_pow(self):
         mt = cv.CreateMat(1000, 1000, cv.CV_32FC1)
         dst = cv.CreateMat(1000, 1000, cv.CV_32FC1)
@@ -450,29 +794,7 @@ class TestDirected(unittest.TestCase):
             print "%4.1f took %f ns" % (a, took * 1e9)
         print dst[0,0], 10 ** 2.4
 
-    def test_SetIdentity(self):
-        for r in range(1,16):
-            for c in range(1, 16):
-                for t in self.mat_types_single:
-                    M = cv.CreateMat(r, c, t)
-                    cv.SetIdentity(M)
-                    for rj in range(r):
-                        for cj in range(c):
-                            if rj == cj:
-                                expected = 1.0
-                            else:
-                                expected = 0.0
-                            self.assertEqual(M[rj,cj], expected)
-
-    def test_Sum(self):
-        for r in range(1,11):
-            for c in range(1, 11):
-                for t in self.mat_types_single:
-                    M = cv.CreateMat(r, c, t)
-                    cv.Set(M, 1)
-                    self.assertEqual(cv.Sum(M)[0], r * c)
-
-    def test_GetRowCol(self):
+    def test_access_row_col(self):
         src = cv.CreateImage((8,3), 8, 1)
         # Put these words
         #     Achilles
@@ -561,7 +883,7 @@ class TestDirected(unittest.TestCase):
                             for k in range(dim[2]):
                                 self.assert_(mat2[i,j,k] == mat[i,j,k] + increment)
 
-    def test_Buffers(self):
+    def test_buffers(self):
         ar = array.array('f', [7] * (360*640))
 
         m = cv.CreateMat(360, 640, cv.CV_32FC1)
@@ -591,50 +913,6 @@ class TestDirected(unittest.TestCase):
         d = cv.CreateMat(h, w, cv.CV_8UC1)
         cv.AbsDiff(a, b, d)
         self.assert_(cv.CountNonZero(d) == 0)
-
-    def test_GetStarKeypoints(self):
-        src = self.get_sample("samples/c/lena.jpg", 0)
-        storage = cv.CreateMemStorage()
-        kp = cv.GetStarKeypoints(src, storage)
-        self.assert_(len(kp) > 0)
-        for (x,y),scale,r in kp:
-            self.assert_(0 <= x)
-            self.assert_(x <= cv.GetSize(src)[0])
-            self.assert_(0 <= y)
-            self.assert_(y <= cv.GetSize(src)[1])
-        return
-        scribble = cv.CreateImage(cv.GetSize(src), 8, 3)
-        cv.CvtColor(src, scribble, cv.CV_GRAY2BGR)
-        for (x,y),scale,r in kp:
-            print x,y,scale,r
-            cv.Circle(scribble, (x,y), scale, cv.RGB(255,0,0))
-        self.snap(scribble)
-
-    def test_Threshold(self):
-        """ directed test for bug 2790622 """
-        src = self.get_sample("samples/c/lena.jpg", 0)
-        results = set()
-        for i in range(10):
-            dst = cv.CreateImage(cv.GetSize(src), cv.IPL_DEPTH_8U, 1)
-            cv.Threshold(src, dst, 128, 128, cv.CV_THRESH_BINARY)
-            results.add(dst.tostring())
-        # Should have produced the same answer every time, so results set should have size 1
-        self.assert_(len(results) == 1)
-
-    def test_Circle(self):
-        """ smoke test to draw circles, many clipped """
-        for w,h in [(2,77), (77,2), (256, 256), (640,480)]:
-            img = cv.CreateImage((w,h), cv.IPL_DEPTH_8U, 1)
-            cv.SetZero(img)
-            tricky = [ -8000, -2, -1, 0, 1, h/2, h-1, h, h+1, w/2, w-1, w, w+1, 8000]
-            for x0 in tricky:
-                for y0 in tricky:
-                    for r in [ 0, 1, 2, 3, 4, 5, w/2, w-1, w, w+1, h/2, h-1, h, h+1, 8000 ]:
-                        for thick in [1, 2, 10]:
-                            for t in [0, 8, 4, cv.CV_AA]:
-                                cv.Circle(img, (x0,y0), r, 255, thick, t)
-        # just check that something was drawn
-        self.assert_(cv.Sum(img)[0] > 0)
 
     def test_text(self):
         img = cv.CreateImage((640,40), cv.IPL_DEPTH_8U, 1)
@@ -678,7 +956,7 @@ class TestDirected(unittest.TestCase):
         sizes = [ 1, 2, 3, 97, 255, 256, 257, 947 ]
         for w in sizes:
             for h in sizes:
-                # Create an IplImage 
+                # Create an IplImage
                 im = cv.CreateImage((w,h), cv.IPL_DEPTH_8U, 1)
                 cv.Set(im, 1)
                 self.assert_(cv.Sum(im)[0] == (w * h))
@@ -709,7 +987,7 @@ class TestDirected(unittest.TestCase):
             rng = cv.RNG(s)
             sequences.add(str([cv.RandInt(rng) for i in range(10)]))
         self.assert_(len(seeds) == len(sequences))
-            
+
         rng = cv.RNG(0)
         im = cv.CreateImage((1024,1024), cv.IPL_DEPTH_8U, 1)
         cv.RandArr(rng, im, cv.CV_RAND_UNI, 0, 256)
@@ -762,11 +1040,11 @@ class TestDirected(unittest.TestCase):
                         dests_set = list(set([j for (i, j) in fromTo]))
                         if len(dests_set) == len(dests):
                             break
-                        
+
                     # print sources
                     # print dests
                     # print fromTo
-                    
+
                     def CV_8UC(n):
                         return [cv.CV_8UC1, cv.CV_8UC2, cv.CV_8UC3, cv.CV_8UC4][n-1]
                     source_m = [cv.CreateMat(rows, cols, CV_8UC(c)) for c in sources]
@@ -786,18 +1064,18 @@ class TestDirected(unittest.TestCase):
                         s = sum(sources[:i]) + 50
                         cv.Set(source_m[i], (s, s+1, s+2, s+3))
                         self.assertEqual(m00(source_m[i]), [s, s+1, s+2, s+3][:sources[i]])
-                        
+
                     for i in range(len(dests)):
                         s = sum(dests[:i]) + 100
                         cv.Set(dest_m[i], (s, s+1, s+2, s+3))
                         self.assertEqual(m00(dest_m[i]), [s, s+1, s+2, s+3][:dests[i]])
 
                     # now run the sanity check
-                    
+
                     for i in range(len(sources)):
-                        s = sum(sources[:i]) + 50    
+                        s = sum(sources[:i]) + 50
                         self.assertEqual(m00(source_m[i]), [s, s+1, s+2, s+3][:sources[i]])
-                        
+
                     for i in range(len(dests)):
                         s = sum(dests[:i]) + 100
                         self.assertEqual(m00(dest_m[i]), [s, s+1, s+2, s+3][:dests[i]])
@@ -851,121 +1129,6 @@ class TestDirected(unittest.TestCase):
         self.assertEqual(cv.GetDims(test_mat[-1:]), (1, 3))
         self.assertEqual(cv.GetDims(test_mat[-1]), (1, 3))
 
-    def test_InitLineIterator(self):
-        scribble = cv.CreateImage((640,480), cv.IPL_DEPTH_8U, 1)
-        self.assert_(len(list(cv.InitLineIterator(scribble, (20,10), (30,10)))) == 11)
-
-    def test_CalcEMD2(self):
-        cc = {}
-        for r in [ 5, 10, 37, 38 ]:
-            scratch = cv.CreateImage((100,100), 8, 1)
-            cv.SetZero(scratch)
-            cv.Circle(scratch, (50,50), r, 255, -1)
-            storage = cv.CreateMemStorage()
-            seq = cv.FindContours(scratch, storage, cv.CV_RETR_TREE, cv.CV_CHAIN_APPROX_SIMPLE)
-            arr = cv.CreateMat(len(seq), 3, cv.CV_32FC1)
-            for i,e in enumerate(seq):
-                arr[i,0] = 1
-                arr[i,1] = e[0]
-                arr[i,2] = e[1]
-            cc[r] = arr
-        def myL1(A, B, D):
-            return abs(A[0]-B[0]) + abs(A[1]-B[1])
-        def myL2(A, B, D):
-            return math.sqrt((A[0]-B[0])**2 + (A[1]-B[1])**2)
-        def myC(A, B, D):
-            return max(abs(A[0]-B[0]), abs(A[1]-B[1]))
-        contours = set(cc.values())
-        for c0 in contours:
-            for c1 in contours:
-                self.assert_(abs(cv.CalcEMD2(c0, c1, cv.CV_DIST_L1) - cv.CalcEMD2(c0, c1, cv.CV_DIST_USER, myL1)) < 1e-3)
-                self.assert_(abs(cv.CalcEMD2(c0, c1, cv.CV_DIST_L2) - cv.CalcEMD2(c0, c1, cv.CV_DIST_USER, myL2)) < 1e-3)
-                self.assert_(abs(cv.CalcEMD2(c0, c1, cv.CV_DIST_C) - cv.CalcEMD2(c0, c1, cv.CV_DIST_USER, myC)) < 1e-3)
-
-    def test_FindContours(self):
-        random.seed(0)
-
-        storage = cv.CreateMemStorage()
-        for trial in range(10):
-            scratch = cv.CreateImage((800,800), 8, 1)
-            cv.SetZero(scratch)
-            def plot(center, radius, mode):
-                cv.Circle(scratch, center, radius, mode, -1)
-                if radius < 20:
-                    return 0
-                else:
-                    newmode = 255 - mode
-                    subs = random.choice([1,2,3])
-                    if subs == 1:
-                        return [ plot(center, radius - 5, newmode) ]
-                    else:
-                        newradius = int({ 2: radius / 2, 3: radius / 2.3 }[subs] - 5)
-                        r = radius / 2
-                        ret = []
-                        for i in range(subs):
-                            th = i * (2 * math.pi) / subs
-                            ret.append(plot((int(center[0] + r * math.cos(th)), int(center[1] + r * math.sin(th))), newradius, newmode))
-                        return sorted(ret)
-
-            actual = plot((400,400), 390, 255 )
-
-            seq = cv.FindContours(scratch, storage, cv.CV_RETR_TREE, cv.CV_CHAIN_APPROX_SIMPLE)
-
-            def traverse(s):
-                if s == None:
-                    return 0
-                else:
-                    self.assert_(abs(cv.ContourArea(s)) > 0.0)
-                    ((x,y),(w,h),th) = cv.MinAreaRect2(s, cv.CreateMemStorage())
-                    self.assert_(((w / h) - 1.0) < 0.01)
-                    self.assert_(abs(cv.ContourArea(s)) > 0.0)
-                    r = []
-                    while s:
-                        r.append(traverse(s.v_next()))
-                        s = s.h_next()
-                    return sorted(r)
-            self.assert_(traverse(seq.v_next()) == actual)
-
-    def test_ConvexHull2(self):
-        # Draw a series of N-pointed stars, find contours, assert the contour is not convex,
-        # assert the hull has N segments, assert that there are N convexity defects.
-
-        def polar2xy(th, r):
-            return (int(400 + r * math.cos(th)), int(400 + r * math.sin(th)))
-        storage = cv.CreateMemStorage(0)
-        for way in ['CvSeq', 'CvMat', 'list']:
-            for points in range(3,20):
-                scratch = cv.CreateImage((800,800), 8, 1)
-                cv.SetZero(scratch)
-                sides = 2 * points
-                cv.FillPoly(scratch, [ [ polar2xy(i * 2 * math.pi / sides, [100,350][i&1]) for i in range(sides) ] ], 255)
-
-                seq = cv.FindContours(scratch, storage, cv.CV_RETR_TREE, cv.CV_CHAIN_APPROX_SIMPLE)
-
-                if way == 'CvSeq':
-                    # pts is a CvSeq
-                    pts = seq
-                elif way == 'CvMat':
-                    # pts is a CvMat
-                    arr = cv.CreateMat(len(seq), 1, cv.CV_32SC2)
-                    for i,e in enumerate(seq):
-                        arr[i,0] = e
-                    pts = arr
-                elif way == 'list':
-                    # pts is a list of 2-tuples
-                    pts = list(seq)
-                else:
-                    assert False
-
-                self.assert_(cv.CheckContourConvexity(pts) == 0)
-                hull = cv.ConvexHull2(pts, storage, return_points = 1)
-                self.assert_(cv.CheckContourConvexity(hull) == 1)
-                self.assert_(len(hull) == points)
-
-                if way in [ 'CvSeq', 'CvMat' ]:
-                    defects = cv.ConvexityDefects(pts, cv.ConvexHull2(pts, storage), storage)
-                    self.assert_(len([depth for (_,_,_,depth) in defects if (depth > 5)]) == points)
-
     def xxxtest_corners(self):
         a = cv.LoadImage("foo-mono.png", 0)
         cv.AdaptiveThreshold(a, a, 255, param1=5)
@@ -1001,16 +1164,7 @@ class TestDirected(unittest.TestCase):
                             (0,255,0))
         self.snap(scribble)
 
-    def test_CalcOpticalFlowBM(self):
-        a = self.get_sample("samples/c/lena.jpg", 0)
-        b = self.get_sample("samples/c/lena.jpg", 0)
-        (w,h) = cv.GetSize(a)
-        vel_size = (w - 8, h - 8)
-        velx = cv.CreateImage(vel_size, cv.IPL_DEPTH_32F, 1)
-        vely = cv.CreateImage(vel_size, cv.IPL_DEPTH_32F, 1)
-        cv.CalcOpticalFlowBM(a, b, (8,8), (1,1), (8,8), 0, velx, vely)
-
-    def new_test_calibration(self):
+    def test_calibration(self):
 
         def get_corners(mono, refine = False):
             (ok, corners) = cv.FindChessboardCorners(mono, (num_x_ints, num_y_ints), cv.CV_CALIB_CB_ADAPTIVE_THRESH | cv.CV_CALIB_CB_NORMALIZE_IMAGE)
@@ -1065,7 +1219,7 @@ class TestDirected(unittest.TestCase):
 
         # Monocular test
 
-        if False:
+        if True:
             corners = [get_corners(i) for i in leftimages]
             goodcorners = [co for (im, (ok, co)) in zip(leftimages, corners) if ok]
 
@@ -1087,12 +1241,12 @@ class TestDirected(unittest.TestCase):
                        cv.CreateMat(len(goodcorners), 3, cv.CV_32FC1),
                        cv.CreateMat(len(goodcorners), 3, cv.CV_32FC1),
                        flags = 0) # cv.CV_CALIB_ZERO_TANGENT_DIST)
-            print "D =", list(cvmat_iterator(distortion))
-            print "K =", list(cvmat_iterator(intrinsics))
+            # print "D =", list(cvmat_iterator(distortion))
+            # print "K =", list(cvmat_iterator(intrinsics))
 
             newK = cv.CreateMat(3, 3, cv.CV_64FC1)
             cv.GetOptimalNewCameraMatrix(intrinsics, distortion, size, 1.0, newK)
-            print "newK =", list(cvmat_iterator(newK))
+            # print "newK =", list(cvmat_iterator(newK))
 
             mapx = cv.CreateImage((640, 480), cv.IPL_DEPTH_32F, 1)
             mapy = cv.CreateImage((640, 480), cv.IPL_DEPTH_32F, 1)
@@ -1101,8 +1255,8 @@ class TestDirected(unittest.TestCase):
                 for img in leftimages[:1]:
                     r = cv.CloneMat(img)
                     cv.Remap(img, r, mapx, mapy)
-                    cv.ShowImage("snap", r)
-                    cv.WaitKey()
+                    # cv.ShowImage("snap", r)
+                    # cv.WaitKey()
 
         rightimages = [image_from_archive(tf, "wide/right%04d.pgm" % i) for i in range(3, 15)]
 
@@ -1176,76 +1330,9 @@ class TestDirected(unittest.TestCase):
                     r_ = cv.CloneMat(r)
                     cv.Remap(l, l_, lmapx, lmapy)
                     cv.Remap(r, r_, rmapx, rmapy)
-                    cv.ShowImage("snap", l_)
-                    cv.WaitKey()
+                    # cv.ShowImage("snap", l_)
+                    # cv.WaitKey()
 
-    def test_tostring(self):
-
-        for w in [ 1, 4, 64, 512, 640]:
-            for h in [ 1, 4, 64, 480, 512]:
-                for c in [1, 2, 3, 4]:
-                    for d in self.depths:
-                        a = cv.CreateImage((w,h), d, c);
-                        self.assert_(len(a.tostring()) == w * h * c * self.depthsize(d))
-
-        for w in [ 32, 96, 480 ]:
-            for h in [ 32, 96, 480 ]:
-                depth_size = {
-                    cv.IPL_DEPTH_8U : 1,
-                    cv.IPL_DEPTH_8S : 1,
-                    cv.IPL_DEPTH_16U : 2,
-                    cv.IPL_DEPTH_16S : 2,
-                    cv.IPL_DEPTH_32S : 4,
-                    cv.IPL_DEPTH_32F : 4,
-                    cv.IPL_DEPTH_64F : 8
-                }
-                for f in  self.depths:
-                    for channels in (1,2,3,4):
-                        img = cv.CreateImage((w, h), f, channels)
-                        esize = (w * h * channels * depth_size[f])
-                        self.assert_(len(img.tostring()) == esize)
-                        cv.SetData(img, " " * esize, w * channels * depth_size[f])
-                        self.assert_(len(img.tostring()) == esize)
-
-                mattype_size = {
-                    cv.CV_8UC1 : 1,
-                    cv.CV_8UC2 : 1,
-                    cv.CV_8UC3 : 1,
-                    cv.CV_8UC4 : 1,
-                    cv.CV_8SC1 : 1,
-                    cv.CV_8SC2 : 1,
-                    cv.CV_8SC3 : 1,
-                    cv.CV_8SC4 : 1,
-                    cv.CV_16UC1 : 2,
-                    cv.CV_16UC2 : 2,
-                    cv.CV_16UC3 : 2,
-                    cv.CV_16UC4 : 2,
-                    cv.CV_16SC1 : 2,
-                    cv.CV_16SC2 : 2,
-                    cv.CV_16SC3 : 2,
-                    cv.CV_16SC4 : 2,
-                    cv.CV_32SC1 : 4,
-                    cv.CV_32SC2 : 4,
-                    cv.CV_32SC3 : 4,
-                    cv.CV_32SC4 : 4,
-                    cv.CV_32FC1 : 4,
-                    cv.CV_32FC2 : 4,
-                    cv.CV_32FC3 : 4,
-                    cv.CV_32FC4 : 4,
-                    cv.CV_64FC1 : 8,
-                    cv.CV_64FC2 : 8,
-                    cv.CV_64FC3 : 8,
-                    cv.CV_64FC4 : 8
-                }
-
-                for t in self.mat_types:
-                    for im in [cv.CreateMat(h, w, t), cv.CreateMatND([h, w], t)]:
-                        elemsize = cv.CV_MAT_CN(cv.GetElemType(im)) * mattype_size[cv.GetElemType(im)]
-                        cv.SetData(im, " " * (w * h * elemsize), (w * elemsize))
-                        esize = (w * h * elemsize)
-                        self.assert_(len(im.tostring()) == esize)
-                        cv.SetData(im, " " * esize, w * elemsize)
-                        self.assert_(len(im.tostring()) == esize)
 
     def xxx_test_Disparity(self):
         print
@@ -1302,58 +1389,6 @@ class TestDirected(unittest.TestCase):
         cv.WaitKey()
         cv.DestroyAllWindows()
 
-    def yield_line_image(self):
-        src = self.get_sample("doc/pics/building.jpg", 0)
-        dst = cv.CreateImage(cv.GetSize(src), 8, 1)
-        cv.Canny(src, dst, 50, 200, 3)
-        return dst
-
-    def test_HoughLines2_STANDARD(self):
-        li = cv.HoughLines2(self.yield_line_image(),
-                                                cv.CreateMemStorage(),
-                                                cv.CV_HOUGH_STANDARD,
-                                                1,
-                                                math.pi/180,
-                                                100,
-                                                0,
-                                                0)
-        self.assert_(len(li) > 0)
-        self.assert_(li[0] != None)
-
-    def test_HoughLines2_PROBABILISTIC(self):
-        li = cv.HoughLines2(self.yield_line_image(),
-                                                cv.CreateMemStorage(),
-                                                cv.CV_HOUGH_PROBABILISTIC,
-                                                1,
-                                                math.pi/180,
-                                                50,
-                                                50,
-                                                10)
-        self.assert_(len(li) > 0)
-        self.assert_(li[0] != None)
-
-    def test_Save(self):
-        for o in [ cv.CreateImage((128,128), cv.IPL_DEPTH_8U, 1), cv.CreateMat(16, 16, cv.CV_32FC1) ]:
-            cv.Save("test.save", o)
-            loaded = cv.Load("test.save", cv.CreateMemStorage())
-            self.assert_(type(o) == type(loaded))
-
-    def test_ExtractSURF(self):
-        img = self.get_sample("samples/c/lena.jpg", 0)
-        w,h = cv.GetSize(img)
-        for hessthresh in [ 300,400,500]:
-            for dsize in [0,1]:
-                for layers in [1,3,10]:
-                    kp,desc = cv.ExtractSURF(img, None, cv.CreateMemStorage(), (dsize, hessthresh, 3, layers))
-                    self.assert_(len(kp) == len(desc))
-                    for d in desc:
-                        self.assert_(len(d) == {0:64, 1:128}[dsize])
-                    for pt,laplacian,size,dir,hessian in kp:
-                        self.assert_((0 <= pt[0]) and (pt[0] <= w))
-                        self.assert_((0 <= pt[1]) and (pt[1] <= h))
-                        self.assert_(laplacian in [-1, 0, 1])
-                        self.assert_((0 <= dir) and (dir <= 360))
-                        self.assert_(hessian >= hessthresh)
 
     def local_test_Haar(self):
         import os
@@ -1365,66 +1400,6 @@ class TestDirected(unittest.TestCase):
         for (x,y,w,h),n in faces:
             cv.Rectangle(img, (x,y), (x+w,y+h), 255)
         #self.snap(img)
-
-    def test_FindChessboardCorners(self):
-        im = cv.CreateImage((512,512), cv.IPL_DEPTH_8U, 1)
-        cv.Set(im, 128)
-
-        # Empty image run
-        status,corners = cv.FindChessboardCorners( im, (7,7) )
-
-        # Perfect checkerboard
-        def xf(i,j, o):
-            return ((96 + o) + 40 * i, (96 + o) + 40 * j)
-        for i in range(8):
-            for j in range(8):
-                color = ((i ^ j) & 1) * 255
-                cv.Rectangle(im, xf(i,j, 0), xf(i,j, 39), color, cv.CV_FILLED)
-        status,corners = cv.FindChessboardCorners( im, (7,7) )
-        self.assert_(status)
-        self.assert_(len(corners) == (7 * 7))
-
-        # Exercise corner display
-        im3 = cv.CreateImage(cv.GetSize(im), cv.IPL_DEPTH_8U, 3)
-        cv.Merge(im, im, im, None, im3)
-        cv.DrawChessboardCorners(im3, (7,7), corners, status)
-
-        if 0:
-            self.snap(im3)
-
-        # Run it with too many corners
-        cv.Set(im, 128)
-        for i in range(40):
-            for j in range(40):
-                color = ((i ^ j) & 1) * 255
-                x = 30 + 6 * i
-                y = 30 + 4 * j
-                cv.Rectangle(im, (x, y), (x+4, y+4), color, cv.CV_FILLED)
-        status,corners = cv.FindChessboardCorners( im, (7,7) )
-
-        # XXX - this is very slow
-        if 0:
-            rng = cv.RNG(0)
-            cv.RandArr(rng, im, cv.CV_RAND_UNI, 0, 255.0)
-            self.snap(im)
-            status,corners = cv.FindChessboardCorners( im, (7,7) )
-
-    def test_DrawChessboardCorners(self):
-        im = cv.CreateImage((512,512), cv.IPL_DEPTH_8U, 3)
-        cv.SetZero(im)
-        cv.DrawChessboardCorners(im, (5, 5), [ (100,100) for i in range(5 * 5) ], 1)
-        self.assert_(cv.Sum(im)[0] > 0)
-
-        self.assertRaises(TypeError, lambda: cv.DrawChessboardCorners(im, (4, 5), [ (100,100) for i in range(5 * 5) ], 1))
-
-    def test_FillPoly(self):
-        scribble = cv.CreateImage((640,480), cv.IPL_DEPTH_8U, 1)
-        random.seed(0)
-        for i in range(50):
-            cv.SetZero(scribble)
-            self.assert_(cv.CountNonZero(scribble) == 0)
-            cv.FillPoly(scribble, [ [ (random.randrange(640), random.randrange(480)) for i in range(100) ] ], (255,))
-            self.assert_(cv.CountNonZero(scribble) != 0)
 
     def test_create(self):
         """ CvCreateImage, CvCreateMat and the header-only form """
@@ -1446,33 +1421,8 @@ class TestDirected(unittest.TestCase):
             self.assertSame(im, m)
             self.assertSame(im2, m2)
 
-    def test_reshape(self):
-        """ Exercise Reshape """
-        # 97 rows
-        # 12 cols
-        rows = 97
-        cols = 12
-        im = cv.CreateMat( rows, cols, cv.CV_32FC1 )
-        elems = rows * cols * 1
-        def crd(im):
-            return cv.GetSize(im) + (cv.CV_MAT_CN(cv.GetElemType(im)),)
-
-        for c in (1, 2, 3, 4):
-            nc,nr,nd = crd(cv.Reshape(im, c))
-            self.assert_(nd == c)
-            self.assert_((nc * nr * nd) == elems)
-
-        nc,nr,nd = crd(cv.Reshape(im, 0, 97*2))
-        self.assert_(nr == 97*2)
-        self.assert_((nc * nr * nd) == elems)
-
-        nc,nr,nd = crd(cv.Reshape(im, 3, 97*2))
-        self.assert_(nr == 97*2)
-        self.assert_(nd == 3)
-        self.assert_((nc * nr * nd) == elems)
 
     def test_casts(self):
-        """ Exercise Reshape """
         im = cv.GetImage(self.get_sample("samples/c/lena.jpg", 0))
         data = im.tostring()
         cv.SetData(im, data, cv.GetSize(im)[0])
@@ -1486,7 +1436,7 @@ class TestDirected(unittest.TestCase):
         self.assertSame(m, cv.GetImage(m))
         im2 = cv.GetImage(m)
         self.assertSame(im, im2)
-        
+
         self.assertEqual(sys.getrefcount(data), start_count + 2)
         del im2
         self.assertEqual(sys.getrefcount(data), start_count + 1)
@@ -1534,7 +1484,7 @@ class TestDirected(unittest.TestCase):
         for x_order in range(4):
           for y_order in range(4 - x_order):
             orders.append((x_order, y_order))
-        
+
         # Just a smoke test for these three functions
         [ cv.GetSpatialMoment(mo, xo, yo) for (xo,yo) in orders ]
         [ cv.GetCentralMoment(mo, xo, yo) for (xo,yo) in orders ]
@@ -1597,6 +1547,106 @@ class TestDirected(unittest.TestCase):
         self.assertEqual(doreduce((1,3), lambda dst: cv.Reduce(srcmat, dst, op = cv.CV_REDUCE_MAX)), [3, 4, 5])
         self.assertEqual(doreduce((1,3), lambda dst: cv.Reduce(srcmat, dst, op = cv.CV_REDUCE_MIN)), [0, 1, 2])
 
+    def test_operations(self):
+        class Im:
+
+            def __init__(self, data = None):
+                self.m = cv.CreateMat(1, 32, cv.CV_32FC1)
+                if data:
+                    cv.SetData(self.m, array.array('f', data), 128)
+
+            def __add__(self, other):
+                r = Im()
+                if isinstance(other, Im):
+                    cv.Add(self.m, other.m, r.m)
+                else:
+                    cv.AddS(self.m, (other,), r.m)
+                return r
+
+            def __sub__(self, other):
+                r = Im()
+                if isinstance(other, Im):
+                    cv.Sub(self.m, other.m, r.m)
+                else:
+                    cv.SubS(self.m, (other,), r.m)
+                return r
+
+            def __rsub__(self, other):
+                r = Im()
+                cv.SubRS(self.m, (other,), r.m)
+                return r
+
+            def __mul__(self, other):
+                r = Im()
+                if isinstance(other, Im):
+                    cv.Mul(self.m, other.m, r.m)
+                else:
+                    cv.ConvertScale(self.m, r.m, other)
+                return r
+
+            def __rmul__(self, other):
+                r = Im()
+                cv.ConvertScale(self.m, r.m, other)
+                return r
+
+            def __div__(self, other):
+                r = Im()
+                if isinstance(other, Im):
+                    cv.Div(self.m, other.m, r.m)
+                else:
+                    cv.ConvertScale(self.m, r.m, 1.0 / other)
+                return r
+
+            def __pow__(self, other):
+                r = Im()
+                cv.Pow(self.m, r.m, other)
+                return r
+
+            def __abs__(self):
+                r = Im()
+                cv.Abs(self.m, r.m)
+                return r
+
+            def __getitem__(self, i):
+                return self.m[0,i]
+
+        def verify(op):
+            r = op(a, b)
+            for i in range(32):
+                expected = op(a[i], b[i])
+                self.assertAlmostEqual(expected, r[i], 4)
+
+        a = Im([random.randrange(1, 256) for i in range(32)])
+        b = Im([random.randrange(1, 256) for i in range(32)])
+
+        # simple operations first
+        verify(lambda x, y: x + y)
+        verify(lambda x, y: x + 3)
+        verify(lambda x, y: x + 0)
+        verify(lambda x, y: x + -8)
+
+        verify(lambda x, y: x - y)
+        verify(lambda x, y: x - 1)
+        verify(lambda x, y: 1 - x)
+
+        verify(lambda x, y: abs(x))
+
+        verify(lambda x, y: x * y)
+        verify(lambda x, y: x * 3)
+
+        verify(lambda x, y: x / y)
+        verify(lambda x, y: x / 2)
+
+        for p in [-2, -1, -0.5, -0.1, 0, 0.1, 0.5, 1, 2 ]:
+            verify(lambda x, y: (x ** p) + (y ** p))
+
+        # Combinations...
+        verify(lambda x, y: x - 4 * abs(y))
+        verify(lambda x, y: abs(y) / x)
+
+        # a polynomial
+        verify(lambda x, y: 2 * x + 3 * (y ** 0.5))
+
     def temp_test(self):
         cv.temp_test()
 
@@ -1619,10 +1669,14 @@ class TestDirected(unittest.TestCase):
         cv.CalcSubdivVoronoi2D(subdiv)
         print
         for e in subdiv.edges:
-            print e, 
+            print e,
             print "  ", cv.Subdiv2DEdgeOrg(e)
             print "  ", cv.Subdiv2DEdgeOrg(cv.Subdiv2DRotateEdge(e, 1)), cv.Subdiv2DEdgeDst(cv.Subdiv2DRotateEdge(e, 1))
         print "nearest", cv.FindNearestPoint2D(subdiv, (1.0, 1.0))
+
+class NewTests(OpenCVTests):
+
+    pass
 
 if __name__ == '__main__':
     random.seed(0)
@@ -1636,12 +1690,14 @@ if __name__ == '__main__':
             shuffle = 1
 
     if len(args) == 0:
-        args = unittest.TestLoader().getTestCaseNames(TestDirected)
+        cases = [PreliminaryTests, FunctionTests, AreaTests]
+        # cases = [NewTests]
+        args = [(tc, t) for tc in cases for t in unittest.TestLoader().getTestCaseNames(tc) ]
 
     suite = unittest.TestSuite()
     for l in range(loops):
         if shuffle:
             random.shuffle(args)
-        for t in args:
-            suite.addTest(TestDirected(t))
+        for tc,t in args:
+            suite.addTest(tc(t))
     unittest.TextTestRunner(verbosity=2).run(suite)
