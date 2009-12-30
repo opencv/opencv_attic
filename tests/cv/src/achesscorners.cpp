@@ -267,7 +267,7 @@ bool validateData(const ChessBoardGenerator& cbg, const Size& imgSz,
 
 bool CV_ChessboardDetectorTest::checkByGenerator()
 {   
-    //theRNG() = 0x3932333740892905;
+    //theRNG() = 0x58e6e895b9913160;
 
     Mat bg(Size(800, 600), CV_8UC3, Scalar::all(255));  
     randu(bg, Scalar::all(0), Scalar::all(255)); 
