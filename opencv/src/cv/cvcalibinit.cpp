@@ -62,6 +62,9 @@
 #include "_cv.h"
 #include <stdarg.h>
 
+#define DISABLE_TRIM_COL_ROW
+
+//#pragma comment(lib, "highgui200d.lib")
 //#define DEBUG_CHESSBOARD
 #ifdef DEBUG_CHESSBOARD
 static int PRINTF( const char* fmt, ... )
@@ -166,9 +169,11 @@ static int icvOrderFoundConnectedQuads( int quad_count, CvCBQuad **quads,
 
 static void icvOrderQuad(CvCBQuad *quad, CvCBCorner *corner, int common);
 
+#ifdef DISABLE_TRIM_COL_ROW
 static int icvTrimCol(CvCBQuad **quads, int count, int col, int dir);
 
 static int icvTrimRow(CvCBQuad **quads, int count, int row, int dir);
+#endif
 
 static int icvAddOuterQuad(CvCBQuad *quad, CvCBQuad **quads, int quad_count,
                     CvCBQuad **all_quads, int all_count, CvCBCorner **corners);
@@ -706,7 +711,7 @@ icvOrderFoundConnectedQuads( int quad_count, CvCBQuad **quads,
         PRINTF("Too few inner quad rows/cols\n");
         return 0;   // no, return
     }
-
+#ifdef DISABLE_TRIM_COL_ROW
     // too many columns, not very common
     if (dcol == w+1)    // too many, trim
     {
@@ -738,7 +743,7 @@ icvOrderFoundConnectedQuads( int quad_count, CvCBQuad **quads,
             quad_count = icvTrimRow(quads,quad_count,row_max,+1);
         }
     }
-
+#endif
 
     // check edges of inner quads
     // if there is an outer quad missing, fill it in
@@ -903,7 +908,7 @@ icvAddOuterQuad( CvCBQuad *quad, CvCBQuad **quads, int quad_count,
 
 
 // trimming routines
-
+#ifdef DISABLE_TRIM_COL_ROW
 static int
 icvTrimCol(CvCBQuad **quads, int count, int col, int dir)
 {
@@ -993,7 +998,7 @@ icvTrimRow(CvCBQuad **quads, int count, int row, int dir)
     }
     return rcount;
 }
-
+#endif
 
 //
 // remove quad from quad group
