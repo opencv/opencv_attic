@@ -41,6 +41,7 @@
 //M*/
 
 #include "_cvaux.h"
+#include <iterator>
 
 /****************************************************************************************\
       The code below is implementation of HOG (Histogram-of-Oriented Gradients)
