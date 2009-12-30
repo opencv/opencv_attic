@@ -62,7 +62,7 @@
 #include "_cv.h"
 #include <stdarg.h>
 
-#define DISABLE_TRIM_COL_ROW
+//#define DISABLE_TRIM_COL_ROW
 
 //#pragma comment(lib, "highgui200d.lib")
 //#define DEBUG_CHESSBOARD
