@@ -215,7 +215,6 @@ void CV_ChessboardDetectorTest::run( int /*start_from */)
     ts.set_failed_test_info( CvTS::OK);
 }
 
-
 double calcErrorMinError(const Size& cornSz, const vector<Point2f>& corners_found, const vector<Point2f>& corners_generated)
 {
     Mat m1(cornSz, CV_32FC2, (Point2f*)&corners_generated[0]);    
@@ -230,63 +229,98 @@ double calcErrorMinError(const Size& cornSz, const vector<Point2f>& corners_foun
     return min(min1, min2);
 }
 
+bool validateData(const ChessBoardGenerator& cbg, const Size& imgSz, 
+                  const vector<Point2f>& corners_generated)
+{
+    Size cornersSize = cbg.cornersSize();
+    Mat_<Point2f> mat(cornersSize.height, cornersSize.width, (Point2f*)&corners_generated[0]);
+
+    double minNeibDist = std::numeric_limits<double>::max();
+    double tmp = 0;
+    for(int i = 1; i < mat.rows - 2; ++i)
+        for(int j = 1; j < mat.cols - 2; ++j)
+        {
+            const Point2f& cur = mat(i, j);
+            
+            tmp = norm( cur - mat(i + 1, j + 1) );
+            if (tmp < minNeibDist)
+                tmp = minNeibDist;
+
+            tmp = norm( cur - mat(i - 1, j + 1 ) );
+            if (tmp < minNeibDist)
+                tmp = minNeibDist;
+
+            tmp = norm( cur - mat(i + 1, j - 1) );
+            if (tmp < minNeibDist)
+                tmp = minNeibDist;
+
+            tmp = norm( cur - mat(i - 1, j - 1) );
+            if (tmp < minNeibDist)
+                tmp = minNeibDist;
+        }
+
+    const double threshold = 0.25;
+    double cbsize = (max(cornersSize.width, cornersSize.height) + 1) * minNeibDist;
+    int imgsize =  min(imgSz.height, imgSz.width);    
+    return imgsize * threshold < cbsize;
+}
+
 bool CV_ChessboardDetectorTest::checkByGenerator()
 {   
-    try
-    {        
-        Mat bg(Size(800, 600), CV_8UC3, Scalar::all(255));  
-        randu(bg, Scalar::all(0), Scalar::all(255)); 
-        GaussianBlur(bg, bg, Size(7,7), 3.0); 
-                
-        Mat_<float> camMat(3, 3);
-        camMat << 300.f, 0.f, bg.cols/2.f, 0, 300.f, bg.rows/2.f, 0.f, 0.f, 1.f;
-        
-        Mat_<float> distCoeffs(1, 5);
-        distCoeffs << 1.2f, 0.2f, 0.f, 0.f, 0.f;
+    //theRNG() = 0x3932333740892905;
 
-        const Size sizes[] = { Size(6, 6), Size(8, 6), Size(11, 12),  Size(5, 4) };
-        const size_t sizes_num = sizeof(sizes)/sizeof(sizes[0]);                
-        const size_t test_num = 16;
-
-        int progress = 0;
-        for(size_t i = 0; i < test_num; ++i)
-        {          
-            progress = update_progress( progress, i, test_num, 0 );
-            ChessBoardGenerator cbg(sizes[i % sizes_num]);
-
-            vector<Point2f> corners_generated;
-            Mat cb = cbg(bg, camMat, distCoeffs, corners_generated);
-
-            /*cb = cb * 0.8 + Scalar::all(30);            
-            GaussianBlur(cb, cb, Size(3, 3), 0.8);     */
-            //cv::addWeighted(cb, 0.8, bg, 0.2, 20, cb); 
+    Mat bg(Size(800, 600), CV_8UC3, Scalar::all(255));  
+    randu(bg, Scalar::all(0), Scalar::all(255)); 
+    GaussianBlur(bg, bg, Size(7,7), 3.0); 
             
-            //printf("%d\n", i);
-            /*if (i < 10)
-                continue;
+    Mat_<float> camMat(3, 3);
+    camMat << 300.f, 0.f, bg.cols/2.f, 0, 300.f, bg.rows/2.f, 0.f, 0.f, 1.f;
+    
+    Mat_<float> distCoeffs(1, 5);
+    distCoeffs << 1.2f, 0.2f, 0.f, 0.f, 0.f;
 
-            cv::namedWindow("CB"); cv::imshow("CB", cb); cv::waitKey();*/
-                                   
-            vector<Point2f> corners_found;
-            bool found = findChessboardCorners(cb, cbg.cornersSize(), corners_found);
-            if (!found)
-            {
-                //cv::imwrite("e:/cb1.png", cb);
-                throw std::exception();            
-                
-            }
+    const Size sizes[] = { Size(6, 6), Size(8, 6), Size(11, 12),  Size(5, 4) };
+    const size_t sizes_num = sizeof(sizes)/sizeof(sizes[0]);                
+    const size_t test_num = 16;
 
-            double err = calcErrorMinError(cbg.cornersSize(), corners_found, corners_generated);            
-            if( err > rough_success_error_level )
-                throw std::exception();            
-        }        
-    }
-    catch (const std::exception&)
-    {
-        ts->printf( CvTS::LOG, "bad accuracy of corner guesses" );
-        ts->set_failed_test_info( CvTS::FAIL_BAD_ACCURACY );
-        return false;
-    }
+    int progress = 0;
+    for(size_t i = 0; i < test_num; ++i)
+    {          
+        progress = update_progress( progress, i, test_num, 0 );
+        ChessBoardGenerator cbg(sizes[i % sizes_num]);
+
+        vector<Point2f> corners_generated;
+
+        Mat cb = cbg(bg, camMat, distCoeffs, corners_generated);
+
+        if(!validateData(cbg, cb.size(), corners_generated))
+        {
+            ts->printf( CvTS::LOG, "Chess board skipped - too small" );
+            continue;               
+        }
+
+        /*cb = cb * 0.8 + Scalar::all(30);            
+        GaussianBlur(cb, cb, Size(3, 3), 0.8);     */
+        //cv::addWeighted(cb, 0.8, bg, 0.2, 20, cb); 
+        //cv::namedWindow("CB"); cv::imshow("CB", cb); cv::waitKey();
+                               
+        vector<Point2f> corners_found;
+        bool found = findChessboardCorners(cb, cbg.cornersSize(), corners_found);
+        if (!found)        
+        {            
+            ts->printf( CvTS::LOG, "Chess board corners not found" );
+            ts->set_failed_test_info( CvTS::FAIL_BAD_ACCURACY );
+            return false;          
+        }
+
+        double err = calcErrorMinError(cbg.cornersSize(), corners_found, corners_generated);            
+        if( err > rough_success_error_level )
+        {
+            ts->printf( CvTS::LOG, "bad accuracy of corner guesses" );
+            ts->set_failed_test_info( CvTS::FAIL_BAD_ACCURACY );
+            return false;
+        }
+    }        
     return true;
 }
 
