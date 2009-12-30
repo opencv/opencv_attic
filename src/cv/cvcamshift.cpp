@@ -67,29 +67,24 @@ cvMeanShift( const void* imgProb, CvRect windowIn,
     CvMat  cur_win;
     CvRect cur_rect = windowIn;
 
-    CV_FUNCNAME( "cvMeanShift" );
-
     if( comp )
         comp->rect = windowIn;
 
     moments.m00 = moments.m10 = moments.m01 = 0;
 
-    __BEGIN__;
-
-    CV_CALL( mat = cvGetMat( mat, &stub ));
+    mat = cvGetMat( mat, &stub );
 
     if( CV_MAT_CN( mat->type ) > 1 )
-        CV_ERROR( CV_BadNumChannels, cvUnsupportedFormat );
+        CV_Error( CV_BadNumChannels, cvUnsupportedFormat );
 
     if( windowIn.height <= 0 || windowIn.width <= 0 )
-        CV_ERROR( CV_StsBadArg, "Input window has non-positive sizes" );
+        CV_Error( CV_StsBadArg, "Input window has non-positive sizes" );
 
     if( windowIn.x < 0 || windowIn.x + windowIn.width > mat->cols ||
         windowIn.y < 0 || windowIn.y + windowIn.height > mat->rows )
-        CV_ERROR( CV_StsBadArg, "Initial window is not inside the image ROI" );
+        CV_Error( CV_StsBadArg, "Initial window is not inside the image ROI" );
 
-    CV_CALL( criteria = cvCheckTermCriteria( criteria, 1., 100 ));
-
+    criteria = cvCheckTermCriteria( criteria, 1., 100 );
     eps = cvRound( criteria.epsilon * criteria.epsilon );
 
     for( i = 0; i < criteria.max_iter; i++ )
@@ -97,8 +92,8 @@ cvMeanShift( const void* imgProb, CvRect windowIn,
         int dx, dy, nx, ny;
         double inv_m00;
 
-        CV_CALL( cvGetSubRect( mat, &cur_win, cur_rect )); 
-        CV_CALL( cvMoments( &cur_win, &moments ));
+        cvGetSubRect( mat, &cur_win, cur_rect ); 
+        cvMoments( &cur_win, &moments );
 
         /* Calculating center of mass */
         if( fabs(moments.m00) < DBL_EPSILON )
@@ -130,8 +125,6 @@ cvMeanShift( const void* imgProb, CvRect windowIn,
         if( dx*dx + dy*dy < eps )
             break;
     }
-
-    __END__;
 
     if( comp )
     {
@@ -179,15 +172,11 @@ cvCamShift( const void* imgProb, CvRect windowIn,
     CvConnectedComp comp;
     CvMat  cur_win, stub, *mat = (CvMat*)imgProb;
 
-    CV_FUNCNAME( "cvCamShift" );
-
     comp.rect = windowIn;
 
-    __BEGIN__;
+    mat = cvGetMat( mat, &stub );
 
-    CV_CALL( mat = cvGetMat( mat, &stub ));
-
-    CV_CALL( itersUsed = cvMeanShift( mat, windowIn, criteria, &comp ));
+    itersUsed = cvMeanShift( mat, windowIn, criteria, &comp );
     windowIn = comp.rect;
 
     windowIn.x -= TOLERANCE;
@@ -206,10 +195,10 @@ cvCamShift( const void* imgProb, CvRect windowIn,
     if( windowIn.y + windowIn.height > mat->height )
         windowIn.height = mat->height - windowIn.y;
 
-    CV_CALL( cvGetSubRect( mat, &cur_win, windowIn ));
+    cvGetSubRect( mat, &cur_win, windowIn );
 
     /* Calculating moments in new center mass */
-    CV_CALL( cvMoments( &cur_win, &moments ));
+    cvMoments( &cur_win, &moments );
 
     m00 = moments.m00;
     m10 = moments.m10;
@@ -219,7 +208,7 @@ cvCamShift( const void* imgProb, CvRect windowIn,
     mu02 = moments.mu02;
 
     if( fabs(m00) < DBL_EPSILON )
-        EXIT;
+        return -1;
 
     inv_m00 = 1. / m00;
     xc = cvRound( m10 * inv_m00 + windowIn.x );
@@ -279,8 +268,6 @@ cvCamShift( const void* imgProb, CvRect windowIn,
         comp.rect.height = MIN( mat->height - comp.rect.y, comp.rect.height );
         comp.area = (float) m00;
     }
-
-    __END__;
 
     if( _comp )
         *_comp = comp;

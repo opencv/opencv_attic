@@ -82,11 +82,7 @@ _CvTrianAttr;
 
 
 /* curvature: 0 - 1-curvature, 1 - k-cosine curvature. */
-CvStatus  icvApproximateChainTC89( CvChain*      chain,
-                                   int header_size,
-                                   CvMemStorage* storage,
-                                   CvSeq**   contour,
-                                   int method );
+CvSeq* icvApproximateChainTC89( CvChain* chain, int header_size, CvMemStorage* storage, int method );
 
 #endif /*_IPCVGEOM_H_*/
 

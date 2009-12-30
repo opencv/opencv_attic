@@ -41,20 +41,17 @@
 
 #include "_cv.h"
 
-CV_IMPL void
-cvCanny( const void* srcarr, void* dstarr,
-         double low_thresh, double high_thresh, int aperture_size )
+CV_IMPL void cvCanny( const void* srcarr, void* dstarr,
+                      double low_thresh, double high_thresh,
+                      int aperture_size )
 {
-    CvMat *dx = 0, *dy = 0;
-    void *buffer = 0;
-    uchar **stack_top, **stack_bottom = 0;
+    cv::Ptr<CvMat> dx, dy;
+    cv::AutoBuffer<char> buffer;
+    std::vector<uchar*> stack;
+    uchar **stack_top = 0, **stack_bottom = 0;
 
-    CV_FUNCNAME( "cvCanny" );
-
-    __BEGIN__;
-
-    CvMat srcstub, *src = (CvMat*)srcarr;
-    CvMat dststub, *dst = (CvMat*)dstarr;
+    CvMat srcstub, *src = cvGetMat( srcarr, &srcstub );
+    CvMat dststub, *dst = cvGetMat( dstarr, &dststub );
     CvSize size;
     int flags = aperture_size;
     int low, high;
@@ -64,15 +61,12 @@ cvCanny( const void* srcarr, void* dstarr,
     int i, j;
     CvMat mag_row;
 
-    CV_CALL( src = cvGetMat( src, &srcstub ));
-    CV_CALL( dst = cvGetMat( dst, &dststub ));
-
     if( CV_MAT_TYPE( src->type ) != CV_8UC1 ||
         CV_MAT_TYPE( dst->type ) != CV_8UC1 )
-        CV_ERROR( CV_StsUnsupportedFormat, "" );
+        CV_Error( CV_StsUnsupportedFormat, "" );
 
     if( !CV_ARE_SIZES_EQ( src, dst ))
-        CV_ERROR( CV_StsUnmatchedSizes, "" );
+        CV_Error( CV_StsUnmatchedSizes, "" );
 
     if( low_thresh > high_thresh )
     {
@@ -82,7 +76,7 @@ cvCanny( const void* srcarr, void* dstarr,
 
     aperture_size &= INT_MAX;
     if( (aperture_size & 1) == 0 || aperture_size < 3 || aperture_size > 7 )
-        CV_ERROR( CV_StsBadFlag, "" );
+        CV_Error( CV_StsBadFlag, "" );
 
     size = cvGetMatSize( src );
 
@@ -119,17 +113,17 @@ cvCanny( const void* srcarr, void* dstarr,
         high = cvFloor( high_thresh );
     }
 
-    CV_CALL( buffer = cvAlloc( (size.width+2)*(size.height+2) +
-                                (size.width+2)*3*sizeof(int)) );
+    buffer.allocate( (size.width+2)*(size.height+2) + (size.width+2)*3*sizeof(int) );
 
-    mag_buf[0] = (int*)buffer;
+    mag_buf[0] = (int*)(char*)buffer;
     mag_buf[1] = mag_buf[0] + size.width + 2;
     mag_buf[2] = mag_buf[1] + size.width + 2;
     map = (uchar*)(mag_buf[2] + size.width + 2);
     mapstep = size.width + 2;
 
     maxsize = MAX( 1 << 10, size.width*size.height/10 );
-    CV_CALL( stack_top = stack_bottom = (uchar**)cvAlloc( maxsize*sizeof(stack_top[0]) ));
+    stack.resize( maxsize );
+    stack_top = stack_bottom = &stack[0];
 
     memset( mag_buf[0], 0, (size.width+2)*sizeof(int) );
     memset( map, 1, mapstep );
@@ -215,13 +209,11 @@ cvCanny( const void* srcarr, void* dstarr,
 
         if( (stack_top - stack_bottom) + size.width > maxsize )
         {
-            uchar** new_stack_bottom;
-            maxsize = MAX( maxsize * 3/2, maxsize + size.width );
-            CV_CALL( new_stack_bottom = (uchar**)cvAlloc( maxsize * sizeof(stack_top[0])) );
-            memcpy( new_stack_bottom, stack_bottom, (stack_top - stack_bottom)*sizeof(stack_top[0]) );
-            stack_top = new_stack_bottom + (stack_top - stack_bottom);
-            cvFree( &stack_bottom );
-            stack_bottom = new_stack_bottom;
+            int sz = (int)(stack_top - stack_bottom);
+            maxsize = MAX( maxsize * 3/2, maxsize + 8 );
+            stack.resize(maxsize);
+            stack_bottom = &stack[0];
+            stack_top = stack_bottom + sz;
         }
 
         for( j = 0; j < size.width; j++ )
@@ -304,13 +296,11 @@ cvCanny( const void* srcarr, void* dstarr,
         uchar* m;
         if( (stack_top - stack_bottom) + 8 > maxsize )
         {
-            uchar** new_stack_bottom;
+            int sz = (int)(stack_top - stack_bottom);
             maxsize = MAX( maxsize * 3/2, maxsize + 8 );
-            CV_CALL( new_stack_bottom = (uchar**)cvAlloc( maxsize * sizeof(stack_top[0])) );
-            memcpy( new_stack_bottom, stack_bottom, (stack_top - stack_bottom)*sizeof(stack_top[0]) );
-            stack_top = new_stack_bottom + (stack_top - stack_bottom);
-            cvFree( &stack_bottom );
-            stack_bottom = new_stack_bottom;
+            stack.resize(maxsize);
+            stack_bottom = &stack[0];
+            stack_top = stack_bottom + sz;
         }
 
         CANNY_POP(m);
@@ -342,13 +332,6 @@ cvCanny( const void* srcarr, void* dstarr,
         for( j = 0; j < size.width; j++ )
             _dst[j] = (uchar)-(_map[j] >> 1);
     }
-
-    __END__;
-
-    cvReleaseMat( &dx );
-    cvReleaseMat( &dy );
-    cvFree( &buffer );
-    cvFree( &stack_bottom );
 }
 
 void cv::Canny( const Mat& image, Mat& edges,

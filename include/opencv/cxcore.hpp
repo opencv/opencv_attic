@@ -1076,10 +1076,6 @@ CV_EXPORTS bool eigen(const Mat& a, Mat& eigenvalues, int lowindex=-1,
                       int highindex=-1);
 CV_EXPORTS bool eigen(const Mat& a, Mat& eigenvalues, Mat& eigenvectors,
                       int lowindex=-1, int highindex=-1);
-//CV_EXPORTS bool selectedeigen(const Mat& a, Mat& eigenvalues, int lowindex,
-//                              int highindex);
-//CV_EXPORTS bool selectedeigen(const Mat& a, Mat& eigenvalues,
-//                              Mat& eigenvectors, int lowindex, int highindex);
 
 CV_EXPORTS void calcCovarMatrix( const Mat* samples, int nsamples,
                                  Mat& covar, Mat& mean,

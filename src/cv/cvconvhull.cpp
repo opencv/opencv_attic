@@ -199,10 +199,6 @@ static void
 icvCalcAndWritePtIndices( CvPoint** pointer, int* stack, int start, int end,
                           CvSeq* ptseq, CvSeqWriter* writer )
 {
-    CV_FUNCNAME( "icvCalcAndWritePtIndices" );
-
-    __BEGIN__;
-
     int i, incr = start < end ? 1 : -1;
     int idx, first_idx = ptseq->first->start_index;
 
@@ -214,13 +210,11 @@ icvCalcAndWritePtIndices( CvPoint** pointer, int* stack, int start, int end,
         {
             block = block->next;
             if( block == ptseq->first )
-                CV_ERROR( CV_StsError, "Internal error" );
+                CV_Error( CV_StsError, "Internal error" );
         }
         idx += block->start_index - first_idx;
         CV_WRITE_SEQ_ELEM( idx, *writer );
     }
-
-    __END__;
 }
 
 
@@ -229,15 +223,13 @@ cvConvexHull2( const CvArr* array, void* hull_storage,
                int orientation, int return_points )
 {
     union { CvContour* c; CvSeq* s; } hull;
-    CvPoint** pointer = 0;
+    cv::AutoBuffer<CvPoint*> _pointer;
+    CvPoint** pointer;
     CvPoint2D32f** pointerf = 0;
-    int* stack = 0;
-
-    CV_FUNCNAME( "cvConvexHull2" );
+    cv::AutoBuffer<int> _stack;
+    int* stack;
 
     hull.s = 0;
-
-    __BEGIN__;
 
     CvMat* mat = 0;
     CvSeqReader reader;
@@ -259,56 +251,55 @@ cvConvexHull2( const CvArr* array, void* hull_storage,
     {
         ptseq = (CvSeq*)array;
         if( !CV_IS_SEQ_POINT_SET( ptseq ))
-            CV_ERROR( CV_StsBadArg, "Unsupported sequence type" );
+            CV_Error( CV_StsBadArg, "Unsupported sequence type" );
         if( hull_storage == 0 )
             hull_storage = ptseq->storage;
     }
     else
     {
-        CV_CALL( ptseq = cvPointSeqFromMat(
-            CV_SEQ_KIND_GENERIC, array, &contour_header, &block ));
+        ptseq = cvPointSeqFromMat( CV_SEQ_KIND_GENERIC, array, &contour_header, &block );
     }
 
     if( CV_IS_STORAGE( hull_storage ))
     {
         if( return_points )
         {
-            CV_CALL( hullseq = cvCreateSeq(
+            hullseq = cvCreateSeq(
                 CV_SEQ_KIND_CURVE|CV_SEQ_ELTYPE(ptseq)|
                 CV_SEQ_FLAG_CLOSED|CV_SEQ_FLAG_CONVEX,
-                sizeof(CvContour), sizeof(CvPoint),(CvMemStorage*)hull_storage ));
+                sizeof(CvContour), sizeof(CvPoint),(CvMemStorage*)hull_storage );
         }
         else
         {
-            CV_CALL( hullseq = cvCreateSeq(
+            hullseq = cvCreateSeq(
                 CV_SEQ_KIND_CURVE|CV_SEQ_ELTYPE_PPOINT|
                 CV_SEQ_FLAG_CLOSED|CV_SEQ_FLAG_CONVEX,
-                sizeof(CvContour), sizeof(CvPoint*), (CvMemStorage*)hull_storage ));
+                sizeof(CvContour), sizeof(CvPoint*), (CvMemStorage*)hull_storage );
         }
     }
     else
     {
         if( !CV_IS_MAT( hull_storage ))
-            CV_ERROR(CV_StsBadArg, "Destination must be valid memory storage or matrix");
+            CV_Error(CV_StsBadArg, "Destination must be valid memory storage or matrix");
 
         mat = (CvMat*)hull_storage;
 
         if( (mat->cols != 1 && mat->rows != 1) || !CV_IS_MAT_CONT(mat->type))
-            CV_ERROR( CV_StsBadArg,
+            CV_Error( CV_StsBadArg,
             "The hull matrix should be continuous and have a single row or a single column" );
 
         if( mat->cols + mat->rows - 1 < ptseq->total )
-            CV_ERROR( CV_StsBadSize, "The hull matrix size might be not enough to fit the hull" );
+            CV_Error( CV_StsBadSize, "The hull matrix size might be not enough to fit the hull" );
 
         if( CV_MAT_TYPE(mat->type) != CV_SEQ_ELTYPE(ptseq) &&
             CV_MAT_TYPE(mat->type) != CV_32SC1 )
-            CV_ERROR( CV_StsUnsupportedFormat,
+            CV_Error( CV_StsUnsupportedFormat,
             "The hull matrix must have the same type as input or 32sC1 (integers)" );
 
-        CV_CALL( hullseq = cvMakeSeqHeaderForArray(
+        hullseq = cvMakeSeqHeaderForArray(
             CV_SEQ_KIND_CURVE|CV_MAT_TYPE(mat->type)|CV_SEQ_FLAG_CLOSED,
             sizeof(contour_header), CV_ELEM_SIZE(mat->type), mat->data.ptr,
-            mat->cols + mat->rows - 1, &hull_header.s, &hullblock ));
+            mat->cols + mat->rows - 1, &hull_header.s, &hullblock );
 
         cvClearSeq( hullseq );
     }
@@ -317,9 +308,9 @@ cvConvexHull2( const CvArr* array, void* hull_storage,
     if( total == 0 )
     {
         if( mat )
-            CV_ERROR( CV_StsBadSize,
+            CV_Error( CV_StsBadSize,
             "Point sequence can not be empty if the output is matrix" );
-        EXIT;
+        return hull.s;
     }
 
     cvStartAppendToSeq( hullseq, &writer );
@@ -329,9 +320,11 @@ cvConvexHull2( const CvArr* array, void* hull_storage,
     sklansky = !is_float ? (sklansky_func)icvSklansky_32s :
                            (sklansky_func)icvSklansky_32f;
 
-    CV_CALL( pointer = (CvPoint**)cvAlloc( ptseq->total*sizeof(pointer[0]) ));
-    CV_CALL( stack = (int*)cvAlloc( (ptseq->total + 2)*sizeof(stack[0]) ));
+    _pointer.allocate( ptseq->total );
+    _stack.allocate( ptseq->total + 2);
+    pointer = _pointer;
     pointerf = (CvPoint2D32f**)pointer;
+    stack = _stack;
 
     cvStartReadSeq( ptseq, &reader );
 
@@ -411,10 +404,8 @@ cvConvexHull2( const CvArr* array, void* hull_storage,
         }
         else if( hulltype == CV_SEQ_ELTYPE_INDEX )
         {
-            CV_CALL( icvCalcAndWritePtIndices( pointer, tl_stack,
-                                               0, tl_count-1, ptseq, &writer ));
-            CV_CALL( icvCalcAndWritePtIndices( pointer, tr_stack,
-                                               tr_count-1, 0, ptseq, &writer ));
+            icvCalcAndWritePtIndices( pointer, tl_stack, 0, tl_count-1, ptseq, &writer );
+            icvCalcAndWritePtIndices( pointer, tr_stack, tr_count-1, 0, ptseq, &writer );
         }
         else
         {
@@ -466,10 +457,8 @@ cvConvexHull2( const CvArr* array, void* hull_storage,
         }
         else if( hulltype == CV_SEQ_ELTYPE_INDEX )
         {
-            CV_CALL( icvCalcAndWritePtIndices( pointer, bl_stack,
-                                               0, bl_count-1, ptseq, &writer ));
-            CV_CALL( icvCalcAndWritePtIndices( pointer, br_stack,
-                                               br_count-1, 0, ptseq, &writer ));
+            icvCalcAndWritePtIndices( pointer, bl_stack, 0, bl_count-1, ptseq, &writer );
+            icvCalcAndWritePtIndices( pointer, br_stack, br_count-1, 0, ptseq, &writer );
         }
         else
         {
@@ -482,7 +471,7 @@ cvConvexHull2( const CvArr* array, void* hull_storage,
     }
 
 finish_hull:
-    CV_CALL( cvEndWriteSeq( &writer ));
+    cvEndWriteSeq( &writer );
 
     if( mat )
     {
@@ -502,27 +491,17 @@ finish_hull:
             hullseq->v_prev = ptseq;*/
     }
 
-    __END__;
-
-    cvFree( &pointer );
-    cvFree( &stack );
-
     return hull.s;
 }
 
 
 /* contour must be a simple polygon */
 /* it must have more than 3 points  */
-CV_IMPL CvSeq*
-cvConvexityDefects( const CvArr* array,
-                    const CvArr* hullarray,
-                    CvMemStorage* storage )
+CV_IMPL CvSeq* cvConvexityDefects( const CvArr* array,
+                                   const CvArr* hullarray,
+                                   CvMemStorage* storage )
 {
     CvSeq* defects = 0;
-
-    CV_FUNCNAME( "cvConvexityDefects" );
-
-    __BEGIN__;
 
     int i, index;
     CvPoint* hull_cur;
@@ -543,26 +522,24 @@ cvConvexityDefects( const CvArr* array,
     if( CV_IS_SEQ( ptseq ))
     {
         if( !CV_IS_SEQ_POINT_SET( ptseq ))
-            CV_ERROR( CV_StsUnsupportedFormat,
+            CV_Error( CV_StsUnsupportedFormat,
                 "Input sequence is not a sequence of points" );
         if( !storage )
             storage = ptseq->storage;
     }
     else
     {
-        CV_CALL( ptseq = cvPointSeqFromMat(
-            CV_SEQ_KIND_GENERIC, array, &contour_header, &block ));
+        ptseq = cvPointSeqFromMat( CV_SEQ_KIND_GENERIC, array, &contour_header, &block );
     }
 
     if( CV_SEQ_ELTYPE( ptseq ) != CV_32SC2 )
-        CV_ERROR( CV_StsUnsupportedFormat,
-            "Floating-point coordinates are not supported here" );
+        CV_Error( CV_StsUnsupportedFormat, "Floating-point coordinates are not supported here" );
 
     if( CV_IS_SEQ( hull ))
     {
         int hulltype = CV_SEQ_ELTYPE( hull );
         if( hulltype != CV_SEQ_ELTYPE_PPOINT && hulltype != CV_SEQ_ELTYPE_INDEX )
-            CV_ERROR( CV_StsUnsupportedFormat,
+            CV_Error( CV_StsUnsupportedFormat,
                 "Convex hull must represented as a sequence "
                 "of indices or sequence of pointers" );
         if( !storage )
@@ -573,35 +550,34 @@ cvConvexityDefects( const CvArr* array,
         CvMat* mat = (CvMat*)hull;
 
         if( !CV_IS_MAT( hull ))
-            CV_ERROR(CV_StsBadArg, "Convex hull is neither sequence nor matrix");
+            CV_Error(CV_StsBadArg, "Convex hull is neither sequence nor matrix");
 
         if( (mat->cols != 1 && mat->rows != 1) ||
             !CV_IS_MAT_CONT(mat->type) || CV_MAT_TYPE(mat->type) != CV_32SC1 )
-            CV_ERROR( CV_StsBadArg,
+            CV_Error( CV_StsBadArg,
             "The matrix should be 1-dimensional and continuous array of int's" );
 
         if( mat->cols + mat->rows - 1 > ptseq->total )
-            CV_ERROR( CV_StsBadSize, "Convex hull is larger than the point sequence" );
+            CV_Error( CV_StsBadSize, "Convex hull is larger than the point sequence" );
 
-        CV_CALL( hull = cvMakeSeqHeaderForArray(
+        hull = cvMakeSeqHeaderForArray(
             CV_SEQ_KIND_CURVE|CV_MAT_TYPE(mat->type)|CV_SEQ_FLAG_CLOSED,
             sizeof(CvContour), CV_ELEM_SIZE(mat->type), mat->data.ptr,
-            mat->cols + mat->rows - 1, &hull_header.s, &hullblock ));
+            mat->cols + mat->rows - 1, &hull_header.s, &hullblock );
     }
 
     is_index = CV_SEQ_ELTYPE(hull) == CV_SEQ_ELTYPE_INDEX;
 
     if( !storage )
-        CV_ERROR( CV_StsNullPtr, "NULL storage pointer" );
+        CV_Error( CV_StsNullPtr, "NULL storage pointer" );
 
-    CV_CALL( defects = cvCreateSeq( CV_SEQ_KIND_GENERIC, sizeof(CvSeq),
-                                    sizeof(CvConvexityDefect), storage ));
+    defects = cvCreateSeq( CV_SEQ_KIND_GENERIC, sizeof(CvSeq), sizeof(CvConvexityDefect), storage );
 
     if( ptseq->total < 4 || hull->total < 3)
     {
         //CV_ERROR( CV_StsBadSize,
         //    "point seq size must be >= 4, convex hull size must be >= 3" );
-        EXIT;
+        return defects;
     }
 
     /* recognize co-orientation of ptseq and its hull */
@@ -612,13 +588,13 @@ cvConvexityDefects( const CvArr* array,
         if( !is_index )
         {
             CvPoint* pos = *CV_SEQ_ELEM( hull, CvPoint*, 0 );
-            CV_CALL( index1 = cvSeqElemIdx( ptseq, pos ));
+            index1 = cvSeqElemIdx( ptseq, pos );
 
             pos = *CV_SEQ_ELEM( hull, CvPoint*, 1 );
-            CV_CALL( index2 = cvSeqElemIdx( ptseq, pos ));
+            index2 = cvSeqElemIdx( ptseq, pos );
 
             pos = *CV_SEQ_ELEM( hull, CvPoint*, 2 );
-            CV_CALL( index3 = cvSeqElemIdx( ptseq, pos ));
+            index3 = cvSeqElemIdx( ptseq, pos );
         }
         else
         {
@@ -718,11 +694,7 @@ cvConvexityDefects( const CvArr* array,
         }
     }
 
-    defects = cvEndWriteSeq( &writer );
-
-    __END__;
-
-    return defects;
+    return cvEndWriteSeq( &writer );
 }
 
 
@@ -730,10 +702,6 @@ CV_IMPL int
 cvCheckContourConvexity( const CvArr* array )
 {
     int flag = -1;
-
-    CV_FUNCNAME( "cvCheckContourConvexity" );
-
-    __BEGIN__;
 
     int i;
     int orientation = 0;
@@ -745,20 +713,18 @@ cvCheckContourConvexity( const CvArr* array )
     if( CV_IS_SEQ(contour) )
     {
         if( !CV_IS_SEQ_POINT_SET(contour))
-            CV_ERROR( CV_StsUnsupportedFormat,
+            CV_Error( CV_StsUnsupportedFormat,
                 "Input sequence must be polygon (closed 2d curve)" );
     }
     else
     {
-        CV_CALL( contour = cvPointSeqFromMat(
-            CV_SEQ_KIND_CURVE|CV_SEQ_FLAG_CLOSED, array, &contour_header, &block ));
+        contour = cvPointSeqFromMat(CV_SEQ_KIND_CURVE|CV_SEQ_FLAG_CLOSED, array, &contour_header, &block );
     }
 
     if( contour->total == 0 )
-        EXIT;
+        return -1;
 
     cvStartReadSeq( contour, &reader, 0 );
-
     flag = 1;
 
     if( CV_SEQ_ELTYPE( contour ) == CV_32SC2 )
@@ -802,7 +768,7 @@ cvCheckContourConvexity( const CvArr* array )
     }
     else
     {
-        assert( CV_SEQ_ELTYPE(contour) == CV_32FC2 );
+        CV_Assert( CV_SEQ_ELTYPE(contour) == CV_32FC2 );
 
         CvPoint2D32f *prev_pt = (CvPoint2D32f*)reader.prev_elem;
         CvPoint2D32f *cur_pt = (CvPoint2D32f*)reader.ptr;
@@ -841,8 +807,6 @@ cvCheckContourConvexity( const CvArr* array )
             dy0 = dy;
         }
     }
-
-    __END__;
 
     return flag;
 }

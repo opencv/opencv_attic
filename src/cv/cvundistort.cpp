@@ -244,15 +244,10 @@ cvInitUndistortRectifyMap( const CvMat* Aarr, const CvMat* dist_coeffs,
 }
 
 
-void
-cvUndistortPoints( const CvMat* _src, CvMat* _dst, const CvMat* _cameraMatrix,
+void cvUndistortPoints( const CvMat* _src, CvMat* _dst, const CvMat* _cameraMatrix,
                    const CvMat* _distCoeffs,
                    const CvMat* _R, const CvMat* _P )
 {
-    CV_FUNCNAME( "cvUndistortPoints" );
-
-    __BEGIN__;
-
     double A[3][3], RR[3][3], k[5]={0,0,0,0,0}, fx, fy, ifx, ify, cx, cy;
     CvMat _A=cvMat(3, 3, CV_64F, A), _Dk;
     CvMat _RR=cvMat(3, 3, CV_64F, RR);
@@ -264,21 +259,21 @@ cvUndistortPoints( const CvMat* _src, CvMat* _dst, const CvMat* _cameraMatrix,
     int sstep, dstep;
     int i, j, n, iters = 1;
 
-    CV_ASSERT( CV_IS_MAT(_src) && CV_IS_MAT(_dst) &&
+    CV_Assert( CV_IS_MAT(_src) && CV_IS_MAT(_dst) &&
         (_src->rows == 1 || _src->cols == 1) &&
         (_dst->rows == 1 || _dst->cols == 1) &&
         CV_ARE_SIZES_EQ(_src, _dst) &&
         (CV_MAT_TYPE(_src->type) == CV_32FC2 || CV_MAT_TYPE(_src->type) == CV_64FC2) &&
         (CV_MAT_TYPE(_dst->type) == CV_32FC2 || CV_MAT_TYPE(_dst->type) == CV_64FC2));
 
-    CV_ASSERT( CV_IS_MAT(_cameraMatrix) &&
+    CV_Assert( CV_IS_MAT(_cameraMatrix) &&
         _cameraMatrix->rows == 3 && _cameraMatrix->cols == 3 );
 
     cvConvert( _cameraMatrix, &_A );
 
     if( _distCoeffs )
     {
-        CV_ASSERT( CV_IS_MAT(_distCoeffs) &&
+        CV_Assert( CV_IS_MAT(_distCoeffs) &&
             (_distCoeffs->rows == 1 || _distCoeffs->cols == 1) &&
             (_distCoeffs->rows*_distCoeffs->cols == 4 ||
             _distCoeffs->rows*_distCoeffs->cols == 5) );
@@ -292,7 +287,7 @@ cvUndistortPoints( const CvMat* _src, CvMat* _dst, const CvMat* _cameraMatrix,
 
     if( _R )
     {
-        CV_ASSERT( CV_IS_MAT(_R) && _R->rows == 3 && _R->cols == 3 );
+        CV_Assert( CV_IS_MAT(_R) && _R->rows == 3 && _R->cols == 3 );
         cvConvert( _R, &_RR );
     }
     else
@@ -302,7 +297,7 @@ cvUndistortPoints( const CvMat* _src, CvMat* _dst, const CvMat* _cameraMatrix,
     {
         double PP[3][3];
         CvMat _P3x3, _PP=cvMat(3, 3, CV_64F, PP);
-        CV_ASSERT( CV_IS_MAT(_P) && _P->rows == 3 && (_P->cols == 3 || _P->cols == 4));
+        CV_Assert( CV_IS_MAT(_P) && _P->rows == 3 && (_P->cols == 3 || _P->cols == 4));
         cvConvert( cvGetCols(_P, &_P3x3, 0, 3), &_PP );
         cvMatMul( &_PP, &_RR, &_RR );
     }
@@ -370,8 +365,6 @@ cvUndistortPoints( const CvMat* _src, CvMat* _dst, const CvMat* _cameraMatrix,
             dstd[i*dstep].y = y;
         }
     }
-
-    __END__;
 }
 
 

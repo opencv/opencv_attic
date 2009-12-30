@@ -51,18 +51,11 @@
 #include "emmintrin.h"
 */
 
-CV_IMPL CvStereoBMState*
-cvCreateStereoBMState( int /*preset*/, int numberOfDisparities )
+CV_IMPL CvStereoBMState* cvCreateStereoBMState( int /*preset*/, int numberOfDisparities )
 {
-    CvStereoBMState* state = 0;
-
-    //CV_FUNCNAME( "cvCreateStereoBMState" );
-
-    __BEGIN__;
-
-    state = (CvStereoBMState*)cvAlloc( sizeof(*state) );
+    CvStereoBMState* state = (CvStereoBMState*)cvAlloc( sizeof(*state) );
     if( !state )
-        EXIT;
+        return 0;
 
     state->preFilterType = CV_STEREO_BM_NORMALIZED_RESPONSE;
     state->preFilterSize = 9;
@@ -78,26 +71,17 @@ cvCreateStereoBMState( int /*preset*/, int numberOfDisparities )
     state->preFilteredImg0 = state->preFilteredImg1 = state->slidingSumBuf = 0;
     state->dbmin = state->dbmax = 0;
 
-    __END__;
-
-    if( cvGetErrStatus() < 0 )
-        cvReleaseStereoBMState( &state );
     return state;
 }
 
 
-CV_IMPL void
-cvReleaseStereoBMState( CvStereoBMState** state )
+CV_IMPL void cvReleaseStereoBMState( CvStereoBMState** state )
 {
-    CV_FUNCNAME( "cvReleaseStereoBMState" );
-
-    __BEGIN__;
-
     if( !state )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
     if( !*state )
-        EXIT;
+        return;
 
     cvReleaseMat( &(*state)->preFilteredImg0 );
     cvReleaseMat( &(*state)->preFilteredImg1 );
@@ -105,8 +89,6 @@ cvReleaseStereoBMState( CvStereoBMState** state )
     cvReleaseMat( &(*state)->dbmin );
     cvReleaseMat( &(*state)->dbmax );
     cvFree( state );
-
-    __END__;
 }
 
 static void icvPrefilter( const CvMat* src, CvMat* dst, int winsize, int ftzero, uchar* buf )
@@ -177,8 +159,7 @@ static void icvPrefilter( const CvMat* src, CvMat* dst, int winsize, int ftzero,
 static const int DISPARITY_SHIFT = 4;
 
 #if CV_SSE2
-static void
-icvFindStereoCorrespondenceBM_SSE2( const CvMat* left, const CvMat* right,
+static void icvFindStereoCorrespondenceBM_SSE2( const CvMat* left, const CvMat* right,
                                     CvMat* disp, const CvMat* dbmin,
                                     const CvMat* dbmax, CvStereoBMState* state,
                                     int realSADWin, uchar* buf, int _dy0, int _dy1 )
@@ -575,14 +556,9 @@ icvFindStereoCorrespondenceBM( const CvMat* left, const CvMat* right,
     }
 }
 
-CV_IMPL void
-cvFindStereoCorrespondenceBM( const CvArr* leftarr, const CvArr* rightarr,
-                              CvArr* disparr, CvStereoBMState* state )
+CV_IMPL void cvFindStereoCorrespondenceBM( const CvArr* leftarr, const CvArr* rightarr,
+                                           CvArr* disparr, CvStereoBMState* state )
 {
-    CV_FUNCNAME( "cvFindStereoCorrespondenceBM" );
-
-    __BEGIN__;
-
     CvMat lstub, *left0 = cvGetMat( leftarr, &lstub );
     CvMat rstub, *right0 = cvGetMat( rightarr, &rstub );
     CvMat left, right;
@@ -594,37 +570,37 @@ cvFindStereoCorrespondenceBM( const CvArr* leftarr, const CvArr* rightarr,
 
     if( !CV_ARE_SIZES_EQ(left0, right0) ||
         !CV_ARE_SIZES_EQ(disp, left0) )
-        CV_ERROR( CV_StsUnmatchedSizes, "All the images must have the same size" );
+        CV_Error( CV_StsUnmatchedSizes, "All the images must have the same size" );
 
     if( CV_MAT_TYPE(left0->type) != CV_8UC1 ||
         !CV_ARE_TYPES_EQ(left0, right0) ||
         CV_MAT_TYPE(disp->type) != CV_16SC1 )
-        CV_ERROR( CV_StsUnsupportedFormat,
+        CV_Error( CV_StsUnsupportedFormat,
         "Both input images must have 8uC1 format and the disparity image must have 16sC1 format" );
 
     if( !state )
-        CV_ERROR( CV_StsNullPtr, "Stereo BM state is NULL." );
+        CV_Error( CV_StsNullPtr, "Stereo BM state is NULL." );
 
     if( state->preFilterType != CV_STEREO_BM_NORMALIZED_RESPONSE )
-        CV_ERROR( CV_StsOutOfRange, "preFilterType must be =CV_STEREO_BM_NORMALIZED_RESPONSE" );
+        CV_Error( CV_StsOutOfRange, "preFilterType must be =CV_STEREO_BM_NORMALIZED_RESPONSE" );
 
     if( state->preFilterSize < 5 || state->preFilterSize > 255 || state->preFilterSize % 2 == 0 )
-        CV_ERROR( CV_StsOutOfRange, "preFilterSize must be odd and be within 5..255" );
+        CV_Error( CV_StsOutOfRange, "preFilterSize must be odd and be within 5..255" );
 
     if( state->preFilterCap < 1 || state->preFilterCap > 63 )
-        CV_ERROR( CV_StsOutOfRange, "preFilterCap must be within 1..63" );
+        CV_Error( CV_StsOutOfRange, "preFilterCap must be within 1..63" );
 
     if( state->SADWindowSize < 5 || state->SADWindowSize > 255 || state->SADWindowSize % 2 == 0 ||
         state->SADWindowSize >= MIN(left0->cols, left0->rows) )
-        CV_ERROR( CV_StsOutOfRange, "SADWindowSize must be odd, be within 5..255 and "
+        CV_Error( CV_StsOutOfRange, "SADWindowSize must be odd, be within 5..255 and "
                                     "be not larger than image width or height" );
 
     if( state->numberOfDisparities <= 0 || state->numberOfDisparities % 16 != 0 )
-        CV_ERROR( CV_StsOutOfRange, "numberOfDisparities must be positive and divisble by 16" );
+        CV_Error( CV_StsOutOfRange, "numberOfDisparities must be positive and divisble by 16" );
     if( state->textureThreshold < 0 )
-        CV_ERROR( CV_StsOutOfRange, "texture threshold must be non-negative" );
+        CV_Error( CV_StsOutOfRange, "texture threshold must be non-negative" );
     if( state->uniquenessRatio < 0 )
-        CV_ERROR( CV_StsOutOfRange, "uniqueness ratio must be non-negative" );
+        CV_Error( CV_StsOutOfRange, "uniqueness ratio must be non-negative" );
 
     if( !state->preFilteredImg0 ||
         state->preFilteredImg0->cols*state->preFilteredImg0->rows < left0->cols*left0->rows )
@@ -651,7 +627,7 @@ cvFindStereoCorrespondenceBM( const CvArr* leftarr, const CvArr* rightarr,
     if( lofs >= width || rofs >= width || width1 < 1 )
     {
         cvSet( disp, cvScalarAll(FILTERED) );
-        EXIT;
+        return;
     }
 
     wsz = state->SADWindowSize;
@@ -713,7 +689,7 @@ cvFindStereoCorrespondenceBM( const CvArr* leftarr, const CvArr* rightarr,
     SMALL_WIN_SIZE = MAX((state->SADWindowSize/2)|1, 9);
 
     if( !state->trySmallerWindows || SMALL_WIN_SIZE >= state->SADWindowSize )
-        EXIT;
+        return;
 
     if( !state->dbmin || !CV_ARE_SIZES_EQ(state->dbmin, disp) )
     {
@@ -775,8 +751,6 @@ cvFindStereoCorrespondenceBM( const CvArr* leftarr, const CvArr* rightarr,
                 row0, left.rows-row1 );
         }
     }
-
-    __END__;
 }
 
 namespace cv

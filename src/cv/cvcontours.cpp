@@ -55,28 +55,20 @@ cvStartReadChainPoints( CvChain * chain, CvChainPtReader * reader )
 {
     int i;
 
-    CV_FUNCNAME( "cvStartReadChainPoints" );
-
-    __BEGIN__;
-
     if( !chain || !reader )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
     if( chain->elem_size != 1 || chain->header_size < (int)sizeof(CvChain))
-        CV_ERROR( CV_StsBadSize, "" );
+        CV_Error( CV_StsBadSize, "" );
 
     cvStartReadSeq( (CvSeq *) chain, (CvSeqReader *) reader, 0 );
-    CV_CHECK();
 
     reader->pt = chain->origin;
-
     for( i = 0; i < 8; i++ )
     {
         reader->deltas[i][0] = (schar) icvCodeDeltas[i].x;
         reader->deltas[i][1] = (schar) icvCodeDeltas[i].y;
     }
-
-    __END__;
 }
 
 
@@ -88,12 +80,8 @@ cvReadChainPoint( CvChainPtReader * reader )
     int code;
     CvPoint pt = { 0, 0 };
 
-    CV_FUNCNAME( "cvReadChainPoint" );
-
-    __BEGIN__;
-
     if( !reader )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
     pt = reader->pt;
 
@@ -114,8 +102,6 @@ cvReadChainPoint( CvChainPtReader * reader )
         reader->pt.x = pt.x + icvCodeDeltas[code].x;
         reader->pt.y = pt.y + icvCodeDeltas[code].y;
     }
-
-    __END__;
 
     return pt;
 }
@@ -199,29 +185,24 @@ cvStartFindContours( void* _img, CvMemStorage* storage,
     CvSize size;
     uchar *img = 0;
     CvContourScanner scanner = 0;
-    CvMat stub, *mat = (CvMat*)_img;
-
-    CV_FUNCNAME( "cvStartFindContours" );
-
-    __BEGIN__;
 
     if( !storage )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
-    CV_CALL( mat = cvGetMat( mat, &stub ));
+    CvMat stub, *mat = cvGetMat( _img, &stub );
 
     if( !CV_IS_MASK_ARR( mat ))
-        CV_ERROR( CV_StsUnsupportedFormat, "[Start]FindContours support only 8uC1 images" );
+        CV_Error( CV_StsUnsupportedFormat, "[Start]FindContours support only 8uC1 images" );
 
     size = cvSize( mat->width, mat->height );
     step = mat->step;
     img = (uchar*)(mat->data.ptr);
 
     if( method < 0 || method > CV_CHAIN_APPROX_TC89_KCOS )
-        CV_ERROR( CV_StsOutOfRange, "" );
+        CV_Error( CV_StsOutOfRange, "" );
 
     if( header_size < (int) (method == CV_CHAIN_CODE ? sizeof( CvChain ) : sizeof( CvContour )))
-        CV_ERROR( CV_StsBadSize, "" );
+        CV_Error( CV_StsBadSize, "" );
 
     scanner = (CvContourScanner)cvAlloc( sizeof( *scanner ));
     memset( scanner, 0, sizeof( *scanner ));
@@ -313,12 +294,6 @@ cvStartFindContours( void* _img, CvMemStorage* storage,
 
     /* converts all pixels to 0 or 1 */
     cvThreshold( mat, mat, 0, 1, CV_THRESH_BINARY );
-    CV_CHECK();
-
-    __END__;
-
-    if( cvGetErrStatus() < 0 )
-        cvFree( &scanner );
 
     return scanner;
 }
@@ -452,13 +427,12 @@ cvStartFindContours( void* _img, CvMemStorage* storage,
 
       new_storage variable is not needed here.
 
-      Two notes.
-      1. Second and third method can interleave. I.e. it is possible to
-         remain contours that satisfy with some criteria and reject others.
-         In hierarchic case the resulting tree is the part of original tree with
-         some nodes absent. But in the resulting tree the contour1 is a child
-         (may be indirect) of contour2 iff in the original tree the contour1
-         is a child (may be indirect) of contour2.
+      Note, that the second and the third methods can interleave. I.e. it is possible to
+      retain contours that satisfy with some criteria and reject others.
+      In hierarchic case the resulting tree is the part of original tree with
+      some nodes absent. But in the resulting tree the contour1 is a child
+      (may be indirect) of contour2 iff in the original tree the contour1
+      is a child (may be indirect) of contour2.
 */
 static void
 icvEndProcessContour( CvContourScanner scanner )
@@ -496,12 +470,8 @@ cvSubstituteContour( CvContourScanner scanner, CvSeq * new_contour )
 {
     _CvContourInfo *l_cinfo;
 
-    CV_FUNCNAME( "cvSubstituteContour" );
-
-    __BEGIN__;
-
     if( !scanner )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
     l_cinfo = scanner->l_cinfo;
     if( l_cinfo && l_cinfo->contour && l_cinfo->contour != new_contour )
@@ -509,8 +479,6 @@ cvSubstituteContour( CvContourScanner scanner, CvSeq * new_contour )
         l_cinfo->contour = new_contour;
         scanner->subst_flag = 1;
     }
-
-    __END__;
 }
 
 
@@ -521,7 +489,7 @@ cvSubstituteContour( CvContourScanner scanner, CvSeq * new_contour )
             ==0 - direct
             >0  - simple approximation
 */
-static CvStatus
+static void
 icvFetchContour( schar                  *ptr,
                  int                    step,
                  CvPoint                pt,
@@ -630,8 +598,6 @@ icvFetchContour( schar                  *ptr,
             writer.seq->total > writer.seq->first->count ||
             (writer.seq->first->prev == writer.seq->first &&
              writer.seq->first->next == writer.seq->first) );
-
-    return CV_OK;
 }
 
 
@@ -692,7 +658,7 @@ icvTraceContour( schar *ptr, int step, schar *stop_ptr, int is_hole )
 }
 
 
-static CvStatus
+static void
 icvFetchContourEx( schar*               ptr,
                    int                  step,
                    CvPoint              pt,
@@ -821,8 +787,6 @@ icvFetchContourEx( schar*               ptr,
              writer.seq->first->next == writer.seq->first) );
 
     if( _rect )  *_rect = rect;
-
-    return CV_OK;
 }
 
 
@@ -836,17 +800,11 @@ cvFindNextContour( CvContourScanner scanner )
     int x, y;
     int prev;
     CvPoint lnbd;
-    CvSeq *contour = 0;
     int nbd;
     int mode;
-    CvStatus result = (CvStatus) 1;
-
-    CV_FUNCNAME( "cvFindNextContour" );
-
-    __BEGIN__;
 
     if( !scanner )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
     icvEndProcessContour( scanner );
 
     /* initialize local state */
@@ -960,12 +918,10 @@ cvFindNextContour( CvContourScanner scanner )
                 if( mode <= 1 )
                 {
                     l_cinfo = &(scanner->cinfo_temp);
-                    result = icvFetchContour( img + x - is_hole, step,
-                                              cvPoint( origin.x + scanner->offset.x,
-                                                       origin.y + scanner->offset.y),
-                                              seq, scanner->approx_method1 );
-                    if( result < 0 )
-                        goto exit_func;
+                    icvFetchContour( img + x - is_hole, step,
+                                     cvPoint( origin.x + scanner->offset.x,
+                                              origin.y + scanner->offset.y),
+                                     seq, scanner->approx_method1 );
                 }
                 else
                 {
@@ -974,13 +930,11 @@ cvFindNextContour( CvContourScanner scanner )
                     cvSetAdd( scanner->cinfo_set, 0, &v.se );
                     l_cinfo = v.ci;
 
-                    result = icvFetchContourEx( img + x - is_hole, step,
-                                                cvPoint( origin.x + scanner->offset.x,
-                                                         origin.y + scanner->offset.y),
-                                                seq, scanner->approx_method1,
-                                                nbd, &(l_cinfo->rect) );
-                    if( result < 0 )
-                        goto exit_func;
+                    icvFetchContourEx( img + x - is_hole, step,
+                                       cvPoint( origin.x + scanner->offset.x,
+                                                origin.y + scanner->offset.y),
+                                       seq, scanner->approx_method1,
+                                       nbd, &(l_cinfo->rect) );
                     l_cinfo->rect.x -= scanner->offset.x;
                     l_cinfo->rect.y -= scanner->offset.y;
 
@@ -999,13 +953,10 @@ cvFindNextContour( CvContourScanner scanner )
 
                 if( scanner->approx_method1 != scanner->approx_method2 )
                 {
-                    result = icvApproximateChainTC89( (CvChain *) seq,
+                    l_cinfo->contour = icvApproximateChainTC89( (CvChain *) seq,
                                                       scanner->header_size2,
                                                       scanner->storage2,
-                                                      &(l_cinfo->contour),
                                                       scanner->approx_method2 );
-                    if( result < 0 )
-                        goto exit_func;
                     cvClearMemStorage( scanner->storage1 );
                 }
 
@@ -1033,11 +984,10 @@ cvFindNextContour( CvContourScanner scanner )
                 scanner->lnbd = lnbd;
                 scanner->img = (schar *) img;
                 scanner->nbd = nbd;
-                contour = l_cinfo->contour;
+                return l_cinfo->contour;
 
-                result = CV_OK;
-                goto exit_func;
-              resume_scan:
+            resume_scan:
+                
                 prev = p;
                 /* update lnbd */
                 if( prev & -2 )
@@ -1054,16 +1004,7 @@ cvFindNextContour( CvContourScanner scanner )
 
     }                           /* end of loop on y */
 
-  exit_func:
-
-    if( result != 0 )
-        contour = 0;
-    if( result < 0 )
-        CV_ERROR( result, "" );
-
-    __END__;
-
-    return contour;
+    return 0;
 }
 
 
@@ -1077,12 +1018,8 @@ cvEndFindContours( CvContourScanner * _scanner )
     CvContourScanner scanner;
     CvSeq *first = 0;
 
-    CV_FUNCNAME( "cvFindNextContour" );
-
-    __BEGIN__;
-
     if( !_scanner )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
     scanner = *_scanner;
 
     if( scanner )
@@ -1098,8 +1035,6 @@ cvEndFindContours( CvContourScanner * _scanner )
         first = scanner->frame.v_next;
         cvFree( _scanner );
     }
-
-    __END__;
 
     return first;
 }
@@ -1129,13 +1064,9 @@ icvFindContoursInInterval( const CvArr* src,
                            int contourHeaderSize )
 {
     int count = 0;
-    CvMemStorage* storage00 = 0;
-    CvMemStorage* storage01 = 0;
+    cv::Ptr<CvMemStorage> storage00;
+    cv::Ptr<CvMemStorage> storage01;
     CvSeq* first = 0;
-
-    CV_FUNCNAME( "icvFindContoursInInterval" );
-
-    __BEGIN__;
 
     int i, j, k, n;
 
@@ -1169,27 +1100,25 @@ icvFindContoursInInterval( const CvArr* src,
     CvSeq* prev = 0;
 
     if( !storage )
-        CV_ERROR( CV_StsNullPtr, "NULL storage pointer" );
+        CV_Error( CV_StsNullPtr, "NULL storage pointer" );
 
     if( !result )
-        CV_ERROR( CV_StsNullPtr, "NULL double CvSeq pointer" );
+        CV_Error( CV_StsNullPtr, "NULL double CvSeq pointer" );
 
     if( contourHeaderSize < (int)sizeof(CvContour))
-        CV_ERROR( CV_StsBadSize, "Contour header size must be >= sizeof(CvContour)" );
+        CV_Error( CV_StsBadSize, "Contour header size must be >= sizeof(CvContour)" );
 
-    CV_CALL( storage00 = cvCreateChildMemStorage(storage));
-    CV_CALL( storage01 = cvCreateChildMemStorage(storage));
+    storage00 = cvCreateChildMemStorage(storage);
+    storage01 = cvCreateChildMemStorage(storage);
 
-    {
-        CvMat stub, *mat;
+    CvMat stub, *mat;
 
-        CV_CALL( mat = cvGetMat( src, &stub ));
-        if( !CV_IS_MASK_ARR(mat))
-            CV_ERROR( CV_StsBadArg, "Input array must be 8uC1 or 8sC1" );
-        src_data = mat->data.ptr;
-        img_step = mat->step;
-        img_size = cvGetMatSize( mat );
-    }
+    mat = cvGetMat( src, &stub );
+    if( !CV_IS_MASK_ARR(mat))
+        CV_Error( CV_StsBadArg, "Input array must be 8uC1 or 8sC1" );
+    src_data = mat->data.ptr;
+    img_step = mat->step;
+    img_size = cvGetMatSize( mat );
 
     // Create temporary sequences
     runs = cvCreateSeq(0, sizeof(CvSeq), sizeof(CvLinkedRunPoint), storage00 );
@@ -1460,16 +1389,11 @@ icvFindContoursInInterval( const CvArr* src,
         }
     }
 
-    __END__;
-
     if( !first )
         count = -1;
 
     if( result )
         *result = first;
-
-    cvReleaseMemStorage(&storage00);
-    cvReleaseMemStorage(&storage01);
 
     return count;
 }
@@ -1506,39 +1430,41 @@ cvFindContours( void*  img,  CvMemStorage*  storage,
     CvSeq *contour = 0;
     int count = -1;
 
-    CV_FUNCNAME( "cvFindContours" );
-
-    __BEGIN__;
-
     if( !firstContour )
-        CV_ERROR( CV_StsNullPtr, "NULL double CvSeq pointer" );
+        CV_Error( CV_StsNullPtr, "NULL double CvSeq pointer" );
+    
+    *firstContour = 0;
 
     if( method == CV_LINK_RUNS )
     {
         if( offset.x != 0 || offset.y != 0 )
-            CV_ERROR( CV_StsOutOfRange,
+            CV_Error( CV_StsOutOfRange,
             "Nonzero offset is not supported in CV_LINK_RUNS yet" );
 
-        CV_CALL( count = icvFindContoursInInterval( img, storage,
-                                    firstContour, cntHeaderSize ));
+        count = icvFindContoursInInterval( img, storage, firstContour, cntHeaderSize );
     }
     else
     {
-        CV_CALL( scanner = cvStartFindContours( img, storage,
-                        cntHeaderSize, mode, method, offset ));
-        assert( scanner );
-
-        do
+        try
         {
-            count++;
-            contour = cvFindNextContour( scanner );
+            scanner = cvStartFindContours( img, storage, cntHeaderSize, mode, method, offset );
+
+            do
+            {
+                count++;
+                contour = cvFindNextContour( scanner );
+            }
+            while( contour != 0 );
         }
-        while( contour != 0 );
+        catch(...)
+        {
+            if( scanner )
+                cvEndFindContours(&scanner);
+            throw;
+        }
 
         *firstContour = cvEndFindContours( &scanner );
     }
-
-    __END__;
 
     return count;
 }
