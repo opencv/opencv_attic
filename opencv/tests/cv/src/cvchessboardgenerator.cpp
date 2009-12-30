@@ -206,7 +206,7 @@ Mat cv::ChessBoardGenerator::operator ()(const Mat& bg, const Mat& camMat, const
     Point3f pb1, pb2;    
     generateBasis(pb1, pb2);
             
-    float cbHalfWidth = static_cast<float>(norm(p) * sin( min(fovx, fovy) * 0.5 * cov * CV_PI / 180));
+    float cbHalfWidth = static_cast<float>(norm(p) * sin( min(fovx, fovy) * 0.5 * CV_PI / 180));
     float cbHalfHeight = cbHalfWidth * patternSize.height / patternSize.width;
     
     vector<Point3f> pts3d(4);
