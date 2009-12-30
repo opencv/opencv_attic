@@ -1230,6 +1230,10 @@ int CvTS::run( int argc, char** argv )
     // 0. reset all the parameters, reorder tests
     clear();
 
+#if defined WIN32 || defined _WIN32
+	cv::setBreakOnError(true);
+#endif
+
     for( test = get_first_test(), i = 0; test != 0; test = test->get_next(), i++ )
         all_tests.push(test);
 
