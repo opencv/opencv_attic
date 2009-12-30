@@ -42,6 +42,7 @@
 #include "_cv.h"
 #include "_cvmodelest.h"
 #include <algorithm>
+#include <iterator>
 #include <limits>
 
 using namespace std;
