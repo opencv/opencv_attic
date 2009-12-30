@@ -45,12 +45,8 @@ cvFindCornerSubPix( const void* srcarr, CvPoint2D32f* corners,
                     int count, CvSize win, CvSize zeroZone,
                     CvTermCriteria criteria )
 {
-    float* buffer = 0;
+    cv::AutoBuffer<float> buffer;
     
-    CV_FUNCNAME( "cvFindCornerSubPix" );
-
-    __BEGIN__;
-
     const int MAX_ITERS = 100;
     const float drv_x[] = { -1.f, 0.f, 1.f };
     const float drv_y[] = { 0.f, 0.5f, 0.f };
@@ -65,31 +61,31 @@ cvFindCornerSubPix( const void* srcarr, CvPoint2D32f* corners,
     double coeff;
     CvSize size, src_buf_size;
     int i, j, k, pt_i;
-    int max_iters, buffer_size;
+    int max_iters;
     double eps;
 
     CvMat stub, *src = (CvMat*)srcarr;
-    CV_CALL( src = cvGetMat( srcarr, &stub ));
+    src = cvGetMat( srcarr, &stub );
 
     if( CV_MAT_TYPE( src->type ) != CV_8UC1 )
-        CV_ERROR( CV_StsBadMask, "" );
+        CV_Error( CV_StsBadMask, "" );
 
     if( !corners )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
     if( count < 0 )
-        CV_ERROR( CV_StsBadSize, "" );
+        CV_Error( CV_StsBadSize, "" );
 
     if( count == 0 )
-        EXIT;
+        return;
 
     if( win.width <= 0 || win.height <= 0 )
-        CV_ERROR( CV_StsBadSize, "" );
+        CV_Error( CV_StsBadSize, "" );
 
     size = cvGetMatSize( src );
 
     if( size.width < win_w + 4 || size.height < win_h + 4 )
-        CV_ERROR( CV_StsBadSize, "" );
+        CV_Error( CV_StsBadSize, "" );
 
     /* initialize variables, controlling loop termination */
     switch( criteria.type )
@@ -108,7 +104,7 @@ cvFindCornerSubPix( const void* srcarr, CvPoint2D32f* corners,
         break;
     default:
         assert( 0 );
-        CV_ERROR( CV_StsBadFlag, "" );
+        CV_Error( CV_StsBadFlag, "" );
     }
 
     eps = MAX( eps, 0 );
@@ -117,9 +113,7 @@ cvFindCornerSubPix( const void* srcarr, CvPoint2D32f* corners,
     max_iters = MAX( max_iters, 1 );
     max_iters = MIN( max_iters, MAX_ITERS );
 
-    /* setup buffer */
-    buffer_size = (win_rect_size * 5 + win_w + win_h + 32) * sizeof(float);
-    buffer = (float*)cvAlloc( buffer_size );
+    buffer.allocate( win_rect_size * 5 + win_w + win_h + 32 );
 
     /* assign pointers */
     maskX = buffer;
@@ -258,10 +252,6 @@ cvFindCornerSubPix( const void* srcarr, CvPoint2D32f* corners,
 
         corners[pt_i] = cI;     /* store result */
     }
-
-    __END__;
-
-    cvFree( &buffer );
 }
 
 void cv::cornerSubPix( const Mat& image, vector<Point2f>& corners,

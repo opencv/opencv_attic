@@ -444,11 +444,7 @@ icvGetDistanceTransformMask( int maskType, float *metrics )
 static void
 icvTrueDistTrans( const CvMat* src, CvMat* dst )
 {
-    CvMat* buffer = 0;
-
-    CV_FUNCNAME( "cvDistTransform2" );
-
-    __BEGIN__;
+    cv::Ptr<CvMat> buffer = 0;
 
     int i, m, n;
     int sstep, dstep;
@@ -457,11 +453,11 @@ icvTrueDistTrans( const CvMat* src, CvMat* dst )
     int pass1_sz, pass2_sz;
 
     if( !CV_ARE_SIZES_EQ( src, dst ))
-        CV_ERROR( CV_StsUnmatchedSizes, "" );
+        CV_Error( CV_StsUnmatchedSizes, "" );
 
     if( CV_MAT_TYPE(src->type) != CV_8UC1 ||
         CV_MAT_TYPE(dst->type) != CV_32FC1 )
-        CV_ERROR( CV_StsUnsupportedFormat,
+        CV_Error( CV_StsUnsupportedFormat,
         "The input image must have 8uC1 type and the output one must have 32fC1 type" );
 
     m = src->rows;
@@ -473,13 +469,12 @@ icvTrueDistTrans( const CvMat* src, CvMat* dst )
     // (see stage 2):
     // sqr_tab & inv_tab: n each; f & v: n*thread_count each; z: (n+1)*thread_count
     pass2_sz = src->cols*(2 + thread_count*3) + thread_count;
-    CV_CALL( buffer = cvCreateMat( 1, MAX(pass1_sz, pass2_sz), CV_32FC1 ));
+    buffer = cvCreateMat( 1, MAX(pass1_sz, pass2_sz), CV_32FC1 );
 
     sstep = src->step;
     dstep = dst->step / sizeof(float);
 
     // stage 1: compute 1d distance transform of each column
-    {
     float* sqr_tab = buffer->data.fl;
     int* sat_tab = (int*)(sqr_tab + m*2);
     const int shift = m*2;
@@ -517,12 +512,10 @@ icvTrueDistTrans( const CvMat* src, CvMat* dst )
             dptr[0] = sqr_tab[dist];
         }
     }
-    }
 
     // stage 2: compute modified distance transform for each row
-    {
     float* inv_tab = buffer->data.fl;
-    float* sqr_tab = inv_tab + n;
+    sqr_tab = inv_tab + n;
 
     inv_tab[0] = sqr_tab[0] = 0.f;
     for( i = 1; i < n; i++ )
@@ -575,13 +568,8 @@ icvTrueDistTrans( const CvMat* src, CvMat* dst )
             d[q] = sqr_tab[abs(q - p)] + f[p];
         }
     }
-    }
 
     cvPow( dst, dst, 0.5 );
-
-    __END__;
-
-    cvReleaseMat( &buffer );
 }
 
 
@@ -612,10 +600,6 @@ typedef CvStatus (CV_STDCALL * CvDistTransFunc)( const uchar* src, int srcstep,
 static void
 icvDistanceATS_L1_8u( const CvMat* src, CvMat* dst )
 {
-    CV_FUNCNAME( "cvDistanceATS" );
-
-    __BEGIN__;
-
     int width = src->cols, height = src->rows;
 
     int a;
@@ -627,8 +611,8 @@ icvDistanceATS_L1_8u( const CvMat* src, CvMat* dst )
     int srcstep = src->step;
     int dststep = dst->step;
 
-    CV_ASSERT( CV_IS_MASK_ARR( src ) && CV_MAT_TYPE( dst->type ) == CV_8UC1 );
-    CV_ASSERT( CV_ARE_SIZES_EQ( src, dst ));
+    CV_Assert( CV_IS_MASK_ARR( src ) && CV_MAT_TYPE( dst->type ) == CV_8UC1 );
+    CV_Assert( CV_ARE_SIZES_EQ( src, dst ));
 
     ////////////////////// forward scan ////////////////////////
     for( x = 0; x < 256; x++ )
@@ -684,8 +668,6 @@ icvDistanceATS_L1_8u( const CvMat* src, CvMat* dst )
             dbase[x] = (uchar)(MIN(a, dbase[x]));
         }
     }
-
-    __END__;
 }
 //END ATS ADDITION
 
@@ -697,14 +679,10 @@ cvDistTransform( const void* srcarr, void* dstarr,
                  const float *mask,
                  void* labelsarr )
 {
-    CvMat* temp = 0;
-    CvMat* src_copy = 0;
-    CvMemStorage* st = 0;
+    cv::Ptr<CvMat> temp;
+    cv::Ptr<CvMat> src_copy;
+    cv::Ptr<CvMemStorage> st;
     
-    CV_FUNCNAME( "cvDistTransform" );
-
-    __BEGIN__;
-
     float _mask[5] = {0};
     CvMat srcstub, *src = (CvMat*)srcarr;
     CvMat dststub, *dst = (CvMat*)dstarr;
@@ -713,20 +691,20 @@ cvDistTransform( const void* srcarr, void* dstarr,
     //CvIPPDistTransFunc ipp_func = 0;
     //CvIPPDistTransFunc2 ipp_inp_func = 0;
 
-    CV_CALL( src = cvGetMat( src, &srcstub ));
-    CV_CALL( dst = cvGetMat( dst, &dststub ));
+    src = cvGetMat( src, &srcstub );
+    dst = cvGetMat( dst, &dststub );
 
     if( !CV_IS_MASK_ARR( src ) || (CV_MAT_TYPE( dst->type ) != CV_32FC1 &&
         (CV_MAT_TYPE(dst->type) != CV_8UC1 || distType != CV_DIST_L1 || labels)) )
-        CV_ERROR( CV_StsUnsupportedFormat,
+        CV_Error( CV_StsUnsupportedFormat,
         "source image must be 8uC1 and the distance map must be 32fC1 "
         "(or 8uC1 in case of simple L1 distance transform)" );
 
     if( !CV_ARE_SIZES_EQ( src, dst ))
-        CV_ERROR( CV_StsUnmatchedSizes, "the source and the destination images must be of the same size" );
+        CV_Error( CV_StsUnmatchedSizes, "the source and the destination images must be of the same size" );
 
     if( maskSize != CV_DIST_MASK_3 && maskSize != CV_DIST_MASK_5 && maskSize != CV_DIST_MASK_PRECISE )
-        CV_ERROR( CV_StsBadSize, "Mask size should be 3 or 5 or 0 (presize)" );
+        CV_Error( CV_StsBadSize, "Mask size should be 3 or 5 or 0 (presize)" );
 
     if( distType == CV_DIST_C || distType == CV_DIST_L1 )
         maskSize = !labels ? CV_DIST_MASK_3 : CV_DIST_MASK_5;
@@ -735,21 +713,21 @@ cvDistTransform( const void* srcarr, void* dstarr,
 
     if( maskSize == CV_DIST_MASK_PRECISE )
     {
-        CV_CALL( icvTrueDistTrans( src, dst ));
-        EXIT;
+        icvTrueDistTrans( src, dst );
+        return;
     }
     
     if( labels )
     {
-        CV_CALL( labels = cvGetMat( labels, &lstub ));
+        labels = cvGetMat( labels, &lstub );
         if( CV_MAT_TYPE( labels->type ) != CV_32SC1 )
-            CV_ERROR( CV_StsUnsupportedFormat, "the output array of labels must be 32sC1" );
+            CV_Error( CV_StsUnsupportedFormat, "the output array of labels must be 32sC1" );
 
         if( !CV_ARE_SIZES_EQ( labels, dst ))
-            CV_ERROR( CV_StsUnmatchedSizes, "the array of labels has a different size" );
+            CV_Error( CV_StsUnmatchedSizes, "the array of labels has a different size" );
 
         if( maskSize == CV_DIST_MASK_3 )
-            CV_ERROR( CV_StsNotImplemented,
+            CV_Error( CV_StsNotImplemented,
             "3x3 mask can not be used for \"labeled\" distance transform. Use 5x5 mask" );
     }
 
@@ -761,7 +739,7 @@ cvDistTransform( const void* srcarr, void* dstarr,
     else if( distType == CV_DIST_USER )
     {
         if( !mask )
-            CV_ERROR( CV_StsNullPtr, "" );
+            CV_Error( CV_StsNullPtr, "" );
 
         memcpy( _mask, mask, (maskSize/2 + 1)*sizeof(float));
     }
@@ -800,12 +778,12 @@ cvDistTransform( const void* srcarr, void* dstarr,
     }
     else*/ if( CV_MAT_TYPE(dst->type) == CV_8UC1 )
     {
-        CV_CALL( icvDistanceATS_L1_8u( src, dst ));
+        icvDistanceATS_L1_8u( src, dst );
     }
     else
     {
         int border = maskSize == CV_DIST_MASK_3 ? 1 : 2;
-        CV_CALL( temp = cvCreateMat( size.height + border*2, size.width + border*2, CV_32SC1 ));
+        temp = cvCreateMat( size.height + border*2, size.width + border*2, CV_32SC1 );
 
         if( !labels )
         {
@@ -822,8 +800,8 @@ cvDistTransform( const void* srcarr, void* dstarr,
             CvPoint top_left = {0,0}, bottom_right = {size.width-1,size.height-1};
             int label;
 
-            CV_CALL( st = cvCreateMemStorage() );
-            CV_CALL( src_copy = cvCreateMat( size.height, size.width, src->type ));
+            st = cvCreateMemStorage();
+            src_copy = cvCreateMat( size.height, size.width, src->type );
             cvCmpS( src, 0, src_copy, CV_CMP_EQ );
             cvFindContours( src_copy, st, &contours, sizeof(CvContour),
                             CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE );
@@ -841,12 +819,6 @@ cvDistTransform( const void* srcarr, void* dstarr,
                         dst->data.fl, dst->step, labels->data.i, labels->step, size, _mask );
         }
     }
-
-    __END__;
-
-    cvReleaseMat( &temp );
-    cvReleaseMat( &src_copy );
-    cvReleaseMemStorage( &st );
 }
 
 void cv::distanceTransform( const Mat& src, Mat& dst, Mat& labels,

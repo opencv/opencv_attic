@@ -992,16 +992,16 @@ public:
     void step();
     enum { DONE=0, STARTED=1, CALC_J=2, CHECK_ERR=3 };
 
-    CvMat* mask;
-    CvMat* prevParam;
-    CvMat* param;
-    CvMat* J;
-    CvMat* err;
-    CvMat* JtJ;
-    CvMat* JtJN;
-    CvMat* JtErr;
-    CvMat* JtJV;
-    CvMat* JtJW;
+    cv::Ptr<CvMat> mask;
+    cv::Ptr<CvMat> prevParam;
+    cv::Ptr<CvMat> param;
+    cv::Ptr<CvMat> J;
+    cv::Ptr<CvMat> err;
+    cv::Ptr<CvMat> JtJ;
+    cv::Ptr<CvMat> JtJN;
+    cv::Ptr<CvMat> JtErr;
+    cv::Ptr<CvMat> JtJV;
+    cv::Ptr<CvMat> JtJW;
     double prevErrNorm, errNorm;
     int lambdaLg10;
     CvTermCriteria criteria;

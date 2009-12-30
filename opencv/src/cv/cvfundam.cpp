@@ -42,6 +42,8 @@
 #include "_cv.h"
 #include "_cvmodelest.h"
 
+using namespace cv;
+
 template<typename T> int icvCompressPoints( T* ptr, const uchar* mask, int mstep, int count )
 {
     int i, j;
@@ -216,20 +218,16 @@ cvFindHomography( const CvMat* objectPoints, const CvMat* imagePoints,
     const double confidence = 0.995;
     const int maxIters = 2000;
     bool result = false;
-    CvMat *m = 0, *M = 0, *tempMask = 0;
-
-    CV_FUNCNAME( "cvFindHomography" );
-
-    __BEGIN__;
+    Ptr<CvMat> m, M, tempMask;
 
     double H[9];
     CvMat _H = cvMat( 3, 3, CV_64FC1, H );
     int count;
 
-    CV_ASSERT( CV_IS_MAT(imagePoints) && CV_IS_MAT(objectPoints) );
+    CV_Assert( CV_IS_MAT(imagePoints) && CV_IS_MAT(objectPoints) );
 
     count = MAX(imagePoints->cols, imagePoints->rows);
-    CV_ASSERT( count >= 4 );
+    CV_Assert( count >= 4 );
 
     m = cvCreateMat( 1, count, CV_64FC2 );
     cvConvertPointsHomogeneous( imagePoints, m );
@@ -239,17 +237,17 @@ cvFindHomography( const CvMat* objectPoints, const CvMat* imagePoints,
 
     if( mask )
     {
-        CV_ASSERT( CV_IS_MASK_ARR(mask) && CV_IS_MAT_CONT(mask->type) &&
+        CV_Assert( CV_IS_MASK_ARR(mask) && CV_IS_MAT_CONT(mask->type) &&
             (mask->rows == 1 || mask->cols == 1) &&
             mask->rows*mask->cols == count );
         tempMask = mask;
+        tempMask.addref();
     }
     else if( count > 4 )
         tempMask = cvCreateMat( 1, count, CV_8U );
-    if( tempMask )
+    if( !tempMask.empty() )
         cvSet( tempMask, cvScalarAll(1.) );
 
-    {
     CvHomographyEstimator estimator( MIN(count, 5) );
     if( count == 4 )
         method = 0;
@@ -267,17 +265,9 @@ cvFindHomography( const CvMat* objectPoints, const CvMat* imagePoints,
         M->cols = m->cols = count;
         estimator.refine( M, m, &_H, 10 );
     }
-    }
 
     if( result )
         cvConvert( &_H, __H );
-
-    __END__;
-
-    cvReleaseMat( &m );
-    cvReleaseMat( &M );
-    if( tempMask != mask )
-        cvReleaseMat( &tempMask );
 
     return (int)result;
 }
@@ -579,29 +569,24 @@ void CvFMEstimator::computeReprojError( const CvMat* _m1, const CvMat* _m2,
 }
 
 
-CV_IMPL int
-cvFindFundamentalMat( const CvMat* points1, const CvMat* points2,
-                      CvMat* fmatrix, int method,
-                      double param1, double param2, CvMat* mask )
+CV_IMPL int cvFindFundamentalMat( const CvMat* points1, const CvMat* points2,
+                                  CvMat* fmatrix, int method,
+                                  double param1, double param2, CvMat* mask )
 {
     int result = 0;
-    CvMat *m1 = 0, *m2 = 0, *tempMask = 0;
-
-    CV_FUNCNAME( "cvFindFundamentalMat" );
-
-    __BEGIN__;
+    Ptr<CvMat> m1, m2, tempMask;
 
     double F[3*9];
     CvMat _F3x3 = cvMat( 3, 3, CV_64FC1, F ), _F9x3 = cvMat( 9, 3, CV_64FC1, F );
     int count;
 
-    CV_ASSERT( CV_IS_MAT(points1) && CV_IS_MAT(points2) && CV_ARE_SIZES_EQ(points1, points2) );
-    CV_ASSERT( CV_IS_MAT(fmatrix) && fmatrix->cols == 3 &&
+    CV_Assert( CV_IS_MAT(points1) && CV_IS_MAT(points2) && CV_ARE_SIZES_EQ(points1, points2) );
+    CV_Assert( CV_IS_MAT(fmatrix) && fmatrix->cols == 3 &&
         (fmatrix->rows == 3 || (fmatrix->rows == 9 && method == CV_FM_7POINT)) );
 
     count = MAX(points1->cols, points1->rows);
     if( count < 7 )
-        EXIT;
+        return 0;
 
     m1 = cvCreateMat( 1, count, CV_64FC2 );
     cvConvertPointsHomogeneous( points1, m1 );
@@ -611,7 +596,7 @@ cvFindFundamentalMat( const CvMat* points1, const CvMat* points2,
 
     if( mask )
     {
-        CV_ASSERT( CV_IS_MASK_ARR(mask) && CV_IS_MAT_CONT(mask->type) &&
+        CV_Assert( CV_IS_MASK_ARR(mask) && CV_IS_MAT_CONT(mask->type) &&
             (mask->rows == 1 || mask->cols == 1) &&
             mask->rows*mask->cols == count );
         tempMask = cvCreateMatHeader(1, count, CV_8U);
@@ -619,10 +604,9 @@ cvFindFundamentalMat( const CvMat* points1, const CvMat* points2,
     }
     else if( count > 8 )
         tempMask = cvCreateMat( 1, count, CV_8U );
-    if( tempMask )
+    if( !tempMask.empty() )
         cvSet( tempMask, cvScalarAll(1.) );
 
-    {
     CvFMEstimator estimator( MIN(count, (method & 3) == CV_FM_7POINT ? 7 : 8) );
     if( count == 7 )
         result = estimator.run7Point(m1, m2, &_F9x3);
@@ -640,37 +624,24 @@ cvFindFundamentalMat( const CvMat* points1, const CvMat* points2,
         else
             result = estimator.runLMeDS(m1, m2, &_F3x3, tempMask, param2 );
         if( result <= 0 )
-            EXIT;
+            return 0;
         /*icvCompressPoints( (CvPoint2D64f*)m1->data.ptr, tempMask->data.ptr, 1, count );
         count = icvCompressPoints( (CvPoint2D64f*)m2->data.ptr, tempMask->data.ptr, 1, count );
         assert( count >= 8 );
         m1->cols = m2->cols = count;
         estimator.run8Point(m1, m2, &_F3x3);*/
     }
-    }
 
     if( result )
         cvConvert( fmatrix->rows == 3 ? &_F3x3 : &_F9x3, fmatrix );
-
-    __END__;
-
-    cvReleaseMat( &m1 );
-    cvReleaseMat( &m2 );
-    if( tempMask != mask )
-        cvReleaseMat( &tempMask );
 
     return result;
 }
 
 
-CV_IMPL void
-cvComputeCorrespondEpilines( const CvMat* points, int pointImageID,
-                             const CvMat* fmatrix, CvMat* lines )
+CV_IMPL void cvComputeCorrespondEpilines( const CvMat* points, int pointImageID,
+                                          const CvMat* fmatrix, CvMat* lines )
 {
-    CV_FUNCNAME( "cvComputeCorrespondEpilines" );
-
-    __BEGIN__;
-
     int abc_stride, abc_plane_stride, abc_elem_size;
     int plane_stride, stride, elem_size;
     int i, dims, count, depth, cn, abc_dims, abc_count, abc_depth, abc_cn;
@@ -680,12 +651,12 @@ cvComputeCorrespondEpilines( const CvMat* points, int pointImageID,
     CvMat F = cvMat( 3, 3, CV_64F, f );
 
     if( !CV_IS_MAT(points) )
-        CV_ERROR( !points ? CV_StsNullPtr : CV_StsBadArg, "points parameter is not a valid matrix" );
+        CV_Error( !points ? CV_StsNullPtr : CV_StsBadArg, "points parameter is not a valid matrix" );
 
     depth = CV_MAT_DEPTH(points->type);
     cn = CV_MAT_CN(points->type);
     if( (depth != CV_32F && depth != CV_64F) || (cn != 1 && cn != 2 && cn != 3) )
-        CV_ERROR( CV_StsUnsupportedFormat, "The format of point matrix is unsupported" );
+        CV_Error( CV_StsUnsupportedFormat, "The format of point matrix is unsupported" );
 
     if( points->rows > points->cols )
     {
@@ -695,30 +666,30 @@ cvComputeCorrespondEpilines( const CvMat* points, int pointImageID,
     else
     {
         if( (points->rows > 1 && cn > 1) || (points->rows == 1 && cn == 1) )
-            CV_ERROR( CV_StsBadSize, "The point matrix does not have a proper layout (2xn, 3xn, nx2 or nx3)" );
+            CV_Error( CV_StsBadSize, "The point matrix does not have a proper layout (2xn, 3xn, nx2 or nx3)" );
         dims = cn * points->rows;
         count = points->cols;
     }
 
     if( dims != 2 && dims != 3 )
-        CV_ERROR( CV_StsOutOfRange, "The dimensionality of points must be 2 or 3" );
+        CV_Error( CV_StsOutOfRange, "The dimensionality of points must be 2 or 3" );
 
     if( !CV_IS_MAT(fmatrix) )
-        CV_ERROR( !fmatrix ? CV_StsNullPtr : CV_StsBadArg, "fmatrix is not a valid matrix" );
+        CV_Error( !fmatrix ? CV_StsNullPtr : CV_StsBadArg, "fmatrix is not a valid matrix" );
 
     if( CV_MAT_TYPE(fmatrix->type) != CV_32FC1 && CV_MAT_TYPE(fmatrix->type) != CV_64FC1 )
-        CV_ERROR( CV_StsUnsupportedFormat, "fundamental matrix must have 32fC1 or 64fC1 type" );
+        CV_Error( CV_StsUnsupportedFormat, "fundamental matrix must have 32fC1 or 64fC1 type" );
 
     if( fmatrix->cols != 3 || fmatrix->rows != 3 )
-        CV_ERROR( CV_StsBadSize, "fundamental matrix must be 3x3" );
+        CV_Error( CV_StsBadSize, "fundamental matrix must be 3x3" );
 
     if( !CV_IS_MAT(lines) )
-        CV_ERROR( !lines ? CV_StsNullPtr : CV_StsBadArg, "lines parameter is not a valid matrix" );
+        CV_Error( !lines ? CV_StsNullPtr : CV_StsBadArg, "lines parameter is not a valid matrix" );
 
     abc_depth = CV_MAT_DEPTH(lines->type);
     abc_cn = CV_MAT_CN(lines->type);
     if( (abc_depth != CV_32F && abc_depth != CV_64F) || (abc_cn != 1 && abc_cn != 3) )
-        CV_ERROR( CV_StsUnsupportedFormat, "The format of the matrix of lines is unsupported" );
+        CV_Error( CV_StsUnsupportedFormat, "The format of the matrix of lines is unsupported" );
 
     if( lines->rows > lines->cols )
     {
@@ -728,16 +699,16 @@ cvComputeCorrespondEpilines( const CvMat* points, int pointImageID,
     else
     {
         if( (lines->rows > 1 && abc_cn > 1) || (lines->rows == 1 && abc_cn == 1) )
-            CV_ERROR( CV_StsBadSize, "The lines matrix does not have a proper layout (3xn or nx3)" );
+            CV_Error( CV_StsBadSize, "The lines matrix does not have a proper layout (3xn or nx3)" );
         abc_dims = abc_cn * lines->rows;
         abc_count = lines->cols;
     }
 
     if( abc_dims != 3 )
-        CV_ERROR( CV_StsOutOfRange, "The lines matrix does not have a proper layout (3xn or nx3)" );
+        CV_Error( CV_StsOutOfRange, "The lines matrix does not have a proper layout (3xn or nx3)" );
 
     if( abc_count != count )
-        CV_ERROR( CV_StsUnmatchedSizes, "The numbers of points and lines are different" );
+        CV_Error( CV_StsUnmatchedSizes, "The numbers of points and lines are different" );
 
     elem_size = CV_ELEM_SIZE(depth);
     abc_elem_size = CV_ELEM_SIZE(abc_depth);
@@ -764,7 +735,7 @@ cvComputeCorrespondEpilines( const CvMat* points, int pointImageID,
         abc_stride = lines->rows == 1 ? 3*abc_elem_size : lines->step;
     }
 
-    CV_CALL( cvConvert( fmatrix, &F ));
+    cvConvert( fmatrix, &F );
     if( pointImageID == 2 )
         cvTranspose( &F, &F );
 
@@ -820,44 +791,36 @@ cvComputeCorrespondEpilines( const CvMat* points, int pointImageID,
         bp += abc_stride;
         cp += abc_stride;
     }
-
-    __END__;
 }
 
 
-CV_IMPL void
-cvConvertPointsHomogeneous( const CvMat* src, CvMat* dst )
+CV_IMPL void cvConvertPointsHomogeneous( const CvMat* src, CvMat* dst )
 {
-    CvMat* temp = 0;
-    CvMat* denom = 0;
-
-    CV_FUNCNAME( "cvConvertPointsHomogeneous" );
-
-    __BEGIN__;
+    Ptr<CvMat> temp, denom;
 
     int i, s_count, s_dims, d_count, d_dims;
     CvMat _src, _dst, _ones;
     CvMat* ones = 0;
 
     if( !CV_IS_MAT(src) )
-        CV_ERROR( !src ? CV_StsNullPtr : CV_StsBadArg,
+        CV_Error( !src ? CV_StsNullPtr : CV_StsBadArg,
         "The input parameter is not a valid matrix" );
 
     if( !CV_IS_MAT(dst) )
-        CV_ERROR( !dst ? CV_StsNullPtr : CV_StsBadArg,
+        CV_Error( !dst ? CV_StsNullPtr : CV_StsBadArg,
         "The output parameter is not a valid matrix" );
 
     if( src == dst || src->data.ptr == dst->data.ptr )
     {
         if( src != dst && (!CV_ARE_TYPES_EQ(src, dst) || !CV_ARE_SIZES_EQ(src,dst)) )
-            CV_ERROR( CV_StsBadArg, "Invalid inplace operation" );
-        EXIT;
+            CV_Error( CV_StsBadArg, "Invalid inplace operation" );
+        return;
     }
 
     if( src->rows > src->cols )
     {
         if( !((src->cols > 1) ^ (CV_MAT_CN(src->type) > 1)) )
-            CV_ERROR( CV_StsBadSize, "Either the number of channels or columns or rows must be =1" );
+            CV_Error( CV_StsBadSize, "Either the number of channels or columns or rows must be =1" );
 
         s_dims = CV_MAT_CN(src->type)*src->cols;
         s_count = src->rows;
@@ -865,7 +828,7 @@ cvConvertPointsHomogeneous( const CvMat* src, CvMat* dst )
     else
     {
         if( !((src->rows > 1) ^ (CV_MAT_CN(src->type) > 1)) )
-            CV_ERROR( CV_StsBadSize, "Either the number of channels or columns or rows must be =1" );
+            CV_Error( CV_StsBadSize, "Either the number of channels or columns or rows must be =1" );
 
         s_dims = CV_MAT_CN(src->type)*src->rows;
         s_count = src->cols;
@@ -877,7 +840,7 @@ cvConvertPointsHomogeneous( const CvMat* src, CvMat* dst )
     if( dst->rows > dst->cols )
     {
         if( !((dst->cols > 1) ^ (CV_MAT_CN(dst->type) > 1)) )
-            CV_ERROR( CV_StsBadSize,
+            CV_Error( CV_StsBadSize,
             "Either the number of channels or columns or rows in the input matrix must be =1" );
 
         d_dims = CV_MAT_CN(dst->type)*dst->cols;
@@ -886,7 +849,7 @@ cvConvertPointsHomogeneous( const CvMat* src, CvMat* dst )
     else
     {
         if( !((dst->rows > 1) ^ (CV_MAT_CN(dst->type) > 1)) )
-            CV_ERROR( CV_StsBadSize,
+            CV_Error( CV_StsBadSize,
             "Either the number of channels or columns or rows in the output matrix must be =1" );
 
         d_dims = CV_MAT_CN(dst->type)*dst->rows;
@@ -897,18 +860,18 @@ cvConvertPointsHomogeneous( const CvMat* src, CvMat* dst )
         dst = cvReshape( dst, &_dst, 1, d_count );
 
     if( s_count != d_count )
-        CV_ERROR( CV_StsUnmatchedSizes, "Both matrices must have the same number of points" );
+        CV_Error( CV_StsUnmatchedSizes, "Both matrices must have the same number of points" );
 
     if( CV_MAT_DEPTH(src->type) < CV_32F || CV_MAT_DEPTH(dst->type) < CV_32F )
-        CV_ERROR( CV_StsUnsupportedFormat,
+        CV_Error( CV_StsUnsupportedFormat,
         "Both matrices must be floating-point (single or double precision)" );
 
     if( s_dims < 2 || s_dims > 4 || d_dims < 2 || d_dims > 4 )
-        CV_ERROR( CV_StsOutOfRange,
+        CV_Error( CV_StsOutOfRange,
         "Both input and output point dimensionality must be 2, 3 or 4" );
 
     if( s_dims < d_dims - 1 || s_dims > d_dims + 1 )
-        CV_ERROR( CV_StsUnmatchedSizes,
+        CV_Error( CV_StsUnmatchedSizes,
         "The dimensionalities of input and output point sets differ too much" );
 
     if( s_dims == d_dims - 1 )
@@ -938,7 +901,7 @@ cvConvertPointsHomogeneous( const CvMat* src, CvMat* dst )
         {
             if( !CV_ARE_TYPES_EQ( src, dst ))
             {
-                CV_CALL( temp = cvCreateMat( src->rows, src->cols, dst->type ));
+                temp = cvCreateMat( src->rows, src->cols, dst->type );
                 cvConvert( src, temp );
                 src = temp;
             }
@@ -954,7 +917,7 @@ cvConvertPointsHomogeneous( const CvMat* src, CvMat* dst )
 
         if( !CV_ARE_TYPES_EQ( src, dst ))
         {
-            CV_CALL( temp = cvCreateMat( src->rows, src->cols, dst->type ));
+            temp = cvCreateMat( src->rows, src->cols, dst->type );
             cvConvert( src, temp );
             src = temp;
         }
@@ -971,7 +934,7 @@ cvConvertPointsHomogeneous( const CvMat* src, CvMat* dst )
         else
             d_stride = dst->step / elem_size, d_plane_stride = 1;
 
-        CV_CALL( denom = cvCreateMat( 1, d_count, dst->type ));
+        denom = cvCreateMat( 1, d_count, dst->type );
 
         if( CV_MAT_DEPTH(dst->type) == CV_32F )
         {
@@ -1066,11 +1029,6 @@ cvConvertPointsHomogeneous( const CvMat* src, CvMat* dst )
                 }
         }
     }
-
-    __END__;
-
-    cvReleaseMat( &denom );
-    cvReleaseMat( &temp );
 }
 
 namespace cv

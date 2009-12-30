@@ -138,26 +138,26 @@ size_t findSubboxForPoint(const Point3f& point, const Octree::Node& node)
 
     return (ind_x << 2) + (ind_y << 1) + (ind_z << 0);
 }
-void initChildBox(const Octree::Node& perent, size_t boxIndex, Octree::Node& child)
+void initChildBox(const Octree::Node& parent, size_t boxIndex, Octree::Node& child)
 {
-    child.x_min = child.x_max = (perent.x_max + perent.x_min) / 2;
-    child.y_min = child.y_max = (perent.y_max + perent.y_min) / 2;
-    child.z_min = child.z_max = (perent.z_max + perent.z_min) / 2;
+    child.x_min = child.x_max = (parent.x_max + parent.x_min) / 2;
+    child.y_min = child.y_max = (parent.y_max + parent.y_min) / 2;
+    child.z_min = child.z_max = (parent.z_max + parent.z_min) / 2;
 
     if ((boxIndex >> 0) & 1)
-        child.z_max = perent.z_max;
+        child.z_max = parent.z_max;
     else
-        child.z_min = perent.z_min;
+        child.z_min = parent.z_min;
 
     if ((boxIndex >> 1) & 1)
-        child.y_max = perent.y_max;
+        child.y_max = parent.y_max;
     else
-        child.y_min = perent.y_min;
+        child.y_min = parent.y_min;
 
     if ((boxIndex >> 2) & 1)
-        child.x_max = perent.x_max;
+        child.x_max = parent.x_max;
     else
-        child.x_min = perent.x_min;
+        child.x_min = parent.x_min;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -200,7 +200,7 @@ void Octree::getPointsWithinSphere( const Point3f& center, float radius, vector<
             size_t sz = out.size();
             out.resize(sz + cur.end - cur.begin);
             for(int i = cur.begin; i < cur.end; ++i)
-                out[sz++] = points[i];;
+                out[sz++] = points[i];
             continue;
         }
 
@@ -284,7 +284,7 @@ void  Octree::buildNext(size_t node_ind)
     size_t size = nodes[node_ind].end - nodes[node_ind].begin;
 
     vector<size_t> boxBorders(9, 0);
-    vector<size_t> boxIndeces(size);
+    vector<size_t> boxIndices(size);
     vector<Point3f> tempPoints(size);
 
     for(int i = nodes[node_ind].begin, j = 0; i < nodes[node_ind].end; ++i, ++j)
@@ -294,7 +294,7 @@ void  Octree::buildNext(size_t node_ind)
         size_t subbox_ind = findSubboxForPoint(p, nodes[node_ind]);
 
         boxBorders[subbox_ind+1]++;
-        boxIndeces[j] = subbox_ind;
+        boxIndices[j] = subbox_ind;
         tempPoints[j] = p;
     }
 
@@ -305,7 +305,7 @@ void  Octree::buildNext(size_t node_ind)
     
     for(size_t i = 0; i < size; ++i)
     {
-        size_t boxIndex = boxIndeces[i];
+        size_t boxIndex = boxIndices[i];
         Point3f& curPoint = tempPoints[i];
 
         size_t copyTo = nodes[node_ind].begin + writeInds[boxIndex]++;

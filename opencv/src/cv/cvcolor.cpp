@@ -2190,10 +2190,6 @@ icvBayer2BGR_8u_C1C3R( const uchar* bayer0, int bayer_step,
 CV_IMPL void
 cvCvtColor( const CvArr* srcarr, CvArr* dstarr, int code )
 {
-    CV_FUNCNAME( "cvCvtColor" );
-
-    __BEGIN__;
-    
     CvMat srcstub, *src = (CvMat*)srcarr;
     CvMat dststub, *dst = (CvMat*)dstarr;
     CvSize size;
@@ -2205,18 +2201,18 @@ cvCvtColor( const CvArr* srcarr, CvArr* dstarr, int code )
     CvColorCvtFunc3 func3 = 0;
     int param[] = { 0, 0, 0, 0 };
     
-    CV_CALL( src = cvGetMat( srcarr, &srcstub ));
-    CV_CALL( dst = cvGetMat( dstarr, &dststub ));
+    src = cvGetMat( srcarr, &srcstub );
+    dst = cvGetMat( dstarr, &dststub );
     
     if( !CV_ARE_SIZES_EQ( src, dst ))
-        CV_ERROR( CV_StsUnmatchedSizes, "" );
+        CV_Error( CV_StsUnmatchedSizes, "" );
 
     if( !CV_ARE_DEPTHS_EQ( src, dst ))
-        CV_ERROR( CV_StsUnmatchedFormats, "" );
+        CV_Error( CV_StsUnmatchedFormats, "" );
 
     depth = CV_MAT_DEPTH(src->type);
     if( depth != CV_8U && depth != CV_16U && depth != CV_32F )
-        CV_ERROR( CV_StsUnsupportedFormat, "" );
+        CV_Error( CV_StsUnsupportedFormat, "" );
 
     src_cn = CV_MAT_CN( src->type );
     dst_cn = CV_MAT_CN( dst->type );
@@ -2238,7 +2234,7 @@ cvCvtColor( const CvArr* srcarr, CvArr* dstarr, int code )
     case CV_BGR2BGRA:
     case CV_RGB2BGRA:
         if( src_cn != 3 || dst_cn != 4 )
-            CV_ERROR( CV_BadNumChannels,
+            CV_Error( CV_BadNumChannels,
             "Incorrect number of channels for this conversion code" );
 
         func1 = depth == CV_8U ? (CvColorCvtFunc1)icvBGR2BGRx_8u_C3C4R :
@@ -2251,7 +2247,7 @@ cvCvtColor( const CvArr* srcarr, CvArr* dstarr, int code )
     case CV_RGBA2BGR:
     case CV_RGB2BGR:
         if( (src_cn != 3 && src_cn != 4) || dst_cn != 3 )
-            CV_ERROR( CV_BadNumChannels,
+            CV_Error( CV_BadNumChannels,
             "Incorrect number of channels for this conversion code" );
 
         func2 = depth == CV_8U ? (CvColorCvtFunc2)icvBGRx2BGR_8u_CnC3R :
@@ -2263,7 +2259,7 @@ cvCvtColor( const CvArr* srcarr, CvArr* dstarr, int code )
 
     case CV_BGRA2RGBA:
         if( src_cn != 4 || dst_cn != 4 )
-            CV_ERROR( CV_BadNumChannels,
+            CV_Error( CV_BadNumChannels,
             "Incorrect number of channels for this conversion code" );
 
         func0 = depth == CV_8U ? (CvColorCvtFunc0)icvBGRA2RGBA_8u_C4R :
@@ -2280,11 +2276,11 @@ cvCvtColor( const CvArr* srcarr, CvArr* dstarr, int code )
     case CV_RGBA2BGR565:
     case CV_RGBA2BGR555:
         if( (src_cn != 3 && src_cn != 4) || dst_cn != 2 )
-            CV_ERROR( CV_BadNumChannels,
+            CV_Error( CV_BadNumChannels,
             "Incorrect number of channels for this conversion code" );
 
         if( depth != CV_8U )
-            CV_ERROR( CV_BadDepth,
+            CV_Error( CV_BadDepth,
             "Conversion to/from 16-bit packed RGB format "
             "is only possible for 8-bit images (8-bit grayscale, 888 BGR/RGB or 8888 BGRA/RGBA)" );
 
@@ -2305,11 +2301,11 @@ cvCvtColor( const CvArr* srcarr, CvArr* dstarr, int code )
     case CV_BGR5652RGBA:
     case CV_BGR5552RGBA:
         if( src_cn != 2 || (dst_cn != 3 && dst_cn != 4))
-            CV_ERROR( CV_BadNumChannels,
+            CV_Error( CV_BadNumChannels,
             "Incorrect number of channels for this conversion code" );
 
         if( depth != CV_8U )
-            CV_ERROR( CV_BadDepth,
+            CV_Error( CV_BadDepth,
             "Conversion to/from 16-bit packed BGR format "
             "is only possible for 8-bit images (8-bit grayscale, 888 BGR/BGR or 8888 BGRA/BGRA)" );
 
@@ -2326,7 +2322,7 @@ cvCvtColor( const CvArr* srcarr, CvArr* dstarr, int code )
     case CV_RGB2GRAY:
     case CV_RGBA2GRAY:
         if( (src_cn != 3 && src_cn != 4) || dst_cn != 1 )
-            CV_ERROR( CV_BadNumChannels,
+            CV_Error( CV_BadNumChannels,
             "Incorrect number of channels for this conversion code" );
 
         func2 = depth == CV_8U ? (CvColorCvtFunc2)icvBGRx2Gray_8u_CnC1R :
@@ -2340,11 +2336,11 @@ cvCvtColor( const CvArr* srcarr, CvArr* dstarr, int code )
     case CV_BGR5652GRAY:
     case CV_BGR5552GRAY:
         if( src_cn != 2 || dst_cn != 1 )
-            CV_ERROR( CV_BadNumChannels,
+            CV_Error( CV_BadNumChannels,
             "Incorrect number of channels for this conversion code" );
 
         if( depth != CV_8U )
-            CV_ERROR( CV_BadDepth,
+            CV_Error( CV_BadDepth,
             "Conversion to/from 16-bit packed BGR format "
             "is only possible for 8-bit images (888 BGR/BGR or 8888 BGRA/BGRA)" );
 
@@ -2356,7 +2352,7 @@ cvCvtColor( const CvArr* srcarr, CvArr* dstarr, int code )
     case CV_GRAY2BGR:
     case CV_GRAY2BGRA:
         if( src_cn != 1 || (dst_cn != 3 && dst_cn != 4))
-            CV_ERROR( CV_BadNumChannels,
+            CV_Error( CV_BadNumChannels,
             "Incorrect number of channels for this conversion code" );
 
         func1 = depth == CV_8U ? (CvColorCvtFunc1)icvGray2BGRx_8u_C1CnR :
@@ -2369,11 +2365,11 @@ cvCvtColor( const CvArr* srcarr, CvArr* dstarr, int code )
     case CV_GRAY2BGR565:
     case CV_GRAY2BGR555:
         if( src_cn != 1 || dst_cn != 2 )
-            CV_ERROR( CV_BadNumChannels,
+            CV_Error( CV_BadNumChannels,
             "Incorrect number of channels for this conversion code" );
 
         if( depth != CV_8U )
-            CV_ERROR( CV_BadDepth,
+            CV_Error( CV_BadDepth,
             "Conversion to/from 16-bit packed BGR format "
             "is only possible for 8-bit images (888 BGR/BGR or 8888 BGRA/BGRA)" );
 
@@ -2394,7 +2390,7 @@ cvCvtColor( const CvArr* srcarr, CvArr* dstarr, int code )
     case CV_BGR2HLS:
     case CV_RGB2HLS:
         if( (src_cn != 3 && src_cn != 4) || dst_cn != 3 )
-            CV_ERROR( CV_BadNumChannels,
+            CV_Error( CV_BadNumChannels,
             "Incorrect number of channels for this conversion code" );
 
         if( depth == CV_8U )
@@ -2433,7 +2429,7 @@ cvCvtColor( const CvArr* srcarr, CvArr* dstarr, int code )
     case CV_HLS2BGR:
     case CV_HLS2RGB:
         if( src_cn != 3 || (dst_cn != 3 && dst_cn != 4) )
-            CV_ERROR( CV_BadNumChannels,
+            CV_Error( CV_BadNumChannels,
             "Incorrect number of channels for this conversion code" );
 
         if( depth == CV_8U )
@@ -2464,18 +2460,18 @@ cvCvtColor( const CvArr* srcarr, CvArr* dstarr, int code )
     case CV_BayerRG2BGR:
     case CV_BayerGR2BGR:
         if( src_cn != 1 || dst_cn != 3 )
-            CV_ERROR( CV_BadNumChannels,
+            CV_Error( CV_BadNumChannels,
             "Incorrect number of channels for this conversion code" );
         
         if( depth != CV_8U )
-            CV_ERROR( CV_BadDepth,
+            CV_Error( CV_BadDepth,
             "Bayer pattern can be converted only to 8-bit 3-channel BGR/RGB image" );
 
         func1 = (CvColorCvtFunc1)icvBayer2BGR_8u_C1C3R;
         param[0] = code; // conversion code
         break;
     default:
-        CV_ERROR( CV_StsBadFlag, "Unknown/unsupported color conversion code" );
+        CV_Error( CV_StsBadFlag, "Unknown/unsupported color conversion code" );
     }
 
     if( func0 )
@@ -2498,9 +2494,7 @@ cvCvtColor( const CvArr* srcarr, CvArr* dstarr, int code )
             dst->data.ptr, dst_step, size, param[0], param[1], param[2] ));
     }
     else
-        CV_ERROR( CV_StsUnsupportedFormat, "The image format is not supported" );
-
-    __END__;
+        CV_Error( CV_StsUnsupportedFormat, "The image format is not supported" );
 }
 
 

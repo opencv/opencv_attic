@@ -43,6 +43,7 @@
 #include "cvtest.h"
 #include <string>
 #include <iostream>
+#include <iterator>
 #include <fstream>
 #include <numeric>
 #include <algorithm>

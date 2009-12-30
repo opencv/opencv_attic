@@ -114,15 +114,15 @@ typedef struct CvEMDState
 CvEMDState;
 
 /* static function declaration */
-static CvStatus icvInitEMD( const float *signature1, int size1,
-                            const float *signature2, int size2,
-                            int dims, CvDistanceFunction dist_func, void *user_param,
-                            const float* cost, int cost_step,
-                            CvEMDState * state, float *lower_bound,
-                            char *local_buffer, int local_buffer_size );
+static int icvInitEMD( const float *signature1, int size1,
+                       const float *signature2, int size2,
+                       int dims, CvDistanceFunction dist_func, void *user_param,
+                       const float* cost, int cost_step,
+                       CvEMDState * state, float *lower_bound,
+                       cv::AutoBuffer<char>& _buffer );
 
-static CvStatus icvFindBasicVariables( float **cost, char **is_x,
-                                       CvNode1D * u, CvNode1D * v, int ssize, int dsize );
+static int icvFindBasicVariables( float **cost, char **is_x,
+                                  CvNode1D * u, CvNode1D * v, int ssize, int dsize );
 
 static float icvIsOptimal( float **cost, char **is_x,
                            CvNode1D * u, CvNode1D * v,
@@ -131,7 +131,7 @@ static float icvIsOptimal( float **cost, char **is_x,
 static void icvRussel( CvEMDState * state );
 
 
-static CvStatus icvNewSolution( CvEMDState * state );
+static bool icvNewSolution( CvEMDState * state );
 static int icvFindLoop( CvEMDState * state );
 
 static void icvAddBasicVariable( CvEMDState * state,
@@ -145,8 +145,7 @@ static float icvDistL1( const float *x, const float *y, void *user_param );
 static float icvDistC( const float *x, const float *y, void *user_param );
 
 /* The main function */
-CV_IMPL float
-cvCalcEMD2( const CvArr* signature_arr1,
+CV_IMPL float cvCalcEMD2( const CvArr* signature_arr1,
             const CvArr* signature_arr2,
             int dist_type,
             CvDistanceFunction dist_func,
@@ -155,19 +154,14 @@ cvCalcEMD2( const CvArr* signature_arr1,
             float *lower_bound,
             void *user_param )
 {
-    char local_buffer[16384];
-    char *local_buffer_ptr = (char *)cvAlignPtr(local_buffer,16);
+    cv::AutoBuffer<char> local_buf;
     CvEMDState state;
     float emd = 0;
 
-    CV_FUNCNAME( "cvCalcEMD2" );
-
     memset( &state, 0, sizeof(state));
 
-    __BEGIN__;
-
     double total_cost = 0;
-    CvStatus result = CV_NO_ERR;
+    int result = 0;
     float eps, min_delta;
     CvNode2D *xp = 0;
     CvMat sign_stub1, *signature1 = (CvMat*)signature_arr1;
@@ -176,32 +170,32 @@ cvCalcEMD2( const CvArr* signature_arr1,
     CvMat flow_stub, *flow = (CvMat*)flow_matrix;
     int dims, size1, size2;
 
-    CV_CALL( signature1 = cvGetMat( signature1, &sign_stub1 ));
-    CV_CALL( signature2 = cvGetMat( signature2, &sign_stub2 ));
+    signature1 = cvGetMat( signature1, &sign_stub1 );
+    signature2 = cvGetMat( signature2, &sign_stub2 );
 
     if( signature1->cols != signature2->cols )
-        CV_ERROR( CV_StsUnmatchedSizes, "The arrays must have equal number of columns (which is number of dimensions but 1)" );
+        CV_Error( CV_StsUnmatchedSizes, "The arrays must have equal number of columns (which is number of dimensions but 1)" );
 
     dims = signature1->cols - 1;
     size1 = signature1->rows;
     size2 = signature2->rows;
 
     if( !CV_ARE_TYPES_EQ( signature1, signature2 ))
-        CV_ERROR( CV_StsUnmatchedFormats, "The array must have equal types" );
+        CV_Error( CV_StsUnmatchedFormats, "The array must have equal types" );
 
     if( CV_MAT_TYPE( signature1->type ) != CV_32FC1 )
-        CV_ERROR( CV_StsUnsupportedFormat, "The signatures must be 32fC1" );
+        CV_Error( CV_StsUnsupportedFormat, "The signatures must be 32fC1" );
 
     if( flow )
     {
-        CV_CALL( flow = cvGetMat( flow, &flow_stub ));
+        flow = cvGetMat( flow, &flow_stub );
 
         if( flow->rows != size1 || flow->cols != size2 )
-            CV_ERROR( CV_StsUnmatchedSizes,
+            CV_Error( CV_StsUnmatchedSizes,
             "The flow matrix size does not match to the signatures' sizes" );
 
         if( CV_MAT_TYPE( flow->type ) != CV_32FC1 )
-            CV_ERROR( CV_StsUnsupportedFormat, "The flow matrix must be 32fC1" );
+            CV_Error( CV_StsUnsupportedFormat, "The flow matrix must be 32fC1" );
     }
 
     cost->data.fl = 0;
@@ -212,28 +206,28 @@ cvCalcEMD2( const CvArr* signature_arr1,
         if( cost_matrix )
         {
             if( dist_func )
-                CV_ERROR( CV_StsBadArg,
+                CV_Error( CV_StsBadArg,
                 "Only one of cost matrix or distance function should be non-NULL in case of user-defined distance" );
 
             if( lower_bound )
-                CV_ERROR( CV_StsBadArg,
+                CV_Error( CV_StsBadArg,
                 "The lower boundary can not be calculated if the cost matrix is used" );
 
-            CV_CALL( cost = cvGetMat( cost_matrix, &cost_stub ));
+            cost = cvGetMat( cost_matrix, &cost_stub );
             if( cost->rows != size1 || cost->cols != size2 )
-                CV_ERROR( CV_StsUnmatchedSizes,
+                CV_Error( CV_StsUnmatchedSizes,
                 "The cost matrix size does not match to the signatures' sizes" );
 
             if( CV_MAT_TYPE( cost->type ) != CV_32FC1 )
-                CV_ERROR( CV_StsUnsupportedFormat, "The cost matrix must be 32fC1" );
+                CV_Error( CV_StsUnsupportedFormat, "The cost matrix must be 32fC1" );
         }
         else if( !dist_func )
-            CV_ERROR( CV_StsNullPtr, "In case of user-defined distance Distance function is undefined" );
+            CV_Error( CV_StsNullPtr, "In case of user-defined distance Distance function is undefined" );
     }
     else
     {
         if( dims == 0 )
-            CV_ERROR( CV_StsBadSize,
+            CV_Error( CV_StsBadSize,
             "Number of dimensions can be 0 only if a user-defined metric is used" );
         user_param = (void *) (size_t)dims;
         switch (dist_type)
@@ -248,21 +242,20 @@ cvCalcEMD2( const CvArr* signature_arr1,
             dist_func = icvDistC;
             break;
         default:
-            CV_ERROR( CV_StsBadFlag, "Bad or unsupported metric type" );
+            CV_Error( CV_StsBadFlag, "Bad or unsupported metric type" );
         }
     }
 
-    IPPI_CALL( result = icvInitEMD( signature1->data.fl, size1,
-                                    signature2->data.fl, size2,
-                                    dims, dist_func, user_param,
-                                    cost->data.fl, cost->step,
-                                    &state, lower_bound, local_buffer_ptr,
-                                    sizeof( local_buffer ) - 16 ));
+    result = icvInitEMD( signature1->data.fl, size1,
+                        signature2->data.fl, size2,
+                        dims, dist_func, user_param,
+                        cost->data.fl, cost->step,
+                        &state, lower_bound, local_buf );
 
     if( result > 0 && lower_bound )
     {
         emd = *lower_bound;
-        EXIT;
+        return emd;
     }
 
     eps = CV_EMD_EPS * state.max_cost;
@@ -286,16 +279,15 @@ cvCalcEMD2( const CvArr* signature_arr1,
                                       state.ssize, state.dsize, state.enter_x );
 
             if( min_delta == CV_EMD_INF )
-            {
-                CV_ERROR( CV_StsNoConv, "" );
-            }
+                CV_Error( CV_StsNoConv, "" );
 
             /* if no negative deltamin, we found the optimal solution */
             if( min_delta >= -eps )
                 break;
 
             /* improve solution */
-            IPPI_CALL( icvNewSolution( &state ));
+            if(!icvNewSolution( &state ))
+                CV_Error( CV_StsNoConv, "" );
         }
     }
 
@@ -317,12 +309,6 @@ cvCalcEMD2( const CvArr* signature_arr1,
     }
 
     emd = (float) (total_cost / state.weight);
-
-    __END__;
-
-    if( state.buffer && state.buffer != local_buffer_ptr )
-        cvFree( &state.buffer );
-
     return emd;
 }
 
@@ -330,13 +316,12 @@ cvCalcEMD2( const CvArr* signature_arr1,
 /************************************************************************************\
 *          initialize structure, allocate buffers and generate initial golution      *
 \************************************************************************************/
-static CvStatus
-icvInitEMD( const float* signature1, int size1,
+static int icvInitEMD( const float* signature1, int size1,
             const float* signature2, int size2,
             int dims, CvDistanceFunction dist_func, void* user_param,
             const float* cost, int cost_step,
             CvEMDState* state, float* lower_bound,
-            char* local_buffer, int local_buffer_size )
+            cv::AutoBuffer<char>& _buffer )
 {
     float s_sum = 0, d_sum = 0, diff;
     int i, j;
@@ -368,18 +353,9 @@ icvInitEMD( const float* signature1, int size1,
     }
 
     /* allocate buffers */
-    if( local_buffer != 0 && local_buffer_size >= buffer_size )
-    {
-        buffer = local_buffer;
-    }
-    else
-    {
-        buffer = (char*)cvAlloc( buffer_size );
-        if( !buffer )
-            return CV_OUTOFMEM_ERR;
-    }
+    _buffer.allocate(buffer_size);
 
-    state->buffer = buffer;
+    state->buffer = buffer = _buffer;
     buffer_end = buffer + buffer_size;
 
     state->idx1 = (int*) buffer;
@@ -407,7 +383,7 @@ icvInitEMD( const float* signature1, int size1,
             
         }
         else if( weight < 0 )
-            return CV_BADRANGE_ERR;
+            CV_Error(CV_StsOutOfRange, "");
     }
 
     for( i = 0; i < size2; i++ )
@@ -421,11 +397,11 @@ icvInitEMD( const float* signature1, int size1,
             state->idx2[dsize++] = i;
         }
         else if( weight < 0 )
-            return CV_BADRANGE_ERR;
+            CV_Error(CV_StsOutOfRange, "");
     }
 
     if( ssize == 0 || dsize == 0 )
-        return CV_BADRANGE_ERR;
+        CV_Error(CV_StsOutOfRange, "");
 
     /* if supply different than the demand, add a zero-cost dummy cluster */
     diff = s_sum - d_sum;
@@ -477,7 +453,7 @@ icvInitEMD( const float* signature1, int size1,
         i = *lower_bound <= lb;
         *lower_bound = lb;
         if( i )
-            return ( CvStatus ) 1;
+            return 1;
     }
 
     /* assign pointers */
@@ -575,15 +551,14 @@ icvInitEMD( const float* signature1, int size1,
     icvRussel( state );
 
     state->enter_x = (state->end_x)++;
-    return CV_NO_ERR;
+    return 0;
 }
 
 
 /****************************************************************************************\
 *                              icvFindBasicVariables                                   *
 \****************************************************************************************/
-static CvStatus
-icvFindBasicVariables( float **cost, char **is_x,
+static int icvFindBasicVariables( float **cost, char **is_x,
                        CvNode1D * u, CvNode1D * v, int ssize, int dsize )
 {
     int i, j, found;
@@ -695,12 +670,10 @@ icvFindBasicVariables( float **cost, char **is_x,
         }
 
         if( !found )
-        {
-            return CV_NOTDEFINED_ERR;
-        }
+            return -1;
     }
 
-    return CV_NO_ERR;
+    return 0;
 }
 
 
@@ -745,7 +718,7 @@ icvIsOptimal( float **cost, char **is_x,
 /****************************************************************************************\
 *                                   icvNewSolution                                     *
 \****************************************************************************************/
-static CvStatus
+static bool
 icvNewSolution( CvEMDState * state )
 {
     int i, j;
@@ -769,7 +742,7 @@ icvNewSolution( CvEMDState * state )
     steps = icvFindLoop( state );
 
     if( steps == 0 )
-        return CV_NOTDEFINED_ERR;
+        return false;
 
     /* find the largest value in the loop */
     for( i = 1; i < steps; i += 2 )
@@ -821,7 +794,7 @@ icvNewSolution( CvEMDState * state )
     /* set enter_x to be the new empty slot */
     state->enter_x = leave_x;
 
-    return CV_NO_ERR;
+    return true;
 }
 
 
