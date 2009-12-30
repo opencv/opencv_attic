@@ -121,6 +121,8 @@ void CV_ChessboardDetectorTimingTest::run( int start_from )
             continue;
         }
 
+        ts->printf(CvTS::LOG, "%s: chessboard %d:\n", imgname, is_chessboard);
+
         gray = cvCreateImage( cvSize( img->width, img->height ), IPL_DEPTH_8U, 1 );
         thresh = cvCreateImage( cvSize( img->width, img->height ), IPL_DEPTH_8U, 1 );
         cvCvtColor( img, gray, CV_BGR2GRAY );
@@ -154,9 +156,7 @@ void CV_ChessboardDetectorTimingTest::run( int start_from )
             ts->printf( CvTS::LOG, "Warning: results differ cvCheckChessboard %d, cvFindChessboardCorners %d\n", 
                        result, result1);
         }
-        
-        ts->printf(CvTS::LOG, "%s: chessboard %d:\n", imgname, is_chessboard);
-        
+                
         int num_pixels = gray->width*gray->height;
         float check_chessboard_time = float(_time01 - _time0)/cvGetTickFrequency(); // in us
         ts->printf(CvTS::LOG, "    cvCheckChessboard time s: %f, us per pixel: %f\n", 
