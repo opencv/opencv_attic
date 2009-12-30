@@ -1185,6 +1185,7 @@ protected:
                                                 CvSize** whole_sizes, bool *are_images );
     void print_timing_params( int test_case_idx, char* ptr, int params_left );
 
+private:
 	bool useCPlus;
 	cv::Mat input0;
 	cv::Mat input1;
@@ -1291,15 +1292,6 @@ int CV_UndistortTest::prepare_test_case( int test_case_idx )
     CvRNG* rng = ts->get_rng();
     int code = CV_ImgWarpBaseTest::prepare_test_case( test_case_idx );
 
-	//Testing C++ code
-	useCPlus = ((cvTsRandInt(rng) % 2)!=0);
-	if (useCPlus)
-	{
-		input0 = &test_mat[INPUT][0];
-		input1 = &test_mat[INPUT][1];
-		input2 = &test_mat[INPUT][2];
-	}
-
     const CvMat* src = &test_mat[INPUT][0];
     double k[4], a[9] = {0,0,0,0,0,0,0,0,1};
     double sz = MAX(src->rows, src->cols);
@@ -1342,6 +1334,15 @@ int CV_UndistortTest::prepare_test_case( int test_case_idx )
 
     cvTsConvert( &_a, _a0 );
     cvTsConvert( &_k, _k0 );
+
+	//Testing C++ code
+	useCPlus = ((cvTsRandInt(rng) % 2)!=0);
+	if (useCPlus)
+	{
+		input0 = &test_mat[INPUT][0];
+		input1 = &test_mat[INPUT][1];
+		input2 = &test_mat[INPUT][2];
+	}
 
     return code;
 }

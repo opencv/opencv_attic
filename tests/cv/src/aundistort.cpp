@@ -47,12 +47,12 @@ class CV_DefaultNewCameraMatrixTest : public CvArrTest
 public:
 	CV_DefaultNewCameraMatrixTest();
 protected:
-	//int validate_test_results( int test_case_idx );
 	int prepare_test_case (int test_case_idx);
 	void prepare_to_validation( int test_case_idx );
 	void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
 	void run_func();
-	
+
+private:
 	cv::Size img_size;
 	cv::Mat camera_mat;
 	cv::Mat new_camera_mat;
@@ -151,3 +151,328 @@ void CV_DefaultNewCameraMatrixTest::prepare_to_validation( int test_case_idx )
 }
 
 CV_DefaultNewCameraMatrixTest default_new_camera_matrix_test; 
+
+//---------
+
+class CV_UndistortPointsTest : public CvArrTest
+{
+public:
+	CV_UndistortPointsTest();
+protected:
+	int prepare_test_case (int test_case_idx);
+	void prepare_to_validation( int test_case_idx );
+	void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
+	double get_success_error_level( int test_case_idx, int i, int j );
+	void run_func();
+	void cvTsDistortPoints(const CvMat* _src, CvMat* _dst, const CvMat* _cameraMatrix,
+                   const CvMat* _distCoeffs,
+                   const CvMat* _R, const CvMat* _P);
+
+private:
+	bool useCPlus;
+	static const int N_POINTS = 10;
+	static const int MAX_X = 2048;
+	static const int MAX_Y = 2048;
+
+	cv::Size img_size;
+
+	cv::Mat camera_mat;
+	cv::Mat R;
+	cv::Mat P;
+	cv::Mat distortion_coeffs;
+	cv::Mat src_points;
+	std::vector<cv::Point2f> dst_points;
+};
+
+CV_UndistortPointsTest::CV_UndistortPointsTest() : CvArrTest("undistort-points","cvUndistortPoints")
+{
+	test_array[INPUT].push(NULL); // points matrix
+	test_array[INPUT].push(NULL); // camera matrix
+	test_array[INPUT].push(NULL); // distortion coeffs
+	test_array[INPUT].push(NULL); // R matrix
+	test_array[INPUT].push(NULL); // P matrix
+	test_array[OUTPUT].push(NULL); // distorted dst points
+	test_array[TEMP].push(NULL); // dst points
+	test_array[REF_OUTPUT].push(NULL);
+}
+
+void CV_UndistortPointsTest::get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types )
+{
+	CvRNG* rng = ts->get_rng();
+	//useCPlus = ((cvTsRandInt(rng) % 2)!=0);
+	useCPlus = 0;
+	if (useCPlus)
+		types[INPUT][0] = types[OUTPUT][0] = types[REF_OUTPUT][0] = types[TEMP][0]= CV_32FC2;
+	else
+		types[INPUT][0] = types[OUTPUT][0] = types[REF_OUTPUT][0] = types[TEMP][0]= cvTsRandInt(rng)%2 ? CV_64FC2 : CV_32FC2;
+	types[INPUT][1] = cvTsRandInt(rng)%2 ? CV_64F : CV_32F;
+	types[INPUT][2] = cvTsRandInt(rng)%2 ? CV_64F : CV_32F;
+	types[INPUT][3] = cvTsRandInt(rng)%2 ? CV_64F : CV_32F;
+	types[INPUT][4] = cvTsRandInt(rng)%2 ? CV_64F : CV_32F;
+
+	sizes[INPUT][0] = sizes[OUTPUT][0] = sizes[REF_OUTPUT][0] = sizes[TEMP][0]= cvTsRandInt(rng)%2 ? cvSize(1,N_POINTS) : cvSize(N_POINTS,1); 
+	sizes[INPUT][1] = sizes[INPUT][3] = cvSize(3,3);
+	sizes[INPUT][4] = cvTsRandInt(rng)%2 ? cvSize(3,3) : cvSize(4,3);
+
+	if (cvTsRandInt(rng)%2)
+	{
+		if (cvTsRandInt(rng)%2)
+		{
+			sizes[INPUT][2] = cvSize(1,4);
+		}
+		else
+		{
+			sizes[INPUT][2] = cvSize(1,5);
+		}
+	}
+	else
+	{
+		if (cvTsRandInt(rng)%2) 
+		{
+			sizes[INPUT][2] = cvSize(4,1);
+		}
+		else
+		{
+			sizes[INPUT][2] = cvSize(5,1);
+		}
+	}
+}
+
+int CV_UndistortPointsTest::prepare_test_case(int test_case_idx)
+{
+	CvRNG* rng = ts->get_rng();
+	int code = CvArrTest::prepare_test_case( test_case_idx );
+
+	if (code <= 0)
+		return code;
+
+	img_size.width = cvTsRandInt(rng) % MAX_X + 1;
+	img_size.height = cvTsRandInt(rng) % MAX_Y + 1;
+	int dist_size = test_mat[INPUT][2].cols > test_mat[INPUT][2].rows ? test_mat[INPUT][2].cols : test_mat[INPUT][2].rows;
+	double cam[9] = {0,0,0,0,0,0,0,0,1};
+	double* dist = new double[dist_size ];
+	double* proj = new double[test_mat[INPUT][4].cols * test_mat[INPUT][4].rows];
+	double* points = new double[N_POINTS*2];
+
+	CvMat _camera = cvMat(3,3,CV_64F,cam);
+	CvMat _distort = cvMat(test_mat[INPUT][2].rows,test_mat[INPUT][2].cols,CV_64F,dist);
+	CvMat _proj = cvMat(test_mat[INPUT][4].rows,test_mat[INPUT][4].cols,CV_64F,proj);
+	CvMat _points= cvMat(test_mat[INPUT][0].rows,test_mat[INPUT][0].cols,CV_64FC2, points);
+
+	for (int i=0;i<test_mat[INPUT][4].cols * test_mat[INPUT][4].rows;i++)
+	{
+		proj[i] = 0;
+	}
+
+	//Generating points
+	for (int i=0;i<N_POINTS;i++)
+	{
+		points[2*i] = cvTsRandReal(rng)*img_size.width;
+		points[2*i+1] = cvTsRandReal(rng)*img_size.height;
+	}
+    
+	
+
+	//Generating camera matrix
+	double sz = MAX(img_size.width,img_size.height);
+	double aspect_ratio = cvTsRandReal(rng)*0.6 + 0.7;
+    cam[2] = (img_size.width - 1)*0.5 + cvTsRandReal(rng)*10 - 5;
+    cam[5] = (img_size.height - 1)*0.5 + cvTsRandReal(rng)*10 - 5;
+    cam[0] = sz/(0.9 - cvTsRandReal(rng)*0.6);
+    cam[4] = aspect_ratio*cam[0];
+
+	//Generating distortion coeffs
+	dist[0] = cvTsRandReal(rng)*0.06 - 0.03;
+    dist[1] = cvTsRandReal(rng)*0.06 - 0.03;
+    if( dist[0]*dist[1] > 0 )
+		dist[1] = -dist[1];
+    if( cvTsRandInt(rng)%4 != 0 )
+    {
+        dist[2] = cvTsRandReal(rng)*0.004 - 0.002;
+        dist[3] = cvTsRandReal(rng)*0.004 - 0.002;
+		if (dist_size > 4)
+			dist[4] = cvTsRandReal(rng)*0.004 - 0.002;
+    }
+    else
+	{
+        dist[2] = dist[3] = 0;
+		if (dist_size > 4)
+			 dist[4] = 0;
+	}
+
+	//Generating P matrix (projection)
+	if ( test_mat[INPUT][4].cols != 4)
+	{
+		proj[8] = 1;
+		if (cvTsRandInt(rng)%2 == 0) // use identity new camera matrix
+		{
+			proj[0] = 1;
+			proj[4] = 1;
+		}
+		else
+		{
+			proj[0] = cam[0] + (cvTsRandReal(rng) - (double)0.5)*0.2*cam[0]; //10%
+			proj[4] = cam[4] + (cvTsRandReal(rng) - (double)0.5)*0.2*cam[4]; //10%
+			proj[2] = cam[2] + (cvTsRandReal(rng) - (double)0.5)*0.3*img_size.width; //15%
+			proj[5] = cam[5] + (cvTsRandReal(rng) - (double)0.5)*0.3*img_size.height; //15%
+		}
+	}
+	else
+	{
+		proj[10] = 1;
+		proj[0] = cam[0] + (cvTsRandReal(rng) - (double)0.5)*0.2*cam[0]; //10%
+		proj[5] = cam[4] + (cvTsRandReal(rng) - (double)0.5)*0.2*cam[4]; //10%
+		proj[2] = cam[2] + (cvTsRandReal(rng) - (double)0.5)*0.3*img_size.width; //15%
+		proj[6] = cam[5] + (cvTsRandReal(rng) - (double)0.5)*0.3*img_size.height; //15%
+
+		proj[3] = (img_size.height + img_size.width - 1)*0.5 + cvTsRandReal(rng)*10 - 5;
+		proj[7] = (img_size.height + img_size.width - 1)*0.5 + cvTsRandReal(rng)*10 - 5;
+		proj[11] = (img_size.height + img_size.width - 1)*0.5 + cvTsRandReal(rng)*10 - 5;
+	}
+
+	//Generating R matrix
+	CvMat* _rot = cvCreateMat(3,3,CV_64F);
+	CvMat* rotation = cvCreateMat(1,3,CV_64F);
+	rotation->data.db[0] = CV_PI*(cvTsRandReal(rng) - (double)0.5); // phi
+	rotation->data.db[1] = CV_PI*(cvTsRandReal(rng) - (double)0.5); // ksi
+	rotation->data.db[1] = CV_PI*(cvTsRandReal(rng) - (double)0.5); //khi
+	cvRodrigues2(rotation,_rot);
+	cvReleaseMat(&rotation);
+
+	//copying data
+	src_points = &_points;
+	CvMat* dst = &test_mat[INPUT][0];
+	cvTsConvert( &_points, dst);
+	dst = &test_mat[INPUT][1];
+	cvTsConvert( &_camera, dst);
+	dst = &test_mat[INPUT][2];
+	cvTsConvert( &_distort, dst);
+	dst = &test_mat[INPUT][3];
+	cvTsConvert( _rot, dst);
+	dst = &test_mat[INPUT][4];
+	cvTsConvert( &_proj, dst);
+
+	cvReleaseMat(&_rot);
+
+	if (useCPlus)
+	{
+	//	double* arr = new double[N_POINTS*2];
+		//CvMat* temp = cvCreateMat(test_mat[INPUT][0].rows,test_mat[INPUT][0].cols,CV_64FC2);
+		//for (int i=0;i<N_POINTS;i++)
+		//	temp->data.db[i] = _points.data.db[i];
+	
+		//cvCopy(&test_mat[INPUT][0],temp);
+		//src_points = temp;
+		//src_points = &test_mat[INPUT][0];
+		camera_mat = &test_mat[INPUT][1];
+		distortion_coeffs = &test_mat[INPUT][2];
+		R = &test_mat[INPUT][3];
+		P = &test_mat[INPUT][4];
+	}
+	delete[] dist;
+	delete[] proj;
+	delete[] points;
+
+	return code;
+}
+
+void CV_UndistortPointsTest::prepare_to_validation(int test_case_idx)
+{
+	int dist_size = test_mat[INPUT][2].cols > test_mat[INPUT][2].rows ? test_mat[INPUT][2].cols : test_mat[INPUT][2].rows;
+	double cam[9] = {0,0,0,0,0,0,0,0,1};
+	double rot[9] = {1,0,0,0,1,0,0,0,1};
+	double* dist = new double[dist_size ];
+	double* proj = new double[test_mat[INPUT][4].cols * test_mat[INPUT][4].rows];
+	double* points = new double[N_POINTS*2];
+	double* r_points = new double[N_POINTS*2];
+	//Run reference calculations
+	CvMat ref_points= cvMat(test_mat[INPUT][0].rows,test_mat[INPUT][0].cols,CV_64FC2,r_points);
+	CvMat _camera = cvMat(3,3,CV_64F,cam);
+	CvMat _rot = cvMat(3,3,CV_64F,rot);
+	CvMat _distort = cvMat(test_mat[INPUT][2].rows,test_mat[INPUT][2].cols,CV_64F,dist);
+	CvMat _proj = cvMat(test_mat[INPUT][4].rows,test_mat[INPUT][4].cols,CV_64F,proj);
+	CvMat _points= cvMat(test_mat[TEMP][0].rows,test_mat[TEMP][0].cols,CV_64FC2,points);
+	cvTsConvert(&test_mat[TEMP][0],&_points);
+	cvTsConvert(&test_mat[INPUT][1],&_camera);
+	cvTsConvert(&test_mat[INPUT][2],&_distort);
+	cvTsConvert(&test_mat[INPUT][3],&_rot);
+	cvTsConvert(&test_mat[INPUT][4],&_proj);
+	cvTsDistortPoints(&_points,&ref_points,&_camera,&_distort,&_rot,&_proj);
+	CvMat* dst = &test_mat[REF_OUTPUT][0];
+	cvTsConvert(&ref_points,dst);
+
+	cvCopy(&test_mat[INPUT][0],&test_mat[OUTPUT][0]);
+
+	if (useCPlus)
+	{
+		double* __points = new double[N_POINTS*2];
+		CvMat pts= cvMat(test_mat[OUTPUT][0].rows,test_mat[OUTPUT][0].cols,CV_64FC2,__points);
+		for (int i=0;i<N_POINTS;i++)
+		{
+			pts.data.db[2*i] = dst_points[i].x;
+			pts.data.db[2*i+1] = dst_points[i].y;
+		}
+		cvTsConvert(&pts,&test_mat[OUTPUT][0]);
+		delete[] __points;
+	}
+	delete[] dist;
+	delete[] proj;
+	delete[] points;
+	delete[] r_points;
+}
+
+void CV_UndistortPointsTest::run_func()
+{
+	if (useCPlus)
+	{
+		cv::undistortPoints(src_points,dst_points,camera_mat,distortion_coeffs,R,P);
+	}
+	else
+	{
+		cvUndistortPoints(&test_mat[INPUT][0],&test_mat[TEMP][0],&test_mat[INPUT][1],&test_mat[INPUT][2],&test_mat[INPUT][3],&test_mat[INPUT][4]);
+	}
+}
+
+void CV_UndistortPointsTest::cvTsDistortPoints(const CvMat* _src, CvMat* _dst, const CvMat* _cameraMatrix,
+                   const CvMat* _distCoeffs,
+                   const CvMat* _R, const CvMat* _P)
+{
+	double a[9];
+	for (int i=0;i<N_POINTS;i++)
+	{
+		int movement = _P->cols > 3 ? 1 : 0;
+		double x = (_src->data.db[2*i]-_P->data.db[2])/_P->data.db[0];
+		double y = (_src->data.db[2*i+1]-_P->data.db[5+movement])/_P->data.db[4+movement];
+		CvMat inverse = cvMat(3,3,CV_64F,a);
+		cvInvert(_R,&inverse);
+		double w1 = x*inverse.data.db[6]+y*inverse.data.db[7]+inverse.data.db[8];
+		double _x = (x*inverse.data.db[0]+y*inverse.data.db[1]+inverse.data.db[2])/w1;
+		double _y = (x*inverse.data.db[3]+y*inverse.data.db[4]+inverse.data.db[5])/w1;
+
+		//Distortions
+
+		double r2 = _x*_x+_y*_y;
+
+		double __x = _x*(1+_distCoeffs->data.db[0]*r2+_distCoeffs->data.db[1]*r2*r2)+
+			2*_distCoeffs->data.db[2]*_x*_y+_distCoeffs->data.db[3]*(r2+2*_x*_x);
+		double __y = _y*(1+_distCoeffs->data.db[0]*r2+_distCoeffs->data.db[1]*r2*r2)+
+			2*_distCoeffs->data.db[3]*_x*_y+_distCoeffs->data.db[2]*(r2+2*_y*_y);
+		if ((_distCoeffs->cols > 4) || (_distCoeffs->rows > 4))
+		{
+			__x+=_x*_distCoeffs->data.db[4]*r2*r2*r2;
+			__y+=_y*_distCoeffs->data.db[4]*r2*r2*r2;
+		}
+
+
+		_dst->data.db[2*i] = __x*_cameraMatrix->data.db[0]+_cameraMatrix->data.db[2];
+		_dst->data.db[2*i+1] = __y*_cameraMatrix->data.db[4]+_cameraMatrix->data.db[5];
+
+	}
+}
+
+double CV_UndistortPointsTest::get_success_error_level( int /*test_case_idx*/, int /*i*/, int /*j*/ )
+{
+    return 5e-2;
+}
+
+CV_UndistortPointsTest undistort_points_test;
