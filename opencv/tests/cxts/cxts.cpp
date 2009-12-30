@@ -622,6 +622,8 @@ void CvTest::write_real_list( CvFileStorage* fs, const char* paramname,
 int CvTest::read_params( CvFileStorage* fs )
 {
     int code = 0;
+    
+    if(fs == NULL) return code; 
 
     if( ts->get_testing_mode() == CvTS::TIMING_MODE )
     {
@@ -1264,6 +1266,11 @@ int CvTS::run( int argc, char** argv )
             params.color_terminal = 0;
         else if( strcmp( argv[i], "-r" ) == 0 )
             params.debug_mode = 0;
+        else if( strcmp( argv[i], "-tn" ) == 0 )
+        {
+            params.test_filter_pattern = argv[++i];
+            params.test_filter_mode = CHOOSE_TESTS;
+        }
     }
 
 #if 0
@@ -1336,10 +1343,11 @@ int CvTS::run( int argc, char** argv )
             printf( LOG, "ERROR: could not open config file %s", config_name );
             return -1;
         }
+
+        if( read_params(fs) < 0 )
+            return -1;
     }
 
-    if( read_params(fs) < 0 )
-        return -1;
 
     if( !ostrm_base_name )
         make_output_stream_base_name( config_name ? config_name : argv[0] );
