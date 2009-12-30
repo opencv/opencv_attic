@@ -966,7 +966,8 @@ protected:
 		const Mat& M, const Mat& D, const Mat& R,
 		const Mat& P, Size imgsize, Rect roi );
 
-	virtual double calibrate( const vector<vector<Point3f> >& objectPoints,
+	// covers of tested functions
+	virtual double calibrateStereoCamera( const vector<vector<Point3f> >& objectPoints,
 		const vector<vector<Point2f> >& imagePoints1,
 		const vector<vector<Point2f> >& imagePoints2,
 		Mat& cameraMatrix1, Mat& distCoeffs1,
@@ -979,6 +980,9 @@ protected:
 		Mat& R1, Mat& R2, Mat& P1, Mat& P2, Mat& Q,
 		double alpha, Size newImageSize,
 		Rect* validPixROI1, Rect* validPixROI2, int flags ) = 0;
+	virtual bool rectifyUncalibrated( const Mat& points1,
+		const Mat& points2, const Mat& F, Size imgSize,
+		Mat& H1, Mat& H2, double threshold=5 ) = 0;
 
 	void run(int);
 };
@@ -1051,7 +1055,8 @@ void CV_StereoCalibrationTest::run( int )
 {
 	const int ntests = 1;
 	const double maxReprojErr = 2;
-	const double maxScanlineDistErr = 3;
+	const double maxScanlineDistErr_c = 3;
+	const double maxScanlineDistErr_uc = 4;
 	FILE* f = 0;
 
 	for(int testcase = 1; testcase <= ntests; testcase++)
@@ -1091,14 +1096,15 @@ void CV_StereoCalibrationTest::run( int )
 			return;
 		}
 
-		size_t i, nframes = imglist.size()/2;
-		int j, npoints = patternSize.width*patternSize.height;
+		size_t nframes = imglist.size()/2;
+		int npoints = patternSize.width*patternSize.height;
 		vector<vector<Point3f> > objpt(nframes);
 		vector<vector<Point2f> > imgpt1(nframes);
 		vector<vector<Point2f> > imgpt2(nframes);
 		Size imgsize;
+		int total = 0;
 
-		for( i = 0; i < nframes; i++ )
+		for( size_t i = 0; i < nframes; i++ )
 		{
 			Mat left = imread(imglist[i*2]);
 			Mat right = imread(imglist[i*2+1]);
@@ -1119,17 +1125,18 @@ void CV_StereoCalibrationTest::run( int )
 				ts->set_failed_test_info( CvTS::FAIL_INVALID_OUTPUT );
 				return;
 			}
-
-			for( j = 0; j < npoints; j++ )
+			total += imgpt1[i].size();
+			for( int j = 0; j < npoints; j++ )
 				objpt[i].push_back(Point3f((float)(j%patternSize.width), (float)(j/patternSize.width), 0.f));
 		}
 
+		// rectify (calibrated)
 		Mat M1 = Mat::eye(3,3,CV_64F), M2 = Mat::eye(3,3,CV_64F), D1(5,1,CV_64F), D2(5,1,CV_64F), R, T, E, F;
 		M1.at<double>(0,2) = M2.at<double>(0,2)=(imgsize.width-1)*0.5;
 		M1.at<double>(1,2) = M2.at<double>(1,2)=(imgsize.height-1)*0.5;
 		D1 = Scalar::all(0);
 		D2 = Scalar::all(0);
-		double err = calibrate(objpt, imgpt1, imgpt2, M1, D1, M2, D2, imgsize, R, T, E, F,
+		double err = calibrateStereoCamera(objpt, imgpt1, imgpt2, M1, D1, M2, D2, imgsize, R, T, E, F,
 			TermCriteria(TermCriteria::MAX_ITER+TermCriteria::EPS, 30, 1e-6),
 			CV_CALIB_SAME_FOCAL_LENGTH
 			//+ CV_CALIB_FIX_ASPECT_RATIO
@@ -1148,11 +1155,12 @@ void CV_StereoCalibrationTest::run( int )
 		Rect roi1, roi2;
 		rectify(M1, D1, M2, D2, imgsize, R, T, R1, R2, P1, P2, Q, 1, imgsize, &roi1, &roi2, 0);
 
-		if(norm(R1.t()*R1 - Mat::eye(3,3,CV_64F)) > 0.01 ||
+		if( norm(R1.t()*R1 - Mat::eye(3,3,CV_64F)) > 0.01 ||
 			norm(R2.t()*R2 - Mat::eye(3,3,CV_64F)) > 0.01 ||
 			abs(determinant(F)) > 0.01)
 		{
-			ts->printf( CvTS::LOG, "The computed R1 and R2 are not orthogonal, or the computed F is not singular, testcase %d\n", testcase);
+			ts->printf( CvTS::LOG, "The computed (by rectify) R1 and R2 are not orthogonal,"
+				"or the computed (by calibrate) F is not singular, testcase %d\n", testcase);
 			ts->set_failed_test_info( CvTS::FAIL_INVALID_OUTPUT );
 			return;
 		}
@@ -1169,29 +1177,72 @@ void CV_StereoCalibrationTest::run( int )
 			return;
 		}
 
-		bool verticalStereo = abs(P2.at<double>(0,3)) < abs(P2.at<double>(1,3));
-		double maxDiff = 0;
+		// rectifyUncalibrated
+		CV_Assert( imgpt1.size() == imgpt2.size() );
+		Mat _imgpt1( total, 1, CV_32FC2 ), _imgpt2( total, 1, CV_32FC2 );
+		vector<vector<Point2f> >::const_iterator iit1 = imgpt1.begin();
+		vector<vector<Point2f> >::const_iterator iit2 = imgpt2.begin();
+		for( int pi = 0; iit1 != imgpt1.end(); ++iit1, ++iit2 )
+		{
+			vector<Point2f>::const_iterator pit1 = iit1->begin();
+			vector<Point2f>::const_iterator pit2 = iit2->begin();
+			CV_Assert( iit1->size() == iit2->size() );
+			for( ; pit1 != iit1->end(); ++pit1, ++pit2, pi++ )
+			{
+				_imgpt1.at<Point2f>(pi,0) = Point2f( pit1->x, pit1->y );
+				_imgpt2.at<Point2f>(pi,0) = Point2f( pit2->x, pit2->y );
+			}
+		}
 
-		for( i = 0; i < nframes; i++ )
+		Mat _M1, _M2, _D1, _D2;
+		vector<Mat> _R1, _R2, _T1, _T2;
+		calibrateCamera( objpt, imgpt1, imgsize, _M1, _D1, _R1, _T1, 0 );
+		calibrateCamera( objpt, imgpt2, imgsize, _M2, _D2, _R2, _T1, 0 );
+		undistortPoints( _imgpt1, _imgpt1, _M1, _D1, Mat(), _M1 );
+		undistortPoints( _imgpt2, _imgpt2, _M2, _D2, Mat(), _M2 );
+
+		Mat _F, _H1, _H2;
+		_F = findFundamentalMat( _imgpt1, _imgpt2 );
+		rectifyUncalibrated( _imgpt1, _imgpt2, _F, imgsize, _H1, _H2 );
+
+		Mat rectifPoints1, rectifPoints2;
+		perspectiveTransform( _imgpt1, rectifPoints1, _H1 );
+		perspectiveTransform( _imgpt2, rectifPoints2, _H2 );
+
+		bool verticalStereo = abs(P2.at<double>(0,3)) < abs(P2.at<double>(1,3));
+		double maxDiff_c = 0, maxDiff_uc = 0;
+		for( size_t i = 0, k = 0; i < nframes; i++ )
 		{
 			vector<Point2f> temp[2];
 			undistortPoints(imgpt1[i], temp[0], M1, D1, R1, P1);
 			undistortPoints(imgpt2[i], temp[1], M2, D2, R2, P2);
 
-			for( j = 0; j < npoints; j++ )
+			for( int j = 0; j < npoints; j++, k++ )
 			{
-				double diff = verticalStereo ? abs(temp[0][j].x - temp[1][j].x) : abs(temp[0][j].y - temp[1][j].y);
-				maxDiff = max(maxDiff, diff);
-				if( maxDiff > maxScanlineDistErr )
+				double diff_c = verticalStereo ? abs(temp[0][j].x - temp[1][j].x) : abs(temp[0][j].y - temp[1][j].y);
+				Point2f d = rectifPoints1.at<Point2f>(k,0) - rectifPoints2.at<Point2f>(k,0);
+				double diff_uc = verticalStereo ? abs(d.x) : abs(d.y);
+				maxDiff_c = max(maxDiff_c, diff_c);
+				maxDiff_uc = max(maxDiff_uc, diff_uc);
+				if( maxDiff_c > maxScanlineDistErr_c )
 				{
-					ts->printf( CvTS::LOG, "The distance between %s coordinates is too big(=%g), testcase %d\n",
-						verticalStereo ? "x" : "y", diff, testcase);
+					ts->printf( CvTS::LOG, "The distance between %s coordinates is too big(=%g) (used calibrated stereo), testcase %d\n",
+						verticalStereo ? "x" : "y", diff_c, testcase);
+					ts->set_failed_test_info( CvTS::FAIL_BAD_ACCURACY );
+					return;
+				}
+				if( maxDiff_uc > maxScanlineDistErr_uc )
+				{
+					ts->printf( CvTS::LOG, "The distance between %s coordinates is too big(=%g) (used uncalibrated stereo), testcase %d\n",
+						verticalStereo ? "x" : "y", diff_uc, testcase);
 					ts->set_failed_test_info( CvTS::FAIL_BAD_ACCURACY );
 					return;
 				}
 			}                
 		}
-		ts->printf( CvTS::LOG, "Testcase %d. Max distance =%g\n", testcase, maxDiff );
+		
+		ts->printf( CvTS::LOG, "Testcase %d. Max distance (calibrated) =%g\n"
+			"Max distance (uncalibrated) =%g\n", testcase, maxDiff_c, maxDiff_uc );
 	}
 }
 
@@ -1200,9 +1251,10 @@ void CV_StereoCalibrationTest::run( int )
 class CV_StereoCalibrationTest_C : public CV_StereoCalibrationTest
 {
 public:
-	CV_StereoCalibrationTest_C() : CV_StereoCalibrationTest( "calibrate-stereo-c", "cvStereoCalibrate" ) {}
+	CV_StereoCalibrationTest_C() : CV_StereoCalibrationTest( "calibrate-stereo-c",
+		"cvStereoCalibrate, cvStereoRectify, cvStereoRectifyUncalibrated" ) {}
 protected:
-	virtual double calibrate( const vector<vector<Point3f> >& objectPoints,
+	virtual double calibrateStereoCamera( const vector<vector<Point3f> >& objectPoints,
 		const vector<vector<Point2f> >& imagePoints1,
 		const vector<vector<Point2f> >& imagePoints2,
 		Mat& cameraMatrix1, Mat& distCoeffs1,
@@ -1215,9 +1267,12 @@ protected:
 		Mat& R1, Mat& R2, Mat& P1, Mat& P2, Mat& Q,
 		double alpha, Size newImageSize,
 		Rect* validPixROI1, Rect* validPixROI2, int flags );
+	virtual bool rectifyUncalibrated( const Mat& points1,
+		const Mat& points2, const Mat& F, Size imgSize,
+		Mat& H1, Mat& H2, double threshold=5 );
 };
 
-double CV_StereoCalibrationTest_C::calibrate( const vector<vector<Point3f> >& objectPoints,
+double CV_StereoCalibrationTest_C::calibrateStereoCamera( const vector<vector<Point3f> >& objectPoints,
 				 const vector<vector<Point2f> >& imagePoints1,
 				 const vector<vector<Point2f> >& imagePoints2,
 				 Mat& cameraMatrix1, Mat& distCoeffs1,
@@ -1240,10 +1295,10 @@ double CV_StereoCalibrationTest_C::calibrate( const vector<vector<Point3f> >& ob
 		total += objectPoints[i].size();
 	}
 
-	Mat npoints( 1, (int)nimages, CV_32S ), 
-		objPt( 1, (int)total, DataType<Point3f>::type ), 
-		imgPt( 1, (int)total, DataType<Point2f>::type ),
-		imgPt2( 1, (int)total, DataType<Point2f>::type );
+	Mat npoints( 1, nimages, CV_32S ), 
+		objPt( 1, total, DataType<Point3f>::type ), 
+		imgPt( 1, total, DataType<Point2f>::type ),
+		imgPt2( 1, total, DataType<Point2f>::type );
 
 	Point2f* imgPtData2 = imgPt2.ptr<Point2f>();
 	Point3f* objPtData = objPt.ptr<Point3f>();
@@ -1251,7 +1306,7 @@ double CV_StereoCalibrationTest_C::calibrate( const vector<vector<Point3f> >& ob
 	for( int i = 0, ni = 0, j = 0; i < nimages; i++, j += ni )
 	{
 		ni = objectPoints[i].size();
-		((int*)npoints.data)[i] = (int)ni;
+		((int*)npoints.data)[i] = ni;
 		copy(objectPoints[i].begin(), objectPoints[i].end(), objPtData + j);
 		copy(imagePoints1[i].begin(), imagePoints1[i].end(), imgPtData + j);
 		copy(imagePoints2[i].begin(), imagePoints2[i].end(), imgPtData2 + j);
@@ -1287,6 +1342,17 @@ void CV_StereoCalibrationTest_C::rectify( const Mat& cameraMatrix1, const Mat& d
 		alpha, newImageSize, (CvRect*)validPixROI1, (CvRect*)validPixROI2);
 }
 
+bool CV_StereoCalibrationTest_C::rectifyUncalibrated( const Mat& points1,
+		   const Mat& points2, const Mat& F, Size imgSize, Mat& H1, Mat& H2, double threshold )
+{
+	H1.create(3, 3, CV_64F);
+	H2.create(3, 3, CV_64F);
+	CvMat _pt1 = points1, _pt2 = points2, _F, *pF=0, _H1 = H1, _H2 = H2;
+	if( F.size() == Size(3, 3) )
+		pF = &(_F = F);
+	return cvStereoRectifyUncalibrated(&_pt1, &_pt2, pF, imgSize, &_H1, &_H2, threshold) > 0;
+}
+
 CV_StereoCalibrationTest_C stereocalib_test_c;
 
 //-------------------------------- CV_StereoCalibrationTest_CPP ------------------------------
@@ -1294,9 +1360,10 @@ CV_StereoCalibrationTest_C stereocalib_test_c;
 class CV_StereoCalibrationTest_CPP : public CV_StereoCalibrationTest
 {
 public:
-	CV_StereoCalibrationTest_CPP() : CV_StereoCalibrationTest( "calibrate-stereo-cpp", "stereoCalibrate" ) {}
+	CV_StereoCalibrationTest_CPP() : CV_StereoCalibrationTest( "calibrate-stereo-cpp", 
+		"stereoCalibrate, stereoRectify, stereoRectifyUncalibrated" ) {}
 protected:
-	virtual double calibrate( const vector<vector<Point3f> >& objectPoints,
+	virtual double calibrateStereoCamera( const vector<vector<Point3f> >& objectPoints,
 		const vector<vector<Point2f> >& imagePoints1,
 		const vector<vector<Point2f> >& imagePoints2,
 		Mat& cameraMatrix1, Mat& distCoeffs1,
@@ -1309,9 +1376,12 @@ protected:
 		Mat& R1, Mat& R2, Mat& P1, Mat& P2, Mat& Q,
 		double alpha, Size newImageSize,
 		Rect* validPixROI1, Rect* validPixROI2, int flags );
+	virtual bool rectifyUncalibrated( const Mat& points1,
+		const Mat& points2, const Mat& F, Size imgSize,
+		Mat& H1, Mat& H2, double threshold=5 );
 };
 
-double CV_StereoCalibrationTest_CPP::calibrate( const vector<vector<Point3f> >& objectPoints,
+double CV_StereoCalibrationTest_CPP::calibrateStereoCamera( const vector<vector<Point3f> >& objectPoints,
 											 const vector<vector<Point2f> >& imagePoints1,
 											 const vector<vector<Point2f> >& imagePoints2,
 											 Mat& cameraMatrix1, Mat& distCoeffs1,
@@ -1335,5 +1405,10 @@ void CV_StereoCalibrationTest_CPP::rectify( const Mat& cameraMatrix1, const Mat&
 				imageSize, R, T, R1, R2, P1, P2, Q, alpha, newImageSize,validPixROI1, validPixROI2, flags );
 }
 
-CV_StereoCalibrationTest_CPP stereocalib_test_cpp;
+bool CV_StereoCalibrationTest_CPP::rectifyUncalibrated( const Mat& points1,
+					   const Mat& points2, const Mat& F, Size imgSize, Mat& H1, Mat& H2, double threshold )
+{
+	return stereoRectifyUncalibrated( points1, points2, F, imgSize, H1, H2, threshold );
+}
 
+CV_StereoCalibrationTest_CPP stereocalib_test_cpp;
