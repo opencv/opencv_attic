@@ -828,9 +828,9 @@ if(BUILD_PACKAGE)
     
     include(${CMAKE_BINARY_DIR}/.cpack/Package.cmake)
 
-    set(root_files README ChangeLog configure)
+    set(root_files README)
 
-    file(GLOB root_src_files *.in *.sh *.cmake CMakeLists.txt)
+    file(GLOB root_src_files *.in *.cmake CMakeLists.txt)
 
     if (NOT WIN32)
         install(FILES ${root_files}
