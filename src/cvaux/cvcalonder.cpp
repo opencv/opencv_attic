@@ -483,7 +483,7 @@ namespace cv {
 	{   
 		static bool warned = false;
 		if (!warned) {
-			printf("\n[OK] compressing leaves with phi %i x %i\n", reduced_num_dim, classes_);
+			printf("\n[OK] compressing leaves with phi %i x %i\n", (int)reduced_num_dim, classes_);
 			warned = true;
 		}
 
@@ -838,7 +838,7 @@ namespace cv {
 			if (print_status)
 			{
 				printf("INVALID PARAMS in RTreeClassifier::train: reduced_num_dim{%i} > base_set.size(){%i}\n",
-					reduced_num_dim, base_set.size());
+					(int)reduced_num_dim, (int)base_set.size());
 			}
 			return;
 		}
@@ -849,7 +849,7 @@ namespace cv {
 		trees_.resize(num_trees);  
 		if (print_status)
 		{
-			printf("[OK] Training trees: base size=%i, reduced size=%i\n", base_set.size(), reduced_num_dim); 
+			printf("[OK] Training trees: base size=%i, reduced size=%i\n", (int)base_set.size(), (int)reduced_num_dim); 
 		}
 
 		int count = 1;
@@ -1062,7 +1062,7 @@ namespace cv {
 
 		if (num_quant_bits_<1 || num_quant_bits_>8) {
 			printf("[WARNING] RTC: suspicious value num_quant_bits_=%i found; setting to %i.\n", 
-				num_quant_bits_, DEFAULT_NUM_QUANT_BITS);
+				num_quant_bits_, (int)DEFAULT_NUM_QUANT_BITS);
 			num_quant_bits_ = DEFAULT_NUM_QUANT_BITS;
 		}
 
