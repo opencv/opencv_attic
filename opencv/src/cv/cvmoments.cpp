@@ -242,7 +242,7 @@ static void momentsInTile( const cv::Mat& img, double* moments )
 
 #if CV_SSE2
 
-template<> static void momentsInTile<uchar, int, int>( const cv::Mat& img, double* moments )
+template<> void momentsInTile<uchar, int, int>( const cv::Mat& img, double* moments )
 {
 	typedef uchar T;
     typedef int WT;
