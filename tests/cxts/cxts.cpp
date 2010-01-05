@@ -1551,7 +1551,9 @@ int CvTS::read_params( CvFileStorage* fs )
                         TIMING_MODE : CORRECTNESS_CHECK_MODE;
     str = cvReadStringByName( fs, node, "timing_mode", params.timing_mode == AVG_TIME ? "avg" : "min" );
     params.timing_mode = strcmp( str, "average" ) == 0 || strcmp( str, "avg" ) == 0 ? AVG_TIME : MIN_TIME;
-    params.test_filter_pattern = cvReadStringByName( fs, node, params.test_filter_mode == CHOOSE_FUNCTIONS ?
+    params.test_filter_pattern = params.test_filter_pattern != 0 &&
+		strlen(params.test_filter_pattern) > 0 ? params.test_filter_pattern :
+		cvReadStringByName( fs, node, params.test_filter_mode == CHOOSE_FUNCTIONS ?
                                                      "functions" : "tests", "" );
     params.resource_path = cvReadStringByName( fs, node, "." );
     if( params.use_optimized < 0 )
