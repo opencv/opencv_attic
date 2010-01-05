@@ -1343,11 +1343,15 @@ int CvTS::run( int argc, char** argv )
             printf( LOG, "ERROR: could not open config file %s", config_name );
             return -1;
         }
+    }
 
+    if( params.test_mode == CORRECTNESS_CHECK_MODE || fs )
+    {
+        // in the case of algorithmic tests we always run read_params,
+        // even if there is no config file
         if( read_params(fs) < 0 )
             return -1;
     }
-
 
     if( !ostrm_base_name )
         make_output_stream_base_name( config_name ? config_name : argv[0] );
