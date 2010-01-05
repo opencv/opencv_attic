@@ -274,7 +274,9 @@ void CV_HighGuiTest::run( int start_from )
 		
 	if (!ImagesTest(ts->get_data_path(), th.temp_folder))
 		return;
-#if defined WIN32 || defined __linux__ 
+#if defined WIN32 || defined __linux__
+
+#if !defined HAVE_GSTREAMER || defined HAVE_GSTREAMER_APP  
 	if (!VideoTest(ts->get_data_path(), th.temp_folder, CV_FOURCC_DEFAULT))
 		return;				
 
@@ -283,7 +285,7 @@ void CV_HighGuiTest::run( int start_from )
     
 	if (!VideoTest(ts->get_data_path(), th.temp_folder, CV_FOURCC('M', 'P', 'G', '2')))
 		return;				
-		
+#endif
 	//if (!VideoTest(ts->get_data_path(), th.temp_folder, CV_FOURCC('D', 'X', '5', '0')))		return;				
 	
 	if (!GuiTest(ts->get_data_path(), th.temp_folder))
