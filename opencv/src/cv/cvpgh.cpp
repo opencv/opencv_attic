@@ -333,30 +333,24 @@ icvCalcPGH( const CvSeq * contour, float *pgh, int angle_dim, int dist_dim )
 CV_IMPL void
 cvCalcPGH( const CvSeq * contour, CvHistogram * hist )
 {
-    CV_FUNCNAME( "cvCalcPGH" );
-
-    __BEGIN__;
-
     int size[CV_MAX_DIM];
     int dims;
     
     if( !CV_IS_HIST(hist))
-        CV_ERROR( CV_StsBadArg, "The histogram header is invalid " );
+        CV_Error( CV_StsBadArg, "The histogram header is invalid " );
 
     if( CV_IS_SPARSE_HIST( hist ))
-        CV_ERROR( CV_StsUnsupportedFormat, "Sparse histogram are not supported" );
+        CV_Error( CV_StsUnsupportedFormat, "Sparse histogram are not supported" );
 
     dims = cvGetDims( hist->bins, size ); 
 
     if( dims != 2 )
-        CV_ERROR( CV_StsBadSize, "The histogram must be two-dimensional" );
+        CV_Error( CV_StsBadSize, "The histogram must be two-dimensional" );
 
     if( !CV_IS_SEQ_POINT_SET( contour ) || CV_SEQ_ELTYPE( contour ) != CV_32SC2 )
-        CV_ERROR( CV_StsUnsupportedFormat, "The contour is not valid or the point type is not supported" );
+        CV_Error( CV_StsUnsupportedFormat, "The contour is not valid or the point type is not supported" );
 
     IPPI_CALL( icvCalcPGH( contour, ((CvMatND*)(hist->bins))->data.fl, size[0], size[1] ));
-
-    __END__;
 }
 
 

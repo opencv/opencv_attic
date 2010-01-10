@@ -66,18 +66,12 @@ cvMatchShapes( const void* contour1, const void* contour2,
     double mmm;
     double result = 0;
 
-    CV_FUNCNAME( "cvMatchShapes" );
-
-    __BEGIN__;
-
     if( !contour1 || !contour2 )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
-/*   first moments calculation */
-    CV_CALL( cvMoments( contour1, &moments ));
-
-/*  Hu moments calculation   */
-    CV_CALL( cvGetHuMoments( &moments, &huMoments ));
+    // calculate moments of the first shape
+    cvMoments( contour1, &moments );
+    cvGetHuMoments( &moments, &huMoments );
 
     ma[0] = huMoments.hu1;
     ma[1] = huMoments.hu2;
@@ -88,11 +82,9 @@ cvMatchShapes( const void* contour1, const void* contour2,
     ma[6] = huMoments.hu7;
 
 
-/*   second moments calculation  */
-    CV_CALL( cvMoments( contour2, &moments ));
-
-/*  Hu moments calculation   */
-    CV_CALL( cvGetHuMoments( &moments, &huMoments ));
+    // calculate moments of the second shape
+    cvMoments( contour2, &moments );
+    cvGetHuMoments( &moments, &huMoments );
 
     mb[0] = huMoments.hu1;
     mb[1] = huMoments.hu2;
@@ -196,10 +188,8 @@ cvMatchShapes( const void* contour1, const void* contour2,
             break;
         }
     default:
-        CV_ERROR( CV_StsBadArg, "Unknown comparison method" );
+        CV_Error( CV_StsBadArg, "Unknown comparison method" );
     }
-
-    __END__;
 
     return result;
 }
@@ -223,6 +213,7 @@ CV_IMPL  double
 cvMatchContourTrees( const CvContourTree* tree1, const CvContourTree* tree2,
                      int method, double threshold )
 {
+    cv::AutoBuffer<_CvTrianAttr*> buf;
     _CvTrianAttr **ptr_p1 = 0, **ptr_p2 = 0;    /*pointers to the pointer's buffer */
     _CvTrianAttr **ptr_n1 = 0, **ptr_n2 = 0;    /*pointers to the pointer's buffer */
     _CvTrianAttr **ptr11, **ptr12, **ptr21, **ptr22;
@@ -235,31 +226,28 @@ cvMatchContourTrees( const CvContourTree* tree1, const CvContourTree* tree2,
     CvSeqReader reader1, reader2;
     double result = 0;
 
-    CV_FUNCNAME("cvMatchContourTrees");
-    __BEGIN__;
-
     if( !tree1 || !tree2 )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
     if( method != CV_CONTOUR_TREES_MATCH_I1 )
-        CV_ERROR( CV_StsBadArg, "Unknown/unsupported comparison method" );
+        CV_Error( CV_StsBadArg, "Unknown/unsupported comparison method" );
 
     if( !CV_IS_SEQ_POLYGON_TREE( tree1 ))
-        CV_ERROR( CV_StsBadArg, "The first argument is not a valid contour tree" );
+        CV_Error( CV_StsBadArg, "The first argument is not a valid contour tree" );
 
     if( !CV_IS_SEQ_POLYGON_TREE( tree2 ))
-        CV_ERROR( CV_StsBadArg, "The second argument is not a valid contour tree" );
+        CV_Error( CV_StsBadArg, "The second argument is not a valid contour tree" );
 
     lpt1 = tree1->total;
     lpt2 = tree2->total;
     lpt = lpt1 > lpt2 ? lpt1 : lpt2;
 
     ptr_p1 = ptr_n1 = ptr_p2 = ptr_n2 = NULL;
-    CV_CALL( ptr_p1 = (_CvTrianAttr **) cvAlloc( lpt * sizeof( _CvTrianAttr * )));
-    CV_CALL( ptr_p2 = (_CvTrianAttr **) cvAlloc( lpt * sizeof( _CvTrianAttr * )));
-
-    CV_CALL( ptr_n1 = (_CvTrianAttr **) cvAlloc( lpt * sizeof( _CvTrianAttr * )));
-    CV_CALL( ptr_n2 = (_CvTrianAttr **) cvAlloc( lpt * sizeof( _CvTrianAttr * )));
+    buf.allocate(lpt*4);
+    ptr_p1 = buf;
+    ptr_p2 = ptr_p1 + lpt;
+    ptr_n1 = ptr_p2 + lpt;
+    ptr_n2 = ptr_n1 + lpt;
 
     cvStartReadSeq( (CvSeq *) tree1, &reader1, 0 );
     cvStartReadSeq( (CvSeq *) tree2, &reader2, 0 );
@@ -279,7 +267,7 @@ cvMatchContourTrees( const CvContourTree* tree1, const CvContourTree* tree2,
     area2 = tree_2.area;
 
     if( area1 < eps || area2 < eps || lpt < 4 )
-        CV_ERROR( CV_StsBadSize, "" );
+        CV_Error( CV_StsBadSize, "" );
 
     r11 = r12 = r21 = r22 = w1 = w2 = d12 = 0;
     flag = 0;
@@ -382,16 +370,7 @@ cvMatchContourTrees( const CvContourTree* tree1, const CvContourTree* tree2,
     }
     while( i > 0 && match_v < threshold );
 
-    result = match_v;
-
-    __END__;
-
-    cvFree( &ptr_n2 );
-    cvFree( &ptr_n1 );
-    cvFree( &ptr_p2 );
-    cvFree( &ptr_p1 );
-
-    return result;
+    return match_v;
 }
 
 

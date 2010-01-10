@@ -408,27 +408,21 @@ cvSnakeImage( const IplImage* src, CvPoint* points,
               int coeffUsage, CvSize win,
               CvTermCriteria criteria, int calcGradient )
 {
-
-    CV_FUNCNAME( "cvSnakeImage" );
-
-    __BEGIN__;
-
     uchar *data;
     CvSize size;
     int step;
 
     if( src->nChannels != 1 )
-        CV_ERROR( CV_BadNumChannels, "input image has more than one channel" );
+        CV_Error( CV_BadNumChannels, "input image has more than one channel" );
 
     if( src->depth != IPL_DEPTH_8U )
-        CV_ERROR( CV_BadDepth, cvUnsupportedFormat );
+        CV_Error( CV_BadDepth, cvUnsupportedFormat );
 
     cvGetRawData( src, &data, &step, &size );
 
     IPPI_CALL( icvSnake8uC1R( data, step, size, points, length,
                               alpha, beta, gamma, coeffUsage, win, criteria,
                               calcGradient ? _CV_SNAKE_GRAD : _CV_SNAKE_IMAGE ));
-    __END__;
 }
 
 /* end of file */

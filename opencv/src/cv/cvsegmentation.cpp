@@ -65,18 +65,12 @@ icvAllocWSNodes( CvMemStorage* storage )
 {
     CvWSNode* n = 0;
     
-    CV_FUNCNAME( "icvAllocWSNodes" );
-
-    __BEGIN__;
-
     int i, count = (storage->block_size - sizeof(CvMemBlock))/sizeof(*n) - 1;
 
-    CV_CALL( n = (CvWSNode*)cvMemStorageAlloc( storage, count*sizeof(*n) ));
+    n = (CvWSNode*)cvMemStorageAlloc( storage, count*sizeof(*n) );
     for( i = 0; i < count-1; i++ )
         n[i].next = n + i + 1;
     n[count-1].next = 0;
-
-    __END__;
 
     return n;
 }
@@ -88,12 +82,8 @@ cvWatershed( const CvArr* srcarr, CvArr* dstarr )
     const int IN_QUEUE = -2;
     const int WSHED = -1;
     const int NQ = 256;
-    CvMemStorage* storage = 0;
+    cv::Ptr<CvMemStorage> storage;
     
-    CV_FUNCNAME( "cvWatershed" );
-
-    __BEGIN__;
-
     CvMat sstub, *src;
     CvMat dstub, *dst;
     CvSize size;
@@ -115,7 +105,7 @@ cvWatershed( const CvArr* srcarr, CvArr* dstarr )
     #define ws_push(idx,mofs,iofs)  \
     {                               \
         if( !free_node )            \
-            CV_CALL( free_node = icvAllocWSNodes( storage ));\
+            free_node = icvAllocWSNodes( storage );\
         node = free_node;           \
         free_node = free_node->next;\
         node->next = 0;             \
@@ -150,22 +140,21 @@ cvWatershed( const CvArr* srcarr, CvArr* dstarr )
         assert( 0 <= diff && diff <= 255 ); \
     }
 
-    CV_CALL( src = cvGetMat( srcarr, &sstub ));
-    CV_CALL( dst = cvGetMat( dstarr, &dstub ));
+    src = cvGetMat( srcarr, &sstub );
+    dst = cvGetMat( dstarr, &dstub );
 
     if( CV_MAT_TYPE(src->type) != CV_8UC3 )
-        CV_ERROR( CV_StsUnsupportedFormat, "Only 8-bit, 3-channel input images are supported" );
+        CV_Error( CV_StsUnsupportedFormat, "Only 8-bit, 3-channel input images are supported" );
 
     if( CV_MAT_TYPE(dst->type) != CV_32SC1 )
-        CV_ERROR( CV_StsUnsupportedFormat,
+        CV_Error( CV_StsUnsupportedFormat,
             "Only 32-bit, 1-channel output images are supported" );
     
     if( !CV_ARE_SIZES_EQ( src, dst ))
-        CV_ERROR( CV_StsUnmatchedSizes, "The input and output images must have the same size" );
+        CV_Error( CV_StsUnmatchedSizes, "The input and output images must have the same size" );
 
     size = cvGetMatSize(src);
-
-    CV_CALL( storage = cvCreateMemStorage() );
+    storage = cvCreateMemStorage();
 
     istep = src->step;
     img = src->data.ptr;
@@ -229,7 +218,7 @@ cvWatershed( const CvArr* srcarr, CvArr* dstarr )
 
     // if there is no markers, exit immediately
     if( i == NQ )
-        EXIT;
+        return;
 
     active_queue = i;
     img = src->data.ptr;
@@ -311,10 +300,6 @@ cvWatershed( const CvArr* srcarr, CvArr* dstarr )
             m[mstep] = IN_QUEUE;
         }
     }
-
-    __END__;
-
-    cvReleaseMemStorage( &storage );
 }
 
 
@@ -336,9 +321,9 @@ cvPyrMeanShiftFiltering( const CvArr* srcarr, CvArr* dstarr,
 {
     const int cn = 3;
     const int MAX_LEVELS = 8;
-    CvMat* src_pyramid[MAX_LEVELS+1];
-    CvMat* dst_pyramid[MAX_LEVELS+1];
-    CvMat* mask0 = 0;
+    cv::Ptr<CvMat> src_pyramid[MAX_LEVELS+1];
+    cv::Ptr<CvMat> dst_pyramid[MAX_LEVELS+1];
+    cv::Ptr<CvMat> mask0;
     int i, j, level;
     //uchar* submask = 0;
 
@@ -348,30 +333,26 @@ cvPyrMeanShiftFiltering( const CvArr* srcarr, CvArr* dstarr,
     memset( src_pyramid, 0, sizeof(src_pyramid) );
     memset( dst_pyramid, 0, sizeof(dst_pyramid) );
     
-    CV_FUNCNAME( "cvPyrMeanShiftFiltering" );
-
-    __BEGIN__;
-
     double sr2 = sr * sr;
     int isr2 = cvRound(sr2), isr22 = MAX(isr2,16);
     int tab[768];
     CvMat sstub0, *src0;
     CvMat dstub0, *dst0;
 
-    CV_CALL( src0 = cvGetMat( srcarr, &sstub0 ));
-    CV_CALL( dst0 = cvGetMat( dstarr, &dstub0 ));
+    src0 = cvGetMat( srcarr, &sstub0 );
+    dst0 = cvGetMat( dstarr, &dstub0 );
 
     if( CV_MAT_TYPE(src0->type) != CV_8UC3 )
-        CV_ERROR( CV_StsUnsupportedFormat, "Only 8-bit, 3-channel images are supported" );
+        CV_Error( CV_StsUnsupportedFormat, "Only 8-bit, 3-channel images are supported" );
     
     if( !CV_ARE_TYPES_EQ( src0, dst0 ))
-        CV_ERROR( CV_StsUnmatchedFormats, "The input and output images must have the same type" );
+        CV_Error( CV_StsUnmatchedFormats, "The input and output images must have the same type" );
 
     if( !CV_ARE_SIZES_EQ( src0, dst0 ))
-        CV_ERROR( CV_StsUnmatchedSizes, "The input and output images must have the same size" );
+        CV_Error( CV_StsUnmatchedSizes, "The input and output images must have the same size" );
 
     if( (unsigned)max_level > (unsigned)MAX_LEVELS )
-        CV_ERROR( CV_StsOutOfRange, "The number of pyramid levels is too large or negative" );
+        CV_Error( CV_StsOutOfRange, "The number of pyramid levels is too large or negative" );
 
     if( !(termcrit.type & CV_TERMCRIT_ITER) )
         termcrit.max_iter = 5;
@@ -389,15 +370,15 @@ cvPyrMeanShiftFiltering( const CvArr* srcarr, CvArr* dstarr,
     dst_pyramid[0] = dst0;
     for( level = 1; level <= max_level; level++ )
     {
-        CV_CALL( src_pyramid[level] = cvCreateMat( (src_pyramid[level-1]->rows+1)/2,
-                        (src_pyramid[level-1]->cols+1)/2, src_pyramid[level-1]->type ));
-        CV_CALL( dst_pyramid[level] = cvCreateMat( src_pyramid[level]->rows,
-                        src_pyramid[level]->cols, src_pyramid[level]->type ));
-        CV_CALL( cvPyrDown( src_pyramid[level-1], src_pyramid[level] ));
+        src_pyramid[level] = cvCreateMat( (src_pyramid[level-1]->rows+1)/2,
+                        (src_pyramid[level-1]->cols+1)/2, src_pyramid[level-1]->type );
+        dst_pyramid[level] = cvCreateMat( src_pyramid[level]->rows,
+                        src_pyramid[level]->cols, src_pyramid[level]->type );
+        cvPyrDown( src_pyramid[level-1], src_pyramid[level] );
         //CV_CALL( cvResize( src_pyramid[level-1], src_pyramid[level], CV_INTER_AREA ));
     }
 
-    CV_CALL( mask0 = cvCreateMat( src0->rows, src0->cols, CV_8UC1 ));
+    mask0 = cvCreateMat( src0->rows, src0->cols, CV_8UC1 );
     //CV_CALL( submask = (uchar*)cvAlloc( (sp+2)*(sp+2) ));
 
     // 2. apply meanshift, starting from the pyramid top (i.e. the smallest layer)
@@ -545,15 +526,6 @@ cvPyrMeanShiftFiltering( const CvArr* srcarr, CvArr* dstarr,
                 dptr[2] = (uchar)c2;
             }
         }
-    }   
-
-    __END__;
-
-    for( i = 1; i <= MAX_LEVELS; i++ )
-    {
-        cvReleaseMat( &src_pyramid[i] );
-        cvReleaseMat( &dst_pyramid[i] );
     }
-    cvReleaseMat( &mask0 );
 }
 

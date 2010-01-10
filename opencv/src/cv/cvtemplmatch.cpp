@@ -54,15 +54,11 @@ icvCrossCorr( const CvArr* _img, const CvArr* _templ, CvArr* _corr,
 
     const double block_scale = 4.5;
     const int min_block_size = 256;
-    CvMat* dft_img[CV_MAX_THREADS] = {0};
-    CvMat* dft_templ = 0;
-    void* buf[CV_MAX_THREADS] = {0};
+    cv::Ptr<CvMat> dft_img[CV_MAX_THREADS];
+    cv::Ptr<CvMat> dft_templ;
+    std::vector<uchar> buf[CV_MAX_THREADS];
     int k, num_threads = 0;
     
-    CV_FUNCNAME( "icvCrossCorr" );
-    
-    __BEGIN__;
-
     CvMat istub, *img = (CvMat*)_img;
     CvMat tstub, *templ = (CvMat*)_templ;
     CvMat cstub, *corr = (CvMat*)_corr;
@@ -71,29 +67,29 @@ icvCrossCorr( const CvArr* _img, const CvArr* _templ, CvArr* _corr,
         cn, templ_cn, corr_cn, buf_size = 0,
         tile_count_x, tile_count_y, tile_count;
 
-    CV_CALL( img = cvGetMat( img, &istub ));
-    CV_CALL( templ = cvGetMat( templ, &tstub ));
-    CV_CALL( corr = cvGetMat( corr, &cstub ));
+    img = cvGetMat( img, &istub );
+    templ = cvGetMat( templ, &tstub );
+    corr = cvGetMat( corr, &cstub );
 
     if( CV_MAT_DEPTH( img->type ) != CV_8U &&
         CV_MAT_DEPTH( img->type ) != CV_16U &&
         CV_MAT_DEPTH( img->type ) != CV_32F &&
         CV_MAT_DEPTH( img->type ) != CV_64F )
-        CV_ERROR( CV_StsUnsupportedFormat,
+        CV_Error( CV_StsUnsupportedFormat,
         "The function supports only 8u, 16u and 32f data types" );
 
     if( !CV_ARE_DEPTHS_EQ( img, templ ) && CV_MAT_DEPTH( templ->type ) != CV_32F )
-        CV_ERROR( CV_StsUnsupportedFormat,
+        CV_Error( CV_StsUnsupportedFormat,
         "Template (kernel) must be of the same depth as the input image, or be 32f" );
     
     if( !CV_ARE_DEPTHS_EQ( img, corr ) && CV_MAT_DEPTH( corr->type ) != CV_32F &&
         CV_MAT_DEPTH( corr->type ) != CV_64F )
-        CV_ERROR( CV_StsUnsupportedFormat,
+        CV_Error( CV_StsUnsupportedFormat,
         "The output image must have the same depth as the input image, or be 32f/64f" );
 
     if( (!CV_ARE_CNS_EQ( img, corr ) || CV_MAT_CN(templ->type) > 1) &&
         (CV_MAT_CN( corr->type ) > 1 || !CV_ARE_CNS_EQ( img, templ)) )
-        CV_ERROR( CV_StsUnsupportedFormat,
+        CV_Error( CV_StsUnsupportedFormat,
         "The output must have the same number of channels as the input (when the template has 1 channel), "
         "or the output must have 1 channel when the input and the template have the same number of channels" );
 
@@ -113,12 +109,12 @@ icvCrossCorr( const CvArr* _img, const CvArr* _templ, CvArr* _corr,
         max_depth = CV_64F;
 
     /*if( img->cols < templ->cols || img->rows < templ->rows )
-        CV_ERROR( CV_StsUnmatchedSizes,
+        CV_Error( CV_StsUnmatchedSizes,
         "Such a combination of image and template/filter size is not supported" );*/
 
     if( corr->rows > img->rows + templ->rows - 1 ||
         corr->cols > img->cols + templ->cols - 1 )
-        CV_ERROR( CV_StsUnmatchedSizes,
+        CV_Error( CV_StsUnmatchedSizes,
         "output image should not be greater than (W + w - 1)x(H + h - 1)" );
 
     blocksize.width = cvRound(templ->cols*block_scale);
@@ -133,7 +129,7 @@ icvCrossCorr( const CvArr* _img, const CvArr* _templ, CvArr* _corr,
         dftsize.width = 2;
     dftsize.height = cvGetOptimalDFTSize(blocksize.height + templ->rows - 1);
     if( dftsize.width <= 0 || dftsize.height <= 0 )
-        CV_ERROR( CV_StsOutOfRange, "the input arrays are too big" );
+        CV_Error( CV_StsOutOfRange, "the input arrays are too big" );
 
     // recompute block size
     blocksize.width = dftsize.width - templ->cols + 1;
@@ -141,7 +137,7 @@ icvCrossCorr( const CvArr* _img, const CvArr* _templ, CvArr* _corr,
     blocksize.height = dftsize.height - templ->rows + 1;
     blocksize.height = MIN( blocksize.height, corr->rows );
 
-    CV_CALL( dft_templ = cvCreateMat( dftsize.height*templ_cn, dftsize.width, max_depth ));
+    dft_templ = cvCreateMat( dftsize.height*templ_cn, dftsize.width, max_depth );
 
 #ifdef USE_OPENMP
     num_threads = cvGetNumThreads();
@@ -150,7 +146,7 @@ icvCrossCorr( const CvArr* _img, const CvArr* _templ, CvArr* _corr,
 #endif
 
     for( k = 0; k < num_threads; k++ )
-        CV_CALL( dft_img[k] = cvCreateMat( dftsize.height, dftsize.width, max_depth ));
+        dft_img[k] = cvCreateMat( dftsize.height, dftsize.width, max_depth );
 
     if( templ_cn > 1 && templ_depth != max_depth )
         buf_size = templ->cols*templ->rows*CV_ELEM_SIZE(templ_depth);
@@ -165,7 +161,7 @@ icvCrossCorr( const CvArr* _img, const CvArr* _templ, CvArr* _corr,
     if( buf_size > 0 )
     {
         for( k = 0; k < num_threads; k++ )
-            CV_CALL( buf[k] = cvAlloc(buf_size) );
+            buf[k].resize(buf_size);
     }
 
     // compute DFT of each template plane
@@ -181,7 +177,7 @@ icvCrossCorr( const CvArr* _img, const CvArr* _templ, CvArr* _corr,
         if( templ_cn > 1 )
         {
             planes[k] = templ_depth == max_depth ? dst :
-                cvInitMatHeader( &temp, templ->rows, templ->cols, templ_depth, buf[0] );
+                cvInitMatHeader( &temp, templ->rows, templ->cols, templ_depth, &buf[0][0] );
             cvSplit( templ, planes[0], planes[1], planes[2], planes[3] );
             src = planes[k];
             planes[k] = 0;
@@ -204,7 +200,6 @@ icvCrossCorr( const CvArr* _img, const CvArr* _templ, CvArr* _corr,
     tile_count_y = (corr->rows + blocksize.height - 1)/blocksize.height;
     tile_count = tile_count_x*tile_count_y;
 
-    {
 #if defined _OPENMP && defined USE_OPENMP
     #pragma omp parallel for num_threads(num_threads) schedule(dynamic)
 #endif
@@ -222,7 +217,7 @@ icvCrossCorr( const CvArr* _img, const CvArr* _templ, CvArr* _corr,
         CvMat sstub, dstub, *src, *dst, temp;
         CvMat* planes[] = { 0, 0, 0, 0 };
         CvMat* _dft_img = dft_img[thread_idx];
-        void* _buf = buf[thread_idx];
+        uchar* _buf = &buf[thread_idx][0];
         CvSize csz = { blocksize.width, blocksize.height }, isz;
         int x0 = x - anchor.x, y0 = y - anchor.y;
         int x1 = MAX( 0, x0 ), y1 = MAX( 0, y0 ), x2, y2;
@@ -310,17 +305,6 @@ icvCrossCorr( const CvArr* _img, const CvArr* _templ, CvArr* _corr,
             }
         }
     }
-    }
-
-    __END__;
-
-    cvReleaseMat( &dft_templ );
-
-    for( k = 0; k < num_threads; k++ )
-    {
-        cvReleaseMat( &dft_img[k] );
-        cvFree( &buf[k] );
-    }
 }
 
 void
@@ -337,13 +321,8 @@ cv::crossCorr( const Mat& img, const Mat& templ, Mat& corr,
 CV_IMPL void
 cvMatchTemplate( const CvArr* _img, const CvArr* _templ, CvArr* _result, int method )
 {
-    CvMat* sum = 0;
-    CvMat* sqsum = 0;
+    cv::Ptr<CvMat> sum, sqsum;
     
-    CV_FUNCNAME( "cvMatchTemplate" );
-
-    __BEGIN__;
-
     int coi1 = 0, coi2 = 0;
     int depth, cn;
     int i, j, k;
@@ -364,20 +343,20 @@ cvMatchTemplate( const CvArr* _img, const CvArr* _templ, CvArr* _result, int met
                     method == CV_TM_SQDIFF_NORMED ||
                     method == CV_TM_CCOEFF_NORMED;
 
-    CV_CALL( img = cvGetMat( img, &stub, &coi1 ));
-    CV_CALL( templ = cvGetMat( templ, &tstub, &coi2 ));
-    CV_CALL( result = cvGetMat( result, &rstub ));
+    img = cvGetMat( img, &stub, &coi1 );
+    templ = cvGetMat( templ, &tstub, &coi2 );
+    result = cvGetMat( result, &rstub );
 
     if( CV_MAT_DEPTH( img->type ) != CV_8U &&
         CV_MAT_DEPTH( img->type ) != CV_32F )
-        CV_ERROR( CV_StsUnsupportedFormat,
+        CV_Error( CV_StsUnsupportedFormat,
         "The function supports only 8u and 32f data types" );
 
     if( !CV_ARE_TYPES_EQ( img, templ ))
-        CV_ERROR( CV_StsUnmatchedSizes, "image and template should have the same type" );
+        CV_Error( CV_StsUnmatchedSizes, "image and template should have the same type" );
 
     if( CV_MAT_TYPE( result->type ) != CV_32FC1 )
-        CV_ERROR( CV_StsUnsupportedFormat, "output image should have 32f type" );
+        CV_Error( CV_StsUnsupportedFormat, "output image should have 32f type" );
 
     if( img->rows < templ->rows || img->cols < templ->cols )
     {
@@ -387,36 +366,34 @@ cvMatchTemplate( const CvArr* _img, const CvArr* _templ, CvArr* _result, int met
 
     if( result->rows != img->rows - templ->rows + 1 ||
         result->cols != img->cols - templ->cols + 1 )
-        CV_ERROR( CV_StsUnmatchedSizes, "output image should be (W - w + 1)x(H - h + 1)" );
+        CV_Error( CV_StsUnmatchedSizes, "output image should be (W - w + 1)x(H - h + 1)" );
 
     if( method < CV_TM_SQDIFF || method > CV_TM_CCOEFF_NORMED )
-        CV_ERROR( CV_StsBadArg, "unknown comparison method" );
+        CV_Error( CV_StsBadArg, "unknown comparison method" );
 
     depth = CV_MAT_DEPTH(img->type);
     cn = CV_MAT_CN(img->type);
 
-    CV_CALL( icvCrossCorr( img, templ, result ));
+    icvCrossCorr( img, templ, result );
 
     if( method == CV_TM_CCORR )
-        EXIT;
+        return;
 
     inv_area = 1./((double)templ->rows * templ->cols);
 
-    CV_CALL( sum = cvCreateMat( img->rows + 1, img->cols + 1,
-                                CV_MAKETYPE( CV_64F, cn )));
+    sum = cvCreateMat( img->rows + 1, img->cols + 1, CV_MAKETYPE( CV_64F, cn ));
     if( method == CV_TM_CCOEFF )
     {
-        CV_CALL( cvIntegral( img, sum, 0, 0 ));
-        CV_CALL( templ_mean = cvAvg( templ ));
+        cvIntegral( img, sum, 0, 0 );
+        templ_mean = cvAvg( templ );
         q0 = q1 = q2 = q3 = 0;
     }
     else
     {
         CvScalar _templ_sdv = cvScalarAll(0);
-        CV_CALL( sqsum = cvCreateMat( img->rows + 1, img->cols + 1,
-                                      CV_MAKETYPE( CV_64F, cn )));
-        CV_CALL( cvIntegral( img, sum, sqsum, 0 ));
-        CV_CALL( cvAvgSdv( templ, &templ_mean, &_templ_sdv ));
+        sqsum = cvCreateMat( img->rows + 1, img->cols + 1, CV_MAKETYPE( CV_64F, cn ));
+        cvIntegral( img, sum, sqsum, 0 );
+        cvAvgSdv( templ, &templ_mean, &_templ_sdv );
 
         templ_norm = CV_SQR(_templ_sdv.val[0]) + CV_SQR(_templ_sdv.val[1]) +
                     CV_SQR(_templ_sdv.val[2]) + CV_SQR(_templ_sdv.val[3]);
@@ -424,7 +401,7 @@ cvMatchTemplate( const CvArr* _img, const CvArr* _templ, CvArr* _result, int met
         if( templ_norm < DBL_EPSILON && method == CV_TM_CCOEFF_NORMED )
         {
             cvSet( result, cvScalarAll(1.) );
-            EXIT;
+            return;
         }
         
         templ_sum2 = templ_norm +
@@ -504,11 +481,6 @@ cvMatchTemplate( const CvArr* _img, const CvArr* _templ, CvArr* _result, int met
             rrow[j] = (float)num;
         }
     }
-        
-    __END__;
-
-    cvReleaseMat( &sum );
-    cvReleaseMat( &sqsum );
 }
 
 void cv::matchTemplate( const Mat& image, const Mat& templ, Mat& result, int method )

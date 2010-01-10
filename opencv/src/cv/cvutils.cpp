@@ -44,41 +44,31 @@
 CV_IMPL CvSeq* cvPointSeqFromMat( int seq_kind, const CvArr* arr,
                                   CvContour* contour_header, CvSeqBlock* block )
 {
-    CvSeq* contour = 0;
+    CV_Assert( arr != 0 && contour_header != 0 && block != 0 );
 
-    CV_FUNCNAME( "cvPointSeqFromMat" );
-
-    assert( arr != 0 && contour_header != 0 && block != 0 );
-
-    __BEGIN__;
-    
     int eltype;
     CvMat* mat = (CvMat*)arr;
     
     if( !CV_IS_MAT( mat ))
-        CV_ERROR( CV_StsBadArg, "Input array is not a valid matrix" ); 
+        CV_Error( CV_StsBadArg, "Input array is not a valid matrix" ); 
 
     eltype = CV_MAT_TYPE( mat->type );
     if( eltype != CV_32SC2 && eltype != CV_32FC2 )
-        CV_ERROR( CV_StsUnsupportedFormat,
+        CV_Error( CV_StsUnsupportedFormat,
         "The matrix can not be converted to point sequence because of "
         "inappropriate element type" );
 
     if( (mat->width != 1 && mat->height != 1) || !CV_IS_MAT_CONT(mat->type))
-        CV_ERROR( CV_StsBadArg,
+        CV_Error( CV_StsBadArg,
         "The matrix converted to point sequence must be "
         "1-dimensional and continuous" );
 
-    CV_CALL( cvMakeSeqHeaderForArray(
+    cvMakeSeqHeaderForArray(
             (seq_kind & (CV_SEQ_KIND_MASK|CV_SEQ_FLAG_CLOSED)) | eltype,
             sizeof(CvContour), CV_ELEM_SIZE(eltype), mat->data.ptr,
-            mat->width*mat->height, (CvSeq*)contour_header, block ));
+            mat->width*mat->height, (CvSeq*)contour_header, block );
 
-    contour = (CvSeq*)contour_header;
-
-    __END__;
-
-    return contour;
+    return (CvSeq*)contour_header;
 }
 
 
@@ -420,10 +410,6 @@ CV_IMPL void
 cvCopyMakeBorder( const CvArr* srcarr, CvArr* dstarr, CvPoint offset,
                   int bordertype, CvScalar value )
 {
-    CV_FUNCNAME( "cvCopyMakeBorder" );
-
-    __BEGIN__;
-
     CvMat srcstub, *src = (CvMat*)srcarr;
     CvMat dststub, *dst = (CvMat*)dstarr;
     CvSize srcsize, dstsize;
@@ -431,19 +417,19 @@ cvCopyMakeBorder( const CvArr* srcarr, CvArr* dstarr, CvPoint offset,
     int pix_size, type;
 
     if( !CV_IS_MAT(src) )
-        CV_CALL( src = cvGetMat( src, &srcstub ));
+        src = cvGetMat( src, &srcstub );
     
     if( !CV_IS_MAT(dst) )    
-        CV_CALL( dst = cvGetMat( dst, &dststub ));
+        dst = cvGetMat( dst, &dststub );
 
     if( offset.x < 0 || offset.y < 0 )
-        CV_ERROR( CV_StsOutOfRange, "Offset (left/top border width) is negative" );
+        CV_Error( CV_StsOutOfRange, "Offset (left/top border width) is negative" );
 
     if( src->rows + offset.y > dst->rows || src->cols + offset.x > dst->cols )
-        CV_ERROR( CV_StsBadSize, "Source array is too big or destination array is too small" );
+        CV_Error( CV_StsBadSize, "Source array is too big or destination array is too small" );
 
     if( !CV_ARE_TYPES_EQ( src, dst ))
-        CV_ERROR( CV_StsUnmatchedFormats, "" );
+        CV_Error( CV_StsUnmatchedFormats, "" );
 
     type = CV_MAT_TYPE(src->type);
     pix_size = CV_ELEM_SIZE(type);
@@ -477,9 +463,7 @@ cvCopyMakeBorder( const CvArr* srcarr, CvArr* dstarr, CvPoint offset,
                                offset.y, offset.x, pix_size, (uchar*)buf );
     }
     else
-        CV_ERROR( CV_StsBadFlag, "Unknown/unsupported border type" );
-    
-    __END__;
+        CV_Error( CV_StsBadFlag, "Unknown/unsupported border type" );
 }
 
 namespace cv

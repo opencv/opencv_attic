@@ -59,23 +59,20 @@ CV_IMPL CvConDensation* cvCreateConDensation( int DP, int MP, int SamplesNum )
     int i;
     CvConDensation *CD = 0;
 
-    CV_FUNCNAME( "cvCreateConDensation" );
-    __BEGIN__;
-    
     if( DP < 0 || MP < 0 || SamplesNum < 0 )
-        CV_ERROR( CV_StsOutOfRange, "" );
+        CV_Error( CV_StsOutOfRange, "" );
     
     /* allocating memory for the structure */
-    CV_CALL( CD = (CvConDensation *) cvAlloc( sizeof( CvConDensation )));
+    CD = (CvConDensation *) cvAlloc( sizeof( CvConDensation ));
     /* setting structure params */
     CD->SamplesNum = SamplesNum;
     CD->DP = DP;
     CD->MP = MP;
     /* allocating memory for structure fields */
-    CV_CALL( CD->flSamples = (float **) cvAlloc( sizeof( float * ) * SamplesNum ));
-    CV_CALL( CD->flNewSamples = (float **) cvAlloc( sizeof( float * ) * SamplesNum ));
-    CV_CALL( CD->flSamples[0] = (float *) cvAlloc( sizeof( float ) * SamplesNum * DP ));
-    CV_CALL( CD->flNewSamples[0] = (float *) cvAlloc( sizeof( float ) * SamplesNum * DP ));
+    CD->flSamples = (float **) cvAlloc( sizeof( float * ) * SamplesNum );
+    CD->flNewSamples = (float **) cvAlloc( sizeof( float * ) * SamplesNum );
+    CD->flSamples[0] = (float *) cvAlloc( sizeof( float ) * SamplesNum * DP );
+    CD->flNewSamples[0] = (float *) cvAlloc( sizeof( float ) * SamplesNum * DP );
 
     /* setting pointers in pointer's arrays */
     for( i = 1; i < SamplesNum; i++ )
@@ -84,17 +81,16 @@ CV_IMPL CvConDensation* cvCreateConDensation( int DP, int MP, int SamplesNum )
         CD->flNewSamples[i] = CD->flNewSamples[i - 1] + DP;
     }
 
-    CV_CALL( CD->State = (float *) cvAlloc( sizeof( float ) * DP ));
-    CV_CALL( CD->DynamMatr = (float *) cvAlloc( sizeof( float ) * DP * DP ));
-    CV_CALL( CD->flConfidence = (float *) cvAlloc( sizeof( float ) * SamplesNum ));
-    CV_CALL( CD->flCumulative = (float *) cvAlloc( sizeof( float ) * SamplesNum ));
+    CD->State = (float *) cvAlloc( sizeof( float ) * DP );
+    CD->DynamMatr = (float *) cvAlloc( sizeof( float ) * DP * DP );
+    CD->flConfidence = (float *) cvAlloc( sizeof( float ) * SamplesNum );
+    CD->flCumulative = (float *) cvAlloc( sizeof( float ) * SamplesNum );
 
-    CV_CALL( CD->RandS = (CvRandState *) cvAlloc( sizeof( CvRandState ) * DP ));
-    CV_CALL( CD->Temp = (float *) cvAlloc( sizeof( float ) * DP ));
-    CV_CALL( CD->RandomSample = (float *) cvAlloc( sizeof( float ) * DP ));
+    CD->RandS = (CvRandState *) cvAlloc( sizeof( CvRandState ) * DP );
+    CD->Temp = (float *) cvAlloc( sizeof( float ) * DP );
+    CD->RandomSample = (float *) cvAlloc( sizeof( float ) * DP );
 
     /* Returning created structure */
-    __END__;
 
     return CD;
 }
@@ -115,16 +111,13 @@ CV_IMPL CvConDensation* cvCreateConDensation( int DP, int MP, int SamplesNum )
 CV_IMPL void
 cvReleaseConDensation( CvConDensation ** ConDensation )
 {
-    CV_FUNCNAME( "cvReleaseConDensation" );
-    __BEGIN__;
-    
     CvConDensation *CD = *ConDensation;
     
     if( !ConDensation )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
     if( !CD )
-        EXIT;
+        return;
 
     /* freeing the memory */
 	cvFree( &CD->State );
@@ -140,9 +133,6 @@ cvReleaseConDensation( CvConDensation ** ConDensation )
     cvFree( &CD->RandomSample );
     /* release structure */
     cvFree( ConDensation );
-    
-    __END__;
-
 }
 
 /*F///////////////////////////////////////////////////////////////////////////////////////
@@ -161,11 +151,8 @@ cvConDensUpdateByTime( CvConDensation * ConDens )
     int i, j;
     float Sum = 0;
 
-    CV_FUNCNAME( "cvConDensUpdateByTime" );
-    __BEGIN__;
-    
     if( !ConDens )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
     /* Sets Temp to Zero */
     icvSetZero_32f( ConDens->Temp, ConDens->DP, 1 );
@@ -211,8 +198,6 @@ cvConDensUpdateByTime( CvConDensation * ConDens )
         icvAddVector_32f( ConDens->flSamples[i], ConDens->RandomSample, ConDens->flSamples[i],
                            ConDens->DP );
     }
-
-    __END__;
 }
 
 /*F///////////////////////////////////////////////////////////////////////////////////////
@@ -236,21 +221,18 @@ cvConDensInitSampleSet( CvConDensation * conDens, CvMat * lowerBound, CvMat * up
     float *UBound;
     float Prob = 1.f / conDens->SamplesNum;
 
-    CV_FUNCNAME( "cvConDensInitSampleSet" );
-    __BEGIN__;
-    
     if( !conDens || !lowerBound || !upperBound )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
     if( CV_MAT_TYPE(lowerBound->type) != CV_32FC1 ||
         !CV_ARE_TYPES_EQ(lowerBound,upperBound) )
-        CV_ERROR( CV_StsBadArg, "source  has not appropriate format" );
+        CV_Error( CV_StsBadArg, "source  has not appropriate format" );
 
     if( (lowerBound->cols != 1) || (upperBound->cols != 1) )
-        CV_ERROR( CV_StsBadArg, "source  has not appropriate size" );
+        CV_Error( CV_StsBadArg, "source  has not appropriate size" );
 
     if( (lowerBound->rows != conDens->DP) || (upperBound->rows != conDens->DP) )
-        CV_ERROR( CV_StsBadArg, "source  has not appropriate size" );
+        CV_Error( CV_StsBadArg, "source  has not appropriate size" );
 
     LBound = lowerBound->data.fl;
     UBound = upperBound->data.fl;
@@ -279,6 +261,4 @@ cvConDensInitSampleSet( CvConDensation * conDens, CvMat * lowerBound, CvMat * up
                     (UBound[i] - LBound[i]) / 5,
                     i);
     }
-
-    __END__;
 }
