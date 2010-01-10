@@ -262,7 +262,7 @@ void cvUndistortPoints( const CvMat* _src, CvMat* _dst, const CvMat* _cameraMatr
     CV_Assert( CV_IS_MAT(_src) && CV_IS_MAT(_dst) &&
         (_src->rows == 1 || _src->cols == 1) &&
         (_dst->rows == 1 || _dst->cols == 1) &&
-        CV_ARE_SIZES_EQ(_src, _dst) &&
+        _src->cols + _src->rows - 1 == _dst->rows + _dst->cols - 1 &&
         (CV_MAT_TYPE(_src->type) == CV_32FC2 || CV_MAT_TYPE(_src->type) == CV_64FC2) &&
         (CV_MAT_TYPE(_dst->type) == CV_32FC2 || CV_MAT_TYPE(_dst->type) == CV_64FC2));
 
