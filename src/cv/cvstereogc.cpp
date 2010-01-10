@@ -369,10 +369,6 @@ CvStereoGCState* cvCreateStereoGCState( int numberOfDisparities, int maxIters )
 {
     CvStereoGCState* state = 0;
 
-    //CV_FUNCNAME("cvCreateStereoGCState");
-
-    __BEGIN__;
-    
     state = (CvStereoGCState*)cvAlloc( sizeof(*state) );
     memset( state, 0, sizeof(*state) );
     state->minDisparity = 0;
@@ -382,8 +378,6 @@ CvStereoGCState* cvCreateStereoGCState( int numberOfDisparities, int maxIters )
     state->interactionRadius = 1;
     state->K = state->lambda = state->lambda1 = state->lambda2 = -1.f;
     state->occlusionCost = OCCLUSION_PENALTY;
-
-    __END__;
 
     return state;
 }
@@ -845,10 +839,6 @@ CV_IMPL void cvFindStereoCorrespondenceGC( const CvArr* _left, const CvArr* _rig
     state2.orphans = 0;
     state2.maxOrphans = 0;
 
-    CV_FUNCNAME( "cvFindStereoCorrespondenceGC" );
-
-    __BEGIN__;
-
     CvMat lstub, *left = cvGetMat( _left, &lstub );
     CvMat rstub, *right = cvGetMat( _right, &rstub );
     CvMat dlstub, *dispLeft = cvGetMat( _dispLeft, &dlstub );
@@ -860,12 +850,12 @@ CV_IMPL void cvFindStereoCorrespondenceGC( const CvArr* _left, const CvArr* _rig
     CvMat _disp;
     int64 E;
 
-    CV_ASSERT( state != 0 );
-    CV_ASSERT( CV_ARE_SIZES_EQ(left, right) && CV_ARE_TYPES_EQ(left, right) &&
+    CV_Assert( state != 0 );
+    CV_Assert( CV_ARE_SIZES_EQ(left, right) && CV_ARE_TYPES_EQ(left, right) &&
                CV_MAT_TYPE(left->type) == CV_8UC1 );
-    CV_ASSERT( !dispLeft ||
+    CV_Assert( !dispLeft ||
         (CV_ARE_SIZES_EQ(dispLeft, left) && CV_MAT_CN(dispLeft->type) == 1) );
-    CV_ASSERT( !dispRight ||
+    CV_Assert( !dispRight ||
         (CV_ARE_SIZES_EQ(dispRight, left) && CV_MAT_CN(dispRight->type) == 1) );
 
     size = cvGetSize(left);
@@ -898,7 +888,7 @@ CV_IMPL void cvFindStereoCorrespondenceGC( const CvArr* _left, const CvArr* _rig
     }
     else
     {
-        CV_ASSERT( dispLeft && dispRight );
+        CV_Assert( dispLeft && dispRight );
         cvConvert( dispLeft, state->dispLeft );
         cvConvert( dispRight, state->dispRight );
     }
@@ -953,8 +943,6 @@ CV_IMPL void cvFindStereoCorrespondenceGC( const CvArr* _left, const CvArr* _rig
         cvConvert( state->dispLeft, dispLeft );
     if( dispRight )
         cvConvert( state->dispRight, dispRight );
-
-    __END__;
 
     cvFree( &state2.orphans );
 }

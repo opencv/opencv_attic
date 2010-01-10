@@ -567,45 +567,33 @@ CV_IMPL void
 cvCalcOpticalFlowLK( const void* srcarrA, const void* srcarrB, CvSize winSize,
                      void* velarrx, void* velarry )
 {
-    CV_FUNCNAME( "cvCalcOpticalFlowLK" );
-
-    __BEGIN__;
-
-    CvMat stubA, *srcA = (CvMat*)srcarrA;
-    CvMat stubB, *srcB = (CvMat*)srcarrB;
-    CvMat stubx, *velx = (CvMat*)velarrx;
-    CvMat stuby, *vely = (CvMat*)velarry;
-
-    CV_CALL( srcA = cvGetMat( srcA, &stubA ));
-    CV_CALL( srcB = cvGetMat( srcB, &stubB ));
-
-    CV_CALL( velx = cvGetMat( velx, &stubx ));
-    CV_CALL( vely = cvGetMat( vely, &stuby ));
+    CvMat stubA, *srcA = cvGetMat( srcarrA, &stubA );
+    CvMat stubB, *srcB = cvGetMat( srcarrB, &stubB );
+    CvMat stubx, *velx = cvGetMat( velarrx, &stubx );
+    CvMat stuby, *vely = cvGetMat( velarry, &stuby );
 
     if( !CV_ARE_TYPES_EQ( srcA, srcB ))
-        CV_ERROR( CV_StsUnmatchedFormats, "Source images have different formats" );
+        CV_Error( CV_StsUnmatchedFormats, "Source images have different formats" );
 
     if( !CV_ARE_TYPES_EQ( velx, vely ))
-        CV_ERROR( CV_StsUnmatchedFormats, "Destination images have different formats" );
+        CV_Error( CV_StsUnmatchedFormats, "Destination images have different formats" );
 
     if( !CV_ARE_SIZES_EQ( srcA, srcB ) ||
         !CV_ARE_SIZES_EQ( velx, vely ) ||
         !CV_ARE_SIZES_EQ( srcA, velx ))
-        CV_ERROR( CV_StsUnmatchedSizes, "" );
+        CV_Error( CV_StsUnmatchedSizes, "" );
 
     if( CV_MAT_TYPE( srcA->type ) != CV_8UC1 ||
         CV_MAT_TYPE( velx->type ) != CV_32FC1 )
-        CV_ERROR( CV_StsUnsupportedFormat, "Source images must have 8uC1 type and "
+        CV_Error( CV_StsUnsupportedFormat, "Source images must have 8uC1 type and "
                                            "destination images must have 32fC1 type" );
 
     if( srcA->step != srcB->step || velx->step != vely->step )
-        CV_ERROR( CV_BadStep, "source and destination images have different step" );
+        CV_Error( CV_BadStep, "source and destination images have different step" );
 
     IPPI_CALL( icvCalcOpticalFlowLK_8u32fR( (uchar*)srcA->data.ptr, (uchar*)srcB->data.ptr,
                                             srcA->step, cvGetMatSize( srcA ), winSize,
                                             velx->data.fl, vely->data.fl, velx->step ));
-
-    __END__;
 }
 
 /* End of file. */

@@ -161,21 +161,18 @@ public:
   }
 
   void FindFeatures(const CvMat* desc, int k, int emax, CvMat* results, CvMat* dist) {
-    CvMat* tmp_desc = 0;
+    cv::Ptr<CvMat> tmp_desc;
 
-    __BEGIN__;
-    CV_FUNCNAME("cvFindFeatures");
-  
     if (desc->cols != dims())
-      CV_ERROR(CV_StsUnmatchedSizes, "desc columns be equal feature dimensions");
+      CV_Error(CV_StsUnmatchedSizes, "desc columns be equal feature dimensions");
     if (results->rows != desc->rows && results->cols != k)
-      CV_ERROR(CV_StsUnmatchedSizes, "results and desc must be same height");
+      CV_Error(CV_StsUnmatchedSizes, "results and desc must be same height");
     if (dist->rows != desc->rows && dist->cols != k)
-      CV_ERROR(CV_StsUnmatchedSizes, "dist and desc must be same height");
+      CV_Error(CV_StsUnmatchedSizes, "dist and desc must be same height");
     if (CV_MAT_TYPE(results->type) != CV_32SC1)
-      CV_ERROR(CV_StsUnsupportedFormat, "results must be CV_32SC1");
+      CV_Error(CV_StsUnsupportedFormat, "results must be CV_32SC1");
     if (CV_MAT_TYPE(dist->type) != CV_64FC1)
-      CV_ERROR(CV_StsUnsupportedFormat, "dist must be CV_64FC1");
+      CV_Error(CV_StsUnsupportedFormat, "dist must be CV_64FC1");
 
     if (CV_MAT_TYPE(type()) != CV_MAT_TYPE(desc->type)) {
       tmp_desc = cvCreateMat(desc->rows, desc->cols, type());
@@ -183,34 +180,25 @@ public:
       desc = tmp_desc;
     }
 
-
     assert(CV_MAT_TYPE(desc->type) == CV_MAT_TYPE(mat->type));
     assert(CV_MAT_TYPE(dist->type) == CV_64FC1);
     assert(CV_MAT_TYPE(results->type) == CV_32SC1);
 
     dispatch_cvtype(mat, find_nn<tree_type>
 		    (desc, k, emax, results, dist));
-
-    __END__;
-
-    if (tmp_desc)
-      cvReleaseMat(&tmp_desc);
   }
   int FindOrthoRange(CvMat* bounds_min, CvMat* bounds_max,
 		     CvMat* results) {
     bool free_bounds = false;
     int count = -1;
 
-    __BEGIN__;
-    CV_FUNCNAME("cvFindFeaturesBoxed");
-
     if (bounds_min->cols * bounds_min->rows != dims() ||
 	bounds_max->cols * bounds_max->rows != dims())
-      CV_ERROR(CV_StsUnmatchedSizes, "bounds_{min,max} must 1 x dims or dims x 1");
+      CV_Error(CV_StsUnmatchedSizes, "bounds_{min,max} must 1 x dims or dims x 1");
     if (CV_MAT_TYPE(bounds_min->type) != CV_MAT_TYPE(bounds_max->type))
-      CV_ERROR(CV_StsUnmatchedFormats, "bounds_{min,max} must have same type");
+      CV_Error(CV_StsUnmatchedFormats, "bounds_{min,max} must have same type");
     if (CV_MAT_TYPE(results->type) != CV_32SC1)
-      CV_ERROR(CV_StsUnsupportedFormat, "results must be CV_32SC1");
+      CV_Error(CV_StsUnsupportedFormat, "results must be CV_32SC1");
 
     if (CV_MAT_TYPE(bounds_min->type) != CV_MAT_TYPE(type())) {
       free_bounds = true;
@@ -232,7 +220,6 @@ public:
     dispatch_cvtype(mat, count = find_ortho_range<tree_type>
 		    (bounds_min, bounds_max,results));
 
-    __END__;
     if (free_bounds) {
       cvReleaseMat(&bounds_min);
       cvReleaseMat(&bounds_max);
@@ -243,17 +230,12 @@ public:
 };
 
 CvFeatureTree* cvCreateKDTree(CvMat* desc) {
-  __BEGIN__;
-  CV_FUNCNAME("cvCreateKDTree");
 
   if (CV_MAT_TYPE(desc->type) != CV_32FC1 &&
       CV_MAT_TYPE(desc->type) != CV_64FC1)
-    CV_ERROR(CV_StsUnsupportedFormat, "descriptors must be either CV_32FC1 or CV_64FC1");
+    CV_Error(CV_StsUnsupportedFormat, "descriptors must be either CV_32FC1 or CV_64FC1");
 
   return new CvKDTreeWrap(desc);
-  __END__;
-
-  return 0;
 }
 
 #endif

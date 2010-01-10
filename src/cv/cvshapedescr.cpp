@@ -46,10 +46,6 @@ cvArcLength( const void *array, CvSlice slice, int is_closed )
 {
     double perimeter = 0;
 
-    CV_FUNCNAME( "cvArcLength" );
-
-    __BEGIN__;
-
     int i, j = 0, count;
     const int N = 16;
     float buf[N];
@@ -63,16 +59,16 @@ cvArcLength( const void *array, CvSlice slice, int is_closed )
     {
         contour = (CvSeq*)array;
         if( !CV_IS_SEQ_POLYLINE( contour ))
-            CV_ERROR( CV_StsBadArg, "Unsupported sequence type" );
+            CV_Error( CV_StsBadArg, "Unsupported sequence type" );
         if( is_closed < 0 )
             is_closed = CV_IS_SEQ_CLOSED( contour );
     }
     else
     {
         is_closed = is_closed > 0;
-        CV_CALL( contour = cvPointSeqFromMat(
+        contour = cvPointSeqFromMat(
             CV_SEQ_KIND_CURVE | (is_closed ? CV_SEQ_FLAG_CLOSED : 0),
-            array, &contour_header, &block ));
+            array, &contour_header, &block );
     }
 
     if( contour->total > 1 )
@@ -123,8 +119,6 @@ cvArcLength( const void *array, CvSlice slice, int is_closed )
             }
         }
     }
-
-    __END__;
 
     return perimeter;
 }
@@ -288,10 +282,6 @@ cvMinEnclosingCircle( const void* array, CvPoint2D32f * _center, float *_radius 
     if( _radius )
         *_radius = 0;
 
-    CV_FUNCNAME( "cvMinEnclosingCircle" );
-
-    __BEGIN__;
-
     CvSeqReader reader;
     int i, k, count;
     CvPoint2D32f pts[8];
@@ -301,24 +291,24 @@ cvMinEnclosingCircle( const void* array, CvPoint2D32f * _center, float *_radius 
     int is_float;
 
     if( !_center || !_radius )
-        CV_ERROR( CV_StsNullPtr, "Null center or radius pointers" );
+        CV_Error( CV_StsNullPtr, "Null center or radius pointers" );
 
     if( CV_IS_SEQ(array) )
     {
         sequence = (CvSeq*)array;
         if( !CV_IS_SEQ_POINT_SET( sequence ))
-            CV_ERROR( CV_StsBadArg, "The passed sequence is not a valid contour" );
+            CV_Error( CV_StsBadArg, "The passed sequence is not a valid contour" );
     }
     else
     {
-        CV_CALL( sequence = cvPointSeqFromMat(
-            CV_SEQ_KIND_GENERIC, array, &contour_header, &block ));
+        sequence = cvPointSeqFromMat(
+            CV_SEQ_KIND_GENERIC, array, &contour_header, &block );
     }
 
     if( sequence->total <= 0 )
-        CV_ERROR( CV_StsBadSize, "" );
+        CV_Error( CV_StsBadSize, "" );
 
-    CV_CALL( cvStartReadSeq( sequence, &reader, 0 ));
+    cvStartReadSeq( sequence, &reader, 0 );
 
     count = sequence->total;
     is_float = CV_SEQ_ELTYPE(sequence) == CV_32FC2;
@@ -441,8 +431,6 @@ cvMinEnclosingCircle( const void* array, CvPoint2D32f * _center, float *_radius 
         radius = (float)(sqrt(radius)*(1 + eps));
         result = 1;
     }
-
-    __END__;
 
     *_center = center;
     *_radius = radius;
@@ -729,10 +717,6 @@ cvContourArea( const void *array, CvSlice slice )
 {
     double area = 0;
 
-    CV_FUNCNAME( "cvContourArea" );
-
-    __BEGIN__;
-
     CvContour contour_header;
     CvSeq* contour = 0;
     CvSeqBlock block;
@@ -741,12 +725,11 @@ cvContourArea( const void *array, CvSlice slice )
     {
         contour = (CvSeq*)array;
         if( !CV_IS_SEQ_POLYLINE( contour ))
-            CV_ERROR( CV_StsBadArg, "Unsupported sequence type" );
+            CV_Error( CV_StsBadArg, "Unsupported sequence type" );
     }
     else
     {
-        CV_CALL( contour = cvPointSeqFromMat(
-            CV_SEQ_KIND_CURVE, array, &contour_header, &block ));
+        contour = cvPointSeqFromMat( CV_SEQ_KIND_CURVE, array, &contour_header, &block );
     }
 
     if( cvSliceLength( slice, contour ) == contour->total )
@@ -756,12 +739,10 @@ cvContourArea( const void *array, CvSlice slice )
     else
     {
         if( CV_SEQ_ELTYPE( contour ) != CV_32SC2 )
-            CV_ERROR( CV_StsUnsupportedFormat,
+            CV_Error( CV_StsUnsupportedFormat,
             "Only curves with integer coordinates are supported in case of contour slice" );
         IPPI_CALL( icvContourSecArea( contour, slice, &area ));
     }
-
-    __END__;
 
     return area;
 }
@@ -776,12 +757,7 @@ cvContourArea( const void *array, CvSlice slice )
 static void
 icvFitEllipse_F( CvSeq* points, CvBox2D* box )
 {
-    CvMat* D = 0;
-    
-    CV_FUNCNAME( "icvFitEllipse_F" );
-
-    __BEGIN__;
-
+    cv::Ptr<CvMat> D;
     double S[36], C[36], T[36];
 
     int i, j;
@@ -797,7 +773,7 @@ icvFitEllipse_F( CvSeq* points, CvBox2D* box )
     CvMat _EIGVECS = cvMat(6,6,CV_64F,eigenvectors), _EIGVALS = cvMat(6,1,CV_64F,eigenvalues);
 
     /* create matrix D of  input points */
-    CV_CALL( D = cvCreateMat( n, 6, CV_64F ));
+    D = cvCreateMat( n, 6, CV_64F );
     
     cvStartReadSeq( points, &reader );
 
@@ -883,7 +859,7 @@ icvFitEllipse_F( CvSeq* points, CvBox2D* box )
         box->center.x = box->center.y = 
         box->size.width = box->size.height = 
         box->angle = 0.f;
-        EXIT;
+        return;
     }
 
     // now find truthful eigenvector
@@ -915,7 +891,7 @@ icvFitEllipse_F( CvSeq* points, CvBox2D* box )
         box->center.x = (float)offx;
         box->center.y = (float)offy;
         box->size.width = box->size.height = box->angle = 0.f;
-        EXIT;
+        return;
     }
        
     a *= scale;
@@ -939,7 +915,7 @@ icvFitEllipse_F( CvSeq* points, CvBox2D* box )
     if( fabs(f) < DBL_EPSILON ) 
     {
         box->size.width = box->size.height = box->angle = 0.f;
-        EXIT;
+        return;
     }
 
     scale = -1. / f;
@@ -965,10 +941,6 @@ icvFitEllipse_F( CvSeq* points, CvBox2D* box )
 
     // calc angle
     box->angle = (float)(180 - atan2(eigenvectors[2], eigenvectors[3])*180/CV_PI);
-
-    __END__;
-
-    cvReleaseMat( &D );
 }
 
 
@@ -976,13 +948,8 @@ CV_IMPL CvBox2D
 cvFitEllipse2( const CvArr* array )
 {
     CvBox2D box;
-    double* Ad = 0, *bd = 0;
-
-    CV_FUNCNAME( "cvFitEllipse2" );
-
+    cv::AutoBuffer<double> Ad, bd;
     memset( &box, 0, sizeof(box));
-
-    __BEGIN__;
 
     CvContour contour_header;
     CvSeq* ptseq = 0;
@@ -993,32 +960,30 @@ cvFitEllipse2( const CvArr* array )
     {
         ptseq = (CvSeq*)array;
         if( !CV_IS_SEQ_POINT_SET( ptseq ))
-            CV_ERROR( CV_StsBadArg, "Unsupported sequence type" );
+            CV_Error( CV_StsBadArg, "Unsupported sequence type" );
     }
     else
     {
-        CV_CALL( ptseq = cvPointSeqFromMat(
-            CV_SEQ_KIND_GENERIC, array, &contour_header, &block ));
+        ptseq = cvPointSeqFromMat(CV_SEQ_KIND_GENERIC, array, &contour_header, &block);
     }
 
     n = ptseq->total;
     if( n < 5 )
-        CV_ERROR( CV_StsBadSize, "Number of points should be >= 6" );
+        CV_Error( CV_StsBadSize, "Number of points should be >= 6" );
 #if 1
     icvFitEllipse_F( ptseq, &box );
 #else
     /*
      *	New fitellipse algorithm, contributed by Dr. Daniel Weiss
      */
-    {
     double gfp[5], rp[5], t;
     CvMat A, b, x;
     const double min_eps = 1e-6;
     int i, is_float;
     CvSeqReader reader;
 
-    CV_CALL( Ad = (double*)cvAlloc( n*5*sizeof(Ad[0]) ));
-    CV_CALL( bd = (double*)cvAlloc( n*sizeof(bd[0]) ));
+    Ad.allocate(n*5);
+    bd.allocate(n);
 
     // first fit for parameters A - E
     A = cvMat( n, 5, CV_64F, Ad );
@@ -1112,12 +1077,7 @@ cvFitEllipse2( const CvArr* array )
         box.angle += 360;
     if( box.angle > 360 )
         box.angle -= 360;
-    }
 #endif
-    __END__;
-
-    cvFree( &Ad );
-    cvFree( &bd );
 
     return box;
 }
@@ -1133,10 +1093,6 @@ cvBoundingRect( CvArr* array, int update )
     CvSeq* ptseq = 0;
     CvSeqBlock block;
 
-    CV_FUNCNAME( "cvBoundingRect" );
-
-    __BEGIN__;
-
     CvMat stub, *mat = 0;
     int  xmin = 0, ymin = 0, xmax = -1, ymax = -1, i, j, k;
     int calculate = update;
@@ -1145,12 +1101,12 @@ cvBoundingRect( CvArr* array, int update )
     {
         ptseq = (CvSeq*)array;
         if( !CV_IS_SEQ_POINT_SET( ptseq ))
-            CV_ERROR( CV_StsBadArg, "Unsupported sequence type" );
+            CV_Error( CV_StsBadArg, "Unsupported sequence type" );
 
         if( ptseq->header_size < (int)sizeof(CvContour))
         {
             /*if( update == 1 )
-                CV_ERROR( CV_StsBadArg, "The header is too small to fit the rectangle, "
+                CV_Error( CV_StsBadArg, "The header is too small to fit the rectangle, "
                                         "so it could not be updated" );*/
             update = 0;
             calculate = 1;
@@ -1158,27 +1114,23 @@ cvBoundingRect( CvArr* array, int update )
     }
     else
     {
-        CV_CALL( mat = cvGetMat( array, &stub ));
+        mat = cvGetMat( array, &stub );
         if( CV_MAT_TYPE(mat->type) == CV_32SC2 ||
             CV_MAT_TYPE(mat->type) == CV_32FC2 )
         {
-            CV_CALL( ptseq = cvPointSeqFromMat(
-                CV_SEQ_KIND_GENERIC, mat, &contour_header, &block ));
+            ptseq = cvPointSeqFromMat(CV_SEQ_KIND_GENERIC, mat, &contour_header, &block);
             mat = 0;
         }
         else if( CV_MAT_TYPE(mat->type) != CV_8UC1 &&
                 CV_MAT_TYPE(mat->type) != CV_8SC1 )
-            CV_ERROR( CV_StsUnsupportedFormat,
+            CV_Error( CV_StsUnsupportedFormat,
                 "The image/matrix format is not supported by the function" );
         update = 0;
         calculate = 1;
     }
 
     if( !calculate )
-    {
-        rect = ((CvContour*)ptseq)->rect;
-        EXIT;
-    }
+        return ((CvContour*)ptseq)->rect;
 
     if( mat )
     {
@@ -1346,9 +1298,7 @@ cvBoundingRect( CvArr* array, int update )
 
     if( update )
         ((CvContour*)ptseq)->rect = rect;
-
-    __END__;
-
+    
     return rect;
 }
 

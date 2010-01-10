@@ -51,24 +51,18 @@ cvSampleLine( const void* img, CvPoint pt1, CvPoint pt2,
 {
     int count = -1;
     
-    CV_FUNCNAME( "cvSampleLine" );
-
-    __BEGIN__;
-    
     int i, coi = 0, pix_size;
-    CvMat stub, *mat = (CvMat*)img;
+    CvMat stub, *mat = cvGetMat( img, &stub, &coi );
     CvLineIterator iterator;
     uchar* buffer = (uchar*)_buffer;
 
-    CV_CALL( mat = cvGetMat( mat, &stub, &coi ));
-
     if( coi != 0 )
-        CV_ERROR( CV_BadCOI, "" );
+        CV_Error( CV_BadCOI, "" );
 
     if( !buffer )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
-    CV_CALL( count = cvInitLineIterator( mat, pt1, pt2, &iterator, connectivity ));
+    count = cvInitLineIterator( mat, pt1, pt2, &iterator, connectivity );
 
     pix_size = CV_ELEM_SIZE(mat->type);
     for( i = 0; i < count; i++ )
@@ -78,8 +72,6 @@ cvSampleLine( const void* img, CvPoint pt1, CvPoint pt2,
         buffer += pix_size;
         CV_NEXT_LINE_POINT( iterator );
     }
-
-    __END__;
 
     return count;
 }
@@ -532,9 +524,6 @@ cvGetRectSubPix( const void* srcarr, void* dstarr, CvPoint2D32f center )
 {
     static CvFuncTable gr_tab[2];
     static int inittab = 0;
-    CV_FUNCNAME( "cvGetRectSubPix" );
-
-    __BEGIN__;
 
     CvMat srcstub, *src = (CvMat*)srcarr;
     CvMat dststub, *dst = (CvMat*)dstarr;
@@ -550,15 +539,15 @@ cvGetRectSubPix( const void* srcarr, void* dstarr, CvPoint2D32f center )
     }
 
     if( !CV_IS_MAT(src))
-        CV_CALL( src = cvGetMat( src, &srcstub ));
+        src = cvGetMat( src, &srcstub );
 
     if( !CV_IS_MAT(dst))
-        CV_CALL( dst = cvGetMat( dst, &dststub ));
+        dst = cvGetMat( dst, &dststub );
 
     cn = CV_MAT_CN( src->type );
 
     if( (cn != 1 && cn != 3) || !CV_ARE_CNS_EQ( src, dst ))
-        CV_ERROR( CV_StsUnsupportedFormat, "" );
+        CV_Error( CV_StsUnsupportedFormat, "" );
 
     src_size = cvGetMatSize( src );
     dst_size = cvGetMatSize( dst );
@@ -575,18 +564,16 @@ cvGetRectSubPix( const void* srcarr, void* dstarr, CvPoint2D32f center )
     else
     {
         if( CV_MAT_DEPTH( src->type ) != CV_8U || CV_MAT_DEPTH( dst->type ) != CV_32F )
-            CV_ERROR( CV_StsUnsupportedFormat, "" );
+            CV_Error( CV_StsUnsupportedFormat, "" );
 
         func = (CvGetRectSubPixFunc)(gr_tab[cn != 1].fn_2d[1]);
     }
 
     if( !func )
-        CV_ERROR( CV_StsUnsupportedFormat, "" );
+        CV_Error( CV_StsUnsupportedFormat, "" );
 
     IPPI_CALL( func( src->data.ptr, src_step, src_size,
                      dst->data.ptr, dst_step, dst_size, center ));
-
-    __END__;
 }
 
 
@@ -802,9 +789,6 @@ cvGetQuadrangleSubPix( const void* srcarr, void* dstarr, const CvMat* mat )
 {
     static  CvFuncTable  gq_tab[2];
     static  int inittab = 0;
-    CV_FUNCNAME( "cvGetQuadrangleSubPix" );
-
-    __BEGIN__;
 
     CvMat srcstub, *src = (CvMat*)srcarr;
     CvMat dststub, *dst = (CvMat*)dstarr;
@@ -821,18 +805,18 @@ cvGetQuadrangleSubPix( const void* srcarr, void* dstarr, const CvMat* mat )
     }
 
     if( !CV_IS_MAT(src))
-        CV_CALL( src = cvGetMat( src, &srcstub ));
+        src = cvGetMat( src, &srcstub );
 
     if( !CV_IS_MAT(dst))
-        CV_CALL( dst = cvGetMat( dst, &dststub ));
+        dst = cvGetMat( dst, &dststub );
 
     if( !CV_IS_MAT(mat))
-        CV_ERROR( CV_StsBadArg, "map matrix is not valid" );
+        CV_Error( CV_StsBadArg, "map matrix is not valid" );
 
     cn = CV_MAT_CN( src->type );
 
     if( (cn != 1 && cn != 3) || !CV_ARE_CNS_EQ( src, dst ))
-        CV_ERROR( CV_StsUnsupportedFormat, "" );
+        CV_Error( CV_StsUnsupportedFormat, "" );
 
     src_size = cvGetMatSize( src );
     dst_size = cvGetMatSize( dst );
@@ -841,7 +825,7 @@ cvGetQuadrangleSubPix( const void* srcarr, void* dstarr, const CvMat* mat )
         CV_ERROR( CV_StsBadSize, "destination ROI must not be larger than source ROI" );*/
 
     if( mat->rows != 2 || mat->cols != 3 )
-        CV_ERROR( CV_StsBadArg,
+        CV_Error( CV_StsBadArg,
         "Transformation matrix must be 2x3" );
 
     if( CV_MAT_TYPE( mat->type ) == CV_32FC1 )
@@ -861,7 +845,7 @@ cvGetQuadrangleSubPix( const void* srcarr, void* dstarr, const CvMat* mat )
         }
     }
     else
-        CV_ERROR( CV_StsUnsupportedFormat,
+        CV_Error( CV_StsUnsupportedFormat,
             "The transformation matrix should have 32fC1 or 64fC1 type" );
 
     if( CV_ARE_DEPTHS_EQ( src, dst ))
@@ -871,18 +855,16 @@ cvGetQuadrangleSubPix( const void* srcarr, void* dstarr, const CvMat* mat )
     else
     {
         if( CV_MAT_DEPTH( src->type ) != CV_8U || CV_MAT_DEPTH( dst->type ) != CV_32F )
-            CV_ERROR( CV_StsUnsupportedFormat, "" );
+            CV_Error( CV_StsUnsupportedFormat, "" );
 
         func = (CvGetQuadrangleSubPixFunc)(gq_tab[cn != 1].fn_2d[1]);
     }
 
     if( !func )
-        CV_ERROR( CV_StsUnsupportedFormat, "" );
+        CV_Error( CV_StsUnsupportedFormat, "" );
 
     IPPI_CALL( func( src->data.ptr, src->step, src_size,
                      dst->data.ptr, dst->step, dst_size, m ));
-
-    __END__;
 }
 
 

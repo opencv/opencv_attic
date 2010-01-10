@@ -361,17 +361,14 @@ cvFindDominantPoints( CvSeq * contour, CvMemStorage * storage, int method,
 {
     CvSeq* corners = 0;
 
-    CV_FUNCNAME( "cvFindDominantPoints" );
-    __BEGIN__;
-
     if( !contour )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
     if( !storage )
         storage = contour->storage;
 
     if( !storage )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
     switch (method)
     {
@@ -396,10 +393,8 @@ cvFindDominantPoints( CvSeq * contour, CvMemStorage * storage, int method,
         }
         break;
     default:
-        CV_ERROR( CV_StsBadArg, "" );
+        CV_Error( CV_StsBadArg, "" );
     }
-
-    __END__;
 
     return corners;
 }

@@ -640,10 +640,7 @@ CV_IMPL void
 cvFitLine( const CvArr* array, int dist, double param,
            double reps, double aeps, float *line )
 {
-    schar* buffer = 0;
-    CV_FUNCNAME( "cvFitLine" );
-
-    __BEGIN__;
+    cv::AutoBuffer<schar> buffer;
 
     schar* points = 0;
     union { CvContour contour; CvSeq seq; } header;
@@ -652,16 +649,16 @@ cvFitLine( const CvArr* array, int dist, double param,
     int type;
 
     if( !line )
-        CV_ERROR( CV_StsNullPtr, "NULL pointer to line parameters" );
+        CV_Error( CV_StsNullPtr, "NULL pointer to line parameters" );
 
     if( CV_IS_SEQ(ptseq) )
     {
         type = CV_SEQ_ELTYPE(ptseq);
         if( ptseq->total == 0 )
-            CV_ERROR( CV_StsBadSize, "The sequence has no points" );
+            CV_Error( CV_StsBadSize, "The sequence has no points" );
         if( (type!=CV_32FC2 && type!=CV_32FC3 && type!=CV_32SC2 && type!=CV_32SC3) ||
             CV_ELEM_SIZE(type) != ptseq->elem_size )
-            CV_ERROR( CV_StsUnsupportedFormat,
+            CV_Error( CV_StsUnsupportedFormat,
                 "Input sequence must consist of 2d points or 3d points" );
     }
     else
@@ -669,21 +666,21 @@ cvFitLine( const CvArr* array, int dist, double param,
         CvMat* mat = (CvMat*)array;
         type = CV_MAT_TYPE(mat->type);
         if( !CV_IS_MAT(mat))
-            CV_ERROR( CV_StsBadArg, "Input array is not a sequence nor matrix" );
+            CV_Error( CV_StsBadArg, "Input array is not a sequence nor matrix" );
 
         if( !CV_IS_MAT_CONT(mat->type) ||
             (type!=CV_32FC2 && type!=CV_32FC3 && type!=CV_32SC2 && type!=CV_32SC3) ||
             (mat->width != 1 && mat->height != 1))
-            CV_ERROR( CV_StsBadArg,
+            CV_Error( CV_StsBadArg,
             "Input array must be 1d continuous array of 2d or 3d points" );
 
-        CV_CALL( ptseq = cvMakeSeqHeaderForArray(
+        ptseq = cvMakeSeqHeaderForArray(
             CV_SEQ_KIND_GENERIC|type, sizeof(CvContour), CV_ELEM_SIZE(type), mat->data.ptr,
-            mat->width + mat->height - 1, &header.seq, &block ));
+            mat->width + mat->height - 1, &header.seq, &block );
     }
 
     if( reps < 0 || aeps < 0 )
-        CV_ERROR( CV_StsOutOfRange, "Both reps and aeps must be non-negative" );
+        CV_Error( CV_StsOutOfRange, "Both reps and aeps must be non-negative" );
 
     if( CV_MAT_DEPTH(type) == CV_32F && ptseq->first->next == ptseq->first )
     {
@@ -692,8 +689,9 @@ cvFitLine( const CvArr* array, int dist, double param,
     }
     else
     {
-        CV_CALL( buffer = points = (schar*)cvAlloc( ptseq->total*CV_ELEM_SIZE(type) ));
-        CV_CALL( cvCvtSeqToArray( ptseq, points, CV_WHOLE_SEQ ));
+        buffer.allocate(ptseq->total*CV_ELEM_SIZE(type));
+        points = buffer;
+        cvCvtSeqToArray( ptseq, points, CV_WHOLE_SEQ );
 
         if( CV_MAT_DEPTH(type) != CV_32F )
         {
@@ -706,7 +704,7 @@ cvFitLine( const CvArr* array, int dist, double param,
     }
 
     if( dist == CV_DIST_USER )
-        CV_ERROR( CV_StsBadArg, "User-defined distance is not allowed" );
+        CV_Error( CV_StsBadArg, "User-defined distance is not allowed" );
 
     if( CV_MAT_CN(type) == 2 )
     {
@@ -718,10 +716,6 @@ cvFitLine( const CvArr* array, int dist, double param,
         IPPI_CALL( icvFitLine3D( (CvPoint3D32f*)points, ptseq->total,
                                  dist, (float)param, (float)reps, (float)aeps, line ));
     }
-
-    __END__;
-
-    cvFree( &buffer );
 }
 
 /* End of file. */

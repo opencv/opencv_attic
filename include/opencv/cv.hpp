@@ -216,6 +216,10 @@ CV_EXPORTS Ptr<FilterEngine> createMorphologyFilter(int op, int type, const Mat&
 enum { MORPH_RECT=0, MORPH_CROSS=1, MORPH_ELLIPSE=2 };
 CV_EXPORTS Mat getStructuringElement(int shape, Size ksize, Point anchor=Point(-1,-1));
 
+template<> inline void Ptr<IplConvKernel>::delete_obj()
+{ cvReleaseStructuringElement(&obj); }
+
+    
 CV_EXPORTS void copyMakeBorder( const Mat& src, Mat& dst,
                                 int top, int bottom, int left, int right,
                                 int borderType, const Scalar& value=Scalar() );

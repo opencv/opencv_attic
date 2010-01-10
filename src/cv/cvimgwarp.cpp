@@ -3153,39 +3153,29 @@ CV_IMPL void
 cvLogPolar( const CvArr* srcarr, CvArr* dstarr,
             CvPoint2D32f center, double M, int flags )
 {
-    CvMat* mapx = 0;
-    CvMat* mapy = 0;
-    double* exp_tab = 0;
-    float* buf = 0;
+    cv::Ptr<CvMat> mapx, mapy;
 
-    CV_FUNCNAME( "cvLogPolar" );
-
-    __BEGIN__;
-
-    CvMat srcstub, *src = (CvMat*)srcarr;
-    CvMat dststub, *dst = (CvMat*)dstarr;
+    CvMat srcstub, *src = cvGetMat(srcarr, &srcstub);
+    CvMat dststub, *dst = cvGetMat(dstarr, &dststub);
     CvSize ssize, dsize;
 
-    CV_CALL( src = cvGetMat( srcarr, &srcstub ));
-    CV_CALL( dst = cvGetMat( dstarr, &dststub ));
-
     if( !CV_ARE_TYPES_EQ( src, dst ))
-        CV_ERROR( CV_StsUnmatchedFormats, "" );
+        CV_Error( CV_StsUnmatchedFormats, "" );
 
     if( M <= 0 )
-        CV_ERROR( CV_StsOutOfRange, "M should be >0" );
+        CV_Error( CV_StsOutOfRange, "M should be >0" );
 
     ssize = cvGetMatSize(src);
     dsize = cvGetMatSize(dst);
 
-    CV_CALL( mapx = cvCreateMat( dsize.height, dsize.width, CV_32F ));
-    CV_CALL( mapy = cvCreateMat( dsize.height, dsize.width, CV_32F ));
+    mapx = cvCreateMat( dsize.height, dsize.width, CV_32F );
+    mapy = cvCreateMat( dsize.height, dsize.width, CV_32F );
 
     if( !(flags & CV_WARP_INVERSE_MAP) )
     {
         int phi, rho;
-
-        CV_CALL( exp_tab = (double*)cvAlloc( dsize.width*sizeof(exp_tab[0])) );
+        cv::AutoBuffer<double> _exp_tab(dsize.width);
+        double* exp_tab = _exp_tab;
 
         for( rho = 0; rho < dst->width; rho++ )
             exp_tab[rho] = std::exp(rho/M);
@@ -3213,8 +3203,8 @@ cvLogPolar( const CvArr* srcarr, CvArr* dstarr,
         int x, y;
         CvMat bufx, bufy, bufp, bufa;
         double ascale = (ssize.height-1)/(2*CV_PI);
-
-        CV_CALL( buf = (float*)cvAlloc( 4*dsize.width*sizeof(buf[0]) ));
+        cv::AutoBuffer<float> _buf(4*dsize.width);
+        float* buf = _buf;
 
         bufx = cvMat( 1, dsize.width, CV_32F, buf );
         bufy = cvMat( 1, dsize.width, CV_32F, buf + dsize.width );
@@ -3268,13 +3258,6 @@ cvLogPolar( const CvArr* srcarr, CvArr* dstarr,
     }
 
     cvRemap( src, dst, mapx, mapy, flags, cvScalarAll(0) );
-
-    __END__;
-
-    cvFree( &exp_tab );
-    cvFree( &buf );
-    cvReleaseMat( &mapx );
-    cvReleaseMat( &mapy );
 }
 
 
@@ -3286,31 +3269,25 @@ CV_IMPL
 void cvLinearPolar( const CvArr* srcarr, CvArr* dstarr,
             CvPoint2D32f center, double maxRadius, int flags )
 {
-    CvMat* mapx = 0;
-    CvMat* mapy = 0;
-    float* buf = 0;
-
-    CV_FUNCNAME( "cvLinPolar" );
-
-    __BEGIN__;
+    cv::Ptr<CvMat> mapx, mapy;
 
     CvMat srcstub, *src = (CvMat*)srcarr;
     CvMat dststub, *dst = (CvMat*)dstarr;
     CvSize ssize, dsize;
 
-    CV_CALL( src = cvGetMat( srcarr, &srcstub,0,0 ));
-    CV_CALL( dst = cvGetMat( dstarr, &dststub,0,0 ));
+    src = cvGetMat( srcarr, &srcstub,0,0 );
+    dst = cvGetMat( dstarr, &dststub,0,0 );
 
     if( !CV_ARE_TYPES_EQ( src, dst ))
-        CV_ERROR( CV_StsUnmatchedFormats, "" );
+        CV_Error( CV_StsUnmatchedFormats, "" );
 
 	ssize.width = src->cols;
     ssize.height = src->rows;
     dsize.width = dst->cols;
     dsize.height = dst->rows;
 
-    CV_CALL( mapx = cvCreateMat( dsize.height, dsize.width, CV_32F ));
-    CV_CALL( mapy = cvCreateMat( dsize.height, dsize.width, CV_32F ));
+    mapx = cvCreateMat( dsize.height, dsize.width, CV_32F );
+    mapy = cvCreateMat( dsize.height, dsize.width, CV_32F );
 
     if( !(flags & CV_WARP_INVERSE_MAP) )
     {
@@ -3341,7 +3318,8 @@ void cvLinearPolar( const CvArr* srcarr, CvArr* dstarr,
         const double ascale = (ssize.height-1)/(2*CV_PI);
         const double pscale = (ssize.width-1)/maxRadius;
 
-        CV_CALL( buf = (float*)cvAlloc( 4*dsize.width*sizeof(buf[0]) ));
+        cv::AutoBuffer<float> _buf(4*dsize.width);
+        float* buf = _buf;
 
         bufx = cvMat( 1, dsize.width, CV_32F, buf );
         bufy = cvMat( 1, dsize.width, CV_32F, buf + dsize.width );
@@ -3375,12 +3353,6 @@ void cvLinearPolar( const CvArr* srcarr, CvArr* dstarr,
     }
 
     cvRemap( src, dst, mapx, mapy, flags, cvScalarAll(0) );
-
-    __END__;
-
-    cvFree( &buf );
-    cvReleaseMat( &mapx );
-    cvReleaseMat( &mapy );
 }
 
 

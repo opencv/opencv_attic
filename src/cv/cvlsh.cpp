@@ -335,11 +335,8 @@ CvLSH* cvCreateLSH(CvLSHOperations* ops, int d, int L, int k, int type, double r
   CvLSH* lsh = 0;
   CvRNG rng = cvRNG(seed);
 
-  __BEGIN__;
-  CV_FUNCNAME("cvCreateLSH");
-
   if (type != CV_32FC1 && type != CV_64FC1)
-    CV_ERROR(CV_StsUnsupportedFormat, "vectors must be either CV_32FC1 or CV_64FC1");
+    CV_Error(CV_StsUnsupportedFormat, "vectors must be either CV_32FC1 or CV_64FC1");
   lsh = new CvLSH;
   lsh->type = type;
   switch (type) {
@@ -347,7 +344,6 @@ CvLSH* cvCreateLSH(CvLSHOperations* ops, int d, int L, int k, int type, double r
   case CV_64FC1: lsh->u.lsh_64f = new lsh_pstable_l2_64f(ops, d, L, k, r, rng); break;
   }
 
-  __END__;
   return lsh;
 }
 
@@ -385,9 +381,6 @@ void cvLSHAdd(CvLSH* lsh, const CvMat* data, CvMat* indices) {
   int dims, n;
   int* ret_indices = 0;
 
-  __BEGIN__;
-  CV_FUNCNAME("cvLSHAdd");
-
   switch (lsh->type) {
   case CV_32FC1: dims = lsh->u.lsh_32f->dims(); break;
   case CV_64FC1: dims = lsh->u.lsh_64f->dims(); break;
@@ -397,15 +390,15 @@ void cvLSHAdd(CvLSH* lsh, const CvMat* data, CvMat* indices) {
   n = data->rows;
 
   if (dims != data->cols)
-    CV_ERROR(CV_StsBadSize, "data must be n x d, where d is what was used to construct LSH");
+    CV_Error(CV_StsBadSize, "data must be n x d, where d is what was used to construct LSH");
 
   if (CV_MAT_TYPE(data->type) != lsh->type)
-    CV_ERROR(CV_StsUnsupportedFormat, "type of data and constructed LSH must agree");
+    CV_Error(CV_StsUnsupportedFormat, "type of data and constructed LSH must agree");
   if (indices) {
     if (CV_MAT_TYPE(indices->type) != CV_32SC1)
-      CV_ERROR(CV_StsUnsupportedFormat, "indices must be CV_32SC1");
+      CV_Error(CV_StsUnsupportedFormat, "indices must be CV_32SC1");
     if (indices->rows * indices->cols != n)
-      CV_ERROR(CV_StsBadSize, "indices must be n x 1 or 1 x n for n x d data");
+      CV_Error(CV_StsBadSize, "indices must be n x 1 or 1 x n for n x d data");
     ret_indices = indices->data.i;
   }
 
@@ -414,31 +407,23 @@ void cvLSHAdd(CvLSH* lsh, const CvMat* data, CvMat* indices) {
   case CV_64FC1: lsh->u.lsh_64f->add(data->data.db, n, ret_indices); break;
   default: assert(0); return;
   }
-  __END__;
 }
 
 void cvLSHRemove(CvLSH* lsh, const CvMat* indices) {
   int n;
 
-  __BEGIN__;
-  CV_FUNCNAME("cvLSHRemove");
-
   if (CV_MAT_TYPE(indices->type) != CV_32SC1)
-    CV_ERROR(CV_StsUnsupportedFormat, "indices must be CV_32SC1");
+    CV_Error(CV_StsUnsupportedFormat, "indices must be CV_32SC1");
   n = indices->rows * indices->cols;
   switch (lsh->type) {
   case CV_32FC1: lsh->u.lsh_32f->remove(indices->data.i, n); break;
   case CV_64FC1: lsh->u.lsh_64f->remove(indices->data.i, n); break;
   default: assert(0); return;
   }
-  __END__;
 }
 
 void cvLSHQuery(CvLSH* lsh, const CvMat* data, CvMat* indices, CvMat* dist, int k, int emax) {
   int dims;
-
-  __BEGIN__;
-  CV_FUNCNAME("cvLSHQuery");
 
   switch (lsh->type) {
   case CV_32FC1: dims = lsh->u.lsh_32f->dims(); break;
@@ -447,19 +432,19 @@ void cvLSHQuery(CvLSH* lsh, const CvMat* data, CvMat* indices, CvMat* dist, int 
   }
 
   if (k<1)
-    CV_ERROR(CV_StsOutOfRange, "k must be positive");
+    CV_Error(CV_StsOutOfRange, "k must be positive");
   if (CV_MAT_TYPE(data->type) != lsh->type)
-    CV_ERROR(CV_StsUnsupportedFormat, "type of data and constructed LSH must agree");
+    CV_Error(CV_StsUnsupportedFormat, "type of data and constructed LSH must agree");
   if (dims != data->cols)
-    CV_ERROR(CV_StsBadSize, "data must be n x d, where d is what was used to construct LSH");
+    CV_Error(CV_StsBadSize, "data must be n x d, where d is what was used to construct LSH");
   if (dist->rows != data->rows || dist->cols != k)
-    CV_ERROR(CV_StsBadSize, "dist must be n x k for n x d data");
+    CV_Error(CV_StsBadSize, "dist must be n x k for n x d data");
   if (dist->rows != indices->rows || dist->cols != indices->cols)
-    CV_ERROR(CV_StsBadSize, "dist and indices must be same size");
+    CV_Error(CV_StsBadSize, "dist and indices must be same size");
   if (CV_MAT_TYPE(dist->type) != CV_64FC1)
-    CV_ERROR(CV_StsUnsupportedFormat, "dist must be CV_64FC1");
+    CV_Error(CV_StsUnsupportedFormat, "dist must be CV_64FC1");
   if (CV_MAT_TYPE(indices->type) != CV_32SC1)
-    CV_ERROR(CV_StsUnsupportedFormat, "indices must be CV_32SC1");
+    CV_Error(CV_StsUnsupportedFormat, "indices must be CV_32SC1");
 
   switch (lsh->type) {
   case CV_32FC1: lsh->u.lsh_32f->query(data->data.fl, data->rows,
@@ -468,5 +453,4 @@ void cvLSHQuery(CvLSH* lsh, const CvMat* data, CvMat* indices, CvMat* dist, int 
 				       k, emax, dist->data.db, indices->data.i); break;
   default: assert(0); return;
   }
-  __END__;
 }

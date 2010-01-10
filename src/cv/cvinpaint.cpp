@@ -728,34 +728,30 @@ CV_IMPL void
 cvInpaint( const CvArr* _input_img, const CvArr* _inpaint_mask, CvArr* _output_img,
            double inpaintRange, int flags )
 {
-    CvMat *mask = 0, *band = 0, *f = 0, *t = 0, *out = 0;
-    CvPriorityQueueFloat *Heap = 0, *Out = 0;
-    IplConvKernel *el_cross = 0, *el_range = 0;
+    cv::Ptr<CvMat> mask, band, f, t, out;
+    cv::Ptr<CvPriorityQueueFloat> Heap, Out;
+    cv::Ptr<IplConvKernel> el_cross, el_range;
     
-    CV_FUNCNAME( "cvInpaint" );
-    
-    __BEGIN__;
-
     CvMat input_hdr, mask_hdr, output_hdr;
     CvMat* input_img, *inpaint_mask, *output_img;
     int range=cvRound(inpaintRange);    
     int erows, ecols;
 
-    CV_CALL( input_img = cvGetMat( _input_img, &input_hdr ));
-    CV_CALL( inpaint_mask = cvGetMat( _inpaint_mask, &mask_hdr ));
-    CV_CALL( output_img = cvGetMat( _output_img, &output_hdr ));
+    input_img = cvGetMat( _input_img, &input_hdr );
+    inpaint_mask = cvGetMat( _inpaint_mask, &mask_hdr );
+    output_img = cvGetMat( _output_img, &output_hdr );
     
     if( !CV_ARE_SIZES_EQ(input_img,output_img) || !CV_ARE_SIZES_EQ(input_img,inpaint_mask))
-        CV_ERROR( CV_StsUnmatchedSizes, "All the input and output images must have the same size" );
+        CV_Error( CV_StsUnmatchedSizes, "All the input and output images must have the same size" );
     
     if( (CV_MAT_TYPE(input_img->type) != CV_8UC1 &&
         CV_MAT_TYPE(input_img->type) != CV_8UC3) ||
         !CV_ARE_TYPES_EQ(input_img,output_img) )
-        CV_ERROR( CV_StsUnsupportedFormat,
+        CV_Error( CV_StsUnsupportedFormat,
         "Only 8-bit 1-channel and 3-channel input/output images are supported" );
 
     if( CV_MAT_TYPE(inpaint_mask->type) != CV_8UC1 )
-        CV_ERROR( CV_StsUnsupportedFormat, "The mask must be 8-bit 1-channel image" );
+        CV_Error( CV_StsUnsupportedFormat, "The mask must be 8-bit 1-channel image" );
 
     range = MAX(range,1);
     range = MIN(range,100);
@@ -763,11 +759,11 @@ cvInpaint( const CvArr* _input_img, const CvArr* _inpaint_mask, CvArr* _output_i
     ecols = input_img->cols + 2;
     erows = input_img->rows + 2;
 
-    CV_CALL( f = cvCreateMat(erows, ecols, CV_8UC1));
-    CV_CALL( t = cvCreateMat(erows, ecols, CV_32FC1));
-    CV_CALL( band = cvCreateMat(erows, ecols, CV_8UC1));
-    CV_CALL( mask = cvCreateMat(erows, ecols, CV_8UC1));
-    CV_CALL( el_cross = cvCreateStructuringElementEx(3,3,1,1,CV_SHAPE_CROSS,NULL));
+    f = cvCreateMat(erows, ecols, CV_8UC1);
+    t = cvCreateMat(erows, ecols, CV_32FC1);
+    band = cvCreateMat(erows, ecols, CV_8UC1);
+    mask = cvCreateMat(erows, ecols, CV_8UC1);
+    el_cross = cvCreateStructuringElementEx(3,3,1,1,CV_SHAPE_CROSS,NULL);
     
     cvCopy( input_img, output_img );
     cvSet(mask,cvScalar(KNOWN,0,0,0));
@@ -778,27 +774,27 @@ cvInpaint( const CvArr* _input_img, const CvArr* _inpaint_mask, CvArr* _output_i
     cvDilate(mask,band,el_cross,1);   // image with narrow band
     Heap=new CvPriorityQueueFloat;
     if (!Heap->Init(band))
-        EXIT;
+        return;
     cvSub(band,mask,band,NULL);
     SET_BORDER1_C1(band,uchar,0);
     if (!Heap->Add(band))
-        EXIT;
+        return;
     cvSet(f,cvScalar(BAND,0,0,0),band);
     cvSet(f,cvScalar(INSIDE,0,0,0),mask);
     cvSet(t,cvScalar(0,0,0,0),band);
     
     if( flags == CV_INPAINT_TELEA )
     {
-        CV_CALL( out = cvCreateMat(erows, ecols, CV_8UC1));
-        CV_CALL( el_range = cvCreateStructuringElementEx(2*range+1,2*range+1,
-            range,range,CV_SHAPE_RECT,NULL));
+        out = cvCreateMat(erows, ecols, CV_8UC1);
+        el_range = cvCreateStructuringElementEx(2*range+1,2*range+1,
+            range,range,CV_SHAPE_RECT,NULL);
         cvDilate(mask,out,el_range,1);
         cvSub(out,mask,out,NULL);
         Out=new CvPriorityQueueFloat;
         if (!Out->Init(out))
-            EXIT;
+            return;
         if (!Out->Add(band))
-            EXIT;
+            return;
         cvSub(out,band,out,NULL);
         SET_BORDER1_C1(out,uchar,0);
         icvCalcFMM(out,t,Out,true);
@@ -807,20 +803,8 @@ cvInpaint( const CvArr* _input_img, const CvArr* _inpaint_mask, CvArr* _output_i
     else if (flags == CV_INPAINT_NS) {
         icvNSInpaintFMM(mask,t,output_img,range,Heap);
     } else {
-        CV_ERROR( CV_StsBadArg, "The flags argument must be one of CV_INPAINT_TELEA or CV_INPAINT_NS" );
+        CV_Error( CV_StsBadArg, "The flags argument must be one of CV_INPAINT_TELEA or CV_INPAINT_NS" );
     }
-    
-    __END__;
-    
-    delete Out;
-    delete Heap;
-    cvReleaseStructuringElement(&el_cross);
-    cvReleaseStructuringElement(&el_range);
-    cvReleaseMat(&out);
-    cvReleaseMat(&mask);
-    cvReleaseMat(&band);
-    cvReleaseMat(&t);
-    cvReleaseMat(&f);
 }
 
 void cv::inpaint( const Mat& src, const Mat& mask, Mat& dst,

@@ -51,10 +51,6 @@ CV_IMPL void
 cvCalcImageHomography( float* line, CvPoint3D32f* _center,
                        float* _intrinsic, float* _homography )
 {
-    CV_FUNCNAME( "cvCalcImageHomography" );
-
-    __BEGIN__;
-
     double norm_xy, norm_xz, xy_sina, xy_cosa, xz_sina, xz_cosa, nx1, plane_dist;
     float _ry[3], _rz[3], _r_trans[9];
     CvMat rx = cvMat( 1, 3, CV_32F, line );
@@ -72,7 +68,7 @@ cvCalcImageHomography( float* line, CvPoint3D32f* _center,
     CvMat homography = cvMat( 3, 3, CV_32F, _homography );
 
     if( !line || !_center || !_intrinsic || !_homography )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
     norm_xy = cvSqrt( line[0] * line[0] + line[1] * line[1] );
     xy_cosa = line[0] / norm_xy;
@@ -112,8 +108,6 @@ cvCalcImageHomography( float* line, CvPoint3D32f* _center,
     cvMatMul( &intrinsic, &sub, &r_trans );
     cvInvert( &intrinsic, &sub, CV_SVD );
     cvMatMul( &r_trans, &sub, &homography );
-
-    __END__;
 }
 
 /* End of file. */

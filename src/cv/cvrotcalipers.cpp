@@ -347,15 +347,12 @@ icvRotatingCalipers( CvPoint2D32f* points, int n, int mode, float* out )
 CV_IMPL  CvBox2D
 cvMinAreaRect2( const CvArr* array, CvMemStorage* storage )
 {
-    CvMemStorage* temp_storage = 0;
+    cv::Ptr<CvMemStorage> temp_storage;
     CvBox2D box;
-    CvPoint2D32f* points = 0;
+    cv::AutoBuffer<CvPoint2D32f> _points;
+    CvPoint2D32f* points;
     
-    CV_FUNCNAME( "cvMinAreaRect2" );
-
     memset(&box, 0, sizeof(box));
-
-    __BEGIN__;
 
     int i, n;
     CvSeqReader reader;
@@ -369,36 +366,35 @@ cvMinAreaRect2( const CvArr* array, CvMemStorage* storage )
         if( !CV_IS_SEQ_POINT_SET(ptseq) &&
             (CV_SEQ_KIND(ptseq) != CV_SEQ_KIND_CURVE || !CV_IS_SEQ_CONVEX(ptseq) ||
             CV_SEQ_ELTYPE(ptseq) != CV_SEQ_ELTYPE_PPOINT ))
-            CV_ERROR( CV_StsUnsupportedFormat,
+            CV_Error( CV_StsUnsupportedFormat,
                 "Input sequence must consist of 2d points or pointers to 2d points" );
         if( !storage )
             storage = ptseq->storage;
     }
     else
     {
-        CV_CALL( ptseq = cvPointSeqFromMat(
-            CV_SEQ_KIND_GENERIC, array, &contour_header, &block ));
+        ptseq = cvPointSeqFromMat( CV_SEQ_KIND_GENERIC, array, &contour_header, &block );
     }
 
     if( storage )
     {
-        CV_CALL( temp_storage = cvCreateChildMemStorage( storage ));
+        temp_storage = cvCreateChildMemStorage( storage );
     }
     else
     {
-        CV_CALL( temp_storage = cvCreateMemStorage(1 << 10));
+        temp_storage = cvCreateMemStorage(1 << 10);
     }
 
     if( !CV_IS_SEQ_CONVEX( ptseq ))
     {
-        CV_CALL( ptseq = cvConvexHull2( ptseq, temp_storage, CV_CLOCKWISE, 1 ));
+        ptseq = cvConvexHull2( ptseq, temp_storage, CV_CLOCKWISE, 1 );
     }
     else if( !CV_IS_SEQ_POINT_SET( ptseq ))
     {
         CvSeqWriter writer;
         
         if( !CV_IS_SEQ(ptseq->v_prev) || !CV_IS_SEQ_POINT_SET(ptseq->v_prev))
-            CV_ERROR( CV_StsBadArg,
+            CV_Error( CV_StsBadArg,
             "Convex hull must have valid pointer to point sequence stored in v_prev" );
         cvStartReadSeq( ptseq, &reader );
         cvStartWriteSeq( CV_SEQ_KIND_CURVE|CV_SEQ_FLAG_CONVEX|CV_SEQ_ELTYPE(ptseq->v_prev),
@@ -416,7 +412,8 @@ cvMinAreaRect2( const CvArr* array, CvMemStorage* storage )
 
     n = ptseq->total;
 
-    CV_CALL( points = (CvPoint2D32f*)cvAlloc( n*sizeof(points[0]) ));
+    _points.allocate(n);
+    points = _points;
     cvStartReadSeq( ptseq, &reader );
 
     if( CV_SEQ_ELTYPE( ptseq ) == CV_32SC2 )
@@ -463,12 +460,6 @@ cvMinAreaRect2( const CvArr* array, CvMemStorage* storage )
     }
 
     box.angle = (float)(box.angle*180/CV_PI);
-
-    __END__; 
-
-    cvReleaseMemStorage( &temp_storage );
-    cvFree( &points );
-
     return box;
 }
 

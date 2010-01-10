@@ -44,27 +44,16 @@ CV_IMPL CvSubdiv2D *
 cvCreateSubdiv2D( int subdiv_type, int header_size,
                   int vtx_size, int quadedge_size, CvMemStorage * storage )
 {
-    CvSubdiv2D *subdiv = 0;
-
-    CV_FUNCNAME( "cvCleateSubdiv2D" );
-
-    __BEGIN__;
-
     if( !storage )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
-    if( header_size < (int)sizeof( *subdiv ) ||
+    if( header_size < (int)sizeof( CvSubdiv2D ) ||
         quadedge_size < (int)sizeof( CvQuadEdge2D ) ||
         vtx_size < (int)sizeof( CvSubdiv2DPoint ))
-        CV_ERROR( CV_StsBadSize, "" );
+        CV_Error( CV_StsBadSize, "" );
 
-    subdiv = (CvSubdiv2D *) cvCreateGraph( subdiv_type, header_size,
-                                           vtx_size, quadedge_size, storage );
-
-    
-    __END__;
-
-    return subdiv;
+    return (CvSubdiv2D *)cvCreateGraph( subdiv_type, header_size,
+                                        vtx_size, quadedge_size, storage );
 }
 
 
@@ -75,21 +64,12 @@ cvCreateSubdiv2D( int subdiv_type, int header_size,
 static CvSubdiv2DEdge
 cvSubdiv2DMakeEdge( CvSubdiv2D * subdiv )
 {
-    CvQuadEdge2D *edge = 0;
-    CvSubdiv2DEdge edgehandle = 0;
-
-    CV_FUNCNAME( "cvSubdiv2DMakeEdge" );
-
-    __BEGIN__;
-
     if( !subdiv )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
-    edge = (CvQuadEdge2D*)cvSetNew( (CvSet*)subdiv->edges );
-    CV_CHECK();
-
+    CvQuadEdge2D* edge = (CvQuadEdge2D*)cvSetNew( (CvSet*)subdiv->edges );
     memset( edge->pt, 0, sizeof( edge->pt ));
-    edgehandle = (CvSubdiv2DEdge) edge;
+    CvSubdiv2DEdge edgehandle = (CvSubdiv2DEdge) edge;
 
     edge->next[0] = edgehandle;
     edge->next[1] = edgehandle + 3;
@@ -97,10 +77,6 @@ cvSubdiv2DMakeEdge( CvSubdiv2D * subdiv )
     edge->next[3] = edgehandle + 1;
 
     subdiv->quad_edges++;
-
-    
-    __END__;
-
     return edgehandle;
 }
 
@@ -108,9 +84,7 @@ cvSubdiv2DMakeEdge( CvSubdiv2D * subdiv )
 static CvSubdiv2DPoint *
 cvSubdiv2DAddPoint( CvSubdiv2D * subdiv, CvPoint2D32f pt, int is_virtual )
 {
-    CvSubdiv2DPoint *subdiv_point = 0;
-
-    subdiv_point = (CvSubdiv2DPoint*)cvSetNew( (CvSet*)subdiv );
+    CvSubdiv2DPoint* subdiv_point = (CvSubdiv2DPoint*)cvSetNew( (CvSet*)subdiv );
     if( subdiv_point )
     {
         memset( subdiv_point, 0, subdiv->elem_size );
@@ -145,18 +119,11 @@ cvSubdiv2DSetEdgePoints( CvSubdiv2DEdge edge,
 {
     CvQuadEdge2D *quadedge = (CvQuadEdge2D *) (edge & ~3);
 
-    CV_FUNCNAME( "cvSubdiv2DSetEdgePoints" );
-
-    __BEGIN__;
-
     if( !quadedge )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
     quadedge->pt[edge & 3] = org_pt;
     quadedge->pt[(edge + 2) & 3] = dst_pt;
-
-    
-    __END__;
 }
 
 
@@ -165,52 +132,33 @@ cvSubdiv2DDeleteEdge( CvSubdiv2D * subdiv, CvSubdiv2DEdge edge )
 {
     CvQuadEdge2D *quadedge = (CvQuadEdge2D *) (edge & ~3);
 
-    CV_FUNCNAME( "cvSubdiv2DDeleteEdge" );
-
-    __BEGIN__;
-
     if( !subdiv || !quadedge )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
     cvSubdiv2DSplice( edge, cvSubdiv2DGetEdge( edge, CV_PREV_AROUND_ORG ));
 
-    {
     CvSubdiv2DEdge sym_edge = cvSubdiv2DSymEdge( edge );
     cvSubdiv2DSplice( sym_edge, cvSubdiv2DGetEdge( sym_edge, CV_PREV_AROUND_ORG ));
-    }
 
     cvSetRemoveByPtr( (CvSet*)(subdiv->edges), quadedge );
     subdiv->quad_edges--;
-
-    
-    __END__;
 }
 
 
 static CvSubdiv2DEdge
 cvSubdiv2DConnectEdges( CvSubdiv2D * subdiv, CvSubdiv2DEdge edgeA, CvSubdiv2DEdge edgeB )
 {
-    CvSubdiv2DEdge new_edge = 0;
-
-    CV_FUNCNAME( "cvSubdiv2DConnectPoints" );
-
-    __BEGIN__;
-
-    CvSubdiv2DPoint *orgB, *dstA;
-
     if( !subdiv )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
-    new_edge = cvSubdiv2DMakeEdge( subdiv );
+    CvSubdiv2DEdge new_edge = cvSubdiv2DMakeEdge( subdiv );
 
     cvSubdiv2DSplice( new_edge, cvSubdiv2DGetEdge( edgeA, CV_NEXT_AROUND_LEFT ));
     cvSubdiv2DSplice( cvSubdiv2DSymEdge( new_edge ), edgeB );
 
-    dstA = cvSubdiv2DEdgeDst( edgeA );
-    orgB = cvSubdiv2DEdgeOrg( edgeB );
+    CvSubdiv2DPoint* dstA = cvSubdiv2DEdgeDst( edgeA );
+    CvSubdiv2DPoint* orgB = cvSubdiv2DEdgeOrg( edgeB );
     cvSubdiv2DSetEdgePoints( new_edge, dstA, orgB );
-    
-    __END__;
 
     return new_edge;
 }
@@ -251,36 +199,27 @@ CV_IMPL CvSubdiv2DPointLocation
 cvSubdiv2DLocate( CvSubdiv2D * subdiv, CvPoint2D32f pt,
                   CvSubdiv2DEdge * _edge, CvSubdiv2DPoint ** _point )
 {
-    CvSubdiv2DEdge edge = 0;
     CvSubdiv2DPoint *point = 0;
-    CvSubdiv2DPointLocation location = CV_PTLOC_ERROR;
-
-    int i, max_edges;
     int right_of_curr = 0;
 
-    CV_FUNCNAME( "cvSubdiv2DLocate" );
-
-    __BEGIN__;
-
     if( !subdiv )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
     if( !CV_IS_SUBDIV2D(subdiv) )
-        CV_ERROR( CV_StsBadFlag, "" );
+        CV_Error( CV_StsBadFlag, "" );
 
-    max_edges = subdiv->quad_edges * 4;
-    edge = subdiv->recent_edge;
+    int i, max_edges = subdiv->quad_edges * 4;
+    CvSubdiv2DEdge edge = subdiv->recent_edge;
 
     if( max_edges == 0 )
-        CV_ERROR( CV_StsBadSize, "" );
-    CV_ASSERT(edge != 0);
+        CV_Error( CV_StsBadSize, "" );
+    CV_Assert(edge != 0);
 
-    location = CV_PTLOC_OUTSIDE_RECT;
     if( pt.x < subdiv->topleft.x || pt.y < subdiv->topleft.y ||
         pt.x >= subdiv->bottomright.x || pt.y >= subdiv->bottomright.y )
-        CV_ERROR( CV_StsOutOfRange, "" );
+        CV_Error( CV_StsOutOfRange, "" );
 
-    location = CV_PTLOC_ERROR;
+    CvSubdiv2DPointLocation location = CV_PTLOC_ERROR;
 
     right_of_curr = icvIsRightOf( pt, edge );
     if( right_of_curr > 0 )
@@ -302,7 +241,7 @@ cvSubdiv2DLocate( CvSubdiv2D * subdiv, CvPoint2D32f pt,
             if( right_of_onext > 0 || (right_of_onext == 0 && right_of_curr == 0) )
             {
                 location = CV_PTLOC_INSIDE;
-                EXIT;
+                goto exit;
             }
             else
             {
@@ -317,7 +256,7 @@ cvSubdiv2DLocate( CvSubdiv2D * subdiv, CvPoint2D32f pt,
                 if( right_of_dprev == 0 && right_of_curr == 0 )
                 {
                     location = CV_PTLOC_INSIDE;
-                    EXIT;
+                    goto exit;
                 }
                 else
                 {
@@ -337,10 +276,8 @@ cvSubdiv2DLocate( CvSubdiv2D * subdiv, CvPoint2D32f pt,
             }
         }
     }
-
+exit:
     
-    __END__;
-
     subdiv->recent_edge = edge;
 
     if( location == CV_PTLOC_INSIDE )
@@ -413,25 +350,21 @@ cvSubdivDelaunay2DInsert( CvSubdiv2D * subdiv, CvPoint2D32f pt )
     CvSubdiv2DEdge curr_edge = 0, deleted_edge = 0, base_edge = 0;
     int i, max_edges;
 
-    CV_FUNCNAME( "cvSubdivDelaunay2DInsert" );
-
-    __BEGIN__;
-
     if( !subdiv )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
     if( !CV_IS_SUBDIV2D(subdiv) )
-        CV_ERROR( CV_StsBadFlag, "" );
+        CV_Error( CV_StsBadFlag, "" );
 
     location = cvSubdiv2DLocate( subdiv, pt, &curr_edge, &curr_point );
 
     switch (location)
     {
     case CV_PTLOC_ERROR:
-        CV_ERROR( CV_StsBadSize, "" );
+        CV_Error( CV_StsBadSize, "" );
 
     case CV_PTLOC_OUTSIDE_RECT:
-        CV_ERROR( CV_StsOutOfRange, "" );
+        CV_Error( CV_StsOutOfRange, "" );
 
     case CV_PTLOC_VERTEX:
         point = curr_point;
@@ -449,8 +382,6 @@ cvSubdivDelaunay2DInsert( CvSubdiv2D * subdiv, CvPoint2D32f pt )
         subdiv->is_geometry_valid = 0;
 
         curr_point = cvSubdiv2DAddPoint( subdiv, pt, 0 );
-        CV_CHECK();
-
         base_edge = cvSubdiv2DMakeEdge( subdiv );
         first_point = cvSubdiv2DEdgeOrg( curr_edge );
         cvSubdiv2DSetEdgePoints( base_edge, first_point, curr_point );
@@ -499,14 +430,7 @@ cvSubdivDelaunay2DInsert( CvSubdiv2D * subdiv, CvPoint2D32f pt )
         CV_Error_(CV_StsError, ("cvSubdiv2DLocate returned invalid location = %d", location) );
     }
 
-    point = curr_point;
-
-    
-    __END__;
-
-    //icvSubdiv2DCheck( subdiv );
-
-    return point;
+    return curr_point;
 }
 
 
@@ -520,12 +444,8 @@ cvInitSubdivDelaunay2D( CvSubdiv2D * subdiv, CvRect rect )
     float rx = (float) rect.x;
     float ry = (float) rect.y;
 
-    CV_FUNCNAME( "cvSubdivDelaunay2DInit" );
-
-    __BEGIN__;
-
     if( !subdiv )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
     cvClearSet( (CvSet *) (subdiv->edges) );
     cvClearSet( (CvSet *) subdiv );
@@ -558,9 +478,6 @@ cvInitSubdivDelaunay2D( CvSubdiv2D * subdiv, CvRect rect )
     cvSubdiv2DSplice( edge_CA, cvSubdiv2DSymEdge( edge_BC ));
 
     subdiv->recent_edge = edge_AB;
-
-    
-    __END__;
 }
 
 
@@ -571,12 +488,8 @@ cvClearSubdivVoronoi2D( CvSubdiv2D * subdiv )
     int i, total;
     CvSeqReader reader;
 
-    CV_FUNCNAME( "cvClearVoronoi2D" );
-
-    __BEGIN__;
-
     if( !subdiv )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
     /* clear pointers to voronoi points */
     total = subdiv->edges->total;
@@ -611,9 +524,6 @@ cvClearSubdivVoronoi2D( CvSubdiv2D * subdiv )
     }
 
     subdiv->is_geometry_valid = 0;
-
-    
-    __END__;
 }
 
 
@@ -623,16 +533,12 @@ cvCalcSubdivVoronoi2D( CvSubdiv2D * subdiv )
     CvSeqReader reader;
     int i, total, elem_size;
 
-    CV_FUNCNAME( "cvCalcSubdivVoronoi2D" );
-
-    __BEGIN__;
-
     if( !subdiv )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
     /* check if it is already calculated */
     if( subdiv->is_geometry_valid )
-        EXIT;
+        return;
 
     total = subdiv->edges->total;
     elem_size = subdiv->edges->elem_size;
@@ -642,7 +548,7 @@ cvCalcSubdivVoronoi2D( CvSubdiv2D * subdiv )
     cvStartReadSeq( (CvSeq *) (subdiv->edges), &reader, 0 );
 
     if( total <= 3 )
-        EXIT;
+        return;
 
     /* skip first three edges (bounding triangle) */
     for( i = 0; i < 3; i++ )
@@ -706,9 +612,6 @@ cvCalcSubdivVoronoi2D( CvSubdiv2D * subdiv )
     }
 
     subdiv->is_geometry_valid = 1;
-
-    
-    __END__;
 }
 
 
@@ -731,18 +634,14 @@ cvFindNearestPoint2D( CvSubdiv2D* subdiv, CvPoint2D32f pt )
     CvSubdiv2DEdge edge; 
     int i;
     
-    CV_FUNCNAME("cvFindNearestPoint2D");
-
-    __BEGIN__;
-
     if( !subdiv )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
     if( !CV_IS_SUBDIV2D( subdiv ))
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
     
     if( subdiv->edges->active_count <= 3 )
-        EXIT;
+        return 0;
 
     if( !subdiv->is_geometry_valid )
         cvCalcSubdivVoronoi2D( subdiv );
@@ -755,7 +654,7 @@ cvFindNearestPoint2D( CvSubdiv2D* subdiv, CvPoint2D32f pt )
     case CV_PTLOC_INSIDE:
         break;
     default:
-        EXIT;
+        return point;
     }
 
     point = 0;
@@ -808,43 +707,7 @@ cvFindNearestPoint2D( CvSubdiv2D* subdiv, CvPoint2D32f pt )
         edge = cvSubdiv2DSymEdge( edge );
     }
 
-    __END__;
-
     return point;
 }
-
-/* Removed from the main interface */
-
-#if 0
-/* Adds new isolated quadedge to the subdivision */
-OPENCVAPI  CvSubdiv2DEdge  cvSubdiv2DMakeEdge( CvSubdiv2D* subdiv );
-
-
-/* Adds new isolated point to subdivision */
-OPENCVAPI  CvSubdiv2DPoint*   cvSubdiv2DAddPoint( CvSubdiv2D* subdiv,
-                                                  CvPoint2D32f pt, int is_virtual );
-
-
-/* Does a splice operation for two quadedges */
-OPENCVAPI  void  cvSubdiv2DSplice( CvSubdiv2DEdge  edgeA,  CvSubdiv2DEdge  edgeB );
-
-
-/* Assigns ending [non-virtual] points for given quadedge */
-OPENCVAPI  void  cvSubdiv2DSetEdgePoints( CvSubdiv2DEdge edge,
-                                          CvSubdiv2DPoint* org_pt,
-                                          CvSubdiv2DPoint* dst_pt );
-
-/* Removes quadedge from subdivision */
-OPENCVAPI  void  cvSubdiv2DDeleteEdge( CvSubdiv2D* subdiv, CvSubdiv2DEdge edge );
-
-
-/* Connects estination point of the first edge with origin point of the second edge */
-OPENCVAPI  CvSubdiv2DEdge  cvSubdiv2DConnectEdges( CvSubdiv2D* subdiv,
-                                                   CvSubdiv2DEdge edgeA,
-                                                   CvSubdiv2DEdge edgeB );
-
-/* Swaps diagonal in two connected Delaunay facets */
-OPENCVAPI  void  cvSubdiv2DSwapEdges( CvSubdiv2DEdge edge );
-#endif
 
 /* End of file. */

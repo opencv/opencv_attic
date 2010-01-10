@@ -85,14 +85,8 @@ static void
 icvHoughLinesStandard( const CvMat* img, float rho, float theta,
                        int threshold, CvSeq *lines, int linesMax )
 {
-    int *accum = 0;
-    int *sort_buf=0;
-    float *tabSin = 0;
-    float *tabCos = 0;
-
-    CV_FUNCNAME( "icvHoughLinesStandard" );
-
-    __BEGIN__;
+    cv::AutoBuffer<int> _accum, _sort_buf;
+    cv::AutoBuffer<float> _tabSin, _tabCos;
 
     const uchar* image;
     int step, width, height;
@@ -104,7 +98,7 @@ icvHoughLinesStandard( const CvMat* img, float rho, float theta,
     float irho = 1 / rho;
     double scale;
 
-    CV_ASSERT( CV_IS_MAT(img) && CV_MAT_TYPE(img->type) == CV_8UC1 );
+    CV_Assert( CV_IS_MAT(img) && CV_MAT_TYPE(img->type) == CV_8UC1 );
 
     image = img->data.ptr;
     step = img->step;
@@ -114,10 +108,13 @@ icvHoughLinesStandard( const CvMat* img, float rho, float theta,
     numangle = cvRound(CV_PI / theta);
     numrho = cvRound(((width + height) * 2 + 1) / rho);
 
-    CV_CALL( accum = (int*)cvAlloc( sizeof(accum[0]) * (numangle+2) * (numrho+2) ));
-    CV_CALL( sort_buf = (int*)cvAlloc( sizeof(accum[0]) * numangle * numrho ));
-    CV_CALL( tabSin = (float*)cvAlloc( sizeof(tabSin[0]) * numangle ));
-    CV_CALL( tabCos = (float*)cvAlloc( sizeof(tabCos[0]) * numangle ));
+    _accum.allocate((numangle+2) * (numrho+2));
+    _sort_buf.allocate(numangle * numrho);
+    _tabSin.allocate(numangle);
+    _tabCos.allocate(numangle);
+    int *accum = _accum, *sort_buf = _sort_buf;
+    float *tabSin = _tabSin, *tabCos = _tabCos;
+    
     memset( accum, 0, sizeof(accum[0]) * (numangle+2) * (numrho+2) );
 
     for( ang = 0, n = 0; n < numangle; ang += theta, n++ )
@@ -166,13 +163,6 @@ icvHoughLinesStandard( const CvMat* img, float rho, float theta,
         line.angle = n * theta;
         cvSeqPush( lines, &line );
     }
-
-    __END__;
-
-    cvFree( &sort_buf );
-    cvFree( &tabSin );
-    cvFree( &tabCos );
-    cvFree( &accum );
 }
 
 
@@ -193,16 +183,13 @@ icvHoughLinesSDiv( const CvMat* img,
                    int srn, int stn,
                    CvSeq* lines, int linesMax )
 {
-    uchar *caccum = 0;
-    uchar *buffer = 0;
-    float *sinTable = 0;
-    int *x = 0;
-    int *y = 0;
-    _CVLIST *list = 0;
-
-    CV_FUNCNAME( "icvHoughLinesSDiv" );
-
-    __BEGIN__;
+    std::vector<uchar> _caccum, _buffer;
+    std::vector<float> _sinTable;
+    std::vector<int> _x, _y;
+    float* sinTable;
+    int *x, *y;
+    uchar *caccum, *buffer;
+    _CVLIST* list = 0;
 
 #define _POINT(row, column)\
     (image_src[(row)*step+(column)])
@@ -234,8 +221,8 @@ icvHoughLinesSDiv( const CvMat* img,
     _index *pindex;
     _index vi;
 
-    CV_ASSERT( CV_IS_MAT(img) && CV_MAT_TYPE(img->type) == CV_8UC1 );
-    CV_ASSERT( linesMax > 0 && rho > 0 && theta > 0 );
+    CV_Assert( CV_IS_MAT(img) && CV_MAT_TYPE(img->type) == CV_8UC1 );
+    CV_Assert( linesMax > 0 && rho > 0 && theta > 0 );
 
     threshold = MIN( threshold, 255 );
 
@@ -260,14 +247,14 @@ icvHoughLinesSDiv( const CvMat* img,
     h_add_head__index( list, &vi );
 
     /* Precalculating sin */
-    CV_CALL( sinTable = (float*)cvAlloc( 5 * tn * stn * sizeof( float )));
-
+    _sinTable.resize( 5 * tn * stn );
+    sinTable = &_sinTable[0];
+    
     for( index = 0; index < 5 * tn * stn; index++ )
-    {
         sinTable[index] = (float)cos( stheta * index * 0.2f );
-    }
 
-    CV_CALL( caccum = (uchar*)cvAlloc( rn * tn * sizeof( caccum[0] )));
+    _caccum.resize(rn * tn);
+    caccum = &_caccum[0];
     memset( caccum, 0, rn * tn * sizeof( caccum[0] ));
 
     /* Counting all feature pixels */
@@ -275,8 +262,10 @@ icvHoughLinesSDiv( const CvMat* img,
         for( col = 0; col < w; col++ )
             fn += _POINT( row, col ) != 0;
 
-    CV_CALL( x = (int*)cvAlloc( fn * sizeof(x[0])));
-    CV_CALL( y = (int*)cvAlloc( fn * sizeof(y[0])));
+    _x.resize(fn);
+    _y.resize(fn);
+    x = &_x[0];
+    y = &_y[0];
 
     /* Full Hough Transform (it's accumulator update part) */
     fi = 0;
@@ -346,10 +335,11 @@ icvHoughLinesSDiv( const CvMat* img,
     if( count * 100 > rn * tn )
     {
         icvHoughLinesStandard( img, rho, theta, threshold, lines, linesMax );
-        EXIT;
+        return;
     }
 
-    CV_CALL( buffer = (uchar *) cvAlloc(srn * stn + 2));
+    _buffer.resize(srn * stn + 2);
+    buffer = &_buffer[0];
     mcaccum = buffer + 1;
 
     count = 0;
@@ -455,19 +445,12 @@ icvHoughLinesSDiv( const CvMat* img,
             cvSeqPush( lines, &line );
 
             if( lines->total >= linesMax )
-                EXIT;
+                break;
             h_get_next__index( &pos );
         }
     }
-
-    __END__;
-
-    h_destroy_list__index( list );
-    cvFree( &sinTable );
-    cvFree( &x );
-    cvFree( &y );
-    cvFree( &caccum );
-    cvFree( &buffer );
+    
+    h_destroy_list__index(list);
 }
 
 
@@ -719,10 +702,6 @@ cvHoughLines2( CvArr* src_image, void* lineStorage, int method,
 {
     CvSeq* result = 0;
 
-    CV_FUNCNAME( "cvHoughLines" );
-
-    __BEGIN__;
-
     CvMat stub, *img = (CvMat*)src_image;
     CvMat* mat = 0;
     CvSeq* lines = 0;
@@ -732,16 +711,16 @@ cvHoughLines2( CvArr* src_image, void* lineStorage, int method,
     int linesMax = INT_MAX;
     int iparam1, iparam2;
 
-    CV_CALL( img = cvGetMat( img, &stub ));
+    img = cvGetMat( img, &stub );
 
     if( !CV_IS_MASK_ARR(img))
-        CV_ERROR( CV_StsBadArg, "The source image must be 8-bit, single-channel" );
+        CV_Error( CV_StsBadArg, "The source image must be 8-bit, single-channel" );
 
     if( !lineStorage )
-        CV_ERROR( CV_StsNullPtr, "NULL destination" );
+        CV_Error( CV_StsNullPtr, "NULL destination" );
 
     if( rho <= 0 || theta <= 0 || threshold <= 0 )
-        CV_ERROR( CV_StsOutOfRange, "rho, theta and threshold must be positive" );
+        CV_Error( CV_StsOutOfRange, "rho, theta and threshold must be positive" );
 
     if( method != CV_HOUGH_PROBABILISTIC )
     {
@@ -756,49 +735,47 @@ cvHoughLines2( CvArr* src_image, void* lineStorage, int method,
 
     if( CV_IS_STORAGE( lineStorage ))
     {
-        CV_CALL( lines = cvCreateSeq( lineType, sizeof(CvSeq), elemSize, (CvMemStorage*)lineStorage ));
+        lines = cvCreateSeq( lineType, sizeof(CvSeq), elemSize, (CvMemStorage*)lineStorage );
     }
     else if( CV_IS_MAT( lineStorage ))
     {
         mat = (CvMat*)lineStorage;
 
         if( !CV_IS_MAT_CONT( mat->type ) || (mat->rows != 1 && mat->cols != 1) )
-            CV_ERROR( CV_StsBadArg,
+            CV_Error( CV_StsBadArg,
             "The destination matrix should be continuous and have a single row or a single column" );
 
         if( CV_MAT_TYPE( mat->type ) != lineType )
-            CV_ERROR( CV_StsBadArg,
+            CV_Error( CV_StsBadArg,
             "The destination matrix data type is inappropriate, see the manual" );
 
-        CV_CALL( lines = cvMakeSeqHeaderForArray( lineType, sizeof(CvSeq), elemSize, mat->data.ptr,
-                                                  mat->rows + mat->cols - 1, &lines_header, &lines_block ));
+        lines = cvMakeSeqHeaderForArray( lineType, sizeof(CvSeq), elemSize, mat->data.ptr,
+                                         mat->rows + mat->cols - 1, &lines_header, &lines_block );
         linesMax = lines->total;
-        CV_CALL( cvClearSeq( lines ));
+        cvClearSeq( lines );
     }
     else
-    {
-        CV_ERROR( CV_StsBadArg, "Destination is not CvMemStorage* nor CvMat*" );
-    }
-
+        CV_Error( CV_StsBadArg, "Destination is not CvMemStorage* nor CvMat*" );
+    
     iparam1 = cvRound(param1);
     iparam2 = cvRound(param2);
 
     switch( method )
     {
     case CV_HOUGH_STANDARD:
-          CV_CALL( icvHoughLinesStandard( img, (float)rho,
-                (float)theta, threshold, lines, linesMax ));
+          icvHoughLinesStandard( img, (float)rho,
+                (float)theta, threshold, lines, linesMax );
           break;
     case CV_HOUGH_MULTI_SCALE:
-          CV_CALL( icvHoughLinesSDiv( img, (float)rho, (float)theta,
-                threshold, iparam1, iparam2, lines, linesMax ));
+          icvHoughLinesSDiv( img, (float)rho, (float)theta,
+                threshold, iparam1, iparam2, lines, linesMax );
           break;
     case CV_HOUGH_PROBABILISTIC:
-          CV_CALL( icvHoughLinesProbabalistic( img, (float)rho, (float)theta,
-                threshold, iparam1, iparam2, lines, linesMax ));
+          icvHoughLinesProbabalistic( img, (float)rho, (float)theta,
+                threshold, iparam1, iparam2, lines, linesMax );
           break;
     default:
-        CV_ERROR( CV_StsBadArg, "Unrecognized method id" );
+        CV_Error( CV_StsBadArg, "Unrecognized method id" );
     }
 
     if( mat )
@@ -809,11 +786,7 @@ cvHoughLines2( CvArr* src_image, void* lineStorage, int method,
             mat->rows = lines->total;
     }
     else
-    {
         result = lines;
-    }
-
-    __END__;
 
     return result;
 }
@@ -830,16 +803,10 @@ icvHoughCirclesGradient( CvMat* img, float dp, float min_dist,
                          CvSeq* circles, int circles_max )
 {
     const int SHIFT = 10, ONE = 1 << SHIFT, R_THRESH = 30;
-    CvMat *dx = 0, *dy = 0;
-    CvMat *edges = 0;
-    CvMat *accum = 0;
-    int* sort_buf = 0;
-    CvMat* dist_buf = 0;
-    CvMemStorage* storage = 0;
-
-    CV_FUNCNAME( "icvHoughCirclesGradient" );
-
-    __BEGIN__;
+    cv::Ptr<CvMat> dx, dy;
+    cv::Ptr<CvMat> edges, accum, dist_buf;
+    std::vector<int> sort_buf;
+    cv::Ptr<CvMemStorage> storage;
 
     int x, y, i, j, center_count, nz_count;
     int rows, cols, arows, acols;
@@ -849,23 +816,23 @@ icvHoughCirclesGradient( CvMat* img, float dp, float min_dist,
     float idp, dr;
     CvSeqReader reader;
 
-    CV_CALL( edges = cvCreateMat( img->rows, img->cols, CV_8UC1 ));
-    CV_CALL( cvCanny( img, edges, MAX(canny_threshold/2,1), canny_threshold, 3 ));
+    edges = cvCreateMat( img->rows, img->cols, CV_8UC1 );
+    cvCanny( img, edges, MAX(canny_threshold/2,1), canny_threshold, 3 );
 
-    CV_CALL( dx = cvCreateMat( img->rows, img->cols, CV_16SC1 ));
-    CV_CALL( dy = cvCreateMat( img->rows, img->cols, CV_16SC1 ));
-    CV_CALL( cvSobel( img, dx, 1, 0, 3 ));
-    CV_CALL( cvSobel( img, dy, 0, 1, 3 ));
+    dx = cvCreateMat( img->rows, img->cols, CV_16SC1 );
+    dy = cvCreateMat( img->rows, img->cols, CV_16SC1 );
+    cvSobel( img, dx, 1, 0, 3 );
+    cvSobel( img, dy, 0, 1, 3 );
 
     if( dp < 1.f )
         dp = 1.f;
     idp = 1.f/dp;
-    CV_CALL( accum = cvCreateMat( cvCeil(img->rows*idp)+2, cvCeil(img->cols*idp)+2, CV_32SC1 ));
-    CV_CALL( cvZero(accum));
+    accum = cvCreateMat( cvCeil(img->rows*idp)+2, cvCeil(img->cols*idp)+2, CV_32SC1 );
+    cvZero(accum);
 
-    CV_CALL( storage = cvCreateMemStorage() );
-    CV_CALL( nz = cvCreateSeq( CV_32SC2, sizeof(CvSeq), sizeof(CvPoint), storage ));
-    CV_CALL( centers = cvCreateSeq( CV_32SC1, sizeof(CvSeq), sizeof(int), storage ));
+    storage = cvCreateMemStorage();
+    nz = cvCreateSeq( CV_32SC2, sizeof(CvSeq), sizeof(CvPoint), storage );
+    centers = cvCreateSeq( CV_32SC1, sizeof(CvSeq), sizeof(int), storage );
 
     rows = img->rows;
     cols = img->cols;
@@ -924,7 +891,7 @@ icvHoughCirclesGradient( CvMat* img, float dp, float min_dist,
 
     nz_count = nz->total;
     if( !nz_count )
-        EXIT;
+        return;
 
     for( y = 1; y < arows - 1; y++ )
     {
@@ -940,16 +907,16 @@ icvHoughCirclesGradient( CvMat* img, float dp, float min_dist,
 
     center_count = centers->total;
     if( !center_count )
-        EXIT;
+        return;
 
-    CV_CALL( sort_buf = (int*)cvAlloc( MAX(center_count,nz_count)*sizeof(sort_buf[0]) ));
-    cvCvtSeqToArray( centers, sort_buf );
+    sort_buf.resize( MAX(center_count,nz_count) );
+    cvCvtSeqToArray( centers, &sort_buf[0] );
 
-    icvHoughSortDescent32s( sort_buf, center_count, adata );
+    icvHoughSortDescent32s( &sort_buf[0], center_count, adata );
     cvClearSeq( centers );
-    cvSeqPushMulti( centers, sort_buf, center_count );
+    cvSeqPushMulti( centers, &sort_buf[0], center_count );
 
-    CV_CALL( dist_buf = cvCreateMat( 1, nz_count, CV_32FC1 ));
+    dist_buf = cvCreateMat( 1, nz_count, CV_32FC1 );
     ddata = dist_buf->data.fl;
 
     dr = dp;
@@ -989,7 +956,7 @@ icvHoughCirclesGradient( CvMat* img, float dp, float min_dist,
         }
 
         cvPow( dist_buf, dist_buf, 0.5 );
-        icvHoughSortDescent32s( sort_buf, nz_count, (int*)ddata );
+        icvHoughSortDescent32s( &sort_buf[0], nz_count, (int*)ddata );
 
         dist_sum = start_dist = ddata[sort_buf[nz_count-1]];
         for( j = nz_count - 2; j >= 0; j-- )
@@ -1022,19 +989,9 @@ icvHoughCirclesGradient( CvMat* img, float dp, float min_dist,
             c[2] = (float)r_best;
             cvSeqPush( circles, c );
             if( circles->total > circles_max )
-                EXIT;
+                return;
         }
     }
-
-    __END__;
-
-    cvReleaseMat( &dist_buf );
-    cvFree( &sort_buf );
-    cvReleaseMemStorage( &storage );
-    cvReleaseMat( &edges );
-    cvReleaseMat( &dx );
-    cvReleaseMat( &dy );
-    cvReleaseMat( &accum );
 }
 
 CV_IMPL CvSeq*
@@ -1045,10 +1002,6 @@ cvHoughCircles( CvArr* src_image, void* circle_storage,
 {
     CvSeq* result = 0;
 
-    CV_FUNCNAME( "cvHoughCircles" );
-
-    __BEGIN__;
-
     CvMat stub, *img = (CvMat*)src_image;
     CvMat* mat = 0;
     CvSeq* circles = 0;
@@ -1058,16 +1011,16 @@ cvHoughCircles( CvArr* src_image, void* circle_storage,
     int canny_threshold = cvRound(param1);
     int acc_threshold = cvRound(param2);
 
-    CV_CALL( img = cvGetMat( img, &stub ));
+    img = cvGetMat( img, &stub );
 
     if( !CV_IS_MASK_ARR(img))
-        CV_ERROR( CV_StsBadArg, "The source image must be 8-bit, single-channel" );
+        CV_Error( CV_StsBadArg, "The source image must be 8-bit, single-channel" );
 
     if( !circle_storage )
-        CV_ERROR( CV_StsNullPtr, "NULL destination" );
+        CV_Error( CV_StsNullPtr, "NULL destination" );
 
     if( dp <= 0 || min_dist <= 0 || canny_threshold <= 0 || acc_threshold <= 0 )
-        CV_ERROR( CV_StsOutOfRange, "dp, min_dist, canny_threshold and acc_threshold must be all positive numbers" );
+        CV_Error( CV_StsOutOfRange, "dp, min_dist, canny_threshold and acc_threshold must be all positive numbers" );
 
     min_radius = MAX( min_radius, 0 );
     if( max_radius <= 0 )
@@ -1077,8 +1030,8 @@ cvHoughCircles( CvArr* src_image, void* circle_storage,
 
     if( CV_IS_STORAGE( circle_storage ))
     {
-        CV_CALL( circles = cvCreateSeq( CV_32FC3, sizeof(CvSeq),
-            sizeof(float)*3, (CvMemStorage*)circle_storage ));
+        circles = cvCreateSeq( CV_32FC3, sizeof(CvSeq),
+            sizeof(float)*3, (CvMemStorage*)circle_storage );
     }
     else if( CV_IS_MAT( circle_storage ))
     {
@@ -1086,28 +1039,26 @@ cvHoughCircles( CvArr* src_image, void* circle_storage,
 
         if( !CV_IS_MAT_CONT( mat->type ) || (mat->rows != 1 && mat->cols != 1) ||
             CV_MAT_TYPE(mat->type) != CV_32FC3 )
-            CV_ERROR( CV_StsBadArg,
+            CV_Error( CV_StsBadArg,
             "The destination matrix should be continuous and have a single row or a single column" );
 
-        CV_CALL( circles = cvMakeSeqHeaderForArray( CV_32FC3, sizeof(CvSeq), sizeof(float)*3,
-                mat->data.ptr, mat->rows + mat->cols - 1, &circles_header, &circles_block ));
+        circles = cvMakeSeqHeaderForArray( CV_32FC3, sizeof(CvSeq), sizeof(float)*3,
+                mat->data.ptr, mat->rows + mat->cols - 1, &circles_header, &circles_block );
         circles_max = circles->total;
-        CV_CALL( cvClearSeq( circles ));
+        cvClearSeq( circles );
     }
     else
-    {
-        CV_ERROR( CV_StsBadArg, "Destination is not CvMemStorage* nor CvMat*" );
-    }
+        CV_Error( CV_StsBadArg, "Destination is not CvMemStorage* nor CvMat*" );
 
     switch( method )
     {
     case CV_HOUGH_GRADIENT:
-          CV_CALL( icvHoughCirclesGradient( img, (float)dp, (float)min_dist,
-                                    min_radius, max_radius, canny_threshold,
-                                    acc_threshold, circles, circles_max ));
+        icvHoughCirclesGradient( img, (float)dp, (float)min_dist,
+                                min_radius, max_radius, canny_threshold,
+                                acc_threshold, circles, circles_max );
           break;
     default:
-        CV_ERROR( CV_StsBadArg, "Unrecognized method id" );
+        CV_Error( CV_StsBadArg, "Unrecognized method id" );
     }
 
     if( mat )
@@ -1119,8 +1070,6 @@ cvHoughCircles( CvArr* src_image, void* circle_storage,
     }
     else
         result = circles;
-
-    __END__;
 
     return result;
 }

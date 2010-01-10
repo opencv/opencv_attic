@@ -1842,22 +1842,18 @@ cvPyrSegmentation( IplImage * src,
     int thresh1 = cvRound( threshold1 );
     int thresh2 = cvRound( threshold2 );
 
-    CV_FUNCNAME( "cvPyrSegmentation" );
-
-    __BEGIN__;
-
     if( src->depth != IPL_DEPTH_8U )
-        CV_ERROR( CV_BadDepth, cvUnsupportedFormat );
+        CV_Error( CV_BadDepth, cvUnsupportedFormat );
 
     if( src->depth != dst->depth || src->nChannels != dst->nChannels )
-        CV_ERROR( CV_StsBadArg, "src and dst have different formats" );
+        CV_Error( CV_StsBadArg, "src and dst have different formats" );
 
     cvGetRawData( src, &src_data, &src_step, &src_size );
     cvGetRawData( dst, &dst_data, &dst_step, &dst_size );
 
     if( src_size.width != dst_size.width ||
         src_size.height != dst_size.height )
-        CV_ERROR( CV_StsBadArg, "src and dst have different ROIs" );
+        CV_Error( CV_StsBadArg, "src and dst have different ROIs" );
 
     switch (src->nChannels)
     {
@@ -1876,9 +1872,8 @@ cvPyrSegmentation( IplImage * src,
                                             comp, storage, level, thresh1, thresh2 ));
         break;
     default:
-        CV_ERROR( CV_BadNumChannels, cvUnsupportedFormat );
+        CV_Error( CV_BadNumChannels, cvUnsupportedFormat );
     }
-    __END__;
 }
 
 

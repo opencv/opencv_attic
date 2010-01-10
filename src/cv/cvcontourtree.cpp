@@ -673,8 +673,8 @@ cvContourFromContourTree( const CvContourTree*  tree,
                           CvTermCriteria  criteria )
 {
     CvSeq* contour = 0;
-    _CvTrianAttr **ptr_buf = 0;     /*  pointer to the pointer's buffer  */
-    int *level_buf = 0;
+    cv::AutoBuffer<_CvTrianAttr*> ptr_buf;     /*  pointer to the pointer's buffer  */
+    cv::AutoBuffer<int> level_buf;
     int i_buf;
 
     int lpt;
@@ -690,15 +690,11 @@ cvContourFromContourTree( const CvContourTree*  tree,
     CvSeqReader reader;
     CvSeqWriter writer;
 
-    CV_FUNCNAME("cvContourFromContourTree");
-
-    __BEGIN__;
-
     if( !tree )
-        CV_ERROR( CV_StsNullPtr, "" );
+        CV_Error( CV_StsNullPtr, "" );
 
     if( !CV_IS_SEQ_POLYGON_TREE( tree ))
-        CV_ERROR( CV_StsBadArg, "" );
+        CV_Error( CV_StsBadArg, "" );
 
     criteria = cvCheckTermCriteria( criteria, 0., 100 );
 
@@ -719,9 +715,9 @@ cvContourFromContourTree( const CvContourTree*  tree,
     seq_flags = CV_SEQ_POLYGON;
     cvStartWriteSeq( seq_flags, out_hearder_size, sizeof( CvPoint ), storage, &writer );
 
-    ptr_buf = (_CvTrianAttr **) cvAlloc( lpt * sizeof( _CvTrianAttr * ));
+    ptr_buf.allocate(lpt);
     if( log_iter )
-        level_buf = (int *) cvAlloc( lpt * (sizeof( int )));
+        level_buf.allocate(lpt);
 
     memset( ptr_buf, 0, lpt * sizeof( _CvTrianAttr * ));
 
@@ -779,11 +775,6 @@ cvContourFromContourTree( const CvContourTree*  tree,
 
     contour = cvEndWriteSeq( &writer );
     cvBoundingRect( contour, 1 );
-
-    __END__;
-
-    cvFree( &level_buf );
-    cvFree( &ptr_buf );
 
     return contour;
 }

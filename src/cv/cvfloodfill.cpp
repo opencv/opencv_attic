@@ -91,7 +91,7 @@ CvFFillSegment;
 *              Simple Floodfill (repainting single-color connected component)            *
 \****************************************************************************************/
 
-static CvStatus
+static void
 icvFloodFill_8u_CnIR( uchar* pImage, int step, CvSize roi, CvPoint seed,
                       uchar* _newVal, CvConnectedComp* region, int flags,
                       CvFFillSegment* buffer, int buffer_size, int cn )
@@ -215,15 +215,13 @@ icvFloodFill_8u_CnIR( uchar* pImage, int step, CvSize roi, CvPoint seed,
         region->rect.height = YMax - YMin + 1;
         region->value = cvScalar(newVal[0], newVal[1], newVal[2], 0);
     }
-
-    return CV_NO_ERR;
 }
 
 
 /* because all the operations on floats that are done during non-gradient floodfill
    are just copying and comparison on equality,
    we can do the whole op on 32-bit integers instead */
-static CvStatus
+static void
 icvFloodFill_32f_CnIR( int* pImage, int step, CvSize roi, CvPoint seed,
                        int* _newVal, CvConnectedComp* region, int flags,
                        CvFFillSegment* buffer, int buffer_size, int cn )
@@ -349,8 +347,6 @@ icvFloodFill_32f_CnIR( int* pImage, int step, CvSize roi, CvPoint seed,
         v0.i = newVal[0]; v1.i = newVal[1]; v2.i = newVal[2];
         region->value = cvScalar( v0.f, v1.f, v2.f );
     }
-
-    return CV_NO_ERR;
 }
 
 /****************************************************************************************\
@@ -369,8 +365,8 @@ icvFloodFill_32f_CnIR( int* pImage, int step, CvSize roi, CvPoint seed,
                             fabs((p1)[1] - (p2)[1] + d_lw[1]) <= interval[1] && \
                             fabs((p1)[2] - (p2)[2] + d_lw[2]) <= interval[2])
 
-static CvStatus
-icvFloodFill_Grad_8u_CnIR( uchar* pImage, int step, uchar* pMask, int maskStep,
+static void
+icvFloodFillGrad_8u_CnIR( uchar* pImage, int step, uchar* pMask, int maskStep,
                            CvSize /*roi*/, CvPoint seed, uchar* _newVal, uchar* _d_lw,
                            uchar* _d_up, CvConnectedComp* region, int flags,
                            CvFFillSegment* buffer, int buffer_size, int cn )
@@ -392,7 +388,7 @@ icvFloodFill_Grad_8u_CnIR( uchar* pImage, int step, uchar* pMask, int maskStep,
 
     L = R = seed.x;
     if( mask[L] )
-        return CV_OK;
+        return;
 
     mask[L] = newMaskVal;
 
@@ -670,13 +666,11 @@ icvFloodFill_Grad_8u_CnIR( uchar* pImage, int step, uchar* pMask, int maskStep,
             region->value = cvScalar(sum[0]*iarea, sum[1]*iarea, sum[2]*iarea);
         }
     }
-
-    return CV_NO_ERR;
 }
 
 
-static CvStatus
-icvFloodFill_Grad_32f_CnIR( float* pImage, int step, uchar* pMask, int maskStep,
+static void
+icvFloodFillGrad_32f_CnIR( float* pImage, int step, uchar* pMask, int maskStep,
                            CvSize /*roi*/, CvPoint seed, float* _newVal, float* _d_lw,
                            float* _d_up, CvConnectedComp* region, int flags,
                            CvFFillSegment* buffer, int buffer_size, int cn )
@@ -698,7 +692,7 @@ icvFloodFill_Grad_32f_CnIR( float* pImage, int step, uchar* pMask, int maskStep,
 
     L = R = seed.x;
     if( mask[L] )
-        return CV_OK;
+        return;
 
     mask[L] = newMaskVal;
 
@@ -978,8 +972,6 @@ icvFloodFill_Grad_32f_CnIR( float* pImage, int step, uchar* pMask, int maskStep,
             region->value = cvScalar(sum[0]*iarea, sum[1]*iarea, sum[2]*iarea);
         }
     }
-
-    return CV_NO_ERR;
 }
 
 
@@ -987,80 +979,49 @@ icvFloodFill_Grad_32f_CnIR( float* pImage, int step, uchar* pMask, int maskStep,
 *                                    External Functions                                  *
 \****************************************************************************************/
 
-typedef  CvStatus (CV_CDECL* CvFloodFillFunc)(
+typedef  void (*CvFloodFillFunc)(
                void* img, int step, CvSize size, CvPoint seed, void* newval,
                CvConnectedComp* comp, int flags, void* buffer, int buffer_size, int cn );
 
-typedef  CvStatus (CV_CDECL* CvFloodFillGradFunc)(
+typedef  void (*CvFloodFillGradFunc)(
                void* img, int step, uchar* mask, int maskStep, CvSize size,
                CvPoint seed, void* newval, void* d_lw, void* d_up, void* ccomp,
                int flags, void* buffer, int buffer_size, int cn );
-
-static  void  icvInitFloodFill( void** ffill_tab,
-                                void** ffillgrad_tab )
-{
-    ffill_tab[0] = (void*)icvFloodFill_8u_CnIR;
-    ffill_tab[1] = (void*)icvFloodFill_32f_CnIR;
-
-    ffillgrad_tab[0] = (void*)icvFloodFill_Grad_8u_CnIR;
-    ffillgrad_tab[1] = (void*)icvFloodFill_Grad_32f_CnIR;
-}
-
 
 CV_IMPL void
 cvFloodFill( CvArr* arr, CvPoint seed_point,
              CvScalar newVal, CvScalar lo_diff, CvScalar up_diff,
              CvConnectedComp* comp, int flags, CvArr* maskarr )
 {
-    static void* ffill_tab[4];
-    static void* ffillgrad_tab[4];
-    static int inittab = 0;
-
-    CvMat* tempMask = 0;
-    CvFFillSegment* buffer = 0;
-    CV_FUNCNAME( "cvFloodFill" );
-
+    cv::Ptr<CvMat> tempMask;
+    cv::AutoBuffer<CvFFillSegment> buffer;
+    
     if( comp )
         memset( comp, 0, sizeof(*comp) );
 
-    __BEGIN__;
-
-    int i, type, depth, cn, is_simple, idx;
+    int i, type, depth, cn, is_simple;
     int buffer_size, connectivity = flags & 255;
     double nv_buf[4] = {0,0,0,0};
     union { uchar b[4]; float f[4]; } ld_buf, ud_buf;
-    CvMat stub, *img = (CvMat*)arr;
+    CvMat stub, *img = cvGetMat(arr, &stub);
     CvMat maskstub, *mask = (CvMat*)maskarr;
     CvSize size;
 
-    if( !inittab )
-    {
-        icvInitFloodFill( ffill_tab, ffillgrad_tab );
-        inittab = 1;
-    }
-
-    CV_CALL( img = cvGetMat( img, &stub ));
     type = CV_MAT_TYPE( img->type );
     depth = CV_MAT_DEPTH(type);
     cn = CV_MAT_CN(type);
 
-    idx = type == CV_8UC1 || type == CV_8UC3 ? 0 :
-          type == CV_32FC1 || type == CV_32FC3 ? 1 : -1;
-
-    if( idx < 0 )
-        CV_ERROR( CV_StsUnsupportedFormat, "" );
-
     if( connectivity == 0 )
         connectivity = 4;
     else if( connectivity != 4 && connectivity != 8 )
-        CV_ERROR( CV_StsBadFlag, "Connectivity must be 4, 0(=4) or 8" );
+        CV_Error( CV_StsBadFlag, "Connectivity must be 4, 0(=4) or 8" );
 
     is_simple = mask == 0 && (flags & CV_FLOODFILL_MASK_ONLY) == 0;
 
     for( i = 0; i < cn; i++ )
     {
         if( lo_diff.val[i] < 0 || up_diff.val[i] < 0 )
-            CV_ERROR( CV_StsBadArg, "lo_diff and up_diff must be non-negative" );
+            CV_Error( CV_StsBadArg, "lo_diff and up_diff must be non-negative" );
         is_simple &= fabs(lo_diff.val[i]) < DBL_EPSILON && fabs(up_diff.val[i]) < DBL_EPSILON;
     }
 
@@ -1068,19 +1029,21 @@ cvFloodFill( CvArr* arr, CvPoint seed_point,
 
     if( (unsigned)seed_point.x >= (unsigned)size.width ||
         (unsigned)seed_point.y >= (unsigned)size.height )
-        CV_ERROR( CV_StsOutOfRange, "Seed point is outside of image" );
+        CV_Error( CV_StsOutOfRange, "Seed point is outside of image" );
 
     cvScalarToRawData( &newVal, &nv_buf, type, 0 );
     buffer_size = MAX( size.width, size.height )*2;
-    CV_CALL( buffer = (CvFFillSegment*)cvAlloc( buffer_size*sizeof(buffer[0])));
+    buffer.allocate( buffer_size );
 
     if( is_simple )
     {
         int elem_size = CV_ELEM_SIZE(type);
         const uchar* seed_ptr = img->data.ptr + img->step*seed_point.y + elem_size*seed_point.x;
-        CvFloodFillFunc func = (CvFloodFillFunc)ffill_tab[idx];
+        CvFloodFillFunc func =
+            type == CV_8UC1 || type == CV_8UC3 ? (CvFloodFillFunc)icvFloodFill_8u_CnIR :
+            type == CV_32FC1 || type == CV_32FC3 ? (CvFloodFillFunc)icvFloodFill_32f_CnIR : 0;
         if( !func )
-            CV_ERROR( CV_StsUnsupportedFormat, "" );
+            CV_Error( CV_StsUnsupportedFormat, "" );
         // check if the new value is different from the current value at the seed point.
         // if they are exactly the same, use the generic version with mask to avoid infinite loops.
         for( i = 0; i < elem_size; i++ )
@@ -1088,73 +1051,66 @@ cvFloodFill( CvArr* arr, CvPoint seed_point,
                 break;
         if( i < elem_size )
         {
-            IPPI_CALL( func( img->data.ptr, img->step, size,
-                             seed_point, &nv_buf, comp, flags,
-                             buffer, buffer_size, cn ));
-            EXIT;
+            func( img->data.ptr, img->step, size,
+                  seed_point, &nv_buf, comp, flags,
+                  buffer, buffer_size, cn );
+            return;
         }
     }
 
+    CvFloodFillGradFunc func = 
+        type == CV_8UC1 || type == CV_8UC3 ? (CvFloodFillGradFunc)icvFloodFillGrad_8u_CnIR :
+        type == CV_32FC1 || type == CV_32FC3 ? (CvFloodFillGradFunc)icvFloodFillGrad_32f_CnIR : 0;
+    if( !func )
+        CV_Error( CV_StsUnsupportedFormat, "" );
+    
+    if( !mask )
     {
-        CvFloodFillGradFunc func = (CvFloodFillGradFunc)ffillgrad_tab[idx];
-        if( !func )
-            CV_ERROR( CV_StsUnsupportedFormat, "" );
+        /* created mask will be 8-byte aligned */
+        tempMask = cvCreateMat( size.height + 2, (size.width + 9) & -8, CV_8UC1 );
+        mask = tempMask;
+    }
+    else
+    {
+        mask = cvGetMat( mask, &maskstub );
+        if( !CV_IS_MASK_ARR( mask ))
+            CV_Error( CV_StsBadMask, "" );
 
-        if( !mask )
-        {
-            /* created mask will be 8-byte aligned */
-            tempMask = cvCreateMat( size.height + 2, (size.width + 9) & -8, CV_8UC1 );
-            mask = tempMask;
-        }
-        else
-        {
-            CV_CALL( mask = cvGetMat( mask, &maskstub ));
-            if( !CV_IS_MASK_ARR( mask ))
-                CV_ERROR( CV_StsBadMask, "" );
-
-            if( mask->width != size.width + 2 || mask->height != size.height + 2 )
-                CV_ERROR( CV_StsUnmatchedSizes, "mask must be 2 pixel wider "
-                                       "and 2 pixel taller than filled image" );
-        }
-
-        {
-            int width = tempMask ? mask->step : size.width + 2;
-            uchar* mask_row = mask->data.ptr + mask->step;
-            memset( mask_row - mask->step, 1, width );
-
-            for( i = 1; i <= size.height; i++, mask_row += mask->step )
-            {
-                if( tempMask )
-                    memset( mask_row, 0, width );
-                mask_row[0] = mask_row[size.width+1] = (uchar)1;
-            }
-            memset( mask_row, 1, width );
-        }
-
-        if( depth == CV_8U )
-            for( i = 0; i < cn; i++ )
-            {
-                int t = cvFloor(lo_diff.val[i]);
-                ld_buf.b[i] = CV_CAST_8U(t);
-                t = cvFloor(up_diff.val[i]);
-                ud_buf.b[i] = CV_CAST_8U(t);
-            }
-        else
-            for( i = 0; i < cn; i++ )
-            {
-                ld_buf.f[i] = (float)lo_diff.val[i];
-                ud_buf.f[i] = (float)up_diff.val[i];
-            }
-
-        IPPI_CALL( func( img->data.ptr, img->step, mask->data.ptr, mask->step,
-                         size, seed_point, &nv_buf, ld_buf.f, ud_buf.f,
-                         comp, flags, buffer, buffer_size, cn ));
+        if( mask->width != size.width + 2 || mask->height != size.height + 2 )
+            CV_Error( CV_StsUnmatchedSizes, "mask must be 2 pixel wider "
+                                   "and 2 pixel taller than filled image" );
     }
 
-    __END__;
+    int width = tempMask ? mask->step : size.width + 2;
+    uchar* mask_row = mask->data.ptr + mask->step;
+    memset( mask_row - mask->step, 1, width );
 
-    cvFree( &buffer );
-    cvReleaseMat( &tempMask );
+    for( i = 1; i <= size.height; i++, mask_row += mask->step )
+    {
+        if( tempMask )
+            memset( mask_row, 0, width );
+        mask_row[0] = mask_row[size.width+1] = (uchar)1;
+    }
+    memset( mask_row, 1, width );
+
+    if( depth == CV_8U )
+        for( i = 0; i < cn; i++ )
+        {
+            int t = cvFloor(lo_diff.val[i]);
+            ld_buf.b[i] = CV_CAST_8U(t);
+            t = cvFloor(up_diff.val[i]);
+            ud_buf.b[i] = CV_CAST_8U(t);
+        }
+    else
+        for( i = 0; i < cn; i++ )
+        {
+            ld_buf.f[i] = (float)lo_diff.val[i];
+            ud_buf.f[i] = (float)up_diff.val[i];
+        }
+
+    func( img->data.ptr, img->step, mask->data.ptr, mask->step,
+          size, seed_point, &nv_buf, ld_buf.f, ud_buf.f,
+          comp, flags, buffer, buffer_size, cn );
 }
 
 
