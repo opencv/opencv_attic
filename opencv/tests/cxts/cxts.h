@@ -614,6 +614,21 @@ protected:
 };
 
 
+class CV_EXPORTS CvBadArgTest : public CvTest
+{
+public:
+    // constructor(s) and destructor
+    CvBadArgTest( const char* test_name, const char* test_funcs, const char* test_descr = "" );
+    virtual ~CvBadArgTest();
+
+protected:
+    virtual int run_test_case( int expected_code, const char* descr );
+    virtual void run_func(void) = 0;
+    int test_case_idx;
+    int progress;
+    double t, freq;
+};
+
 /****************************************************************************************\
 *                                 Utility Functions                                      *
 \****************************************************************************************/
