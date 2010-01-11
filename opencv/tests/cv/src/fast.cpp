@@ -61,7 +61,7 @@ CV_FastTest::CV_FastTest(): CvTest( "features-fast", "cv::FAST" )
 }
 CV_FastTest::~CV_FastTest() {}
 
-void CV_FastTest::run( int start_from )
+void CV_FastTest::run( int )
 {
     Mat image1 = imread(string(ts->get_data_path()) + "inpaint/orig.jpg");   
     Mat image2 = imread(string(ts->get_data_path()) + "cameracalibration/chess9.jpg");   
@@ -85,13 +85,13 @@ void CV_FastTest::run( int start_from )
     for(size_t i = 0; i < keypoints1.size(); ++i)
     {
         const KeyPoint& kp = keypoints1[i];
-        cv::circle(image1, kp.pt, kp.size/2, CV_RGB(255, 0, 0));        
+        cv::circle(image1, kp.pt, cvRound(kp.size/2), CV_RGB(255, 0, 0));        
     }
 
     for(size_t i = 0; i < keypoints2.size(); ++i)
     {
         const KeyPoint& kp = keypoints2[i];
-        cv::circle(image2, kp.pt, kp.size/2, CV_RGB(255, 0, 0));        
+        cv::circle(image2, kp.pt, cvRound(kp.size/2), CV_RGB(255, 0, 0));        
     }
 
     Mat kps1(1, keypoints1.size() * sizeof(KeyPoint), CV_8U, &keypoints1[0]);

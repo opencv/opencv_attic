@@ -701,11 +701,11 @@ void CxCore_CartToPolarTest::run_func()
         cv::Mat mag = test_array[OUTPUT][0] ? cv::cvarrToMat(test_array[OUTPUT][0]) : cv::Mat();
         cv::Mat ph = test_array[OUTPUT][1] ? cv::cvarrToMat(test_array[OUTPUT][1]) : cv::Mat();
         if(!mag.data)
-            cv::phase(X, Y, ph, use_degrees);
+            cv::phase(X, Y, ph, use_degrees != 0);
         else if(!ph.data)
             cv::magnitude(X, Y, mag);
         else
-            cv::cartToPolar(X, Y, mag, ph, use_degrees);
+            cv::cartToPolar(X, Y, mag, ph, use_degrees != 0);
     }
 }
 
@@ -846,7 +846,7 @@ void CxCore_PolarToCartTest::run_func()
         cv::Mat Y = test_array[OUTPUT][1] ? cv::cvarrToMat(test_array[OUTPUT][1]) : cv::Mat();
         cv::Mat mag = test_array[INPUT][1] ? cv::cvarrToMat(test_array[INPUT][1]) : cv::Mat();
         cv::Mat ph = test_array[INPUT][0] ? cv::cvarrToMat(test_array[INPUT][0]) : cv::Mat();
-        cv::polarToCart(mag, ph, X, Y, use_degrees);
+        cv::polarToCart(mag, ph, X, Y, use_degrees != 0);
     }
 }
 

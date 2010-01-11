@@ -217,7 +217,7 @@ icvCrossCorr( const CvArr* _img, const CvArr* _templ, CvArr* _corr,
         CvMat sstub, dstub, *src, *dst, temp;
         CvMat* planes[] = { 0, 0, 0, 0 };
         CvMat* _dft_img = dft_img[thread_idx];
-        uchar* _buf = &buf[thread_idx][0];
+        uchar* _buf = buf_size > 0 ? &buf[thread_idx][0] : 0;
         CvSize csz = { blocksize.width, blocksize.height }, isz;
         int x0 = x - anchor.x, y0 = y - anchor.y;
         int x1 = MAX( 0, x0 ), y1 = MAX( 0, y0 ), x2, y2;

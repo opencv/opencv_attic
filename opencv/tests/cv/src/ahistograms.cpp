@@ -659,8 +659,8 @@ void CV_MinMaxHistTest::run_func(void)
         cv::SparseMat h((CvSparseMat*)hist[0]->bins);
         double _min_val = 0, _max_val = 0;
         cv::minMaxLoc(h, &_min_val, &_max_val, min_idx, max_idx );
-        min_val = _min_val;
-        max_val = _max_val;
+        min_val = (float)_min_val;
+        max_val = (float)_max_val;
     }
     else
         cvGetMinMaxHistValue( hist[0], &min_val, &max_val, min_idx, max_idx );
