@@ -974,12 +974,8 @@ int CvBadArgTest::run_test_case( int expected_code, const char* descr )
     
     int errcount = 0;
     bool thrown = false;
-    char buf[100];
-    if(!descr || strlen(descr) == 0)
-    {
-        sprintf(buf, "test case #%d", test_case_idx);
-        descr = buf;
-    }
+    if(!descr)
+        descr = "";
     
     try
     {
@@ -990,20 +986,22 @@ int CvBadArgTest::run_test_case( int expected_code, const char* descr )
         thrown = true;
         if( e.code != expected_code )
         {
-            ts->printf(CvTS::LOG, "%s: the error code %d is different from the expected %d\n",
-                descr, e.code, expected_code);
+            ts->printf(CvTS::LOG, "%s (test case #%d): the error code %d is different from the expected %d\n",
+                descr, test_case_idx, e.code, expected_code);
             errcount = 1;
         }
     }
     catch(...)
     {
         thrown = true;
-        ts->printf(CvTS::LOG, "%s: unknown exception was thrown (the function has likely crashed)\n", descr);
+        ts->printf(CvTS::LOG, "%s  (test case #%d): unknown exception was thrown (the function has likely crashed)\n",
+                   descr, test_case_idx);
         errcount = 1;
     }
     if(!thrown)
     {
-        ts->printf(CvTS::LOG, "%s: no expected exception was thrown\n", descr);
+        ts->printf(CvTS::LOG, "%s  (test case #%d): no expected exception was thrown\n",
+                   descr, test_case_idx);
         errcount = 1;
     }
     test_case_idx++;
