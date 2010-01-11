@@ -43,6 +43,7 @@
 #include "cvchessboardgenerator.h"
 
 #include <limits>
+#include <numeric>
 
 using namespace std;
 using namespace cv;
@@ -77,7 +78,7 @@ public:
     CV_ChessboardDetectorTest();
 protected:
     void run(int);
-    bool checkByGenerator();    
+    bool checkByGenerator();        
 };
 
 CV_ChessboardDetectorTest::CV_ChessboardDetectorTest():
@@ -175,7 +176,7 @@ void CV_ChessboardDetectorTest::run( int /*start_from */)
         Size pattern_size = expected.size();
 
         vector<Point2f> v;        
-        bool result = findChessboardCorners(gray, pattern_size, v, CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_NORMALIZE_IMAGE);        
+        bool result = findChessboardCorners(gray, pattern_size, v, CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_NORMALIZE_IMAGE);
         show_points( gray, Mat(), v, pattern_size, result );
         if( !result || v.size() != count_exp )
         {
@@ -269,8 +270,8 @@ bool CV_ChessboardDetectorTest::checkByGenerator()
 {   
     bool res = true;
     //theRNG() = 0x58e6e895b9913160;
-    cv::DefaultRngAuto dra;
-    theRNG() = *ts->get_rng();
+    //cv::DefaultRngAuto dra;
+    //theRNG() = *ts->get_rng();
 
     Mat bg(Size(800, 600), CV_8UC3, Scalar::all(255));  
     randu(bg, Scalar::all(0), Scalar::all(255)); 
@@ -325,7 +326,46 @@ bool CV_ChessboardDetectorTest::checkByGenerator()
             res = false;
             continue;
         }        
-    }        
+    }  
+
+    /* ***** negative ***** */
+    {        
+        vector<Point2f> corners_found;
+        bool found = findChessboardCorners(bg, Size(8, 7), corners_found);
+        if (found)
+            res = false;
+
+        ChessBoardGenerator cbg(Size(8, 7));
+
+        vector<Point2f> cg;
+        Mat cb = cbg(bg, camMat, distCoeffs, cg);        
+
+        found = findChessboardCorners(cb, Size(3, 4), corners_found);
+        if (found)
+            res = false;        
+
+        Point2f c = std::accumulate(cg.begin(), cg.end(), Point2f(), plus<Point2f>()) * (1.f/cg.size());
+
+        Mat_<double> aff(2, 3);
+        aff << 1.0, 0.0, -(double)c.x, 0.0, 1.0, 0.0;
+        Mat sh;
+        warpAffine(cb, sh, aff, cb.size());
+
+        found = findChessboardCorners(sh, Size(8, 7), corners_found);
+        if (found)
+            res = false;        
+        
+        vector< vector<Point> > cnts(1);
+        vector<Point>& cnt = cnts[0];
+        cnt.push_back(cg[  0]); cnt.push_back(cg[0+2]); 
+        cnt.push_back(cg[7+0]); cnt.push_back(cg[7+2]);                
+        cv::drawContours(cb, cnts, -1, Scalar::all(128), CV_FILLED);
+
+        found = findChessboardCorners(cb, Size(8, 7), corners_found);
+        if (found)
+            res = false;
+    }
+    
     return res;
 }
 
