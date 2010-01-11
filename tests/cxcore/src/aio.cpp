@@ -136,7 +136,7 @@ static bool cvTsCheckSparse(const CvSparseMat* m1, const CvSparseMat* m2, double
     return true;
 }
 
-void CV_IOTest::run( int start_from )
+void CV_IOTest::run( int )
 {
     double ranges[][2] = {{0, 256}, {-128, 128}, {0, 65536}, {-32768, 32768},
         {-1000000, 1000000}, {-10, 10}, {-10, 10}};

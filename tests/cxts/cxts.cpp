@@ -958,7 +958,7 @@ CvBadArgTest::~CvBadArgTest()
 
 int CvBadArgTest::run_test_case( int expected_code, const char* descr )
 {
-    double new_t = cv::getTickCount(), dt;
+    double new_t = (double)cv::getTickCount(), dt;
     if( test_case_idx < 0 )
     {
         test_case_idx = 0;

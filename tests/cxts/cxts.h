@@ -389,7 +389,7 @@ public:
     CvTest* get_first_test() { return CvTest::get_first_test(); }
 
     // retrieves one of global options of the test system
-    bool is_debug_mode() { return params.debug_mode; }
+    int is_debug_mode() { return params.debug_mode; }
 
     // returns the current testing mode
     int get_testing_mode()  { return params.test_mode; }
@@ -479,7 +479,7 @@ protected:
     {
         // if non-zero, the tests are run in unprotected mode to debug possible crashes,
         // otherwise the system tries to catch the exceptions and continue with other tests
-        bool debug_mode;
+        int debug_mode;
 
         // if non-zero, the header is not print
         bool skip_header;

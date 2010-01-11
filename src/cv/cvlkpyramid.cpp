@@ -371,7 +371,7 @@ icvInitPyramidalAlgorithm( const CvMat* imgA, const CvMat* imgB,
                            int max_iters, int flags,
                            uchar *** imgI, uchar *** imgJ,
                            int **step, CvSize** size,
-                          double **scale, cv::AutoBuffer<uchar>* buffer )
+                           double **scale, cv::AutoBuffer<uchar>* buffer )
 {
     const int ALIGN = 8;
     int pyrBytes, bufferBytes = 0, elem_size;
@@ -380,7 +380,6 @@ icvInitPyramidalAlgorithm( const CvMat* imgA, const CvMat* imgB,
     int i;
     CvSize imgSize, levelSize;
 
-    *buffer = 0;
     *imgI = *imgJ = 0;
     *step = 0;
     *scale = 0;

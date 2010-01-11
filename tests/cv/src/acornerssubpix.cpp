@@ -54,7 +54,7 @@ public:
 protected:
     Mat intrinsic_matrix_;
     Mat distortion_coeffs_;
-    const Size image_size_;
+    Size image_size_;
     
     void run(int);
     void generateIntrinsicParams();
@@ -115,7 +115,7 @@ CV_ChessboardSubpixelTest::CV_ChessboardSubpixelTest():
 }
 
 /* ///////////////////// chess_corner_test ///////////////////////// */
-void CV_ChessboardSubpixelTest::run( int start_from )
+void CV_ChessboardSubpixelTest::run( int )
 {
     int code = CvTS::OK;
     int  progress = 0;
