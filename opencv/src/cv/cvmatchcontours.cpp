@@ -224,7 +224,6 @@ cvMatchContourTrees( const CvContourTree* tree1, const CvContourTree* tree2,
     char s1, s2;
     _CvTrianAttr tree_1, tree_2;        /*current vertex 1 and 2 tree */
     CvSeqReader reader1, reader2;
-    double result = 0;
 
     if( !tree1 || !tree2 )
         CV_Error( CV_StsNullPtr, "" );
