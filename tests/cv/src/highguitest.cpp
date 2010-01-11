@@ -89,7 +89,7 @@ protected:
 	bool GuiTest(const string& dir, const string& tmp);
 };
 
-CV_HighGuiTest::CV_HighGuiTest(): CvTest( "highgui", "?" )
+CV_HighGuiTest::CV_HighGuiTest(): CvTest( "z-highgui", "?" )
 {
     support_testing_modes = CvTS::CORRECTNESS_CHECK_MODE;
 }
