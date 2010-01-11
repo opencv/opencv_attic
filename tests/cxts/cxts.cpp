@@ -943,6 +943,74 @@ int CvTest::update_progress( int progress, int test_case_idx, int count, double 
     return progress;
 }
 
+
+CvBadArgTest::CvBadArgTest( const char* _test_name, const char* _test_funcs, const char* _test_descr )
+  : CvTest( _test_name, _test_funcs, _test_descr )
+{
+    progress = -1;
+    test_case_idx = -1;
+    freq = cv::getTickFrequency();
+}
+
+CvBadArgTest::~CvBadArgTest()
+{
+}
+
+int CvBadArgTest::run_test_case( int expected_code, const char* descr )
+{
+    double new_t = cv::getTickCount(), dt;
+    if( test_case_idx < 0 )
+    {
+        test_case_idx = 0;
+        progress = 0;
+        dt = 0;
+    }
+    else
+    {
+        dt = (new_t - t)/(freq*1000);
+        t = new_t;
+    }
+    progress = update_progress(progress, test_case_idx, 0, dt);
+    
+    int errcount = 0;
+    bool thrown = false;
+    char buf[100];
+    if(!descr || strlen(descr) == 0)
+    {
+        sprintf(buf, "test case #%d", test_case_idx);
+        descr = buf;
+    }
+    
+    try
+    {
+        run_func();
+    }
+    catch(const cv::Exception& e)
+    {
+        thrown = true;
+        if( e.code != expected_code )
+        {
+            ts->printf(CvTS::LOG, "%s: the error code %d is different from the expected %d\n",
+                descr, e.code, expected_code);
+            errcount = 1;
+        }
+    }
+    catch(...)
+    {
+        thrown = true;
+        ts->printf(CvTS::LOG, "%s: unknown exception was thrown (the function has likely crashed)\n", descr);
+        errcount = 1;
+    }
+    if(!thrown)
+    {
+        ts->printf(CvTS::LOG, "%s: no expected exception was thrown\n", descr);
+        errcount = 1;
+    }
+    test_case_idx++;
+    
+    return errcount;
+}
+
 /*****************************************************************************************\
 *                                 Base Class for Test System                              *
 \*****************************************************************************************/
