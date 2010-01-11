@@ -77,13 +77,13 @@ public:
     CV_ChessboardDetectorTest();
 protected:
     void run(int);
-    bool checkByGenerator();
+    bool checkByGenerator();    
 };
 
 CV_ChessboardDetectorTest::CV_ChessboardDetectorTest():
     CvTest( "chessboard-detector", "cvFindChessboardCorners" )
 {
-    support_testing_modes = CvTS::CORRECTNESS_CHECK_MODE;
+    support_testing_modes = CvTS::CORRECTNESS_CHECK_MODE;    
 }
 
 double calcError(const vector<Point2f>& v, const Mat& u)
@@ -117,10 +117,12 @@ const double precise_success_error_level = 2;
 /* ///////////////////// chess_corner_test ///////////////////////// */
 void CV_ChessboardDetectorTest::run( int /*start_from */)
 {
-    if (!checkByGenerator())
-        return;
-
     CvTS& ts = *this->ts;
+    ts.set_failed_test_info( CvTS::OK );
+
+    /*if (!checkByGenerator())
+        return;*/
+    checkByGenerator();    
 
 //#define WRITE_POINTS 1
 #ifndef WRITE_POINTS    
@@ -134,7 +136,7 @@ void CV_ChessboardDetectorTest::run( int /*start_from */)
     if( !fs.isOpened() || board_list.empty() || !board_list.isSeq() || board_list.size() % 2 != 0 )
     {
         ts.printf( CvTS::LOG, "chessboard_list.dat can not be readed or is not valid" );
-        ts.set_failed_test_info( CvTS::FAIL_MISSING_TEST_DATA );
+        ts.set_failed_test_info( CvTS::FAIL_MISSING_TEST_DATA );        
         return;
     }
 
@@ -153,7 +155,7 @@ void CV_ChessboardDetectorTest::run( int /*start_from */)
         {
             ts.printf( CvTS::LOG, "one of chessboard images can't be read: %s", img_file.c_str() );
             ts.set_failed_test_info( CvTS::FAIL_MISSING_TEST_DATA );
-            return;
+            continue;
         }
 
         string filename = folder + (string)board_list[idx * 2 + 1];
@@ -164,7 +166,7 @@ void CV_ChessboardDetectorTest::run( int /*start_from */)
             {                
                 ts.printf( CvTS::LOG, "one of chessboard corner files can't be read: %s", filename.c_str() ); 
                 ts.set_failed_test_info( CvTS::FAIL_MISSING_TEST_DATA );
-                return;                
+                continue;                
             }
             expected = Mat(u, true);
             cvReleaseMat( &u );
@@ -179,7 +181,7 @@ void CV_ChessboardDetectorTest::run( int /*start_from */)
         {
             ts.printf( CvTS::LOG, "chess board is not found\n" );
             ts.set_failed_test_info( CvTS::FAIL_INVALID_OUTPUT );
-            return;
+            continue;
         }
 
 #ifndef WRITE_POINTS
@@ -188,7 +190,7 @@ void CV_ChessboardDetectorTest::run( int /*start_from */)
         {
             ts.printf( CvTS::LOG, "bad accuracy of corner guesses" );
             ts.set_failed_test_info( CvTS::FAIL_BAD_ACCURACY );
-            return;
+            continue;
         }
         max_rough_error = MAX( max_rough_error, err );
 #endif
@@ -201,7 +203,7 @@ void CV_ChessboardDetectorTest::run( int /*start_from */)
         {
             ts.printf( CvTS::LOG, "bad accuracy of adjusted corners" ); 
             ts.set_failed_test_info( CvTS::FAIL_BAD_ACCURACY );
-            return;
+            continue;
         }
         max_precise_error = MAX( max_precise_error, err );
 #else
@@ -210,9 +212,7 @@ void CV_ChessboardDetectorTest::run( int /*start_from */)
         cvSave( filename.c_str(), &cvmat_v );
 #endif
         progress = update_progress( progress, idx, max_idx, 0 );
-    }
-
-    ts.set_failed_test_info( CvTS::OK);
+    }    
 }
 
 double calcErrorMinError(const Size& cornSz, const vector<Point2f>& corners_found, const vector<Point2f>& corners_generated)
@@ -267,7 +267,10 @@ bool validateData(const ChessBoardGenerator& cbg, const Size& imgSz,
 
 bool CV_ChessboardDetectorTest::checkByGenerator()
 {   
+    bool res = true;
     //theRNG() = 0x58e6e895b9913160;
+    cv::DefaultRngAuto dra;
+    theRNG() = *ts->get_rng();
 
     Mat bg(Size(800, 600), CV_8UC3, Scalar::all(255));  
     randu(bg, Scalar::all(0), Scalar::all(255)); 
@@ -310,7 +313,8 @@ bool CV_ChessboardDetectorTest::checkByGenerator()
         {            
             ts->printf( CvTS::LOG, "Chess board corners not found" );
             ts->set_failed_test_info( CvTS::FAIL_BAD_ACCURACY );
-            return false;          
+            res = false;
+            continue;          
         }
 
         double err = calcErrorMinError(cbg.cornersSize(), corners_found, corners_generated);            
@@ -318,10 +322,11 @@ bool CV_ChessboardDetectorTest::checkByGenerator()
         {
             ts->printf( CvTS::LOG, "bad accuracy of corner guesses" );
             ts->set_failed_test_info( CvTS::FAIL_BAD_ACCURACY );
-            return false;
-        }
+            res = false;
+            continue;
+        }        
     }        
-    return true;
+    return res;
 }
 
 CV_ChessboardDetectorTest chessboard_detector_test;
