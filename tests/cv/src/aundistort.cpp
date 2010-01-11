@@ -73,7 +73,7 @@ CV_DefaultNewCameraMatrixTest::CV_DefaultNewCameraMatrixTest() : CvArrTest("undi
 	 test_array[REF_OUTPUT].push(NULL);
 }
 
-void CV_DefaultNewCameraMatrixTest::get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types )
+void CV_DefaultNewCameraMatrixTest::get_test_array_types_and_sizes( int /*test_case_idx*/, CvSize** sizes, int** types )
 {
 	CvRNG* rng = ts->get_rng();
 	matrix_type = types[INPUT][0] = types[OUTPUT][0]= types[REF_OUTPUT][0] = cvTsRandInt(rng)%2 ? CV_64F : CV_32F;
@@ -119,7 +119,7 @@ void CV_DefaultNewCameraMatrixTest::run_func()
 	new_camera_mat = cv::getDefaultNewCameraMatrix(camera_mat,img_size,center_principal_point);
 }
 
-void CV_DefaultNewCameraMatrixTest::prepare_to_validation( int test_case_idx )
+void CV_DefaultNewCameraMatrixTest::prepare_to_validation( int /*test_case_idx*/ )
 {
 	const CvMat* src = &test_mat[INPUT][0];
 	CvMat* dst = &test_mat[REF_OUTPUT][0];
@@ -196,15 +196,19 @@ CV_UndistortPointsTest::CV_UndistortPointsTest() : CvArrTest("undistort-points",
 	test_array[REF_OUTPUT].push(NULL);
 }
 
-void CV_UndistortPointsTest::get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types )
+void CV_UndistortPointsTest::get_test_array_types_and_sizes( int /*test_case_idx*/, CvSize** sizes, int** types )
 {
 	CvRNG* rng = ts->get_rng();
-	//useCPlus = ((cvTsRandInt(rng) % 2)!=0);
-	useCPlus = 0;
+	useCPlus = ((cvTsRandInt(rng) % 2)!=0);
+	//useCPlus = 1;
 	if (useCPlus)
+	{
 		types[INPUT][0] = types[OUTPUT][0] = types[REF_OUTPUT][0] = types[TEMP][0]= CV_32FC2;
+	}
 	else
+	{
 		types[INPUT][0] = types[OUTPUT][0] = types[REF_OUTPUT][0] = types[TEMP][0]= cvTsRandInt(rng)%2 ? CV_64FC2 : CV_32FC2;
+	}
 	types[INPUT][1] = cvTsRandInt(rng)%2 ? CV_64F : CV_32F;
 	types[INPUT][2] = cvTsRandInt(rng)%2 ? CV_64F : CV_32F;
 	types[INPUT][3] = cvTsRandInt(rng)%2 ? CV_64F : CV_32F;
@@ -340,7 +344,7 @@ int CV_UndistortPointsTest::prepare_test_case(int test_case_idx)
 	cvReleaseMat(&rotation);
 
 	//copying data
-	src_points = &_points;
+	//src_points = &_points;
 	CvMat* dst = &test_mat[INPUT][0];
 	cvTsConvert( &_points, dst);
 	dst = &test_mat[INPUT][1];
@@ -356,14 +360,15 @@ int CV_UndistortPointsTest::prepare_test_case(int test_case_idx)
 
 	if (useCPlus)
 	{
-	//	double* arr = new double[N_POINTS*2];
-		//CvMat* temp = cvCreateMat(test_mat[INPUT][0].rows,test_mat[INPUT][0].cols,CV_64FC2);
-		//for (int i=0;i<N_POINTS;i++)
-		//	temp->data.db[i] = _points.data.db[i];
+		CvMat* temp = cvCreateMat(test_mat[INPUT][0].rows,test_mat[INPUT][0].cols,CV_32FC2);
+		for (int i=0;i<N_POINTS;i++)
+			temp->data.db[i] = _points.data.db[i];
 	
-		//cvCopy(&test_mat[INPUT][0],temp);
-		//src_points = temp;
-		//src_points = &test_mat[INPUT][0];
+
+		src_points = cv::Mat(temp,true);
+
+		cvReleaseMat(&temp);
+
 		camera_mat = &test_mat[INPUT][1];
 		distortion_coeffs = &test_mat[INPUT][2];
 		R = &test_mat[INPUT][3];
@@ -376,7 +381,7 @@ int CV_UndistortPointsTest::prepare_test_case(int test_case_idx)
 	return code;
 }
 
-void CV_UndistortPointsTest::prepare_to_validation(int test_case_idx)
+void CV_UndistortPointsTest::prepare_to_validation(int /*test_case_idx*/)
 {
 	int dist_size = test_mat[INPUT][2].cols > test_mat[INPUT][2].rows ? test_mat[INPUT][2].cols : test_mat[INPUT][2].rows;
 	double cam[9] = {0,0,0,0,0,0,0,0,1};
@@ -476,3 +481,5 @@ double CV_UndistortPointsTest::get_success_error_level( int /*test_case_idx*/, i
 }
 
 CV_UndistortPointsTest undistort_points_test;
+
+//------------------------------------------------------
