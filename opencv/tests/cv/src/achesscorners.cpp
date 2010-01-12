@@ -351,7 +351,7 @@ bool CV_ChessboardDetectorTest::checkByGenerator()
         Mat sh;
         warpAffine(cb, sh, aff, cb.size());
 
-        found = findChessboardCorners(sh, Size(8, 7), corners_found);
+        found = findChessboardCorners(sh, cbg.cornersSize(), corners_found);
         if (found)
             res = false;        
         
@@ -361,11 +361,11 @@ bool CV_ChessboardDetectorTest::checkByGenerator()
         cnt.push_back(cg[7+0]); cnt.push_back(cg[7+2]);                
         cv::drawContours(cb, cnts, -1, Scalar::all(128), CV_FILLED);
 
-        found = findChessboardCorners(cb, Size(8, 7), corners_found);
+        found = findChessboardCorners(cb, cbg.cornersSize(), corners_found);
         if (found)
             res = false;
 
-        cv::drawChessboardCorners(cb, Size(8, 7), corners_found, found);
+        cv::drawChessboardCorners(cb, cbg.cornersSize(), corners_found, found);
     }
     
     return res;
