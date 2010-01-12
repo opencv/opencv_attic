@@ -336,7 +336,7 @@ bool CvRTrees::grow_forest( const CvTermCriteria term_crit )
     float* samples_ptr     = 0;
     uchar* missing_ptr     = 0;
     float* true_resp_ptr   = 0;
-    bool is_oob_or_vimportance = (max_oob_err > 0) && (term_crit.type != CV_TERMCRIT_ITER) || var_importance;
+    bool is_oob_or_vimportance = (max_oob_err > 0 && term_crit.type != CV_TERMCRIT_ITER) || var_importance;
 
     // oob_predictions_sum[i] = sum of predicted values for the i-th sample
     // oob_num_of_predictions[i] = number of summands

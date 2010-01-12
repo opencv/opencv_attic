@@ -136,7 +136,6 @@ CvPyramid;
 #define IPPI_CALL(func) CV_Assert((func) >= 0)
 #endif
 
-#include "_cvmatrix.h"
 #include "_cvgeom.h"
 #include "_cvimgproc.h"
 

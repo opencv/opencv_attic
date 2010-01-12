@@ -245,22 +245,6 @@ typedef float (CV_CDECL * CvDistanceFunction)( const float* a, const float* b, v
 }
 #endif
 
-typedef struct CvConDensation
-{
-    int MP;
-    int DP;
-    float* DynamMatr;       /* Matrix of the linear Dynamics system  */
-    float* State;           /* Vector of State                       */
-    int SamplesNum;         /* Number of the Samples                 */
-    float** flSamples;      /* arr of the Sample Vectors             */
-    float** flNewSamples;   /* temporary array of the Sample Vectors */
-    float* flConfidence;    /* Confidence for each Sample            */
-    float* flCumulative;    /* Cumulative confidence                 */
-    float* Temp;            /* Temporary vector                      */
-    float* RandomSample;    /* RandomVector to update sample set     */
-    struct CvRandState* RandS; /* Array of structures to generate random vectors */
-}
-CvConDensation;
 
 /*
 standard Kalman filter (in G. Welch' and G. Bishop's notation):

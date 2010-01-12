@@ -16,7 +16,7 @@ foreach(h ${aux_hdr_names})
     list(APPEND aux_hdrs_ext "${CMAKE_CURRENT_SOURCE_DIR}/../../include/opencv/${h}")
 endforeach()
 
-file(GLOB_RECURSE aux_hdrs_int *.h*)
+file(GLOB_RECURSE aux_hdrs_int *.h)
 set(lib_hdrs ${lib_hdrs} ${aux_hdrs_ext} ${aux_hdrs_int})
 
 source_group("Include\\External" FILES ${aux_hdrs_ext})
