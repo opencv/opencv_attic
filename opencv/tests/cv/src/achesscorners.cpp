@@ -285,8 +285,7 @@ bool CV_ChessboardDetectorTest::checkByGenerator()
 
     const Size sizes[] = { Size(6, 6), Size(8, 6), Size(11, 12),  Size(5, 4) };
     const size_t sizes_num = sizeof(sizes)/sizeof(sizes[0]);                
-    const size_t test_num = 16;
-
+    const size_t test_num = 16;    
     int progress = 0;
     for(size_t i = 0; i < test_num; ++i)
     {          
@@ -309,7 +308,8 @@ bool CV_ChessboardDetectorTest::checkByGenerator()
         //cv::namedWindow("CB"); cv::imshow("CB", cb); cv::waitKey();
                                
         vector<Point2f> corners_found;
-        bool found = findChessboardCorners(cb, cbg.cornersSize(), corners_found);
+        int flags = i % 8; // need to check branches for all flags
+        bool found = findChessboardCorners(cb, cbg.cornersSize(), corners_found, flags );
         if (!found)        
         {            
             ts->printf( CvTS::LOG, "Chess board corners not found" );
@@ -349,7 +349,7 @@ bool CV_ChessboardDetectorTest::checkByGenerator()
         Mat_<double> aff(2, 3);
         aff << 1.0, 0.0, -(double)c.x, 0.0, 1.0, 0.0;
         Mat sh;
-        warpAffine(cb, sh, aff, cb.size());
+        warpAffine(cb, sh, aff, cb.size());        
 
         found = findChessboardCorners(sh, cbg.cornersSize(), corners_found);
         if (found)
