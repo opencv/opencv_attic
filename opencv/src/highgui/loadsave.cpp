@@ -448,13 +448,6 @@ bool imencode( const string& ext, const Mat& image,
 *                         HighGUI loading & saving function implementation               *
 \****************************************************************************************/
 
-static int icvSetCXCOREBindings(void)
-{
-    return CV_SET_IMAGE_IO_FUNCTIONS();
-}
-
-int cxcore_bindings_initialized = icvSetCXCOREBindings();
-
 CV_IMPL int
 cvHaveImageReader( const char* filename )
 {

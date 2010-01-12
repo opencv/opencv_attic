@@ -593,20 +593,6 @@ CVAPI(int)  cvCamShift( const CvArr* prob_image, CvRect  window,
 CVAPI(int)  cvMeanShift( const CvArr* prob_image, CvRect  window,
                         CvTermCriteria criteria, CvConnectedComp* comp );
 
-/* Creates ConDensation filter state */
-CVAPI(CvConDensation*)  cvCreateConDensation( int dynam_params,
-                                             int measure_params,
-                                             int sample_count );
-
-/* Releases ConDensation filter state */
-CVAPI(void)  cvReleaseConDensation( CvConDensation** condens );
-
-/* Updates ConDensation filter by time (predict future state of the system) */
-CVAPI(void)  cvConDensUpdateByTime( CvConDensation* condens);
-
-/* Initializes ConDensation filter samples  */
-CVAPI(void)  cvConDensInitSampleSet( CvConDensation* condens, CvMat* lower_bound, CvMat* upper_bound );
-
 /* Creates Kalman filter and sets A, B, Q, R and state to some initial values */
 CVAPI(CvKalman*) cvCreateKalman( int dynam_params, int measure_params,
                                 int control_params CV_DEFAULT(0));
@@ -729,16 +715,6 @@ CVAPI(CvSeq*)  cvApproxPoly( const void* src_seq,
                              int method, double parameter,
                              int parameter2 CV_DEFAULT(0));
 
-#define CV_DOMINANT_IPAN 1
-
-/* Finds high-curvature points of the contour */
-CVAPI(CvSeq*) cvFindDominantPoints( CvSeq* contour, CvMemStorage* storage,
-                                   int method CV_DEFAULT(CV_DOMINANT_IPAN),
-                                   double parameter1 CV_DEFAULT(0),
-                                   double parameter2 CV_DEFAULT(0),
-                                   double parameter3 CV_DEFAULT(0),
-                                   double parameter4 CV_DEFAULT(0));
-
 /* Calculates perimeter of a contour or length of a part of contour */
 CVAPI(double)  cvArcLength( const void* curve,
                             CvSlice slice CV_DEFAULT(CV_WHOLE_SEQ),
@@ -785,9 +761,6 @@ CVAPI(CvSeq*)  cvContourFromContourTree( const CvContourTree* tree,
 CVAPI(double)  cvMatchContourTrees( const CvContourTree* tree1,
                                     const CvContourTree* tree2,
                                     int method, double threshold );
-
-/* Calculates histogram of a contour */
-CVAPI(void)  cvCalcPGH( const CvSeq* contour, CvHistogram* hist );
 
 #define CV_CLOCKWISE         1
 #define CV_COUNTER_CLOCKWISE 2
@@ -931,10 +904,6 @@ CVAPI(void)  cvSnakeImage( const IplImage* image, CvPoint* points,
                            float* beta, float* gamma,
                            int coeff_usage, CvSize  win,
                            CvTermCriteria criteria, int calc_gradient CV_DEFAULT(1));
-
-/* Calculates the cooficients of the homography matrix */
-CVAPI(void)  cvCalcImageHomography( float* line, CvPoint3D32f* center,
-                                    float* intrinsic, float* homography );
 
 #define CV_DIST_MASK_3   3
 #define CV_DIST_MASK_5   5

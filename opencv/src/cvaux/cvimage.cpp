@@ -45,14 +45,10 @@
 //
 // */
 
-#include "_cxcore.h"
+#include "_cvaux.h"
+#include "highgui.h"
 
 /////////////////////////////// CvImage implementation //////////////////////////////////
-
-static CvLoadImageFunc load_image = 0;
-static CvLoadImageMFunc load_image_m = 0;
-static CvSaveImageFunc save_image = 0;
-static CvShowImageFunc show_image = 0;
 
 static bool
 icvIsXmlOrYaml( const char* filename )
@@ -117,14 +113,7 @@ bool CvImage::load( const char* filename, const char* imgname, int color )
         }*/
     }
     else
-    {
-        if( load_image )
-            img = load_image( filename, color );
-        else
-            CV_Error( CV_StsNotImplemented,
-            "Loading an image stored in such a format requires HigGUI.\n"
-            "Link it to your program and call any function from it\n" );
-    }
+        img = cvLoadImage( filename, color );
 
     attach( img );
     return img != 0;
@@ -173,14 +162,7 @@ void CvImage::save( const char* filename, const char* imgname, const int* params
     if( icvIsXmlOrYaml( filename ) )
         cvSave( filename, image, imgname );
     else
-    {
-        if( save_image )
-            save_image( filename, image, params );
-        else
-            CV_Error( CV_StsNotImplemented,
-            "Saving an image in such a format requires HigGUI.\n"
-            "Link it to your program and call any function from it\n" );
-    }
+        cvSaveImage( filename, image, params );
 }
 
 
@@ -194,13 +176,7 @@ void CvImage::write( CvFileStorage* fs, const char* imgname )
 void CvImage::show( const char* window_name )
 {
     if( image )
-    {
-        if( !show_image )
-            CV_Error( CV_StsNotImplemented,
-            "CvImage::show method requires HighGUI.\n"
-            "Link it to your program and call any function from it\n" );
-        show_image( window_name, image );
-    }
+        cvShowImage( window_name, image );
 }
 
 
@@ -263,14 +239,7 @@ bool CvMatrix::load( const char* filename, const char* matname, int color )
         }*/
     }
     else
-    {
-        if( load_image_m )
-            m = load_image_m( filename, color );
-        else
-            CV_Error( CV_StsNotImplemented,
-            "Loading an image stored in such a format requires HigGUI.\n"
-            "Link it to your program and call any function from it\n" );
-    }
+        m = cvLoadImageM( filename, color );
 
     set( m, false );
     return m != 0;
@@ -319,14 +288,7 @@ void CvMatrix::save( const char* filename, const char* matname, const int* param
     if( icvIsXmlOrYaml( filename ) )
         cvSave( filename, matrix, matname );
     else
-    {
-        if( save_image )
-            save_image( filename, matrix, params );
-        else
-            CV_Error( CV_StsNotImplemented,
-            "Saving a matrixe in such a format requires HigGUI.\n"
-            "Link it to your program and call any function from it\n" );
-    }
+        cvSaveImage( filename, matrix, params );
 }
 
 
@@ -340,26 +302,9 @@ void CvMatrix::write( CvFileStorage* fs, const char* matname )
 void CvMatrix::show( const char* window_name )
 {
     if( matrix )
-    {
-        if( !show_image )
-            CV_Error( CV_StsNotImplemented,
-            "CvMatrix::show method requires HighGUI.\n"
-            "Link it to your program and call any function from it\n" );
-        show_image( window_name, matrix );
-    }
+        cvShowImage( window_name, matrix );
 }
 
-
-CV_IMPL int
-cvSetImageIOFunctions( CvLoadImageFunc _load_image, CvLoadImageMFunc _load_image_m,
-                       CvSaveImageFunc _save_image, CvShowImageFunc _show_image )
-{
-    load_image = _load_image;
-    load_image_m = _load_image_m;
-    save_image = _save_image;
-    show_image = _show_image;
-    return 1;
-}
 
 /* End of file. */
 

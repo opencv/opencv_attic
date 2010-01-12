@@ -38,7 +38,7 @@
 // the use of this software, even if advised of the possibility of such damage.
 //
 //M*/
-#include "_cv.h"
+#include "_cvaux.h"
 
 #define _CV_ACOS_TABLE_SIZE  513
 

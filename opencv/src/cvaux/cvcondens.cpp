@@ -38,7 +38,7 @@
 // the use of this software, even if advised of the possibility of such damage.
 //
 //M*/
-#include "_cv.h"
+#include "_cvaux.h"
 
 /*F///////////////////////////////////////////////////////////////////////////////////////
 //    Name:    cvCreateConDensation

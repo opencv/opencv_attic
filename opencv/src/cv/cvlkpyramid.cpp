@@ -1200,7 +1200,9 @@ cvCalcAffineFlowPyrLK( const void* arrA, const void* arrB,
                     }
                 }
 
-                icvTransformVector_64d( G, b, eta, 6, 6 );
+                for( k = 0; k < 6; k++ )
+                    eta[k] = G[k*6]*b[0] + G[k*6+1]*b[1] + G[k*6+2]*b[2] +
+                        G[k*6+3]*b[3] + G[k*6+4]*b[4] + G[k*6+5]*b[5];
 
                 Av[2] = (float)(Av[2] + Av[0] * eta[0] + Av[1] * eta[1]);
                 Av[5] = (float)(Av[5] + Av[3] * eta[0] + Av[4] * eta[1]);
