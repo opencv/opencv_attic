@@ -50,19 +50,21 @@ StereoCalib(const char* imageList, int useUncalibrated)
 {
     CvRect roi1, roi2;
     int nx = 0, ny = 0;
-    int displayCorners = 0;
+    int displayCorners = 1;
     int showUndistorted = 1;
     bool isVerticalStereo = false;//OpenCV can handle left-right
                                       //or up-down camera arrangements
     const int maxScale = 1;
     const float squareSize = 1.f; //Set this to your actual square size
     FILE* f = fopen(imageList, "rt");
-    int i, j, lr, nframes, n, N = 0;
+    int i, j, lr, nframes = 0, n, N = 0;
     vector<string> imageNames[2];
     vector<CvPoint3D32f> objectPoints;
     vector<CvPoint2D32f> points[2];
+    vector<CvPoint2D32f> temp_points[2];
     vector<int> npoints;
     vector<uchar> active[2];
+    int is_found[2] = {0, 0};
     vector<CvPoint2D32f> temp;
     CvSize imageSize = {0,0};
     // ARRAY AND VECTOR STORAGE:
@@ -91,12 +93,14 @@ StereoCalib(const char* imageList, int useUncalibrated)
         return;
     n = nx*ny;
     temp.resize(n);
+    temp_points[0].resize(n);
+    temp_points[1].resize(n);
     
     for(i=0;;i++)
     {
         int count = 0, result=0;
         lr = i % 2;
-        vector<CvPoint2D32f>& pts = points[lr];
+        vector<CvPoint2D32f>& pts = temp_points[lr];//points[lr];
         if( !fgets( buf, sizeof(buf)-3, f ))
             break;
         size_t len = strlen(buf);
@@ -141,17 +145,21 @@ StereoCalib(const char* imageList, int useUncalibrated)
             cvCvtColor( img, cimg, CV_GRAY2BGR );
             cvDrawChessboardCorners( cimg, cvSize(nx, ny), &temp[0],
                 count, result );
-            cvShowImage( "corners", cimg );
+            IplImage* cimg1 = cvCreateImage(cvSize(640, 480), IPL_DEPTH_8U, 3);
+            cvResize(cimg, cimg1);
+            cvShowImage( "corners", cimg1 );
             cvReleaseImage( &cimg );
+            cvReleaseImage( &cimg1 );
             int c = cvWaitKey(1000);
             if( c == 27 || c == 'q' || c == 'Q' ) //Allow ESC to quit
                 exit(-1);
         }
         else
             putchar('.');
-        N = pts.size();
-        pts.resize(N + n, cvPoint2D32f(0,0));
-        active[lr].push_back((uchar)result);
+        //N = pts.size();
+        //pts.resize(N + n, cvPoint2D32f(0,0));
+        //active[lr].push_back((uchar)result);
+        is_found[lr] = result > 0 ? 1 : 0;
     //assert( result != 0 );
         if( result )
         {
@@ -160,14 +168,36 @@ StereoCalib(const char* imageList, int useUncalibrated)
                 cvSize(11, 11), cvSize(-1,-1),
                 cvTermCriteria(CV_TERMCRIT_ITER+CV_TERMCRIT_EPS,
                 30, 0.01) );
-            copy( temp.begin(), temp.end(), pts.begin() + N );
+            copy( temp.begin(), temp.end(), pts.begin() );
         }
         cvReleaseImage( &img );
+        
+        if(lr)
+        {
+            if(is_found[0] == 1 && is_found[1] == 1)
+            {
+                assert(temp_points[0].size() == temp_points[1].size());
+                int current_size = points[0].size();
+                
+                points[0].resize(current_size + temp_points[0].size(), cvPoint2D32f(0.0, 0.0));
+                points[1].resize(current_size + temp_points[1].size(), cvPoint2D32f(0.0, 0.0));
+                
+                copy(temp_points[0].begin(), temp_points[0].end(), points[0].begin() + current_size);
+                copy(temp_points[1].begin(), temp_points[1].end(), points[1].begin() + current_size);
+                
+                nframes++;
+
+                printf("Pair successfully detected...\n");
+            }
+            
+            is_found[0] = 0;
+            is_found[1] = 0;
+            
+        }
     }
     fclose(f);
     printf("\n");
 // HARVEST CHESSBOARD 3D OBJECT POINT LIST:
-    nframes = active[0].size();//Number of good chessboads found
     objectPoints.resize(nframes*n);
     for( i = 0; i < ny; i++ )
         for( j = 0; j < nx; j++ )
@@ -186,6 +216,8 @@ StereoCalib(const char* imageList, int useUncalibrated)
     cvSetIdentity(&_M2);
     cvZero(&_D1);
     cvZero(&_D2);
+    
+    printf("check1\n");
 
 // CALIBRATE THE STEREO CAMERAS
     printf("Running stereo calibration ...");
@@ -354,7 +386,10 @@ StereoCalib(const char* imageList, int useUncalibrated)
                         BMState);
                     cvNormalize( disp, vdisp, 0, 256, CV_MINMAX );
                     cvNamedWindow( "disparity" );
-                    cvShowImage( "disparity", vdisp );
+                    IplImage* vdisp1 = cvCreateImage(cvSize(640, 480), IPL_DEPTH_8U, 1);
+                    cvResize(vdisp, vdisp1);
+                    cvShowImage( "disparity", vdisp1 );
+                    cvReleaseImage(&vdisp1);
                 }
                 if( !isVerticalStereo )
                 {
@@ -392,7 +427,10 @@ StereoCalib(const char* imageList, int useUncalibrated)
                         cvPoint(j,imageSize.height*2),
                         CV_RGB(255,0,0));
                 }
-                cvShowImage( "rectified", pair );
+                IplImage* pair1 = cvCreateImage(cvSize(640, 480), IPL_DEPTH_8U, 3);
+                cvResize(pair, pair1);
+                cvShowImage( "rectified", pair1 );
+                cvReleaseImage(&pair1);
                 if( cvWaitKey() == 27 )
                     break;
             }
