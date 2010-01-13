@@ -1186,12 +1186,8 @@ void CvVideoWriter_FFMPEG::close()
 bool CvVideoWriter_FFMPEG::open( const char * filename, int fourcc,
 		double fps, CvSize frameSize, bool is_color )
 {
-    CV_FUNCNAME("CvVideoWriter_FFMPEG::open");
-
 	CodecID codec_id = CODEC_ID_NONE;
 	int err, codec_pix_fmt, bitrate_scale=64;
-
-	__BEGIN__;
 
     close();
 
@@ -1205,9 +1201,8 @@ bool CvVideoWriter_FFMPEG::open( const char * filename, int fourcc,
 
 	/* auto detect the output format from the name and fourcc code. */
 	fmt = guess_format(NULL, filename, NULL);
-	if (!fmt) {
-		CV_ERROR( CV_StsUnsupportedFormat, "FFMPEG does not recognize the given file extension");
-	}
+	if (!fmt)
+        return false;
 
 	/* determine optimal pixel format */
     if (is_color) {
@@ -1217,7 +1212,17 @@ bool CvVideoWriter_FFMPEG::open( const char * filename, int fourcc,
         input_pix_fmt = PIX_FMT_GRAY8;
     }
 
-	// alloc memory for context
+	/* Lookup codec_id for given fourcc */
+#if LIBAVCODEC_VERSION_INT<((51<<16)+(49<<8)+0)
+    if( (codec_id = codec_get_bmp_id( fourcc )) == CODEC_ID_NONE )
+        return false;
+#else
+	const struct AVCodecTag * tags[] = { codec_bmp_tags, NULL};
+    if( (codec_id = av_codec_get_id(tags, fourcc)) == CODEC_ID_NONE )
+        return false;
+#endif
+
+    // alloc memory for context
 	oc = av_alloc_format_context();
 	assert (oc);
 
@@ -1227,22 +1232,6 @@ bool CvVideoWriter_FFMPEG::open( const char * filename, int fourcc,
 
 	/* set some options */
 	oc->max_delay = (int)(0.7*AV_TIME_BASE);  /* This reduces buffer underrun warnings with MPEG */
-
-	/* Lookup codec_id for given fourcc */
-#if LIBAVCODEC_VERSION_INT<((51<<16)+(49<<8)+0)
-        if( (codec_id = codec_get_bmp_id( fourcc )) == CODEC_ID_NONE ){
-			CV_ERROR( CV_StsUnsupportedFormat,
-				"FFMPEG could not find a codec matching the given FOURCC code. Use fourcc=CV_FOURCC_DEFAULT for auto selection." );
-		}
-#else
-	{
-	const struct AVCodecTag * tags[] = { codec_bmp_tags, NULL};
-        if( (codec_id = av_codec_get_id(tags, fourcc)) == CODEC_ID_NONE ){
-			CV_ERROR( CV_StsUnsupportedFormat,
-				"FFMPEG could not find a codec matching the given FOURCC code. Use fourcc=CV_FOURCC_DEFAULT for auto selection." );
-		}
-	}
-#endif
 
     // set a few optimal pixel formats for lossless codecs of interest..
     switch (codec_id) {
@@ -1276,7 +1265,7 @@ bool CvVideoWriter_FFMPEG::open( const char * filename, int fourcc,
 	/* set the output parameters (must be done even if no
        parameters). */
     if (av_set_parameters(oc, NULL) < 0) {
-		CV_ERROR(CV_StsBadArg, "Invalid output format parameters");
+		CV_Error(CV_StsBadArg, "Invalid output format parameters");
     }
 
     dump_format(oc, 0, filename, 1);
@@ -1284,7 +1273,7 @@ bool CvVideoWriter_FFMPEG::open( const char * filename, int fourcc,
     /* now that all the parameters are set, we can open the audio and
        video codecs and allocate the necessary encode buffers */
     if (!video_st){
-		CV_ERROR(CV_StsBadArg, "Couldn't open video stream");
+		CV_Error(CV_StsBadArg, "Couldn't open video stream");
 	}
 
     AVCodec *codec;
@@ -1300,14 +1289,14 @@ bool CvVideoWriter_FFMPEG::open( const char * filename, int fourcc,
     /* find the video encoder */
     codec = avcodec_find_encoder(c->codec_id);
     if (!codec) {
-		CV_ERROR(CV_StsBadArg, "codec not found");
+		CV_Error(CV_StsBadArg, "codec not found");
     }
 
     /* open the codec */
     if ( (err=avcodec_open(c, codec)) < 0) {
 		char errtext[256];
 		sprintf(errtext, "Could not open codec '%s': %s", codec->name, icvFFMPEGErrStr(err));
-		CV_ERROR(CV_StsBadArg, errtext);
+		CV_Error(CV_StsBadArg, errtext);
     }
 
     outbuf = NULL;
@@ -1325,7 +1314,7 @@ bool CvVideoWriter_FFMPEG::open( const char * filename, int fourcc,
     /* allocate the encoded raw picture */
     picture = icv_alloc_picture_FFMPEG(c->pix_fmt, c->width, c->height, need_color_convert);
     if (!picture) {
-		CV_ERROR(CV_StsNoMem, "Could not allocate picture");
+		CV_Error(CV_StsNoMem, "Could not allocate picture");
     }
 
     /* if the output format is not our input format, then a temporary
@@ -1335,22 +1324,19 @@ bool CvVideoWriter_FFMPEG::open( const char * filename, int fourcc,
     if ( need_color_convert ) {
         input_picture = icv_alloc_picture_FFMPEG(input_pix_fmt, c->width, c->height, false);
         if (!input_picture) {
-			CV_ERROR(CV_StsNoMem, "Could not allocate picture");
+			CV_Error(CV_StsNoMem, "Could not allocate picture");
         }
     }
 
 	/* open the output file, if needed */
     if (!(fmt->flags & AVFMT_NOFILE)) {
         if (url_fopen(&oc->pb, filename, URL_WRONLY) < 0) {
-			CV_ERROR(CV_StsBadArg, "Couldn't open output file for writing");
+			CV_Error(CV_StsBadArg, "Couldn't open output file for writing");
         }
     }
 
     /* write the stream header, if any */
     av_write_header( oc );
-
-
-	__END__;
 
 	return true;
 }
