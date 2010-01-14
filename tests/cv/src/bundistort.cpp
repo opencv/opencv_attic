@@ -1,0 +1,279 @@
+/*M///////////////////////////////////////////////////////////////////////////////////////
+//
+//  IMPORTANT: READ BEFORE DOWNLOADING, COPYING, INSTALLING OR USING.
+//
+//  By downloading, copying, installing or using the software you agree to this license.
+//  If you do not agree to this license, do not download, install,
+//  copy or use the software.
+//
+//
+//                        Intel License Agreement
+//                For Open Source Computer Vision Library
+//
+// Copyright (C) 2000, Intel Corporation, all rights reserved.
+// Third party copyrights are property of their respective owners.
+//
+// Redistribution and use in source and binary forms, with or without modification,
+// are permitted provided that the following conditions are met:
+//
+//   * Redistribution's of source code must retain the above copyright notice,
+//     this list of conditions and the following disclaimer.
+//
+//   * Redistribution's in binary form must reproduce the above copyright notice,
+//     this list of conditions and the following disclaimer in the documentation
+//     and/or other materials provided with the distribution.
+//
+//   * The name of Intel Corporation may not be used to endorse or promote products
+//     derived from this software without specific prior written permission.
+//
+// This software is provided by the copyright holders and contributors "as is" and
+// any express or implied warranties, including, but not limited to, the implied
+// warranties of merchantability and fitness for a particular purpose are disclaimed.
+// In no event shall the Intel Corporation or contributors be liable for any direct,
+// indirect, incidental, special, exemplary, or consequential damages
+// (including, but not limited to, procurement of substitute goods or services;
+// loss of use, data, or profits; or business interruption) however caused
+// and on any theory of liability, whether in contract, strict liability,
+// or tort (including negligence or otherwise) arising in any way out of
+// the use of this software, even if advised of the possibility of such damage.
+//
+//M*/
+#include "cvtest.h"
+
+class CV_UndistortPointsBadArgTest : public CvBadArgTest
+{
+public:
+    CV_UndistortPointsBadArgTest();
+protected:
+    void run(int);
+	void run_func();
+
+private:
+	//common
+	cv::Size img_size;
+	bool useCPlus;
+	//static const int N_POINTS = 1;
+	static const int N_POINTS2 = 2;
+
+	//C
+	CvMat* _camera_mat;
+	CvMat* _R;
+	CvMat* _P;
+	CvMat* _distortion_coeffs;
+	CvMat* _src_points;
+	CvMat* _dst_points;
+
+
+	//C++
+	cv::Mat camera_mat;
+	cv::Mat R;
+	cv::Mat P;
+	cv::Mat distortion_coeffs;
+	cv::Mat src_points;
+	std::vector<cv::Point2f> dst_points;
+    
+};
+
+CV_UndistortPointsBadArgTest::CV_UndistortPointsBadArgTest (): 
+    CvBadArgTest( "undistort-points-badarg", "cvUndistortPoints" )
+{
+    support_testing_modes = CvTS::CORRECTNESS_CHECK_MODE;
+}
+
+void CV_UndistortPointsBadArgTest::run_func()
+{
+	if (useCPlus)
+	{
+		cv::undistortPoints(src_points,dst_points,camera_mat,distortion_coeffs,R,P);
+	}
+	else
+	{
+		cvUndistortPoints(_src_points,_dst_points,_camera_mat,_distortion_coeffs,_R,_P);
+	}
+}
+
+void CV_UndistortPointsBadArgTest::run(int)
+{
+	//CvRNG* rng = ts->get_rng();
+	int errcount = 0;
+	useCPlus = false;
+//initializing
+	img_size.width = 800;
+	img_size.width = 600;
+	double cam[9] = {150.f, 0.f, img_size.width/2.f, 0, 300.f, img_size.height/2.f, 0.f, 0.f, 1.f};
+	double dist[4] = {0.01,0.02,0.001,0.0005};
+	double s_points[N_POINTS2] = {img_size.width/4,img_size.height/4};
+	double d_points[N_POINTS2];
+	double p[9] = {155.f, 0.f, img_size.width/2.f+img_size.width/50.f, 0, 310.f, img_size.height/2.f+img_size.height/50.f, 0.f, 0.f, 1.f};
+	double r[9] = {1,0,0,0,1,0,0,0,1};
+
+	CvMat _camera_mat_orig = cvMat(3,3,CV_64F,cam);
+	CvMat _distortion_coeffs_orig = cvMat(1,4,CV_64F,dist);
+	CvMat _P_orig = cvMat(3,3,CV_64F,p);
+	CvMat _R_orig = cvMat(3,3,CV_64F,r);
+	CvMat _src_points_orig = cvMat(1,4,CV_64FC2,s_points); 
+	CvMat _dst_points_orig = cvMat(1,4,CV_64FC2,d_points); 
+
+	_camera_mat = &_camera_mat_orig;
+	_distortion_coeffs = &_distortion_coeffs_orig;
+	_P = &_P_orig;
+	_R = &_R_orig;
+	_src_points = &_src_points_orig; 
+	_dst_points = &_dst_points_orig; 
+
+//tests
+	CvMat* temp1;
+	CvMat* temp;
+	IplImage* temp_img = cvCreateImage(cvSize(img_size.width,img_size.height),8,3);
+
+//-----------
+	temp = (CvMat*)temp_img;
+	_src_points = temp;
+	errcount += run_test_case( CV_StsAssert, "Input data is not CvMat*" ); 
+	_src_points = &_src_points_orig; 
+
+	temp = (CvMat*)temp_img;
+	_dst_points = temp;
+	errcount += run_test_case( CV_StsAssert, "Output data is not CvMat*" ); 
+	_dst_points = &_dst_points_orig; 
+
+	temp = cvCreateMat(2,3,CV_64F);
+	_src_points = temp;
+	errcount += run_test_case( CV_StsAssert, "Invalid input data matrix size" ); 
+	_src_points = &_src_points_orig; 
+	cvReleaseMat(&temp);
+
+	temp = cvCreateMat(2,3,CV_64F);
+	_dst_points = temp;
+	errcount += run_test_case(CV_StsAssert, "Invalid output data matrix size" ); 
+	_dst_points = &_dst_points_orig; 
+	cvReleaseMat(&temp);
+
+	temp = cvCreateMat(1,3,CV_64F);
+	temp1 = cvCreateMat(4,1,CV_64F);
+	_dst_points = temp;
+	_src_points = temp1;
+	errcount += run_test_case(CV_StsAssert, "Output and input data sizes mismatch" ); 
+	_dst_points = &_dst_points_orig; 
+	_src_points = &_src_points_orig; 
+	cvReleaseMat(&temp);
+	cvReleaseMat(&temp1);
+
+	temp = cvCreateMat(1,3,CV_32S);
+	_dst_points = temp;
+	errcount += run_test_case(CV_StsAssert, "Invalid output data matrix type" ); 
+	_dst_points = &_dst_points_orig; 
+	cvReleaseMat(&temp);
+
+	temp = cvCreateMat(1,3,CV_32S);
+	_src_points = temp;
+	errcount += run_test_case(CV_StsAssert, "Invalid input data matrix type" ); 
+	_src_points = &_src_points_orig; 
+	cvReleaseMat(&temp);
+//------------
+	temp = cvCreateMat(2,3,CV_64F);
+	_camera_mat = temp;
+	errcount += run_test_case( CV_StsAssert, "Invalid camera data matrix size" ); 
+	_camera_mat = &_camera_mat_orig; 
+	cvReleaseMat(&temp);
+
+	temp = cvCreateMat(3,4,CV_64F);
+	_camera_mat = temp;
+	errcount += run_test_case( CV_StsAssert, "Invalid camera data matrix size" ); 
+	_camera_mat = &_camera_mat_orig; 
+	cvReleaseMat(&temp);
+
+	temp = (CvMat*)temp_img;
+	_camera_mat = temp;
+	errcount += run_test_case( CV_StsAssert, "Camera data is not CvMat*" ); 
+	_camera_mat = &_camera_mat_orig; 
+//----------
+
+	temp = (CvMat*)temp_img;
+	_distortion_coeffs = temp;
+	errcount += run_test_case( CV_StsAssert, "Distortion coefficients data is not CvMat*" ); 
+	_distortion_coeffs = &_distortion_coeffs_orig; 
+
+	temp = cvCreateMat(1,6,CV_64F);
+	_distortion_coeffs = temp;
+	errcount += run_test_case( CV_StsAssert, "Invalid distortion coefficients data matrix size" ); 
+	_distortion_coeffs = &_distortion_coeffs_orig; 
+	cvReleaseMat(&temp);
+
+	temp = cvCreateMat(3,3,CV_64F);
+	_distortion_coeffs = temp;
+	errcount += run_test_case( CV_StsAssert, "Invalid distortion coefficients data matrix size" ); 
+	_distortion_coeffs = &_distortion_coeffs_orig; 
+	cvReleaseMat(&temp);
+//----------
+	temp = (CvMat*)temp_img;
+	_R = temp;
+	errcount += run_test_case( CV_StsAssert, "R data is not CvMat*" ); 
+	_R = &_R_orig; 
+
+	temp = cvCreateMat(4,3,CV_64F);
+	_R = temp;
+	errcount += run_test_case( CV_StsAssert, "Invalid R data matrix size" ); 
+	_R = &_R_orig; 
+	cvReleaseMat(&temp);
+
+	temp = cvCreateMat(3,2,CV_64F);
+	_R = temp;
+	errcount += run_test_case( CV_StsAssert, "Invalid R data matrix size" ); 
+	_R = &_R_orig; 
+	cvReleaseMat(&temp);
+
+//-----------
+	temp = (CvMat*)temp_img;
+	_P = temp;
+	errcount += run_test_case( CV_StsAssert, "P data is not CvMat*" ); 
+	_P = &_P_orig; 
+
+	temp = cvCreateMat(4,3,CV_64F);
+	_P = temp;
+	errcount += run_test_case( CV_StsAssert, "Invalid P data matrix size" ); 
+	_P = &_P_orig; 
+	cvReleaseMat(&temp);
+
+	temp = cvCreateMat(3,2,CV_64F);
+	_P = temp;
+	errcount += run_test_case( CV_StsAssert, "Invalid P data matrix size" ); 
+	_P = &_P_orig; 
+	cvReleaseMat(&temp);
+//------------
+	//C++ tests
+	useCPlus = true;
+
+	camera_mat = cv::Mat(&_camera_mat_orig);
+	distortion_coeffs = cv::Mat(&_distortion_coeffs_orig);
+	P = cv::Mat(&_P_orig);
+	R = cv::Mat(&_R_orig);
+	src_points = cv::Mat(&_src_points_orig);
+
+	temp = cvCreateMat(2,2,CV_32FC2);
+	src_points = cv::Mat(temp);
+	errcount += run_test_case( CV_StsAssert, "Invalid input data matrix size" ); 
+	src_points = cv::Mat(&_src_points_orig);
+	cvReleaseMat(&temp);
+
+	temp = cvCreateMat(1,4,CV_64FC2);
+	src_points = cv::Mat(temp);
+	errcount += run_test_case( CV_StsAssert, "Invalid input data matrix type" ); 
+	src_points = cv::Mat(&_src_points_orig);
+	cvReleaseMat(&temp);
+
+	src_points = cv::Mat();
+	errcount += run_test_case( CV_StsAssert, "Input data matrix is not continuous" ); 
+	src_points = cv::Mat(&_src_points_orig);
+	cvReleaseMat(&temp);
+
+
+
+//------------
+	cvReleaseImage(&temp_img);
+	ts->set_failed_test_info(errcount > 0 ? CvTS::FAIL_BAD_ARG_CHECK : CvTS::OK);
+}
+
+CV_UndistortPointsBadArgTest default_new_camera_matrix_badarg_test;
+
+/* End of file. */
