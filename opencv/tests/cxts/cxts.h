@@ -626,7 +626,61 @@ protected:
     virtual void run_func(void) = 0;
     int test_case_idx;
     int progress;
-    double t, freq;
+    double t, freq;   
+
+    template<class F>
+    int run_test_case( int expected_code, const char* descr, F f)
+    {
+        double new_t = (double)cv::getTickCount(), dt;
+        if( test_case_idx < 0 )
+        {
+            test_case_idx = 0;
+            progress = 0;
+            dt = 0;
+        }
+        else
+        {
+            dt = (new_t - t)/(freq*1000);
+            t = new_t;
+        }
+        progress = update_progress(progress, test_case_idx, 0, dt);
+        
+        int errcount = 0;
+        bool thrown = false;
+        if(!descr)
+            descr = "";
+
+        try
+        {
+            f();
+        }
+        catch(const cv::Exception& e)
+        {
+            thrown = true;
+            if( e.code != expected_code )
+            {
+                ts->printf(CvTS::LOG, "%s (test case #%d): the error code %d is different from the expected %d\n",
+                    descr, test_case_idx, e.code, expected_code);
+                errcount = 1;
+            }
+        }
+        catch(...)
+        {
+            thrown = true;
+            ts->printf(CvTS::LOG, "%s  (test case #%d): unknown exception was thrown (the function has likely crashed)\n",
+                       descr, test_case_idx);
+            errcount = 1;
+        }
+        if(!thrown)
+        {
+            ts->printf(CvTS::LOG, "%s  (test case #%d): no expected exception was thrown\n",
+                       descr, test_case_idx);
+            errcount = 1;
+        }
+        test_case_idx++;
+        
+        return errcount;
+    }
 };
 
 /****************************************************************************************\
