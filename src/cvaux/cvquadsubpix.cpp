@@ -48,6 +48,8 @@
 
 #define _SUBPIX_VERBOSE
 
+#undef max
+
 namespace cv {
     
     
