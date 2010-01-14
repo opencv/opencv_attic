@@ -362,7 +362,7 @@ int CV_UndistortPointsTest::prepare_test_case(int test_case_idx)
 	{
 		CvMat* temp = cvCreateMat(test_mat[INPUT][0].rows,test_mat[INPUT][0].cols,CV_32FC2);
 		for (int i=0;i<N_POINTS;i++)
-			temp->data.db[i] = _points.data.db[i];
+			temp->data.fl[i] = (float)_points.data.db[i];
 	
 
 		src_points = cv::Mat(temp,true);
@@ -397,29 +397,44 @@ void CV_UndistortPointsTest::prepare_to_validation(int /*test_case_idx*/)
 	CvMat _distort = cvMat(test_mat[INPUT][2].rows,test_mat[INPUT][2].cols,CV_64F,dist);
 	CvMat _proj = cvMat(test_mat[INPUT][4].rows,test_mat[INPUT][4].cols,CV_64F,proj);
 	CvMat _points= cvMat(test_mat[TEMP][0].rows,test_mat[TEMP][0].cols,CV_64FC2,points);
-	cvTsConvert(&test_mat[TEMP][0],&_points);
+
+	
 	cvTsConvert(&test_mat[INPUT][1],&_camera);
 	cvTsConvert(&test_mat[INPUT][2],&_distort);
 	cvTsConvert(&test_mat[INPUT][3],&_rot);
 	cvTsConvert(&test_mat[INPUT][4],&_proj);
+
+	if (useCPlus)
+	{
+		for (int i=0;i<N_POINTS;i++)
+		{
+			points[2*i] = dst_points[i].x;
+			points[2*i+1] = dst_points[i].y;
+		}
+	}
+	else
+	{
+		cvTsConvert(&test_mat[TEMP][0],&_points);
+	}
+
 	cvTsDistortPoints(&_points,&ref_points,&_camera,&_distort,&_rot,&_proj);
 	CvMat* dst = &test_mat[REF_OUTPUT][0];
 	cvTsConvert(&ref_points,dst);
 
 	cvCopy(&test_mat[INPUT][0],&test_mat[OUTPUT][0]);
 
-	if (useCPlus)
-	{
-		double* __points = new double[N_POINTS*2];
-		CvMat pts= cvMat(test_mat[OUTPUT][0].rows,test_mat[OUTPUT][0].cols,CV_64FC2,__points);
-		for (int i=0;i<N_POINTS;i++)
-		{
-			pts.data.db[2*i] = dst_points[i].x;
-			pts.data.db[2*i+1] = dst_points[i].y;
-		}
-		cvTsConvert(&pts,&test_mat[OUTPUT][0]);
-		delete[] __points;
-	}
+	//if (useCPlus)
+	//{
+	//	double* __points = new double[N_POINTS*2];
+	//	CvMat pts= cvMat(test_mat[OUTPUT][0].rows,test_mat[OUTPUT][0].cols,CV_64FC2,__points);
+	//	for (int i=0;i<N_POINTS;i++)
+	//	{
+	//		pts.data.db[2*i] = dst_points[i].x;
+	//		pts.data.db[2*i+1] = dst_points[i].y;
+	//	}
+	//	cvTsConvert(&pts,&test_mat[OUTPUT][0]);
+	//	delete[] __points;
+	//}
 	delete[] dist;
 	delete[] proj;
 	delete[] points;
