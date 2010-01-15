@@ -1271,12 +1271,14 @@ protected:
     void run_func();
     void prepare_to_validation( int test_case_idx );
     CvScalar alpha;
+    bool test_nd;
 };
 
 CxCore_ScaleAddTest::CxCore_ScaleAddTest() :
     CxCore_MatrixTest( "matrix-scaleadd", "cvScaleAdd", 3, 1, false, false, 4 )
 {
     alpha = cvScalarAll(0);
+    test_nd = false;
 }
 
 
@@ -1285,6 +1287,7 @@ void CxCore_ScaleAddTest::get_test_array_types_and_sizes( int test_case_idx, CvS
     CxCore_MatrixTest::get_test_array_types_and_sizes( test_case_idx, sizes, types );
     sizes[INPUT][2] = cvSize(1,1);
     types[INPUT][2] &= CV_MAT_DEPTH_MASK;
+    test_nd = cvTsRandInt(ts->get_rng()) % 2 != 0;
 }
 
 
@@ -1304,13 +1307,22 @@ int CxCore_ScaleAddTest::prepare_test_case( int test_case_idx )
     int code = CxCore_MatrixTest::prepare_test_case( test_case_idx );
     if( code > 0 )
         alpha = cvGet1D( &test_mat[INPUT][2], 0 );
+    if( test_nd )
+        alpha.val[1] = 0;
     return code;
 }
 
 
 void CxCore_ScaleAddTest::run_func()
 {
-    cvScaleAdd( test_array[INPUT][0], alpha, test_array[INPUT][1], test_array[OUTPUT][0] );
+    if(!test_nd)
+        cvScaleAdd( test_array[INPUT][0], alpha, test_array[INPUT][1], test_array[OUTPUT][0] );
+    else
+    {
+        cv::MatND c = cv::cvarrToMatND(test_array[OUTPUT][0]);
+        cv::scaleAdd( cv::cvarrToMatND(test_array[INPUT][0]), alpha.val[0],
+                      cv::cvarrToMatND(test_array[INPUT][1]), c);
+    }
 }
 
 

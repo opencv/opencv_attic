@@ -952,8 +952,12 @@ void CxCore_CopyTest::run_func()
         cvCopy(test_array[INPUT][0], test_array[INPUT_OUTPUT][0], mask);
     else
     {
+        cv::MatND a = cv::cvarrToMatND(test_array[INPUT][0]);
         cv::MatND c = cv::cvarrToMatND(test_array[INPUT_OUTPUT][0]);
-        cv::cvarrToMatND(test_array[INPUT][0]).copyTo(c, mask ? cv::cvarrToMatND(mask) : cv::MatND());
+        if(!mask)
+            a.copyTo(c);
+        else
+            a.copyTo(c, cv::cvarrToMatND(mask));
     }
 }
 

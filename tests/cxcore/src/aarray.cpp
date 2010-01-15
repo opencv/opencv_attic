@@ -209,6 +209,7 @@ void CV_ArrayOpTest::run( int /* start_from */)
         int i, k, size[MAX_DIM]={0}, idx[MAX_DIM]={0};
         vector<string> all_idxs;
         vector<double> all_vals;
+        vector<double> all_vals2;
         string sidx, min_sidx, max_sidx;
         double min_val=0, max_val=0;
         
@@ -224,7 +225,8 @@ void CV_ArrayOpTest::run( int /* start_from */)
         int nz0 = (unsigned)rng % max(p/5,10);
         nz0 = min(max(nz0, 1), p);
         all_vals.resize(nz0);
-        Mat_<double> _all_vals(all_vals);
+        all_vals2.resize(nz0);
+        Mat_<double> _all_vals(all_vals), _all_vals2(all_vals2);
         rng.fill(_all_vals, CV_RAND_UNI, Scalar(-1000), Scalar(1000));
         if( depth == CV_32F )
         {
@@ -232,8 +234,18 @@ void CV_ArrayOpTest::run( int /* start_from */)
             _all_vals.convertTo(_all_vals_f, CV_32F);
             _all_vals_f.convertTo(_all_vals, CV_64F);
         }
+        _all_vals.convertTo(_all_vals2, _all_vals2.type(), 2);
+        if( depth == CV_32F )
+        {
+            Mat _all_vals2_f;
+            _all_vals2.convertTo(_all_vals2_f, CV_32F);
+            _all_vals2_f.convertTo(_all_vals2, CV_64F);
+        }
 
         minMaxLoc(_all_vals, &min_val, &max_val);
+        double _norm0 = norm(_all_vals, CV_C);
+        double _norm1 = norm(_all_vals, CV_L1);
+        double _norm2 = norm(_all_vals, CV_L2);
         
         for( i = 0; i < nz0; i++ )
         {
@@ -265,13 +277,29 @@ void CV_ArrayOpTest::run( int /* start_from */)
         Ptr<CvSparseMat> M2 = (CvSparseMat*)M;
         MatND Md;
         M.copyTo(Md);
-        SparseMat M3 = Md;
+        SparseMat M3; SparseMat(Md).convertTo(M3, Md.type(), 2);
         
         int nz1 = M.nzcount(), nz2 = M3.nzcount();
-        if( nz1 != nz0 || nz2 != nz0 )
+        double norm0 = norm(M, CV_C);
+        double norm1 = norm(M, CV_L1);
+        double norm2 = norm(M, CV_L2);
+        double eps = depth == CV_32F ? FLT_EPSILON*100 : DBL_EPSILON*1000;
+        
+        if( nz1 != nz0 || nz2 != nz0)
         {
             errcount++;
-            ts->printf(CvTS::LOG, "%d: The number of non-zero elements before/after converting to/from dense matrix is not correct: %d/%d (while it should be %d)\n", si, nz1, nz2, nz0 );
+            ts->printf(CvTS::LOG, "%d: The number of non-zero elements before/after converting to/from dense matrix is not correct: %d/%d (while it should be %d)\n",
+                       si, nz1, nz2, nz0 );
+            break;
+        }
+        
+        if( fabs(norm0 - _norm0) > fabs(_norm0)*eps ||
+            fabs(norm1 - _norm1) > fabs(_norm1)*eps ||
+            fabs(norm2 - _norm2) > fabs(_norm2)*eps )
+        {
+            errcount++;
+            ts->printf(CvTS::LOG, "%d: The norms are different: %.20g/%.20g/%.20g vs %.20g/%.20g/%.20g\n",
+                       si, norm0, norm1, norm2, _norm0, _norm1, _norm2 );
             break;
         }
         
@@ -298,7 +326,7 @@ void CV_ArrayOpTest::run( int /* start_from */)
             val2 = getValue(M2, idx);
             val3 = getValue(M3, idx, rng);
             
-            if( val1 != val0 || val2 != val0 || val3 != val0 )
+            if( val1 != val0 || val2 != val0 || fabs(val3 - val0*2) > fabs(val0*2)*FLT_EPSILON )
             {
                 errcount++;
                 ts->printf(CvTS::LOG, "SparseMat M[%s] = %g/%g/%g (while it should be %g)\n", sidx.c_str(), val1, val2, val3, val0 );
@@ -342,6 +370,7 @@ void CV_ArrayOpTest::run( int /* start_from */)
         
         int idx1[MAX_DIM], idx2[MAX_DIM];
         double val1 = 0, val2 = 0;
+        M3 = SparseMat(Md);
         minMaxLoc(M3, &val1, &val2, idx1, idx2);
         string s1 = idx2string(idx1, dims), s2 = idx2string(idx2, dims);
         if( val1 != min_val || val2 != max_val || s1 != min_sidx || s2 != max_sidx )

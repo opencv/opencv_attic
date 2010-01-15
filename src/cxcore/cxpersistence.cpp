@@ -4439,7 +4439,8 @@ icvReadGraph( CvFileStorage* fs, CvFileNode* node )
         char* dst_ptr = read_buf;
         int read_max = read_buf_size /MAX(src_elem_size, 1), read_count = 0;
         CvSeqReader reader;
-        cvStartReadRawData( fs, k == 0 ? vtx_node : edge_node, &reader );
+        if(dt)
+            cvStartReadRawData( fs, k == 0 ? vtx_node : edge_node, &reader );
 
         for( i = 0; i < elem_count; i++ )
         {
