@@ -1821,6 +1821,9 @@ struct DefaultRngAuto
 		int original_num_classes_;  
 		bool keep_floats_;
 	};
+    
+CV_EXPORTS bool find4QuadCornerSubpix(const Mat& img, std::vector<Point2f>& corners, Size region_size);
+
 
 }
 
