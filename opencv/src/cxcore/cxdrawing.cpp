@@ -48,7 +48,7 @@ enum { XY_SHIFT = 16, XY_ONE = 1 << XY_SHIFT, DRAWING_STORAGE_BLOCK = (1<<12) - 
 struct PolyEdge
 {
     PolyEdge() : y0(0), y1(0), x(0), dx(0), next(0) {}
-    PolyEdge(int _y0, int _y1, int _x, int _dx) : y0(_y0), y1(_y1), x(_x), dx(_dx) {}
+    //PolyEdge(int _y0, int _y1, int _x, int _dx) : y0(_y0), y1(_y1), x(_x), dx(_dx) {}
 
     int y0, y1;
     int x, dx;

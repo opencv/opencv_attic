@@ -441,13 +441,11 @@ decode_rle8_bad: ;
         case 24:
             for( y = 0; y < m_height; y++, data += step )
             {
+                m_strm.getBytes( src, src_pitch );
                 if(!color)
-                {
-                    m_strm.getBytes( src, src_pitch );
                     icvCvt_BGR2Gray_8u_C3C1R( src, 0, data, 0, cvSize(m_width,1) );
-                }
                 else
-                    m_strm.getBytes( data, step );
+                    memcpy( data, src, m_width*3 );
             }
             result = true;
             break;

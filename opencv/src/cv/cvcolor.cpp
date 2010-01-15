@@ -2513,15 +2513,6 @@ void cv::cvtColor( const Mat& src, Mat& dst, int code, int dst_cn )
         dst_cn = 4;
         break;
 
-    case CV_BGRA2BGR:
-    case CV_RGBA2BGR:
-    case CV_RGB2BGR:
-    case CV_BGR5652BGR:
-    case CV_BGR5552BGR:
-    case CV_BGR5652RGB:
-    case CV_BGR5552RGB:
-    case CV_GRAY2BGR:
-
     case CV_BGR2YCrCb:
     case CV_RGB2YCrCb:
     case CV_BGR2XYZ:
@@ -2534,14 +2525,23 @@ void cv::cvtColor( const Mat& src, Mat& dst, int code, int dst_cn )
     case CV_RGB2Luv:
     case CV_BGR2HLS:
     case CV_RGB2HLS:
+        dst_cn = 3;
+        break;
 
     case CV_BayerBG2BGR:
     case CV_BayerGB2BGR:
     case CV_BayerRG2BGR:
     case CV_BayerGR2BGR:
-        dst_cn = 3;
-        break;
 
+    case CV_BGRA2BGR:
+    case CV_RGBA2BGR:
+    case CV_RGB2BGR:
+    case CV_BGR5652BGR:
+    case CV_BGR5552BGR:
+    case CV_BGR5652RGB:
+    case CV_BGR5552RGB:
+    case CV_GRAY2BGR:
+        
     case CV_YCrCb2BGR:
     case CV_YCrCb2RGB:
     case CV_XYZ2BGR:

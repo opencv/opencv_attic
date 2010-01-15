@@ -2951,18 +2951,27 @@ cvCalcPCA( const CvArr* data_arr, CvArr* avg_arr, CvArr* eigenvals, CvArr* eigen
         transpose( temp, mean );
     }
 
-    if( pca.eigenvalues.size() == evals.size() )
-        pca.eigenvalues.convertTo( evals, evals.type() );
+    evals = pca.eigenvalues;
+    evects = pca.eigenvectors;
+    int ecount0 = evals0.cols + evals0.rows - 1;
+    int ecount = evals.cols + evals.rows - 1;
+    
+    CV_Assert( (evals0.cols == 1 || evals0.rows == 1) &&
+                ecount0 <= ecount &&
+                evects0.cols == evects.cols &&
+                evects0.rows == ecount0 );
+    
+    cv::Mat temp = evals0;
+    if( evals.rows == 1 )
+        evals.colRange(0, ecount0).convertTo(temp, evals0.type());
     else
-    {
-        cv::Mat temp; pca.eigenvalues.convertTo( temp, evals.type() );
-        transpose( temp, evals );
-    }
-
-    pca.eigenvectors.convertTo( evects, evects.type() );
+        evals.rowRange(0, ecount0).convertTo(temp, evals0.type());
+    if( temp.data != evals0.data )
+        transpose(temp, evals0);
+    evects.rowRange(0, ecount0).convertTo( evects0, evects0.type() );
 
     // otherwise some datatype's or size's were incorrect, so the output arrays have been reallocated
-    CV_Assert( mean0.data == mean.data && evals0.data == evals.data && evects0.data == evects.data );
+    CV_Assert( mean0.data == mean.data );
 }
 
 
@@ -2975,7 +2984,18 @@ cvProjectPCA( const CvArr* data_arr, const CvArr* avg_arr,
 
     cv::PCA pca;
     pca.mean = mean;
-    pca.eigenvectors = evects;
+    int n;
+    if( mean.rows == 1 )
+    {
+        CV_Assert(dst.cols <= evects.rows && dst.rows == data.rows);
+        n = dst.cols;
+    }
+    else
+    {
+        CV_Assert(dst.rows <= evects.rows && dst.cols == data.cols);
+        n = dst.rows;
+    }
+    pca.eigenvectors = evects.rowRange(0, n);
 
     cv::Mat result = pca.project(data);
     if( result.cols != dst.cols )
@@ -2995,7 +3015,18 @@ cvBackProjectPCA( const CvArr* proj_arr, const CvArr* avg_arr,
 
     cv::PCA pca;
     pca.mean = mean;
-    pca.eigenvectors = evects;
+    int n;
+    if( mean.rows == 1 )
+    {
+        CV_Assert(data.cols <= evects.rows && dst.rows == data.rows);
+        n = data.cols;
+    }
+    else
+    {
+        CV_Assert(data.rows <= evects.rows && dst.cols == data.cols);
+        n = data.rows;
+    }
+    pca.eigenvectors = evects.rowRange(0, n);
 
     cv::Mat result = pca.backProject(data);
     result.convertTo(dst, dst.type());

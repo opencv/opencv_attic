@@ -170,7 +170,7 @@ typedef unsigned long ulong;
 
 namespace cv
 {
-    
+
 // -128.f ... 255.f
 extern const float g_8x32fTab[];
 #define CV_8TO32F(x)  cv::g_8x32fTab[(x)+128]
@@ -258,36 +258,36 @@ template<typename T> struct OpMax
     T operator ()(T a, T b) const { return std::max(a, b); }
 };
 
-static inline Size getContinuousSize( const Mat& m1, int widthScale=1 )
+inline Size getContinuousSize( const Mat& m1, int widthScale=1 )
 {
     return m1.isContinuous() ? Size(m1.cols*m1.rows*widthScale, 1) :
         Size(m1.cols*widthScale, m1.rows);
 }
 
-static inline Size getContinuousSize( const Mat& m1, const Mat& m2, int widthScale=1 )
+inline Size getContinuousSize( const Mat& m1, const Mat& m2, int widthScale=1 )
 {
     return (m1.flags & m2.flags & Mat::CONTINUOUS_FLAG) != 0 ?
         Size(m1.cols*m1.rows*widthScale, 1) : Size(m1.cols*widthScale, m1.rows);
 }
 
-static inline Size getContinuousSize( const Mat& m1, const Mat& m2,
-                                      const Mat& m3, int widthScale=1 )
+inline Size getContinuousSize( const Mat& m1, const Mat& m2,
+                               const Mat& m3, int widthScale=1 )
 {
     return (m1.flags & m2.flags & m3.flags & Mat::CONTINUOUS_FLAG) != 0 ?
         Size(m1.cols*m1.rows*widthScale, 1) : Size(m1.cols*widthScale, m1.rows);
 }
 
-static inline Size getContinuousSize( const Mat& m1, const Mat& m2,
-                                      const Mat& m3, const Mat& m4,
-                                      int widthScale=1 )
+inline Size getContinuousSize( const Mat& m1, const Mat& m2,
+                               const Mat& m3, const Mat& m4,
+                               int widthScale=1 )
 {
     return (m1.flags & m2.flags & m3.flags & m4.flags & Mat::CONTINUOUS_FLAG) != 0 ?
         Size(m1.cols*m1.rows*widthScale, 1) : Size(m1.cols*widthScale, m1.rows);
 }
 
-static inline Size getContinuousSize( const Mat& m1, const Mat& m2,
-                                      const Mat& m3, const Mat& m4,
-                                      const Mat& m5, int widthScale=1 )
+inline Size getContinuousSize( const Mat& m1, const Mat& m2,
+                               const Mat& m3, const Mat& m4,
+                               const Mat& m5, int widthScale=1 )
 {
     return (m1.flags & m2.flags & m3.flags & m4.flags & m5.flags & Mat::CONTINUOUS_FLAG) != 0 ?
         Size(m1.cols*m1.rows*widthScale, 1) : Size(m1.cols*widthScale, m1.rows);
@@ -411,7 +411,7 @@ binarySOpC1_( const Mat& srcmat, Mat& dstmat, double _scalar )
     size_t step1 = srcmat.step/sizeof(src[0]);
     size_t step = dstmat.step/sizeof(dst[0]);
     Size size = srcmat.size();
-    
+
     size.width *= srcmat.channels();
     if( srcmat.isContinuous() && dstmat.isContinuous() )
     {
