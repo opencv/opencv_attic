@@ -48,6 +48,8 @@
 using namespace std;
 using namespace cv;
 
+#define _L2_ERR
+
 void show_points( const Mat& gray, const Mat& u, const vector<Point2f>& v, Size pattern_size, bool was_found )
 {
     Mat rgb( gray.size(), CV_8U);
@@ -78,6 +80,7 @@ public:
     CV_ChessboardDetectorTest();
 protected:
     void run(int);
+    void run_batch(const string& filename);
     bool checkByGenerator();        
 };
 
@@ -102,12 +105,23 @@ double calcError(const vector<Point2f>& v, const Mat& u)
             double dx = fabs( v[j].x - u_data[j1].x );
             double dy = fabs( v[j].y - u_data[j1].y );
 
+#if defined(_L2_ERR)
+            err1 += dx*dx + dy*dy;
+#else
             dx = MAX( dx, dy );
             if( dx > err1 )
                 err1 = dx;
+#endif //_L2_ERR
+            //printf("dx = %f\n", dx);
         }
+        //printf("\n");
         err = min(err, err1);
     }
+    
+#if defined(_L2_ERR)
+    err = sqrt(err/count_exp);
+#endif //_L2_ERR
+    
     return err;
 }
 
@@ -118,20 +132,27 @@ const double precise_success_error_level = 2;
 /* ///////////////////// chess_corner_test ///////////////////////// */
 void CV_ChessboardDetectorTest::run( int /*start_from */)
 {
-    CvTS& ts = *this->ts;
-    ts.set_failed_test_info( CvTS::OK );
-
     /*if (!checkByGenerator())
         return;*/
     checkByGenerator();    
+    
+    run_batch("chessboard_list.dat");
+    run_batch("chessboard_list_subpixel.dat");
+}
 
+void CV_ChessboardDetectorTest::run_batch( const string& filename )
+{
+    CvTS& ts = *this->ts;
+    ts.set_failed_test_info( CvTS::OK );
+
+    ts.printf(CvTS::LOG, "\nRunning batch %s\n", filename.c_str());
 //#define WRITE_POINTS 1
 #ifndef WRITE_POINTS    
     double max_rough_error = 0, max_precise_error = 0;
 #endif
     string folder = string(ts.get_data_path()) + "cameracalibration/";
 
-    FileStorage fs( folder + "chessboard_list.dat", FileStorage::READ );
+    FileStorage fs( folder + filename, FileStorage::READ );
     FileNode board_list = fs["boards"];
         
     if( !fs.isOpened() || board_list.empty() || !board_list.isSeq() || board_list.size() % 2 != 0 )
@@ -143,6 +164,8 @@ void CV_ChessboardDetectorTest::run( int /*start_from */)
 
     int progress = 0;
     int max_idx = board_list.node->data.seq->total/2;
+    double sum_error = 0.0;
+    int count = 0;
 
     for(int idx = 0; idx < max_idx; ++idx )
     {
@@ -154,7 +177,7 @@ void CV_ChessboardDetectorTest::run( int /*start_from */)
                 
         if( gray.empty() )
         {
-            ts.printf( CvTS::LOG, "one of chessboard images can't be read: %s", img_file.c_str() );
+            ts.printf( CvTS::LOG, "one of chessboard images can't be read: %s\n", img_file.c_str() );
             ts.set_failed_test_info( CvTS::FAIL_MISSING_TEST_DATA );
             continue;
         }
@@ -165,7 +188,7 @@ void CV_ChessboardDetectorTest::run( int /*start_from */)
             CvMat *u = (CvMat*)cvLoad( filename.c_str() );
             if(!u )
             {                
-                ts.printf( CvTS::LOG, "one of chessboard corner files can't be read: %s", filename.c_str() ); 
+                ts.printf( CvTS::LOG, "one of chessboard corner files can't be read: %s\n", filename.c_str() ); 
                 ts.set_failed_test_info( CvTS::FAIL_MISSING_TEST_DATA );
                 continue;                
             }
@@ -180,32 +203,41 @@ void CV_ChessboardDetectorTest::run( int /*start_from */)
         show_points( gray, Mat(), v, pattern_size, result );
         if( !result || v.size() != count_exp )
         {
-            ts.printf( CvTS::LOG, "chess board is not found\n" );
+            ts.printf( CvTS::LOG, "chessboard is not found in %s\n", img_file.c_str() );
             ts.set_failed_test_info( CvTS::FAIL_INVALID_OUTPUT );
             continue;
         }
 
 #ifndef WRITE_POINTS
         double err = calcError(v, expected);
+#if 0
         if( err > rough_success_error_level )
         {
-            ts.printf( CvTS::LOG, "bad accuracy of corner guesses" );
+            ts.printf( CvTS::LOG, "bad accuracy of corner guesses\n" );
             ts.set_failed_test_info( CvTS::FAIL_BAD_ACCURACY );
             continue;
         }
+#endif
         max_rough_error = MAX( max_rough_error, err );
 #endif
-        cornerSubPix( gray, v, Size(5, 5), Size(-1,-1), TermCriteria(TermCriteria::EPS|TermCriteria::MAX_ITER, 30, 0.1));        
+        //cornerSubPix( gray, v, Size(5, 5), Size(-1,-1), TermCriteria(TermCriteria::EPS|TermCriteria::MAX_ITER, 30, 0.1));        
+        find4QuadCornerSubpix(gray, v, Size(5, 5));
         show_points( gray, expected, v, pattern_size, result  );
 
 #ifndef WRITE_POINTS
+//        printf("called find4QuadCornerSubpix\n");
         err = calcError(v, expected);
+        sum_error += err;
+        count++;
+#if 1
         if( err > precise_success_error_level )
         {
-            ts.printf( CvTS::LOG, "bad accuracy of adjusted corners" ); 
+            ts.printf( CvTS::LOG, "bad accuracy of adjusted corners\n" ); 
             ts.set_failed_test_info( CvTS::FAIL_BAD_ACCURACY );
             continue;
         }
+#endif
+        ts.printf(CvTS::LOG, "Error on %s is %f\n", img_file.c_str(), err);
         max_precise_error = MAX( max_precise_error, err );
 #else
         Mat mat_v(pattern_size, CV_32FC2, (void*)&v[0]);
@@ -214,6 +246,9 @@ void CV_ChessboardDetectorTest::run( int /*start_from */)
 #endif
         progress = update_progress( progress, idx, max_idx, 0 );
     }    
+    
+    sum_error /= count;
+    ts.printf(CvTS::LOG, "Average error is %f\n", sum_error);
 }
 
 double calcErrorMinError(const Size& cornSz, const vector<Point2f>& corners_found, const vector<Point2f>& corners_generated)
@@ -312,7 +347,7 @@ bool CV_ChessboardDetectorTest::checkByGenerator()
         bool found = findChessboardCorners(cb, cbg.cornersSize(), corners_found, flags);
         if (!found)        
         {            
-            ts->printf( CvTS::LOG, "Chess board corners not found" );
+            ts->printf( CvTS::LOG, "Chess board corners not found\n" );
             ts->set_failed_test_info( CvTS::FAIL_BAD_ACCURACY );
             res = false;
             continue;          

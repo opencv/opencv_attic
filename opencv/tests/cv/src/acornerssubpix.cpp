@@ -98,10 +98,13 @@ int calcDistance(const vector<Point2f>& set1, const vector<Point2f>& set2, doubl
         }
         indices.push_back(min_idx);
         
+//        printf("dist %d = %f\n", (int)i, min_dist);
+        
         sum_dist += min_dist*min_dist;
     }
     
     mean_dist = sqrt(sum_dist/set1.size());
+//    printf("sum_dist = %f, set1.size() = %d, mean_dist = %f\n", sum_dist, (int)set1.size(), mean_dist);
     
     return 1;
 }
@@ -123,11 +126,13 @@ void CV_ChessboardSubpixelTest::run( int )
     CvRNG* rng = ts->get_rng();
     
     const int runs_count = 20;
-    const int max_pattern_size = 20;
+    const int max_pattern_size = 8;
     const int min_pattern_size = 5;
     Mat bg(image_size_, CV_8UC1);
     bg = Scalar(0);
     
+    double sum_dist = 0.0;
+    int count = 0;
     for(int i = 0; i < runs_count; i++)
     {
         const int pattern_width = min_pattern_size + cvRandInt(rng) % (max_pattern_size - min_pattern_size);
@@ -170,16 +175,33 @@ void CV_ChessboardSubpixelTest::run( int )
         }
         
         double dist1 = 0.0;
-        calcDistance(corners, test_corners, dist1);
+        int ret = calcDistance(corners, test_corners, dist1);
+        if(ret == 0)
+        {
+            ts->printf(CvTS::LOG, "findChessboardCorners returns invalid corner coordinates!\n");
+            code = CvTS::FAIL_INVALID_OUTPUT;
+            break;            
+        }
         
         IplImage chessboard_image_header = chessboard_image;
         cvFindCornerSubPix(&chessboard_image_header, (CvPoint2D32f*)&test_corners[0], 
-            test_corners.size(), cvSize(7, 7), cvSize(-1, -1), cvTermCriteria(CV_TERMCRIT_EPS|CV_TERMCRIT_ITER,30,0.1));
+            test_corners.size(), cvSize(3, 3), cvSize(1, 1), cvTermCriteria(CV_TERMCRIT_EPS|CV_TERMCRIT_ITER,300,0.1));
+        find4QuadCornerSubpix(chessboard_image, test_corners, Size(5, 5));
         
         double dist2 = 0.0;
-        calcDistance(corners, test_corners, dist2);
+        ret = calcDistance(corners, test_corners, dist2);
+        if(ret == 0)
+        {
+            ts->printf(CvTS::LOG, "findCornerSubpix returns invalid corner coordinates!\n");
+            code = CvTS::FAIL_INVALID_OUTPUT;
+            break;            
+        }
+        
         ts->printf(CvTS::LOG, "Error after findChessboardCorners: %f, after findCornerSubPix: %f\n", 
                    dist1, dist2);
+        sum_dist += dist2;
+        count++;
+        
         if(dist1 < dist2)
         {
             ts->printf(CvTS::LOG, "findCornerSubPix increases average error!\n");
@@ -189,6 +211,8 @@ void CV_ChessboardSubpixelTest::run( int )
         
         progress = update_progress( progress, i-1, runs_count, 0 );
     }
+    sum_dist /= count;
+    ts->printf(CvTS::LOG, "Average error after findCornerSubpix: %f\n", sum_dist); 
         
     if( code < 0 )
         ts->set_failed_test_info( code );
