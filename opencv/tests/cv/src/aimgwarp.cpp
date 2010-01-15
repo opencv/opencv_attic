@@ -1192,6 +1192,9 @@ private:
 	cv::Mat input2;
 	cv::Mat input_new_cam;
 	cv::Mat input_output;
+
+	bool zero_new_cam;
+	bool zero_distortion;
 };
 
 
@@ -1275,11 +1278,18 @@ void CV_UndistortTest::run_func()
 	if (!useCPlus)
 	{
 		cvUndistort2( test_array[INPUT][0], test_array[INPUT_OUTPUT][0],
-                  &test_mat[INPUT][1], &test_mat[INPUT][2] );
+                 &test_mat[INPUT][1], &test_mat[INPUT][2] );
 	}
 	else
 	{
-		cv::undistort(input0,input_output,input1,input2);
+		if (zero_distortion)
+		{
+			cv::undistort(input0,input_output,input1,cv::Mat());
+		}
+		else
+		{
+			cv::undistort(input0,input_output,input1,input2);
+		}
 	}
 }
 
@@ -1348,23 +1358,12 @@ int CV_UndistortTest::prepare_test_case( int test_case_idx )
 
     cvTsConvert( &_a, _a0 );
 
-	if ((cvRandInt(rng)%2) == 0)
-	{
-		cvTsConvert( &_k, _k0 );
-	}
-	else
-	{
-		_k0 = 0;
-	}
 
-	if ((cvRandInt(rng)%2) == 0)
-	{
-		cvTsConvert( &_new_cam, _new_cam0 );
-	}
-	else
-	{
-		 _new_cam0 = 0;
-	}
+	zero_distortion = (cvRandInt(rng)%2) == 0 ? false : true;
+	cvTsConvert( &_k, _k0 );
+
+	zero_new_cam = (cvRandInt(rng)%2) == 0 ? false : true;
+	cvTsConvert( &_new_cam, _new_cam0 );
     
 
 	//Testing C++ code
