@@ -220,8 +220,8 @@ void CV_ChessboardDetectorTest::run_batch( const string& filename )
 #endif
         max_rough_error = MAX( max_rough_error, err );
 #endif
-        //cornerSubPix( gray, v, Size(5, 5), Size(-1,-1), TermCriteria(TermCriteria::EPS|TermCriteria::MAX_ITER, 30, 0.1));        
-        find4QuadCornerSubpix(gray, v, Size(5, 5));
+        cornerSubPix( gray, v, Size(5, 5), Size(-1,-1), TermCriteria(TermCriteria::EPS|TermCriteria::MAX_ITER, 30, 0.1));        
+        //find4QuadCornerSubpix(gray, v, Size(5, 5));
         show_points( gray, expected, v, pattern_size, result  );
 
 #ifndef WRITE_POINTS
