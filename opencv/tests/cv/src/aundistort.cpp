@@ -170,11 +170,13 @@ protected:
 
 private:
 	bool useCPlus;
+	bool useDstMat;
 	static const int N_POINTS = 10;
 	static const int MAX_X = 2048;
 	static const int MAX_Y = 2048;
 
 	cv::Size img_size;
+	cv::Mat dst_points_mat;
 
 	cv::Mat camera_mat;
 	cv::Mat R;
@@ -249,6 +251,8 @@ int CV_UndistortPointsTest::prepare_test_case(int test_case_idx)
 
 	if (code <= 0)
 		return code;
+
+	useDstMat = cvTsRandInt(rng) % 2;
 
 	img_size.width = cvTsRandInt(rng) % MAX_X + 1;
 	img_size.height = cvTsRandInt(rng) % MAX_Y + 1;
@@ -350,11 +354,32 @@ int CV_UndistortPointsTest::prepare_test_case(int test_case_idx)
 	dst = &test_mat[INPUT][1];
 	cvTsConvert( &_camera, dst);
 	dst = &test_mat[INPUT][2];
-	cvTsConvert( &_distort, dst);
+	if ((cvTsRandInt(rng) % 2 == 0))
+	{
+		cvTsConvert( &_distort, dst);
+	}
+	else
+	{
+		dst = 0;
+	}
 	dst = &test_mat[INPUT][3];
-	cvTsConvert( _rot, dst);
+	if ((cvTsRandInt(rng) % 2 == 0))
+	{
+		cvTsConvert( _rot, dst);
+	}
+	else
+	{
+		dst = 0;
+	}
 	dst = &test_mat[INPUT][4];
-	cvTsConvert( &_proj, dst);
+	if ((cvTsRandInt(rng) % 2 == 0))
+	{
+		cvTsConvert( &_proj, dst);
+	}
+	else
+	{
+		dst = 0;
+	}
 
 	cvReleaseMat(&_rot);
 
@@ -406,6 +431,18 @@ void CV_UndistortPointsTest::prepare_to_validation(int /*test_case_idx*/)
 
 	if (useCPlus)
 	{
+		if (useDstMat)
+		{
+			CvMat temp = dst_points_mat;
+			CvMat* temp_db = cvCreateMat(temp.rows,temp.cols,CV_64F);
+			cvTsConvert(&temp,temp_db);
+			for (int i=0;i<N_POINTS*2;i++)
+			{
+				points[i] = temp_db->data.db[i];
+			}		
+			cvReleaseMat(&temp_db);
+		}
+
 		for (int i=0;i<N_POINTS;i++)
 		{
 			points[2*i] = dst_points[i].x;
@@ -445,7 +482,14 @@ void CV_UndistortPointsTest::run_func()
 {
 	if (useCPlus)
 	{
-		cv::undistortPoints(src_points,dst_points,camera_mat,distortion_coeffs,R,P);
+		if (useDstMat)
+		{
+			cv::undistortPoints(src_points,dst_points_mat,camera_mat,distortion_coeffs,R,P);
+		}
+		else
+		{
+			cv::undistortPoints(src_points,dst_points,camera_mat,distortion_coeffs,R,P);
+		}
 	}
 	else
 	{
@@ -599,6 +643,10 @@ int CV_InitUndistortRectifyMapTest::prepare_test_case(int test_case_idx)
 	if (useCPlus)
 	{
 		mat_type = (cvTsRandInt(rng) % 2) == 0 ? CV_32FC1 : CV_16SC2;
+		if ((cvTsRandInt(rng) % 4) == 0)
+			mat_type = -1;
+		if ((cvTsRandInt(rng) % 4) == 0)
+			mat_type = CV_32FC2;
 		_mapx = 0;
 		_mapy = 0;
 	}
@@ -609,6 +657,8 @@ int CV_InitUndistortRectifyMapTest::prepare_test_case(int test_case_idx)
 		int typey = (typex == CV_32FC1) ? CV_32FC1 : CV_16UC1;
 		_mapx = cvCreateMat(img_size.height,img_size.width,typex);
 		_mapy = cvCreateMat(img_size.height,img_size.width,typey);
+
+
 	}
 	
 	int dist_size = test_mat[INPUT][2].cols > test_mat[INPUT][2].rows ? test_mat[INPUT][2].cols : test_mat[INPUT][2].rows;
@@ -694,11 +744,32 @@ int CV_InitUndistortRectifyMapTest::prepare_test_case(int test_case_idx)
 	dst = &test_mat[INPUT][1];
 	cvTsConvert( &_camera, dst);
 	dst = &test_mat[INPUT][2];
-	cvTsConvert( &_distort, dst);
+	if ((cvTsRandInt(rng) % 2 == 0))
+	{
+		cvTsConvert( &_distort, dst);
+	}
+	else
+	{
+		dst = 0;
+	}
 	dst = &test_mat[INPUT][3];
-	cvTsConvert( _rot, dst);
+	if ((cvTsRandInt(rng) % 2 == 0))
+	{
+		cvTsConvert( _rot, dst);
+	}
+	else
+	{
+		dst = 0;
+	}
 	dst = &test_mat[INPUT][4];
-	cvTsConvert( &_new_cam, dst);
+	if ((cvTsRandInt(rng) % 2 == 0))
+	{
+		cvTsConvert( &_new_cam, dst);
+	}
+	else
+	{
+		dst = 0;
+	}
 
 	cvReleaseMat(&_rot);
 
