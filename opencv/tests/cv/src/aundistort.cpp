@@ -68,9 +68,9 @@ private:
 
 CV_DefaultNewCameraMatrixTest::CV_DefaultNewCameraMatrixTest() : CvArrTest("undistort-getDefaultNewCameraMatrix","getDefaultNewCameraMatrix")
 {
-	 test_array[INPUT].push(NULL);
-	 test_array[OUTPUT].push(NULL);
-	 test_array[REF_OUTPUT].push(NULL);
+	test_array[INPUT].push(NULL);
+	test_array[OUTPUT].push(NULL);
+	test_array[REF_OUTPUT].push(NULL);
 }
 
 void CV_DefaultNewCameraMatrixTest::get_test_array_types_and_sizes( int /*test_case_idx*/, CvSize** sizes, int** types )
@@ -100,9 +100,9 @@ int CV_DefaultNewCameraMatrixTest::prepare_test_case(int test_case_idx)
 	double a[9] = {0,0,0,0,0,0,0,0,1};
 	CvMat _a = cvMat(3,3,CV_64F,a);
 	a[2] = (img_size.width - 1)*0.5 + cvTsRandReal(rng)*10 - 5;
-    a[5] = (img_size.height - 1)*0.5 + cvTsRandReal(rng)*10 - 5;
-    a[0] = sz/(0.9 - cvTsRandReal(rng)*0.6);
-    a[4] = aspect_ratio*a[0];
+	a[5] = (img_size.height - 1)*0.5 + cvTsRandReal(rng)*10 - 5;
+	a[0] = sz/(0.9 - cvTsRandReal(rng)*0.6);
+	a[4] = aspect_ratio*a[0];
 
 	//Copying into input array
 	CvMat* _a0 = &test_mat[INPUT][0];
@@ -111,7 +111,7 @@ int CV_DefaultNewCameraMatrixTest::prepare_test_case(int test_case_idx)
 	//new_camera_mat = camera_mat;
 
 	return code;
-	
+
 }
 
 void CV_DefaultNewCameraMatrixTest::run_func()
@@ -165,8 +165,8 @@ protected:
 	double get_success_error_level( int test_case_idx, int i, int j );
 	void run_func();
 	void cvTsDistortPoints(const CvMat* _src, CvMat* _dst, const CvMat* _cameraMatrix,
-                   const CvMat* _distCoeffs,
-                   const CvMat* _R, const CvMat* _P);
+		const CvMat* _distCoeffs,
+		const CvMat* _R, const CvMat* _P);
 
 private:
 	bool useCPlus;
@@ -206,7 +206,7 @@ void CV_UndistortPointsTest::get_test_array_types_and_sizes( int /*test_case_idx
 {
 	CvRNG* rng = ts->get_rng();
 	useCPlus = ((cvTsRandInt(rng) % 2)!=0);
-	//useCPlus = 1;
+	//useCPlus = 0;
 	if (useCPlus)
 	{
 		types[INPUT][0] = types[OUTPUT][0] = types[REF_OUTPUT][0] = types[TEMP][0]= CV_32FC2;
@@ -282,34 +282,34 @@ int CV_UndistortPointsTest::prepare_test_case(int test_case_idx)
 		points[2*i] = cvTsRandReal(rng)*img_size.width;
 		points[2*i+1] = cvTsRandReal(rng)*img_size.height;
 	}
-    
-	
+
+
 
 	//Generating camera matrix
 	double sz = MAX(img_size.width,img_size.height);
 	double aspect_ratio = cvTsRandReal(rng)*0.6 + 0.7;
-    cam[2] = (img_size.width - 1)*0.5 + cvTsRandReal(rng)*10 - 5;
-    cam[5] = (img_size.height - 1)*0.5 + cvTsRandReal(rng)*10 - 5;
-    cam[0] = sz/(0.9 - cvTsRandReal(rng)*0.6);
-    cam[4] = aspect_ratio*cam[0];
+	cam[2] = (img_size.width - 1)*0.5 + cvTsRandReal(rng)*10 - 5;
+	cam[5] = (img_size.height - 1)*0.5 + cvTsRandReal(rng)*10 - 5;
+	cam[0] = sz/(0.9 - cvTsRandReal(rng)*0.6);
+	cam[4] = aspect_ratio*cam[0];
 
 	//Generating distortion coeffs
 	dist[0] = cvTsRandReal(rng)*0.06 - 0.03;
-    dist[1] = cvTsRandReal(rng)*0.06 - 0.03;
-    if( dist[0]*dist[1] > 0 )
+	dist[1] = cvTsRandReal(rng)*0.06 - 0.03;
+	if( dist[0]*dist[1] > 0 )
 		dist[1] = -dist[1];
-    if( cvTsRandInt(rng)%4 != 0 )
-    {
-        dist[2] = cvTsRandReal(rng)*0.004 - 0.002;
-        dist[3] = cvTsRandReal(rng)*0.004 - 0.002;
+	if( cvTsRandInt(rng)%4 != 0 )
+	{
+		dist[2] = cvTsRandReal(rng)*0.004 - 0.002;
+		dist[3] = cvTsRandReal(rng)*0.004 - 0.002;
 		if (dist_size > 4)
 			dist[4] = cvTsRandReal(rng)*0.004 - 0.002;
-    }
-    else
+	}
+	else
 	{
-        dist[2] = dist[3] = 0;
+		dist[2] = dist[3] = 0;
 		if (dist_size > 4)
-			 dist[4] = 0;
+			dist[4] = 0;
 	}
 
 	//Generating P matrix (projection)
@@ -374,9 +374,9 @@ int CV_UndistortPointsTest::prepare_test_case(int test_case_idx)
 	if (useCPlus)
 	{
 		CvMat* temp = cvCreateMat(test_mat[INPUT][0].rows,test_mat[INPUT][0].cols,CV_32FC2);
-		for (int i=0;i<N_POINTS;i++)
+		for (int i=0;i<test_mat[INPUT][0].rows*test_mat[INPUT][0].cols*2;i++)
 			temp->data.fl[i] = (float)_points.data.db[i];
-	
+
 
 		src_points = cv::Mat(temp,true);
 
@@ -411,7 +411,7 @@ void CV_UndistortPointsTest::prepare_to_validation(int /*test_case_idx*/)
 	CvMat _proj = cvMat(test_mat[INPUT][4].rows,test_mat[INPUT][4].cols,CV_64F,proj);
 	CvMat _points= cvMat(test_mat[TEMP][0].rows,test_mat[TEMP][0].cols,CV_64FC2,points);
 
-	
+
 	cvTsConvert(&test_mat[INPUT][1],&_camera);
 	cvTsConvert(&test_mat[INPUT][2],&_distort);
 	cvTsConvert(&test_mat[INPUT][3],&_rot);
@@ -428,10 +428,14 @@ void CV_UndistortPointsTest::prepare_to_validation(int /*test_case_idx*/)
 			}		
 		}
 
-		for (int i=0;i<N_POINTS;i++)
+		else
 		{
-			points[2*i] = dst_points[i].x;
-			points[2*i+1] = dst_points[i].y;
+
+			for (int i=0;i<N_POINTS;i++)
+			{
+				points[2*i] = dst_points[i].x;
+				points[2*i+1] = dst_points[i].y;
+			}
 		}
 	}
 	else
@@ -439,24 +443,19 @@ void CV_UndistortPointsTest::prepare_to_validation(int /*test_case_idx*/)
 		cvTsConvert(&test_mat[TEMP][0],&_points);
 	}
 
-	cvTsDistortPoints(&_points,&ref_points,&_camera,&_distort,&_rot,&_proj);
+	CvMat* input2;
+	CvMat* input3;
+	CvMat* input4;
+	input2 = zero_distortion ? 0 : &_distort;
+	input3 = zero_R ? 0 : &_rot;
+	input4 = zero_new_cam ? 0 : &_proj;
+	cvTsDistortPoints(&_points,&ref_points,&_camera,input2,input3,input4);
+
 	CvMat* dst = &test_mat[REF_OUTPUT][0];
 	cvTsConvert(&ref_points,dst);
 
 	cvCopy(&test_mat[INPUT][0],&test_mat[OUTPUT][0]);
 
-	//if (useCPlus)
-	//{
-	//	double* __points = new double[N_POINTS*2];
-	//	CvMat pts= cvMat(test_mat[OUTPUT][0].rows,test_mat[OUTPUT][0].cols,CV_64FC2,__points);
-	//	for (int i=0;i<N_POINTS;i++)
-	//	{
-	//		pts.data.db[2*i] = dst_points[i].x;
-	//		pts.data.db[2*i+1] = dst_points[i].y;
-	//	}
-	//	cvTsConvert(&pts,&test_mat[OUTPUT][0]);
-	//	delete[] __points;
-	//}
 	delete[] dist;
 	delete[] proj;
 	delete[] points;
@@ -465,59 +464,100 @@ void CV_UndistortPointsTest::prepare_to_validation(int /*test_case_idx*/)
 
 void CV_UndistortPointsTest::run_func()
 {
-if (useCPlus)
+
+	if (useCPlus)
 	{
 		cv::Mat input2,input3,input4;
 		input2 = zero_distortion ? cv::Mat() : cv::Mat(&test_mat[INPUT][2]);
 		input3 = zero_R ? cv::Mat() : cv::Mat(&test_mat[INPUT][3]);
 		input4 = zero_new_cam ? cv::Mat() : cv::Mat(&test_mat[INPUT][4]);
-		
+
 		if (useDstMat)
 		{
+			//cv::undistortPoints(src_points,dst_points_mat,camera_mat,distortion_coeffs,R,P);
 			cv::undistortPoints(src_points,dst_points_mat,camera_mat,input2,input3,input4);
 		}
 		else
 		{
+			//cv::undistortPoints(src_points,dst_points,camera_mat,distortion_coeffs,R,P);
 			cv::undistortPoints(src_points,dst_points,camera_mat,input2,input3,input4);
 		}
 	}
 	else
 	{
 		CvMat* input2;
+		CvMat* input3;
+		CvMat* input4;
 		input2 = zero_distortion ? 0 : &test_mat[INPUT][2];
-		cvUndistortPoints(&test_mat[INPUT][0],&test_mat[TEMP][0],&test_mat[INPUT][1],&test_mat[INPUT][2],&test_mat[INPUT][3],&test_mat[INPUT][4]);
+		input3 = zero_R ? 0 : &test_mat[INPUT][3];
+		input4 = zero_new_cam ? 0 : &test_mat[INPUT][4];
+		cvUndistortPoints(&test_mat[INPUT][0],&test_mat[TEMP][0],&test_mat[INPUT][1],input2,input3,input4);
 	}
 
 }
 
 void CV_UndistortPointsTest::cvTsDistortPoints(const CvMat* _src, CvMat* _dst, const CvMat* _cameraMatrix,
-                   const CvMat* _distCoeffs,
-                   const CvMat* _R, const CvMat* _P)
+											   const CvMat* _distCoeffs,
+											   const CvMat* _R, const CvMat* _P)
 {
 	double a[9];
+
+	CvMat* __P;
+	if ((!_P)||(_P->cols == 3))
+		__P = cvCreateMat(3,3,CV_64F);
+	else
+		__P = cvCreateMat(3,4,CV_64F);
+	if (_P)
+	{
+		cvTsConvert(_P,__P);
+	}
+	else
+	{
+		cvZero(__P);
+		__P->data.db[0] = 1;
+		__P->data.db[4] = 1;
+		__P->data.db[8] = 1;
+	}
+	CvMat* __R = cvCreateMat(3,3,CV_64F);;
+	if (_R)
+	{
+		cvCopy(_R,__R);
+	}
+	else
+	{
+		cvZero(__R);
+		__R->data.db[0] = 1;
+		__R->data.db[4] = 1;
+		__R->data.db[8] = 1;
+	}
 	for (int i=0;i<N_POINTS;i++)
 	{
-		int movement = _P->cols > 3 ? 1 : 0;
-		double x = (_src->data.db[2*i]-_P->data.db[2])/_P->data.db[0];
-		double y = (_src->data.db[2*i+1]-_P->data.db[5+movement])/_P->data.db[4+movement];
+		int movement = __P->cols > 3 ? 1 : 0;
+		double x = (_src->data.db[2*i]-__P->data.db[2])/__P->data.db[0];
+		double y = (_src->data.db[2*i+1]-__P->data.db[5+movement])/__P->data.db[4+movement];
 		CvMat inverse = cvMat(3,3,CV_64F,a);
-		cvInvert(_R,&inverse);
+		cvInvert(__R,&inverse);
 		double w1 = x*inverse.data.db[6]+y*inverse.data.db[7]+inverse.data.db[8];
 		double _x = (x*inverse.data.db[0]+y*inverse.data.db[1]+inverse.data.db[2])/w1;
 		double _y = (x*inverse.data.db[3]+y*inverse.data.db[4]+inverse.data.db[5])/w1;
 
 		//Distortions
 
-		double r2 = _x*_x+_y*_y;
-
-		double __x = _x*(1+_distCoeffs->data.db[0]*r2+_distCoeffs->data.db[1]*r2*r2)+
-			2*_distCoeffs->data.db[2]*_x*_y+_distCoeffs->data.db[3]*(r2+2*_x*_x);
-		double __y = _y*(1+_distCoeffs->data.db[0]*r2+_distCoeffs->data.db[1]*r2*r2)+
-			2*_distCoeffs->data.db[3]*_x*_y+_distCoeffs->data.db[2]*(r2+2*_y*_y);
-		if ((_distCoeffs->cols > 4) || (_distCoeffs->rows > 4))
+		double __x = _x;
+		double __y = _y;
+		if (_distCoeffs)
 		{
-			__x+=_x*_distCoeffs->data.db[4]*r2*r2*r2;
-			__y+=_y*_distCoeffs->data.db[4]*r2*r2*r2;
+			double r2 = _x*_x+_y*_y;
+
+			__x = _x*(1+_distCoeffs->data.db[0]*r2+_distCoeffs->data.db[1]*r2*r2)+
+				2*_distCoeffs->data.db[2]*_x*_y+_distCoeffs->data.db[3]*(r2+2*_x*_x);
+			__y = _y*(1+_distCoeffs->data.db[0]*r2+_distCoeffs->data.db[1]*r2*r2)+
+				2*_distCoeffs->data.db[3]*_x*_y+_distCoeffs->data.db[2]*(r2+2*_y*_y);
+			if ((_distCoeffs->cols > 4) || (_distCoeffs->rows > 4))
+			{
+				__x+=_x*_distCoeffs->data.db[4]*r2*r2*r2;
+				__y+=_y*_distCoeffs->data.db[4]*r2*r2*r2;
+			}
 		}
 
 
@@ -525,11 +565,15 @@ void CV_UndistortPointsTest::cvTsDistortPoints(const CvMat* _src, CvMat* _dst, c
 		_dst->data.db[2*i+1] = __y*_cameraMatrix->data.db[4]+_cameraMatrix->data.db[5];
 
 	}
+
+	cvReleaseMat(&__R);
+	cvReleaseMat(&__P);
+
 }
 
 double CV_UndistortPointsTest::get_success_error_level( int /*test_case_idx*/, int /*i*/, int /*j*/ )
 {
-    return 5e-2;
+	return 5e-2;
 }
 
 CV_UndistortPointsTest undistort_points_test;
@@ -548,8 +592,8 @@ protected:
 	double get_success_error_level( int test_case_idx, int i, int j );
 	void run_func();
 	void cvTsDistortPoints(const CvMat* _src, CvMat* _dst, const CvMat* _cameraMatrix,
-                   const CvMat* _distCoeffs,
-                   const CvMat* _R, const CvMat* _P);
+		const CvMat* _distCoeffs,
+		const CvMat* _R, const CvMat* _P);
 
 private:
 	bool useCPlus;
@@ -657,7 +701,7 @@ int CV_InitUndistortRectifyMapTest::prepare_test_case(int test_case_idx)
 
 
 	}
-	
+
 	int dist_size = test_mat[INPUT][2].cols > test_mat[INPUT][2].rows ? test_mat[INPUT][2].cols : test_mat[INPUT][2].rows;
 	double cam[9] = {0,0,0,0,0,0,0,0,1};
 	double* dist = new double[dist_size ];
@@ -680,34 +724,34 @@ int CV_InitUndistortRectifyMapTest::prepare_test_case(int test_case_idx)
 		points[2*i] = cvTsRandReal(rng)*img_size.width;
 		points[2*i+1] = cvTsRandReal(rng)*img_size.height;
 	}
-    
-	
+
+
 
 	//Generating camera matrix
 	double sz = MAX(img_size.width,img_size.height);
 	double aspect_ratio = cvTsRandReal(rng)*0.6 + 0.7;
-    cam[2] = (img_size.width - 1)*0.5 + cvTsRandReal(rng)*10 - 5;
-    cam[5] = (img_size.height - 1)*0.5 + cvTsRandReal(rng)*10 - 5;
-    cam[0] = sz/(0.9 - cvTsRandReal(rng)*0.6);
-    cam[4] = aspect_ratio*cam[0];
+	cam[2] = (img_size.width - 1)*0.5 + cvTsRandReal(rng)*10 - 5;
+	cam[5] = (img_size.height - 1)*0.5 + cvTsRandReal(rng)*10 - 5;
+	cam[0] = sz/(0.9 - cvTsRandReal(rng)*0.6);
+	cam[4] = aspect_ratio*cam[0];
 
 	//Generating distortion coeffs
 	dist[0] = cvTsRandReal(rng)*0.06 - 0.03;
-    dist[1] = cvTsRandReal(rng)*0.06 - 0.03;
-    if( dist[0]*dist[1] > 0 )
+	dist[1] = cvTsRandReal(rng)*0.06 - 0.03;
+	if( dist[0]*dist[1] > 0 )
 		dist[1] = -dist[1];
-    if( cvTsRandInt(rng)%4 != 0 )
-    {
-        dist[2] = cvTsRandReal(rng)*0.004 - 0.002;
-        dist[3] = cvTsRandReal(rng)*0.004 - 0.002;
+	if( cvTsRandInt(rng)%4 != 0 )
+	{
+		dist[2] = cvTsRandReal(rng)*0.004 - 0.002;
+		dist[3] = cvTsRandReal(rng)*0.004 - 0.002;
 		if (dist_size > 4)
 			dist[4] = cvTsRandReal(rng)*0.004 - 0.002;
-    }
-    else
+	}
+	else
 	{
-        dist[2] = dist[3] = 0;
+		dist[2] = dist[3] = 0;
 		if (dist_size > 4)
-			 dist[4] = 0;
+			dist[4] = 0;
 	}
 
 	//Generating new camera matrix
@@ -790,7 +834,7 @@ void CV_InitUndistortRectifyMapTest::prepare_to_validation(int /*test_case_idx*/
 	cvTsConvert(&test_mat[INPUT][3],&_rot);
 	cvTsConvert(&test_mat[INPUT][4],&_new_cam);
 
-//Applying precalculated undistort rectify map
+	//Applying precalculated undistort rectify map
 	if (!useCPlus)
 	{
 		mapx = cv::Mat(_mapx);
@@ -808,7 +852,7 @@ void CV_InitUndistortRectifyMapTest::prepare_to_validation(int /*test_case_idx*/
 		_points.data.db[2*i+1] = (double)_map2.data.fl[(int)(v*_map2.cols+u)];
 	}
 
-//---
+	//---
 	cvUndistortPoints(&_points,&ref_points,&_camera,&_distort,&_rot,&_new_cam);
 	//cvTsDistortPoints(&_points,&ref_points,&_camera,&_distort,&_rot,&_new_cam);
 	CvMat* dst = &test_mat[REF_OUTPUT][0];
@@ -845,8 +889,8 @@ void CV_InitUndistortRectifyMapTest::run_func()
 }
 
 void CV_InitUndistortRectifyMapTest::cvTsDistortPoints(const CvMat* _src, CvMat* _dst, const CvMat* _cameraMatrix,
-                   const CvMat* _distCoeffs,
-                   const CvMat* _R, const CvMat* _P)
+													   const CvMat* _distCoeffs,
+													   const CvMat* _R, const CvMat* _P)
 {
 	double a[9];
 	for (int i=0;i<N_POINTS;i++)
@@ -883,7 +927,7 @@ void CV_InitUndistortRectifyMapTest::cvTsDistortPoints(const CvMat* _src, CvMat*
 
 double CV_InitUndistortRectifyMapTest::get_success_error_level( int /*test_case_idx*/, int /*i*/, int /*j*/ )
 {
-    return 2;
+	return 2;
 }
 
 CV_InitUndistortRectifyMapTest::~CV_InitUndistortRectifyMapTest()
