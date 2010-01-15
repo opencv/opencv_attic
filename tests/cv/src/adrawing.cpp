@@ -122,7 +122,7 @@ void CV_DrawingTest_CPP::draw( Mat& img )
 
 	p2 = Point(3,imgSize.height+1000);
 	if( clipLine(Rect(0,0,imgSize.width,imgSize.height), p1, p2) && clipLine(imgSize, p1, p2) )
-		circle( img, Point(500,300), 50, Scalar(255,0,0), 5, 8, 1 ); // draw
+		circle( img, Point(500,300), 50, cvColorToScalar(255,CV_8UC3), 5, 8, 1 ); // draw
 
 	p1 = Point(imgSize.width,1), p2 = Point(imgSize.width,3);
 	if( clipLine(Rect(0,0,imgSize.width,imgSize.height), p1, p2) && clipLine(imgSize, p1, p2) )

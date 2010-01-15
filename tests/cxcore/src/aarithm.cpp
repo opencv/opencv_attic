@@ -340,16 +340,23 @@ void CxCore_AddSTest::run_func()
 {
     if(!test_nd)
     {
-        cvAddS( test_array[INPUT][0], gamma,
-            test_array[INPUT_OUTPUT][0], test_array[MASK][0] );
+        if( test_mat[INPUT][0].cols % 2 == 0 )
+            cvAddS( test_array[INPUT][0], gamma,
+                test_array[INPUT_OUTPUT][0], test_array[MASK][0] );
+        else
+        {
+            cv::Mat a = cv::cvarrToMat(test_array[INPUT][0]),
+                c = cv::cvarrToMat(test_array[INPUT_OUTPUT][0]);
+                cv::subtract(a, -cv::Scalar(gamma), c, test_array[MASK][0] ?
+                    cv::cvarrToMat(test_array[MASK][0]) : cv::Mat());
+        }
     }
     else
     {
         cv::MatND c = cv::cvarrToMatND(test_array[INPUT_OUTPUT][0]);
         cv::add( cv::cvarrToMatND(test_array[INPUT][0]),
-                 gamma, c,
-                 test_array[MASK][0] ?
-                    cv::cvarrToMatND(test_array[MASK][0]) : cv::MatND());
+                 gamma, c, test_array[MASK][0] ?
+                 cv::cvarrToMatND(test_array[MASK][0]) : cv::MatND());
     }
 }
 
@@ -807,7 +814,13 @@ CxCore_SetIdentityTest::CxCore_SetIdentityTest() :
 
 void CxCore_SetIdentityTest::run_func()
 {
-    cvSetIdentity(test_array[OUTPUT][0], gamma);
+    if(!test_nd)
+        cvSetIdentity(test_array[OUTPUT][0], gamma);
+    else
+    {
+        cv::Mat a = cv::cvarrToMat(test_array[OUTPUT][0]);
+        cv::setIdentity(a, gamma);
+    }
 }
 
 
@@ -840,7 +853,13 @@ CxCore_SetZeroTest::CxCore_SetZeroTest() :
 
 void CxCore_SetZeroTest::run_func()
 {
-    cvSetZero(test_array[OUTPUT][0]);
+    if(!test_nd)
+        cvSetZero(test_array[OUTPUT][0]);
+    else
+    {
+        cv::MatND a = cv::cvarrToMatND(test_array[OUTPUT][0]);
+        a.setTo(cv::Scalar());
+    }
 }
 
 
@@ -873,7 +892,14 @@ CxCore_FillTest::CxCore_FillTest() :
 
 void CxCore_FillTest::run_func()
 {
-    cvSet(test_array[INPUT_OUTPUT][0], gamma, test_array[MASK][0]);
+    const CvArr* mask = test_array[MASK][0];
+    if(!test_nd)
+        cvSet(test_array[INPUT_OUTPUT][0], gamma, mask);
+    else
+    {
+        cv::MatND a = cv::cvarrToMatND(test_array[INPUT_OUTPUT][0]);
+        a.setTo(gamma, mask ? cv::cvarrToMatND(mask) : cv::MatND());
+    }
 }
 
 
@@ -921,7 +947,14 @@ double CxCore_CopyTest::get_success_error_level( int /*test_case_idx*/, int /*i*
 
 void CxCore_CopyTest::run_func()
 {
-    cvCopy(test_array[INPUT][0], test_array[INPUT_OUTPUT][0], test_array[MASK][0]);
+    const CvArr* mask = test_array[MASK][0];
+    if(!test_nd)
+        cvCopy(test_array[INPUT][0], test_array[INPUT_OUTPUT][0], mask);
+    else
+    {
+        cv::MatND c = cv::cvarrToMatND(test_array[INPUT_OUTPUT][0]);
+        cv::cvarrToMatND(test_array[INPUT][0]).copyTo(c, mask ? cv::cvarrToMatND(mask) : cv::MatND());
+    }
 }
 
 
@@ -1343,7 +1376,17 @@ CxCore_SplitTest::CxCore_SplitTest() :
 
 void CxCore_SplitTest::run_func()
 {
-    cvSplit( test_array[INPUT][0], hdrs[0], hdrs[1], hdrs[2], hdrs[3] );
+    int i, nz = (hdrs[0] != 0) + (hdrs[1] != 0) + (hdrs[2] != 0) + (hdrs[3] != 0);
+    
+    if(!test_nd || nz != CV_MAT_CN(test_mat[INPUT][0].type))
+        cvSplit( test_array[INPUT][0], hdrs[0], hdrs[1], hdrs[2], hdrs[3] );
+    else
+    {
+        cv::MatND _hdrs[4];
+        for( i = 0; i < nz; i++ )
+            _hdrs[i] = cv::cvarrToMatND(hdrs[i]);
+        cv::split(cv::cvarrToMatND(test_array[INPUT][0]), _hdrs);
+    }
 }
 
 CxCore_SplitTest split_test;
@@ -1365,7 +1408,17 @@ CxCore_MergeTest::CxCore_MergeTest() :
 
 void CxCore_MergeTest::run_func()
 {
-    cvMerge( hdrs[0], hdrs[1], hdrs[2], hdrs[3], test_array[INPUT_OUTPUT][0] );
+    int i, nz = (hdrs[0] != 0) + (hdrs[1] != 0) + (hdrs[2] != 0) + (hdrs[3] != 0);
+    
+    if(!test_nd || nz != CV_MAT_CN(test_mat[INPUT_OUTPUT][0].type))
+        cvMerge( hdrs[0], hdrs[1], hdrs[2], hdrs[3], test_array[INPUT_OUTPUT][0] );
+    else
+    {
+        cv::MatND _hdrs[4], dst = cv::cvarrToMatND(test_array[INPUT_OUTPUT][0]);
+        for( i = 0; i < nz; i++ )
+            _hdrs[i] = cv::cvarrToMatND(hdrs[i]);
+        cv::merge(_hdrs, nz, dst);
+    }
 }
 
 CxCore_MergeTest merge_test;

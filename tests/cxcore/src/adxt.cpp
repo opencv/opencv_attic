@@ -781,7 +781,13 @@ void CxCore_DFTTest::run_func()
     CvArr* dst = temp_dst ? test_array[TEMP][1] : test_array[OUTPUT][0];
     CvArr* src = inplace ? dst : test_array[INPUT][0];
 
-    cvDFT( src, dst, flags );
+    if(!(flags & CV_DXT_INVERSE))
+        cvDFT( src, dst, flags );
+    else
+    {
+        cv::Mat _src = cv::cvarrToMat(src), _dst = cv::cvarrToMat(dst);
+        idft(_src, _dst, flags & ~CV_DXT_INVERSE);
+    }
 }
 
 
@@ -848,7 +854,13 @@ void CxCore_DCTTest::run_func()
     CvArr* dst = test_array[OUTPUT][0];
     CvArr* src = inplace ? dst : test_array[INPUT][0];
 
-    cvDCT( src, dst, flags );
+    if(!(flags & CV_DXT_INVERSE))
+        cvDCT( src, dst, flags );
+    else
+    {
+        cv::Mat _src = cv::cvarrToMat(src), _dst = cv::cvarrToMat(dst);
+        idct(_src, _dst, flags & ~CV_DXT_INVERSE);
+    }
 }
 
 

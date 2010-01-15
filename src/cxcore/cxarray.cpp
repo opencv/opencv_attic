@@ -67,12 +67,12 @@ cvSetIPLAllocators( Cv_iplCreateImageHeader createHeader,
                     Cv_iplCreateROI createROI,
                     Cv_iplCloneImage cloneImage )
 {
-    if( !createHeader || !allocateData || !deallocate || !createROI || !cloneImage )
-    {
-        if( createHeader || allocateData || deallocate || createROI || cloneImage )
-            CV_Error( CV_StsBadArg, "Either all the pointers should be null or "
-                                    "they all should be non-null" );
-    }
+    int count = (createHeader != 0) + (allocateData != 0) + (deallocate != 0) +
+        (createROI != 0) + (cloneImage != 0);
+    
+    if( count != 0 && count != 5 )
+        CV_Error( CV_StsBadArg, "Either all the pointers should be null or "
+                                 "they all should be non-null" );
 
     CvIPL.createHeader = createHeader;
     CvIPL.allocateData = allocateData;

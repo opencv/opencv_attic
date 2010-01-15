@@ -1869,7 +1869,7 @@ void minMaxLoc(const MatND& a, double* minVal,
             minval = val0;
             minofs = (it.planes[0].data - a.data) + pt0.x*esz;
         }
-        if( val1 > minval )
+        if( val1 > maxval )
         {
             maxval = val1;
             maxofs = (it.planes[0].data - a.data) + pt1.x*esz;

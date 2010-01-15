@@ -43,7 +43,7 @@
 
 using namespace cv;
 
-//#define CHECK_C
+#define CHECK_C
 
 Size sz( 200, 500);
 
@@ -251,14 +251,14 @@ void CV_PCATest::run( int )
 	cvProjectPCA( &_testPoints, &_avg, &_evec, &_prjTestPoints );
 	cvBackProjectPCA( &_prjTestPoints, &_avg, &_evec, &_backPrjTestPoints );
 
-	err = norm(prjTestPoints, rPrjTestPoints.t(), CV_RELATIVE_L2);
+	err = norm(prjTestPoints, rPrjTestPoints, CV_RELATIVE_L2);
 	if( err > diffPrjEps )
 	{
 		ts->printf( CvTS::LOG, "bad accuracy of cvProjectPCA() (CV_PCA_DATA_AS_ROW); err = %f\n", err );
 		code = CvTS::FAIL_BAD_ACCURACY;
 		goto exit_func;
 	}
-	err = norm(backPrjTestPoints, rBackPrjTestPoints.t(), CV_RELATIVE_L2);
+	err = norm(backPrjTestPoints, rBackPrjTestPoints, CV_RELATIVE_L2);
 	if( err > diffBackPrjEps )
 	{
 		ts->printf( CvTS::LOG, "bad accuracy of cvBackProjectPCA() (CV_PCA_DATA_AS_ROW); err = %f\n", err );
@@ -269,24 +269,24 @@ void CV_PCATest::run( int )
 	// 3. check C PCA & COL
 	_points = cPoints;
 	_testPoints = cTestPoints;
-	avg.t(); _avg = avg;
-	eval.t(); _eval = eval;
-	evec.t(); _evec = evec;
-	prjTestPoints.t(); _prjTestPoints = prjTestPoints;
-	backPrjTestPoints.t(); _backPrjTestPoints = backPrjTestPoints;
+	avg = avg.t(); _avg = avg;
+	eval = eval.t(); _eval = eval;
+	evec = evec.t(); _evec = evec;
+    prjTestPoints = prjTestPoints.t(); _prjTestPoints = prjTestPoints;
+    backPrjTestPoints = backPrjTestPoints.t(); _backPrjTestPoints = backPrjTestPoints;
 
 	cvCalcPCA( &_points, &_avg, &_eval, &_evec, CV_PCA_DATA_AS_COL );
 	cvProjectPCA( &_testPoints, &_avg, &_evec, &_prjTestPoints );
 	cvBackProjectPCA( &_prjTestPoints, &_avg, &_evec, &_backPrjTestPoints );
 
-	err = norm(prjTestPoints, rPrjTestPoints, CV_RELATIVE_L2 );
+	err = norm(prjTestPoints, rPrjTestPoints.t(), CV_RELATIVE_L2 );
 	if( err > diffPrjEps )
 	{
 		ts->printf( CvTS::LOG, "bad accuracy of cvProjectPCA() (CV_PCA_DATA_AS_COL); err = %f\n", err );
 		code = CvTS::FAIL_BAD_ACCURACY;
 		goto exit_func;
 	}
-	err = norm(backPrjTestPoints, rBackPrjTestPoints, CV_RELATIVE_L2);
+	err = norm(backPrjTestPoints, rBackPrjTestPoints.t(), CV_RELATIVE_L2);
 	if( err > diffBackPrjEps )
 	{
 		ts->printf( CvTS::LOG, "bad accuracy of cvBackProjectPCA() (CV_PCA_DATA_AS_COL); err = %f\n", err );

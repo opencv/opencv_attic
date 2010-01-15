@@ -181,12 +181,14 @@ template<typename T> static CvStatus CV_STDCALL InvSqrt(const T* src, T* dst, in
 
 }
 
+#if !CV_SSE2
 template<typename T> static CvStatus CV_STDCALL Sqrt(const T* src, T* dst, int len)
 {
     for( int i = 0; i < len; i++ )
         dst[i] = std::sqrt(src[i]);
     return CV_OK;
 }
+#endif
 
 template<typename T> static CvStatus CV_STDCALL
 Magnitude(const T* x, const T* y, T* mag, int len)
@@ -249,7 +251,7 @@ template<> CvStatus CV_STDCALL InvSqrt(const float* src, float* dst, int len)
     return CV_OK;
 }
 
-template<> CvStatus CV_STDCALL Sqrt(const float* src, float* dst, int len)
+CvStatus CV_STDCALL Sqrt(const float* src, float* dst, int len)
 {
     int i = 0;
     if( (((size_t)src|(size_t)dst) & 15) == 0 )
@@ -271,7 +273,7 @@ template<> CvStatus CV_STDCALL Sqrt(const float* src, float* dst, int len)
     return CV_OK;
 }
 
-template<> CvStatus CV_STDCALL Sqrt(const double* src, double* dst, int len)
+CvStatus CV_STDCALL Sqrt(const double* src, double* dst, int len)
 {
     int i = 0;
     if( (((size_t)src|(size_t)dst) & 15) == 0 )
@@ -735,11 +737,6 @@ static CvStatus CV_STDCALL Exp_32f( const float *_x, float *y, int n )
     DBLINT buf[4];
     const Cv32suf* x = (const Cv32suf*)_x;
 
-    if( !x || !y )
-        return CV_NULLPTR_ERR;
-    if( n <= 0 )
-        return CV_BADSIZE_ERR;
-
     buf[0].i.lo = buf[1].i.lo = buf[2].i.lo = buf[3].i.lo = 0;
 
     for( ; i <= n - 4; i += 4 )
@@ -839,11 +836,6 @@ static CvStatus CV_STDCALL Exp_64f( const double *_x, double *y, int n )
     int i = 0;
     DBLINT buf[4];
     const Cv64suf* x = (const Cv64suf*)_x;
-
-    if( !x || !y )
-        return CV_NULLPTR_ERR;
-    if( n <= 0 )
-        return CV_BADSIZE_ERR;
 
     buf[0].i.lo = buf[1].i.lo = buf[2].i.lo = buf[3].i.lo = 0;
 
@@ -951,11 +943,14 @@ void exp( const Mat& src, Mat& dst )
     dst.create( src.size(), src.type() );
     Size size = getContinuousSize( src, dst, src.channels() );
 
-    MathFunc func = depth == CV_32F ? (MathFunc)Exp_32f : depth == CV_64F ? (MathFunc)Exp_64f : 0;
-    CV_Assert(func != 0);
-
-    for( int y = 0; y < size.height; y++ )
-        func( src.data + src.step*y, dst.data + dst.step*y, size.width );
+    if( depth == CV_32F )
+        for( int y = 0; y < size.height; y++ )
+            Exp_32f( src.ptr<float>(y), dst.ptr<float>(y), size.width );
+    else if( depth == CV_64F )
+        for( int y = 0; y < size.height; y++ )
+            Exp_64f( src.ptr<double>(y), dst.ptr<double>(y), size.width );
+    else
+        CV_Error( CV_StsUnsupportedFormat, "" );
 }
 
 
@@ -1255,11 +1250,6 @@ static CvStatus CV_STDCALL Log_32f( const float *_x, float *y, int n )
 
     const int* x = (const int*)_x;
 
-    if( !x || !y )
-        return CV_NULLPTR_ERR;
-    if( n <= 0 )
-        return CV_BADSIZE_ERR;
-
     for( i = 0; i <= n - 4; i += 4 )
     {
         double x0, x1, x2, x3;
@@ -1356,11 +1346,6 @@ static CvStatus CV_STDCALL Log_64f( const double *x, double *y, int n )
     int i = 0;
     DBLINT buf[4];
     DBLINT *X = (DBLINT *) x;
-
-    if( !x || !y )
-        return CV_NULLPTR_ERR;
-    if( n <= 0 )
-        return CV_BADSIZE_ERR;
 
     for( ; i <= n - 4; i += 4 )
     {
@@ -1459,11 +1444,14 @@ void log( const Mat& src, Mat& dst )
     dst.create( src.size(), src.type() );
     Size size = getContinuousSize( src, dst, src.channels() );
 
-    MathFunc func = depth == CV_32F ? (MathFunc)Log_32f : depth == CV_64F ? (MathFunc)Log_64f : 0;
-    CV_Assert(func != 0);
-
-    for( int y = 0; y < size.height; y++ )
-        func( src.data + src.step*y, dst.data + dst.step*y, size.width );
+    if( depth == CV_32F )
+        for( int y = 0; y < size.height; y++ )
+            Log_32f( src.ptr<float>(y), dst.ptr<float>(y), size.width );
+    else if( depth == CV_64F )
+        for( int y = 0; y < size.height; y++ )
+            Log_64f( src.ptr<double>(y), dst.ptr<double>(y), size.width );
+    else
+        CV_Error( CV_StsUnsupportedFormat, "" );
 }
 
 

@@ -184,15 +184,13 @@ void CV_IOTest::run( int )
         cn = cvTsRandInt(rng) % 4 + 1;
         int sz[] = {cvTsRandInt(rng)%10+1, cvTsRandInt(rng)%10+1, cvTsRandInt(rng)%10+1};
         MatND test_mat_nd(3, sz, CV_MAKETYPE(depth, cn));
-        Mat plain = test_mat_nd;
         
-        rng0.fill(plain, CV_RAND_UNI, Scalar::all(ranges[depth][0]), Scalar::all(ranges[depth][1]));
+        rng0.fill(test_mat_nd, CV_RAND_UNI, Scalar::all(ranges[depth][0]), Scalar::all(ranges[depth][1]));
         if( depth >= CV_32F )
         {
             exp(test_mat_nd, test_mat_nd);
             MatND test_mat_scale(test_mat_nd.dims, test_mat_nd.size, test_mat_nd.type());
-            plain = test_mat_scale;
-            rng0.fill(plain, CV_RAND_UNI, Scalar::all(-1), Scalar::all(1));
+            rng0.fill(test_mat_scale, CV_RAND_UNI, Scalar::all(-1), Scalar::all(1));
             multiply(test_mat_nd, test_mat_scale, test_mat_nd);
         }
         
@@ -208,8 +206,14 @@ void CV_IOTest::run( int )
         
         fs << "test_list" << "[" << 0.0000000000001 << 2 << CV_PI << -3435345 << "2-502 2-029 3egegeg" <<
             "{:" << "month" << 12 << "day" << 31 << "year" << 1969 << "}" << "]";
-        fs << "test_map" << "{" << "x" << 1 << "y" << 2 << "width" << 100 << "height" << 200 <<
-            "lbp" << "[:" << 0 << 1 << 1 << 0 << 1 << 1 << 0 << 1 << "]" << "}";
+        fs << "test_map" << "{" << "x" << 1 << "y" << 2 << "width" << 100 << "height" << 200 << "lbp" << "[:";
+        
+        const uchar arr[] = {0, 1, 1, 0, 1, 1, 0, 1};
+        fs.writeRaw("u", arr, (int)(sizeof(arr)/sizeof(arr[0])));
+
+        fs << "]" << "}";
+        cvWriteComment(*fs, "test comment", 0);
+        
         fs.writeObj("test_seq", seq);
         
         fs.release();
@@ -275,21 +279,44 @@ void CV_IOTest::run( int )
             //cvNorm(&stub, &_test_stub, CV_L2) != 0 ) 
             cvTsCmpEps( &stub1, &_test_stub1, &max_diff, 0, &pt, true) < 0 )
         {
-            ts->printf( CvTS::LOG, "the read nd matrix is not correct: (%.20g vs %.20g) at (%d,%d)\n",
+            ts->printf( CvTS::LOG, "readObj method: the read nd matrix is not correct: (%.20g vs %.20g) vs at (%d,%d)\n",
                        cvGetReal2D(&stub1, pt.y, pt.x), cvGetReal2D(&_test_stub1, pt.y, pt.x),
                        pt.y, pt.x );
             ts->set_failed_test_info( CvTS::FAIL_INVALID_OUTPUT );
             return;
         }
+
+        MatND mat_nd2;
+        fs["test_mat_nd"] >> mat_nd2;
+        CvMatND m_nd2 = mat_nd2;
+        cvGetMat(&m_nd2, &stub, 0, 1);
+        cvReshape(&stub, &stub1, 1, 0);
         
-        if( m_nd && CV_IS_MATND(m_nd))
-            cvReleaseMatND(&m_nd);
+        if( !CV_ARE_TYPES_EQ(&stub, &_test_stub) ||
+            !CV_ARE_SIZES_EQ(&stub, &_test_stub) ||
+            //cvNorm(&stub, &_test_stub, CV_L2) != 0 ) 
+            cvTsCmpEps( &stub1, &_test_stub1, &max_diff, 0, &pt, true) < 0 )
+        {
+            ts->printf( CvTS::LOG, "C++ method: the read nd matrix is not correct: (%.20g vs %.20g) vs at (%d,%d)\n",
+                        cvGetReal2D(&stub1, pt.y, pt.x), cvGetReal2D(&_test_stub1, pt.y, pt.x),
+                        pt.y, pt.x );
+                        ts->set_failed_test_info( CvTS::FAIL_INVALID_OUTPUT );
+                        return;
+        }
+        
+        cvRelease((void**)&m_nd);
             
         CvSparseMat* m_s = (CvSparseMat*)fs["test_sparse_mat"].readObj();
-        CvSparseMat* _test_sparse = (CvSparseMat*)test_sparse_mat;
+        CvSparseMat* _test_sparse_ = (CvSparseMat*)test_sparse_mat;
+        CvSparseMat* _test_sparse = (CvSparseMat*)cvClone(_test_sparse_);
+        cvReleaseSparseMat(&_test_sparse_);
+        SparseMat m_s2;
+        fs["test_sparse_mat"] >> m_s2;
+        CvSparseMat* _m_s2 = (CvSparseMat*)m_s2;
         
-        if( !m_s || !CV_IS_SPARSE_MAT(m_s) || !cvTsCheckSparse(m_s, _test_sparse,
-            depth==CV_32F?FLT_EPSILON:DBL_EPSILON))
+        if( !m_s || !CV_IS_SPARSE_MAT(m_s) ||
+            !cvTsCheckSparse(m_s, _test_sparse,0) ||
+            !cvTsCheckSparse(_m_s2, _test_sparse,0))
         {
             ts->printf( CvTS::LOG, "the read sparse matrix is not correct\n" );
             ts->set_failed_test_info( CvTS::FAIL_INVALID_OUTPUT );
@@ -299,6 +326,7 @@ void CV_IOTest::run( int )
         if( m_s && CV_IS_SPARSE_MAT(m_s))
             cvReleaseSparseMat(&m_s);
         cvReleaseSparseMat(&_test_sparse);
+        cvReleaseSparseMat(&_m_s2);
         
         FileNode tl = fs["test_list"];
         if( tl.type() != FileNode::SEQ || tl.size() != 6 ||
@@ -327,9 +355,26 @@ void CV_IOTest::run( int )
         
         
         int real_lbp_val = 0;
-        FileNodeIterator it = tm_lbp.begin();
-        for( int k = 0; k < 8; k++, ++it )
-            real_lbp_val |= (int)*it << k;
+        FileNodeIterator it;
+        it = tm_lbp.begin();
+        real_lbp_val |= (int)*it << 0;
+        ++it;
+        real_lbp_val |= (int)*it << 1;
+        it++;
+        real_lbp_val |= (int)*it << 2;
+        it += 1;
+        real_lbp_val |= (int)*it << 3;
+        FileNodeIterator it2(it);
+        it2 += 4;
+        real_lbp_val |= (int)*it2 << 7;
+        --it2;
+        real_lbp_val |= (int)*it2 << 6;
+        it2--;
+        real_lbp_val |= (int)*it2 << 5;
+        it2 -= 1;
+        real_lbp_val |= (int)*it2 << 4;
+        it2 += -1;
+        CV_Assert( it == it2 );
         
         if( tm.type() != FileNode::MAP || tm.size() != 5 ||
             real_x != 1 ||

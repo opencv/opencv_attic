@@ -47,7 +47,6 @@
 #include <iterator>
 #include <limits>
 #include <numeric>
-#include "cvaux.h"
 
 using namespace cv;
 using namespace std;
