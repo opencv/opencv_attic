@@ -47,6 +47,8 @@
   #include "cxcore.h"
   #if defined WIN32 || defined _WIN32 || defined WIN64 || defined _WIN64
     #include <windows.h>
+	#undef min
+	#undef max
   #endif
 
 #else // SKIP_INCLUDES
