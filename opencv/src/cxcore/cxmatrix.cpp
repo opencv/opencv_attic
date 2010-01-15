@@ -2514,7 +2514,7 @@ void SparseMat::convertTo( SparseMat& m, int rtype, double alpha ) const
     
     CV_Assert(hdr != 0);
     if( hdr != m.hdr )
-        m.create( m.hdr->dims, m.hdr->size, rtype );
+        m.create( hdr->dims, hdr->size, rtype );
     
     SparseMatConstIterator from = begin();
     size_t i, N = nzcount();
@@ -2949,7 +2949,7 @@ double norm( const SparseMat& src, int normType )
     {
         if( normType == NORM_INF )
             for( i = 0; i < N; i++, ++it )
-                result = std::max(result, (double)*(const float*)it.ptr);
+                result = std::max(result, std::abs((double)*(const float*)it.ptr));
         else if( normType == NORM_L1 )
             for( i = 0; i < N; i++, ++it )
                 result += std::abs(*(const float*)it.ptr);
@@ -2964,7 +2964,7 @@ double norm( const SparseMat& src, int normType )
     {
         if( normType == NORM_INF )
             for( i = 0; i < N; i++, ++it )
-                result = std::max(result, *(const double*)it.ptr);
+                result = std::max(result, std::abs(*(const double*)it.ptr));
         else if( normType == NORM_L1 )
             for( i = 0; i < N; i++, ++it )
                 result += std::abs(*(const double*)it.ptr);

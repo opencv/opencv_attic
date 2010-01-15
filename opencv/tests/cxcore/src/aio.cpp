@@ -180,6 +180,20 @@ void CV_IOTest::run( int )
             test_mat.elemSize(), storage);
         cvSeqPushMulti(seq, test_mat.data, test_mat.cols*test_mat.rows); 
         
+        CvGraph* graph = cvCreateGraph( CV_ORIENTED_GRAPH,
+                                        sizeof(CvGraph), sizeof(CvGraphVtx),
+                                        sizeof(CvGraphEdge), storage );
+        int edges[][2] = {{0,1},{1,2},{2,0},{0,3},{3,4},{4,1}};
+        int i, vcount = 5, ecount = 6;
+        for( i = 0; i < vcount; i++ )
+            cvGraphAddVtx(graph);
+        for( i = 0; i < ecount; i++ )
+        {
+            CvGraphEdge* edge;
+            cvGraphAddEdge(graph, edges[i][0], edges[i][1], 0, &edge);
+            edge->weight = (float)(i+1);
+        }
+        
         depth = cvTsRandInt(rng) % (CV_64F+1);
         cn = cvTsRandInt(rng) % 4 + 1;
         int sz[] = {cvTsRandInt(rng)%10+1, cvTsRandInt(rng)%10+1, cvTsRandInt(rng)%10+1};
@@ -215,6 +229,8 @@ void CV_IOTest::run( int )
         cvWriteComment(*fs, "test comment", 0);
         
         fs.writeObj("test_seq", seq);
+        fs.writeObj("test_graph",graph);
+        CvGraph* graph2 = cvCloneGraph(graph,storage);
         
         fs.release();
         
@@ -306,13 +322,12 @@ void CV_IOTest::run( int )
         
         cvRelease((void**)&m_nd);
             
-        CvSparseMat* m_s = (CvSparseMat*)fs["test_sparse_mat"].readObj();
-        CvSparseMat* _test_sparse_ = (CvSparseMat*)test_sparse_mat;
-        CvSparseMat* _test_sparse = (CvSparseMat*)cvClone(_test_sparse_);
-        cvReleaseSparseMat(&_test_sparse_);
+        Ptr<CvSparseMat> m_s = (CvSparseMat*)fs["test_sparse_mat"].readObj();
+        Ptr<CvSparseMat> _test_sparse_ = (CvSparseMat*)test_sparse_mat;
+        Ptr<CvSparseMat> _test_sparse = (CvSparseMat*)cvClone(_test_sparse_);
         SparseMat m_s2;
         fs["test_sparse_mat"] >> m_s2;
-        CvSparseMat* _m_s2 = (CvSparseMat*)m_s2;
+        Ptr<CvSparseMat> _m_s2 = (CvSparseMat*)m_s2;
         
         if( !m_s || !CV_IS_SPARSE_MAT(m_s) ||
             !cvTsCheckSparse(m_s, _test_sparse,0) ||
@@ -322,11 +337,6 @@ void CV_IOTest::run( int )
             ts->set_failed_test_info( CvTS::FAIL_INVALID_OUTPUT );
             return;
         }
-        
-        if( m_s && CV_IS_SPARSE_MAT(m_s))
-            cvReleaseSparseMat(&m_s);
-        cvReleaseSparseMat(&_test_sparse);
-        cvReleaseSparseMat(&_m_s2);
         
         FileNode tl = fs["test_list"];
         if( tl.type() != FileNode::SEQ || tl.size() != 6 ||
@@ -389,6 +399,29 @@ void CV_IOTest::run( int )
             ts->set_failed_test_info( CvTS::FAIL_INVALID_OUTPUT );
             return;
         }
+        
+        CvGraph* graph3 = (CvGraph*)fs["test_graph"].readObj();
+        if(graph2->active_count != vcount || graph3->active_count != vcount ||
+           graph2->edges->active_count != ecount || graph3->edges->active_count != ecount)
+        {
+            ts->printf( CvTS::LOG, "the cloned or read graph have wrong number of vertices or edges\n" );
+            ts->set_failed_test_info( CvTS::FAIL_INVALID_OUTPUT );
+            return;
+        }
+        
+        for( i = 0; i < ecount; i++ )
+        {
+            CvGraphEdge* edge2 = cvFindGraphEdge(graph2, edges[i][0], edges[i][1]);
+            CvGraphEdge* edge3 = cvFindGraphEdge(graph3, edges[i][0], edges[i][1]);
+            if( !edge2 || edge2->weight != (float)(i+1) ||
+                !edge3 || edge3->weight != (float)(i+1) )
+            {
+                ts->printf( CvTS::LOG, "the cloned or read graph do not have the edge (%d, %d)\n", edges[i][0], edges[i][1] );
+                ts->set_failed_test_info( CvTS::FAIL_INVALID_OUTPUT );
+                return;
+            }
+        }
+        
         fs.release();
         #ifdef _MSC_VER
             _unlink(filename);
