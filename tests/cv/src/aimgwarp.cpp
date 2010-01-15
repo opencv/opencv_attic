@@ -1190,6 +1190,7 @@ private:
 	cv::Mat input0;
 	cv::Mat input1;
 	cv::Mat input2;
+	cv::Mat input_new_cam;
 	cv::Mat input_output;
 };
 
@@ -1200,6 +1201,7 @@ CV_UndistortTest::CV_UndistortTest()
     //spatial_scale_zoom = spatial_scale_decimate;
     test_array[INPUT].push(NULL);
     test_array[INPUT].push(NULL);
+	test_array[INPUT].push(NULL);
 
     spatial_scale_decimate = spatial_scale_zoom;
     //default_timing_param_names = imgwarp_perspective_param_names;
@@ -1240,6 +1242,8 @@ void CV_UndistortTest::get_test_array_types_and_sizes( int test_case_idx, CvSize
     types[INPUT][2] = cvTsRandInt(rng)%2 ? CV_64F : CV_32F;
     sizes[INPUT][1] = cvSize(3,3);
     sizes[INPUT][2] = cvTsRandInt(rng)%2 ? cvSize(4,1) : cvSize(1,4);
+	types[INPUT][3] =  types[INPUT][1];
+	sizes[INPUT][3] = sizes[INPUT][1];
     interpolation = CV_INTER_LINEAR;
 }
 
@@ -1295,6 +1299,11 @@ int CV_UndistortTest::prepare_test_case( int test_case_idx )
     const CvMat* src = &test_mat[INPUT][0];
     double k[4], a[9] = {0,0,0,0,0,0,0,0,1};
     double sz = MAX(src->rows, src->cols);
+
+	double new_cam[9] = {0,0,0,0,0,0,0,0,1};
+	CvMat _new_cam = cvMat(test_mat[INPUT][3].rows,test_mat[INPUT][3].cols,CV_64F,new_cam);
+	CvMat* _new_cam0 = &test_mat[INPUT][3];
+
     CvMat* _a0 = &test_mat[INPUT][1], *_k0 = &test_mat[INPUT][2];
     CvMat _a = cvMat(3,3,CV_64F,a);
     CvMat _k = cvMat(_k0->rows,_k0->cols, CV_MAKETYPE(CV_64F,CV_MAT_CN(_k0->type)),k);
@@ -1320,6 +1329,11 @@ int CV_UndistortTest::prepare_test_case( int test_case_idx )
         }
         else
             k[2] = k[3] = 0;
+
+		new_cam[0] = a[0] + (cvTsRandReal(rng) - (double)0.5)*0.2*a[0]; //10%
+		new_cam[4] = a[4] + (cvTsRandReal(rng) - (double)0.5)*0.2*a[4]; //10%
+		new_cam[2] = a[2] + (cvTsRandReal(rng) - (double)0.5)*0.3*test_mat[INPUT][0].rows; //15%
+		new_cam[5] = a[5] + (cvTsRandReal(rng) - (double)0.5)*0.3*test_mat[INPUT][0].cols; //15%
     }
     else
     {
@@ -1333,7 +1347,25 @@ int CV_UndistortTest::prepare_test_case( int test_case_idx )
     }
 
     cvTsConvert( &_a, _a0 );
-    cvTsConvert( &_k, _k0 );
+
+	if ((cvRandInt(rng)%2) == 0)
+	{
+		cvTsConvert( &_k, _k0 );
+	}
+	else
+	{
+		_k0 = 0;
+	}
+
+	if ((cvRandInt(rng)%2) == 0)
+	{
+		cvTsConvert( &_new_cam, _new_cam0 );
+	}
+	else
+	{
+		 _new_cam0 = 0;
+	}
+    
 
 	//Testing C++ code
 	useCPlus = ((cvTsRandInt(rng) % 2)!=0);
@@ -1342,6 +1374,7 @@ int CV_UndistortTest::prepare_test_case( int test_case_idx )
 		input0 = &test_mat[INPUT][0];
 		input1 = &test_mat[INPUT][1];
 		input2 = &test_mat[INPUT][2];
+		input_new_cam = &test_mat[INPUT][3];
 	}
 
     return code;
