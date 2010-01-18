@@ -1070,8 +1070,8 @@ CV_EXPORTS double invert(const Mat& a, Mat& c, int flags=DECOMP_LU);
 CV_EXPORTS bool solve(const Mat& a, const Mat& b, Mat& x, int flags=DECOMP_LU);
 CV_EXPORTS void sort(const Mat& a, Mat& b, int flags);
 CV_EXPORTS void sortIdx(const Mat& a, Mat& b, int flags);
-CV_EXPORTS void solveCubic(const Mat& coeffs, Mat& roots);
-CV_EXPORTS void solvePoly(const Mat& coeffs, Mat& roots, int maxIters=20, int fig=100);
+CV_EXPORTS int solveCubic(const Mat& coeffs, Mat& roots);
+CV_EXPORTS double solvePoly(const Mat& coeffs, Mat& roots, int maxIters=300);
 CV_EXPORTS bool eigen(const Mat& a, Mat& eigenvalues, int lowindex=-1,
                       int highindex=-1);
 CV_EXPORTS bool eigen(const Mat& a, Mat& eigenvalues, Mat& eigenvectors,
