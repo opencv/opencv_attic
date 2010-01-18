@@ -1945,273 +1945,94 @@ cvSolveCubic( const CvMat* coeffs, CvMat* roots )
 }
 
 
-/*
-  Finds real and complex roots of polynomials of any degree with real
-  coefficients. The original code has been taken from Ken Turkowski's web
-  page (http://www.worldserver.com/turk/opensource/) and adopted for OpenCV.
-  Here is the copyright notice.
-
-  -----------------------------------------------------------------------
-  Copyright (C) 1981-1999 Ken Turkowski. <turk@computer.org>
-
-  All rights reserved.
-
-  Warranty Information
-  Even though I have reviewed this software, I make no warranty
-  or representation, either express or implied, with respect to this
-  software, its quality, accuracy, merchantability, or fitness for a
-  particular purpose.  As a result, this software is provided "as is,"
-  and you, its user, are assuming the entire risk as to its quality
-  and accuracy.
-
-  This code may be used and freely distributed as long as it includes
-  this copyright notice and the above warranty information.
-*/
-
-
-/*******************************************************************************
- * FindPolynomialRoots
- *
- * The Bairstow and Newton correction formulae are used for a simultaneous
- * linear and quadratic iterated synthetic division.  The coefficients of
- * a polynomial of degree n are given as a[i] (i=0,i,..., n) where a[0] is
- * the constant term.  The coefficients are scaled by dividing them by
- * their geometric mean.  The Bairstow or Newton iteration method will
- * nearly always converge to the number of figures carried, fig, either to
- * root values or to their reciprocals.  If the simultaneous Newton and
- * Bairstow iteration fails to converge on root values or their
- * reciprocals in maxiter iterations, the convergence requirement will be
- * successively reduced by one decimal figure.  This program anticipates
- * and protects against loss of significance in the quadratic synthetic
- * division.  (Refer to "On Programming the Numerical Solution of
- * Polynomial Equations," by K. W. Ellenberger, Commun. ACM 3 (Dec. 1960),
- * 644-647.)  The real and imaginary part of each root is stated as u[i]
- * and v[i], respectively.
- *
- * ACM algorithm #30 - Numerical Solution of the Polynomial Equation
- * K. W. Ellenberger
- * Missle Division, North American Aviation, Downey, California
- * Converted to C, modified, optimized, and structured by
- * Ken Turkowski
- * CADLINC, Inc., Palo Alto, California
- *******************************************************************************/
-
-#define MAXN 16
-
-static void icvFindPolynomialRoots(const double *a, double *u, int n, int maxiter, int fig)
+int cv::solveCubic( const Mat& coeffs, Mat& roots )
 {
-  int i;
-  int j;
-  double h[MAXN + 3], b[MAXN + 3], c[MAXN + 3], d[MAXN + 3], e[MAXN + 3];
-  // [-2 : n]
-  double K, ps, qs, pt, qt, s, rev, r = 0;
-  int t;
-  double p = 0, q = 0, qq;
+    const int n = 3;
+    if( ((roots.rows != 1 || roots.cols != n) &&
+        (roots.rows != n || roots.cols != 1)) ||
+        (roots.type() != CV_32F && roots.type() != CV_64F) )
+        roots.create(n, 1, CV_64F);
 
-  // Zero elements with negative indices
-  b[2 + -1] = b[2 + -2] =
-    c[2 + -1] = c[2 + -2] =
-    d[2 + -1] = d[2 + -2] =
-    e[2 + -1] = e[2 + -2] =
-    h[2 + -1] = h[2 + -2] = 0.0;
-
-  // Copy polynomial coefficients to working storage
-  for (j = n; j >= 0; j--)
-    h[2 + j] = *a++; // Note reversal of coefficients
-
-  t = 1;
-  K = pow(10.0, (double)(fig)); // Relative accuracy
-
-  for (; h[2 + n] == 0.0; n--) { // Look for zero high-order coeff.
-    *u++ = 0.0;
-    *u++ = 0.0;
-  }
-
- INIT:
-  if (n == 0)
-    return;
-
-  ps = qs = pt = qt = s = 0.0;
-  rev = 1.0;
-  K = pow(10.0, (double)(fig));
-
-  if (n == 1) {
-    r = -h[2 + 1] / h[2 + 0];
-    goto LINEAR;
-  }
-
-  for (j = n; j >= 0; j--) // Find geometric mean of coeff's
-    if (h[2 + j] != 0.0)
-      s += log(fabs(h[2 + j]));
-  s = exp(s / (n + 1));
-
-  for (j = n; j >= 0; j--) // Normalize coeff's by mean
-    h[2 + j] /= s;
-
-  if (fabs(h[2 + 1] / h[2 + 0]) < fabs(h[2 + n - 1] / h[2 + n])) {
-  REVERSE:
-    t = -t;
-    for (j = (n - 1) / 2; j >= 0; j--) {
-      s = h[2 + j];
-      h[2 + j] = h[2 + n - j];
-      h[2 + n - j] = s;
-    }
-  }
-  if (qs != 0.0) {
-    p = ps;
-    q = qs;
-  } else {
-    if (h[2 + n - 2] == 0.0) {
-      q = 1.0;
-      p = -2.0;
-    } else {
-      q = h[2 + n] / h[2 + n - 2];
-      p = (h[2 + n - 1] - q * h[2 + n - 3]) / h[2 + n - 2];
-    }
-    if (n == 2)
-      goto QADRTIC;
-    r = 0.0;
-  }
- ITERATE:
-  for (i = maxiter; i > 0; i--) {
-
-    for (j = 0; j <= n; j++) { // BAIRSTOW
-      b[2 + j] = h[2 + j] - p * b[2 + j - 1] - q * b[2 + j - 2];
-      c[2 + j] = b[2 + j] - p * c[2 + j - 1] - q * c[2 + j - 2];
-    }
-    if ((h[2 + n - 1] != 0.0) && (b[2 + n - 1] != 0.0)) {
-      if (fabs(h[2 + n - 1] / b[2 + n - 1]) >= K) {
-	b[2 + n] = h[2 + n] - q * b[2 + n - 2];
-      }
-      if (b[2 + n] == 0.0)
-	goto QADRTIC;
-      if (K < fabs(h[2 + n] / b[2 + n]))
-	goto QADRTIC;
-    }
-
-    for (j = 0; j <= n; j++) { // NEWTON
-      d[2 + j] = h[2 + j] + r * d[2 + j - 1]; // Calculate polynomial at r
-      e[2 + j] = d[2 + j] + r * e[2 + j - 1]; // Calculate derivative at r
-    }
-    if (d[2 + n] == 0.0)
-      goto LINEAR;
-    if (K < fabs(h[2 + n] / d[2 + n]))
-      goto LINEAR;
-
-    c[2 + n - 1] = -p * c[2 + n - 2] - q * c[2 + n - 3];
-    s = c[2 + n - 2] * c[2 + n - 2] - c[2 + n - 1] * c[2 + n - 3];
-    if (s == 0.0) {
-      p -= 2.0;
-      q *= (q + 1.0);
-    } else {
-      p += (b[2 + n - 1] * c[2 + n - 2] - b[2 + n] * c[2 + n - 3]) / s;
-      q += (-b[2 + n - 1] * c[2 + n - 1] + b[2 + n] * c[2 + n - 2]) / s;
-    }
-    if (e[2 + n - 1] == 0.0)
-      r -= 1.0; // Minimum step
+    CvMat _coeffs = coeffs, _roots = roots;
+    int nroots = cvSolveCubic( &_coeffs, &_roots);
+    if( nroots == 0 )
+        roots = Mat();
+    else if( roots.rows > 1 )
+        roots = roots.rowRange(0, nroots);
     else
-      r -= d[2 + n] / e[2 + n - 1]; // Newton's iteration
-  }
-  ps = pt;
-  qs = qt;
-  pt = p;
-  qt = q;
-  if (rev < 0.0)
-    K /= 10.0;
-  rev = -rev;
-  goto REVERSE;
-
- LINEAR:
-  if (t < 0)
-    r = 1.0 / r;
-  n--;
-  *u++ = r;
-  *u++ = 0.0;
-
-  for (j = n; j >= 0; j--) { // Polynomial deflation by lin-nomial
-    if ((d[2 + j] != 0.0) && (fabs(h[2 + j] / d[2 + j]) < K))
-      h[2 + j] = d[2 + j];
-    else
-      h[2 + j] = 0.0;
-  }
-
-  if (n == 0)
-    return;
-  goto ITERATE;
-
- QADRTIC:
-  if (t < 0) {
-    p /= q;
-    q = 1.0 / q;
-  }
-  n -= 2;
-
-  if (0.0 < (q - (p * p / 4.0))) { // Two complex roots
-    s = sqrt(q - (p * p / 4.0));
-    *u++ = -p / 2.0;
-    *u++ = s;
-    *u++ = -p / 2.0;
-    *u++ = -s;
-  } else { // Two real roots
-    s = sqrt(((p * p / 4.0)) - q);
-    if (p < 0.0)
-      *u++ = qq = -p / 2.0 + s;
-    else
-      *u++ = qq = -p / 2.0 - s;
-    *u++ = 0.0;
-    *u++ = q / qq;
-    *u++ = 0.0;
-  }
-
-  for (j = n; j >= 0; j--) { // Polynomial deflation by quadratic
-    if ((b[2 + j] != 0.0) && (fabs(h[2 + j] / b[2 + j]) < K))
-      h[2 + j] = b[2 + j];
-    else
-      h[2 + j] = 0.0;
-  }
-  goto INIT;
+        roots = roots.colRange(0, nroots);
+    return nroots;
 }
 
-#undef MAXN
-
-void cvSolvePoly(const CvMat* a, CvMat *r, int maxiter, int fig)
+/* finds complex roots of a polynomial using Durand-Kerner method:
+   http://en.wikipedia.org/wiki/Durand%E2%80%93Kerner_method */
+double cv::solvePoly( const Mat& coeffs0, Mat& roots0, int maxIters )
 {
-    int m, n;
-    double *ad = 0, *rd = 0;
+    typedef Complex<double> C;
 
-    CV_Assert(maxiter > 0);
-    if (CV_MAT_TYPE(a->type) != CV_32FC1 &&
-        CV_MAT_TYPE(a->type) != CV_64FC1)
-        CV_Error(CV_StsUnsupportedFormat, "coeffs must be either CV_32FC1 or CV_64FC1");
-    if (CV_MAT_TYPE(r->type) != CV_32FC2 &&
-        CV_MAT_TYPE(r->type) != CV_64FC2)
-        CV_Error(CV_StsUnsupportedFormat, "roots must be either CV_32FC2 or CV_64FC2");
-    m = a->rows * a->cols;
-    n = r->rows * r->cols;
+    double maxDiff = 0;
+    int iter, i, j, n;
 
-    if (m - 1 != n)
-        CV_Error(CV_StsUnmatchedFormats, "must have n + 1 coefficients");
+    CV_Assert( (coeffs0.cols == 1 || coeffs0.rows == 1) &&
+               (coeffs0.depth() == CV_32F || coeffs0.depth() == CV_64F) &&
+               coeffs0.channels() <= 2 );
+    n = coeffs0.cols + coeffs0.rows - 2;
 
-    if( CV_MAT_DEPTH(a->type) == CV_32F || !CV_IS_MAT_CONT(a->type))
+    if( ((roots0.rows != 1 || roots0.cols != n) &&
+        (roots0.rows != n || roots0.cols != 1)) ||
+        (roots0.type() != CV_32FC2 && roots0.type() != CV_64FC2) )
+        roots0.create( n, 1, CV_64FC2 );
+
+    AutoBuffer<C> buf(n*2+2);
+    C *coeffs = buf, *roots = coeffs + n + 1;
+    Mat coeffs1(coeffs0.size(), CV_MAKETYPE(CV_64F, coeffs0.channels()), coeffs0.channels() == 2 ? coeffs : roots);
+    coeffs0.convertTo(coeffs1, coeffs1.type());
+    if( coeffs0.channels() == 1 )
     {
-        ad = (double*)cvStackAlloc(m*sizeof(ad[0]));
-        CvMat _a = cvMat( a->rows, a->cols, CV_64F, ad );
-        cvConvert( a, &_a );
+        const double* rcoeffs = (const double*)roots;
+        for( i = 0; i <= n; i++ )
+            coeffs[i] = C(rcoeffs[i], 0);
     }
-    else
-        ad = a->data.db;
 
-    if( CV_MAT_DEPTH(r->type) == CV_32F || !CV_IS_MAT_CONT(r->type))
-        rd = (double*)cvStackAlloc(n*sizeof(ad[0]));
-    else
-        rd = r->data.db;
+    C p(1, 0), r(1, 1);
 
-    icvFindPolynomialRoots( ad, rd, n, maxiter, fig);
-    if( rd != r->data.db )
+    for( i = 0; i < n; i++ )
     {
-        CvMat _r = cvMat( r->rows, r->cols, CV_64FC2, rd );
-        cvConvert( &_r, r );
+        roots[i] = p;
+        p = p * r;
     }
+
+    maxIters = maxIters <= 0 ? 300 : maxIters;
+    for( iter = 0; iter < maxIters; iter++ )
+    {
+        maxDiff = 0;
+        for( i = 0; i < n; i++ )
+        {
+            p = roots[i];
+            C num = coeffs[0], denom = 1;
+            for( j = 0; j < n; j++ )
+            {
+                num = num*p + coeffs[j+1];
+                if( j != i ) denom = denom * (p - roots[j]);
+            }
+            num /= denom;
+            roots[i] = p - num;
+            maxDiff = max(maxDiff, abs(num));
+        }
+        if( maxDiff <= 0 )
+            break;
+    }
+
+    Mat(roots0.size(), CV_64FC2, roots).convertTo(roots0, roots0.type());
+    return maxDiff;
+}
+
+
+void cvSolvePoly(const CvMat* a, CvMat *r, int maxiter, int)
+{
+    cv::Mat _a = cv::cvarrToMat(a), _r = cv::cvarrToMat(r), _r0 = r;
+    cv::solvePoly(_a, _r, maxiter);
+    CV_Assert( _r.data == _r0.data ); // check that the array of roots was not reallocated
 }
 
 
