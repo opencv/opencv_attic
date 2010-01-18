@@ -591,9 +591,6 @@ protected:
 	void get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types );
 	double get_success_error_level( int test_case_idx, int i, int j );
 	void run_func();
-	void cvTsDistortPoints(const CvMat* _src, CvMat* _dst, const CvMat* _cameraMatrix,
-		const CvMat* _distCoeffs,
-		const CvMat* _R, const CvMat* _P);
 
 private:
 	bool useCPlus;
@@ -848,8 +845,8 @@ void CV_InitUndistortRectifyMapTest::prepare_to_validation(int /*test_case_idx*/
 	{
 		double u = test_mat[INPUT][0].data.db[2*i];
 		double v = test_mat[INPUT][0].data.db[2*i+1];
-		_points.data.db[2*i] = (double)_map1.data.fl[(int)(v*_map1.cols+u)];
-		_points.data.db[2*i+1] = (double)_map2.data.fl[(int)(v*_map2.cols+u)];
+		_points.data.db[2*i] = (double)_map1.data.fl[(int)v*_map1.cols+(int)u];
+		_points.data.db[2*i+1] = (double)_map2.data.fl[(int)v*_map2.cols+(int)u];
 	}
 
 	//---
@@ -864,6 +861,10 @@ void CV_InitUndistortRectifyMapTest::prepare_to_validation(int /*test_case_idx*/
 	delete[] new_cam;
 	delete[] points;
 	delete[] r_points;
+	if (_mapx)
+		cvReleaseMat(&_mapx);
+	if (_mapy)
+		cvReleaseMat(&_mapy);
 }
 
 void CV_InitUndistortRectifyMapTest::run_func()
@@ -888,43 +889,6 @@ void CV_InitUndistortRectifyMapTest::run_func()
 	}
 }
 
-void CV_InitUndistortRectifyMapTest::cvTsDistortPoints(const CvMat* _src, CvMat* _dst, const CvMat* _cameraMatrix,
-													   const CvMat* _distCoeffs,
-													   const CvMat* _R, const CvMat* _P)
-{
-	double a[9];
-	for (int i=0;i<N_POINTS;i++)
-	{
-		int movement = _P->cols > 3 ? 1 : 0;
-		double x = (_src->data.db[2*i]-_P->data.db[2])/_P->data.db[0];
-		double y = (_src->data.db[2*i+1]-_P->data.db[5+movement])/_P->data.db[4+movement];
-		CvMat inverse = cvMat(3,3,CV_64F,a);
-		cvInvert(_R,&inverse);
-		double w1 = x*inverse.data.db[6]+y*inverse.data.db[7]+inverse.data.db[8];
-		double _x = (x*inverse.data.db[0]+y*inverse.data.db[1]+inverse.data.db[2])/w1;
-		double _y = (x*inverse.data.db[3]+y*inverse.data.db[4]+inverse.data.db[5])/w1;
-
-		//Distortions
-
-		double r2 = _x*_x+_y*_y;
-
-		double __x = _x*(1+_distCoeffs->data.db[0]*r2+_distCoeffs->data.db[1]*r2*r2)+
-			2*_distCoeffs->data.db[2]*_x*_y+_distCoeffs->data.db[3]*(r2+2*_x*_x);
-		double __y = _y*(1+_distCoeffs->data.db[0]*r2+_distCoeffs->data.db[1]*r2*r2)+
-			2*_distCoeffs->data.db[3]*_x*_y+_distCoeffs->data.db[2]*(r2+2*_y*_y);
-		if ((_distCoeffs->cols > 4) || (_distCoeffs->rows > 4))
-		{
-			__x+=_x*_distCoeffs->data.db[4]*r2*r2*r2;
-			__y+=_y*_distCoeffs->data.db[4]*r2*r2*r2;
-		}
-
-
-		_dst->data.db[2*i] = __x*_cameraMatrix->data.db[0]+_cameraMatrix->data.db[2];
-		_dst->data.db[2*i+1] = __y*_cameraMatrix->data.db[4]+_cameraMatrix->data.db[5];
-
-	}
-}
-
 double CV_InitUndistortRectifyMapTest::get_success_error_level( int /*test_case_idx*/, int /*i*/, int /*j*/ )
 {
 	return 2;
@@ -932,10 +896,6 @@ double CV_InitUndistortRectifyMapTest::get_success_error_level( int /*test_case_
 
 CV_InitUndistortRectifyMapTest::~CV_InitUndistortRectifyMapTest()
 {
-	if (_mapx)
-		cvReleaseMat(&_mapx);
-	if (_mapy)
-		cvReleaseMat(&_mapy);
-}
 
+}
 CV_InitUndistortRectifyMapTest init_undistort_rectify_map_test;
