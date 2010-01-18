@@ -7,14 +7,12 @@
 #include <vector>
 #include <iostream>
 
-#if 0
-
 typedef std::complex<double> complex_type;
 
 struct pred_complex {
     bool operator() (const complex_type& lhs, const complex_type& rhs) const
     {
-        return lhs.real() != rhs.real() ? lhs.real() < rhs.real() : lhs.imag() < rhs.imag();
+        return fabs(lhs.real() - rhs.real()) > fabs(rhs.real())*FLT_EPSILON ? lhs.real() < rhs.real() : lhs.imag() < rhs.imag();
     }
 };
 
@@ -76,7 +74,7 @@ void CV_SolvePolyTest::run( int )
 
         bool pass = false;
         double div;
-        for (int maxiter = 10; !pass && maxiter < 10000; maxiter *= 2)
+        for (int maxiter = 100; !pass && maxiter < 10000; maxiter *= 2)
         {
             for (int j = 0; j < n + 1; ++j)
 	            a[j] = c[j].real();
@@ -113,10 +111,9 @@ void CV_SolvePolyTest::run( int )
             ts->printf( CvTS::LOG, "\n" );
             for (size_t j=0;j<ar.size();++j)
 	            ts->printf( CvTS::LOG, "ar[%d]=(%g, %g)\n", j, ar[j].real(), ar[j].imag());
+            break;
         }
     }
 }
 
 CV_SolvePolyTest solve_poly_test;
-
-#endif

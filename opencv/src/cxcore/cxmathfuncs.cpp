@@ -2009,10 +2009,10 @@ double cv::solvePoly( const Mat& coeffs0, Mat& roots0, int maxIters )
         for( i = 0; i < n; i++ )
         {
             p = roots[i];
-            C num = coeffs[0], denom = 1;
+            C num = coeffs[n], denom = 1;
             for( j = 0; j < n; j++ )
             {
-                num = num*p + coeffs[j+1];
+                num = num*p + coeffs[n-j-1];
                 if( j != i ) denom = denom * (p - roots[j]);
             }
             num /= denom;
