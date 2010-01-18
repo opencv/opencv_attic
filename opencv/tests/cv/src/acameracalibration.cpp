@@ -955,26 +955,28 @@ void CV_CalibrationMatrixValuesTest_CPP::calibMatrixValues( const Mat& cameraMat
 CV_CalibrationMatrixValuesTest_CPP calibMatrixValues_test_cpp;
 
 //----------------------------------------- CV_ProjectPointsTest --------------------------------
-void calcdfdx( const vector<Point2f>& f1, const vector<vector<Point2f> >& arrF2, float eps, Mat& dfdx )
+void calcdfdx( const vector<vector<Point2f> >& leftF, const vector<vector<Point2f> >& rightF, double eps, Mat& dfdx )
 {
     const int fdim = 2;
-	CV_Assert( !f1.empty() && ! arrF2.empty() && ! arrF2[0].empty() );
-	CV_Assert( f1.size() ==  arrF2[0].size() );
-	CV_Assert( fabs(eps) > std::numeric_limits<float>::epsilon() );
-	int fcount = f1.size(), xdim = arrF2.size();
+	CV_Assert( !leftF.empty() && !rightF.empty() && !leftF[0].empty() && !rightF[0].empty() );
+	CV_Assert( leftF[0].size() ==  rightF[0].size() );
+	CV_Assert( fabs(eps) > std::numeric_limits<double>::epsilon() );
+	int fcount = leftF[0].size(), xdim = leftF.size();
 
-	dfdx.create( fcount*fdim, xdim, CV_32FC1 );
-	
-	vector<vector<Point2f> >::const_iterator arrF2It = arrF2.begin();
-	for( int xi = 0; xi < xdim; xi++, ++arrF2It )
+	dfdx.create( fcount*fdim, xdim, CV_64FC1 );
+
+	vector<vector<Point2f> >::const_iterator arrLeftIt = leftF.begin();
+	vector<vector<Point2f> >::const_iterator arrRightIt = rightF.begin();
+	for( int xi = 0; xi < xdim; xi++, ++arrLeftIt, ++arrRightIt )
 	{
-        CV_Assert( arrF2It->size() ==  fcount );
-        vector<Point2f>::const_iterator f2It = arrF2It->begin();
-        vector<Point2f>::const_iterator f1It = f1.begin();
-        for( int fi = 0; fi < dfdx.rows; fi+=fdim, ++f1It, ++f2It )
+        CV_Assert( (int)arrLeftIt->size() ==  fcount );
+        CV_Assert( (int)arrRightIt->size() ==  fcount );
+        vector<Point2f>::const_iterator lIt = arrLeftIt->begin();
+        vector<Point2f>::const_iterator rIt = arrRightIt->begin();
+        for( int fi = 0; fi < dfdx.rows; fi+=fdim, ++lIt, ++rIt )
         {
-		    dfdx.at<float>(fi, xi ) = (f1It->x - f2It->x) / eps;
-			dfdx.at<float>(fi+1, xi ) = (f1It->y - f2It->y) / eps;
+            dfdx.at<double>(fi, xi )   = 0.5 * ((double)(rIt->x - lIt->x)) / eps;
+			dfdx.at<double>(fi+1, xi ) = 0.5 * ((double)(rIt->y - lIt->y)) / eps;
 		}
 	}
 }
@@ -1002,31 +1004,26 @@ void CV_ProjectPointsTest::run(int)
 
 	int code = CvTS::OK;
 	const int pointCount = 100;
-	const float objectPointsMinVal = 5.0f,
-                  objectPointsMaxVal = 10.0f;
-    const double  rMinVal = -0.3f,
-				  rMaxVal = 0.3f,
-				  tMinVal = -2.0f,
-				  tMaxVal = 2.0f,
-				  fcMinVal = 1e-5f,
-				  fcMaxVal = 10.0f,
-				  distMinVal = -0.5f,
-				  distMaxVal = 10.0f;    
 
-    Mat tmp;
-    Mat_<float> objectPoints( pointCount, 3);
+	const float zMinVal = 10.0f, zMaxVal = 100.0f,
+                rMinVal = -0.3f, rMaxVal = 0.3f,
+				tMinVal = -2.0f, tMaxVal = 2.0f;
 
-	Mat_<float> rvec( 1, 3), rmat, tvec( 1, 3 ), cameraMatrix( 3, 3, 0.f),
-        distCoeffs( 1, 4 ),  rvec2, rmat2, tvec2, cameraMatrix2, distCoeffs2;
+    const float imgPointErr = 1e-3f,
+                dEps = 1e-3f;
+
+    Size imgSize( 600, 800 );
+    Mat_<float> objPoints( pointCount, 3), rvec( 1, 3), rmat, tvec( 1, 3 ), cameraMatrix( 3, 3 ), distCoeffs( 1, 4 ),
+      leftRvec, rightRvec, leftTvec, rightTvec, leftCameraMatrix, rightCameraMatrix, leftDistCoeffs, rightDistCoeffs;
 
 	RNG rng = *ts->get_rng();
 
 	// generate data
-	for( int y = 0; y < objectPoints.rows; y++ )
-		for( int x = 0; x < objectPoints.cols; x++ )
-			objectPoints(Point(x,y)) = rng.uniform(objectPointsMinVal, objectPointsMaxVal);
+	cameraMatrix << 300.f,  0.f,    imgSize.width/2.f,
+                    0.f,    300.f,  imgSize.height/2.f,
+                    0.f,    0.f,    1.f;
+	distCoeffs << 0.1, 0.01, 0.001, 0.001;
 
-    
 	rvec(0,0) = rng.uniform( rMinVal, rMaxVal );
 	rvec(0,1) = rng.uniform( rMinVal, rMaxVal );
 	rvec(0,2) = rng.uniform( rMinVal, rMaxVal );
@@ -1036,55 +1033,49 @@ void CV_ProjectPointsTest::run(int)
 	tvec(0,1) = rng.uniform( tMinVal, tMaxVal );
 	tvec(0,2) = rng.uniform( tMinVal, tMaxVal );
 
-	//cameraMatrix.setTo( Scalar(0) );
-	float fx, fy, cx, cy,
-		   fx2, fy2, cx2, cy2;
-	fx = cameraMatrix(0,0) = rng.uniform( fcMinVal, fcMaxVal );
-	fy = cameraMatrix(1,1) = rng.uniform( fcMinVal, fcMaxVal );
-	cx = cameraMatrix(0,2) = rng.uniform( fcMinVal, fcMaxVal );
-	cy = cameraMatrix(1,2) = rng.uniform( fcMinVal, fcMaxVal );
-	cameraMatrix(2,2) = 1;
+    for( int y = 0; y < objPoints.rows; y++ )
+	{
+	    Mat point(1, 3, CV_32FC1, objPoints.ptr(y) );
+	    float z = rng.uniform( zMinVal, zMaxVal );
+	    point.at<float>(0,2) = z;
+        point.at<float>(0,0) = (rng.uniform(2.f,(float)(imgSize.width-2)) - cameraMatrix(0,2)) / cameraMatrix(0,0) * z;
+        point.at<float>(0,1) = (rng.uniform(2.f,(float)(imgSize.height-2)) - cameraMatrix(1,2)) / cameraMatrix(1,1) * z;
+        point = (point - tvec) * rmat;
+	}
 
-	float k1, k2, p1, p2;
-	k1 = distCoeffs(0,0) = rng.uniform( distMinVal, distMaxVal );
-	k2 = distCoeffs(0,1) = rng.uniform( distMinVal, distMaxVal );
-	p1 = distCoeffs(0,2) = rng.uniform( distMinVal, distMaxVal );
-	p2 = distCoeffs(0,3) = rng.uniform( distMinVal, distMaxVal );
-
-	vector<Point2f> imagePoints;
-	vector<vector<Point2f> > imagePoints2;
+	vector<Point2f> imgPoints;
+	vector<vector<Point2f> > leftImgPoints;
+	vector<vector<Point2f> > rightImgPoints;
 	Mat dpdrot, dpdt, dpdf, dpdc, dpddist,
 		valDpdrot, valDpdt, valDpdf, valDpdc, valDpddist;
-	float f1[2], f2[2], c1[2], c2[2];
 
-    const float imgPointErr = 1e-4f,
-                rEps = 1e-3f;
-
-	project( objectPoints, rvec, tvec, cameraMatrix, distCoeffs,
-		imagePoints, dpdrot, dpdt, dpdf, dpdc, dpddist, 0 );
+	project( objPoints, rvec, tvec, cameraMatrix, distCoeffs,
+		imgPoints, dpdrot, dpdt, dpdf, dpdc, dpddist, 0 );
 
     // calculate and check image points
-    Mat_<float> points = objectPoints * rmat.t() + repeat(  tvec, objectPoints.rows, 1 );
-	assert( (int)imagePoints.size() == pointCount );
-	vector<Point2f>::const_iterator it = imagePoints.begin();
-	double w;
+    assert( (int)imgPoints.size() == pointCount );
+	vector<Point2f>::const_iterator it = imgPoints.begin();
 	for( int i = 0; i < pointCount; i++, ++it )
 	{
-	    float z = points( i, 2 ),
-              x = points( i, 0 ) / z,
-		      y = points( i, 1 ) / z,
-			  r2 = x*x + y*y,
-			  r4 = r2*r2;
+	    Point3d p( objPoints(i,0), objPoints(i,1), objPoints(i,2) );
+	    double z = p.x*rmat(2,0) + p.y*rmat(2,1) + p.z*rmat(2,2) + tvec(0,2),
+               x = (p.x*rmat(0,0) + p.y*rmat(0,1) + p.z*rmat(0,2) + tvec(0,0)) / z,
+               y = (p.x*rmat(1,0) + p.y*rmat(1,1) + p.z*rmat(1,2) + tvec(0,1)) / z,
+               r2 = x*x + y*y,
+			   r4 = r2*r2;
 		Point2f validImgPoint;
-		float a1 = 2*x*y,
-              a2 = r2 + 2*x*x,
-              a3 = r2 + 2*y*y,
-              cdist = 1+k1*r2+k2*r4;
-		validImgPoint.x = fx*(x*cdist + p1*a1 + p2*a2) + cx;
-		validImgPoint.y = fy*(y*cdist + p1*a3 + p2*a1) + cy;
+		double a1 = 2*x*y,
+               a2 = r2 + 2*x*x,
+               a3 = r2 + 2*y*y,
+               cdist = 1+distCoeffs(0,0)*r2+distCoeffs(0,1)*r4;
+		validImgPoint.x = (double)cameraMatrix(0,0)*(x*cdist + (double)distCoeffs(0,2)*a1 + (double)distCoeffs(0,3)*a2)
+            + (double)cameraMatrix(0,2);
+		validImgPoint.y = (double)cameraMatrix(1,1)*(y*cdist + (double)distCoeffs(0,2)*a3 + distCoeffs(0,3)*a1)
+            + (double)cameraMatrix(1,2);
 
-        if( fabs(it->x - validImgPoint.x) > fabs(imgPointErr*validImgPoint.x) ||
-            fabs(it->y - validImgPoint.y) > fabs(imgPointErr*validImgPoint.y) )
+        Point2f ssdfp = *it;
+        if( fabs(it->x - validImgPoint.x) > imgPointErr ||
+            fabs(it->y - validImgPoint.y) > imgPointErr )
 		{
 			ts->printf( CvTS::LOG, "bad image point\n" );
 			code = CvTS::FAIL_BAD_ACCURACY;
@@ -1093,91 +1084,103 @@ void CV_ProjectPointsTest::run(int)
 	}
 
 	// check derivatives
-    imagePoints2.resize(3);
+	// 1. rotation
+	leftImgPoints.resize(3);
+    rightImgPoints.resize(3);
 	for( int i = 0; i < 3; i++ )
 	{
-        rvec.copyTo( rvec2 );
-        rvec2(0,i) += rEps;
-        project( objectPoints, rvec2, tvec, cameraMatrix, distCoeffs,
-            imagePoints2[i], valDpdrot, valDpdt, valDpdf, valDpdc, valDpddist, 0 );
+        rvec.copyTo( leftRvec ); leftRvec(0,i) -= dEps;
+        project( objPoints, leftRvec, tvec, cameraMatrix, distCoeffs,
+            leftImgPoints[i], valDpdrot, valDpdt, valDpdf, valDpdc, valDpddist, 0 );
+        rvec.copyTo( rightRvec ); rightRvec(0,i) += dEps;
+        project( objPoints, rightRvec, tvec, cameraMatrix, distCoeffs,
+            rightImgPoints[i], valDpdrot, valDpdt, valDpdf, valDpdc, valDpddist, 0 );
 	}
-    calcdfdx( imagePoints, imagePoints2, rEps, valDpdrot );
-    dpdrot.convertTo(tmp, CV_32FC1); dpdrot = tmp;
-	if( norm( dpdrot, valDpdrot ) > 0.001 )
+    calcdfdx( leftImgPoints, rightImgPoints, dEps, valDpdrot );
+    if( norm( dpdrot, valDpdrot, NORM_INF ) > 2.3 )
 	{
 		ts->printf( CvTS::LOG, "bad dpdrot\n" );
 		code = CvTS::FAIL_BAD_ACCURACY;
-		/*goto _exit_;*/
 	}
 
-    imagePoints2.resize(3);
-	for( int i = 0; i < 3; i++ )
+    // 2. translation
+    for( int i = 0; i < 3; i++ )
 	{
-        tvec.copyTo( tvec2 );
-        tvec2(0,i) += rEps;
-        project( objectPoints, rvec, tvec2, cameraMatrix, distCoeffs,
-            imagePoints2[i], valDpdrot, valDpdt, valDpdf, valDpdc, valDpddist, 0 );
+        tvec.copyTo( leftTvec ); leftTvec(0,i) -= dEps;
+        project( objPoints, rvec, leftTvec, cameraMatrix, distCoeffs,
+            leftImgPoints[i], valDpdrot, valDpdt, valDpdf, valDpdc, valDpddist, 0 );
+        tvec.copyTo( rightTvec ); rightTvec(0,i) += dEps;
+        project( objPoints, rvec, rightTvec, cameraMatrix, distCoeffs,
+            rightImgPoints[i], valDpdrot, valDpdt, valDpdf, valDpdc, valDpddist, 0 );
 	}
-    calcdfdx( imagePoints, imagePoints2, rEps, valDpdt );
-    dpdt.convertTo(tmp, CV_32FC1); dpdt = tmp;
-	if( norm( dpdt, valDpdt ) > 0.001 )
+    calcdfdx( leftImgPoints, rightImgPoints, dEps, valDpdt );
+    if( norm( dpdt, valDpdt, NORM_INF ) > 0.1 )
 	{
 		ts->printf( CvTS::LOG, "bad dpdtvec\n" );
 		code = CvTS::FAIL_BAD_ACCURACY;
-		//goto _exit_;
 	}
 
-    imagePoints2.resize(2);
-	cameraMatrix.copyTo( cameraMatrix2 );
-	fx2 = cameraMatrix2(0,0) += rEps;
-	project( objectPoints, rvec, tvec, cameraMatrix2, distCoeffs,
-		imagePoints2[0], valDpdrot, valDpdt, valDpdf, valDpdc, valDpddist, 0 );
-    cameraMatrix.copyTo( cameraMatrix2 );
-	fy2 = cameraMatrix2(1,1) += rEps;
-	project( objectPoints, rvec, tvec, cameraMatrix2, distCoeffs,
-		imagePoints2[1], valDpdrot, valDpdt, valDpdf, valDpdc, valDpddist, 0 );
-    calcdfdx( imagePoints, imagePoints2, rEps, valDpdf );
-    dpdf.convertTo(tmp, CV_32FC1); dpdf = tmp;
-	if( norm( dpdf, valDpdf ) > 0.001 )
-	{
-		ts->printf( CvTS::LOG, "bad dpdf\n" );
-		code = CvTS::FAIL_BAD_ACCURACY;
-		//goto _exit_;
-	}
+    // 3. camera matrix
+    // 3.1. focus
+    leftImgPoints.resize(2);
+    rightImgPoints.resize(2);
+    cameraMatrix.copyTo( leftCameraMatrix ); leftCameraMatrix(0,0) -= dEps;
+    project( objPoints, rvec, tvec, leftCameraMatrix, distCoeffs,
+        leftImgPoints[0], valDpdrot, valDpdt, valDpdf, valDpdc, valDpddist, 0 );
+    cameraMatrix.copyTo( leftCameraMatrix ); leftCameraMatrix(1,1) -= dEps;
+    project( objPoints, rvec, tvec, leftCameraMatrix, distCoeffs,
+        leftImgPoints[1], valDpdrot, valDpdt, valDpdf, valDpdc, valDpddist, 0 );
+    cameraMatrix.copyTo( rightCameraMatrix ); rightCameraMatrix(0,0) += dEps;
+    project( objPoints, rvec, tvec, rightCameraMatrix, distCoeffs,
+        rightImgPoints[0], valDpdrot, valDpdt, valDpdf, valDpdc, valDpddist, 0 );
+    cameraMatrix.copyTo( rightCameraMatrix ); rightCameraMatrix(1,1) += dEps;
+    project( objPoints, rvec, tvec, rightCameraMatrix, distCoeffs,
+        rightImgPoints[1], valDpdrot, valDpdt, valDpdf, valDpdc, valDpddist, 0 );
+    calcdfdx( leftImgPoints, rightImgPoints, dEps, valDpdf );
+    if ( norm( dpdf, valDpdf ) > 0.2 )
+    {
+        ts->printf( CvTS::LOG, "bad dpdf\n" );
+        code = CvTS::FAIL_BAD_ACCURACY;
+    }
+    // 3.2. principal point
+    leftImgPoints.resize(2);
+    rightImgPoints.resize(2);
+    cameraMatrix.copyTo( leftCameraMatrix ); leftCameraMatrix(0,2) -= dEps;
+    project( objPoints, rvec, tvec, leftCameraMatrix, distCoeffs,
+        leftImgPoints[0], valDpdrot, valDpdt, valDpdf, valDpdc, valDpddist, 0 );
+    cameraMatrix.copyTo( leftCameraMatrix ); leftCameraMatrix(1,2) -= dEps;
+    project( objPoints, rvec, tvec, leftCameraMatrix, distCoeffs,
+        leftImgPoints[1], valDpdrot, valDpdt, valDpdf, valDpdc, valDpddist, 0 );
+    cameraMatrix.copyTo( rightCameraMatrix ); rightCameraMatrix(0,2) += dEps;
+    project( objPoints, rvec, tvec, rightCameraMatrix, distCoeffs,
+        rightImgPoints[0], valDpdrot, valDpdt, valDpdf, valDpdc, valDpddist, 0 );
+    cameraMatrix.copyTo( rightCameraMatrix ); rightCameraMatrix(1,2) += dEps;
+    project( objPoints, rvec, tvec, rightCameraMatrix, distCoeffs,
+        rightImgPoints[1], valDpdrot, valDpdt, valDpdf, valDpdc, valDpddist, 0 );
+    calcdfdx( leftImgPoints, rightImgPoints, dEps, valDpdc );
+    if ( norm( dpdc, valDpdc ) > 0.2 )
+    {
+        ts->printf( CvTS::LOG, "bad dpdc\n" );
+        code = CvTS::FAIL_BAD_ACCURACY;
+    }
 
-    imagePoints2.resize(2);
-	cameraMatrix.copyTo( cameraMatrix2 );
-    cx2 = cameraMatrix2(0,2) += rEps;
-	project( objectPoints, rvec, tvec, cameraMatrix2, distCoeffs,
-		imagePoints2[0], valDpdrot, valDpdt, valDpdf, valDpdc, valDpddist, 0 );
-    cameraMatrix.copyTo( cameraMatrix2 );
-    cy2 = cameraMatrix2(1,2) += rEps;
-	project( objectPoints, rvec, tvec, cameraMatrix2, distCoeffs,
-		imagePoints2[1], valDpdrot, valDpdt, valDpdf, valDpdc, valDpddist, 0 );
-	calcdfdx( imagePoints, imagePoints2, rEps, valDpdc );
-    dpdc.convertTo(tmp, CV_32FC1); dpdc = tmp;
-	if( norm( dpdc, valDpdc ) > 0.001 )
-	{
-		ts->printf( CvTS::LOG, "bad dpdc\n" );
-		code = CvTS::FAIL_BAD_ACCURACY;
-		//goto _exit_;
-	}
-
-    imagePoints2.resize(distCoeffs.cols);
+    // 4. distortion
+    leftImgPoints.resize(distCoeffs.cols);
+    rightImgPoints.resize(distCoeffs.cols);
 	for( int i = 0; i < distCoeffs.cols; i++ )
 	{
-        distCoeffs.copyTo( distCoeffs2 );
-        distCoeffs2(0,i) += rEps;
-        project( objectPoints, rvec2, tvec, cameraMatrix, distCoeffs,
-            imagePoints2[i], valDpdrot, valDpdt, valDpdf, valDpdc, valDpddist, 0 );
+        distCoeffs.copyTo( leftDistCoeffs ); leftDistCoeffs(0,i) -= dEps;
+        project( objPoints, rvec, tvec, cameraMatrix, leftDistCoeffs,
+            leftImgPoints[i], valDpdrot, valDpdt, valDpdf, valDpdc, valDpddist, 0 );
+        distCoeffs.copyTo( rightDistCoeffs ); rightDistCoeffs(0,i) += dEps;
+        project( objPoints, rvec, tvec, cameraMatrix, rightDistCoeffs,
+            rightImgPoints[i], valDpdrot, valDpdt, valDpdf, valDpdc, valDpddist, 0 );
 	}
-    calcdfdx( imagePoints, imagePoints2, rEps, valDpddist );
-    dpddist.convertTo(tmp, CV_32FC1); dpddist = tmp;
-	if( norm( dpddist, valDpddist ) > 0.001 )
+    calcdfdx( leftImgPoints, rightImgPoints, dEps, valDpddist );
+    if( norm( dpddist, valDpddist ) > 0.3 )
 	{
 		ts->printf( CvTS::LOG, "bad dpddist\n" );
 		code = CvTS::FAIL_BAD_ACCURACY;
-//		goto _exit_;
 	}
 
 _exit_:
@@ -1186,7 +1189,45 @@ _exit_:
 	ts->set_failed_test_info( code );
 }
 
+//----------------------------------------- CV_ProjectPointsTest_C --------------------------------
+class CV_ProjectPointsTest_C : public CV_ProjectPointsTest
+{
+public:
+	CV_ProjectPointsTest_C() :
+        CV_ProjectPointsTest( "projectPoints-c", "cvProjectPoints" ) {}
+protected:
+	virtual void project( const Mat& objectPoints,
+		const Mat& rvec, const Mat& tvec,
+		const Mat& cameraMatrix,
+		const Mat& distCoeffs,
+		vector<Point2f>& imagePoints,
+		Mat& dpdrot, Mat& dpdt, Mat& dpdf,
+		Mat& dpdc, Mat& dpddist,
+		double aspectRatio=0 );
+};
 
+void CV_ProjectPointsTest_C::project( const Mat& opoints, const Mat& rvec, const Mat& tvec,
+									   const Mat& cameraMatrix, const Mat& distCoeffs, vector<Point2f>& ipoints,
+									   Mat& dpdrot, Mat& dpdt, Mat& dpdf, Mat& dpdc, Mat& dpddist, double aspectRatio)
+{
+    int npoints = opoints.cols*opoints.rows*opoints.channels()/3;
+    ipoints.resize(npoints);
+    dpdrot.create(npoints*2, 3, CV_64F);
+    dpdt.create(npoints*2, 3, CV_64F);
+    dpdf.create(npoints*2, 2, CV_64F);
+    dpdc.create(npoints*2, 2, CV_64F);
+    dpddist.create(npoints*2, distCoeffs.rows + distCoeffs.cols - 1, CV_64F);
+    CvMat _objectPoints = opoints, _imagePoints = Mat(ipoints);
+    CvMat _rvec = rvec, _tvec = tvec, _cameraMatrix = cameraMatrix, _distCoeffs = distCoeffs;
+    CvMat _dpdrot = dpdrot, _dpdt = dpdt, _dpdf = dpdf, _dpdc = dpdc, _dpddist = dpddist;
+
+	cvProjectPoints2( &_objectPoints, &_rvec, &_tvec, &_cameraMatrix, &_distCoeffs,
+                      &_imagePoints, &_dpdrot, &_dpdt, &_dpdf, &_dpdc, &_dpddist, aspectRatio );
+}
+
+CV_ProjectPointsTest_C projectPointsTest_c;
+
+//----------------------------------------- CV_ProjectPointsTest_CPP --------------------------------
 class CV_ProjectPointsTest_CPP : public CV_ProjectPointsTest
 {
 public:
@@ -1672,3 +1713,4 @@ bool CV_StereoCalibrationTest_CPP::rectifyUncalibrated( const Mat& points1,
 }
 
 CV_StereoCalibrationTest_CPP stereocalib_test_cpp;
+
