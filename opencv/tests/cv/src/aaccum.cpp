@@ -150,8 +150,6 @@ protected:
     void prepare_to_validation( int );
 };
 
-static int niters = 0;
-
 CV_AccTest::CV_AccTest()
     : CV_AccumBaseTest( "accum-acc", "cvAcc" )
 {

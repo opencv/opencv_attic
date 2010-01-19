@@ -338,6 +338,8 @@ CVAPI(void)  cvDilate( const CvArr* src, CvArr* dst,
                        IplConvKernel* element CV_DEFAULT(NULL),
                        int iterations CV_DEFAULT(1) );
 
+#define CV_MOP_ERODE        0
+#define CV_MOP_DILATE       1
 #define CV_MOP_OPEN         2
 #define CV_MOP_CLOSE        3
 #define CV_MOP_GRADIENT     4

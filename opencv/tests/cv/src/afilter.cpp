@@ -239,7 +239,7 @@ static const char* morph_mask_shape[] = { "rect", "ellipse", 0 };
 class CV_MorphologyBaseTestImpl : public CV_FilterBaseTest
 {
 public:
-    CV_MorphologyBaseTestImpl( const char* test_name, const char* test_funcs, int optype );
+    CV_MorphologyBaseTestImpl( const char* test_name, const char* test_funcs );
 
 protected:
     void prepare_to_validation( int test_case_idx );
@@ -250,14 +250,14 @@ protected:
     void print_timing_params( int test_case_idx, char* ptr, int params_left );
     double get_success_error_level( int test_case_idx, int i, int j );
     int write_default_params(CvFileStorage* fs);
-    int optype;
+    int optype, optype_min, optype_max;
     int shape;
     IplConvKernel* element;
 };
 
 
-CV_MorphologyBaseTestImpl::CV_MorphologyBaseTestImpl( const char* test_name, const char* test_funcs, int _optype )
-    : CV_FilterBaseTest( test_name, test_funcs, false ), optype(_optype)
+CV_MorphologyBaseTestImpl::CV_MorphologyBaseTestImpl( const char* test_name, const char* test_funcs )
+    : CV_FilterBaseTest( test_name, test_funcs, false )
 {
     shape = -1;
     element = 0;
@@ -265,6 +265,7 @@ CV_MorphologyBaseTestImpl::CV_MorphologyBaseTestImpl( const char* test_name, con
     whole_size_list = filter_whole_sizes;
     depth_list = morph_depths;
     cn_list = filter_channels;
+    optype = optype_min = optype_max = -1;
 
     element = 0;
 }
@@ -288,7 +289,8 @@ void CV_MorphologyBaseTestImpl::get_test_array_types_and_sizes( int test_case_id
 {
     CvRNG* rng = ts->get_rng();
     CV_FilterBaseTest::get_test_array_types_and_sizes( test_case_idx, sizes, types );
-    int depth = cvTsRandInt(rng) % 2 ? CV_32F : CV_8U;
+    int depth = cvTsRandInt(rng) % 4;
+    depth = depth == 0 ? CV_8U : depth == 1 ? CV_16U : depth == 2 ? CV_16S : CV_32F;
     int cn = CV_MAT_CN(types[INPUT][0]);
 
     types[INPUT][0] = types[OUTPUT][0] = types[REF_OUTPUT][0] = types[TEMP][0] = CV_MAKETYPE(depth, cn);
@@ -297,6 +299,7 @@ void CV_MorphologyBaseTestImpl::get_test_array_types_and_sizes( int test_case_id
         shape = CV_SHAPE_CUSTOM;
     else
         sizes[INPUT][1] = cvSize(0,0);
+    optype = cvTsRandInt(rng) % (optype_max - optype_min + 1) + optype_min;
 }
 
 
@@ -327,7 +330,9 @@ void CV_MorphologyBaseTestImpl::print_timing_params( int test_case_idx, char* pt
 
 double CV_MorphologyBaseTestImpl::get_success_error_level( int /*test_case_idx*/, int /*i*/, int /*j*/ )
 {
-    return 0;
+    return CV_MAT_DEPTH(test_mat[INPUT][0].type) < CV_32F ||
+        (optype == CV_MOP_ERODE || optype == CV_MOP_DILATE ||
+        optype == CV_MOP_OPEN || optype == CV_MOP_CLOSE) ? 0 : 1e-5;
 }
 
 
@@ -369,23 +374,65 @@ int CV_MorphologyBaseTestImpl::prepare_test_case( int test_case_idx )
 void CV_MorphologyBaseTestImpl::prepare_to_validation( int test_case_idx )
 {
     CV_FilterBaseTest::prepare_to_validation( test_case_idx );
-    cvTsMinMaxFilter( &test_mat[TEMP][0], &test_mat[REF_OUTPUT][0], element, optype );
+    CvMat *src = &test_mat[TEMP][0], *dst = &test_mat[REF_OUTPUT][0];
+
+    if( optype == CV_MOP_ERODE || optype == CV_MOP_DILATE )
+    {
+        cvTsMinMaxFilter( src, dst, element, optype );
+    }
+    else
+    {
+        cv::Ptr<CvMat> dst0 = cvCloneMat(dst), src1 = cvCloneMat(src);
+        if( optype == CV_MOP_OPEN )
+        {
+            cvTsMinMaxFilter( src, dst0, element, CV_MOP_ERODE );
+            cvTsPrepareToFilter( dst0, src1, anchor, CV_TS_BORDER_REPLICATE );
+            cvTsMinMaxFilter( src1, dst, element, CV_MOP_DILATE );
+        }
+        else if( optype == CV_MOP_CLOSE )
+        {
+            cvTsMinMaxFilter( src, dst0, element, CV_MOP_DILATE );
+            cvTsPrepareToFilter( dst0, src1, anchor, CV_TS_BORDER_REPLICATE );
+            cvTsMinMaxFilter( src1, dst, element, CV_MOP_ERODE );
+        }
+        else if( optype == CV_MOP_GRADIENT )
+        {
+            cvTsMinMaxFilter( src, dst0, element, CV_MOP_ERODE );
+            cvTsMinMaxFilter( src, dst, element, CV_MOP_DILATE );
+            cvTsAdd( dst, cvScalarAll(1), dst0, cvScalarAll(-1), cvScalarAll(0), dst, 0 );
+        }
+        else if( optype == CV_MOP_TOPHAT )
+        {
+            cvTsMinMaxFilter( src, dst0, element, CV_MOP_ERODE );
+            cvTsPrepareToFilter( dst0, src1, anchor, CV_TS_BORDER_REPLICATE );
+            cvTsMinMaxFilter( src1, dst, element, CV_MOP_DILATE );
+            cvTsAdd( dst, cvScalarAll(-1), &test_mat[INPUT][0], cvScalarAll(1), cvScalarAll(0), dst, 0 );
+        }
+        else
+        {
+            cvTsMinMaxFilter( src, dst0, element, CV_MOP_DILATE );
+            cvTsPrepareToFilter( dst0, src1, anchor, CV_TS_BORDER_REPLICATE );
+            cvTsMinMaxFilter( src1, dst, element, CV_MOP_ERODE );
+            cvTsAdd( dst, cvScalarAll(1), &test_mat[INPUT][0], cvScalarAll(-1), cvScalarAll(0), dst, 0 );
+        }
+    }
+
     cvReleaseStructuringElement( &element );
 }
 
 
-CV_MorphologyBaseTestImpl morph( "morph", "", -1 );
+CV_MorphologyBaseTestImpl morph( "morph", "" );
 
 
 class CV_MorphologyBaseTest : public CV_MorphologyBaseTestImpl
 {
 public:
-    CV_MorphologyBaseTest( const char* test_name, const char* test_funcs, int optype );
+    CV_MorphologyBaseTest( const char* test_name, const char* test_funcs );
 };
 
 
-CV_MorphologyBaseTest::CV_MorphologyBaseTest( const char* test_name, const char* test_funcs, int _optype )
-    : CV_MorphologyBaseTestImpl( test_name, test_funcs, _optype )
+CV_MorphologyBaseTest::CV_MorphologyBaseTest( const char* test_name, const char* test_funcs )
+    : CV_MorphologyBaseTestImpl( test_name, test_funcs )
 {
     default_timing_param_names = morph_param_names;
     depth_list = 0;
@@ -406,8 +453,9 @@ protected:
 
 
 CV_ErodeTest::CV_ErodeTest()
-    : CV_MorphologyBaseTest( "morph-erode", "cvErode", CV_TS_MIN )
+    : CV_MorphologyBaseTest( "morph-erode", "cvErode" )
 {
+    optype_min = optype_max = CV_MOP_ERODE;
 }
 
 
@@ -432,8 +480,9 @@ protected:
 
 
 CV_DilateTest::CV_DilateTest()
-    : CV_MorphologyBaseTest( "morph-dilate", "cvDilate", CV_TS_MAX )
+    : CV_MorphologyBaseTest( "morph-dilate", "cvDilate" )
 {
+    optype_min = optype_max = CV_MOP_DILATE;
 }
 
 
@@ -445,6 +494,32 @@ void CV_DilateTest::run_func()
 
 CV_DilateTest dilate_test;
 
+/////////////// morphEx ///////////////
+
+class CV_MorphExTest : public CV_MorphologyBaseTest
+{
+public:
+    CV_MorphExTest();
+protected:
+    void run_func();
+};
+
+
+CV_MorphExTest::CV_MorphExTest()
+    : CV_MorphologyBaseTest( "morph-ex", "cvMorphologyEx" )
+{
+    optype_min = CV_MOP_ERODE;
+    optype_max = CV_MOP_BLACKHAT;
+}
+
+
+void CV_MorphExTest::run_func()
+{
+    cvMorphologyEx( inplace ? test_array[OUTPUT][0] : test_array[INPUT][0],
+             test_array[OUTPUT][0], 0, element, optype, 1 );
+}
+
+CV_MorphExTest morphex_test;
 
 /////////////// generic filter ///////////////
 
