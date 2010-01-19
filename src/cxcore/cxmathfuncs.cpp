@@ -2002,7 +2002,7 @@ double cv::solvePoly( const Mat& coeffs0, Mat& roots0, int maxIters )
         p = p * r;
     }
 
-    maxIters = maxIters <= 0 ? 300 : maxIters;
+    maxIters = maxIters <= 0 ? 1000 : maxIters;
     for( iter = 0; iter < maxIters; iter++ )
     {
         maxDiff = 0;
@@ -2021,6 +2021,14 @@ double cv::solvePoly( const Mat& coeffs0, Mat& roots0, int maxIters )
         }
         if( maxDiff <= 0 )
             break;
+    }
+
+    if( coeffs0.channels() == 1 )
+    {
+        const double verySmallEps = 1e-100;
+        for( i = 0; i < n; i++ )
+            if( fabs(roots[i].im) < verySmallEps )
+                roots[i].im = 0;
     }
 
     Mat(roots0.size(), CV_64FC2, roots).convertTo(roots0, roots0.type());

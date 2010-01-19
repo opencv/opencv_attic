@@ -123,10 +123,6 @@
 %nodefault CvKalman;
 %newobject cvCreateKalman;
 
-%nodefault CvConDensation;
-%newobject cvCreateConDensation;
-
-
 /****************************************************************************************\
 *                                  Histogram functions                                   *
 \****************************************************************************************/

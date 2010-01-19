@@ -826,7 +826,7 @@ cvCreateData( CvArr* arr )
             int depth = img->depth;
             int width = img->width;
 
-            if( img->depth == IPL_DEPTH_32F || img->nChannels == 64 )
+            if( img->depth == IPL_DEPTH_32F || img->depth == IPL_DEPTH_64F )
             {
                 img->width *= img->depth == IPL_DEPTH_32F ? sizeof(float) : sizeof(double);
                 img->depth = IPL_DEPTH_8U;
