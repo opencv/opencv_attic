@@ -862,7 +862,7 @@ void SURF::operator()(const Mat& img, const Mat& mask,
         }
     }
     descriptors.resize(d ? d->total*d->elem_size/sizeof(float) : 0);
-    if(d)
+    if(descriptors.size() != 0)
         cvCvtSeqToArray(d, &descriptors[0]);
 }
 
