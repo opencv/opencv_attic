@@ -492,7 +492,7 @@ void CV_CameraCalibrationTest::run( int start_from )
                      //CV_CALIB_ZERO_TANGENT_DIST +
                      //CV_CALIB_FIX_ASPECT_RATIO +
                      //CV_CALIB_USE_INTRINSIC_GUESS +
-                     0;
+                     CV_CALIB_FIX_K3;
         memset( cameraMatrix, 0, 9*sizeof(cameraMatrix[0]) );
         cameraMatrix[0] = cameraMatrix[4] = 807.;
         cameraMatrix[2] = (imageSize.width - 1)*0.5;
@@ -721,7 +721,7 @@ void CV_CameraCalibrationTest_CPP::calibrate( int imageCount, int* pointCounts,
 	vector<vector<Point3f> > objectPoints( imageCount );
 	vector<vector<Point2f> > imagePoints( imageCount );
 	Size imageSize = _imageSize;
-	Mat cameraMatrix, distCoeffs;
+	Mat cameraMatrix, distCoeffs(1,4,CV_64F,Scalar::all(0));
 	vector<Mat> rvecs, tvecs;
 
 	CvPoint3D64f* op = _objectPoints;
