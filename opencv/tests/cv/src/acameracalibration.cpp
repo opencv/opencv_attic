@@ -1114,7 +1114,7 @@ void CV_ProjectPointsTest::run(int)
             rightImgPoints[i], valDpdrot, valDpdt, valDpdf, valDpdc, valDpddist, 0 );
 	}
     calcdfdx( leftImgPoints, rightImgPoints, dEps, valDpdt );
-    if( norm( dpdt, valDpdt, NORM_INF ) > 0.1 )
+    if( norm( dpdt, valDpdt, NORM_INF ) > 0.2 )
 	{
 		ts->printf( CvTS::LOG, "bad dpdtvec\n" );
 		code = CvTS::FAIL_BAD_ACCURACY;
