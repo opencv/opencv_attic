@@ -1192,9 +1192,6 @@ MinEnclosingCircle int,center,radius
   cvarrseq points
   CvPoint2D32f center /O
   float radius /O
-CalcPGH
-  CvSeq contour
-  CvHistogram hist
 
 # Planar Subdivisions
 
@@ -1373,11 +1370,6 @@ POSIT rotation_matrix,translation_vector
   CvTermCriteria criteria
   CvMatr32f_i rotation_matrix /O,A
   CvVect32f_i translation_vector /O,A
-CalcImageHomography intrinsic,homography
-  floats line
-  CvPoint3D32f* points
-  CvMatr32f_i intrinsic /O,A,/ch_Mat33
-  CvMatr32f_i homography /O,A
 
 EstimateRigidTransform
   CvArr A
