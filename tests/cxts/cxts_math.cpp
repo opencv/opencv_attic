@@ -2947,7 +2947,7 @@ void cvTsMinMaxFilter( const CvMat* a, CvMat* b, const IplConvKernel* kernel, in
     int cn, ncols, a_step;
     int ker_size = kernel->nRows*kernel->nCols;
     int* offset = (int*)malloc( ker_size*sizeof(offset[0]));
-    int calc_max = op_type == CV_TS_MAX;
+    int calc_max = op_type != 0;
     uchar *a_data, *b_data;
 
     cn = CV_MAT_CN(a->type);

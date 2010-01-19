@@ -504,7 +504,7 @@ struct VMax16u
 {
     enum { ESZ = 2 };
     __m128i operator()(const __m128i& a, const __m128i& b) const
-    { return _mm_adds_epu16(_mm_subs_epu16(a,b),b); }
+    { return _mm_adds_epu16(_mm_subs_epu16(a,b), b); }
 };
 struct VMin16s
 {
@@ -533,9 +533,9 @@ typedef MorphRowFVec<VMax32f> DilateRowVec32f;
 typedef MorphColumnIVec<VMin8u> ErodeColumnVec8u;
 typedef MorphColumnIVec<VMax8u> DilateColumnVec8u;
 typedef MorphColumnIVec<VMin16u> ErodeColumnVec16u;
-typedef MorphColumnIVec<VMax16u> DilateColumnVec16s;
+typedef MorphColumnIVec<VMax16u> DilateColumnVec16u;
 typedef MorphColumnIVec<VMin16s> ErodeColumnVec16s;
-typedef MorphColumnIVec<VMax16s> DilateColumnVec16u;
+typedef MorphColumnIVec<VMax16s> DilateColumnVec16s;
 typedef MorphColumnFVec<VMin32f> ErodeColumnVec32f;
 typedef MorphColumnFVec<VMax32f> DilateColumnVec32f;
 
@@ -879,7 +879,7 @@ Ptr<BaseColumnFilter> getMorphologyColumnFilter(int op, int type, int ksize, int
                 DilateColumnVec16u>(ksize, anchor));
         if( depth == CV_16S )
             return Ptr<BaseColumnFilter>(new MorphColumnFilter<MaxOp<short>,
-                DilateColumnVec16u>(ksize, anchor));
+                DilateColumnVec16s>(ksize, anchor));
         if( depth == CV_32F )
             return Ptr<BaseColumnFilter>(new MorphColumnFilter<MaxOp<float>,
                 DilateColumnVec32f>(ksize, anchor));
