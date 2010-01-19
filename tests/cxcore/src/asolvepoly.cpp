@@ -9,10 +9,19 @@
 
 typedef std::complex<double> complex_type;
 
-struct pred_complex {
+struct pred_complex
+{
     bool operator() (const complex_type& lhs, const complex_type& rhs) const
     {
         return fabs(lhs.real() - rhs.real()) > fabs(rhs.real())*FLT_EPSILON ? lhs.real() < rhs.real() : lhs.imag() < rhs.imag();
+    }
+};
+
+struct pred_double
+{
+    bool operator() (const double& lhs, const double& rhs) const
+    {
+        return lhs < rhs;
     }
 };
 
@@ -34,13 +43,14 @@ void CV_SolvePolyTest::run( int )
     CvRNG rng = cvRNG();
     int fig = 100;
     double range = 50;
+    double err_eps = 1e-4;
 
     for (int idx = 0, max_idx = 1000, progress = 0; idx < max_idx; ++idx)
     {
         progress = update_progress(progress, idx-1, max_idx, 0);
         int n = cvRandInt(&rng) % 13 + 1;
         std::vector<complex_type> r(n), ar(n), c(n + 1, 0);
-        std::vector<double> a(n + 1), u(n * 2);
+        std::vector<double> a(n + 1), u(n * 2), ar1(n), ar2(n);
 
         int rr_odds = 3; // odds that we get a real root
         for (int j = 0; j < n;)
@@ -73,8 +83,9 @@ void CV_SolvePolyTest::run( int )
         }
 
         bool pass = false;
-        double div;
-        for (int maxiter = 100; !pass && maxiter < 10000; maxiter *= 2)
+        double div = 0, s = 0;
+        int cubic_case = idx & 1;
+        for (int maxiter = 100; !pass && maxiter < 10000; maxiter *= 2, cubic_case = (cubic_case + 1) % 2)
         {
             for (int j = 0; j < n + 1; ++j)
 	            a[j] = c[j].real();
@@ -90,21 +101,59 @@ void CV_SolvePolyTest::run( int )
             sort(r.begin(), r.end(), pred_complex());
             sort(ar.begin(), ar.end(), pred_complex());
 
-            div = 0;
-            double s = 0;
+            pass = true;
+            if( n == 3 )
+            {
+                ar2.resize(n);
+                cv::Mat _umat2(3, 1, CV_64F, &ar2[0]), umat2 = _umat2;
+                cvFlip(&amat, &amat, 0);
+                int nr2;
+                if( cubic_case == 0 )
+                    nr2 = cv::solveCubic(cv::Mat(&amat),umat2);
+                else
+                    nr2 = cv::solveCubic(cv::Mat_<float>(cv::Mat(&amat)), umat2);
+                cvFlip(&amat, &amat, 0);
+                if(nr2 > 0)
+                    sort(ar2.begin(), ar2.begin()+nr2, pred_double());
+                ar2.resize(nr2);
+
+                int nr1 = 0;
+                for(int j = 0; j < n; j++)
+                    if( fabs(r[j].imag()) < DBL_EPSILON )
+                        ar1[nr1++] = r[j].real();
+
+                pass = pass && nr1 == nr2;
+                if( nr2 > 0 )
+                {
+                    div = s = 0;
+                    for(int j = 0; j < nr1; j++)
+                    {
+                        s += fabs(ar1[j]);
+                        div += fabs(ar1[j] - ar2[j]);
+                    }
+                    div /= s;
+                    pass = pass && div < err_eps;
+                }
+            }
+
+            div = s = 0;
             for (int j = 0; j < n; ++j)
             {
-	            s += r[j].real() + fabs(r[j].imag());
-	            div += pow(r[j].real() - ar[j].real(), 2) + pow(r[j].imag() - ar[j].imag(), 2);
+                s += fabs(r[j].real()) + fabs(r[j].imag());
+                div += sqrt(pow(r[j].real() - ar[j].real(), 2) + pow(r[j].imag() - ar[j].imag(), 2));
             }
             div /= s;
-            pass = div < 1e-2;
+            pass = pass && div < err_eps;
         }
 
         if (!pass)
         {
             ts->set_failed_test_info(CvTS::FAIL_INVALID_OUTPUT);
-            ts->printf( CvTS::LOG, "\n" );
+            ts->printf( CvTS::LOG, "too big diff = %g\n", div );
+
+            for (size_t j=0;j<ar2.size();++j)
+                ts->printf( CvTS::LOG, "ar2[%d]=%g\n", j, ar2[j]);
+            ts->printf(CvTS::LOG, "\n");
 
             for (size_t j=0;j<r.size();++j)
 	            ts->printf( CvTS::LOG, "r[%d]=(%g, %g)\n", j, r[j].real(), r[j].imag());
