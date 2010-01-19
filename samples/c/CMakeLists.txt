@@ -65,6 +65,8 @@ if (BUILD_EXAMPLES)
     MY_DEFINE_EXAMPLE(watershed			watershed.cpp)
 	MY_DEFINE_EXAMPLE(grabcut			grabcut.cpp)
     MY_DEFINE_EXAMPLE(polar_transforms	polar_transforms.c)
+    MY_DEFINE_EXAMPLE(calibration	calibration.cpp)
+    MY_DEFINE_EXAMPLE(calibration_artificial calibration_artificial.cpp)
 endif(BUILD_EXAMPLES)
 
 if (INSTALL_C_EXAMPLES AND NOT WIN32)
