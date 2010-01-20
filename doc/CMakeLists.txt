@@ -13,8 +13,6 @@ if(BUILD_LATEX_DOCS AND PDFLATEX_COMPILER)
         
 project(opencv_refman)
 
-#set(refman_m4_srcs CxCore.tex.m4 CvReference.tex.m4 HighGui.tex.m4)
-set(refman_srcs CxCore.tex CvReference.tex HighGui.tex new_CxCore-cpp.tex new_Cv-cpp.tex CvAux.tex new_HighGui-cpp.tex MachineLearning.tex opencv.tex opencv.sty helvetica.sty opencv.bib)
 set(refman_copied_srcs)
 
 #foreach(f ${refman_m4_srcs})
@@ -31,8 +29,9 @@ set(refman_copied_srcs)
 #    list(APPEND refman_copied_srcs ${outputf})
 #endforeach()
 
-foreach(f ${refman_srcs})
-    set(outputf ${CMAKE_CURRENT_BINARY_DIR}/${f})
+foreach(f ${FILES_TEX})
+    get_filename_component(basef ${f} NAME)
+    set(outputf ${CMAKE_CURRENT_BINARY_DIR}/${basef})
     add_custom_command(
         OUTPUT ${outputf}
         DEPENDS ${f}
