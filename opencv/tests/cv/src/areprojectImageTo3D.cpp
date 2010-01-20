@@ -47,6 +47,9 @@
 using namespace cv;
 using namespace std;
 
+template<class T> double thres() { return 1.0; }
+template<> double thres<float>() { return 1e-5; }   
+
 class CV_ReprojectImageTo3DTest : public CvTest
 {
 public:
@@ -93,8 +96,6 @@ protected:
         }        
         return sqrt(sum)/sqrt(nsum);
     }
-    template<class T> double thres() const { return 1.0; }
-    template<> double thres<float>() const { return 1e-5; }   
 
     template<class InT, class OutT> void runCase(InT min, InT max)
     {                     
