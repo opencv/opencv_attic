@@ -862,9 +862,15 @@ void CV_InitUndistortRectifyMapTest::prepare_to_validation(int /*test_case_idx*/
 	delete[] points;
 	delete[] r_points;
 	if (_mapx)
+	{
 		cvReleaseMat(&_mapx);
+		_mapx = 0;
+	}
 	if (_mapy)
+	{
 		cvReleaseMat(&_mapy);
+		_mapy = 0;
+	}
 }
 
 void CV_InitUndistortRectifyMapTest::run_func()
