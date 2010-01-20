@@ -967,8 +967,11 @@ CV_WarpPerspectiveTest warp_perspective_test;
 
 /////////////////////////
 
-void cvTsInitUndistortMap( const CvMat* _a0, const CvMat* _k0, CvMat* mapx, CvMat* mapy )
+void cvTsInitUndistortMap( const CvMat* _a0, const CvMat* _k0, CvMat* _mapx, CvMat* _mapy )
 {
+	CvMat* mapx = cvCreateMat(_mapx->rows,_mapx->cols,CV_32F);
+	CvMat* mapy = cvCreateMat(_mapx->rows,_mapx->cols,CV_32F);
+
     int u, v;
     double a[9], k[5]={0,0,0,0,0};
     CvMat _a = cvMat(3, 3, CV_64F, a);
@@ -986,7 +989,7 @@ void cvTsInitUndistortMap( const CvMat* _a0, const CvMat* _k0, CvMat* mapx, CvMa
     for( v = 0; v < mapy->rows; v++ )
     {
         float* mx = (float*)(mapx->data.ptr + v*mapx->step);
-        float* my = (float*)(mapy->data.ptr + v*mapy->step);
+		float* my = (float*)(mapy->data.ptr + v*mapy->step);
         
         for( u = 0; u < mapy->cols; u++ )
         {
@@ -997,10 +1000,32 @@ void cvTsInitUndistortMap( const CvMat* _a0, const CvMat* _k0, CvMat* mapx, CvMa
             double cdist = 1 + (k[0] + (k[1] + k[4]*r2)*r2)*r2;
             double x1 = x*cdist + k[2]*2*x*y + k[3]*(r2 + 2*x2);
             double y1 = y*cdist + k[3]*2*x*y + k[2]*(r2 + 2*y2);
-            mx[u] = (float)(x1*fx + cx);
-            my[u] = (float)(y1*fy + cy);
+           
+			my[u] = (float)(y1*fy + cy);
+			mx[u] = (float)(x1*fx + cx);
         }
     }
+
+	if (_mapy)
+	{
+		cvCopy(mapy,_mapy);
+		cvCopy(mapx,_mapx);
+	}
+	else
+	{
+		for (int i=0;i<mapx->rows;i++)
+		{
+			float* _mx = (float*)(_mapx->data.ptr + _mapx->step*i);
+			float* _my = (float*)(_mapx->data.ptr + _mapx->step*i);
+			for (int j=0;j<mapx->cols;j++)
+			{
+				_mx[2*j] = mapx->data.fl[j+i*mapx->cols];
+				_my[2*j+1] = mapy->data.fl[j+i*mapy->cols];
+			}
+		}
+	}
+	cvReleaseMat(&mapx);
+	cvReleaseMat(&mapy);
 }
 
 
@@ -1427,6 +1452,8 @@ protected:
     void get_timing_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types,
                                                 CvSize** whole_sizes, bool *are_images );
     void print_timing_params( int test_case_idx, char* ptr, int params_left );
+private:
+	bool dualChannel;
 };
 
 
@@ -1473,10 +1500,14 @@ void CV_UndistortMapTest::get_test_array_types_and_sizes( int test_case_idx, CvS
     CvRNG* rng = ts->get_rng();
     CvArrTest::get_test_array_types_and_sizes( test_case_idx, sizes, types );
     int depth = cvTsRandInt(rng)%2 ? CV_64F : CV_32F;
+
+
+
     CvSize sz = sizes[OUTPUT][0];
     types[INPUT][0] = types[INPUT][1] = depth;
+	dualChannel = cvTsRandInt(rng)%2 == 0;
     types[OUTPUT][0] = types[OUTPUT][1] = 
-        types[REF_OUTPUT][0] = types[REF_OUTPUT][1] = CV_32F;
+        types[REF_OUTPUT][0] = types[REF_OUTPUT][1] = dualChannel ? CV_32FC2 : CV_32F;
     sizes[INPUT][0] = cvSize(3,3);
     sizes[INPUT][1] = cvTsRandInt(rng)%2 ? cvSize(4,1) : cvSize(1,4);
 
@@ -1509,8 +1540,12 @@ void CV_UndistortMapTest::print_timing_params( int test_case_idx, char* ptr, int
 
 void CV_UndistortMapTest::run_func()
 {
-    cvInitUndistortMap( &test_mat[INPUT][0], &test_mat[INPUT][1],
+	if (!dualChannel )
+		cvInitUndistortMap( &test_mat[INPUT][0], &test_mat[INPUT][1],
                         test_array[OUTPUT][0], test_array[OUTPUT][1] );
+	else
+		cvInitUndistortMap( &test_mat[INPUT][0], &test_mat[INPUT][1],
+                        test_array[OUTPUT][0], 0 );
 }
 
 
@@ -1560,7 +1595,7 @@ int CV_UndistortMapTest::prepare_test_case( int test_case_idx )
     }
 
     cvTsConvert( &_a, _a0 );
-    cvTsConvert( &_k, _k0 );
+	cvTsConvert( &_k, _k0 );
 
     return code;
 }
@@ -1568,8 +1603,12 @@ int CV_UndistortMapTest::prepare_test_case( int test_case_idx )
 
 void CV_UndistortMapTest::prepare_to_validation( int /*test_case_idx*/ )
 {
-    cvTsInitUndistortMap( &test_mat[INPUT][0], &test_mat[INPUT][1],
+	if (!dualChannel )
+		cvTsInitUndistortMap( &test_mat[INPUT][0], &test_mat[INPUT][1],
                           &test_mat[REF_OUTPUT][0], &test_mat[REF_OUTPUT][1] );
+	else
+		cvTsInitUndistortMap( &test_mat[INPUT][0], &test_mat[INPUT][1],
+                          &test_mat[REF_OUTPUT][0], 0 );
 }
 
 
