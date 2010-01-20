@@ -42,6 +42,7 @@
 
 #include "cvtest.h"
 
+
 class CV_DefaultNewCameraMatrixTest : public CvArrTest
 {
 public:
@@ -584,7 +585,6 @@ class CV_InitUndistortRectifyMapTest : public CvArrTest
 {
 public:
 	CV_InitUndistortRectifyMapTest();
-	~CV_InitUndistortRectifyMapTest();
 protected:
 	int prepare_test_case (int test_case_idx);
 	void prepare_to_validation( int test_case_idx );
@@ -792,7 +792,6 @@ int CV_InitUndistortRectifyMapTest::prepare_test_case(int test_case_idx)
 	zero_new_cam = (cvRandInt(rng)%2) == 0 ? false : true;
 	zero_R = (cvRandInt(rng)%2) == 0 ? false : true;
 
-
 	cvReleaseMat(&_rot);
 
 	if (useCPlus)
@@ -850,7 +849,9 @@ void CV_InitUndistortRectifyMapTest::prepare_to_validation(int /*test_case_idx*/
 	}
 
 	//---
-	cvUndistortPoints(&_points,&ref_points,&_camera,&_distort,&_rot,&_new_cam);
+
+	cvUndistortPoints(&_points,&ref_points,&_camera,
+		zero_distortion ? 0 : &_distort, zero_R ? 0 : &_rot, zero_new_cam ? &_camera : &_new_cam);
 	//cvTsDistortPoints(&_points,&ref_points,&_camera,&_distort,&_rot,&_new_cam);
 	CvMat* dst = &test_mat[REF_OUTPUT][0];
 	cvTsConvert(&ref_points,dst);
@@ -897,11 +898,7 @@ void CV_InitUndistortRectifyMapTest::run_func()
 
 double CV_InitUndistortRectifyMapTest::get_success_error_level( int /*test_case_idx*/, int /*i*/, int /*j*/ )
 {
-	return 2;
+	return 8;
 }
 
-CV_InitUndistortRectifyMapTest::~CV_InitUndistortRectifyMapTest()
-{
-
-}
 CV_InitUndistortRectifyMapTest init_undistort_rectify_map_test;
