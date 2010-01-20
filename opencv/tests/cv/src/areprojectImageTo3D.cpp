@@ -51,7 +51,7 @@ class CV_ReprojectImageTo3DTest : public CvTest
 {
 public:
     CV_ReprojectImageTo3DTest()
-        : CvTest( "areprojectImageTo3D", "cvReprojectImageTo3D")
+        : CvTest( "reprojectImageTo3D", "cvReprojectImageTo3D")
     {
         support_testing_modes = CvTS::CORRECTNESS_CHECK_MODE;
     }
