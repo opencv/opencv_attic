@@ -143,7 +143,8 @@ typedef size_t CvSubdiv2DEdge;
 #define CV_SUBDIV2D_POINT_FIELDS()\
     int            flags;      \
     CvSubdiv2DEdge first;      \
-    CvPoint2D32f   pt;
+    CvPoint2D32f   pt;         \
+	int id;
 
 #define CV_SUBDIV2D_VIRTUAL_POINT_FLAG (1 << 30)
 
