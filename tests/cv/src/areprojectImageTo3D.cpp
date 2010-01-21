@@ -60,25 +60,40 @@ public:
     }
     ~CV_ReprojectImageTo3DTest() {}
 protected: 
+
     
     void run(int)
-    {
+    {        
         ts->set_failed_test_info(CvTS::OK);
+        int progress = 0;
 
+        progress = update_progress( progress, 1, 14, 0 );
         runCase<float, float>(-100.f, 100.f);
+        progress = update_progress( progress, 2, 14, 0 );
         runCase<int, float>(-100, 100);
+        progress = update_progress( progress, 3, 14, 0 );
         runCase<short, float>(-100, 100);
+        progress = update_progress( progress, 4, 14, 0 );
         runCase<unsigned char, float>(10, 100);
+        progress = update_progress( progress, 5, 14, 0 );
 
         runCase<float, int>(-100.f, 100.f);
+        progress = update_progress( progress, 6, 14, 0 );
         runCase<int, int>(-100, 100);
+        progress = update_progress( progress, 7, 14, 0 );
         runCase<short, int>(-100, 100);
+        progress = update_progress( progress, 8, 14, 0 );
         runCase<unsigned char, int>(10, 100);
+        progress = update_progress( progress, 10, 14, 0 );
 
         runCase<float, short>(-100.f, 100.f);
+        progress = update_progress( progress, 11, 14, 0 );
         runCase<int, short>(-100, 100);
+        progress = update_progress( progress, 12, 14, 0 );
         runCase<short, short>(-100, 100);
+        progress = update_progress( progress, 13, 14, 0 );
         runCase<unsigned char, short>(10, 100);        
+        progress = update_progress( progress, 14, 14, 0 );
     }
 
     template<class U, class V> double error(const Vec<U, 3>& v1, const Vec<V, 3>& v2) const
