@@ -400,7 +400,7 @@ bool CV_ChessboardDetectorTest::checkByGenerator()
         if (found)
             res = false;
 
-        cv::drawChessboardCorners(cb, cbg.cornersSize(), corners_found, found);
+        cv::drawChessboardCorners(cb, cbg.cornersSize(), Mat(corners_found), found);
     }
     
     return res;

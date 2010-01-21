@@ -1322,7 +1322,7 @@ bool PlanarObjectDetector::operator()(const vector<Mat>& pyr, const vector<KeyPo
         return false;
     
     vector<uchar> mask;
-    _H = findHomography(fromPt, toPt, mask, RANSAC, 10);
+    _H = findHomography(Mat(fromPt), Mat(toPt), mask, RANSAC, 10);
     if( _H.data )
     {
         const Mat_<double>& H = _H;

@@ -750,7 +750,7 @@ public:
     // converts old-style IplImage to the new matrix; the data is not copied by default
     Mat(const IplImage* img, bool copyData=false);
     // builds matrix from std::vector with or without copying the data
-    template<typename _Tp> Mat(const vector<_Tp>& vec, bool copyData=false);
+    template<typename _Tp> explicit Mat(const vector<_Tp>& vec, bool copyData=false);
     // helper constructor to compile matrix expressions
     Mat(const MatExpr_Base& expr);
     // destructor - calls release()
@@ -1244,7 +1244,7 @@ public:
     Mat_(const MatExpr_Base& expr);
     // makes a matrix out of Vec or std::vector. The matrix will have a single column
     template<int n> explicit Mat_(const Vec<_Tp, n>& vec);
-    Mat_(const vector<_Tp>& vec, bool copyData=false);
+    explicit Mat_(const vector<_Tp>& vec, bool copyData=false);
 
     Mat_& operator = (const Mat& m);
     Mat_& operator = (const Mat_& m);

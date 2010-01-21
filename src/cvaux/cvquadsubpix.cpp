@@ -129,7 +129,7 @@ void findCorner(const vector<Point>& contour, Point2f point, Point2f& corner)
     double min_dist = std::numeric_limits<double>::max();
     int min_idx = -1;
     
-    Rect brect = boundingRect(contour);
+    Rect brect = boundingRect(Mat(contour));
     
     // find corner idx
     for(size_t i = 0; i < contour.size(); i++)
@@ -154,7 +154,7 @@ void findCorner(const vector<Point2f>& contour, Point2f point, Point2f& corner)
     double min_dist = std::numeric_limits<double>::max();
     int min_idx = -1;
     
-    Rect brect = boundingRect(contour);
+    Rect brect = boundingRect(Mat(contour));
     
     // find corner idx
     for(size_t i = 0; i < contour.size(); i++)
@@ -301,7 +301,7 @@ bool find4QuadCornerSubpix(const Mat& img, std::vector<Point2f>& corners, Size r
 #if 1
             vector<Point2f> temp;
             for(size_t j = 0; j < quads[k]->size(); j++) temp.push_back((*quads[k])[j]);
-            approxPolyDP(temp, quads_approx[k], 0.5, true);
+            approxPolyDP(Mat(temp), quads_approx[k], 0.5, true);
             
             findCorner(quads_approx[k], corners[i], quad_corners[k]);
 #else
