@@ -83,7 +83,10 @@ struct WrapAff2D
 
 bool CV_RigidTransform_Test::testNPoints(int from)
 {
-    cv::RNG rng(*ts->get_rng());
+    //cv::RNG rng(*ts->get_rng());
+    RNG rng(0x575fb9e42db574a8);
+    theRNG() = rng;
+
     int progress = 0;
     int k, ntests = 10000;
     
@@ -124,6 +127,7 @@ bool CV_RigidTransform_Test::testNPoints(int from)
                     continue;
             }
             ts->set_failed_test_info(CvTS::FAIL_MISMATCH);
+            ts->printf( CvTS::LOG, "Threshold = %f, norm of difference = %f", thres, d );
             return false;
         }
     }
@@ -148,6 +152,8 @@ bool CV_RigidTransform_Test::testImage()
     if (norm(aff_est, aff, NORM_INF) > thres)
     {                
         ts->set_failed_test_info(CvTS::FAIL_MISMATCH);
+        ts->printf( CvTS::LOG, "Threshold = %f, norm of difference = %f", thres, 
+            norm(aff_est, aff, NORM_INF) );
         return false;
     }    
 
