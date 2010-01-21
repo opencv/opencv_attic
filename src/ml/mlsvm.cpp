@@ -1795,7 +1795,7 @@ bool CvSVM::train_auto( const CvMat* _train_data, const CvMat* _responses,
                     memcpy( responses_local->data.ptr, responses->data.ptr, resp_elem_size*test_size*k );
                     memcpy( responses_local->data.ptr + resp_elem_size*test_size*k,
                         true_resp + resp_elem_size*test_size,
-                        sizeof(samples[0])*(sample_count - testset_size*(k+1)) );
+                        resp_elem_size*(sample_count - testset_size*(k+1)) );
 
                     if( k == k_fold - 1 )
                     {
