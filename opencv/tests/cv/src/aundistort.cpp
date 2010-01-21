@@ -350,7 +350,7 @@ int CV_UndistortPointsTest::prepare_test_case(int test_case_idx)
 	CvMat* rotation = cvCreateMat(1,3,CV_64F);
 	rotation->data.db[0] = CV_PI*(cvTsRandReal(rng) - (double)0.5); // phi
 	rotation->data.db[1] = CV_PI*(cvTsRandReal(rng) - (double)0.5); // ksi
-	rotation->data.db[1] = CV_PI*(cvTsRandReal(rng) - (double)0.5); //khi
+	rotation->data.db[2] = CV_PI*(cvTsRandReal(rng) - (double)0.5); //khi
 	cvRodrigues2(rotation,_rot);
 	cvReleaseMat(&rotation);
 
@@ -630,10 +630,10 @@ CV_InitUndistortRectifyMapTest::CV_InitUndistortRectifyMapTest() : CvArrTest("un
 
 void CV_InitUndistortRectifyMapTest::get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types )
 {
+	CvArrTest::get_test_array_types_and_sizes(test_case_idx,sizes,types);
 	CvRNG* rng = ts->get_rng();
 	useCPlus = ((cvTsRandInt(rng) % 2)!=0);
-	CvArrTest::get_test_array_types_and_sizes(test_case_idx,sizes,types);
-	//useCPlus = 1;
+	//useCPlus = 0;
 	types[INPUT][0] = types[OUTPUT][0] = types[REF_OUTPUT][0] = CV_64FC2;
 
 	types[INPUT][1] = cvTsRandInt(rng)%2 ? CV_64F : CV_32F;
@@ -771,9 +771,9 @@ int CV_InitUndistortRectifyMapTest::prepare_test_case(int test_case_idx)
 	//Generating R matrix
 	CvMat* _rot = cvCreateMat(3,3,CV_64F);
 	CvMat* rotation = cvCreateMat(1,3,CV_64F);
-	rotation->data.db[0] = CV_PI*(cvTsRandReal(rng) - (double)0.5); // phi
-	rotation->data.db[1] = CV_PI*(cvTsRandReal(rng) - (double)0.5); // ksi
-	rotation->data.db[1] = CV_PI*(cvTsRandReal(rng) - (double)0.5); //khi
+	rotation->data.db[0] = CV_PI/8*(cvTsRandReal(rng) - (double)0.5); // phi
+	rotation->data.db[1] = CV_PI/8*(cvTsRandReal(rng) - (double)0.5); // ksi
+	rotation->data.db[2] = CV_PI/3*(cvTsRandReal(rng) - (double)0.5); //khi
 	cvRodrigues2(rotation,_rot);
 	cvReleaseMat(&rotation);
 
@@ -810,7 +810,7 @@ int CV_InitUndistortRectifyMapTest::prepare_test_case(int test_case_idx)
 	return code;
 }
 
-void CV_InitUndistortRectifyMapTest::prepare_to_validation(int /*test_case_idx*/)
+void CV_InitUndistortRectifyMapTest::prepare_to_validation(int/* test_case_idx*/)
 {
 	int dist_size = test_mat[INPUT][2].cols > test_mat[INPUT][2].rows ? test_mat[INPUT][2].cols : test_mat[INPUT][2].rows;
 	double cam[9] = {0,0,0,0,0,0,0,0,1};
@@ -900,7 +900,7 @@ void CV_InitUndistortRectifyMapTest::run_func()
 
 double CV_InitUndistortRectifyMapTest::get_success_error_level( int /*test_case_idx*/, int /*i*/, int /*j*/ )
 {
-	return 10;
+	return 5;
 }
 
 CV_InitUndistortRectifyMapTest init_undistort_rectify_map_test;
