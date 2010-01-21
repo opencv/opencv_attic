@@ -91,6 +91,7 @@ cvSubdiv2DAddPoint( CvSubdiv2D * subdiv, CvPoint2D32f pt, int is_virtual )
         subdiv_point->pt = pt;
         subdiv_point->first = 0;
         subdiv_point->flags |= is_virtual ? CV_SUBDIV2D_VIRTUAL_POINT_FLAG : 0;
+		subdiv_point->id = -1;
     }
 
     return subdiv_point;
