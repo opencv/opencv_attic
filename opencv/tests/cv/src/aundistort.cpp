@@ -74,8 +74,9 @@ CV_DefaultNewCameraMatrixTest::CV_DefaultNewCameraMatrixTest() : CvArrTest("undi
 	test_array[REF_OUTPUT].push(NULL);
 }
 
-void CV_DefaultNewCameraMatrixTest::get_test_array_types_and_sizes( int /*test_case_idx*/, CvSize** sizes, int** types )
+void CV_DefaultNewCameraMatrixTest::get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types )
 {
+	CvArrTest::get_test_array_types_and_sizes(test_case_idx,sizes,types);
 	CvRNG* rng = ts->get_rng();
 	matrix_type = types[INPUT][0] = types[OUTPUT][0]= types[REF_OUTPUT][0] = cvTsRandInt(rng)%2 ? CV_64F : CV_32F;
 	sizes[INPUT][0] = sizes[OUTPUT][0] = sizes[REF_OUTPUT][0] = cvSize(3,3);
@@ -203,8 +204,9 @@ CV_UndistortPointsTest::CV_UndistortPointsTest() : CvArrTest("undistort-points",
 	test_array[REF_OUTPUT].push(NULL);
 }
 
-void CV_UndistortPointsTest::get_test_array_types_and_sizes( int /*test_case_idx*/, CvSize** sizes, int** types )
+void CV_UndistortPointsTest::get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types )
 {
+	CvArrTest::get_test_array_types_and_sizes(test_case_idx,sizes,types);
 	CvRNG* rng = ts->get_rng();
 	useCPlus = ((cvTsRandInt(rng) % 2)!=0);
 	//useCPlus = 0;
@@ -626,10 +628,11 @@ CV_InitUndistortRectifyMapTest::CV_InitUndistortRectifyMapTest() : CvArrTest("un
 	test_array[REF_OUTPUT].push(NULL);
 }
 
-void CV_InitUndistortRectifyMapTest::get_test_array_types_and_sizes( int /*test_case_idx*/, CvSize** sizes, int** types )
+void CV_InitUndistortRectifyMapTest::get_test_array_types_and_sizes( int test_case_idx, CvSize** sizes, int** types )
 {
 	CvRNG* rng = ts->get_rng();
 	useCPlus = ((cvTsRandInt(rng) % 2)!=0);
+	CvArrTest::get_test_array_types_and_sizes(test_case_idx,sizes,types);
 	//useCPlus = 1;
 	types[INPUT][0] = types[OUTPUT][0] = types[REF_OUTPUT][0] = CV_64FC2;
 
@@ -897,7 +900,7 @@ void CV_InitUndistortRectifyMapTest::run_func()
 
 double CV_InitUndistortRectifyMapTest::get_success_error_level( int /*test_case_idx*/, int /*i*/, int /*j*/ )
 {
-	return 8;
+	return 10;
 }
 
 CV_InitUndistortRectifyMapTest init_undistort_rectify_map_test;
