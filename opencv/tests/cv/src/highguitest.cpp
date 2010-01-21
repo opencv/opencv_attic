@@ -163,7 +163,7 @@ bool CV_HighGuiTest::ImagesTest(const string& dir, const string& tmp)
 			continue;			
 		}			
 		
-		Mat buf_loaded = imdecode(buf, 1);
+		Mat buf_loaded = imdecode(Mat(buf), 1);
 		if (buf_loaded.empty())
 		{
 			ts->printf(CvTS::LOG, "Decoding failed with fmt=%s\n", ext.c_str());

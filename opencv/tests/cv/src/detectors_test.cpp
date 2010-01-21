@@ -200,7 +200,7 @@ template <class T> bool CV_DetectorsTest::testDedector(const Mat& img, const T& 
                 ++foundCounter;
 
         }
-        if (foundCounter == case_num)
+        if (foundCounter == (int)case_num)
             result.push_back(okp);
     }
 
