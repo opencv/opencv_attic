@@ -1717,7 +1717,7 @@ mjpeg_to_rgb24 (int width, int height,
 		unsigned char *src, int length,
 		unsigned char *dst)
 {
-  cv::Mat temp=cv::imdecode(cv::vector<uchar>(src, src + length), 1);
+  cv::Mat temp=cv::imdecode(cv::Mat(std::vector<uchar>(src, src + length)), 1);
   if( !temp.data || temp.cols != width || temp.rows != height )
     return false;
   memcpy(dst, temp.data, width*height*3);
