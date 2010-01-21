@@ -623,7 +623,6 @@ CV_InitUndistortRectifyMapTest::CV_InitUndistortRectifyMapTest() : CvArrTest("un
 	test_array[INPUT].push(NULL); // R matrix
 	test_array[INPUT].push(NULL); // new camera matrix
 	test_array[OUTPUT].push(NULL); // distorted dst points
-	test_array[TEMP].push(NULL); // dst points
 	test_array[REF_OUTPUT].push(NULL);
 }
 
