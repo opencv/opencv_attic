@@ -647,8 +647,8 @@ Applies a generic geometrical transformation to an image.
 \begin{description}
 \cvarg{src}{Source image}
 \cvarg{dst}{Destination image. It will have the same size as \texttt{map1} and the same type as \texttt{src}}
-\cvarg{map1}{The first map of type \texttt{CV\_16SC2}, \texttt{CV\_32FC1} or \texttt{CV\_32FC2}. See \cvCppCross{convertMaps}}
-\cvarg{map2}{The second map of type \texttt{CV\_16UC1}, \texttt{CV\_32FC1} or none (empty map), respectively}
+\cvarg{map1}{The first map of either \texttt{(x,y)} points or just \texttt{x} values having type \texttt{CV\_16SC2}, \texttt{CV\_32FC1} or \texttt{CV\_32FC2}. See \cvCppCross{convertMaps} for converting floating point representation to fixed-point for speed.}
+\cvarg{map2}{The second map of \texttt{y} values having type \texttt{CV\_16UC1}, \texttt{CV\_32FC1} or none (empty map if map1 is \texttt{(x,y)} points), respectively}
 \cvarg{interpolation}{The interpolation method, see \cvCppCross{resize}. The method \texttt{INTER\_AREA} is not supported by this function}
 \cvarg{borderMode}{The pixel extrapolation method, see \cvCppCross{borderInterpolate}. When the\\ \texttt{borderMode=BORDER\_TRANSPARENT}, it means that the pixels in the destination image that corresponds to the "outliers" in the source image are not modified by the function}
 \cvarg{borderValue}{A value used in the case of a constant border. By default it is 0}
@@ -660,8 +660,13 @@ The function \texttt{remap} transforms the source image using the specified map:
 \texttt{dst}(x,y) = \texttt{src}(map_x(x,y),map_y(x,y))
 \]
 
-Where values of pixels with non-integer coordinates are computed using one of the available interpolation methods. $map_x$ and $map_y$ can be encoded as separate floating-point maps, interleaved floating-point maps or fixed-point maps.
-The function can not operate in-place.
+Where values of pixels with non-integer coordinates are computed using one of the available interpolation methods. $map_x$ and $map_y$ 
+can be encoded as separate floating-point maps in $map_1$ and $map_2$ respectively, or interleaved floating-point maps of $(x,y)$ in $map_1$, or 
+fixed-point maps made by using \cvCppCross{convertMaps}. The reason you might want to convert from floating to fixed-point 
+representations of a map is that they can yield much faster (~2x) remapping operations. In the converted case, $map_1$ contains pairs 
+\texttt{(cvFloor(x), cvFloor(y))} and $map_2$ contains indices in a table of interpolation coefficients. 
+
+This function can not operate in-place.
 
 \cvCppFunc{resize}
 Resizes an image
