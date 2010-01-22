@@ -102,7 +102,7 @@ int main()
         else
             cout<< "-not-found ";        
 
-        drawChessboardCorners(boards[i], cbg.cornersSize(), tmp, found);
+        drawChessboardCorners(boards[i], cbg.cornersSize(), Mat(tmp), found);
         imshow("Current chessboard", boards[i]); waitKey(1000);
     }
     cout << "Done" << endl;
