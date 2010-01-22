@@ -63,13 +63,14 @@ StereoCalib(const char* imageList, int useUncalibrated)
     vector<CvPoint2D32f> points[2];
     vector<CvPoint2D32f> temp_points[2];
     vector<int> npoints;
-    vector<uchar> active[2];
+//    vector<uchar> active[2];
     int is_found[2] = {0, 0};
     vector<CvPoint2D32f> temp;
     CvSize imageSize = {0,0};
     // ARRAY AND VECTOR STORAGE:
     double M1[3][3], M2[3][3], D1[5], D2[5];
     double R[3][3], T[3], E[3][3], F[3][3];
+    double Q[4][4];
     CvMat _M1 = cvMat(3, 3, CV_64F, M1 );
     CvMat _M2 = cvMat(3, 3, CV_64F, M2 );
     CvMat _D1 = cvMat(1, 5, CV_64F, D1 );
@@ -78,6 +79,9 @@ StereoCalib(const char* imageList, int useUncalibrated)
     CvMat _T = cvMat(3, 1, CV_64F, T );
     CvMat _E = cvMat(3, 3, CV_64F, E );
     CvMat _F = cvMat(3, 3, CV_64F, F );
+    
+    CvMat _Q = cvMat(4, 4, CV_64FC1, Q);
+
     char buf[1024];
     
     if( displayCorners )
@@ -217,8 +221,6 @@ StereoCalib(const char* imageList, int useUncalibrated)
     cvZero(&_D1);
     cvZero(&_D2);
     
-    printf("check1\n");
-
 // CALIBRATE THE STEREO CAMERAS
     printf("Running stereo calibration ...");
     fflush(stdout);
@@ -233,6 +235,7 @@ StereoCalib(const char* imageList, int useUncalibrated)
         CV_CALIB_SAME_FOCAL_LENGTH +
         CV_CALIB_FIX_K3);
     printf(" done\n");
+    
 // CALIBRATION QUALITY CHECK
 // because the output fundamental matrix implicitly
 // includes all the output information,
@@ -264,6 +267,15 @@ StereoCalib(const char* imageList, int useUncalibrated)
         avgErr += err;
     }
     printf( "avg err = %g\n", avgErr/(nframes*n) );
+    
+    // save intrinsic parameters
+    CvFileStorage* fstorage = cvOpenFileStorage("intrinsics.yml", NULL, CV_STORAGE_WRITE);
+    cvWrite(fstorage, "M1", &_M1);
+    cvWrite(fstorage, "D1", &_D1);
+    cvWrite(fstorage, "M2", &_M2);
+    cvWrite(fstorage, "D2", &_D2);
+    cvReleaseFileStorage(&fstorage);
+    
 //COMPUTE AND DISPLAY RECTIFICATION
     if( showUndistorted )
     {
@@ -272,7 +284,6 @@ StereoCalib(const char* imageList, int useUncalibrated)
         CvMat* my1 = cvCreateMat( imageSize.height,
             imageSize.width, CV_32F );
         CvMat* mx2 = cvCreateMat( imageSize.height,
-
             imageSize.width, CV_32F );
         CvMat* my2 = cvCreateMat( imageSize.height,
             imageSize.width, CV_32F );
@@ -282,9 +293,6 @@ StereoCalib(const char* imageList, int useUncalibrated)
             imageSize.width, CV_8U );
         CvMat* disp = cvCreateMat( imageSize.height,
             imageSize.width, CV_16S );
-        CvMat* vdisp = cvCreateMat( imageSize.height,
-            imageSize.width, CV_8U );
-        CvMat* pair;
         double R1[3][3], R2[3][3], P1[3][4], P2[3][4];
         CvMat _R1 = cvMat(3, 3, CV_64F, R1);
         CvMat _R2 = cvMat(3, 3, CV_64F, R2);
@@ -296,10 +304,20 @@ StereoCalib(const char* imageList, int useUncalibrated)
 
             cvStereoRectify( &_M1, &_M2, &_D1, &_D2, imageSize,
                 &_R, &_T,
-                &_R1, &_R2, &_P1, &_P2, 0,
-                0/*CV_CALIB_ZERO_DISPARITY*/,
+                &_R1, &_R2, &_P1, &_P2, &_Q,
+                CV_CALIB_ZERO_DISPARITY,
                 1, imageSize, &roi1, &roi2);
             
+            CvFileStorage* file = cvOpenFileStorage("extrinsics.yml", NULL, CV_STORAGE_WRITE);
+            cvWrite(file, "R", &_R);
+            cvWrite(file, "T", &_T);    
+            cvWrite(file, "R1", &_R1);
+            cvWrite(file, "R2", &_R2);
+            cvWrite(file, "P1", &_P1);    
+            cvWrite(file, "P2", &_P2);    
+            cvWrite(file, "Q", &_Q);
+            cvReleaseFileStorage(&file);
+                        
             isVerticalStereo = fabs(P2[1][3]) > fabs(P2[0][3]);
             if(!isVerticalStereo)
                 roi2.x += imageSize.width;
@@ -340,104 +358,8 @@ StereoCalib(const char* imageList, int useUncalibrated)
         }
         else
             assert(0);
-        cvNamedWindow( "rectified", 1 );
-// RECTIFY THE IMAGES AND FIND DISPARITY MAPS
-        if( !isVerticalStereo )
-            pair = cvCreateMat( imageSize.height, imageSize.width*2,
-            CV_8UC3 );
-        else
-            pair = cvCreateMat( imageSize.height*2, imageSize.width,
-            CV_8UC3 );
-//Setup for finding stereo corrrespondences
-        CvStereoBMState *BMState = cvCreateStereoBMState();
-        assert(BMState != 0);
-        BMState->preFilterSize=33;
-        BMState->preFilterCap=33;
-        BMState->SADWindowSize=33;
-        if( useUncalibrated )
-        {
-            BMState->minDisparity=-64;
-            BMState->numberOfDisparities=128;
-        }
-        else
-        {
-            BMState->minDisparity=-32;
-            BMState->numberOfDisparities=192;
-        }
-        BMState->textureThreshold=10;
-        BMState->uniquenessRatio=15;
-        for( i = 0; i < nframes; i++ )
-        {
-            IplImage* img1=cvLoadImage(imageNames[0][i].c_str(),0);
-            IplImage* img2=cvLoadImage(imageNames[1][i].c_str(),0);
-            if( img1 && img2 )
-            {
-                CvMat part;
-                cvRemap( img1, img1r, mx1, my1 );
-                cvRemap( img2, img2r, mx2, my2 );
-                if( !isVerticalStereo || useUncalibrated != 0 )
-                {
-              // When the stereo camera is oriented vertically,
-              // useUncalibrated==0 does not transpose the
-              // image, so the epipolar lines in the rectified
-              // images are vertical. Stereo correspondence
-              // function does not support such a case.
-                    cvFindStereoCorrespondenceBM( img1r, img2r, disp,
-                        BMState);
-                    cvNormalize( disp, vdisp, 0, 256, CV_MINMAX );
-                    cvNamedWindow( "disparity" );
-                    IplImage* vdisp1 = cvCreateImage(cvSize(640, 480), IPL_DEPTH_8U, 1);
-                    cvResize(vdisp, vdisp1);
-                    cvShowImage( "disparity", vdisp1 );
-                    cvReleaseImage(&vdisp1);
-                }
-                if( !isVerticalStereo )
-                {
-                    cvGetCols( pair, &part, 0, imageSize.width );
-                    cvCvtColor( img1r, &part, CV_GRAY2BGR );
-                    cvGetCols( pair, &part, imageSize.width,
-                        imageSize.width*2 );
-                    cvCvtColor( img2r, &part, CV_GRAY2BGR );
-                    cvRectangle( pair, cvPoint(roi1.x,roi1.y),
-                                cvPoint(roi1.x+roi1.width, roi1.y+roi1.height),
-                                CV_RGB(0,255,0),3);
-                    cvRectangle( pair, cvPoint(roi2.x,roi2.y),
-                                cvPoint(roi2.x+roi2.width, roi2.y+roi2.height),
-                                CV_RGB(0,255,0),3);
-                    for( j = 0; j < imageSize.height; j += 16 )
-                        cvLine( pair, cvPoint(0,j),
-                        cvPoint(imageSize.width*2,j),
-                        CV_RGB(255,0,0));
-                }
-                else
-                {
-                    cvGetRows( pair, &part, 0, imageSize.height );
-                    cvCvtColor( img1r, &part, CV_GRAY2BGR );
-                    cvGetRows( pair, &part, imageSize.height,
-                        imageSize.height*2 );
-                    cvCvtColor( img2r, &part, CV_GRAY2BGR );
-                    cvRectangle( pair, cvPoint(roi1.x,roi1.y),
-                                cvPoint(roi1.x+roi1.width, roi1.y+roi1.height),
-                                CV_RGB(0,255,0),3);
-                    cvRectangle( pair, cvPoint(roi2.x,roi2.y),
-                                cvPoint(roi2.x+roi2.width, roi2.y+roi2.height),
-                                CV_RGB(0,255,0),3);
-                    for( j = 0; j < imageSize.width; j += 16 )
-                        cvLine( pair, cvPoint(j,0),
-                        cvPoint(j,imageSize.height*2),
-                        CV_RGB(255,0,0));
-                }
-                IplImage* pair1 = cvCreateImage(cvSize(640, 480), IPL_DEPTH_8U, 3);
-                cvResize(pair, pair1);
-                cvShowImage( "rectified", pair1 );
-                cvReleaseImage(&pair1);
-                if( cvWaitKey() == 27 )
-                    break;
-            }
-            cvReleaseImage( &img1 );
-            cvReleaseImage( &img2 );
-        }
-        cvReleaseStereoBMState(&BMState);
+        
+        
         cvReleaseMat( &mx1 );
         cvReleaseMat( &my1 );
         cvReleaseMat( &mx2 );
