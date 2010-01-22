@@ -452,7 +452,7 @@ enum { GC_INIT_WITH_RECT  = 0,
 
 CV_EXPORTS void grabCut( const Mat& img, Mat& mask, Rect rect, 
                          Mat& bgdModel, Mat& fgdModel,
-                         int iterCount, int flag = GC_EVAL );
+                         int iterCount, int mode = GC_EVAL );
 
 enum { INPAINT_NS=CV_INPAINT_NS, INPAINT_TELEA=CV_INPAINT_TELEA };
 

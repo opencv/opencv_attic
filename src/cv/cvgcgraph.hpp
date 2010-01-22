@@ -50,6 +50,7 @@ public:
     GCGraph();
     GCGraph( unsigned int vtxCount, unsigned int edgeCount );
     ~GCGraph();
+    void create( unsigned int vtxCount, unsigned int edgeCount );
     int addVtx();
     void addEdges( int i, int j, TWeight w, TWeight revw );
     void addTermWeights( int i, TWeight sourceW, TWeight sinkW );
@@ -88,13 +89,18 @@ GCGraph<TWeight>::GCGraph()
 template <class TWeight>
 GCGraph<TWeight>::GCGraph( unsigned int vtxCount, unsigned int edgeCount )
 {
-    vtcs.reserve( vtxCount );
-    edges.reserve( edgeCount );
-    flow = 0;
+    create( vtxCount, edgeCount );
 }
 template <class TWeight>
 GCGraph<TWeight>::~GCGraph()
 {
+}
+template <class TWeight>
+void GCGraph<TWeight>::create( unsigned int vtxCount, unsigned int edgeCount )
+{
+    vtcs.reserve( vtxCount );
+    edges.reserve( edgeCount );
+    flow = 0;
 }
 
 template <class TWeight>
