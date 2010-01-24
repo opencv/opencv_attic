@@ -1325,6 +1325,36 @@ public:
     operator vector<_Tp>() const;
 };
 
+typedef Mat_<uchar> Mat1b;
+typedef Mat_<Vec2b> Mat2b;
+typedef Mat_<Vec3b> Mat3b;
+typedef Mat_<Vec4b> Mat4b;
+
+typedef Mat_<short> Mat1s;
+typedef Mat_<Vec2s> Mat2s;
+typedef Mat_<Vec3s> Mat3s;
+typedef Mat_<Vec4s> Mat4s;
+
+typedef Mat_<ushort> Mat1w;
+typedef Mat_<Vec2w> Mat2w;
+typedef Mat_<Vec3w> Mat3w;
+typedef Mat_<Vec4w> Mat4w;
+
+typedef Mat_<int>   Mat1i;
+typedef Mat_<Vec2i> Mat2i;
+typedef Mat_<Vec3i> Mat3i;
+typedef Mat_<Vec4i> Mat4i;
+
+typedef Mat_<float> Mat1f;
+typedef Mat_<Vec2f> Mat2f;
+typedef Mat_<Vec3f> Mat3f;
+typedef Mat_<Vec4f> Mat4f;
+
+typedef Mat_<double> Mat1d;
+typedef Mat_<Vec2d> Mat2d;
+typedef Mat_<Vec3d> Mat3d;
+typedef Mat_<Vec4d> Mat4d;
+
 //////////// Iterators & Comma initializers //////////////////
 
 template<typename _Tp>

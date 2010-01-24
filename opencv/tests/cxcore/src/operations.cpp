@@ -663,6 +663,39 @@ bool CV_OperationsTest::TestTemplateMat()
         Mat_<float> mf;
         mf = mi.clone(); mf*=mt;  CHECK_DIFF_FLT(mf, d1);
 
+        ////// typedefs //////
+
+        if (Mat1b(1, 1).elemSize() != sizeof(uchar)) throw test_excep();
+        if (Mat2b(1, 1).elemSize() != 2 * sizeof(uchar)) throw test_excep();
+        if (Mat3b(1, 1).elemSize() != 3 * sizeof(uchar)) throw test_excep();
+        if (Mat1f(1, 1).elemSize() != sizeof(float)) throw test_excep();
+        if (Mat2f(1, 1).elemSize() != 2 * sizeof(float)) throw test_excep();
+        if (Mat3f(1, 1).elemSize() != 3 * sizeof(float)) throw test_excep();
+        if (Mat1f(1, 1).depth() != CV_32F) throw test_excep();
+        if (Mat3f(1, 1).depth() != CV_32F) throw test_excep();
+        if (Mat3f(1, 1).type() != CV_32FC3) throw test_excep();
+        if (Mat1i(1, 1).depth() != CV_32S) throw test_excep();
+        if (Mat1d(1, 1).depth() != CV_64F) throw test_excep();
+        if (Mat1b(1, 1).depth() != CV_8U) throw test_excep();
+        if (Mat3b(1, 1).type() != CV_8UC3) throw test_excep();
+        if (Mat1w(1, 1).depth() != CV_16U) throw test_excep();
+        if (Mat1s(1, 1).depth() != CV_16S) throw test_excep();
+        if (Mat1f(1, 1).channels() != 1) throw test_excep();
+        if (Mat1b(1, 1).channels() != 1) throw test_excep();
+        if (Mat1i(1, 1).channels() != 1) throw test_excep();
+        if (Mat1w(1, 1).channels() != 1) throw test_excep();
+        if (Mat1s(1, 1).channels() != 1) throw test_excep();
+        if (Mat2f(1, 1).channels() != 2) throw test_excep();
+        if (Mat2b(1, 1).channels() != 2) throw test_excep();
+        if (Mat2i(1, 1).channels() != 2) throw test_excep();
+        if (Mat2w(1, 1).channels() != 2) throw test_excep();
+        if (Mat2s(1, 1).channels() != 2) throw test_excep();
+        if (Mat3f(1, 1).channels() != 3) throw test_excep();
+        if (Mat3b(1, 1).channels() != 3) throw test_excep();
+        if (Mat3i(1, 1).channels() != 3) throw test_excep();
+        if (Mat3w(1, 1).channels() != 3) throw test_excep();
+        if (Mat3s(1, 1).channels() != 3) throw test_excep();
+
     }
     catch (const test_excep& e)
     {
