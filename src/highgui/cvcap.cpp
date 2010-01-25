@@ -101,43 +101,44 @@ CV_IMPL int cvGetCaptureDomain( CvCapture* capture)
  */
 CV_IMPL CvCapture * cvCreateCameraCapture (int index)
 {
-	int  domains[] =
-	{
+    int  domains[] =
+    {
 #ifdef HAVE_VIDEOINPUT
         CV_CAP_DSHOW,
 #endif
-		CV_CAP_IEEE1394,   // identical to CV_CAP_DC1394
-		CV_CAP_STEREO,
-		CV_CAP_VFW,        // identical to CV_CAP_V4L
-		CV_CAP_MIL,
-		CV_CAP_QT,
-		CV_CAP_UNICAP,
-		-1
-	};
+        CV_CAP_IEEE1394,   // identical to CV_CAP_DC1394
+        CV_CAP_STEREO,
+        CV_CAP_PVAPI,
+        CV_CAP_VFW,        // identical to CV_CAP_V4L
+        CV_CAP_MIL,
+        CV_CAP_QT,
+        CV_CAP_UNICAP,
+        -1
+    };
 
-	// interpret preferred interface (0 = autodetect)
-	int pref = (index / 100) * 100;
-	if (pref)
-	{
-		domains[0]=pref;
-		index %= 100;
-		domains[1]=-1;
-	}
+    // interpret preferred interface (0 = autodetect)
+    int pref = (index / 100) * 100;
+    if (pref)
+    {
+        domains[0]=pref;
+        index %= 100;
+        domains[1]=-1;
+    }
 
-	// try every possibly installed camera API
-	for (int i = 0; domains[i] >= 0; i++)
-	{
+    // try every possibly installed camera API
+    for (int i = 0; domains[i] >= 0; i++)
+    {
         #if defined(HAVE_VIDEOINPUT) || defined(HAVE_TYZX) || defined(HAVE_VFW) || \
-	    defined(HAVE_CAMV4L) || defined (HAVE_CAMV4L2) || defined(HAVE_GSTREAMER) || \
-	    defined(HAVE_DC1394_2) || defined(HAVE_DC1394) || defined(HAVE_CMU1394) || \
-	    defined(HAVE_GSTREAMER) || defined(HAVE_MIL) || defined(HAVE_QUICKTIME) || \
-	    defined(HAVE_UNICAP)
-		// local variable to memorize the captured device
-		CvCapture *capture;
-	#endif
+        defined(HAVE_CAMV4L) || defined (HAVE_CAMV4L2) || defined(HAVE_GSTREAMER) || \
+        defined(HAVE_DC1394_2) || defined(HAVE_DC1394) || defined(HAVE_CMU1394) || \
+        defined(HAVE_GSTREAMER) || defined(HAVE_MIL) || defined(HAVE_QUICKTIME) || \
+        defined(HAVE_UNICAP) || defined(HAVE_PVAPI)
+        // local variable to memorize the captured device
+        CvCapture *capture;
+        #endif
 
-		switch (domains[i])
-		{
+        switch (domains[i])
+        {
         #ifdef HAVE_VIDEOINPUT
         case CV_CAP_DSHOW:
             capture = cvCreateCameraCapture_DShow (index);
@@ -146,88 +147,96 @@ CV_IMPL CvCapture * cvCreateCameraCapture (int index)
             break;
         #endif
 
-		#ifdef HAVE_TYZX
-		case CV_CAP_STEREO:
-			capture = cvCreateCameraCapture_TYZX (index);
-			if (capture)
-				return capture;
-			break;
-		#endif
+        #ifdef HAVE_TYZX
+        case CV_CAP_STEREO:
+            capture = cvCreateCameraCapture_TYZX (index);
+            if (capture)
+                return capture;
+            break;
+        #endif
 
-		case CV_CAP_VFW:
-		#ifdef HAVE_VFW
-			capture = cvCreateCameraCapture_VFW (index);
-			if (capture)
-				return capture;
-		#endif
-		#if defined (HAVE_CAMV4L) || defined (HAVE_CAMV4L2)
-			capture = cvCreateCameraCapture_V4L (index);
-			if (capture)
-				return capture;
-		#endif
-		#ifdef HAVE_GSTREAMER
-			capture = cvCreateCapture_GStreamer(CV_CAP_GSTREAMER_V4L2, 0);
-			if (capture)
-				return capture;
-			capture = cvCreateCapture_GStreamer(CV_CAP_GSTREAMER_V4L, 0);
-			if (capture)
-				return capture;
-		#endif
-			break;
+        case CV_CAP_VFW:
+        #ifdef HAVE_VFW
+            capture = cvCreateCameraCapture_VFW (index);
+            if (capture)
+                return capture;
+        #endif
+        #if defined (HAVE_CAMV4L) || defined (HAVE_CAMV4L2)
+            capture = cvCreateCameraCapture_V4L (index);
+            if (capture)
+                return capture;
+        #endif
+        #ifdef HAVE_GSTREAMER
+            capture = cvCreateCapture_GStreamer(CV_CAP_GSTREAMER_V4L2, 0);
+            if (capture)
+                return capture;
+            capture = cvCreateCapture_GStreamer(CV_CAP_GSTREAMER_V4L, 0);
+            if (capture)
+                return capture;
+        #endif
+            break;
 
-		case CV_CAP_FIREWIRE:
-		#ifdef HAVE_DC1394_2
-			capture = cvCreateCameraCapture_DC1394_2 (index);
-			if (capture)
-				return capture;
-		#endif
-		#ifdef HAVE_DC1394
-			capture = cvCreateCameraCapture_DC1394 (index);
-			if (capture)
-				return capture;
-		#endif
-		#ifdef HAVE_CMU1394
-			capture = cvCreateCameraCapture_CMU (index);
-			if (capture)
-				return capture;
-		#endif
-	/* Re-enable again when gstreamer 1394 support will land in the backend code	
-		#ifdef HAVE_GSTREAMER
-			capture = cvCreateCapture_GStreamer(CV_CAP_GSTREAMER_1394, 0);
-			if (capture)
-				return capture;
-		#endif
-	*/ 
-			break;
-		#ifdef HAVE_MIL
-		case CV_CAP_MIL:
-			capture = cvCreateCameraCapture_MIL (index);
-			if (capture)
-				return capture;
-			break;
-		#endif
+        case CV_CAP_FIREWIRE:
+        #ifdef HAVE_DC1394_2
+            capture = cvCreateCameraCapture_DC1394_2 (index);
+            if (capture)
+                return capture;
+        #endif
+        #ifdef HAVE_DC1394
+            capture = cvCreateCameraCapture_DC1394 (index);
+            if (capture)
+                return capture;
+        #endif
+        #ifdef HAVE_CMU1394
+            capture = cvCreateCameraCapture_CMU (index);
+            if (capture)
+                return capture;
+        #endif
+    /* Re-enable again when gstreamer 1394 support will land in the backend code	
+        #ifdef HAVE_GSTREAMER
+            capture = cvCreateCapture_GStreamer(CV_CAP_GSTREAMER_1394, 0);
+            if (capture)
+                return capture;
+        #endif
+    */ 
+            break;
+        #ifdef HAVE_MIL
+        case CV_CAP_MIL:
+            capture = cvCreateCameraCapture_MIL (index);
+            if (capture)
+                return capture;
+            break;
+        #endif
 
-		#ifdef HAVE_QUICKTIME
-		case CV_CAP_QT:
-			capture = cvCreateCameraCapture_QT (index);
-			if (capture)
-				return capture;
-			break;
-		#endif
+        #ifdef HAVE_QUICKTIME
+        case CV_CAP_QT:
+            capture = cvCreateCameraCapture_QT (index);
+            if (capture)
+                return capture;
+            break;
+        #endif
 
-		#ifdef HAVE_UNICAP
-		case CV_CAP_UNICAP:
-		  capture = cvCreateCameraCapture_Unicap (index);
-		  if (capture)
-		    return capture;
-		  break;
-		#endif
+        #ifdef HAVE_UNICAP
+        case CV_CAP_UNICAP:
+        capture = cvCreateCameraCapture_Unicap (index);
+        if (capture)
+            return capture;
+        break;
+        #endif
+        
+        #ifdef HAVE_PVAPI
+        case CV_CAP_PVAPI:
+        capture = cvCreateCameraCapture_PvAPI (index);
+        if (capture)
+            return capture;
+        break;
+        #endif
+        
+        }
+    }
 
-		}
-	}
-
-	// failed open a camera
-	return 0;
+    // failed open a camera
+    return 0;
 }
 
 /**

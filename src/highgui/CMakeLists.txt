@@ -93,6 +93,12 @@ if(UNIX)
     if(HAVE_FFMPEG)
         set(highgui_srcs ${highgui_srcs} cvcap_ffmpeg.cpp)
     endif()
+    
+    if(HAVE_PVAPI)
+        add_definitions(-DHAVE_PVAPI)
+        set(highgui_srcs cvcap_pvapi.cpp ${highgui_srcs})
+        set(HIGHGUI_LIBRARIES ${HIGHGUI_LIBRARIES} PvAPI)
+    endif()
 
     if(HAVE_GSTREAMER)
         set(highgui_srcs ${highgui_srcs} cvcap_gstreamer.cpp)
