@@ -155,6 +155,7 @@ CvVideoWriter* cvCreateVideoWriter_QT ( const char* filename, int fourcc,
                                         double fps, CvSize frameSize, int is_color );
 
 CvCapture * cvCreateCameraCapture_Unicap  (const int     index);
+CvCapture * cvCreateCameraCapture_PvAPI  (const int     index);
 CvVideoWriter* cvCreateVideoWriter_GStreamer( const char* filename, int fourcc,
                                             double fps, CvSize frameSize, int is_color );
 /*namespace cv

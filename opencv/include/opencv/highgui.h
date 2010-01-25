@@ -266,6 +266,8 @@ CVAPI(CvCapture*) cvCreateFileCapture( const char* filename );
 
 #define CV_CAP_DSHOW    700   // DirectShow (via videoInput)
 
+#define CV_CAP_PVAPI    800   // PvAPI, Prosilica GigE SDK
+
 /* start capturing frames from camera: index = camera_index + domain_offset (CV_CAP_*) */
 CVAPI(CvCapture*) cvCreateCameraCapture( int index );
 
