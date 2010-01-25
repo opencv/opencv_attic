@@ -235,7 +235,7 @@ Mat& Mat::operator = (const Scalar& s)
             memcpy( dst, scalar, dst_limit - dst );
         }
 
-        if( sz.height )
+        if( sz.height > 0 )
         {
             dst = dst_limit - sz.width + step;
             for( ; sz.height--; dst += step )
