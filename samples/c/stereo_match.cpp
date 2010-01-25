@@ -9,6 +9,8 @@
 
 #include <cv.h>
 #include <highgui.h>
+#include <cstdio>
+
 using namespace std;
 
 void saveXYZ(const char* filename, CvMat* mat)
