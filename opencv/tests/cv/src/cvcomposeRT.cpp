@@ -124,11 +124,11 @@ public:
      
 private:
     const mat_t& rv1, tv1, rv2, tv2;
+    double eps;
+    Mat_<double> ev;
     
     Differential& operator=(const Differential&);
-    Mat rv3_m, tv3_m, rv3_p, tv3_p;    
-    Mat_<double> ev;
-    double eps;
+    Mat rv3_m, tv3_m, rv3_p, tv3_p;          
 };
 
 class CV_composeRT_Test : public CvTest

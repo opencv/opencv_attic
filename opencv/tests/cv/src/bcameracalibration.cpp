@@ -50,7 +50,8 @@ using namespace std;
 class CV_CameraCalibrationBadArgTest : public CvBadArgTest
 {
 public:
-    CV_CameraCalibrationBadArgTest() : CvBadArgTest("calibrate-camera-c-badarg", "cvCalibrateCamera2"), imgSize(800, 600)        
+    CV_CameraCalibrationBadArgTest() : CvBadArgTest("calibrate-camera-c-badarg", "cvCalibrateCamera2"), 
+        imgSize(800, 600)        
     { 
         support_testing_modes = CvTS::CORRECTNESS_CHECK_MODE;         
         
@@ -472,9 +473,9 @@ public:
 protected:         
     void run_func(void) {};
 
-    Mat_<float> distCoeffs;
     Mat_<float> camMat;
-
+    Mat_<float> distCoeffs;
+    
     struct C_Caller
     {        
         CvMat* objectPoints;
