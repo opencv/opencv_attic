@@ -1068,10 +1068,10 @@ void CV_ProjectPointsTest::run(int)
                a2 = r2 + 2*x*x,
                a3 = r2 + 2*y*y,
                cdist = 1+distCoeffs(0,0)*r2+distCoeffs(0,1)*r4;
-		validImgPoint.x = (double)cameraMatrix(0,0)*(x*cdist + (double)distCoeffs(0,2)*a1 + (double)distCoeffs(0,3)*a2)
-            + (double)cameraMatrix(0,2);
-		validImgPoint.y = (double)cameraMatrix(1,1)*(y*cdist + (double)distCoeffs(0,2)*a3 + distCoeffs(0,3)*a1)
-            + (double)cameraMatrix(1,2);
+		validImgPoint.x = static_cast<float>((double)cameraMatrix(0,0)*(x*cdist + (double)distCoeffs(0,2)*a1 + (double)distCoeffs(0,3)*a2)
+            + (double)cameraMatrix(0,2));
+		validImgPoint.y = static_cast<float>((double)cameraMatrix(1,1)*(y*cdist + (double)distCoeffs(0,2)*a3 + distCoeffs(0,3)*a1)
+            + (double)cameraMatrix(1,2));
 
         Point2f ssdfp = *it;
         if( fabs(it->x - validImgPoint.x) > imgPointErr ||
