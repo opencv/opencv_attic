@@ -1512,6 +1512,7 @@ CVAPI(void) cvCorrectMatches(CvMat* F, CvMat* points1, CvMat* points2,
 /* stereo correspondence parameters and functions */
 
 #define CV_STEREO_BM_NORMALIZED_RESPONSE  0
+#define CV_STEREO_BM_XSOBEL               1
 
 /* Block matching algorithm structure */
 typedef struct CvStereoBMState
@@ -1544,6 +1545,7 @@ typedef struct CvStereoBMState
     CvMat* slidingSumBuf;
     CvMat* dbmin;
     CvMat* dbmax;
+    CvMat* disp;
 }
 CvStereoBMState;
 

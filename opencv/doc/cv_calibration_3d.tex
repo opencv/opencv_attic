@@ -398,12 +398,11 @@ typedef struct CvStereoBMState
     int       textureThreshold; // areas with no texture are ignored
     float     uniquenessRatio;// filter out pixels if there are other close matches
                               // with different disparity
-    int       speckleWindowSize;// Disparity variation window (not used)
-    int       speckleRange; // Acceptable range of variation in window (not used)
-    // internal buffers, do not modify (!)
-    CvMat* preFilteredImg0;
-    CvMat* preFilteredImg1;
-    CvMat* slidingSumBuf;
+    int       speckleWindowSize; // the maximum area of speckles to remove
+                                 // (set to 0 to disable speckle filtering)
+    int       speckleRange; // acceptable range of disparity variation in each connected component
+    // internal data
+    ...
 }
 CvStereoBMState;
 \end{lstlisting}
@@ -738,11 +737,11 @@ void cvFindStereoCorrespondenceBM( \par const CvArr* left, \par const CvArr* rig
 \begin{description}
 \cvarg{left}{The left single-channel, 8-bit image.}
 \cvarg{right}{The right image of the same size and the same type.}
-\cvarg{disparity}{The output single-channel 16-bit signed disparity map of the same size as input images. Its elements will be the computed disparities, multiplied by 16 and rounded to integers.}
+\cvarg{disparity}{The output single-channel 16-bit signed, or 32-bit floating-point disparity map of the same size as input images. In the first case the computed disparities are represented as fixed-point numbers with 4 fractional bits (i.e. the computed disparity values are multiplied by 16 and rounded to integers).}
 \cvarg{state}{Stereo correspondence structure.}
 \end{description}
 
-The function cvFindStereoCorrespondenceBM computes disparity map for the input rectified stereo pair.
+The function cvFindStereoCorrespondenceBM computes disparity map for the input rectified stereo pair. Invalid pixels (for which disparity can not be computed) are set to \texttt{state->minDisparity - 1} (or to \texttt{(state->minDisparity-1)*16} in the case of 16-bit fixed-point disparity map)
 
 \cvCPyFunc{FindStereoCorrespondenceGC}
 Computes the disparity map using graph cut-based algorithm.
@@ -1237,8 +1236,8 @@ class StereoBM
     // separate initialization function
     void init(int preset, int ndisparities=0, int SADWindowSize=21);
     // computes the disparity for the two rectified 8-bit single-channel images.
-    // the disparity will be 16-bit singed image of the same size as left.
-    void operator()( const Mat& left, const Mat& right, Mat& disparity );
+    // the disparity will be 16-bit signed (fixed-point) or 32-bit floating-point image of the same size as left.
+    void operator()( const Mat& left, const Mat& right, Mat& disparity, int disptype=CV_16S );
 
     Ptr<CvStereoBMState> state;
 };

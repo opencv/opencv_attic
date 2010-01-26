@@ -892,7 +892,8 @@ template<> inline void Ptr<CvStereoBMState>::delete_obj()
 class CV_EXPORTS StereoBM
 {
 public:
-    enum { NORMALIZED_RESPONSE = CV_STEREO_BM_NORMALIZED_RESPONSE,
+    enum { PREFILTER_NORMALIZED_RESPONSE = CV_STEREO_BM_NORMALIZED_RESPONSE,
+        PREFILTER_XSOBEL = CV_STEREO_BM_XSOBEL,
         BASIC_PRESET=CV_STEREO_BM_BASIC,
         FISH_EYE_PRESET=CV_STEREO_BM_FISH_EYE,
         NARROW_PRESET=CV_STEREO_BM_NARROW };
@@ -900,7 +901,7 @@ public:
     StereoBM();
     StereoBM(int preset, int ndisparities=0, int SADWindowSize=21);
     void init(int preset, int ndisparities=0, int SADWindowSize=21);
-    void operator()( const Mat& left, const Mat& right, Mat& disparity );
+    void operator()( const Mat& left, const Mat& right, Mat& disparity, int disptype=CV_16S );
 
     Ptr<CvStereoBMState> state;
 };
