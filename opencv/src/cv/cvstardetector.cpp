@@ -196,11 +196,11 @@ icvStarDetectorComputeResponses( const CvMat* img, CvMat* responses, CvMat* size
         float* r_ptr2 = (float*)(responses->data.ptr + responses->step*(rows - 1 - y));
         short* s_ptr = (short*)(sizes->data.ptr + sizes->step*y);
         short* s_ptr2 = (short*)(sizes->data.ptr + sizes->step*(rows - 1 - y));
-        for( x = 0; x < cols; x++ )
-        {
-            r_ptr[x] = r_ptr2[x] = 0;
-            s_ptr[x] = s_ptr2[x] = 0;
-        }
+        
+        memset( r_ptr, 0, cols*sizeof(r_ptr[0]));
+        memset( r_ptr2, 0, cols*sizeof(r_ptr2[0]));
+        memset( s_ptr, 0, cols*sizeof(s_ptr[0]));
+        memset( s_ptr2, 0, cols*sizeof(s_ptr2[0]));
     }
 
 #ifdef _OPENMP
@@ -208,14 +208,14 @@ icvStarDetectorComputeResponses( const CvMat* img, CvMat* responses, CvMat* size
 #endif
     for( y = border; y < rows - border; y++ )
     {
-        int x, i;
+        int x = border, i;
         float* r_ptr = (float*)(responses->data.ptr + responses->step*y);
         short* s_ptr = (short*)(sizes->data.ptr + sizes->step*y);
-        for( x = 0; x < border; x++ )
-        {
-            r_ptr[x] = r_ptr[cols - 1 - x] = 0;
-            s_ptr[x] = s_ptr[cols - 1 - x] = 0;
-        }
+        
+        memset( r_ptr, 0, border*sizeof(r_ptr[0]));
+        memset( s_ptr, 0, border*sizeof(s_ptr[0]));
+        memset( r_ptr + cols - border, 0, border*sizeof(r_ptr[0]));
+        memset( s_ptr + cols - border, 0, border*sizeof(s_ptr[0]));
 
 #if CV_SSE2
         for( ; x <= cols - border - 4; x += 4 )
