@@ -91,7 +91,7 @@ void cv::ChessBoardGenerator::generateBasis(Point3f& pb1, Point3f& pb2) const
         n[1]/=len;  
         n[2]/=len;
         
-        if (fabs(n[2]) > min_cos)
+        if (-n[2] > min_cos)
             break;
     }
 
@@ -105,11 +105,12 @@ void cv::ChessBoardGenerator::generateBasis(Point3f& pb1, Point3f& pb2) const
     pb2 = Point3f(b2[0]/len_b1, b2[1]/len_b2, b2[2]/len_b2);
 }
 
+
 Mat cv::ChessBoardGenerator::generageChessBoard(const Mat& bg, const Mat& camMat, const Mat& distCoeffs, 
                                                 const Point3f& zero, const Point3f& pb1, const Point3f& pb2, 
                                                 float sqWidth, float sqHeight, const vector<Point3f>& whole,
                                                 vector<Point2f>& corners) const
-{
+{    
     vector< vector<Point> > squares_black;    
     for(int i = 0; i < patternSize.width; ++i)
         for(int j = 0; j < patternSize.height; ++j)
@@ -134,22 +135,14 @@ Mat cv::ChessBoardGenerator::generageChessBoard(const Mat& bg, const Mat& camMat
                 transform(temp.begin(), temp.end(), back_inserter(squares_black.back()), Mult(rendererResolutionMultiplier));             
             }  
 
-    /* calculate corners */
-    vector<Point3f> corners3d;    
+    /* calculate corners */    
+    corners3d.clear();
     for(int j = 0; j < patternSize.height - 1; ++j)
         for(int i = 0; i < patternSize.width - 1; ++i)
             corners3d.push_back(zero + (i + 1) * sqWidth * pb1 + (j + 1) * sqHeight * pb2);
     corners.clear();
     projectPoints(Mat(corners3d), rvec, tvec, camMat, distCoeffs, corners);
-
-  /*  Mat_<Point2f> corners_mat(patternSize.width - 1, patternSize.height - 1, (Point2f*)&corners[0]);
-    const Point2f& a = corners_mat(0, 0);
-    const Point2f& b = corners_mat(0, corners_mat.cols - 1);
-    const Point2f& c = corners_mat(1, 0);
-    Point2f v1 = (a - b), v2 = (c - b);    
-    if (v1.x * v2.y - v1.y * v2.x > 0)
-        flip(corners_mat, corners_mat, 0);*/
-
+ 
     vector<Point3f> whole3d;
     vector<Point2f> whole2d;
     generateEdge(whole[0], whole[1], whole3d);
@@ -179,6 +172,10 @@ Mat cv::ChessBoardGenerator::generageChessBoard(const Mat& bg, const Mat& camMat
         drawContours(tmp, squares_black, -1, Scalar::all(0), CV_FILLED, CV_AA);
         resize(tmp, result, bg.size(), 0, 0, INTER_AREA);
     }        
+
+
+  
+
     return result;
 }
 
