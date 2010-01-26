@@ -17,6 +17,8 @@ In Windows you can use MiKTeX
 
 ----
 [1] To install easy install on Ubuntu, try:
+ sudo apt-get install python-setuptools
+ or use:
 First:
   wget -q http://peak.telecommunity.com/dist/ez_setup.py
 Then
