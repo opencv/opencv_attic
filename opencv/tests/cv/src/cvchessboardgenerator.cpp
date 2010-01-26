@@ -91,7 +91,7 @@ void cv::ChessBoardGenerator::generateBasis(Point3f& pb1, Point3f& pb2) const
         n[1]/=len;  
         n[2]/=len;
         
-        if (-n[2] > min_cos)
+        if (n[2] > min_cos)
             break;
     }
 
@@ -172,9 +172,6 @@ Mat cv::ChessBoardGenerator::generageChessBoard(const Mat& bg, const Mat& camMat
         drawContours(tmp, squares_black, -1, Scalar::all(0), CV_FILLED, CV_AA);
         resize(tmp, result, bg.size(), 0, 0, INTER_AREA);
     }        
-
-
-  
 
     return result;
 }
