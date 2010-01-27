@@ -385,6 +385,12 @@ class FunctionTests(OpenCVTests):
         random.seed(0)
 
         storage = cv.CreateMemStorage()
+
+        # First run FindContours on a black image.
+        scratch = cv.CreateImage((800,800), 8, 1)
+        cv.SetZero(scratch)
+        seq = cv.FindContours(scratch, storage, cv.CV_RETR_TREE, cv.CV_CHAIN_APPROX_SIMPLE)
+
         for trial in range(10):
             scratch = cv.CreateImage((800,800), 8, 1)
             cv.SetZero(scratch)
@@ -1689,10 +1695,13 @@ if __name__ == '__main__':
         if o == '-r':
             shuffle = 1
 
+    cases = [PreliminaryTests, FunctionTests, AreaTests]
+    everything = [(tc, t) for tc in cases for t in unittest.TestLoader().getTestCaseNames(tc) ]
     if len(args) == 0:
-        cases = [PreliminaryTests, FunctionTests, AreaTests]
         # cases = [NewTests]
-        args = [(tc, t) for tc in cases for t in unittest.TestLoader().getTestCaseNames(tc) ]
+        args = everything
+    else:
+        args = [(tc, t) for (tc, t) in everything if t in args]
 
     suite = unittest.TestSuite()
     for l in range(loops):

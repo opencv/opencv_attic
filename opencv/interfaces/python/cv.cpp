@@ -1023,7 +1023,10 @@ static struct PyMethodDef cvseq_methods[] =
 static Py_ssize_t cvseq_seq_length(PyObject *o)
 {
   cvseq_t *ps = (cvseq_t*)o;
-  return (Py_ssize_t)(ps->a->total);
+  if (ps->a == NULL)
+    return (Py_ssize_t)0;
+  else
+    return (Py_ssize_t)(ps->a->total);
 }
 
 static PyObject* cvseq_seq_getitem(PyObject *o, Py_ssize_t i)
@@ -1036,7 +1039,7 @@ static PyObject* cvseq_seq_getitem(PyObject *o, Py_ssize_t i)
   CvPoint2D32f *pt2;
   CvPoint3D32f *pt3;
 
-  if (i < (Py_ssize_t)(ps->a->total)) {
+  if (i < cvseq_seq_length(o)) {
     switch (CV_SEQ_ELTYPE(ps->a)) {
 
     case CV_SEQ_ELTYPE_POINT:
@@ -1091,13 +1094,13 @@ static PyObject* cvseq_map_getitem(PyObject *o, PyObject *item)
   if (PyInt_Check(item)) {
     long i = PyInt_AS_LONG(item);
     if (i < 0)
-      i += ps->a->total;
+      i += cvseq_seq_length(o);
     return cvseq_seq_getitem(o, i);
   } else if (PySlice_Check(item)) {
     Py_ssize_t start, stop, step, slicelength, cur, i;
     PyObject* result;
 
-    if (PySlice_GetIndicesEx((PySliceObject*)item, ps->a->total,
+    if (PySlice_GetIndicesEx((PySliceObject*)item, cvseq_seq_length(o),
          &start, &stop, &step, &slicelength) < 0) {
       return NULL;
     }
