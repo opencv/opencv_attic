@@ -2604,7 +2604,7 @@ static PyObject *pycvCreateImage(PyObject *self, PyObject *args)
   if (!PyArg_ParseTuple(args, "(ii)Ii:CreateImage", &w, &h, &depth, &channels))
     return NULL;
   iplimage_t *cva = PyObject_NEW(iplimage_t, &iplimage_Type);
-  cva->a = cvCreateImage(cvSize(w, h), depth, channels);
+  ERRWRAP(cva->a = cvCreateImage(cvSize(w, h), depth, channels));
   if (cva->a == NULL) {
     PyErr_SetString(PyExc_TypeError, "CreateImage failed");
     return NULL;
@@ -2619,7 +2619,7 @@ static PyObject *pycvCreateMatHeader(PyObject *self, PyObject *args)
   if (!PyArg_ParseTuple(args, "iii", &rows, &cols, &type))
     return NULL;
   cvmat_t *m = PyObject_NEW(cvmat_t, &cvmat_Type);
-  m->a = cvCreateMatHeader(rows, cols, type);
+  ERRWRAP(m->a = cvCreateMatHeader(rows, cols, type));
   if (m->a == NULL) {
     PyErr_SetString(PyExc_TypeError, "CreateMat failed");
     return NULL;
@@ -2637,7 +2637,7 @@ static PyObject *pycvCreateMat(PyObject *self, PyObject *args)
   if (!PyArg_ParseTuple(args, "iii", &rows, &cols, &type))
     return NULL;
   cvmat_t *m = PyObject_NEW(cvmat_t, &cvmat_Type);
-  m->a = cvCreateMat(rows, cols, type);
+  ERRWRAP(m->a = cvCreateMat(rows, cols, type));
   if (m->a == NULL) {
     PyErr_SetString(PyExc_TypeError, "CreateMat failed");
     return NULL;
