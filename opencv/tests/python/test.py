@@ -304,6 +304,7 @@ class FunctionTests(OpenCVTests):
                         self.assert_(a.depth == d)
                         self.assert_(cv.GetSize(a) == (w, h))
                         # self.assert_(cv.GetElemType(a) == d)
+        self.assertRaises(cv.error, lambda: cv.CreateImage((100, 100), 9, 1))
 
     def test_CreateMat(self):
         for rows in [1, 2, 4, 16, 64, 512, 640]:
@@ -312,7 +313,8 @@ class FunctionTests(OpenCVTests):
                     m = cv.CreateMat(rows, cols, t)
                     self.assertEqual(cv.GetElemType(m), t)
                     self.assertEqual(m.type, t)
-
+        # Uncomment when ticket #100 is fixed
+        # self.assertRaises(cv.error, lambda: cv.CreateMat(100, 100, 666666))
 
     def test_DrawChessboardCorners(self):
         im = cv.CreateImage((512,512), cv.IPL_DEPTH_8U, 3)
