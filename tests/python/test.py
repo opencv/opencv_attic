@@ -76,6 +76,16 @@ class OpenCVTests(unittest.TestCase):
     def setUp(self):
         self.image_cache = {}
 
+    def snap(self, img):
+        self.snapL([img])
+
+    def snapL(self, L):
+        for i,img in enumerate(L):
+            cv.NamedWindow("snap-%d" % i, 1)
+            cv.ShowImage("snap-%d" % i, img)
+        cv.WaitKey()
+        cv.DestroyAllWindows()
+
 # Tests to run first; check the handful of basic operations that the later tests rely on
 
 class PreliminaryTests(OpenCVTests):
@@ -647,6 +657,13 @@ class FunctionTests(OpenCVTests):
             results.add(dst.tostring())
         # Should have produced the same answer every time, so results set should have size 1
         self.assert_(len(results) == 1)
+
+        # ticket #71 repro attempt
+        image = self.get_sample("samples/c/lena.jpg", 0)
+        red = cv.CreateImage(cv.GetSize(image), 8, 1)
+        binary = cv.CreateImage(cv.GetSize(image), 8, 1)
+        cv.Split(image, red, None, None, None)
+        cv.Threshold(red, binary, 42, 255, cv.CV_THRESH_BINARY)
 
     ##############################################################################
 
@@ -1385,15 +1402,6 @@ class AreaTests(OpenCVTests):
             cv.Line(b, (x*16,0), (x*16,1024), 255)
             #self.snapL([a,b])
 
-    def snap(self, img):
-        self.snapL([img])
-
-    def snapL(self, L):
-        for i,img in enumerate(L):
-            cv.NamedWindow("snap-%d" % i, 1)
-            cv.ShowImage("snap-%d" % i, img)
-        cv.WaitKey()
-        cv.DestroyAllWindows()
 
 
     def local_test_Haar(self):
