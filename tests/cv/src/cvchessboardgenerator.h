@@ -26,7 +26,7 @@ public:
     mutable vector<Point3f> corners3d;
 private:
     void generateEdge(const Point3f& p1, const Point3f& p2, vector<Point3f>& out) const;
-    Mat generageChessBoard(const Mat& bg, const Mat& camMat, const Mat& distCoeffs, 
+    Mat generateChessBoard(const Mat& bg, const Mat& camMat, const Mat& distCoeffs, 
         const Point3f& zero, const Point3f& pb1, const Point3f& pb2, 
         float sqWidth, float sqHeight, const vector<Point3f>& whole, vector<Point2f>& corners) const;
     void generateBasis(Point3f& pb1, Point3f& pb2) const;  
