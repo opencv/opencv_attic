@@ -106,7 +106,7 @@ void cv::ChessBoardGenerator::generateBasis(Point3f& pb1, Point3f& pb2) const
 }
 
 
-Mat cv::ChessBoardGenerator::generageChessBoard(const Mat& bg, const Mat& camMat, const Mat& distCoeffs, 
+Mat cv::ChessBoardGenerator::generateChessBoard(const Mat& bg, const Mat& camMat, const Mat& distCoeffs, 
                                                 const Point3f& zero, const Point3f& pb1, const Point3f& pb2, 
                                                 float sqWidth, float sqHeight, const vector<Point3f>& whole,
                                                 vector<Point2f>& corners) const
@@ -233,7 +233,7 @@ Mat cv::ChessBoardGenerator::operator ()(const Mat& bg, const Mat& camMat, const
     float sqWidth  = 2 * cbHalfWidth/patternSize.width;
     float sqHeight = 2 * cbHalfHeight/patternSize.height;
         
-    return generageChessBoard(bg, camMat, distCoeffs, zero, pb1, pb2, sqWidth, sqHeight,  pts3d, corners);      
+    return generateChessBoard(bg, camMat, distCoeffs, zero, pb1, pb2, sqWidth, sqHeight,  pts3d, corners);      
 }
 
 
@@ -292,7 +292,7 @@ Mat cv::ChessBoardGenerator::operator ()(const Mat& bg, const Mat& camMat, const
     
     Point3f zero = p - pb1 * cbHalfWidth - cbHalfHeight * pb2;
             
-    return generageChessBoard(bg, camMat, distCoeffs, zero, pb1, pb2, 
+    return generateChessBoard(bg, camMat, distCoeffs, zero, pb1, pb2, 
         squareSize.width, squareSize.height, pts3d, corners);      
 }
 
@@ -323,7 +323,7 @@ Mat cv::ChessBoardGenerator::operator ()(const Mat& bg, const Mat& camMat, const
     
     Point3f zero = p - pb1 * cbHalfWidth - cbHalfHeight * pb2;
             
-    return generageChessBoard(bg, camMat, distCoeffs, zero, pb1, pb2, 
+    return generateChessBoard(bg, camMat, distCoeffs, zero, pb1, pb2, 
         squareSize.width, squareSize.height,  pts3d, corners);      
 }
 
