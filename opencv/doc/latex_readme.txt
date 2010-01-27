@@ -13,7 +13,7 @@ sudo apt-get install texlive-fonts-extra
  
 ## Above will make the opencv.pdf manual. Below is only if you wish to make HTML documentation:
 sudo apt-get install python-setuptools             ## See [1] below for another install method
-easy_install -U Sphinx                             ## This is NOT the speech recognition program. 
+sudo easy_install -U Sphinx                        ## This is NOT the speech recognition program. 
 sudo easy_install plasTeX            
 
 -------------------------------------------------------------------------
@@ -48,5 +48,4 @@ First:
   wget -q http://peak.telecommunity.com/dist/ez_setup.py
 Then
   sudo python ez_setup.py
-Then you can:
-  easy_install -U Sphinx
+
