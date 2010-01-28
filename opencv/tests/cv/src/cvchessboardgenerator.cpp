@@ -200,16 +200,19 @@ Mat cv::ChessBoardGenerator::operator ()(const Mat& bg, const Mat& camMat, const
     generateBasis(pb1, pb2);
             
     float cbHalfWidth = static_cast<float>(norm(p) * sin( min(fovx, fovy) * 0.5 * CV_PI / 180));
-    float cbHalfHeight = cbHalfWidth * patternSize.height / patternSize.width;
+    float cbHalfHeight = cbHalfWidth * patternSize.height / patternSize.width;    
+
+    float cbHalfWidthEx  =  cbHalfWidth * ( patternSize.width + 1) / patternSize.width;
+    float cbHalfHeightEx = cbHalfHeight * (patternSize.height + 1) / patternSize.height;
     
     vector<Point3f> pts3d(4);
     vector<Point2f> pts2d(4);
     for(;;)
     {        
-        pts3d[0] = p + pb1 * cbHalfWidth + cbHalfHeight * pb2;
-        pts3d[1] = p + pb1 * cbHalfWidth - cbHalfHeight * pb2;
-        pts3d[2] = p - pb1 * cbHalfWidth - cbHalfHeight * pb2;
-        pts3d[3] = p - pb1 * cbHalfWidth + cbHalfHeight * pb2;
+        pts3d[0] = p + pb1 * cbHalfWidthEx + cbHalfHeightEx * pb2;
+        pts3d[1] = p + pb1 * cbHalfWidthEx - cbHalfHeightEx * pb2;
+        pts3d[2] = p - pb1 * cbHalfWidthEx - cbHalfHeightEx * pb2;
+        pts3d[3] = p - pb1 * cbHalfWidthEx + cbHalfHeightEx * pb2;
         
         /* can remake with better perf */
         projectPoints(Mat(pts3d), rvec, tvec, camMat, distCoeffs, pts2d);
@@ -219,16 +222,16 @@ Mat cv::ChessBoardGenerator::operator ()(const Mat& bg, const Mat& camMat, const
         bool inrect3 = pts2d[2].x < bg.cols && pts2d[2].y < bg.rows && pts2d[2].x > 0 && pts2d[2].y > 0;
         bool inrect4 = pts2d[3].x < bg.cols && pts2d[3].y < bg.rows && pts2d[3].x > 0 && pts2d[3].y > 0;
         
-        if ( inrect1 && inrect2 && inrect3 && inrect4)
+        if (inrect1 && inrect2 && inrect3 && inrect4)
             break;
 
         cbHalfWidth*=0.8f;
-        cbHalfHeight = cbHalfWidth * patternSize.height / patternSize.width;        
+        cbHalfHeight = cbHalfWidth * patternSize.height / patternSize.width;   
+        
+        cbHalfWidthEx  = cbHalfWidth * ( patternSize.width + 1) / patternSize.width;
+        cbHalfHeightEx = cbHalfHeight * (patternSize.height + 1) / patternSize.height;
     }
-
-    cbHalfWidth  *= static_cast<float>(patternSize.width)/(patternSize.width + 1);
-    cbHalfHeight *= static_cast<float>(patternSize.height)/(patternSize.height + 1);
-
+    
     Point3f zero = p - pb1 * cbHalfWidth - cbHalfHeight * pb2;
     float sqWidth  = 2 * cbHalfWidth/patternSize.width;
     float sqHeight = 2 * cbHalfHeight/patternSize.height;
