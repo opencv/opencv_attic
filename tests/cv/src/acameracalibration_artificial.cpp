@@ -53,13 +53,13 @@
 using namespace cv;
 using namespace std;
 
-template<class T> ostream& operator<<(ostream& out, const Mat_<T>& mat)
-{    
-    for(Mat_<T>::const_iterator pos = mat.begin(), end = mat.end(); pos != end; ++pos)
-        out << *pos << " ";
-    return out;
-}
-ostream& operator<<(ostream& out, const Mat& mat) { return out << Mat_<double>(mat); } 
+//template<class T> ostream& operator<<(ostream& out, const Mat_<T>& mat)
+//{    
+//    for(Mat_<T>::const_iterator pos = mat.begin(), end = mat.end(); pos != end; ++pos)
+//        out << *pos << " ";
+//    return out;
+//}
+//ostream& operator<<(ostream& out, const Mat& mat) { return out << Mat_<double>(mat); } 
 
 Mat calcRvec(const vector<Point3f>& points, const Size& cornerSize)
 {  
@@ -170,10 +170,12 @@ protected:
             if (norm(tvec_est - tvec) > eps* (norm(tvec) + dlt))            
             {
                 if (err_count++ < errMsgNum)
+                {
                     if (err_count == errMsgNum)       
                         ts->printf( CvTS::LOG, "%d) ...\n", r);                                            
                     else                
                         ts->printf( CvTS::LOG, "%d) Bad accuracy in returned tvecs. Index = %d\n", r, i);                        
+                }
                 ts->set_failed_test_info(CvTS::FAIL_BAD_ACCURACY);
             }            
         }
@@ -195,10 +197,12 @@ protected:
             if (norm(rmat_est, rmat) > eps* (norm(rmat) + dlt))
             {
                 if (err_count++ < errMsgNum)
+                {
                     if (err_count == errMsgNum)
                         ts->printf( CvTS::LOG, "%d) ...\n", r);                                            
                     else
                         ts->printf( CvTS::LOG, "%d) Bad accuracy in returned rvecs (rotation matrs). Index = %d\n", r, i);                                                                
+                }
                 ts->set_failed_test_info(CvTS::FAIL_BAD_ACCURACY);
             }
         }
