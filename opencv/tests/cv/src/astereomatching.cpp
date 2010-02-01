@@ -208,7 +208,7 @@ float dispRMS( const Mat& computedDisp, const Mat& groundTruthDisp, const Mat& m
     Mat grayGroundTruthDisp; cvtColor(groundTruthDisp, grayGroundTruthDisp, CV_BGR2GRAY);
 
     int pointsCount = mask.empty() ? computedDisp.cols*computedDisp.rows : countNonZero(mask);
-    return 1.f/sqrt(pointsCount) * norm(grayComputedDisp, grayGroundTruthDisp, NORM_L2, mask);
+    return 1.f/sqrt((float)pointsCount) * norm(grayComputedDisp, grayGroundTruthDisp, NORM_L2, mask);
 }
 
 /*
