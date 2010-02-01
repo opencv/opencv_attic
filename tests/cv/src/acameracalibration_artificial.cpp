@@ -180,7 +180,10 @@ protected:
                     if (err_count == errMsgNum)       
                         ts->printf( CvTS::LOG, "%d) ...\n", r);                                            
                     else                
+                    {
                         ts->printf( CvTS::LOG, "%d) Bad accuracy in returned tvecs. Index = %d\n", r, i);                        
+                        ts->printf( CvTS::LOG, "%d) norm(tvec_est - tvec) = %f, norm(tvec_exp) = %f \n", r, norm(tvec_est - tvec), norm(tvec));
+                    }
                 }
                 ts->set_failed_test_info(CvTS::FAIL_BAD_ACCURACY);
             }            
@@ -207,7 +210,11 @@ protected:
                     if (err_count == errMsgNum)
                         ts->printf( CvTS::LOG, "%d) ...\n", r);                                            
                     else
+                    {
                         ts->printf( CvTS::LOG, "%d) Bad accuracy in returned rvecs (rotation matrs). Index = %d\n", r, i);                                                                
+                        ts->printf( CvTS::LOG, "%d) norm(rot_mat_est - rot_mat_exp) = %f, norm(rot_mat_exp) = %f \n", r, norm(rmat_est, rmat), norm(rmat));                                
+
+                    }
                 }
                 ts->set_failed_test_info(CvTS::FAIL_BAD_ACCURACY);
             }
