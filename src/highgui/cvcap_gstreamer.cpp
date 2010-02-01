@@ -92,14 +92,12 @@ protected:
     void restartPipeline();
     void setFilter(const char*, int, int, int);
     void removeFilter(const char *filter);
-    void static newPad(GstElement *decodebin,
+    void static newPad(GstElement *myelement,
                              GstPad     *pad,
-                             gboolean    last,
                              gpointer    data);
     GstElement	       *pipeline;
-	GstElement	       *source;
-	GstElement	       *decodebin;
-	GstElement	       *colour;
+	GstElement	       *uridecodebin;
+	GstElement	       *color;
 	GstElement	       *sink;
 
 	GstBuffer	       *buffer;
@@ -188,7 +186,6 @@ bool CvCapture_GStreamer::grabFrame()
 #endif
 	{
 		buffer = gst_app_sink_pull_buffer(GST_APP_SINK(sink));
-
 	} 
 	if(!buffer)
 		return 0;
@@ -213,8 +210,6 @@ IplImage * CvCapture_GStreamer::retrieveFrame(int)
 		if(!gst_structure_get_int(structure, "width", &width) ||
 	   !gst_structure_get_int(structure, "height", &height))
 			return 0;
-
-     	printf("creating frame %dx%d\n", width, height);
 
 		frame = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 3);
 		gst_caps_unref(buff_caps);
@@ -243,9 +238,9 @@ void CvCapture_GStreamer::restartPipeline()
 
 	printf("ready, relinking\n");
 
-	gst_element_unlink(source, decodebin);
+	gst_element_unlink(uridecodebin, color);
 	printf("filtering with %s\n", gst_caps_to_string(caps));
-	gst_element_link_filtered(source, decodebin, caps);
+	gst_element_link_filtered(uridecodebin, color, caps);
 
 	printf("relinked, pausing\n");
 
@@ -274,7 +269,7 @@ void CvCapture_GStreamer::setFilter(const char *property, int type, int v1, int 
 			gst_caps_set_simple(caps, "video/x-raw-rgb", property, type, v1, NULL);
 		else
 			gst_caps_set_simple(caps, "video/x-raw-rgb", property, type, v1, v2, NULL);
-	}
+	}	
 
 	restartPipeline();
 }
@@ -292,46 +287,23 @@ void CvCapture_GStreamer::removeFilter(const char *filter)
 
 
 //
-// connect decodebin's dynamically created source pads to colourconverter
+// connect uridecodebin dynamically created source pads to colourconverter
 //
-void CvCapture_GStreamer::newPad(GstElement *decodebin,
+void CvCapture_GStreamer::newPad(GstElement *uridecodebin,
                              GstPad     *pad,
-                             gboolean    last,
                              gpointer    data)
 {
-	GstElement *mysink = GST_ELEMENT(data);
-	GstStructure *str;
-	GstPad *sinkpad;
-	GstCaps *mycaps;
+  GstPad *sinkpad;
+  GstElement *color = (GstElement *) data;
 
-	/* link only once */
-	sinkpad = gst_element_get_pad(mysink, "sink");
 
-	if(GST_PAD_IS_LINKED(sinkpad)) {
-		g_print("sink is already linked\n");
-		g_object_unref(sinkpad);
-		return;
-	}
+  sinkpad = gst_element_get_static_pad (color, "sink");
 
-	/* check media type */
-	mycaps = gst_pad_get_caps(pad);
-	str = gst_caps_get_structure(mycaps, 0);
-	const char *structname = gst_structure_get_name(str);
-//	g_print("new pad %s\n", structname);
-	if(!g_strrstr(structname, "video")) {
-		gst_caps_unref(mycaps);
-		gst_object_unref(sinkpad);
-		return;
-	}
-	printf("linking pad %s\n", structname);
+  gst_pad_link (pad, sinkpad);
 
-	/* link'n'play */
-	gst_pad_link (pad, sinkpad);
-
-	gst_caps_unref(mycaps);
-	gst_object_unref(sinkpad);
-
+  gst_object_unref (sinkpad);
 }
+
 bool CvCapture_GStreamer::open( int type, const char* filename )
 {
     close();
@@ -351,22 +323,27 @@ bool CvCapture_GStreamer::open( int type, const char* filename )
 		isInited = true;
 	}
     bool stream=false;
-	const char *sourcetypes[] = {"dv1394src", "v4lsrc", "v4l2src", "filesrc"};
+    char *checked_filename=NULL;
+    char *uri=NULL;
+	//const char *sourcetypes[] = {"dv1394src", "v4lsrc", "v4l2src", "filesrc"};
 	//printf("entered capturecreator %s\n", sourcetypes[type]);
-    if  (type == CV_CAP_GSTREAMER_FILE && gst_uri_is_valid(filename)) {
+    if  (type == CV_CAP_GSTREAMER_FILE) {	
+		if (!gst_uri_is_valid(filename)) {
+			checked_filename=realpath(filename,NULL);
+			uri=g_filename_to_uri(checked_filename,NULL,NULL);
+			stream=false;
+		}
+		else {
+			stream=true;
+			uri=g_strdup (filename);
+		}	
 		printf("Trying to connect to stream \n");
-		stream=true;
-		source = gst_element_make_from_uri(GST_URI_SRC, filename, NULL);
+		uridecodebin = gst_element_factory_make ("uridecodebin", NULL);
+		g_object_set(G_OBJECT(uridecodebin),"uri",uri, NULL);
 	}
-	else	
-		source = gst_element_factory_make(sourcetypes[type], NULL);
-	if(!source)
+	if(!uridecodebin)
 		return 0;
-
-	if(type ==CV_CAP_GSTREAMER_FILE && !gst_uri_is_valid(filename))
-		g_object_set(G_OBJECT(source), "location", filename, NULL);
-
-	colour = gst_element_factory_make("ffmpegcolorspace", NULL);
+	color = gst_element_factory_make("ffmpegcolorspace", NULL);
 
 #ifdef HAVE_GSTREAMER_APP
 	sink = gst_element_factory_make("appsink", NULL);
@@ -385,12 +362,11 @@ bool CvCapture_GStreamer::open( int type, const char* filename )
     //GstCaps *caps=gst_video_format_new_caps(GST_VIDEO_FORMAT_BGR,,368,30,1,1,1);
     gst_app_sink_set_caps(GST_APP_SINK(sink), caps);
 	gst_caps_unref(caps);
-	decodebin = gst_element_factory_make("decodebin", NULL);
-	g_signal_connect(decodebin, "new-decoded-pad", G_CALLBACK(newPad), colour);
+	g_signal_connect(uridecodebin, "pad-added", G_CALLBACK(newPad), color);
 
 	pipeline = gst_pipeline_new (NULL);
 
-	gst_bin_add_many(GST_BIN(pipeline), source, decodebin, colour, sink, NULL);
+	gst_bin_add_many(GST_BIN(pipeline), uridecodebin, color, sink, NULL);
 
 	switch(type) {
 	case CV_CAP_GSTREAMER_V4L2: // default to 640x480, 30 fps
@@ -398,16 +374,9 @@ bool CvCapture_GStreamer::open( int type, const char* filename )
 	case CV_CAP_GSTREAMER_V4L:
 	case CV_CAP_GSTREAMER_1394:
         break;
-	case CV_CAP_GSTREAMER_FILE:
-		if(!gst_element_link(source, decodebin)) {
-			CV_ERROR(CV_StsError, "GStreamer: cannot link filesrc -> decodebin\n");
-			gst_object_unref(pipeline);
-			return 0;
-		}
-		break;
-	}
-	if(!gst_element_link(colour, sink)) {
-		CV_ERROR(CV_StsError, "GStreamer: cannot link colour -> sink\n");
+    }
+	if(!gst_element_link(color, sink)) {
+		CV_ERROR(CV_StsError, "GStreamer: cannot link color -> sink\n");
 		gst_object_unref(pipeline);
 		return 0;
 	}
@@ -433,13 +402,8 @@ bool CvCapture_GStreamer::open( int type, const char* filename )
 	}
 
 
-//	printf("state now paused\n");
-	// construct capture struct
-	//capture->type = type;
-	handleMessage();
 
-//	GstClock *clock = gst_pipeline_get_clock(GST_PIPELINE(pipeline));
-//	printf("clock %s\n", gst_object_get_name(GST_OBJECT(clock)));
+	handleMessage();
 
 	__END__;
    
@@ -468,11 +432,12 @@ protected:
     GstElement* file;
     GstElement* enc;
     GstElement* mux;
-    GstElement* colour;
+    GstElement* color;
     GstBuffer* buffer;
     GstElement* pipeline;
     int input_pix_fmt;
 };
+
 void CvVideoWriter_GStreamer::init()
 {
 	encs[CV_FOURCC('H','F','Y','U')]=(char*)"ffenc_huffyuv";
@@ -519,7 +484,7 @@ bool CvVideoWriter_GStreamer::open( const char * filename, int fourcc,
     file=gst_element_factory_make("filesink", NULL);
     enc=gst_element_factory_make(encit->second, NULL);
     mux=gst_element_factory_make("avimux", NULL);
-    colour = gst_element_factory_make("ffmpegcolorspace", NULL);
+    color = gst_element_factory_make("ffmpegcolorspace", NULL);
     if (!enc) 
 		CV_ERROR( CV_StsUnsupportedFormat, "Your version of Gstreamer doesn't support this codec acutally or needed plugin missing.");
     g_object_set(G_OBJECT(file), "location", filename, NULL);
@@ -547,14 +512,14 @@ bool CvVideoWriter_GStreamer::open( const char * filename, int fourcc,
     }                                                                       
 	gst_app_src_set_caps(GST_APP_SRC(source), caps);
 	if (fourcc==CV_FOURCC_DEFAULT) {  
-		gst_bin_add_many(GST_BIN(pipeline), source, colour,mux, file, NULL);
-		if(!gst_element_link_many(source,colour,enc,mux,file,NULL)) {
+		gst_bin_add_many(GST_BIN(pipeline), source, color,mux, file, NULL);
+		if(!gst_element_link_many(source,color,enc,mux,file,NULL)) {
 			CV_ERROR(CV_StsError, "GStreamer: cannot link elements\n");
 		}
 	}	
 	else { 
-		gst_bin_add_many(GST_BIN(pipeline), source, colour,enc,mux, file, NULL);
-		if(!gst_element_link_many(source,colour,enc,mux,file,NULL)) {
+		gst_bin_add_many(GST_BIN(pipeline), source, color,enc,mux, file, NULL);
+		if(!gst_element_link_many(source,color,enc,mux,file,NULL)) {
 			CV_ERROR(CV_StsError, "GStreamer: cannot link elements\n");
 		}	
 	}
@@ -660,7 +625,6 @@ double CvCapture_GStreamer::getProperty( int propId )
 			CV_WARN("GStreamer: unable to query position of stream");
 			return 0;
 		}
-
 		return ((double) value) / GST_FORMAT_PERCENT_MAX;
 	case CV_CAP_PROP_FRAME_WIDTH:
 	case CV_CAP_PROP_FRAME_HEIGHT:
