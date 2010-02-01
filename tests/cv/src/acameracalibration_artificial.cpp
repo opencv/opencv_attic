@@ -192,7 +192,7 @@ protected:
 
     void compareRotationVecs(const vector<Mat>& rvecs, const vector<Mat>& rvecs_est)
     {
-        const double eps = 1e-2;
+        const double eps = 2e-2;
         const double dlt = 1e-4;
 
         Mat rmat, rmat_est;
