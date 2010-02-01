@@ -161,7 +161,7 @@ void CV_IOTest::run( int )
         
         int test_int = (int)cvTsRandInt(rng);
         double test_real = (cvTsRandInt(rng)%2?1:-1)*exp(cvTsRandReal(rng)*18-9);
-        string test_string = "vw wv23424rtrt@#$@$%$%&%IJUKYILFD@#$@%$&*&() ";
+        string test_string = "vw wv23424rt\"&amp;&lt;&gt;&amp;&apos;@#$@$%$%&%IJUKYILFD@#$@%$&*&() ";
         
         int depth = cvTsRandInt(rng) % (CV_64F+1);
         int cn = cvTsRandInt(rng) % 4 + 1;
@@ -230,7 +230,7 @@ void CV_IOTest::run( int )
         
         fs.writeObj("test_seq", seq);
         fs.writeObj("test_graph",graph);
-        CvGraph* graph2 = cvCloneGraph(graph,storage);
+        CvGraph* graph2 = (CvGraph*)cvClone(graph);
         
         fs.release();
         
