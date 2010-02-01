@@ -121,10 +121,10 @@ protected:
 
         if (fail)
         {
-            ts->set_failed_test_info(CvTS::FAIL_BAD_ACCURACY);                            
-            ts->printf( CvTS::LOG, "%d) Expected [Fx Fy Cx Cy] = [%f %f %f %f]\n", r, fx, fy, cx, cy);
-            ts->printf( CvTS::LOG, "%d) Estimated [Fx Fy Cx Cy] = [%f %f %f %f]\n", r, fx_e, fy_e, cx_e, cy_e);
+            ts->set_failed_test_info(CvTS::FAIL_BAD_ACCURACY);                                        
         }        
+        ts->printf( CvTS::LOG, "%d) Expected  [Fx Fy Cx Cy] = [%.3f %.3f %.3f %.3f]\n", r, fx, fy, cx, cy);
+        ts->printf( CvTS::LOG, "%d) Estimated [Fx Fy Cx Cy] = [%.3f %.3f %.3f %.3f]\n", r, fx_e, fy_e, cx_e, cy_e);                        
     }
 
     void compareDistCoeffs(const Mat_<double>& distCoeffs, const Mat& distCoeffs_est)
@@ -150,8 +150,10 @@ protected:
         {
             // commented according to vp123's recomendation. TODO - improve accuaracy
             //ts->set_failed_test_info(CvTS::FAIL_BAD_ACCURACY); ss            
+            
             ts->printf( CvTS::LOG, "%d) DistCoeff exp=(%.2f, %.2f, %.4f, %.4f %.2f)\n", r, k1, k2, p1, p2, k3);
-            ts->printf( CvTS::LOG, "%d) DistCoeff est=(%.2f, %.2f, %.4f, %.4f %.2f)\n", r, k1_e, k2_e, p1_e, p2_e, k3_e);            
+            ts->printf( CvTS::LOG, "%d) DistCoeff est=(%.2f, %.2f, %.4f, %.4f %.2f)\n", r, k1_e, k2_e, p1_e, p2_e, k3_e);                                    
+            ts->printf( CvTS::LOG, "%d) AbsError = [%.5f %.5f %.5f %.5f %.5f]\n", r, fabs(k1-k1_e), fabs(k2-k2_e), fabs(p1-p1_e), fabs(p2-p2_e), fabs(k3-k3_e));
         }                
     }
 
@@ -301,6 +303,7 @@ protected:
         size_t repeat_num = 3;
         for(r = 0; r < repeat_num; ++r)
         {
+            ts->printf( CvTS::LOG, "\n");
             progress = update_progress(progress, r, repeat_num, 0);
             const bool artificial_corners = false;
             const int brds_num = 20;              
@@ -318,7 +321,7 @@ protected:
             Mat_<double> camMat(3, 3);
             camMat << fx, 0., cx, 0, fy, cy, 0., 0., 1.;
 
-            double k1 = 1 + (double)rng/5;
+            double k1 = 0.5 + (double)rng/5;
             double k2 = (double)rng/5;
             double k3 = (double)rng/5;
 
