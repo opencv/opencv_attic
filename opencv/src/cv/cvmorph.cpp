@@ -946,7 +946,7 @@ Ptr<FilterEngine> createMorphologyFilter( int op, int type, const Mat& kernel,
     if( (_rowBorderType == BORDER_CONSTANT || _columnBorderType == BORDER_CONSTANT) &&
         borderValue == morphologyDefaultBorderValue() )
     {
-        int depth = CV_MAT_TYPE(type);
+        int depth = CV_MAT_DEPTH(type);
         CV_Assert( depth == CV_8U || depth == CV_16U || depth == CV_32F );
         if( op == MORPH_ERODE )
             borderValue = Scalar::all( depth == CV_8U ? (double)UCHAR_MAX :
