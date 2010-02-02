@@ -277,6 +277,8 @@ protected:
                     break;                    
             }                   
 
+            //cv::namedWindow("CB"); imshow("CB", boards[i]); cv::waitKey();
+
             imagePoints_art.push_back(corners_art);                        
             imagePoints_findCb.push_back(corners_fcb);
 
@@ -400,8 +402,8 @@ protected:
             progress = update_progress(progress, r, repeat_num, 0);
 
             ts->printf( CvTS::LOG, "findChessboard corners\n");
-            runTest(bg.size(), camMat, distCoeffs, brds_num, cbg.cornersSize(), 0);       
-            progress = update_progress(progress, r, repeat_num, JUST_FIND_CORNERS);
+            runTest(bg.size(), camMat, distCoeffs, brds_num, cbg.cornersSize(), JUST_FIND_CORNERS);       
+            progress = update_progress(progress, r, repeat_num, 0);
 
             ts->printf( CvTS::LOG, "cornersSubPix corners\n");
             runTest(bg.size(), camMat, distCoeffs, brds_num, cbg.cornersSize(), USE_CORNERS_SUBPIX);
