@@ -23,7 +23,7 @@ void getBinMask( const Mat& comMask, Mat& binMask )
     binMask = comMask & 1;
 }
 
-class GCApp
+class GCApplication
 {
 public:
     enum{ NOT_SET = 0, IN_PROCESS = 1, SET = 2 };
@@ -53,15 +53,12 @@ private:
     int iterCount;
 };
 
-void GCApp::reset()
+void GCApplication::reset()
 {
-    if( image->empty() )
-        return;
-    mask.setTo(Scalar::all(GC_BGD));
-    bgdPxls.clear();
-    fgdPxls.clear();
-    prBgdPxls.clear();
-    prFgdPxls.clear();
+    if( !mask.empty() )
+        mask.setTo(Scalar::all(GC_BGD));
+    bgdPxls.clear(); fgdPxls.clear();
+    prBgdPxls.clear();  prFgdPxls.clear();
 
     isInitialized = false;
     rectState = NOT_SET;
@@ -70,18 +67,17 @@ void GCApp::reset()
     iterCount = 0;
 }
 
-void GCApp::setImageAndWinName( const Mat& _image, const string& _winName  )
+void GCApplication::setImageAndWinName( const Mat& _image, const string& _winName  )
 {
     if( _image.empty() || _winName.empty() )
         return;
     image = &_image;
     winName = &_winName;
     mask.create( image->size(), CV_8UC1);
-    mask.setTo(Scalar::all(GC_BGD));
     reset();
 }
 
-void GCApp::showImage() const
+void GCApplication::showImage() const
 {
     if( image->empty() || winName->empty() )
         return;
@@ -112,7 +108,7 @@ void GCApp::showImage() const
     imshow( *winName, res );
 }
 
-void GCApp::setRectInMask()
+void GCApplication::setRectInMask()
 {
     assert( !mask.empty() );
     mask.setTo( GC_BGD );
@@ -123,7 +119,7 @@ void GCApp::setRectInMask()
     (mask(rect)).setTo( Scalar(GC_PR_FGD) );
 }
 
-void GCApp::setLblsInMask( int flags, Point p, bool isPr )
+void GCApplication::setLblsInMask( int flags, Point p, bool isPr )
 {
     vector<Point> *bpxls, *fpxls;
     uchar bvalue, fvalue;
@@ -145,17 +141,15 @@ void GCApp::setLblsInMask( int flags, Point p, bool isPr )
     {
         bpxls->push_back(p);
         circle( mask, p, radius, bvalue, thickness );
-        showImage();
     }
     if( flags & FGD_KEY )
     {
         fpxls->push_back(p);
         circle( mask, p, radius, fvalue, thickness );
-        showImage();
     }
 }
 
-void GCApp::mouseClick( int event, int x, int y, int flags, void* param )
+void GCApplication::mouseClick( int event, int x, int y, int flags, void* param )
 {
     // TODO add bad args check
     switch( event )
@@ -213,14 +207,20 @@ void GCApp::mouseClick( int event, int x, int y, int flags, void* param )
             showImage();
         }
         else if( lblsState == IN_PROCESS )
+        {
             setLblsInMask(flags, Point(x,y), false);
+            showImage();
+        }
         else if( prLblsState == IN_PROCESS )
+        {
             setLblsInMask(flags, Point(x,y), true);
+            showImage();
+        }
         break;
     }
 }
 
-int GCApp::nextIter()
+int GCApplication::nextIter()
 {
     if( isInitialized )
         grabCut( *image, mask, rect, bgdModel, fgdModel, 1 );
@@ -238,16 +238,13 @@ int GCApp::nextIter()
     }
     iterCount++;
 
-    bgdPxls.clear();
-    fgdPxls.clear();
-    prBgdPxls.clear();
-    prFgdPxls.clear();
+    bgdPxls.clear(); fgdPxls.clear();
+    prBgdPxls.clear(); prFgdPxls.clear();
 
-    showImage();
     return iterCount;
 }
 
-GCApp gcapp;
+GCApplication gcapp;
 
 void on_mouse( int event, int x, int y, int flags, void* param )
 {
@@ -304,7 +301,10 @@ int main( int argc, char** argv )
             cout << "<" << iterCount << "... ";
             int newIterCount = gcapp.nextIter();
             if( newIterCount > iterCount )
+            {
+                gcapp.showImage();
                 cout << iterCount << ">" << endl;
+            }
             else
                 cout << "rect must be determined>" << endl;
             break;
