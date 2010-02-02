@@ -110,9 +110,9 @@ int cvCheckChessboard(IplImage* src, CvSize size)
     }
     
     const int erosion_count = 1;
-    const double black_level = 20;
-    const double white_level = 130;
-    const double black_white_gap = 70;
+    const float black_level = 20.f;
+    const float white_level = 130.f;
+    const float black_white_gap = 70.f;
     
 #if defined(DEBUG_WINDOWS)
     cvNamedWindow("1", 1);
@@ -177,8 +177,8 @@ int cvCheckChessboard(IplImage* src, CvSize size)
                 // check the number of black and white squares
                 std::vector<int> counts;
                 countClasses(quads, i, j, counts);
-                const int black_count = ceil(size.width/2.0)*ceil(size.height/2.0);
-                const int white_count = floor(size.width/2.0)*floor(size.height/2.0);
+                const int black_count = cvRound(ceil(size.width/2.0)*ceil(size.height/2.0));
+                const int white_count = cvRound(floor(size.width/2.0)*floor(size.height/2.0));
                 if(counts[0] < black_count*0.75 ||
                    counts[1] < white_count*0.75)
                 {
