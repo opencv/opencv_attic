@@ -867,14 +867,26 @@ static OSErr icvDataProc_QT_Cam (SGChannel channel, Ptr raw_data, long len, long
 	if (capture->sequence == 0)
 	{
 		ImageDescriptionHandle   description = (ImageDescriptionHandle) NewHandle(0);
-
+		
 		// we need a decompression sequence that fits the raw data coming from the camera
 		err = SGGetChannelSampleDescription (channel, (Handle) description);
 		OPENCV_ASSERT (err == noErr, "icvDataProc_QT_Cam", "couldnt get channel sample description");
-		err = DecompressSequenceBegin (&capture->sequence, description, capture->gworld, 0, &capture->bounds,
-			                           nil, srcCopy, nil, 0, codecNormalQuality, bestSpeedCodec);
+		
+		//*************************************************************************************//
+		//This fixed a bug when Quicktime is called twice to grab a frame (black band bug) - Yannick Verdie 2010
+		Rect sourceRect;
+		sourceRect.top = 0;
+		sourceRect.left = 0;	
+		sourceRect.right = (**description).width;
+		sourceRect.bottom = (**description).height;
+		
+		MatrixRecord scaleMatrix;
+		RectMatrix(&scaleMatrix,&sourceRect,&capture->bounds);
+		
+		err = DecompressSequenceBegin (&capture->sequence, description, capture->gworld, 0,&capture->bounds,&scaleMatrix, srcCopy, NULL, 0, codecNormalQuality, bestSpeedCodec);
+		//**************************************************************************************//
+		
 		OPENCV_ASSERT (err == noErr, "icvDataProc_QT_Cam", "couldnt begin decompression sequence");
-
 		DisposeHandle ((Handle) description);
 	}
 
