@@ -120,7 +120,7 @@ icvStarDetectorComputeResponses( const CvMat* img, CvMat* responses, CvMat* size
     CvStarFeature f[MAX_PATTERN];
 
     CvMat *sum = 0, *tilted = 0, *flatTilted = 0;
-    int x, y, i=0, rows = img->rows, cols = img->cols, step;
+    int y, i=0, rows = img->rows, cols = img->cols, step;
     int border, npatterns=0, maxIdx=0;
 #ifdef _OPENMP
     int nthreads = cvGetNumThreads();

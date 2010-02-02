@@ -61,8 +61,8 @@ cvFindCornerSubPix( const void* srcarr, CvPoint2D32f* corners,
     double coeff;
     CvSize size, src_buf_size;
     int i, j, k, pt_i;
-    int max_iters;
-    double eps;
+    int max_iters = 10;
+    double eps = 0;
 
     CvMat stub, *src = (CvMat*)srcarr;
     src = cvGetMat( srcarr, &stub );
