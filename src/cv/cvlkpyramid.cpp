@@ -1373,7 +1373,7 @@ cvEstimateRigidTransform( const CvArr* _A, const CvArr* _B, CvMat* _M, int full_
     CvSize sz0, sz1;
     int cn, equal_sizes;
     int i, j, k, k1;
-    int count_x, count_y, count;
+    int count_x, count_y, count = 0;
     double scale = 1;
     CvRNG rng = cvRNG(-1);
     double m[6]={0};
