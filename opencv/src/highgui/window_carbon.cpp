@@ -69,6 +69,7 @@ typedef struct CvTrackbar
     int* data;
     int pos;
     int maxval;
+	int labelSize;//Yannick Verdie
     CvTrackbarCallback notify;
     CvTrackbarCallback2 notify2;
     void* userdata;
@@ -325,6 +326,8 @@ static void icvDeleteWindow( CvWindow* window )
 	if (window->imageRef != NULL)
         CGImageRelease(window->imageRef);
     
+	DisposeWindow (window->window);//YV
+	
     cvFree( (void**)&window );
 }
 
@@ -474,6 +477,25 @@ void TrackbarActionProcPtr (ControlRef theControl, ControlPartCode partCode)
             trackbar->notify(pos);
         else if ( trackbar->notify2 )
             trackbar->notify2(pos, trackbar->userdata);
+		
+		//--------YV---------------------------
+		CFStringEncoding encoding = kCFStringEncodingASCII;
+		CFAllocatorRef alloc_default = kCFAllocatorDefault;  // = NULL;
+		
+		char valueinchar[20];
+		sprintf(valueinchar, " (%d)",  *trackbar->data);	
+		
+		// create an empty CFMutableString
+		CFIndex maxLength = 256;
+		CFMutableStringRef cfstring = CFStringCreateMutable(alloc_default,maxLength);
+		
+		// append some c strings into it.
+		CFStringAppendCString(cfstring,trackbar->name,encoding);
+		CFStringAppendCString(cfstring,valueinchar,encoding);
+		
+		SetControlData(trackbar->label, kControlEntireControl,kControlStaticTextCFStringTag, sizeof(cfstring), &cfstring);
+		DrawControls(trackbar->parent->window);
+		//-----------------------------------------
     }
 }
 
@@ -534,6 +556,23 @@ static int icvCreateTrackbar (const char* trackbar_name,
         
         trackbar->maxval = count;
         
+		//----------- YV ----------------------
+		//get nb of digits
+		int nbDigit = 0;
+		while((count/=10)>10){
+			nbDigit++;
+		}
+		
+		//pad size maxvalue in pixel
+		Point	qdSize;
+		char valueinchar[strlen(trackbar_name)+1 +1 +1+nbDigit+1];//lenght+\n +space +(+nbDigit+)
+		sprintf(valueinchar, "%s (%d)",trackbar_name, trackbar->maxval);
+		SInt16	baseline;
+		CFStringRef text = CFStringCreateWithCString(NULL,valueinchar,kCFStringEncodingASCII);
+		GetThemeTextDimensions( text, kThemeCurrentPortFont, kThemeStateActive, false, &qdSize, &baseline );
+		trackbar->labelSize = qdSize.h;
+		//--------------------------------------
+		
         int c = icvCountTrackbarInWindow(window);		
         
         GetWindowBounds(window->window,kWindowContentRgn,&bounds);
@@ -544,8 +583,11 @@ static int icvCreateTrackbar (const char* trackbar_name,
         stboundsRect.right = stboundsRect.left+LABELWIDTH;
         
         //fprintf(stdout,"create trackabar bounds (%d %d %d %d)\n",stboundsRect.top,stboundsRect.left,stboundsRect.bottom,stboundsRect.right);
-        CreateStaticTextControl (window->window,&stboundsRect,CFStringCreateWithCString(NULL,trackbar_name,kCFStringEncodingASCII),NULL,&stoutControl);
-        
+	 //----------- YV ----------------------
+	 sprintf(valueinchar, "%s (%d)",trackbar_name, trackbar->pos);
+        CreateStaticTextControl (window->window,&stboundsRect,CFStringCreateWithCString(NULL,valueinchar,kCFStringEncodingASCII),NULL,&stoutControl);
+        //--------------------------------------
+		
         stboundsRect.top = (INTERWIDGETSPACE +WIDGETHEIGHT)* (c-1)+INTERWIDGETSPACE;
         stboundsRect.left = INTERWIDGETSPACE*2+LABELWIDTH;
         stboundsRect.bottom = stboundsRect.top + WIDGETHEIGHT;
