@@ -398,7 +398,7 @@ cvApproxChains( CvSeq*              src_seq,
 
         if( len >= minimal_perimeter )
         {
-            CvSeq *contour;
+            CvSeq *contour = 0;
             
             switch( method )
             {
@@ -409,11 +409,8 @@ cvApproxChains( CvSeq*              src_seq,
                 contour = icvApproximateChainTC89( (CvChain *) src_seq, sizeof( CvContour ), storage, method );
                 break;
             default:
-                assert(0);
                 CV_Error( CV_StsOutOfRange, "" );
             }
-
-            assert( contour );
 
             if( contour->total > 0 )
             {
