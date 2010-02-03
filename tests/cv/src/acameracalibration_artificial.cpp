@@ -243,7 +243,7 @@ protected:
     Size2f sqSile;
 
     vector<Point3f> chessboard3D;
-    vector<Mat> boards, rvecs_exp, tvecs_exp;                
+    vector<Mat> boards, rvecs_exp, tvecs_exp, rvecs_spnp, tvecs_spnp;                
     vector< vector<Point3f> > objectPoints;
     vector< vector<Point2f> > imagePoints_art;
     vector< vector<Point2f> > imagePoints_findCb;
@@ -351,7 +351,16 @@ protected:
         {
             ts->printf( CvTS::LOG, "%d) Too big reproject error without intrinsics = %f\n", r, rep_errorWOI);
             ts->set_failed_test_info(CvTS::FAIL_BAD_ACCURACY);
-        }        
+        }    
+        
+        ts->printf( CvTS::LOG, "%d) Testing solvePnP...\n", r);
+        rvecs_spnp.resize(brdsNum);
+        tvecs_spnp.resize(brdsNum);
+        for(size_t i = 0; i < brdsNum; ++i)
+            solvePnP(Mat(objectPoints[i]), Mat(imagePoints[i]), camMat, distCoeffs, rvecs_spnp[i], tvecs_spnp[i]);
+
+        compareShiftVecs(tvecs_exp, tvecs_spnp);
+        compareRotationVecs(rvecs_exp, rvecs_spnp);         
     }
 
     void run(int)
