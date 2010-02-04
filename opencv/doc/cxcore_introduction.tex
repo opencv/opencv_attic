@@ -146,44 +146,39 @@ using namespace std;
  //Point a cv::Mat header at it (no allocation is done)
  Mat image_roi = image(roi);
 \end{lstlisting}
-\begin{comment}
+
 A bit advanced, but should you want efficiently to sample from a circular region in an image  
 (below, instead of sampling, we just draw into a BGR image) :
 
-
-
-\begin(lstlisting}
- // the function returns x boundary coordinates of 
- // the circle for each y. RxV[y1] = x1 means that 
- // when y=y1, -x1 <=x<=x1 is inside the circle
- void getCircularROI(int R, vector < int > & RxV)
- {
-     RxV.resize(R+1);
-     for( int y = 0; y <= R; y++ )
-          RxV[y] = cvRound(sqrt((double)R*R - y*y));
- }
-\end{lstlisting}
-\end{comment}
-\begin{comment}
-//This draws a green circle (note the "[1]" for a BGR" image),
-// but is really an example of how to *sample* from a circular region. 
-void drawCircle(Mat &image, int R, Point &center)
+\begin{lstlisting}
+// the function returns x boundary coordinates of 
+// the circle for each y. RxV[y1] = x1 means that 
+// when y=y1, -x1 <=x<=x1 is inside the circle
+void getCircularROI(int R, vector < int > & RxV)
 {
-	vector<int> RxV;
-	getCircularROI(R, RxV);
+    RxV.resize(R+1);
+    for( int y = 0; y <= R; y++ )
+        RxV[y] = cvRound(sqrt((double)R*R - y*y));
+}
+
+// This draws a circle in the green channel
+// (note the "[1]" for a BGR" image,
+// blue and red channels are not modified),
+// but is really an example of how to *sample* from a circular region. 
+void drawCircle(Mat &image, int R, Point center)
+{
+    vector<int> RxV;
+    getCircularROI(R, RxV);
 	
-	Mat_<Vec3b>& img = (Mat_<Vec3b>&)image; //3 channel pointer to image
-	for( int dy = -R; dy <= R; dy++ )
-	{
-		 int Rx = RxV[abs(dy)];
-		 for( int dx = -Rx; dx <= Rx; dx++ )
-		 	img(center.y+dy, center.x+dx)[1] = 255;
-	}
+    Mat_<Vec3b>& img = (Mat_<Vec3b>&)image; //3 channel pointer to image
+    for( int dy = -R; dy <= R; dy++ )
+    {
+        int Rx = RxV[abs(dy)];
+        for( int dx = -Rx; dx <= Rx; dx++ )
+            img(center.y+dy, center.x+dx)[1] = 255;
+    }
 }
 \end{lstlisting}
-
-
-\end{comment}
 
 \section{Namespace \texttt{cv} and Function Naming}
 
