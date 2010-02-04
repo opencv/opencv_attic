@@ -1,8 +1,6 @@
 <?xml version="1.0"?>
 <opencv_storage>
 <boards>
-"subpixel/m-0-capt0072.jpg" "subpixel/m-0-capt0072.yml"
-"subpixel/m-1-capt0058.jpg" "subpixel/m-1-capt0058.yml"
 "subpixel/m-0-capt0025.jpg" "subpixel/m-0-capt0025.yml"
 "subpixel/m-0-capt0026.jpg" "subpixel/m-0-capt0026.yml"
 "subpixel/m-0-capt0027.jpg" "subpixel/m-0-capt0027.yml"
@@ -36,5 +34,4 @@
 "subpixel/m-1-capt0045.jpg" "subpixel/m-1-capt0045.yml"
 "subpixel/m-1-capt0046.jpg" "subpixel/m-1-capt0046.yml"
 "subpixel/m-1-capt0047.jpg" "subpixel/m-1-capt0047.yml"
-"subpixel/m-1-capt0059.jpg" "subpixel/m-1-capt0059.yml"
 </boards></opencv_storage>
