@@ -157,7 +157,9 @@ void CV_ChessboardDetectorTest::run_batch( const string& filename )
         
     if( !fs.isOpened() || board_list.empty() || !board_list.isSeq() || board_list.size() % 2 != 0 )
     {
-        ts.printf( CvTS::LOG, "chessboard_list.dat can not be readed or is not valid" );
+        ts.printf( CvTS::LOG, "%s can not be readed or is not valid\n", (folder + filename).c_str() );
+        ts.printf( CvTS::LOG, "fs.isOpened=%d, board_list.empty=%d, board_list.isSeq=%d,board_list.size()%2=%d\n", 
+            fs.isOpened(), (int)board_list.empty(), board_list.isSeq(), board_list.size()%2);
         ts.set_failed_test_info( CvTS::FAIL_MISSING_TEST_DATA );        
         return;
     }
@@ -232,7 +234,7 @@ void CV_ChessboardDetectorTest::run_batch( const string& filename )
 #if 1
         if( err > precise_success_error_level )
         {
-            ts.printf( CvTS::LOG, "bad accuracy of adjusted corners\n" ); 
+            ts.printf( CvTS::LOG, "Image %s: bad accuracy of adjusted corners %f\n", img_file.c_str(), err ); 
             ts.set_failed_test_info( CvTS::FAIL_BAD_ACCURACY );
             continue;
         }
