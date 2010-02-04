@@ -49,7 +49,8 @@ int main( int argc, char** argv )
     vector<Mat> planes;
     split(img_yuv, planes);
 
-    // another Mat constructor; allocates a matrix of the specified size and type
+    // another Mat constructor; allocates a matrix of the specified
+	// size and type
     Mat noise(img.size(), CV_8U);
     
     // fills the matrix with normally distributed random values;
@@ -57,7 +58,8 @@ int main( int argc, char** argv )
     // Scalar replaces CvScalar, Scalar::all() replaces cvScalarAll().
     randn(noise, Scalar::all(128), Scalar::all(20));
                                                      
-    // blur the noise a bit, kernel size is 3x3 and both sigma's are set to 0.5
+    // blur the noise a bit, kernel size is 3x3 and both sigma's 
+	// are set to 0.5
     GaussianBlur(noise, noise, Size(3, 3), 0.5, 0.5);
 
     const double brightness_gain = 0;
@@ -100,7 +102,8 @@ int main( int argc, char** argv )
     namedWindow("image with grain", CV_WINDOW_AUTOSIZE);
 #if DEMO_MIXED_API_USE
     // this is to demonstrate that img and iplimg really share the data -
-    // the result of the above processing is stored to img and thus in iplimg too.
+    // the result of the above processing is stored to img and thus 
+	// in iplimg too.
     cvShowImage("image with grain", iplimg);
 #else
     imshow("image with grain", img);
@@ -256,7 +259,8 @@ Mat B = A;
 Mat C = B.row(3);
 // now create a separate copy of the matrix
 Mat D = B.clone();
-// copy the 5-th row of B to C, that is, copy the 5-th row of A to the 3-rd row of A.
+// copy the 5-th row of B to C, that is, copy the 5-th row of A 
+// to the 3-rd row of A.
 B.row(5).copyTo(C);
 // now let A and D share the data; after that the modified version
 // of A is still referenced by B and C.
@@ -395,7 +399,8 @@ In the above sample you may have noticed \hyperref[saturatecast]{saturate\_cast}
 I(x,y)=\min(\max(value, 0), 255)
 \]
 
-and the similar rules are applied to 8-bit signed and 16-bit signed and unsigned types. This "saturation" semantics (different from usual C language "wrapping" semantics, where lowest bits are taken, is implemented in every image processing function, from the simple \texttt{cv::add} to \texttt{cv::cvtColor}, \texttt{cv::resize}, \texttt{cv::filter2D} etc.
+and the similar rules are applied to 8-bit signed and 16-bit signed and unsigned types. This "saturation" semantics (different from usual C language "wrapping" semantics, where lowest bits are taken, is implemented in every image processing function, from the simple \texttt{cv::add} to 
+\texttt{cv::cvtColor}, \texttt{cv::resize}, \texttt{cv::filter2D} etc.
 It is not a new feature of OpenCV v2.x, it was there from very beginning. In the new version this special \hyperref[saturatecast]{saturate\_cast} template operator is introduced to simplify implementation of this semantic in your own functions.
 
 
