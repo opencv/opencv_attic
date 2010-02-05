@@ -619,9 +619,10 @@ double CvCapture_FFMPEG::getProperty( int property_id )
 
     switch( property_id )
     {
-    case CV_CAP_PROP_POS_MSEC:
+    case CV_CAP_PROP_POS_MSEC:        
         if(video_st->cur_dts != AV_NOPTS_VALUE_)
-            return (((double)video_st->cur_dts-1) *1000) / av_q2d (video_st->r_frame_rate);
+            return (((double)video_st->cur_dts-1) *1000.0f * av_q2d (video_st->time_base));
+        //  return (((double)video_st->cur_dts-1) *1000) / av_q2d (video_st->r_frame_rate);
         break;
     case CV_CAP_PROP_POS_FRAMES:
         if(video_st->cur_dts != AV_NOPTS_VALUE_)
