@@ -194,7 +194,7 @@ void CV_PCATest::run( int )
 		goto exit_func;
 	}
 	
-	prjEps = 1.2, backPrjEps = 1.2;
+    prjEps = 1.25, backPrjEps = 1.25;
 	for( int i = 0; i < rTestPoints.rows; i++ )
 	{
 		// check pca project
