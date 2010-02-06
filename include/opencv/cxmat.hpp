@@ -3376,7 +3376,7 @@ template<typename _Tp> inline MatConstIterator_<_Tp>& MatConstIterator_<_Tp>::op
         Point pt = pos();
         int cols = m->cols;
         ofs += pt.y*cols + pt.x;
-        if( ofs > cols*m->rows )
+        if( ofs >= cols*m->rows )
         {
             ptr = sliceEnd = (_Tp*)(m->data + m->step*(m->rows-1)) + cols; 
             return *this; 
