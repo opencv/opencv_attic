@@ -1568,10 +1568,10 @@ void line( Mat& img, Point pt1, Point pt2, const Scalar& color,
 
 void rectangle( Mat& img, Point pt1, Point pt2,
                 const Scalar& color, int thickness,
-                int line_type, int shift )
+                int lineType, int shift )
 {
-    if( line_type == CV_AA && img.depth() != CV_8U )
-        line_type = 8;
+    if( lineType == CV_AA && img.depth() != CV_8U )
+        lineType = 8;
 
     CV_Assert( thickness <= 255 );
     CV_Assert( 0 <= shift && shift <= XY_SHIFT );
@@ -1589,40 +1589,23 @@ void rectangle( Mat& img, Point pt1, Point pt2,
     pt[3].y = pt2.y;
 
     if( thickness >= 0 )
-        PolyLine( img, pt, 4, true, buf, thickness, line_type, shift );
+        PolyLine( img, pt, 4, true, buf, thickness, lineType, shift );
     else
-        FillConvexPoly( img, pt, 4, buf, line_type, shift );
+        FillConvexPoly( img, pt, 4, buf, lineType, shift );
 }
 
-/*void rectangle( Mat& img, Rect &rec,
+    
+void rectangle( Mat& img, Rect rec,
                 const Scalar& color, int thickness,
-                int line_type, int shift )
+                int lineType, int shift )
 {
-    if( line_type == CV_AA && img.depth() != CV_8U )
-        line_type = 8;
-
-    CV_Assert( thickness <= 255 );
     CV_Assert( 0 <= shift && shift <= XY_SHIFT );
-
-    double buf[4];
-    scalarToRawData(color, buf, img.type(), 0);
-
-    Point pt[4];
-
-    pt[0]   = Point(rec.x,rec.y);                           //pt1;
-    pt[1].x = rec.x + rec.width;                            //pt2.x;
-    pt[1].y = rec.y;                                        //pt1.y;
-    pt[2]   = Point(rec.x + rec.width, rec.y + rec.height); //pt2;
-    pt[3].x = rec.x;                                        //pt1.x;
-    pt[3].y = rec.y + rec.height;                           //pt2.y;
-
-    if( thickness >= 0 )
-        PolyLine( img, pt, 4, true, buf, thickness, line_type, shift );
-    else
-        FillConvexPoly( img, pt, 4, buf, line_type, shift );
+    if( rec.area() > 0 )
+        rectangle( img, rec.tl(), rec.br() - Point(1<<shift,1<<shift),
+                   color, thickness, lineType, shift );
 }
-*/
 
+    
 void circle( Mat& img, Point center, int radius,
              const Scalar& color, int thickness, int line_type, int shift )
 {
@@ -2253,16 +2236,16 @@ cvRectangle( CvArr* _img, CvPoint pt1, CvPoint pt2,
     cv::Mat img = cv::cvarrToMat(_img);
     cv::rectangle( img, pt1, pt2, color, thickness, line_type, shift );
 }
-/*
+
 CV_IMPL void
-cvRectangle( CvArr* _img, CvRect rec,
-             CvScalar color, int thickness,
-             int line_type, int shift )
+cvRectangleR( CvArr* _img, CvRect rec,
+              CvScalar color, int thickness,
+              int line_type, int shift )
 {
     cv::Mat img = cv::cvarrToMat(_img);
     cv::rectangle( img, rec, color, thickness, line_type, shift );
 }
-*/
+
 CV_IMPL void
 cvCircle( CvArr* _img, CvPoint center, int radius,
           CvScalar color, int thickness, int line_type, int shift )

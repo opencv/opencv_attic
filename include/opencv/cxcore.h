@@ -1303,6 +1303,13 @@ CVAPI(void)  cvRectangle( CvArr* img, CvPoint pt1, CvPoint pt2,
                           int line_type CV_DEFAULT(8),
                           int shift CV_DEFAULT(0));
 
+/* Draws a rectangle specified by a CvRect structure */
+CVAPI(void)  cvRectangleR( CvArr* img, CvRect r,
+                           CvScalar color, int thickness CV_DEFAULT(1),
+                           int line_type CV_DEFAULT(8),
+                           int shift CV_DEFAULT(0));
+    
+    
 /* Draws a circle with specified center and radius.
    Thickness works in the same way as with cvRectangle */
 CVAPI(void)  cvCircle( CvArr* img, CvPoint center, int radius,
