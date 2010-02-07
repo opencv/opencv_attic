@@ -1147,9 +1147,9 @@ CV_EXPORTS void rectangle(Mat& img, Point pt1, Point pt2,
                           const Scalar& color, int thickness=1,
                           int lineType=8, int shift=0);
 
-//CV_EXPORTS void rectangle(Mat& img, Rect &rec,
-//                          const Scalar& color, int thickness=1,
-//                          int lineType=8, int shift=0);
+CV_EXPORTS void rectangle(Mat& img, Rect rec,
+                          const Scalar& color, int thickness=1,
+                          int lineType=8, int shift=0);
 
 CV_EXPORTS void circle(Mat& img, Point center, int radius,
                        const Scalar& color, int thickness=1,
