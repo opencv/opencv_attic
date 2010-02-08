@@ -142,8 +142,8 @@ void CV_PCATest::run( int )
 
 	Mat avg(1, sz.width, CV_32FC1 );
 	reduce( rPoints, avg, 0, CV_REDUCE_AVG );
-	Mat Q = rPoints - repeat( avg, rPoints.rows, 1 ), eval, evec;
-	Q = Q.t() * Q;
+	Mat Q = rPoints - repeat( avg, rPoints.rows, 1 ), Qt = Q.t(), eval, evec;
+	Q = Qt * Q;
 	Q = Q /(float)rPoints.rows;
 
 	eigen( Q, eval, evec );
@@ -198,7 +198,8 @@ void CV_PCATest::run( int )
 	for( int i = 0; i < rTestPoints.rows; i++ )
 	{
 		// check pca project
-		Mat prj = (rTestPoints.row(i) - avg) * subEvec.t();
+		Mat subEvec_t = subEvec.t();
+		Mat prj = rTestPoints.row(i) - avg; prj *= subEvec_t;
 		err = norm(rPrjTestPoints.row(i), prj, CV_RELATIVE_L2);
 		if( err > prjEps )
 		{
