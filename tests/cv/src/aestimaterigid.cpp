@@ -118,7 +118,8 @@ bool CV_RigidTransform_Test::testNPoints(int from)
             if (n <= 4)
             {
                 Mat A = fpts.reshape(1, 3);
-                Mat B = A - repeat(A.row(0), 3, 1); B = B.t()*B;
+                Mat B = A - repeat(A.row(0), 3, 1), Bt = B.t();
+				B = Bt*B;
                 dB = cv::determinant(B);
                 nB = norm(B);
                 if( fabs(dB) < 0.01*nB )

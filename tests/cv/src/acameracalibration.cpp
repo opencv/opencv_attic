@@ -1455,9 +1455,11 @@ void CV_StereoCalibrationTest::run( int )
 		Mat R1, R2, P1, P2, Q;
 		Rect roi1, roi2;
 		rectify(M1, D1, M2, D2, imgsize, R, T, R1, R2, P1, P2, Q, 1, imgsize, &roi1, &roi2, 0);
+		Mat eye33 = Mat::eye(3,3,CV_64F);
+		Mat R1t = R1.t(), R2t = R2.t();
 
-		if( norm(R1.t()*R1 - Mat::eye(3,3,CV_64F)) > 0.01 ||
-			norm(R2.t()*R2 - Mat::eye(3,3,CV_64F)) > 0.01 ||
+		if( norm(R1t*R1 - eye33) > 0.01 ||
+			norm(R2t*R2 - eye33) > 0.01 ||
 			abs(determinant(F)) > 0.01)
 		{
 			ts->printf( CvTS::LOG, "The computed (by rectify) R1 and R2 are not orthogonal,"

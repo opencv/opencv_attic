@@ -91,6 +91,12 @@ CV_OperationsTest::~CV_OperationsTest() {}
 #define CHECK_DIFF(a, b) checkDiff(a, b, "(" #a ")  !=  (" #b ")  at l." STR(__LINE__))
 #define CHECK_DIFF_FLT(a, b) checkDiffF(a, b, "(" #a ")  !=(eps)  (" #b ")  at l." STR(__LINE__))
 
+#if defined _MSC_VER && _MSC_VER < 1400
+#define MSVC_OLD 1
+#else
+#define MSVC_OLD 0
+#endif
+
 bool CV_OperationsTest::TestMat()
 {
     try
@@ -102,8 +108,9 @@ bool CV_OperationsTest::TestMat()
 
         float data[] = { sqrt(2.f)/2, -sqrt(2.f)/2, 1.f, sqrt(2.f)/2, sqrt(2.f)/2, 10.f };
         Mat rot_2x3(2, 3, CV_32F, data);
-                   
-        Mat res = 2 * rot_2x3 * (one_3x1 + shi_3x1 + shi_3x1 + shi_3x1) - shi_2x1 + shift;
+        
+		Mat res = one_3x1 + shi_3x1 + shi_3x1 + shi_3x1;
+        res = Mat(Mat(2 * rot_2x3) * res - shi_2x1) + shift;
 
         Mat tmp, res2;
         add(one_3x1, shi_3x1, tmp);
@@ -263,7 +270,9 @@ bool CV_OperationsTest::TestMat()
         CHECK_DIFF(4.0 * (maskMat1 | maskMat1), maskMat4);
         CHECK_DIFF((maskMat4 | maskMat4)/4.0, maskMat1);
 
+#if !MSVC_OLD
         CHECK_DIFF(2.0 * (maskMat1 * 2.0) , maskMat4);
+#endif
         CHECK_DIFF((maskMat4 / 2.0) / 2.0 , maskMat1);
         CHECK_DIFF(-(maskMat4 - maskMat5) , maskMat1);
         CHECK_DIFF(-((maskMat4 - maskMat5) * 1.0), maskMat1);        
@@ -329,12 +338,13 @@ bool CV_OperationsTest::TestMat()
 
         m = maskMat1.clone(); m+=(maskMat1 * 3.0 + 1.0); CHECK_DIFF(m, maskMat5);
         m = maskMat5.clone(); m-=(maskMat1 * 3.0 + 1.0); CHECK_DIFF(m, maskMat1);
+#if !MSVC_OLD
         m = mi.clone(); m+=(3.0 * mi * mt + d1); CHECK_DIFF_FLT(m, mi + d1 * 4);
         m = mi.clone(); m-=(3.0 * mi * mt + d1); CHECK_DIFF_FLT(m, mi - d1 * 4);
         m = mi.clone(); m*=(mt * 1.0); CHECK_DIFF_FLT(m, d1);
         m = mi.clone(); m*=(mt * 1.0 + 1.0); CHECK_DIFF_FLT(m, d1 + mi);
         m = mi.clone(); m*=mt_tr.t(); CHECK_DIFF_FLT(m, d1);
-        
+
         CHECK_DIFF_FLT( (mi * 2) * mt, d2);
         CHECK_DIFF_FLT( mi * (2 * mt), d2);           
         CHECK_DIFF_FLT( mt.t() * mi_tr, d1 );
@@ -385,6 +395,7 @@ bool CV_OperationsTest::TestMat()
         CHECK_DIFF_FLT(mt.inv() * mt, d1);
 
         CHECK_DIFF_FLT(mt.inv() * (2*mt - mt), d1);               
+#endif
     }
     catch (const test_excep& e)
     {
@@ -437,7 +448,7 @@ bool CV_OperationsTest::TestTemplateMat()
         float data[] = { sqrt(2.f)/2, -sqrt(2.f)/2, 1.f, sqrt(2.f)/2, sqrt(2.f)/2, 10.f };
         Mat_<float> rot_2x3(2, 3, data);
                
-        Mat_<float> res = 2 * rot_2x3 * (one_3x1 + shi_3x1 + shi_3x1 + shi_3x1) - shi_2x1 + shift;
+        Mat_<float> res = Mat(Mat(2 * rot_2x3) * Mat(one_3x1 + shi_3x1 + shi_3x1 + shi_3x1) - shi_2x1) + shift;
         Mat_<float> resS = rot_2x3 * one_3x1;
 
         Mat_<float> tmp, res2, resS2;
