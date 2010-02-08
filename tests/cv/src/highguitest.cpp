@@ -45,20 +45,18 @@
 #include <iostream>
 #include <fstream>
 #include <iterator>
-#include <iostream>
+//#include <iostream>
 #include "cvaux.h"
 
 using namespace cv;
 using namespace std;
 
-
-
 //#if defined WIN32 || defined _WIN32 || defined WIN64 || defined _WIN64
-#if 0
+#if 1
     
 #else
 
-#define MARKERS
+#define MARKERS1
 
 #ifdef MARKERS
 	#define marker(x) cout << (x)  << endl
@@ -69,7 +67,7 @@ using namespace std;
 struct TempDirHolder
 {
 	const string temp_folder;
-	TempDirHolder() : temp_folder(tmpnam(0)) { cout << "1temp-1" << endl; exec_cmd("mkdir " + temp_folder); cout << "1temp-2" << endl;}	
+	TempDirHolder() : temp_folder(tmpnam(0)) {exec_cmd("mkdir " + temp_folder); }	
 	~TempDirHolder() { exec_cmd("rm -rf " + temp_folder); }
 	static void exec_cmd(const string& cmd) { marker(cmd); int res = system( cmd.c_str() ); (void)res; }
 	
@@ -111,9 +109,7 @@ double PSNR(const Mat& m1, const Mat& m2)
 bool CV_HighGuiTest::ImagesTest(const string& dir, const string& tmp)
 {
 	int code = CvTS::OK;
-    cout << "2-1" << endl;
 	Mat image = imread(dir + "shared/baboon.jpg");
-    cout << "2-2" << endl;
 	
 	if (image.empty())
 	{
@@ -126,12 +122,10 @@ bool CV_HighGuiTest::ImagesTest(const string& dir, const string& tmp)
 	
 	for(size_t i = 0; i < ext_num; ++i)
 	{
-        cout << "2-#" << i << "\t1" << endl;
 		ts->printf(CvTS::LOG, "ext=%s\n", exts[i].c_str());
         string ext = exts[i];
 		string full_name = tmp + "/img." + ext;
 		marker(exts[i]);	
-        cout << "2-#" << i << "\t2" << endl;
 		
 		imwrite(full_name, image);			
 		Mat loaded = imread(full_name);	
@@ -141,7 +135,6 @@ bool CV_HighGuiTest::ImagesTest(const string& dir, const string& tmp)
 			code = CvTS::FAIL_MISMATCH;
 			continue;
 		}			
-        cout << "2-#" << i << "\t3" << endl;
 						
 		const double thresDbell = 20;
 		double psnr = PSNR(loaded, image);
@@ -151,7 +144,6 @@ bool CV_HighGuiTest::ImagesTest(const string& dir, const string& tmp)
 			code = CvTS::FAIL_BAD_ACCURACY;
 			continue;			
 		}	
-        cout << "2-#" << i << "\t4" << endl;
 		
 		FILE *f = fopen(full_name.c_str(), "rb");
 		fseek(f, 0, SEEK_END);
@@ -161,7 +153,6 @@ bool CV_HighGuiTest::ImagesTest(const string& dir, const string& tmp)
 		size_t read = fread(&from_file[0], len, sizeof(vector<uchar>::value_type), f); (void)read;
 		fclose(f);
 
-        cout << "2-#" << i << "\t5" << endl;
 		
 		vector<uchar> buf;		
 		imencode("." + exts[i], image, buf);
@@ -172,7 +163,6 @@ bool CV_HighGuiTest::ImagesTest(const string& dir, const string& tmp)
 			code = CvTS::FAIL_MISMATCH;
 			continue;			
 		}			
-        cout << "2-#" << i << "\t6" << endl;
 		
 		Mat buf_loaded = imdecode(Mat(buf), 1);
 		if (buf_loaded.empty())
@@ -182,7 +172,6 @@ bool CV_HighGuiTest::ImagesTest(const string& dir, const string& tmp)
 			continue;				
 		}
 
-        cout << "2-#" << i << "\t7" << endl;
 		
         psnr = PSNR(buf_loaded, image);
 		if (psnr < thresDbell)
@@ -192,7 +181,6 @@ bool CV_HighGuiTest::ImagesTest(const string& dir, const string& tmp)
 			continue;			
 		}					
 	}
-    cout << "2-e" << endl;
 	ts->set_failed_test_info(code);  
 	return code == CvTS::OK;		
 }
@@ -204,13 +192,11 @@ bool CV_HighGuiTest::VideoTest(const string& dir, const string& tmp, int fourcc)
 		
 	CvCapture* cap = cvCaptureFromFile(src_file.c_str());
 	
-    cout << "Dir = " << dir << "tmp = " << tmp << "fourcc = " << fourcc << "\t1"<< endl;
 	if (!cap)
 	{
 		ts->set_failed_test_info(CvTS::FAIL_MISMATCH);
 		return false;
 	}
-    cout << "Dir = " << dir << "tmp = " << tmp << "fourcc = " << fourcc << "\t2"<< endl;
 	
 	CvVideoWriter* writer = 0;
 	
@@ -219,15 +205,12 @@ bool CV_HighGuiTest::VideoTest(const string& dir, const string& tmp, int fourcc)
 	{
 		IplImage* img = cvQueryFrame( cap );
 
-        cout << "Dir = " << dir << "tmp = " << tmp << "fourcc = " << fourcc << "\t2 + " << counter++<< endl;
 		if (!img)
 			break;
 		
 		if (writer == 0)			
 		{
-            cout << "Dir = " << dir << "tmp = " << tmp << "fourcc = " << fourcc << "\t2 + 0" << counter<< endl;
 			writer = cvCreateVideoWriter(tmp_name.c_str(), fourcc, 24, cvGetSize(img));					
-            cout << "Dir = " << dir << "tmp = " << tmp << "fourcc = " << fourcc << "\t2 + 1" << counter<< endl;
 			if (writer == 0)
 			{
 				marker("can't craete writer");
@@ -237,22 +220,16 @@ bool CV_HighGuiTest::VideoTest(const string& dir, const string& tmp, int fourcc)
 			}
 		}
 				
-        cout << "Dir = " << dir << "tmp = " << tmp << "fourcc = " << fourcc << "\t2 ?" << counter<< endl;
 		cvWriteFrame(writer, img);		
-        cout << "Dir = " << dir << "tmp = " << tmp << "fourcc = " << fourcc << "\t2 ??" << counter<< endl;
 	}	
 		
 
-    cout << "Dir = " << dir << "tmp = " << tmp << "fourcc = " << fourcc << "\t3"<< endl;
 	cvReleaseVideoWriter( &writer );	
-    cout << "Dir = " << dir << "tmp = " << tmp << "fourcc = " << fourcc << "\t3.5"<< endl;
 	cvReleaseCapture( &cap );
 	
-    cout << "Dir = " << dir << "tmp = " << tmp << "fourcc = " << fourcc << "\t4"<< endl;
 	marker("mid++");
 	
 	cap = cvCaptureFromFile(src_file.c_str());
-    cout << "Dir = " << dir << "tmp = " << tmp << "fourcc = " << fourcc << "\t5"<< endl;
 	marker("mid1");
 	CvCapture *saved = cvCaptureFromFile(tmp_name.c_str());		
 	if (!saved)
@@ -261,8 +238,6 @@ bool CV_HighGuiTest::VideoTest(const string& dir, const string& tmp, int fourcc)
 		return false;			
 	}
 
-    cout << "Dir = " << dir << "tmp = " << tmp << "fourcc = " << fourcc << "\t6"<< endl;
-	
 
 	const double thresDbell = 20;	
 	
@@ -271,11 +246,9 @@ bool CV_HighGuiTest::VideoTest(const string& dir, const string& tmp, int fourcc)
 	for(;;)
 	{		
 
-        cout << "Dir = " << dir << "tmp = " << tmp << "fourcc = " << fourcc << "\t6 + " << counter++ << endl; ;
 		IplImage* ipl = cvQueryFrame( cap );
 		IplImage* ipl1 = cvQueryFrame( saved );
 
-        cout << "Dir = " << dir << "tmp = " << tmp << "fourcc = " << fourcc << "\t6 + ??" << counter << endl; ;
 		
 		if (!ipl || !ipl1)
 			break;
@@ -283,20 +256,15 @@ bool CV_HighGuiTest::VideoTest(const string& dir, const string& tmp, int fourcc)
 		Mat img(ipl);		
 		Mat img1(ipl1);						
 				
-        cout << "Dir = " << dir << "tmp = " << tmp << "fourcc = " << fourcc << "\t6 + !" << counter << endl; ;
 		if (PSNR(img1, img) < thresDbell)
 		{		
 			error = true;
 			break;				
 		}			
-        cout << "Dir = " << dir << "tmp = " << tmp << "fourcc = " << fourcc << "\t6 + !!" << counter << endl; ;
 	}	
 		
-    cout << "Dir = " << dir << "tmp = " << tmp << "fourcc = " << fourcc << "\t7" << endl; ;
 	cvReleaseCapture( &cap );
-    cout << "Dir = " << dir << "tmp = " << tmp << "fourcc = " << fourcc << "\t8" << endl; ;
 	cvReleaseCapture( &saved );
-    cout << "Dir = " << dir << "tmp = " << tmp << "fourcc = " << fourcc << "\t9" << endl; ;
 		
 	if (error)
 	{
@@ -310,71 +278,30 @@ bool CV_HighGuiTest::VideoTest(const string& dir, const string& tmp, int fourcc)
 
 void CV_HighGuiTest::run( int /*start_from */)
 {	   
-    cout << "1" << endl;
     TempDirHolder th;
-    cout << "2" << endl;
 		
 	if (!ImagesTest(ts->get_data_path(), th.temp_folder))
 		return;
 
-    cout << "3" << endl;
 #if defined WIN32 || defined __linux__
 
 #if !defined HAVE_GSTREAMER || defined HAVE_GSTREAMER_APP  
 	if (!VideoTest(ts->get_data_path(), th.temp_folder, CV_FOURCC_DEFAULT))
 		return;	
 
-    cout << "4" << endl;
 
 	if (!VideoTest(ts->get_data_path(), th.temp_folder, CV_FOURCC('M', 'J', 'P', 'G')))
 		return;
 
-    cout << "5" << endl;
     
 	if (!VideoTest(ts->get_data_path(), th.temp_folder, CV_FOURCC('M', 'P', 'G', '2')))
 		return;				
 
-    cout << "6" << endl;
 #endif
 	//if (!VideoTest(ts->get_data_path(), th.temp_folder, CV_FOURCC('D', 'X', '5', '0')))		return;				
-	
-	if (!GuiTest(ts->get_data_path(), th.temp_folder))
-		return;
-
-    cout << "7" << endl;
 #endif
     ts->set_failed_test_info(CvTS::OK);
 }
-
-void Foo(int /*k*/, void* /*z*/)
-{
-	
-}
-
-bool CV_HighGuiTest::GuiTest(const string& /*dir*/, const string&/* tmp*/)
-{	
-    cout << "GUI 1" << endl;
-	namedWindow("Win");
-    cout << "GUI 2" << endl;
-	Mat m(30, 30, CV_8U);	
-	m = Scalar(128);	
-    cout << "GUI 3" << endl;
-	imshow("Win", m);	
-    cout << "GUI 4" << endl;
-	int value = 50;
-    cout << "GUI 5" << endl;
-	createTrackbar( "trackbar", "Win", &value, 100, Foo, &value);	
-    cout << "GUI 6" << endl;
-	getTrackbarPos( "trackbar", "Win" );	
-    cout << "GUI 7" << endl;
-	waitKey(500);		
-    cout << "GUI 8" << endl;
-	cvDestroyAllWindows();
-    cout << "GUI 9" << endl;
-	
-	return true;
-}
-
 CV_HighGuiTest HighGui_test;
 
 
