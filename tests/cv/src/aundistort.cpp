@@ -695,6 +695,7 @@ int CV_InitUndistortRectifyMapTest::prepare_test_case(int test_case_idx)
 		int typex = (cvTsRandInt(rng) % 2) == 0 ? CV_32FC1 : CV_16SC2;
 		//typex = CV_32FC1; ///!!!!!!!!!!!!!!!!
 		int typey = (typex == CV_32FC1) ? CV_32FC1 : CV_16UC1;
+
 		_mapx = cvCreateMat(img_size.height,img_size.width,typex);
 		_mapy = cvCreateMat(img_size.height,img_size.width,typey);
 
@@ -900,7 +901,7 @@ void CV_InitUndistortRectifyMapTest::run_func()
 
 double CV_InitUndistortRectifyMapTest::get_success_error_level( int /*test_case_idx*/, int /*i*/, int /*j*/ )
 {
-	return 5;
+	return 8;
 }
 
 CV_InitUndistortRectifyMapTest init_undistort_rectify_map_test;
