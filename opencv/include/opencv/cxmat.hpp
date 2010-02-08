@@ -1481,6 +1481,15 @@ operator + (const Mat_<_Tp>& a, const Scalar& alpha)
     return MatExpr_<MatExpr_Temp, Mat_<_Tp> >(MatExpr_Temp(a, alpha));
 }
 
+static inline
+MatExpr_<MatExpr_Op2_<Mat, Scalar, Mat, MatOp_AddS_<Mat> >, Mat >
+operator + (const Mat& a, const Scalar& alpha)
+{
+    typedef MatExpr_Op2_<Mat, Scalar, Mat, MatOp_AddS_<Mat> > MatExpr_Temp;
+    return MatExpr_<MatExpr_Temp, Mat>(MatExpr_Temp(a, alpha));
+}
+
+
 // alpha + A
 template<typename _Tp> static inline
 MatExpr_<MatExpr_Op3_<Mat_<_Tp>, double, double, Mat_<_Tp>, MatOp_ScaleAddS_<Mat> >, Mat_<_Tp> >
@@ -1493,6 +1502,11 @@ MatExpr_<MatExpr_Op2_<Mat_<_Tp>, Scalar, Mat_<_Tp>, MatOp_AddS_<Mat> >, Mat_<_Tp
 operator + (const Scalar& alpha, const Mat_<_Tp>& a)
 { return a + alpha; }
 
+static inline
+MatExpr_<MatExpr_Op2_<Mat, Scalar, Mat, MatOp_AddS_<Mat> >, Mat >
+operator + (const Scalar& alpha, const Mat& a)
+{ return a + alpha; }
+
 // A - alpha
 template<typename _Tp> static inline
 MatExpr_<MatExpr_Op3_<Mat_<_Tp>, double, double, Mat_<_Tp>, MatOp_ScaleAddS_<Mat> >, Mat_<_Tp> >
@@ -1503,6 +1517,11 @@ operator - (const Mat_<_Tp>& a, double alpha)
 template<typename _Tp> static inline
 MatExpr_<MatExpr_Op2_<Mat_<_Tp>, Scalar, Mat_<_Tp>, MatOp_AddS_<Mat> >, Mat_<_Tp> >
 operator - (const Mat_<_Tp>& a, const Scalar& alpha)
+{ return a + (-alpha); }
+
+static inline
+MatExpr_<MatExpr_Op2_<Mat, Scalar, Mat, MatOp_AddS_<Mat> >, Mat >
+operator - (const Mat& a, const Scalar& alpha)
 { return a + (-alpha); }
 
 // alpha - A
