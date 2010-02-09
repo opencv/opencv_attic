@@ -46,6 +46,7 @@
 */
 
 #include "cvtest.h"
+#include <limits>
 
 using namespace std;
 using namespace cv;
@@ -63,84 +64,159 @@ const int ERROR_KINDS_COUNT = 6;
 //============================== quality measuring functions =================================================
 
 /*
-  Calculate textureless regions of image: regions where the squared horizontal intensity gradient averaged over
-  a square window of size=evalTexturelessWidth is below a threshold=evalTexturelessThresh.
+  Calculate textureless regions of image (regions where the squared horizontal intensity gradient averaged over
+  a square window of size=evalTexturelessWidth is below a threshold=evalTexturelessThresh) and textured regions.
 */
-void computeTexturelessRegions( const Mat& img,  Mat& texturelessMask,
+void computeTextureBasedMasks( const Mat& img, Mat* texturelessMask, Mat* texturedMask,
              int texturelessWidth = EVAL_TEXTURELESS_WIDTH, float texturelessThresh = EVAL_TEXTURELESS_THRESH )
 {
+    if( !texturelessMask && !texturedMask )
+        return;
     if( img.empty() )
         CV_Error( CV_StsBadArg, "img is empty" );
-    if( img.type() != CV_8UC3 )
-        CV_Error( CV_StsBadArg, "img.type() must be CV_8UC1" );
+
     Mat dxI; Sobel( img, dxI, CV_32F, 1, 0, 3 );
-    Mat dxI2; pow( dxI / 8.f, 2, dxI2 );
-    Mat tmp; cvtColor(dxI2, tmp, CV_BGR2GRAY); dxI2 = tmp;
+    Mat dxI2; pow( dxI / 8.f/*normalize*/, 2, dxI2 );
+    if( dxI2.channels() > 1)
+    {
+        Mat tmp; cvtColor( dxI2, tmp, CV_BGR2GRAY ); dxI2 = tmp;
+    }
     Mat avgDxI2; boxFilter( dxI2, avgDxI2, CV_32FC1, Size(texturelessWidth,texturelessWidth) );
-    texturelessMask = avgDxI2 < texturelessThresh;
+
+    if( texturelessMask )
+        *texturelessMask = avgDxI2 < texturelessThresh;
+    if( texturedMask )
+        *texturedMask = avgDxI2 >= texturelessThresh;
 }
 
-void checkDispMaps( const Mat& disp1, const Mat& disp2 )
+void checkSizeAndTypeOfDispMaps( const Mat& dispMap1, const Mat& dispMap2 )
 {
-    if( disp1.empty() || disp2.empty() )
-        CV_Error( CV_StsBadArg, "disp1 or disp2 is empty" );
-    if( disp1.depth() != CV_8U || disp2.depth() != CV_8U )
-        CV_Error( CV_StsBadArg, "disp1.depth() and disp2.depth() must be CV_8U" );
-    Size sz = disp1.size();
-    if( disp1.cols != sz.width || disp2.rows != sz.height )
-        CV_Error( CV_StsBadArg, "disp1 and disp2 must have the same size" );
+    if( dispMap1.empty() || dispMap2.empty() )
+        CV_Error( CV_StsBadArg, "dispMap1 or dispMap2 is empty" );
+    if( dispMap1.cols != dispMap2.cols || dispMap1.rows != dispMap2.rows )
+        CV_Error( CV_StsBadArg, "dispMap1 and dispMap2 must have the same size" );
+    if( dispMap1.type() != CV_32FC1 && dispMap2.type() != CV_32FC1 )
+        CV_Error( CV_StsBadArg, "dispMap1 and dispMap2 must have CV_32FC1 type" );
+}
+
+void checkSizeAndTypeOfMask( const Mat& mask, Size sz )
+{
+    if( mask.empty() )
+        CV_Error( CV_StsBadArg, "mask is empty" );
+    if( mask.type() != CV_8UC1 )
+        CV_Error( CV_StsBadArg, "mask must have CV_8UC1 type" );
+    if( mask.rows != sz.height || mask.cols != sz.width )
+        CV_Error( CV_StsBadArg, "mask has incorrect size" );
+}
+
+void checkDispMapsAndUnknDispMasks( const Mat& dispMap1, const Mat& dispMap2,
+                                    const Mat& unknDispMask1, const Mat& unknDispMask2 )
+{
+    checkSizeAndTypeOfDispMaps( dispMap1, dispMap2 );
+
+    if( !unknDispMask1.empty() )
+        checkSizeAndTypeOfMask( unknDispMask1, dispMap1.size() );
+    if( !unknDispMask2.empty() )
+        checkSizeAndTypeOfMask( unknDispMask2, dispMap1.size() );
+
+    double minVal1, minVal2;
+    if( unknDispMask1.empty() )
+        minMaxLoc( dispMap1, &minVal1 );
+    else
+        minMaxLoc( dispMap1, &minVal1, 0, 0, 0, ~unknDispMask1 );
+    if( unknDispMask2.empty() )
+        minMaxLoc( dispMap2, &minVal2 );
+    else
+        minMaxLoc( dispMap2, &minVal2, 0, 0, 0, ~unknDispMask2 );
+    if( minVal1 < 0 || minVal2 < 0)
+        CV_Error( CV_StsBadArg, "known disparity values must be positive" );
 }
 
 /*
-  Calculate occluded regions of reference image (left image): regions that are occluded in the matching image (right image),
-  i.e., where the forward-mapped disparity lands at a location with a larger (nearer) disparity.
+  Calculate occluded regions of reference image (left image) (regions that are occluded in the matching image (right image),
+  i.e., where the forward-mapped disparity lands at a location with a larger (nearer) disparity) and non occluded regions.
 */
-void computeOccludedRegions( const Mat& leftDisp, const Mat& rightDisp, Mat& occludedMask,
+void computeOcclusionBasedMasks( const Mat& leftDisp, const Mat& rightDisp,
+                             Mat* occludedMask, Mat* nonOccludedMask,
+                             const Mat& leftUnknDispMask = Mat(), const Mat& rightUnknDispMask = Mat(),
                              float dispThresh = EVAL_DISP_THRESH )
 {
-    checkDispMaps(leftDisp, rightDisp);
-    Mat grayLeftDisp; cvtColor(leftDisp, grayLeftDisp, CV_BGR2GRAY);
-    Mat grayRightDisp; cvtColor(rightDisp, grayRightDisp, CV_BGR2GRAY);
+    const float dispDiff = 1.f;
+    if( !occludedMask && !nonOccludedMask )
+        return;
+    checkDispMapsAndUnknDispMasks( leftDisp, rightDisp, leftUnknDispMask, rightUnknDispMask );
 
-    occludedMask.create(leftDisp.size(), CV_8UC1); occludedMask.setTo(Scalar::all(255));
+    if( occludedMask )
+    {
+        occludedMask->create( leftDisp.size(), CV_8UC1 );
+        occludedMask->setTo(Scalar::all(0) );
+    }
+    if( nonOccludedMask )
+    {
+        nonOccludedMask->create( leftDisp.size(), CV_8UC1 );
+        occludedMask->setTo(Scalar::all(0) );
+    }
     for( int leftY = 0; leftY < leftDisp.rows; leftY++ )
+    {
         for( int leftX = 0; leftX < leftDisp.cols; leftX++ )
         {
-            int leftDispVal = grayLeftDisp.at<uchar>(leftY, leftX);
-            int rightX = leftX - leftDispVal, rightY = leftY;
-            if( rightX < 0 )
-                occludedMask.at<uchar>(leftY, leftX) = 0;
+            if( !leftUnknDispMask.empty() && leftUnknDispMask.at<uchar>(leftY,leftX) )
+                continue;
+            float leftDispVal = leftDisp.at<float>(leftY, leftX);
+            int rightX = leftX - (int)leftDispVal, rightY = leftY;
+            if( occludedMask && rightX < 0 )
+                occludedMask->at<uchar>(leftY, leftX) = 255;
             else
             {
-                int rightDispVal = grayRightDisp.at<uchar>(rightY, rightX);
-                if( abs(rightDispVal - leftDispVal) > dispThresh )
-                    occludedMask.at<uchar>(leftY, leftX) = 0;
+                if( !rightUnknDispMask.empty() && rightUnknDispMask.at<uchar>(rightY,rightX) )
+                    continue;
+                float rightDispVal = rightDisp.at<float>(rightY, rightX);
+                if( rightDispVal > leftDispVal + dispDiff )
+                {
+                    if( occludedMask )
+                        occludedMask->at<uchar>(leftY, leftX) = 255;
+                }
+                else
+                {
+                    if( nonOccludedMask )
+                        nonOccludedMask->at<uchar>(leftY, leftX) = 255;
+                }
             }
         }
+    }
 }
 
 /*
   Calculate depth discontinuty regions: pixels whose neiboring disparities differ by more than
   dispGap, dilated by window of width discontWidth.
 */
-void computeDepthDiscontRegions( const Mat& disp, Mat& depthDiscontMask,
+void computeDepthDiscontMask( const Mat& disp, Mat& depthDiscontMask, const Mat& unknDispMask = Mat(),
                                  float dispGap = EVAL_DISP_GAP, int discontWidth = EVAL_DISCONT_WIDTH )
 {
     if( disp.empty() )
         CV_Error( CV_StsBadArg, "disp is empty" );
-    if( disp.depth() != CV_8U )
-        CV_Error( CV_StsBadArg, "disp.depth() must be CV_8U" );
-    Mat grayDisp; cvtColor(disp, grayDisp, CV_BGR2GRAY);
-    Mat maxNeighbDisp; dilate(grayDisp, maxNeighbDisp, Mat(3, 3, CV_8UC1, Scalar(1)));
-    Mat minNeighbDisp; erode(grayDisp, minNeighbDisp, Mat(3, 3, CV_8UC1, Scalar(1)));
-    depthDiscontMask = max((Mat)(maxNeighbDisp-grayDisp), (Mat)(grayDisp-minNeighbDisp)) > dispGap;
-    dilate(depthDiscontMask, depthDiscontMask, Mat(discontWidth, discontWidth, CV_8UC1, Scalar(1)));
+    if( disp.type() != CV_32FC1 )
+        CV_Error( CV_StsBadArg, "disp must have CV_32FC1 type" );
+    if( !unknDispMask.empty() )
+        checkSizeAndTypeOfMask( unknDispMask, disp.size() );
+
+    Mat curDisp; disp.copyTo( curDisp );
+    if( !unknDispMask.empty() )
+        curDisp.setTo( Scalar(numeric_limits<float>::min()), unknDispMask );
+    Mat maxNeighbDisp; dilate( curDisp, maxNeighbDisp, Mat(3, 3, CV_8UC1, Scalar(1)) );
+    if( !unknDispMask.empty() )
+        curDisp.setTo( Scalar(numeric_limits<float>::max()), unknDispMask );
+    Mat minNeighbDisp; erode( curDisp, minNeighbDisp, Mat(3, 3, CV_8UC1, Scalar(1)) );
+    depthDiscontMask = max( (Mat)(maxNeighbDisp-disp), (Mat)(disp-minNeighbDisp) ) > dispGap;
+    if( !unknDispMask.empty() )
+        depthDiscontMask &= ~unknDispMask;
+    dilate( depthDiscontMask, depthDiscontMask, Mat(discontWidth, discontWidth, CV_8UC1, Scalar(1)) );
 }
 
 /*
-  Following functions are for getting evaluation masks excluding a border.
+   Get evaluation masks excluding a border.
 */
-Mat borderedAllMask( Size maskSize, int border = EVAL_IGNORE_BORDER )
+Mat getBorderedMask( Size maskSize, int border = EVAL_IGNORE_BORDER )
 {
     CV_Assert( border >= 0 );
     Mat mask(maskSize, CV_8UC1, Scalar(0));
@@ -152,63 +228,19 @@ Mat borderedAllMask( Size maskSize, int border = EVAL_IGNORE_BORDER )
     return mask;
 }
 
-void checkMask( const Mat& mask )
-{
-    if( mask.empty() )
-        CV_Error( CV_StsBadArg, "mask is empty" );
-    if( mask.type() != CV_8UC1 )
-        CV_Error( CV_StsBadArg, "mask must have CV_8UC1 type" );
-}
-
-void checkMasks( const Mat& mask1, const Mat& mask2 )
-{
-    checkMask(mask1);
-    checkMask(mask2);
-    if( mask1.cols != mask2.cols || mask1.rows != mask2.rows )
-        CV_Error( CV_StsBadArg, "mask1 and mask2 must have the same size" );
-}
-
-Mat borderedNoOcclMask( const Mat& occludedMask, int border = EVAL_IGNORE_BORDER )
-{
-    checkMask(occludedMask);
-    return ~occludedMask & borderedAllMask(occludedMask.size(), border);
-}
-
-Mat borderedOcclMask( const Mat& occludedMask, int border = EVAL_IGNORE_BORDER )
-{
-    checkMask(occludedMask);
-    return occludedMask & borderedAllMask(occludedMask.size(), border);
-}
-
-Mat borderedTexturedMask( const Mat& texturelessMask, const Mat& occludedMask, int border = EVAL_IGNORE_BORDER )
-{
-    checkMasks(texturelessMask, occludedMask);
-    return ~texturelessMask & borderedAllMask(occludedMask.size(), border);
-}
-
-Mat borderedTexturelessMask( const Mat& texturelessMask, const Mat& occludedMask, int border = EVAL_IGNORE_BORDER )
-{
-    checkMasks(texturelessMask, occludedMask);
-    return texturelessMask & borderedAllMask(occludedMask.size(), border);
-}
-
-Mat borderedDepthDiscontMask( const Mat& depthDiscontMask, const Mat& occludedMask, int border = EVAL_IGNORE_BORDER )
-{
-    checkMasks(depthDiscontMask, occludedMask);
-    return depthDiscontMask & borderedAllMask(occludedMask.size(), border);
-}
-
 /*
   Calculate root-mean-squared error between the computed disparity map (computedDisp) and ground truth map (groundTruthDisp).
 */
 float dispRMS( const Mat& computedDisp, const Mat& groundTruthDisp, const Mat& mask )
 {
-    checkDispMaps(computedDisp, groundTruthDisp);
-    Mat grayComputedDisp; cvtColor(computedDisp, grayComputedDisp, CV_BGR2GRAY);
-    Mat grayGroundTruthDisp; cvtColor(groundTruthDisp, grayGroundTruthDisp, CV_BGR2GRAY);
-
-    int pointsCount = mask.empty() ? computedDisp.cols*computedDisp.rows : countNonZero(mask);
-    return 1.f/sqrt((float)pointsCount) * norm(grayComputedDisp, grayGroundTruthDisp, NORM_L2, mask);
+    checkSizeAndTypeOfDispMaps( computedDisp, groundTruthDisp );
+    int pointsCount = computedDisp.cols*computedDisp.rows;
+    if( !mask.empty() )
+    {
+        checkSizeAndTypeOfMask( mask, computedDisp.size() );
+        pointsCount = countNonZero(mask);
+    }
+    return 1.f/sqrt((float)pointsCount) * norm(computedDisp, groundTruthDisp, NORM_L2, mask);
 }
 
 /*
@@ -217,67 +249,34 @@ float dispRMS( const Mat& computedDisp, const Mat& groundTruthDisp, const Mat& m
 float badMatchPxlsPercentage( const Mat& computedDisp, const Mat& groundTruthDisp, const Mat& mask,
                               int badThresh = EVAL_BAD_THRESH )
 {
-    checkDispMaps(computedDisp, groundTruthDisp);
-    Mat grayComputedDisp; cvtColor(computedDisp, grayComputedDisp, CV_BGR2GRAY);
-    Mat grayGroundTruthDisp; cvtColor(groundTruthDisp, grayGroundTruthDisp, CV_BGR2GRAY);
-
+    checkSizeAndTypeOfDispMaps( computedDisp, groundTruthDisp );
     Mat badPxlsMap;
-    absdiff(computedDisp, groundTruthDisp, badPxlsMap);
+    absdiff( computedDisp, groundTruthDisp, badPxlsMap );
     badPxlsMap = badPxlsMap > badThresh;
     int pointsCount = computedDisp.cols*computedDisp.rows;
     if( !mask.empty() )
     {
+        checkSizeAndTypeOfMask( mask, computedDisp.size() );
         badPxlsMap = badPxlsMap & mask;
         pointsCount = countNonZero(mask);
     }
     return 1.f/pointsCount * countNonZero(badPxlsMap);
 }
 
-/*
-  Calculate root-mean-squared errors for six kinds regions:
-  bordered region, bordered non occluded region, bordered occluded region, bordered textured region,
-  bordered textureless region, bordered depth discontinuty region.
-*/
-void calcRMSs( const Mat& computedDisp, const Mat& groundTruthDisp,
-               const Mat& texturelessMask, const Mat& occludedMask, const Mat& depthDiscontMask,
-               vector<float>& errors )
-{
-    errors.resize(ERROR_KINDS_COUNT);
-    errors[0] = dispRMS( computedDisp, groundTruthDisp, borderedAllMask(computedDisp.size()) );
-    errors[1] = dispRMS( computedDisp, groundTruthDisp, borderedNoOcclMask(occludedMask) );
-    errors[2] = dispRMS( computedDisp, groundTruthDisp, borderedOcclMask(occludedMask) ),
-    errors[3] = dispRMS( computedDisp, groundTruthDisp, borderedTexturedMask(texturelessMask, occludedMask) ),
-    errors[4] = dispRMS( computedDisp, groundTruthDisp, borderedTexturelessMask(texturelessMask, occludedMask) ),
-    errors[5] = dispRMS( computedDisp, groundTruthDisp, borderedDepthDiscontMask(depthDiscontMask, occludedMask) );
-}
-
-/*
-  Calculate percentages of bad matching pixels for six kinds regions:
-  bordered region, bordered non occluded region, bordered occluded region, bordered textured region,
-  bordered textureless region, bordered depth discontinuty region.
-*/
-void calcBadMatchPxlsPercentages( const Mat& computedDisp, const Mat& groundTruthDisp,
-                const Mat& texturelessMask, const Mat& occludedMask, const Mat& depthDiscontMask,
-                vector<float>& errors, int badThresh = EVAL_BAD_THRESH )
-{
-    errors.resize(ERROR_KINDS_COUNT);
-    errors[0] = badMatchPxlsPercentage( computedDisp, groundTruthDisp, borderedAllMask(computedDisp.size()), badThresh ),
-    errors[1] = badMatchPxlsPercentage( computedDisp, groundTruthDisp, borderedNoOcclMask(occludedMask), badThresh ),
-    errors[2] = badMatchPxlsPercentage( computedDisp, groundTruthDisp, borderedOcclMask(occludedMask), badThresh ),
-    errors[3] = badMatchPxlsPercentage( computedDisp, groundTruthDisp, borderedTexturedMask(texturelessMask, occludedMask), badThresh ),
-    errors[4] = badMatchPxlsPercentage( computedDisp, groundTruthDisp, borderedTexturelessMask(texturelessMask, occludedMask), badThresh ),
-    errors[5] = badMatchPxlsPercentage( computedDisp, groundTruthDisp, borderedDepthDiscontMask(depthDiscontMask, occludedMask), badThresh );
-}
-
 //===================== regression test for stereo matching algorithms ==============================
 
-const string RESULT_DIR = "test_results";
-const string LEFT_IMG_NAME = "im2.ppm";
-const string RIGHT_IMG_NAME = "im6.ppm";
-const string TRUE_LEFT_DISP_NAME = "disp2.pgm";
-const string TRUE_RIGHT_DISP_NAME = "disp6.pgm";
+const string ALGORITHMS_DIR = "stereomatching/algorithms/";
+const string DATASETS_DIR = "stereomatching/datasets/";
+const string DATASETS_FILE = "datasets.xml";
 
-string DATASETS_NAMES[] = { "barn2", "bull", "cones", "poster", "sawtooth", "teddy", "venus" };
+const string RUN_PARAMS_FILE = "_params.xml";
+const string RESULT_FILE = "_res.xml";
+
+const string LEFT_IMG_NAME = "im2.png";
+const string RIGHT_IMG_NAME = "im6.png";
+const string TRUE_LEFT_DISP_NAME = "disp2.png";
+const string TRUE_RIGHT_DISP_NAME = "disp6.png";
+
 string ERROR_PREFIXES[] = { "borderedAll",
                             "borderedNoOccl",
                             "borderedOccl",
@@ -285,41 +284,241 @@ string ERROR_PREFIXES[] = { "borderedAll",
                             "borderedTextureless",
                             "borderedDepthDiscont" }; // size of ERROR_KINDS_COUNT
 
+
 const string RMS_STR = "RMS";
-const string BAD_PXLS_PERCENTAGE_STR = "badPxlsPercentage";
+const string BAD_PXLS_PERCENTAGE_STR = "BadPxlsPercentage";
 
 class CV_StereoMatchingTest : public CvTest
 {
 public:
-    CV_StereoMatchingTest(const char* testName, const char* testFuncs) :
-            CvTest( testName, testFuncs ) {}
+    CV_StereoMatchingTest( const char* testName ) :
+            CvTest( testName, "stereo-matching" ) {}
 protected:
     // assumed that left image is a reference image
-    virtual void runStereoMatchingFunc( const Mat& leftImg, const Mat& rigthImg,
-                                        Mat& leftDisp, Mat& rightDisp ) = 0;
+    virtual void runStereoMatchingAlgorithm( const Mat& leftImg, const Mat& rigthImg,
+                   Mat& leftDisp, Mat& rightDisp, FileStorage& paramsFS, const string& datasetName ) = 0;
 
-    void writeErrors( FileStorage fs, const string& errName, const vector<float>& errors );
-    void readErrors( FileNode fn, const string& errName, vector<float>& errors );
+    int readDatasetsInfo();
+    void readDatasetRunParams( FileStorage& fs, const string datasetName ) {}
+    void writeErrors( const string& errName, const vector<float>& errors, FileStorage* fs = 0 );
+    void readErrors( FileNode& fn, const string& errName, vector<float>& errors );
     int compareErrors( const vector<float>& calcErrors, const vector<float>& validErrors,
-                       const vector<float>& eps, const string& errName, const string& datasetName );
-    int processStereoMatchingResults( FileStorage& fs, const string& datasetName, bool isWrite,
+                       const vector<float>& eps, const string& errName );
+    int processStereoMatchingResults( FileStorage& fs, int datasetIdx, bool isWrite,
                   const Mat& leftImg, const Mat& rightImg,
                   const Mat& trueLeftDisp, const Mat& trueRightDisp,
                   const Mat& leftDisp, const Mat& rightDisp );
     void run( int );
 
-    string resultFilename;
+    vector<string> datasetsNames;
+    vector<int> dispScaleFactors;
+    vector<int> dispUnknownVal;
 };
 
-void CV_StereoMatchingTest::writeErrors( FileStorage fs, const string& errName, const vector<float>& errors )
+void CV_StereoMatchingTest::run(int)
+{
+    string dataPath = ts->get_data_path();
+    string algoritmName = name;
+    assert( !algoritmName.empty() );
+    if( dataPath.empty() )
+    {
+        ts->printf( CvTS::LOG, "dataPath is empty" );
+        ts->set_failed_test_info( CvTS::FAIL_BAD_ARG_CHECK );
+        return;
+    }
+
+    int code = readDatasetsInfo();
+    if( code != CvTS::OK )
+    {
+        ts->set_failed_test_info( code );
+        return;
+    }
+
+    string fullResultFilename = dataPath + ALGORITHMS_DIR + algoritmName + RESULT_FILE;
+    bool isWrite = true; // write or compare results
+    FileStorage runParamsFS( dataPath + ALGORITHMS_DIR + algoritmName + RUN_PARAMS_FILE, FileStorage::READ );
+    FileStorage resFS( fullResultFilename, FileStorage::READ );
+    if( resFS.isOpened() )
+        isWrite = false;
+    else
+    {
+        resFS.open( fullResultFilename, FileStorage::WRITE );
+        if( !resFS.isOpened() )
+        {
+            ts->printf( CvTS::LOG, "file named %s can not be read or written\n", fullResultFilename.c_str() );
+            ts->set_failed_test_info( CvTS::FAIL_BAD_ARG_CHECK );
+            return;
+        }
+        resFS << "stereo_matching" << "{";
+    }
+
+    for( int dsi = 0; dsi < (int)datasetsNames.size(); dsi++)
+    {
+        string datasetFullDirName = dataPath + DATASETS_DIR + datasetsNames[dsi] + "/";
+        Mat leftImg = imread(datasetFullDirName + LEFT_IMG_NAME);
+        Mat rightImg = imread(datasetFullDirName + RIGHT_IMG_NAME);
+        Mat trueLeftDisp = imread(datasetFullDirName + TRUE_LEFT_DISP_NAME, 0);
+        Mat trueRightDisp = imread(datasetFullDirName + TRUE_RIGHT_DISP_NAME, 0);
+
+        if( leftImg.empty() || rightImg.empty() || trueLeftDisp.empty() || trueRightDisp.empty() )
+        {
+            ts->printf( CvTS::LOG, "images or ground-truth disparities of dataset %s can not be read", datasetsNames[dsi].c_str() );
+            code = CvTS::FAIL_INVALID_TEST_DATA;
+            continue;
+        }
+        Mat tmp;
+        int scaleFactor = dispScaleFactors[dsi];
+        trueLeftDisp.convertTo( tmp, CV_32FC1, 1.f/scaleFactor ); trueLeftDisp = tmp; tmp.release();
+        trueRightDisp.convertTo( tmp, CV_32FC1, 1.f/scaleFactor ); trueRightDisp = tmp; tmp.release();
+
+        Mat leftDisp, rightDisp;
+        runStereoMatchingAlgorithm( leftImg, rightImg, leftDisp, rightDisp, runParamsFS, datasetsNames[dsi] );
+        leftDisp.convertTo( tmp, CV_32FC1 ); leftDisp = tmp; tmp.release();
+        rightDisp.convertTo( tmp, CV_32FC1 ); rightDisp = tmp; tmp.release();
+
+        int tempCode = processStereoMatchingResults( resFS, dsi, isWrite,
+                   leftImg, rightImg, trueLeftDisp, trueRightDisp, leftDisp, rightDisp);
+
+        code = tempCode==CvTS::OK ? code : tempCode;
+    }
+
+    if( isWrite )
+        resFS << "}"; // "stereo_matching"
+
+    ts->set_failed_test_info( code );
+}
+
+void calcErrors( const Mat& leftImg, const Mat& rightImg,
+                 const Mat& trueLeftDisp, const Mat& trueRightDisp,
+                 const Mat& trueLeftUnknDispMask, const Mat& trueRightUnknDispMask,
+                 const Mat& calcLeftDisp, const Mat& calcRightDisp,
+                 vector<float>& rms, vector<float>& badPxlsPercentages )
+{
+    Mat texturelessMask, texturedMask;
+    computeTextureBasedMasks( leftImg, &texturelessMask, &texturedMask );
+    Mat occludedMask, nonOccludedMask;
+    computeOcclusionBasedMasks( trueLeftDisp, trueRightDisp, &occludedMask, &nonOccludedMask,
+                                trueLeftUnknDispMask, trueRightUnknDispMask);
+    Mat depthDiscontMask;
+    computeDepthDiscontMask( trueLeftDisp, depthDiscontMask, trueLeftUnknDispMask);
+
+    Mat borderedKnownMask = getBorderedMask( leftImg.size() ) & ~trueLeftUnknDispMask;
+
+    nonOccludedMask &= borderedKnownMask;
+    occludedMask &= borderedKnownMask;
+    texturedMask &= nonOccludedMask; // & borderedKnownMask
+    texturelessMask &= nonOccludedMask; // & borderedKnownMask
+    depthDiscontMask &= nonOccludedMask; // & borderedKnownMask
+
+    rms.resize(ERROR_KINDS_COUNT);
+    rms[0] = dispRMS( calcLeftDisp, trueLeftDisp, borderedKnownMask );
+    rms[1] = dispRMS( calcLeftDisp, trueLeftDisp, nonOccludedMask );
+    rms[2] = dispRMS( calcLeftDisp, trueLeftDisp, occludedMask );
+    rms[3] = dispRMS( calcLeftDisp, trueLeftDisp, texturedMask );
+    rms[4] = dispRMS( calcLeftDisp, trueLeftDisp, texturelessMask );
+    rms[5] = dispRMS( calcLeftDisp, trueLeftDisp, depthDiscontMask );
+
+    badPxlsPercentages.resize(ERROR_KINDS_COUNT);
+    badPxlsPercentages[0] = badMatchPxlsPercentage( calcLeftDisp, trueLeftDisp, borderedKnownMask );
+    badPxlsPercentages[1] = badMatchPxlsPercentage( calcLeftDisp, trueLeftDisp, nonOccludedMask );
+    badPxlsPercentages[2] = badMatchPxlsPercentage( calcLeftDisp, trueLeftDisp, occludedMask );
+    badPxlsPercentages[3] = badMatchPxlsPercentage( calcLeftDisp, trueLeftDisp, texturedMask );
+    badPxlsPercentages[4] = badMatchPxlsPercentage( calcLeftDisp, trueLeftDisp, texturelessMask );
+    badPxlsPercentages[5] = badMatchPxlsPercentage( calcLeftDisp, trueLeftDisp, depthDiscontMask );
+}
+
+int CV_StereoMatchingTest::processStereoMatchingResults( FileStorage& fs, int datasetIdx, bool isWrite,
+              const Mat& leftImg, const Mat& rightImg,
+              const Mat& trueLeftDisp, const Mat& trueRightDisp,
+              const Mat& leftDisp, const Mat& rightDisp )
+{
+    // rightDisp is not used in current test virsion
+    int code = CvTS::OK;
+    assert( fs.isOpened() );
+    assert( trueLeftDisp.type() == CV_32FC1 && trueRightDisp.type() == CV_32FC1 );
+    assert( leftDisp.type() == CV_32FC1 && rightDisp.type() == CV_32FC1 );
+
+    // compute errors
+    Mat leftUnknMask, rightUnknMask;
+    absdiff( trueLeftDisp, Scalar(dispUnknownVal[datasetIdx]), leftUnknMask );
+    leftUnknMask = leftUnknMask < numeric_limits<float>::epsilon();
+    absdiff( trueRightDisp, Scalar(dispUnknownVal[datasetIdx]), rightUnknMask );
+    rightUnknMask = rightUnknMask < numeric_limits<float>::epsilon();
+    vector<float> rmss, badPxlsPercentages;
+    calcErrors( leftImg, rightImg, trueLeftDisp, trueRightDisp, leftUnknMask, rightUnknMask,
+                leftDisp, rightDisp, rmss, badPxlsPercentages );
+
+    const string& datasetName = datasetsNames[datasetIdx];
+    if( isWrite )
+    {
+        fs << datasetName << "{";
+        cvWriteComment( fs.fs, RMS_STR.c_str(), 0 );
+        writeErrors( RMS_STR, rmss, &fs );
+        cvWriteComment( fs.fs, BAD_PXLS_PERCENTAGE_STR.c_str(), 0 );
+        writeErrors( BAD_PXLS_PERCENTAGE_STR, badPxlsPercentages, &fs );
+        fs << "}"; // datasetName
+    }
+    else // compare
+    {
+        ts->printf( CvTS::LOG, "\nerrors on dataset %s\n", datasetName.c_str() );
+        ts->printf( CvTS::LOG, "%s\n", RMS_STR.c_str() );
+        writeErrors( RMS_STR, rmss );
+        ts->printf( CvTS::LOG, "%s\n", BAD_PXLS_PERCENTAGE_STR.c_str() );
+        writeErrors( BAD_PXLS_PERCENTAGE_STR, badPxlsPercentages );
+
+        FileNode fn = fs.getFirstTopLevelNode()[datasetName];
+        vector<float> validRmss, validBadPxlsPercentages;
+
+        readErrors( fn, RMS_STR, validRmss );
+        readErrors( fn, BAD_PXLS_PERCENTAGE_STR, validBadPxlsPercentages );
+        int tempCode = compareErrors( rmss, validRmss,
+                      vector<float>(ERROR_KINDS_COUNT, 0.01f), RMS_STR );
+        code = tempCode==CvTS::OK ? code : tempCode;
+        tempCode = compareErrors( badPxlsPercentages, validBadPxlsPercentages,
+                      vector<float>(ERROR_KINDS_COUNT, 0.01f), BAD_PXLS_PERCENTAGE_STR );
+        code = tempCode==CvTS::OK ? code : tempCode;
+    }
+    return code;
+}
+
+int CV_StereoMatchingTest::readDatasetsInfo()
+{
+    string datasetsFilename = string(ts->get_data_path()) + DATASETS_DIR + DATASETS_FILE;
+
+    FileStorage fs( datasetsFilename, FileStorage::READ );
+    if( !fs.isOpened() )
+    {
+        ts->printf( CvTS::LOG, "%s can not be read\n", datasetsFilename.c_str() );
+        return CvTS::FAIL_INVALID_TEST_DATA;
+    }
+    FileNode fn = fs.getFirstTopLevelNode()["names_scale_unknown"];
+    assert(fn.isSeq());
+    datasetsNames.clear();
+    dispScaleFactors.clear();
+    dispUnknownVal.clear();
+    for( int i = 0; i < (int)fn.size(); i+=3 )
+    {
+        string name = fn[i]; datasetsNames.push_back(name);
+        string scale = fn[i+1]; dispScaleFactors.push_back(atoi(scale.c_str()));
+        string unkn = fn[i+2]; dispUnknownVal.push_back(atoi(unkn.c_str()));
+    }
+
+    return CvTS::OK;
+}
+
+void CV_StereoMatchingTest::writeErrors( const string& errName, const vector<float>& errors, FileStorage* fs )
 {
     assert( (int)errors.size() == ERROR_KINDS_COUNT );
     vector<float>::const_iterator it = errors.begin();
-    for( int i = 0; i < ERROR_KINDS_COUNT; i++, ++it )
-        fs << ERROR_PREFIXES[i] + errName << *it;
+    if( fs )
+        for( int i = 0; i < ERROR_KINDS_COUNT; i++, ++it )
+            *fs << ERROR_PREFIXES[i] + errName << *it;
+    else
+        for( int i = 0; i < ERROR_KINDS_COUNT; i++, ++it )
+            ts->printf( CvTS::LOG, "%s = %f\n", string(ERROR_PREFIXES[i]+errName).c_str(), *it );
 }
 
-void CV_StereoMatchingTest::readErrors( FileNode fn, const string& errName, vector<float>& errors )
+void CV_StereoMatchingTest::readErrors( FileNode& fn, const string& errName, vector<float>& errors )
 {
     errors.resize( ERROR_KINDS_COUNT );
     vector<float>::iterator it = errors.begin();
@@ -328,7 +527,7 @@ void CV_StereoMatchingTest::readErrors( FileNode fn, const string& errName, vect
 }
 
 int CV_StereoMatchingTest::compareErrors( const vector<float>& calcErrors, const vector<float>& validErrors,
-                   const vector<float>& eps, const string& errName, const string& datasetName )
+                   const vector<float>& eps, const string& errName )
 {
     assert( (int)calcErrors.size() == ERROR_KINDS_COUNT );
     assert( (int)validErrors.size() == ERROR_KINDS_COUNT );
@@ -339,114 +538,41 @@ int CV_StereoMatchingTest::compareErrors( const vector<float>& calcErrors, const
     for( int i = 0; i < ERROR_KINDS_COUNT; i++, ++calcIt, ++validIt, ++epsIt )
         if( fabs(*calcIt - *validIt) > *epsIt )
         {
-            ts->printf( CvTS::LOG, "bad accuracy of %s on dataset %s",
-                        string(ERROR_PREFIXES[i]+errName).c_str(), datasetName.c_str() );
+            ts->printf( CvTS::LOG, "bad accuracy of %s\n", string(ERROR_PREFIXES[i]+errName).c_str());
             return CvTS::FAIL_BAD_ACCURACY;
         }
     return CvTS::OK;
 }
 
-int CV_StereoMatchingTest::processStereoMatchingResults( FileStorage& fs, const string& datasetName, bool isWrite,
-              const Mat& leftImg, const Mat& rightImg,
-              const Mat& trueLeftDisp, const Mat& trueRightDisp,
-              const Mat& leftDisp, const Mat& rightDisp )
+//----------------------------------- StereoBM test -----------------------------------------------------
+
+class CV_StereoBMTest : public CV_StereoMatchingTest
 {
-    // rightDisp is not used in current test virsion
-    int code = CvTS::OK;
-    assert( fs.isOpened() );
-    assert( !datasetName.empty() );
+public:
+    CV_StereoBMTest() :
+            CV_StereoMatchingTest( "stereobm" ) {}
+protected:
+    virtual void runStereoMatchingAlgorithm( const Mat& leftImg, const Mat& rigthImg,
+              Mat& leftDisp, Mat& rightDisp, FileStorage& paramsFS, const string& datasetName );
+};
 
-    // commpute three kinds masks
-    Mat texturelessMask; computeTexturelessRegions( leftImg, texturelessMask );
-    Mat occludedMask; computeOccludedRegions( trueLeftDisp, trueRightDisp, occludedMask );
-    Mat depthDiscontMask; computeDepthDiscontRegions( trueLeftDisp, depthDiscontMask );
-    assert( !texturelessMask.empty() && !occludedMask.empty() && !depthDiscontMask.empty() );
-
-    // compute errors
-    vector<float> rmss, badPxlsPercentages;
-    calcRMSs( leftDisp, trueLeftDisp, texturelessMask, occludedMask, depthDiscontMask, rmss );
-    calcBadMatchPxlsPercentages( leftDisp, trueLeftDisp,
-              texturelessMask, occludedMask, depthDiscontMask, badPxlsPercentages );
-
-    if( isWrite )
+void CV_StereoBMTest::runStereoMatchingAlgorithm( const Mat& _leftImg, const Mat& _rigthImg,
+              Mat& leftDisp, Mat& rightDisp, FileStorage& paramsFS, const string& datasetName )
+{
+    int ndisp = 7;
+    int winSize = 21;
+    if( paramsFS.isOpened() && !datasetName.empty())
     {
-        fs << datasetName << "{";
-        writeErrors( fs, RMS_STR, rmss );
-        writeErrors( fs, BAD_PXLS_PERCENTAGE_STR, badPxlsPercentages );
-        fs << "}"; // datasetName
+        FileNodeIterator fni = paramsFS.getFirstTopLevelNode()[datasetName].begin();
+        fni >> ndisp >> winSize;
     }
-    else // compare
-    {
-        FileNode fn = fs.getFirstTopLevelNode()[datasetName];
-        vector<float> validRmss, validBadPxlsPercentages;
 
-        readErrors( fn, RMS_STR, validRmss );
-        int tempCode = compareErrors( rmss, validRmss,
-                      vector<float>(ERROR_KINDS_COUNT, 0.01f), RMS_STR, datasetName );
-        code = tempCode==CvTS::OK ? code : tempCode;
+    assert( _leftImg.type() == CV_8UC3 && _rigthImg.type() == CV_8UC3 );
+    Mat leftImg; cvtColor( _leftImg, leftImg, CV_BGR2GRAY );
+    Mat rigthImg; cvtColor( _rigthImg, rigthImg, CV_BGR2GRAY );
 
-        readErrors( fn, BAD_PXLS_PERCENTAGE_STR, validBadPxlsPercentages );
-        tempCode = compareErrors( badPxlsPercentages, validBadPxlsPercentages,
-                      vector<float>(ERROR_KINDS_COUNT, 0.01f), BAD_PXLS_PERCENTAGE_STR, datasetName );
-        code = tempCode==CvTS::OK ? code : tempCode;
-    }
-    return code;
+    StereoBM bm( StereoBM::BASIC_PRESET, ndisp*16 );
+    bm( leftImg, rigthImg, leftDisp, CV_32F );
 }
 
-void CV_StereoMatchingTest::run(int)
-{
-    int code = CvTS::OK;
-    if( resultFilename.empty() )
-    {
-        ts->printf( CvTS::LOG, "resultFilename is empty" );
-        ts->set_failed_test_info( CvTS::FAIL_BAD_ARG_CHECK );
-        return;
-    }
-             
-    string fullResultFilename = string(ts->get_data_path()) + "stereomatching/" + RESULT_DIR + "/" + resultFilename;
-    bool isWrite = true; // write or compare results
-    FileStorage fs( fullResultFilename, FileStorage::READ );
-    if( fs.isOpened() )
-        isWrite = false;
-    else
-    {
-        fs.open( fullResultFilename, FileStorage::WRITE );
-        if( !fs.isOpened() )
-        {
-            ts->printf( CvTS::LOG, "file named %s can not be read or written", fullResultFilename.c_str() );
-            code = CvTS::FAIL_BAD_ARG_CHECK;
-            return;
-        }
-        fs << "stereo_matching" << "{";
-    }
-    
-    int datasetsCount = sizeof(DATASETS_NAMES)/sizeof(DATASETS_NAMES[0]);
-    for( int dsi = 0; dsi < datasetsCount; dsi++)
-    {
-        string dataPath = string(ts->get_data_path()) + "stereomatching/datasets/" + DATASETS_NAMES[dsi] + "/";
-        Mat leftImg = imread(dataPath + LEFT_IMG_NAME);
-        Mat rightImg = imread(dataPath + RIGHT_IMG_NAME);
-        Mat trueLeftDisp = imread(dataPath + TRUE_LEFT_DISP_NAME);
-        Mat trueRightDisp = imread(dataPath + TRUE_RIGHT_DISP_NAME);
-        if( leftImg.empty() || rightImg.empty() || trueLeftDisp.empty() || trueRightDisp.empty() )
-        {
-            ts->printf( CvTS::LOG, "images or true disparities of dataset %s can not be read", DATASETS_NAMES[dsi].c_str() );
-            code = CvTS::FAIL_INVALID_TEST_DATA;
-            continue;
-        }
-
-        Mat leftDisp, rightDisp;
-        runStereoMatchingFunc( leftImg, rightImg, leftDisp, rightDisp );
-
-        int tempCode = processStereoMatchingResults( fs, DATASETS_NAMES[dsi], isWrite,
-                   leftImg, rightImg, trueLeftDisp, trueRightDisp, leftDisp, rightDisp);
-        code = tempCode==CvTS::OK ? code : tempCode;
-    }    
-
-    if( isWrite )
-        fs << "}"; // "stereo_matching"
-
-    ts->set_failed_test_info( code );
-}
-
-//CV_StereoMatchingTest stereoMatchingTest;
+CV_StereoBMTest stereoBM;
