@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<opencv_storage>
+<datasets>
+	<names_scale_unknown>
+	  	barn2 "8" "0"
+	  	bull "8" "0"
+	  	cones "1" "0"
+	  	poster "8" "0"
+	  	sawtooth "8" "0"
+	  	teddy "1" "0"
+	    	venus "8" "0"
+	</names_scale_unknown>
+</datasets>
+</opencv_storage>
