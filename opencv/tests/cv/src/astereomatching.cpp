@@ -47,6 +47,7 @@
 
 #include "cvtest.h"
 #include <limits>
+#include <cstdio>
 
 using namespace std;
 using namespace cv;
@@ -163,7 +164,7 @@ void computeOcclusionBasedMasks( const Mat& leftDisp, const Mat& rightDisp,
             if( !leftUnknDispMask.empty() && leftUnknDispMask.at<uchar>(leftY,leftX) )
                 continue;
             float leftDispVal = leftDisp.at<float>(leftY, leftX);
-            int rightX = leftX - (int)leftDispVal, rightY = leftY;
+            int rightX = leftX - cvRound(leftDispVal), rightY = leftY;
             if( occludedMask && rightX < 0 )
                 occludedMask->at<uchar>(leftY, leftX) = 255;
             else
@@ -295,7 +296,7 @@ public:
             CvTest( testName, "stereo-matching" ) {}
 protected:
     // assumed that left image is a reference image
-    virtual void runStereoMatchingAlgorithm( const Mat& leftImg, const Mat& rigthImg,
+    virtual void runStereoMatchingAlgorithm( const Mat& leftImg, const Mat& rightImg,
                    Mat& leftDisp, Mat& rightDisp, FileStorage& paramsFS, const string& datasetName ) = 0;
 
     int readDatasetsInfo();
@@ -352,8 +353,10 @@ void CV_StereoMatchingTest::run(int)
         resFS << "stereo_matching" << "{";
     }
 
+    int progress = 0;
     for( int dsi = 0; dsi < (int)datasetsNames.size(); dsi++)
     {
+        progress = update_progress( progress, dsi, (int)datasetsNames.size(), 0 );
         string datasetFullDirName = dataPath + DATASETS_DIR + datasetsNames[dsi] + "/";
         Mat leftImg = imread(datasetFullDirName + LEFT_IMG_NAME);
         Mat rightImg = imread(datasetFullDirName + RIGHT_IMG_NAME);
@@ -367,9 +370,21 @@ void CV_StereoMatchingTest::run(int)
             continue;
         }
         Mat tmp;
-        int scaleFactor = dispScaleFactors[dsi];
-        trueLeftDisp.convertTo( tmp, CV_32FC1, 1.f/scaleFactor ); trueLeftDisp = tmp; tmp.release();
-        trueRightDisp.convertTo( tmp, CV_32FC1, 1.f/scaleFactor ); trueRightDisp = tmp; tmp.release();
+        int dispScaleFactor = dispScaleFactors[dsi];
+        trueLeftDisp.convertTo( tmp, CV_32FC1, 1.f/dispScaleFactor ); trueLeftDisp = tmp; tmp.release();
+        trueRightDisp.convertTo( tmp, CV_32FC1, 1.f/dispScaleFactor ); trueRightDisp = tmp; tmp.release();
+
+        /*Mat res(trueLeftDisp.size(), CV_8UC1, Scalar(0) );
+        for( int leftY = 0; leftY < trueLeftDisp.rows; leftY++ )
+        {
+            for( int leftX = 0; leftX < trueLeftDisp.cols; leftX++ )
+            {
+                int lv = cvRound( trueLeftDisp.at<float>(leftY, leftX) );
+                if( leftX - lv >= 0)
+                    res.at<uchar>(leftY, leftX - lv) = lv;
+            }
+        }
+        imwrite( "/home/maria/work/stereo/qqq.jpg", res);*/
 
         Mat leftDisp, rightDisp;
         runStereoMatchingAlgorithm( leftImg, rightImg, leftDisp, rightDisp, runParamsFS, datasetsNames[dsi] );
@@ -378,7 +393,6 @@ void CV_StereoMatchingTest::run(int)
 
         int tempCode = processStereoMatchingResults( resFS, dsi, isWrite,
                    leftImg, rightImg, trueLeftDisp, trueRightDisp, leftDisp, rightDisp);
-
         code = tempCode==CvTS::OK ? code : tempCode;
     }
 
@@ -386,6 +400,22 @@ void CV_StereoMatchingTest::run(int)
         resFS << "}"; // "stereo_matching"
 
     ts->set_failed_test_info( code );
+}
+
+Size reduceSize( const Size& sz, int reduceScale )
+{
+    Size newsz;
+    newsz.height = sz.height / reduceScale;
+    newsz.width = sz.width / reduceScale;
+    return newsz;
+}
+
+int getReduceScale( const Size& bigSz, const Size& smallSz )
+{
+    assert( bigSz.height >= smallSz.height );
+    int scale = bigSz.height / smallSz.height;
+    assert( bigSz.width / smallSz.width == scale );
+    return scale;
 }
 
 void calcErrors( const Mat& leftImg, const Mat& rightImg,
@@ -428,22 +458,32 @@ void calcErrors( const Mat& leftImg, const Mat& rightImg,
 }
 
 int CV_StereoMatchingTest::processStereoMatchingResults( FileStorage& fs, int datasetIdx, bool isWrite,
-              const Mat& leftImg, const Mat& rightImg,
-              const Mat& trueLeftDisp, const Mat& trueRightDisp,
+              const Mat& _leftImg, const Mat& _rightImg,
+              const Mat& _trueLeftDisp, const Mat& _trueRightDisp,
               const Mat& leftDisp, const Mat& rightDisp )
 {
     // rightDisp is not used in current test virsion
     int code = CvTS::OK;
     assert( fs.isOpened() );
-    assert( trueLeftDisp.type() == CV_32FC1 && trueRightDisp.type() == CV_32FC1 );
+    assert( _trueLeftDisp.type() == CV_32FC1 && _trueRightDisp.type() == CV_32FC1 );
     assert( leftDisp.type() == CV_32FC1 && rightDisp.type() == CV_32FC1 );
 
-    // compute errors
+    // resize images (if neaded)
+    int reduceImgScale = getReduceScale( _leftImg.size(), leftDisp.size() );
+    Mat leftImg, rightImg, trueLeftDisp, trueRightDisp;
+    resize( _leftImg, leftImg, reduceSize(_leftImg.size(), reduceImgScale) );
+    resize( _rightImg, rightImg, reduceSize(_rightImg.size(), reduceImgScale) );
+    resize( _trueLeftDisp, trueLeftDisp, reduceSize(_trueLeftDisp.size(), reduceImgScale) );
+    resize( _trueRightDisp, trueRightDisp, reduceSize(_trueRightDisp.size(), reduceImgScale) );
+
+    // get masks for unknown ground truth disparity values
     Mat leftUnknMask, rightUnknMask;
     absdiff( trueLeftDisp, Scalar(dispUnknownVal[datasetIdx]), leftUnknMask );
     leftUnknMask = leftUnknMask < numeric_limits<float>::epsilon();
     absdiff( trueRightDisp, Scalar(dispUnknownVal[datasetIdx]), rightUnknMask );
     rightUnknMask = rightUnknMask < numeric_limits<float>::epsilon();
+
+    // calculate errors
     vector<float> rmss, badPxlsPercentages;
     calcErrors( leftImg, rightImg, trueLeftDisp, trueRightDisp, leftUnknMask, rightUnknMask,
                 leftDisp, rightDisp, rmss, badPxlsPercentages );
@@ -452,6 +492,9 @@ int CV_StereoMatchingTest::processStereoMatchingResults( FileStorage& fs, int da
     if( isWrite )
     {
         fs << datasetName << "{";
+        char str[50];
+        sprintf( str, "reduceImgFactor=%d", reduceImgScale );
+        cvWriteComment( fs.fs, str, 0 );
         cvWriteComment( fs.fs, RMS_STR.c_str(), 0 );
         writeErrors( RMS_STR, rmss, &fs );
         cvWriteComment( fs.fs, BAD_PXLS_PERCENTAGE_STR.c_str(), 0 );
@@ -460,7 +503,7 @@ int CV_StereoMatchingTest::processStereoMatchingResults( FileStorage& fs, int da
     }
     else // compare
     {
-        ts->printf( CvTS::LOG, "\nerrors on dataset %s\n", datasetName.c_str() );
+        ts->printf( CvTS::LOG, "\nerrors on dataset %s (reduceImgFactor=%d)\n", datasetName.c_str(), reduceImgScale );
         ts->printf( CvTS::LOG, "%s\n", RMS_STR.c_str() );
         writeErrors( RMS_STR, rmss );
         ts->printf( CvTS::LOG, "%s\n", BAD_PXLS_PERCENTAGE_STR.c_str() );
@@ -552,27 +595,66 @@ public:
     CV_StereoBMTest() :
             CV_StereoMatchingTest( "stereobm" ) {}
 protected:
-    virtual void runStereoMatchingAlgorithm( const Mat& leftImg, const Mat& rigthImg,
-              Mat& leftDisp, Mat& rightDisp, FileStorage& paramsFS, const string& datasetName );
+    virtual void runStereoMatchingAlgorithm( const Mat& _leftImg, const Mat& _rightImg,
+                   Mat& leftDisp, Mat& rightDisp, FileStorage& paramsFS, const string& datasetName )
+    {
+        int ndisp = 7;
+        int winSize = 21;
+        if( paramsFS.isOpened() && !datasetName.empty())
+        {
+            FileNodeIterator fni = paramsFS.getFirstTopLevelNode()[datasetName].begin();
+            fni >> ndisp >> winSize;
+        }
+
+        assert( _leftImg.type() == CV_8UC3 && _rightImg.type() == CV_8UC3 );
+        Mat leftImg; cvtColor( _leftImg, leftImg, CV_BGR2GRAY );
+        Mat rightImg; cvtColor( _rightImg, rightImg, CV_BGR2GRAY );
+
+        StereoBM bm( StereoBM::BASIC_PRESET, ndisp*16 );
+        bm( leftImg, rightImg, leftDisp, CV_32F );
+    }
 };
 
-void CV_StereoBMTest::runStereoMatchingAlgorithm( const Mat& _leftImg, const Mat& _rigthImg,
-              Mat& leftDisp, Mat& rightDisp, FileStorage& paramsFS, const string& datasetName )
+CV_StereoBMTest stereoBM;
+
+//----------------------------------- StereoGC test -----------------------------------------------------
+
+class CV_StereoGCTest : public CV_StereoMatchingTest
 {
-    int ndisp = 7;
-    int winSize = 21;
-    if( paramsFS.isOpened() && !datasetName.empty())
+public:
+    CV_StereoGCTest() :
+            CV_StereoMatchingTest( "stereogc" ) {}
+protected:
+    virtual void runStereoMatchingAlgorithm( const Mat& _leftImg, const Mat& _rightImg,
+                   Mat& leftDisp, Mat& rightDisp, FileStorage& paramsFS, const string& datasetName )
     {
-        FileNodeIterator fni = paramsFS.getFirstTopLevelNode()[datasetName].begin();
-        fni >> ndisp >> winSize;
+        int ndisp = 20;
+        int icount = 2;
+        int reduceImgFactor;
+        if( paramsFS.isOpened() && !datasetName.empty())
+        {
+            FileNodeIterator fni = paramsFS.getFirstTopLevelNode()[datasetName].begin();
+            fni >> ndisp >> icount >> reduceImgFactor;
+        }
+
+        assert( _leftImg.type() == CV_8UC3 && _rightImg.type() == CV_8UC3 );
+        Mat leftImg, rightImg, tmp;
+        cvtColor( _leftImg, tmp, CV_BGR2GRAY );
+        resize( tmp, leftImg, reduceSize(_leftImg.size(),reduceImgFactor) ); tmp.release();
+        cvtColor( _rightImg, tmp, CV_BGR2GRAY );
+        resize( tmp, rightImg, reduceSize(_rightImg.size(),reduceImgFactor) ); tmp.release();
+
+        leftDisp.create( leftImg.size(), CV_16SC1 );
+        rightDisp.create( leftImg.size(), CV_16SC1 );
+
+        CvMat _limg = leftImg, _rimg = rightImg, _ldisp = leftDisp, _rdisp = rightDisp;
+        CvStereoGCState *state = cvCreateStereoGCState( ndisp, icount );
+        cvFindStereoCorrespondenceGC( &_limg, &_rimg, &_ldisp, &_rdisp, state );
+        cvReleaseStereoGCState( &state );
+
+        leftDisp = - leftDisp;
     }
 
-    assert( _leftImg.type() == CV_8UC3 && _rigthImg.type() == CV_8UC3 );
-    Mat leftImg; cvtColor( _leftImg, leftImg, CV_BGR2GRAY );
-    Mat rigthImg; cvtColor( _rigthImg, rigthImg, CV_BGR2GRAY );
+};
 
-    StereoBM bm( StereoBM::BASIC_PRESET, ndisp*16 );
-    bm( leftImg, rigthImg, leftDisp, CV_32F );
-}
-
-CV_StereoBMTest stereoBM;
+CV_StereoGCTest stereoGC;
