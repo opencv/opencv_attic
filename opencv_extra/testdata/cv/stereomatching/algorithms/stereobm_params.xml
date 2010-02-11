@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <opencv_storage>
 <params>
+	<!-- numDisp and winSize -->
 	<barn2> 1 19 </barn2>
 	<bull> 1 39 </bull>
 	<cones> 18 19 </cones>

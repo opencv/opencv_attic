@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<opencv_storage>
+<params>
+	<!-- numDisp, iterCount, resizeImgFactor -->
+	<barn2> 32 2 1 </barn2>
+	<bull> 40 2 1 </bull>
+	<cones> 40 2 6 </cones>
+	<poster> 51 3 1 </poster>
+	<sawtooth> 20 3 1 </sawtooth>
+	<teddy> 30 3 6 </teddy>
+	<venus> 25 2 1 </venus>
+</params>
+</opencv_storage>
