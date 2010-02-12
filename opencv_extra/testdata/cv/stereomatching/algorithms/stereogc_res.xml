@@ -2,115 +2,123 @@
 <opencv_storage>
 <stereo_matching>
   <barn2>
-    <!-- reduceImgFactor=1 -->
     <!-- RMS -->
-    <borderedAllRMS>9.4928985834121704e-01</borderedAllRMS>
-    <borderedNoOcclRMS>9.0197920799255371e-01</borderedNoOcclRMS>
-    <borderedOcclRMS>2.9041461944580078e+00</borderedOcclRMS>
-    <borderedTexturedRMS>7.0166534185409546e-01</borderedTexturedRMS>
-    <borderedTexturelessRMS>1.6519012451171875e+00</borderedTexturelessRMS>
-    <borderedDepthDiscontRMS>1.6282123327255249e+00</borderedDepthDiscontRMS>
+    <borderedAllRMS>8.8603770732879639e-01</borderedAllRMS>
+    <borderedNoOcclRMS>7.8308063745498657e-01</borderedNoOcclRMS>
+    <borderedOcclRMS>3.8752806186676025e+00</borderedOcclRMS>
+    <borderedTexturedRMS>7.2582632303237915e-01</borderedTexturedRMS>
+    <borderedTexturelessRMS>1.0224789381027222e+00</borderedTexturelessRMS>
+    <borderedDepthDiscontRMS>1.8392300605773926e+00</borderedDepthDiscontRMS>
     <!-- BadPxlsPercentage -->
-    <borderedAllBadPxlsPercentage>3.5328693687915802e-02</borderedAllBadPxlsPercentage>
-    <borderedNoOcclBadPxlsPercentage>2.9424229636788368e-02</borderedNoOcclBadPxlsPercentage>
-    <borderedOcclBadPxlsPercentage>5.5191254615783691e-01</borderedOcclBadPxlsPercentage>
-    <borderedTexturedBadPxlsPercentage>1.9362613558769226e-02</borderedTexturedBadPxlsPercentage>
-    <borderedTexturelessBadPxlsPercentage>8.9412324130535126e-02</borderedTexturelessBadPxlsPercentage>
-    <borderedDepthDiscontBadPxlsPercentage>1.1149543523788452e-01</borderedDepthDiscontBadPxlsPercentage></barn2>
+    <borderedAllBadPxlsPercentage>3.3159919083118439e-02</borderedAllBadPxlsPercentage>
+    <borderedNoOcclBadPxlsPercentage>2.7169827371835709e-02</borderedNoOcclBadPxlsPercentage>
+    <borderedOcclBadPxlsPercentage>5.4741239547729492e-01</borderedOcclBadPxlsPercentage>
+    <borderedTexturedBadPxlsPercentage>1.8625134602189064e-02</borderedTexturedBadPxlsPercentage>
+    <borderedTexturelessBadPxlsPercentage>6.9922037422657013e-02</borderedTexturelessBadPxlsPercentage>
+    <borderedDepthDiscontBadPxlsPercentage>1.1224113404750824e-01</borderedDepthDiscontBadPxlsPercentage></barn2>
   <bull>
-    <!-- reduceImgFactor=1 -->
     <!-- RMS -->
-    <borderedAllRMS>3.6778658628463745e-01</borderedAllRMS>
-    <borderedNoOcclRMS>3.6420366168022156e-01</borderedNoOcclRMS>
-    <borderedOcclRMS>1.0077822208404541e+00</borderedOcclRMS>
-    <borderedTexturedRMS>3.5408842563629150e-01</borderedTexturedRMS>
-    <borderedTexturelessRMS>4.1205170750617981e-01</borderedTexturelessRMS>
-    <borderedDepthDiscontRMS>9.7981500625610352e-01</borderedDepthDiscontRMS>
+    <borderedAllRMS>3.7080153822898865e-01</borderedAllRMS>
+    <borderedNoOcclRMS>3.6729887127876282e-01</borderedNoOcclRMS>
+    <borderedOcclRMS>1.0052068233489990e+00</borderedOcclRMS>
+    <borderedTexturedRMS>3.5788035392761230e-01</borderedTexturedRMS>
+    <borderedTexturelessRMS>4.0584596991539001e-01</borderedTexturelessRMS>
+    <borderedDepthDiscontRMS>9.5839411020278931e-01</borderedDepthDiscontRMS>
     <!-- BadPxlsPercentage -->
-    <borderedAllBadPxlsPercentage>1.3756513595581055e-02</borderedAllBadPxlsPercentage>
-    <borderedNoOcclBadPxlsPercentage>1.3120710849761963e-02</borderedNoOcclBadPxlsPercentage>
-    <borderedOcclBadPxlsPercentage>2.0852534472942352e-01</borderedOcclBadPxlsPercentage>
-    <borderedTexturedBadPxlsPercentage>7.8758532181382179e-03</borderedTexturedBadPxlsPercentage>
-    <borderedTexturelessBadPxlsPercentage>3.9932556450366974e-02</borderedTexturelessBadPxlsPercentage>
-    <borderedDepthDiscontBadPxlsPercentage>1.3994456827640533e-01</borderedDepthDiscontBadPxlsPercentage></bull>
+    <borderedAllBadPxlsPercentage>1.3837000355124474e-02</borderedAllBadPxlsPercentage>
+    <borderedNoOcclBadPxlsPercentage>1.3208182528614998e-02</borderedNoOcclBadPxlsPercentage>
+    <borderedOcclBadPxlsPercentage>2.0737327635288239e-01</borderedOcclBadPxlsPercentage>
+    <borderedTexturedBadPxlsPercentage>7.5097181834280491e-03</borderedTexturedBadPxlsPercentage>
+    <borderedTexturelessBadPxlsPercentage>3.8072898983955383e-02</borderedTexturelessBadPxlsPercentage>
+    <borderedDepthDiscontBadPxlsPercentage>1.3895486295223236e-01</borderedDepthDiscontBadPxlsPercentage></bull>
   <cones>
-    <!-- reduceImgFactor=6 -->
     <!-- RMS -->
-    <borderedAllRMS>1.1709786987304688e+02</borderedAllRMS>
-    <borderedNoOcclRMS>1.1264179992675781e+02</borderedNoOcclRMS>
-    <borderedOcclRMS>1.2477310180664062e+02</borderedOcclRMS>
-    <borderedTexturedRMS>1.1264210510253906e+02</borderedTexturedRMS>
-    <borderedTexturelessRMS>1.1140579223632812e+02</borderedTexturelessRMS>
-    <borderedDepthDiscontRMS>1.0909697723388672e+02</borderedDepthDiscontRMS>
+    <borderedAllRMS>3.7308437824249268e+00</borderedAllRMS>
+    <borderedNoOcclRMS>3.1105630397796631e+00</borderedNoOcclRMS>
+    <borderedOcclRMS>9.5623703002929688e+00</borderedOcclRMS>
+    <borderedTexturedRMS>3.1101467609405518e+00</borderedTexturedRMS>
+    <borderedTexturelessRMS>3.1284358501434326e+00</borderedTexturelessRMS>
+    <borderedDepthDiscontRMS>5.4951958656311035e+00</borderedDepthDiscontRMS>
     <!-- BadPxlsPercentage -->
-    <borderedAllBadPxlsPercentage>9.9993598461151123e-01</borderedAllBadPxlsPercentage>
-    <borderedNoOcclBadPxlsPercentage>1.</borderedNoOcclBadPxlsPercentage>
-    <borderedOcclBadPxlsPercentage>9.9990916252136230e-01</borderedOcclBadPxlsPercentage>
-    <borderedTexturedBadPxlsPercentage>1.</borderedTexturedBadPxlsPercentage>
-    <borderedTexturelessBadPxlsPercentage>1.</borderedTexturelessBadPxlsPercentage>
-    <borderedDepthDiscontBadPxlsPercentage>1.</borderedDepthDiscontBadPxlsPercentage></cones>
+    <borderedAllBadPxlsPercentage>1.7794829607009888e-01</borderedAllBadPxlsPercentage>
+    <borderedNoOcclBadPxlsPercentage>1.4968457818031311e-01</borderedNoOcclBadPxlsPercentage>
+    <borderedOcclBadPxlsPercentage>6.9263684749603271e-01</borderedOcclBadPxlsPercentage>
+    <borderedTexturedBadPxlsPercentage>1.4879696071147919e-01</borderedTexturedBadPxlsPercentage>
+    <borderedTexturelessBadPxlsPercentage>1.8787306547164917e-01</borderedTexturelessBadPxlsPercentage>
+    <borderedDepthDiscontBadPxlsPercentage>2.6704102754592896e-01</borderedDepthDiscontBadPxlsPercentage></cones>
   <poster>
-    <!-- reduceImgFactor=1 -->
     <!-- RMS -->
-    <borderedAllRMS>5.3581643104553223e-01</borderedAllRMS>
-    <borderedNoOcclRMS>4.4311472773551941e-01</borderedNoOcclRMS>
-    <borderedOcclRMS>2.4272620677947998e+00</borderedOcclRMS>
-    <borderedTexturedRMS>4.5470806956291199e-01</borderedTexturedRMS>
-    <borderedTexturelessRMS>3.2873508334159851e-01</borderedTexturelessRMS>
-    <borderedDepthDiscontRMS>1.1077035665512085e+00</borderedDepthDiscontRMS>
+    <borderedAllRMS>4.7286075353622437e-01</borderedAllRMS>
+    <borderedNoOcclRMS>4.1047108173370361e-01</borderedNoOcclRMS>
+    <borderedOcclRMS>1.9339451789855957e+00</borderedOcclRMS>
+    <borderedTexturedRMS>4.2168381810188293e-01</borderedTexturedRMS>
+    <borderedTexturelessRMS>3.1932061910629272e-01</borderedTexturelessRMS>
+    <borderedDepthDiscontRMS>9.7188043594360352e-01</borderedDepthDiscontRMS>
     <!-- BadPxlsPercentage -->
-    <borderedAllBadPxlsPercentage>7.5475452467799187e-03</borderedAllBadPxlsPercentage>
-    <borderedNoOcclBadPxlsPercentage>4.6614543534815311e-03</borderedNoOcclBadPxlsPercentage>
-    <borderedOcclBadPxlsPercentage>1.8865031003952026e-01</borderedOcclBadPxlsPercentage>
-    <borderedTexturedBadPxlsPercentage>5.1959608681499958e-03</borderedTexturedBadPxlsPercentage>
-    <borderedTexturelessBadPxlsPercentage>1.2792630877811462e-04</borderedTexturelessBadPxlsPercentage>
-    <borderedDepthDiscontBadPxlsPercentage>3.8808040320873260e-02</borderedDepthDiscontBadPxlsPercentage></poster>
+    <borderedAllBadPxlsPercentage>4.8060007393360138e-03</borderedAllBadPxlsPercentage>
+    <borderedNoOcclBadPxlsPercentage>2.9884576797485352e-03</borderedNoOcclBadPxlsPercentage>
+    <borderedOcclBadPxlsPercentage>1.2160385400056839e-01</borderedOcclBadPxlsPercentage>
+    <borderedTexturedBadPxlsPercentage>3.4076399169862270e-03</borderedTexturedBadPxlsPercentage>
+    <borderedTexturelessBadPxlsPercentage>0.</borderedTexturelessBadPxlsPercentage>
+    <borderedDepthDiscontBadPxlsPercentage>2.7874028310179710e-02</borderedDepthDiscontBadPxlsPercentage></poster>
   <sawtooth>
-    <!-- reduceImgFactor=1 -->
     <!-- RMS -->
-    <borderedAllRMS>1.0963695049285889e+00</borderedAllRMS>
-    <borderedNoOcclRMS>1.0963695049285889e+00</borderedNoOcclRMS>
-    <borderedOcclRMS>4.4058694839477539e+00</borderedOcclRMS>
-    <borderedTexturedRMS>1.1118340492248535e+00</borderedTexturedRMS>
-    <borderedTexturelessRMS>8.0678206682205200e-01</borderedTexturelessRMS>
-    <borderedDepthDiscontRMS>2.7431144714355469e+00</borderedDepthDiscontRMS>
+    <borderedAllRMS>1.1101239919662476e+00</borderedAllRMS>
+    <borderedNoOcclRMS>9.7588479518890381e-01</borderedNoOcclRMS>
+    <borderedOcclRMS>4.5185084342956543e+00</borderedOcclRMS>
+    <borderedTexturedRMS>9.7688007354736328e-01</borderedTexturedRMS>
+    <borderedTexturelessRMS>9.6292138099670410e-01</borderedTexturelessRMS>
+    <borderedDepthDiscontRMS>2.4524936676025391e+00</borderedDepthDiscontRMS>
     <!-- BadPxlsPercentage -->
-    <borderedAllBadPxlsPercentage>1.6633117571473122e-02</borderedAllBadPxlsPercentage>
-    <borderedNoOcclBadPxlsPercentage>1.6633117571473122e-02</borderedNoOcclBadPxlsPercentage>
-    <borderedOcclBadPxlsPercentage>2.9172822833061218e-01</borderedOcclBadPxlsPercentage>
-    <borderedTexturedBadPxlsPercentage>1.7207717522978783e-02</borderedTexturedBadPxlsPercentage>
-    <borderedTexturelessBadPxlsPercentage>7.3597053997218609e-03</borderedTexturelessBadPxlsPercentage>
-    <borderedDepthDiscontBadPxlsPercentage>1.1866609007120132e-01</borderedDepthDiscontBadPxlsPercentage></sawtooth>
+    <borderedAllBadPxlsPercentage>1.6968598589301109e-02</borderedAllBadPxlsPercentage>
+    <borderedNoOcclBadPxlsPercentage>1.2799737975001335e-02</borderedNoOcclBadPxlsPercentage>
+    <borderedOcclBadPxlsPercentage>3.0354505777359009e-01</borderedOcclBadPxlsPercentage>
+    <borderedTexturedBadPxlsPercentage>1.2960721738636494e-02</borderedTexturedBadPxlsPercentage>
+    <borderedTexturelessBadPxlsPercentage>1.0718011297285557e-02</borderedTexturelessBadPxlsPercentage>
+    <borderedDepthDiscontBadPxlsPercentage>9.4535112380981445e-02</borderedDepthDiscontBadPxlsPercentage></sawtooth>
   <teddy>
-    <!-- reduceImgFactor=6 -->
     <!-- RMS -->
-    <borderedAllRMS>2.0732359313964844e+02</borderedAllRMS>
-    <borderedNoOcclRMS>2.0732359313964844e+02</borderedNoOcclRMS>
-    <borderedOcclRMS>8.5327537536621094e+01</borderedOcclRMS>
-    <borderedTexturedRMS>2.0966488647460938e+02</borderedTexturedRMS>
-    <borderedTexturelessRMS>9.9806800842285156e+01</borderedTexturelessRMS>
-    <borderedDepthDiscontRMS>3.0175250244140625e+02</borderedDepthDiscontRMS>
+    <borderedAllRMS>2.3585431575775146e+00</borderedAllRMS>
+    <borderedNoOcclRMS>2.1146903038024902e+00</borderedNoOcclRMS>
+    <borderedOcclRMS>5.3201212882995605e+00</borderedOcclRMS>
+    <borderedTexturedRMS>1.8850584030151367e+00</borderedTexturedRMS>
+    <borderedTexturelessRMS>3.0281293392181396e+00</borderedTexturelessRMS>
+    <borderedDepthDiscontRMS>3.3921070098876953e+00</borderedDepthDiscontRMS>
     <!-- BadPxlsPercentage -->
-    <borderedAllBadPxlsPercentage>9.9998408555984497e-01</borderedAllBadPxlsPercentage>
-    <borderedNoOcclBadPxlsPercentage>9.9998408555984497e-01</borderedNoOcclBadPxlsPercentage>
-    <borderedOcclBadPxlsPercentage>9.9997484683990479e-01</borderedOcclBadPxlsPercentage>
-    <borderedTexturedBadPxlsPercentage>9.9998360872268677e-01</borderedTexturedBadPxlsPercentage>
-    <borderedTexturelessBadPxlsPercentage>1.</borderedTexturelessBadPxlsPercentage>
-    <borderedDepthDiscontBadPxlsPercentage>9.9996256828308105e-01</borderedDepthDiscontBadPxlsPercentage></teddy>
+    <borderedAllBadPxlsPercentage>2.1576626598834991e-01</borderedAllBadPxlsPercentage>
+    <borderedNoOcclBadPxlsPercentage>1.8987368047237396e-01</borderedNoOcclBadPxlsPercentage>
+    <borderedOcclBadPxlsPercentage>7.4136221408843994e-01</borderedOcclBadPxlsPercentage>
+    <borderedTexturedBadPxlsPercentage>1.5850366652011871e-01</borderedTexturedBadPxlsPercentage>
+    <borderedTexturelessBadPxlsPercentage>3.5032036900520325e-01</borderedTexturelessBadPxlsPercentage>
+    <borderedDepthDiscontBadPxlsPercentage>2.7547970414161682e-01</borderedDepthDiscontBadPxlsPercentage></teddy>
+  <tsukuba>
+    <!-- RMS -->
+    <borderedAllRMS>9.0252566337585449e-01</borderedAllRMS>
+    <borderedNoOcclRMS>8.2488614320755005e-01</borderedNoOcclRMS>
+    <borderedOcclRMS>3.0998113155364990e+00</borderedOcclRMS>
+    <borderedTexturedRMS>7.9985678195953369e-01</borderedTexturedRMS>
+    <borderedTexturelessRMS>9.0117520093917847e-01</borderedTexturelessRMS>
+    <borderedDepthDiscontRMS>1.6128941774368286e+00</borderedDepthDiscontRMS>
+    <!-- BadPxlsPercentage -->
+    <borderedAllBadPxlsPercentage>3.1517971307039261e-02</borderedAllBadPxlsPercentage>
+    <borderedNoOcclBadPxlsPercentage>2.6900326833128929e-02</borderedNoOcclBadPxlsPercentage>
+    <borderedOcclBadPxlsPercentage>3.2406181097030640e-01</borderedOcclBadPxlsPercentage>
+    <borderedTexturedBadPxlsPercentage>2.5436310097575188e-02</borderedTexturedBadPxlsPercentage>
+    <borderedTexturelessBadPxlsPercentage>3.1640913337469101e-02</borderedTexturelessBadPxlsPercentage>
+    <borderedDepthDiscontBadPxlsPercentage>1.0374939441680908e-01</borderedDepthDiscontBadPxlsPercentage></tsukuba>
   <venus>
-    <!-- reduceImgFactor=1 -->
     <!-- RMS -->
-    <borderedAllRMS>6.9732612371444702e-01</borderedAllRMS>
-    <borderedNoOcclRMS>6.7259842157363892e-01</borderedNoOcclRMS>
-    <borderedOcclRMS>1.9825903177261353e+00</borderedOcclRMS>
-    <borderedTexturedRMS>6.1309921741485596e-01</borderedTexturedRMS>
-    <borderedTexturelessRMS>8.4373235702514648e-01</borderedTexturelessRMS>
-    <borderedDepthDiscontRMS>1.3117414712905884e+00</borderedDepthDiscontRMS>
+    <borderedAllRMS>9.1059452295303345e-01</borderedAllRMS>
+    <borderedNoOcclRMS>9.1059452295303345e-01</borderedNoOcclRMS>
+    <borderedOcclRMS>2.9145858287811279e+00</borderedOcclRMS>
+    <borderedTexturedRMS>7.7305060625076294e-01</borderedTexturedRMS>
+    <borderedTexturelessRMS>1.2280260324478149e+00</borderedTexturelessRMS>
+    <borderedDepthDiscontRMS>1.4077984094619751e+00</borderedDepthDiscontRMS>
     <!-- BadPxlsPercentage -->
-    <borderedAllBadPxlsPercentage>4.0404040366411209e-02</borderedAllBadPxlsPercentage>
-    <borderedNoOcclBadPxlsPercentage>3.6747857928276062e-02</borderedNoOcclBadPxlsPercentage>
-    <borderedOcclBadPxlsPercentage>4.1193920373916626e-01</borderedOcclBadPxlsPercentage>
-    <borderedTexturedBadPxlsPercentage>2.9997996985912323e-02</borderedTexturedBadPxlsPercentage>
-    <borderedTexturelessBadPxlsPercentage>5.9644669294357300e-02</borderedTexturelessBadPxlsPercentage>
-    <borderedDepthDiscontBadPxlsPercentage>1.3260821998119354e-01</borderedDepthDiscontBadPxlsPercentage></venus></stereo_matching>
+    <borderedAllBadPxlsPercentage>4.2327091097831726e-02</borderedAllBadPxlsPercentage>
+    <borderedNoOcclBadPxlsPercentage>4.2327091097831726e-02</borderedNoOcclBadPxlsPercentage>
+    <borderedOcclBadPxlsPercentage>4.4048944115638733e-01</borderedOcclBadPxlsPercentage>
+    <borderedTexturedBadPxlsPercentage>3.4803714603185654e-02</borderedTexturedBadPxlsPercentage>
+    <borderedTexturelessBadPxlsPercentage>6.4381949603557587e-02</borderedTexturelessBadPxlsPercentage>
+    <borderedDepthDiscontBadPxlsPercentage>1.5468718111515045e-01</borderedDepthDiscontBadPxlsPercentage></venus></stereo_matching>
 </opencv_storage>
