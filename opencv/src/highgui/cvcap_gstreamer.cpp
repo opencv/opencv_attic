@@ -323,21 +323,26 @@ bool CvCapture_GStreamer::open( int type, const char* filename )
 		isInited = true;
 	}
     bool stream=false;
-    char *checked_filename=NULL;
     char *uri=NULL;
 	//const char *sourcetypes[] = {"dv1394src", "v4lsrc", "v4l2src", "filesrc"};
 	//printf("entered capturecreator %s\n", sourcetypes[type]);
     if  (type == CV_CAP_GSTREAMER_FILE) {	
 		if (!gst_uri_is_valid(filename)) {
-			checked_filename=realpath(filename,NULL);
-			uri=g_filename_to_uri(checked_filename,NULL,NULL);
+			uri=realpath(filename,NULL);
+			if (uri)
+				uri=g_filename_to_uri(uri,NULL,NULL);
+			else {
+				perror(filename);
+				exit(EXIT_FAILURE);
+			}	
 			stream=false;
 		}
+
 		else {
 			stream=true;
 			uri=g_strdup (filename);
+			printf("Trying to connect to stream \n");
 		}	
-		printf("Trying to connect to stream \n");
 		uridecodebin = gst_element_factory_make ("uridecodebin", NULL);
 		g_object_set(G_OBJECT(uridecodebin),"uri",uri, NULL);
 	}
