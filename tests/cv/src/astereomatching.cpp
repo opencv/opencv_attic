@@ -53,7 +53,7 @@ using namespace std;
 using namespace cv;
 
 const float EVAL_BAD_THRESH = 1.f;
-const int EVAL_TEXTURELESS_WIDTH = 9;
+const int EVAL_TEXTURELESS_WIDTH = 7;
 const float EVAL_TEXTURELESS_THRESH = 2.f;
 const float EVAL_DISP_THRESH = 1.f;
 const float EVAL_DISP_GAP = 2.f;
@@ -90,14 +90,20 @@ void computeTextureBasedMasks( const Mat& img, Mat* texturelessMask, Mat* textur
         *texturedMask = avgDxI2 >= texturelessThresh;
 }
 
-void checkSizeAndTypeOfDispMaps( const Mat& dispMap1, const Mat& dispMap2 )
+void checkSizeAndTypeOfDispMaps( const Mat& leftDispMap, const Mat& rightDispMap )
 {
-    if( dispMap1.empty() || dispMap2.empty() )
-        CV_Error( CV_StsBadArg, "dispMap1 or dispMap2 is empty" );
-    if( dispMap1.cols != dispMap2.cols || dispMap1.rows != dispMap2.rows )
-        CV_Error( CV_StsBadArg, "dispMap1 and dispMap2 must have the same size" );
-    if( dispMap1.type() != CV_32FC1 && dispMap2.type() != CV_32FC1 )
-        CV_Error( CV_StsBadArg, "dispMap1 and dispMap2 must have CV_32FC1 type" );
+    if( leftDispMap.empty() )
+        CV_Error( CV_StsBadArg, "leftDispMap is empty" );
+    if( leftDispMap.type() != CV_32FC1 )
+        CV_Error( CV_StsBadArg, "leftDispMap must have CV_32FC1 type" );
+
+    if( !rightDispMap.empty() )
+    {
+        if( rightDispMap.type() != CV_32FC1 )
+            CV_Error( CV_StsBadArg, "rightDispMap must have CV_32FC1 type" );
+        if( rightDispMap.cols != leftDispMap.cols || rightDispMap.rows != leftDispMap.rows )
+            CV_Error( CV_StsBadArg, "leftDispMap and rightDispMap must have the same size" );
+    }
 }
 
 void checkSizeAndTypeOfMask( const Mat& mask, Size sz )
@@ -110,26 +116,29 @@ void checkSizeAndTypeOfMask( const Mat& mask, Size sz )
         CV_Error( CV_StsBadArg, "mask has incorrect size" );
 }
 
-void checkDispMapsAndUnknDispMasks( const Mat& dispMap1, const Mat& dispMap2,
-                                    const Mat& unknDispMask1, const Mat& unknDispMask2 )
+void checkDispMapsAndUnknDispMasks( const Mat& leftDispMap, const Mat& rightDispMap,
+                                    const Mat& leftUnknDispMask, const Mat& rightUnknDispMask )
 {
-    checkSizeAndTypeOfDispMaps( dispMap1, dispMap2 );
+    checkSizeAndTypeOfDispMaps( leftDispMap, rightDispMap );
 
-    if( !unknDispMask1.empty() )
-        checkSizeAndTypeOfMask( unknDispMask1, dispMap1.size() );
-    if( !unknDispMask2.empty() )
-        checkSizeAndTypeOfMask( unknDispMask2, dispMap1.size() );
+    if( !leftUnknDispMask.empty() )
+        checkSizeAndTypeOfMask( leftUnknDispMask, leftDispMap.size() );
+    if( !rightUnknDispMask.empty() )
+        checkSizeAndTypeOfMask( rightUnknDispMask, rightDispMap.size() );
 
-    double minVal1, minVal2;
-    if( unknDispMask1.empty() )
-        minMaxLoc( dispMap1, &minVal1 );
+    double leftMinVal = 0, rightMinVal = 0;
+    if( leftUnknDispMask.empty() )
+        minMaxLoc( leftDispMap, &leftMinVal );
     else
-        minMaxLoc( dispMap1, &minVal1, 0, 0, 0, ~unknDispMask1 );
-    if( unknDispMask2.empty() )
-        minMaxLoc( dispMap2, &minVal2 );
-    else
-        minMaxLoc( dispMap2, &minVal2, 0, 0, 0, ~unknDispMask2 );
-    if( minVal1 < 0 || minVal2 < 0)
+        minMaxLoc( leftDispMap, &leftMinVal, 0, 0, 0, ~leftUnknDispMask );
+    if( !rightDispMap.empty() )
+    {
+        if( rightUnknDispMask.empty() )
+            minMaxLoc( rightDispMap, &rightMinVal );
+        else
+            minMaxLoc( rightDispMap, &rightMinVal, 0, 0, 0, ~rightUnknDispMask );
+    }
+    if( leftMinVal < 0 || rightMinVal < 0)
         CV_Error( CV_StsBadArg, "known disparity values must be positive" );
 }
 
@@ -137,7 +146,7 @@ void checkDispMapsAndUnknDispMasks( const Mat& dispMap1, const Mat& dispMap2,
   Calculate occluded regions of reference image (left image) (regions that are occluded in the matching image (right image),
   i.e., where the forward-mapped disparity lands at a location with a larger (nearer) disparity) and non occluded regions.
 */
-void computeOcclusionBasedMasks( const Mat& leftDisp, const Mat& rightDisp,
+void computeOcclusionBasedMasks( const Mat& leftDisp, const Mat& _rightDisp,
                              Mat* occludedMask, Mat* nonOccludedMask,
                              const Mat& leftUnknDispMask = Mat(), const Mat& rightUnknDispMask = Mat(),
                              float dispThresh = EVAL_DISP_THRESH )
@@ -145,16 +154,39 @@ void computeOcclusionBasedMasks( const Mat& leftDisp, const Mat& rightDisp,
     const float dispDiff = 1.f;
     if( !occludedMask && !nonOccludedMask )
         return;
-    checkDispMapsAndUnknDispMasks( leftDisp, rightDisp, leftUnknDispMask, rightUnknDispMask );
+    checkDispMapsAndUnknDispMasks( leftDisp, _rightDisp, leftUnknDispMask, rightUnknDispMask );
+
+    Mat rightDisp;
+    if( _rightDisp.empty() )
+    {
+        if( !rightUnknDispMask.empty() )
+           CV_Error( CV_StsBadArg, "rightUnknDispMask must be empty if _rightDisp is empty" );
+        rightDisp.create(leftDisp.size(), CV_32FC1);
+        rightDisp.setTo(Scalar::all(0) );
+        for( int leftY = 0; leftY < leftDisp.rows; leftY++ )
+        {
+            for( int leftX = 0; leftX < leftDisp.cols; leftX++ )
+            {
+                if( !leftUnknDispMask.empty() && leftUnknDispMask.at<uchar>(leftY,leftX) )
+                    continue;
+                float leftDispVal = leftDisp.at<float>(leftY, leftX);
+                int rightX = leftX - cvRound(leftDispVal), rightY = leftY;
+                if( rightX >= 0)
+                    rightDisp.at<float>(rightY,rightX) = max(rightDisp.at<float>(rightY,rightX), leftDispVal);
+            }
+        }
+    }
+    else
+        _rightDisp.copyTo(rightDisp);
 
     if( occludedMask )
     {
-        occludedMask->create( leftDisp.size(), CV_8UC1 );
+        occludedMask->create(leftDisp.size(), CV_8UC1);
         occludedMask->setTo(Scalar::all(0) );
     }
     if( nonOccludedMask )
     {
-        nonOccludedMask->create( leftDisp.size(), CV_8UC1 );
+        nonOccludedMask->create(leftDisp.size(), CV_8UC1);
         occludedMask->setTo(Scalar::all(0) );
     }
     for( int leftY = 0; leftY < leftDisp.rows; leftY++ )
@@ -165,7 +197,7 @@ void computeOcclusionBasedMasks( const Mat& leftDisp, const Mat& rightDisp,
                 continue;
             float leftDispVal = leftDisp.at<float>(leftY, leftX);
             int rightX = leftX - cvRound(leftDispVal), rightY = leftY;
-            if( occludedMask && rightX < 0 )
+            if( rightX < 0 && occludedMask )
                 occludedMask->at<uchar>(leftY, leftX) = 255;
             else
             {
@@ -293,7 +325,7 @@ class CV_StereoMatchingTest : public CvTest
 {
 public:
     CV_StereoMatchingTest( const char* testName ) :
-            CvTest( testName, "stereo-matching" ) {}
+            CvTest( testName, "stereo-matching" ) { rmsEps = perEps = 0.01f; }
 protected:
     // assumed that left image is a reference image
     virtual void runStereoMatchingAlgorithm( const Mat& leftImg, const Mat& rightImg,
@@ -314,6 +346,9 @@ protected:
     vector<string> datasetsNames;
     vector<int> dispScaleFactors;
     vector<int> dispUnknownVal;
+
+    float rmsEps;
+    float perEps;
 };
 
 void CV_StereoMatchingTest::run(int)
@@ -363,28 +398,17 @@ void CV_StereoMatchingTest::run(int)
         Mat trueLeftDisp = imread(datasetFullDirName + TRUE_LEFT_DISP_NAME, 0);
         Mat trueRightDisp = imread(datasetFullDirName + TRUE_RIGHT_DISP_NAME, 0);
 
-        if( leftImg.empty() || rightImg.empty() || trueLeftDisp.empty() || trueRightDisp.empty() )
+        if( leftImg.empty() || rightImg.empty() || trueLeftDisp.empty()/* || trueRightDisp.empty()*/ )
         {
-            ts->printf( CvTS::LOG, "images or ground-truth disparities of dataset %s can not be read", datasetsNames[dsi].c_str() );
+            ts->printf( CvTS::LOG, "images or left ground-truth disparities of dataset %s can not be read", datasetsNames[dsi].c_str() );
             code = CvTS::FAIL_INVALID_TEST_DATA;
             continue;
         }
         Mat tmp;
         int dispScaleFactor = dispScaleFactors[dsi];
         trueLeftDisp.convertTo( tmp, CV_32FC1, 1.f/dispScaleFactor ); trueLeftDisp = tmp; tmp.release();
-        trueRightDisp.convertTo( tmp, CV_32FC1, 1.f/dispScaleFactor ); trueRightDisp = tmp; tmp.release();
-
-        /*Mat res(trueLeftDisp.size(), CV_8UC1, Scalar(0) );
-        for( int leftY = 0; leftY < trueLeftDisp.rows; leftY++ )
-        {
-            for( int leftX = 0; leftX < trueLeftDisp.cols; leftX++ )
-            {
-                int lv = cvRound( trueLeftDisp.at<float>(leftY, leftX) );
-                if( leftX - lv >= 0)
-                    res.at<uchar>(leftY, leftX - lv) = lv;
-            }
-        }
-        imwrite( "/home/maria/work/stereo/qqq.jpg", res);*/
+        if( !trueRightDisp.empty() )
+            trueRightDisp.convertTo( tmp, CV_32FC1, 1.f/dispScaleFactor ); trueRightDisp = tmp; tmp.release();
 
         Mat leftDisp, rightDisp;
         runStereoMatchingAlgorithm( leftImg, rightImg, leftDisp, rightDisp, runParamsFS, datasetsNames[dsi] );
@@ -400,22 +424,6 @@ void CV_StereoMatchingTest::run(int)
         resFS << "}"; // "stereo_matching"
 
     ts->set_failed_test_info( code );
-}
-
-Size reduceSize( const Size& sz, int reduceScale )
-{
-    Size newsz;
-    newsz.height = sz.height / reduceScale;
-    newsz.width = sz.width / reduceScale;
-    return newsz;
-}
-
-int getReduceScale( const Size& bigSz, const Size& smallSz )
-{
-    assert( bigSz.height >= smallSz.height );
-    int scale = bigSz.height / smallSz.height;
-    assert( bigSz.width / smallSz.width == scale );
-    return scale;
 }
 
 void calcErrors( const Mat& leftImg, const Mat& rightImg,
@@ -458,30 +466,25 @@ void calcErrors( const Mat& leftImg, const Mat& rightImg,
 }
 
 int CV_StereoMatchingTest::processStereoMatchingResults( FileStorage& fs, int datasetIdx, bool isWrite,
-              const Mat& _leftImg, const Mat& _rightImg,
-              const Mat& _trueLeftDisp, const Mat& _trueRightDisp,
+              const Mat& leftImg, const Mat& rightImg,
+              const Mat& trueLeftDisp, const Mat& trueRightDisp,
               const Mat& leftDisp, const Mat& rightDisp )
 {
     // rightDisp is not used in current test virsion
     int code = CvTS::OK;
     assert( fs.isOpened() );
-    assert( _trueLeftDisp.type() == CV_32FC1 && _trueRightDisp.type() == CV_32FC1 );
+    assert( trueLeftDisp.type() == CV_32FC1 && trueRightDisp.type() == CV_32FC1 );
     assert( leftDisp.type() == CV_32FC1 && rightDisp.type() == CV_32FC1 );
-
-    // resize images (if neaded)
-    int reduceImgScale = getReduceScale( _leftImg.size(), leftDisp.size() );
-    Mat leftImg, rightImg, trueLeftDisp, trueRightDisp;
-    resize( _leftImg, leftImg, reduceSize(_leftImg.size(), reduceImgScale) );
-    resize( _rightImg, rightImg, reduceSize(_rightImg.size(), reduceImgScale) );
-    resize( _trueLeftDisp, trueLeftDisp, reduceSize(_trueLeftDisp.size(), reduceImgScale) );
-    resize( _trueRightDisp, trueRightDisp, reduceSize(_trueRightDisp.size(), reduceImgScale) );
 
     // get masks for unknown ground truth disparity values
     Mat leftUnknMask, rightUnknMask;
     absdiff( trueLeftDisp, Scalar(dispUnknownVal[datasetIdx]), leftUnknMask );
     leftUnknMask = leftUnknMask < numeric_limits<float>::epsilon();
-    absdiff( trueRightDisp, Scalar(dispUnknownVal[datasetIdx]), rightUnknMask );
-    rightUnknMask = rightUnknMask < numeric_limits<float>::epsilon();
+    if( !trueRightDisp.empty() )
+    {
+        absdiff( trueRightDisp, Scalar(dispUnknownVal[datasetIdx]), rightUnknMask );
+        rightUnknMask = rightUnknMask < numeric_limits<float>::epsilon();
+    }
 
     // calculate errors
     vector<float> rmss, badPxlsPercentages;
@@ -492,9 +495,6 @@ int CV_StereoMatchingTest::processStereoMatchingResults( FileStorage& fs, int da
     if( isWrite )
     {
         fs << datasetName << "{";
-        char str[50];
-        sprintf( str, "reduceImgFactor=%d", reduceImgScale );
-        cvWriteComment( fs.fs, str, 0 );
         cvWriteComment( fs.fs, RMS_STR.c_str(), 0 );
         writeErrors( RMS_STR, rmss, &fs );
         cvWriteComment( fs.fs, BAD_PXLS_PERCENTAGE_STR.c_str(), 0 );
@@ -503,7 +503,7 @@ int CV_StereoMatchingTest::processStereoMatchingResults( FileStorage& fs, int da
     }
     else // compare
     {
-        ts->printf( CvTS::LOG, "\nerrors on dataset %s (reduceImgFactor=%d)\n", datasetName.c_str(), reduceImgScale );
+        ts->printf( CvTS::LOG, "\nquality on dataset %s\n", datasetName.c_str() );
         ts->printf( CvTS::LOG, "%s\n", RMS_STR.c_str() );
         writeErrors( RMS_STR, rmss );
         ts->printf( CvTS::LOG, "%s\n", BAD_PXLS_PERCENTAGE_STR.c_str() );
@@ -515,10 +515,10 @@ int CV_StereoMatchingTest::processStereoMatchingResults( FileStorage& fs, int da
         readErrors( fn, RMS_STR, validRmss );
         readErrors( fn, BAD_PXLS_PERCENTAGE_STR, validBadPxlsPercentages );
         int tempCode = compareErrors( rmss, validRmss,
-                      vector<float>(ERROR_KINDS_COUNT, 0.01f), RMS_STR );
+                      vector<float>(ERROR_KINDS_COUNT, rmsEps), RMS_STR );
         code = tempCode==CvTS::OK ? code : tempCode;
         tempCode = compareErrors( badPxlsPercentages, validBadPxlsPercentages,
-                      vector<float>(ERROR_KINDS_COUNT, 0.01f), BAD_PXLS_PERCENTAGE_STR );
+                      vector<float>(ERROR_KINDS_COUNT, perEps), BAD_PXLS_PERCENTAGE_STR );
         code = tempCode==CvTS::OK ? code : tempCode;
     }
     return code;
@@ -600,11 +600,15 @@ protected:
     {
         int ndisp = 7;
         int winSize = 21;
-        if( paramsFS.isOpened() && !datasetName.empty())
+        assert( !datasetName.empty() );
+        if( paramsFS.isOpened() )
         {
             FileNodeIterator fni = paramsFS.getFirstTopLevelNode()[datasetName].begin();
             fni >> ndisp >> winSize;
         }
+        else
+            ts->printf( CvTS::LOG, "%s was tested with default params "
+                        "(ndisp = 7, winSize = 21)\n", datasetName.c_str());
 
         assert( _leftImg.type() == CV_8UC3 && _rightImg.type() == CV_8UC3 );
         Mat leftImg; cvtColor( _leftImg, leftImg, CV_BGR2GRAY );
@@ -623,29 +627,30 @@ class CV_StereoGCTest : public CV_StereoMatchingTest
 {
 public:
     CV_StereoGCTest() :
-            CV_StereoMatchingTest( "stereogc" ) {}
+            CV_StereoMatchingTest( "stereogc" ) { rmsEps = 1.f; perEps = 0.08f; }
 protected:
     virtual void runStereoMatchingAlgorithm( const Mat& _leftImg, const Mat& _rightImg,
                    Mat& leftDisp, Mat& rightDisp, FileStorage& paramsFS, const string& datasetName )
     {
         int ndisp = 20;
         int icount = 2;
-        int reduceImgFactor;
-        if( paramsFS.isOpened() && !datasetName.empty())
+        assert( !datasetName.empty() );
+        if( paramsFS.isOpened() )
         {
             FileNodeIterator fni = paramsFS.getFirstTopLevelNode()[datasetName].begin();
-            fni >> ndisp >> icount >> reduceImgFactor;
+            fni >> ndisp >> icount;
         }
+        else
+            ts->printf( CvTS::LOG, "%s was tested with default params "
+                        "(ndisp = 20, icount = 2)\n", datasetName.c_str());
 
         assert( _leftImg.type() == CV_8UC3 && _rightImg.type() == CV_8UC3 );
         Mat leftImg, rightImg, tmp;
-        cvtColor( _leftImg, tmp, CV_BGR2GRAY );
-        resize( tmp, leftImg, reduceSize(_leftImg.size(),reduceImgFactor) ); tmp.release();
-        cvtColor( _rightImg, tmp, CV_BGR2GRAY );
-        resize( tmp, rightImg, reduceSize(_rightImg.size(),reduceImgFactor) ); tmp.release();
+        cvtColor( _leftImg, leftImg, CV_BGR2GRAY );
+        cvtColor( _rightImg, rightImg, CV_BGR2GRAY );
 
         leftDisp.create( leftImg.size(), CV_16SC1 );
-        rightDisp.create( leftImg.size(), CV_16SC1 );
+        rightDisp.create( rightImg.size(), CV_16SC1 );
 
         CvMat _limg = leftImg, _rimg = rightImg, _ldisp = leftDisp, _rdisp = rightDisp;
         CvStereoGCState *state = cvCreateStereoGCState( ndisp, icount );
