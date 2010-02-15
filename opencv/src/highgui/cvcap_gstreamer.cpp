@@ -165,11 +165,11 @@ bool CvCapture_GStreamer::grabFrame()
 {
 	
 	if(!pipeline)
-		return 0;
+		return false;
 
 	if(gst_app_sink_is_eos(GST_APP_SINK(sink))) {
 		//printf("end of stream\n");
-		return 0;
+		return false;
 	}
 
 	if(buffer)
@@ -188,9 +188,9 @@ bool CvCapture_GStreamer::grabFrame()
 		buffer = gst_app_sink_pull_buffer(GST_APP_SINK(sink));
 	} 
 	if(!buffer)
-		return 0;
+		return false;
 
-	return 1;
+	return true;
 }
 
 //
@@ -199,7 +199,7 @@ bool CvCapture_GStreamer::grabFrame()
 IplImage * CvCapture_GStreamer::retrieveFrame(int)
 {
 	if(!buffer)
-		return 0;
+		return false;
 
 	if(!frame) {
 		gint height, width;
@@ -209,7 +209,7 @@ IplImage * CvCapture_GStreamer::retrieveFrame(int)
 
 		if(!gst_structure_get_int(structure, "width", &width) ||
 	   !gst_structure_get_int(structure, "height", &height))
-			return 0;
+			return false;
 
 		frame = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 3);
 		gst_caps_unref(buff_caps);
@@ -313,7 +313,7 @@ bool CvCapture_GStreamer::open( int type, const char* filename )
 
 //	teststreamer(filename);
 
-//	return 0;
+//	return false;
 
 	if(!isInited) {
 //		printf("gst_init\n");
@@ -332,8 +332,9 @@ bool CvCapture_GStreamer::open( int type, const char* filename )
 			if (uri)
 				uri=g_filename_to_uri(uri,NULL,NULL);
 			else {
-				perror(filename);
-				exit(EXIT_FAILURE);
+				CV_WARN("Error opening file\n");
+				close();
+				return false;
 			}	
 			stream=false;
 		}
@@ -346,8 +347,10 @@ bool CvCapture_GStreamer::open( int type, const char* filename )
 		uridecodebin = gst_element_factory_make ("uridecodebin", NULL);
 		g_object_set(G_OBJECT(uridecodebin),"uri",uri, NULL);
 	}
-	if(!uridecodebin)
-		return 0;
+	if(!uridecodebin) {
+		close();
+		return false;
+	}	
 	color = gst_element_factory_make("ffmpegcolorspace", NULL);
 
 #ifdef HAVE_GSTREAMER_APP
@@ -383,7 +386,7 @@ bool CvCapture_GStreamer::open( int type, const char* filename )
 	if(!gst_element_link(color, sink)) {
 		CV_ERROR(CV_StsError, "GStreamer: cannot link color -> sink\n");
 		gst_object_unref(pipeline);
-		return 0;
+		return false;
 	}
 
 //	printf("linked, pausing\n");
@@ -394,7 +397,7 @@ bool CvCapture_GStreamer::open( int type, const char* filename )
 //		icvHandleMessage(capture);
 //		cvReleaseCapture((CvCapture **)(void *)&capture);
 		gst_object_unref(pipeline);
-		return 0;
+		return false;
 	}
 
 	if(gst_element_set_state(GST_ELEMENT(pipeline), GST_STATE_PLAYING) ==
@@ -403,7 +406,7 @@ bool CvCapture_GStreamer::open( int type, const char* filename )
 //		icvHandleMessage(capture);
 //		cvReleaseCapture((CvCapture **)(void *)&capture);
 		gst_object_unref(pipeline);
-		return 0;
+		return false;
 	}
 
 
@@ -575,12 +578,12 @@ CvVideoWriter* cvCreateVideoWriter_GStreamer(const char* filename, int fourcc, d
         return wrt;
 
     delete wrt;
-    return 0;
+    return false;
 }
 #else
 CvVideoWriter* cvCreateVideoWriter_GStreamer(const char*, int, double, CvSize, int )
 {
-    return 0;
+    return false;
 }
 
 #endif
@@ -606,7 +609,7 @@ double CvCapture_GStreamer::getProperty( int propId )
 
 	if(!pipeline) {
 		CV_WARN("GStreamer: no pipeline");
-		return 0;
+		return false;
 	}
 
 	switch(propId) {
@@ -614,21 +617,21 @@ double CvCapture_GStreamer::getProperty( int propId )
 		format = GST_FORMAT_TIME;
 		if(!gst_element_query_position(pipeline, &format, &value)) {
 			CV_WARN("GStreamer: unable to query position of stream");
-			return 0;
+			return false;
 		}
 		return value * 1e-6; // nano seconds to milli seconds
 	case CV_CAP_PROP_POS_FRAMES:
 		format = GST_FORMAT_DEFAULT;
 		if(!gst_element_query_position(pipeline, &format, &value)) {
 			CV_WARN("GStreamer: unable to query position of stream");
-			return 0;
+			return false;
 		}
 		return value;
 	case CV_CAP_PROP_POS_AVI_RATIO:
 		format = GST_FORMAT_PERCENT;
 		if(!gst_element_query_position(pipeline, &format, &value)) {
 			CV_WARN("GStreamer: unable to query position of stream");
-			return 0;
+			return false;
 		}
 		return ((double) value) / GST_FORMAT_PERCENT_MAX;
 	case CV_CAP_PROP_FRAME_WIDTH:
@@ -640,7 +643,7 @@ double CvCapture_GStreamer::getProperty( int propId )
 		format = GST_FORMAT_DEFAULT;
 		if(!gst_element_query_duration(pipeline, &format, &value)) {
 			CV_WARN("GStreamer: unable to query position of stream");
-			return 0;
+			return false;
 		}
 		return value;
 	case CV_CAP_PROP_FORMAT:
@@ -656,7 +659,7 @@ double CvCapture_GStreamer::getProperty( int propId )
 		CV_WARN("GStreamer: unhandled property");
 		break;
 	}
-	return 0;
+	return false;
 }
 
 bool CvCapture_GStreamer::setProperty( int propId, double value )
@@ -666,7 +669,7 @@ bool CvCapture_GStreamer::setProperty( int propId, double value )
 
 	if(!pipeline) {
 		CV_WARN("GStreamer: no pipeline");
-		return 0;
+		return false;
 	}
 
 	switch(propId) {
@@ -734,7 +737,7 @@ bool CvCapture_GStreamer::setProperty( int propId, double value )
 	default:
 		CV_WARN("GStreamer: unhandled property");
 	}
-	return 0;
+	return false;
 }
 CvCapture* cvCreateCapture_GStreamer(int type, const char* filename )
 {
@@ -744,5 +747,5 @@ CvCapture* cvCreateCapture_GStreamer(int type, const char* filename )
         return capture;
 
     delete capture;
-    return 0;
+    return false;
 }
