@@ -77,31 +77,42 @@ typedef std::basic_string<wchar_t> WString;
 CV_EXPORTS string fromUtf16(const WString& str);
 CV_EXPORTS WString toUtf16(const string& str);
 
-class CV_EXPORTS Exception
+CV_EXPORTS string format( const char* fmt, ... );
+
+class CV_EXPORTS Exception : public std::exception
 {
 public:
-    Exception() { code = 0; line = 0; }
-    Exception(int _code, const string& _err, const string& _func, const string& _file, int _line)
-        : code(_code), err(_err), func(_func), file(_file), line(_line) {}
-    Exception(const Exception& exc)
-        : code(exc.code), err(exc.err), func(exc.func), file(exc.file), line(exc.line) {}
-    Exception& operator = (const Exception& exc)
-    {
-        if( this != &exc )
-        {
-            code = exc.code; err = exc.err; func = exc.func; file = exc.file; line = exc.line;
-        }
-        return *this;
-    }
+	Exception() { code = 0; line = 0; }
+	Exception(int _code, const string& _err, const string& _func, const string& _file, int _line)
+		: code(_code), err(_err), func(_func), file(_file), line(_line) {}
+	Exception(const Exception& exc)
+		: code(exc.code), err(exc.err), func(exc.func), file(exc.file), line(exc.line) {}
+	Exception& operator = (const Exception& exc)
+	{
+		if( this != &exc )
+		{
+		code = exc.code; err = exc.err; func = exc.func; file = exc.file; line = exc.line;
+		}
+		return *this;
+	}
+	virtual ~Exception() throw() {}
 
-    int code;
-    string err;
-    string func;
-    string file;
-    int line;
+	virtual const char *what() const throw()
+	{
+		msg = format("Code: %d\nError: %s\nFunction: %s\nFile: %s\nLine: %d\n",
+		 code, err.c_str(), func.c_str(), file.c_str(), line);
+		return msg.c_str();
+	}
+
+	mutable string msg;
+
+	int code;
+	string err;
+	string func;
+	string file;
+	int line;
 };
 
-CV_EXPORTS string format( const char* fmt, ... );
 CV_EXPORTS void error( const Exception& exc );
 CV_EXPORTS bool setBreakOnError(bool value);
 CV_EXPORTS CvErrorCallback redirectError( CvErrorCallback errCallback,
