@@ -593,7 +593,7 @@ class CV_StereoBMTest : public CV_StereoMatchingTest
 {
 public:
     CV_StereoBMTest() :
-            CV_StereoMatchingTest( "stereobm" ) {}
+            CV_StereoMatchingTest( "stereobm" ) { rmsEps = 2.5f; perEps = 0.1f; }
 protected:
     virtual void runStereoMatchingAlgorithm( const Mat& _leftImg, const Mat& _rightImg,
                    Mat& leftDisp, Mat& rightDisp, FileStorage& paramsFS, const string& datasetName )
