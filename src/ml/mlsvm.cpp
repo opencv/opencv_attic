@@ -1863,8 +1863,7 @@ bool CvSVM::train_auto( const CvMat* _train_data, const CvMat* _responses,
     delete solver;
     solver = 0;
     cvReleaseMemStorage( &temp_storage );
-    if( responses != _responses )
-        cvReleaseMat( &responses );
+    cvReleaseMat( &responses );
     cvReleaseMat( &responses_local );
     cvFree( &samples );
     cvFree( &samples_local );
