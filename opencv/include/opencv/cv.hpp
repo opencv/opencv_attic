@@ -906,6 +906,38 @@ public:
     Ptr<CvStereoBMState> state;
 };
 
+    
+class StereoSGBM
+{
+public:
+    enum { DISP_SHIFT=4, DISP_SCALE = (1<<DISP_SHIFT) };
+    
+    StereoSGBM();
+    StereoSGBM(int minDisparity, int numDisparities, int SADWindowSize,
+               int P1=0, int P2=0, int disp12MaxDiff=0,
+               int preFilterCap=0, int uniquenessRatio=0,
+               int speckleWindowSize=0, int speckleRange=0);
+    virtual ~StereoSGBM();
+    
+    virtual void operator()(const Mat& left, const Mat& right, Mat& disp);
+    
+    int minDisparity;
+    int numberOfDisparities;
+    int SADWindowSize;
+    int preFilterCap;
+    int uniquenessRatio;
+    int P1, P2;
+    int speckleWindowSize;
+    int speckleRange;
+    int disp12MaxDiff;
+    
+protected:
+    Mat buffer;
+};
+
+    
+CV_EXPORTS void filterSpeckles( Mat& img, double newVal, int maxSpeckleSize, double maxDiff, Mat& buf );
+
 CV_EXPORTS void reprojectImageTo3D( const Mat& disparity,
                                     Mat& _3dImage, const Mat& Q,
                                     bool handleMissingValues=false );
