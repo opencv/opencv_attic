@@ -590,7 +590,7 @@ cvPreprocessOrderedResponses( const CvMat* responses, const CvMat* sample_idx, i
 
     if( r_type == CV_32FC1 && CV_IS_MAT_CONT(responses->type) && !sample_idx )
     {
-        out_responses = (CvMat*)responses;
+        out_responses = cvCloneMat( responses );
         EXIT;
     }
 
