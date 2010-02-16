@@ -672,6 +672,7 @@ void CvDTreeTrainData::set_data( const CvMat* _train_data, int _tflag,
     if (_idst)
         cvFree( &_idst );
     cvFree( &int_ptr );
+    cvFree( &pair16u32s_ptr);
     cvReleaseMat( &var_type0 );
     cvReleaseMat( &sample_indices );
     cvReleaseMat( &tmp_map );
