@@ -84,27 +84,22 @@ class CV_EXPORTS Exception : public std::exception
 public:
 	Exception() { code = 0; line = 0; }
 	Exception(int _code, const string& _err, const string& _func, const string& _file, int _line)
-		: code(_code), err(_err), func(_func), file(_file), line(_line) {}
-	Exception(const Exception& exc)
-		: code(exc.code), err(exc.err), func(exc.func), file(exc.file), line(exc.line) {}
-	Exception& operator = (const Exception& exc)
-	{
-		if( this != &exc )
-		{
-		code = exc.code; err = exc.err; func = exc.func; file = exc.file; line = exc.line;
-		}
-		return *this;
-	}
+		: code(_code), err(_err), func(_func), file(_file), line(_line)
+    { formatMessage(); }
+    
 	virtual ~Exception() throw() {}
 
-	virtual const char *what() const throw()
-	{
-		msg = format("Code: %d\nError: %s\nFunction: %s\nFile: %s\nLine: %d\n",
-		 code, err.c_str(), func.c_str(), file.c_str(), line);
-		return msg.c_str();
-	}
+	virtual const char *what() const throw() { return msg.c_str(); }
 
-	mutable string msg;
+    void formatMessage()
+    {
+        if( func.size() > 0 )
+            msg = format("%s:%d: error: (%d) %s in function %s\n", file.c_str(), line, code, err.c_str(), func.c_str());
+        else
+            msg = format("%s:%d: error: (%d) %s\n", file.c_str(), line, code, err.c_str());
+    }
+    
+	string msg;
 
 	int code;
 	string err;
