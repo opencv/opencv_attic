@@ -914,6 +914,8 @@ void CvBoost::clear()
     cvReleaseMat( &weak_eval );
     cvReleaseMat( &subsample_mask );
     cvReleaseMat( &weights );
+    cvReleaseMat( &subtree_weights );
+
     have_subsample = false;
 }
 
@@ -1114,6 +1116,7 @@ CvBoost::update_weights( CvBoostTree* tree )
         cvReleaseMat( &weak_eval );
         cvReleaseMat( &subsample_mask );
         cvReleaseMat( &weights );
+        cvReleaseMat( &subtree_weights );
 
         CV_CALL( orig_response = cvCreateMat( 1, n, CV_32S ));
         CV_CALL( weak_eval = cvCreateMat( 1, n, CV_64F ));
