@@ -860,6 +860,21 @@ struct MinMax16u
         b = std::max(b, t);
     }
 };
+    
+struct MinMax16s
+{
+    typedef short value_type;
+    typedef int arg_type;
+    enum { SIZE = 1 };
+    arg_type load(const short* ptr) { return *ptr; }
+    void store(short* ptr, arg_type val) { *ptr = (short)val; }
+    void operator()(arg_type& a, arg_type& b) const
+    {
+        arg_type t = a;
+        a = std::min(a, b);
+        b = std::max(b, t);
+    }
+};
 
 struct MinMax32f
 {
@@ -909,7 +924,23 @@ struct MinMaxVec16u
     }
 };
 
+    
+struct MinMaxVec16s
+{
+    typedef short value_type;
+    typedef __m128i arg_type;
+    enum { SIZE = 8 };
+    arg_type load(const short* ptr) { return _cv_loadu_si128((const __m128i*)ptr); }
+    void store(short* ptr, arg_type val) { _mm_storeu_si128((__m128i*)ptr, val); }
+    void operator()(arg_type& a, arg_type& b) const
+    {
+        arg_type t = a;
+        a = _mm_min_epi16(a, b);
+        b = _mm_max_epi16(b, t);
+    }
+};    
 
+    
 struct MinMaxVec32f
 {
     typedef float value_type;
@@ -930,6 +961,7 @@ struct MinMaxVec32f
 
 typedef MinMax8u MinMaxVec8u;
 typedef MinMax16u MinMaxVec16u;
+typedef MinMax16s MinMaxVec16s;
 typedef MinMax32f MinMaxVec32f;
 
 #endif
@@ -1182,8 +1214,12 @@ void medianBlur( const Mat& src0, Mat& dst, int ksize )
             medianBlur_SortNet<MinMax8u, MinMaxVec8u>( src, dst, ksize );
         else if( src.depth() == CV_16U )
             medianBlur_SortNet<MinMax16u, MinMaxVec16u>( src, dst, ksize );
+        else if( src.depth() == CV_16S )
+            medianBlur_SortNet<MinMax16s, MinMaxVec16s>( src, dst, ksize );
         else if( src.depth() == CV_32F )
             medianBlur_SortNet<MinMax32f, MinMaxVec32f>( src, dst, ksize );
+        else
+            CV_Error(CV_StsUnsupportedFormat, "");
         return;
     }
 
