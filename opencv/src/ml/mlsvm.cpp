@@ -1810,12 +1810,9 @@ bool CvSVM::train_auto( const CvMat* _train_data, const CvMat* _responses,
                         EXIT;
 
                     // Compute test set error on <test_size> samples
-                    CvMat s = cvMat( 1, var_count, CV_32FC1 );
                     for( i = 0; i < test_size; i++, true_resp += resp_elem_size, test_samples_ptr++ )
                     {
-                        float resp;
-                        s.data.fl = *test_samples_ptr;
-                        resp = predict( &s );
+                        float resp = predict( *test_samples_ptr, var_count );
                         error += is_regression ? powf( resp - *(float*)true_resp, 2 )
                             : ((int)resp != cls_lbls[*(int*)true_resp]);
                     }
@@ -1866,7 +1863,8 @@ bool CvSVM::train_auto( const CvMat* _train_data, const CvMat* _responses,
     delete solver;
     solver = 0;
     cvReleaseMemStorage( &temp_storage );
-    cvReleaseMat( &responses );
+    if( responses != _responses )
+        cvReleaseMat( &responses );
     cvReleaseMat( &responses_local );
     cvFree( &samples );
     cvFree( &samples_local );
@@ -1877,39 +1875,28 @@ bool CvSVM::train_auto( const CvMat* _train_data, const CvMat* _responses,
     return ok;
 }
 
-float CvSVM::predict( const CvMat* sample, bool returnDFVal ) const
+float CvSVM::predict( const float* row_sample, int row_len, bool returnDFVal ) const
 {
-    bool local_alloc = 0;
-    float result = 0;
-    float* row_sample = 0;
-    Qfloat* buffer = 0;
+    assert( kernel );
+    assert( row_sample );
 
-    CV_FUNCNAME( "CvSVM::predict" );
+    int var_count = get_var_count();
+    assert( row_len == var_count );
 
-    __BEGIN__;
-
-    int class_count;
-    int var_count, buf_sz;
-
-    if( !kernel )
-        CV_ERROR( CV_StsBadArg, "The SVM should be trained first" );
-
-    class_count = class_labels ? class_labels->cols :
+    int class_count = class_labels ? class_labels->cols :
                   params.svm_type == ONE_CLASS ? 1 : 0;
 
-    CV_CALL( cvPreparePredictData( sample, var_all, var_idx,
-                                   class_count, 0, &row_sample ));
-
-    var_count = get_var_count();
-
-    buf_sz = sv_total*sizeof(buffer[0]) + (class_count+1)*sizeof(int);
+    float result = 0;
+    bool local_alloc = 0;
+    float* buffer = 0;
+    int buf_sz = sv_total*sizeof(buffer[0]) + (class_count+1)*sizeof(int);
     if( buf_sz <= CV_MAX_LOCAL_SIZE )
     {
-        CV_CALL( buffer = (Qfloat*)cvStackAlloc( buf_sz ));
-        local_alloc = 1;
+        buffer = (float*)cvStackAlloc( buf_sz );
+        local_alloc = true;
     }
     else
-        CV_CALL( buffer = (Qfloat*)cvAlloc( buf_sz ));
+        buffer = (float*)cvAlloc( buf_sz );
 
     if( params.svm_type == EPS_SVR ||
         params.svm_type == NU_SVR ||
@@ -1957,16 +1944,39 @@ float CvSVM::predict( const CvMat* sample, bool returnDFVal ) const
         result = returnDFVal && class_count == 2 ? (float)sum : (float)(class_labels->data.i[k]);
     }
     else
-        CV_ERROR( CV_StsBadArg, "INTERNAL ERROR: Unknown SVM type, "
+        CV_Error( CV_StsBadArg, "INTERNAL ERROR: Unknown SVM type, "
                                 "the SVM structure is probably corrupted" );
+    if( !local_alloc )
+        cvFree( &buffer );
+
+    return result;
+}
+
+float CvSVM::predict( const CvMat* sample, bool returnDFVal ) const
+{
+    float result = 0;
+    float* row_sample = 0;
+
+    CV_FUNCNAME( "CvSVM::predict" );
+
+    __BEGIN__;
+
+    int class_count;
+    
+    if( !kernel )
+        CV_ERROR( CV_StsBadArg, "The SVM should be trained first" );
+
+    class_count = class_labels ? class_labels->cols :
+                  params.svm_type == ONE_CLASS ? 1 : 0;
+
+    CV_CALL( cvPreparePredictData( sample, var_all, var_idx,
+                                   class_count, 0, &row_sample ));
+    result = predict( row_sample, get_var_count(), returnDFVal );
 
     __END__;
 
     if( sample && (!CV_IS_MAT(sample) || sample->data.fl != row_sample) )
         cvFree( &row_sample );
-
-    if( !local_alloc )
-        cvFree( &buffer );
 
     return result;
 }

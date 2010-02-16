@@ -585,6 +585,8 @@ protected:
     virtual void create_kernel();
     virtual void create_solver();
 
+    virtual float predict( const float* row_sample, int row_len, bool returnDFVal=false ) const;
+
     virtual void write_params( CvFileStorage* fs ) const;
     virtual void read_params( CvFileStorage* fs, CvFileNode* node );
 

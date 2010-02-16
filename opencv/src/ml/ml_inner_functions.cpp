@@ -1147,7 +1147,7 @@ cvPreparePredictData( const CvArr* _sample, int dims_all,
     if( CV_IS_MAT(sample) )
     {
         sample_data = sample->data.fl;
-        sample_step = sample->step / sizeof(row_sample[0]);
+        sample_step = CV_IS_MAT_CONT(sample->type) ? 1 : sample->step/sizeof(row_sample[0]);
 
         if( !comp_idx && CV_IS_MAT_CONT(sample->type) && !as_sparse )
             *_row_sample = sample_data;
@@ -1161,12 +1161,8 @@ cvPreparePredictData( const CvArr* _sample, int dims_all,
             else
             {
                 int* comp = comp_idx->data.i;
-                if( !sample_step )
-                    for( i = 0; i < dims_selected; i++ )
-                        row_sample[i] = sample_data[comp[i]];
-                else
-                    for( i = 0; i < dims_selected; i++ )
-                        row_sample[i] = sample_data[sample_step*comp[i]];
+                for( i = 0; i < dims_selected; i++ )
+                    row_sample[i] = sample_data[sample_step*comp[i]];
             }
 
             *_row_sample = row_sample;
