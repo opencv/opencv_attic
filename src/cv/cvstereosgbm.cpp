@@ -50,7 +50,7 @@
 */ 
 
 #include "_cv.h"
-#include <climits>
+#include <limits>
 
 namespace cv
 {

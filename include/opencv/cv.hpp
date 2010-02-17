@@ -907,7 +907,7 @@ public:
 };
 
     
-class StereoSGBM
+class CV_EXPORTS StereoSGBM
 {
 public:
     enum { DISP_SHIFT=4, DISP_SCALE = (1<<DISP_SHIFT) };
