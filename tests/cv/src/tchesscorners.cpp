@@ -158,11 +158,11 @@ void CV_ChessboardDetectorTimingTest::run( int start_from )
         }
                 
         int num_pixels = gray->width*gray->height;
-        float check_chessboard_time = float(_time01 - _time0)/cvGetTickFrequency(); // in us
+        float check_chessboard_time = float(_time01 - _time0)/(float)cvGetTickFrequency(); // in us
         ts->printf(CvTS::LOG, "    cvCheckChessboard time s: %f, us per pixel: %f\n", 
                    check_chessboard_time*1e-6, check_chessboard_time/num_pixels);
         
-        float find_chessboard_time = float(_time1 - _time01)/cvGetTickFrequency();
+        float find_chessboard_time = float(_time1 - _time01)/(float)cvGetTickFrequency();
         ts->printf(CvTS::LOG, "    cvFindChessboard time s: %f, us per pixel: %f\n",
                    find_chessboard_time*1e-6, find_chessboard_time/num_pixels);
 
