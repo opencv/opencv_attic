@@ -53,8 +53,8 @@ using namespace std;
 using namespace cv;
 
 const float EVAL_BAD_THRESH = 1.f;
-const int EVAL_TEXTURELESS_WIDTH = 7;
-const float EVAL_TEXTURELESS_THRESH = 2.f;
+const int EVAL_TEXTURELESS_WIDTH = 3;
+const float EVAL_TEXTURELESS_THRESH = 4.f;
 const float EVAL_DISP_THRESH = 1.f;
 const float EVAL_DISP_GAP = 2.f;
 const int EVAL_DISCONT_WIDTH = 9;
@@ -68,20 +68,21 @@ const int ERROR_KINDS_COUNT = 6;
   Calculate textureless regions of image (regions where the squared horizontal intensity gradient averaged over
   a square window of size=evalTexturelessWidth is below a threshold=evalTexturelessThresh) and textured regions.
 */
-void computeTextureBasedMasks( const Mat& img, Mat* texturelessMask, Mat* texturedMask,
+void computeTextureBasedMasks( const Mat& _img, Mat* texturelessMask, Mat* texturedMask,
              int texturelessWidth = EVAL_TEXTURELESS_WIDTH, float texturelessThresh = EVAL_TEXTURELESS_THRESH )
 {
     if( !texturelessMask && !texturedMask )
         return;
-    if( img.empty() )
+    if( _img.empty() )
         CV_Error( CV_StsBadArg, "img is empty" );
 
-    Mat dxI; Sobel( img, dxI, CV_32F, 1, 0, 3 );
-    Mat dxI2; pow( dxI / 8.f/*normalize*/, 2, dxI2 );
-    if( dxI2.channels() > 1)
+    Mat img = _img;
+    if( _img.channels() > 1)
     {
-        Mat tmp; cvtColor( dxI2, tmp, CV_BGR2GRAY ); dxI2 = tmp;
+        Mat tmp; cvtColor( _img, tmp, CV_BGR2GRAY ); img = tmp;
     }
+    Mat dxI; Sobel( img, dxI, CV_32FC1, 1, 0, 3 );
+    Mat dxI2; pow( dxI / 8.f/*normalize*/, 2, dxI2 );
     Mat avgDxI2; boxFilter( dxI2, avgDxI2, CV_32FC1, Size(texturelessWidth,texturelessWidth) );
 
     if( texturelessMask )
@@ -151,7 +152,6 @@ void computeOcclusionBasedMasks( const Mat& leftDisp, const Mat& _rightDisp,
                              const Mat& leftUnknDispMask = Mat(), const Mat& rightUnknDispMask = Mat(),
                              float dispThresh = EVAL_DISP_THRESH )
 {
-    const float dispDiff = 1.f;
     if( !occludedMask && !nonOccludedMask )
         return;
     checkDispMapsAndUnknDispMasks( leftDisp, _rightDisp, leftUnknDispMask, rightUnknDispMask );
@@ -187,7 +187,7 @@ void computeOcclusionBasedMasks( const Mat& leftDisp, const Mat& _rightDisp,
     if( nonOccludedMask )
     {
         nonOccludedMask->create(leftDisp.size(), CV_8UC1);
-        occludedMask->setTo(Scalar::all(0) );
+        nonOccludedMask->setTo(Scalar::all(0) );
     }
     for( int leftY = 0; leftY < leftDisp.rows; leftY++ )
     {
@@ -204,7 +204,7 @@ void computeOcclusionBasedMasks( const Mat& leftDisp, const Mat& _rightDisp,
                 if( !rightUnknDispMask.empty() && rightUnknDispMask.at<uchar>(rightY,rightX) )
                     continue;
                 float rightDispVal = rightDisp.at<float>(rightY, rightX);
-                if( rightDispVal > leftDispVal + dispDiff )
+                if( rightDispVal > leftDispVal + dispThresh )
                 {
                     if( occludedMask )
                         occludedMask->at<uchar>(leftY, leftX) = 255;
@@ -273,7 +273,7 @@ float dispRMS( const Mat& computedDisp, const Mat& groundTruthDisp, const Mat& m
         checkSizeAndTypeOfMask( mask, computedDisp.size() );
         pointsCount = countNonZero(mask);
     }
-    return 1.f/sqrt((float)pointsCount) * norm(computedDisp, groundTruthDisp, NORM_L2, mask);
+    return 1.f/sqrt((float)pointsCount) * (float)norm(computedDisp, groundTruthDisp, NORM_L2, mask);
 }
 
 /*
@@ -332,7 +332,6 @@ protected:
                    Mat& leftDisp, Mat& rightDisp, FileStorage& paramsFS, const string& datasetName ) = 0;
 
     int readDatasetsInfo();
-    void readDatasetRunParams( FileStorage& fs, const string datasetName ) {}
     void writeErrors( const string& errName, const vector<float>& errors, FileStorage* fs = 0 );
     void readErrors( FileNode& fn, const string& errName, vector<float>& errors );
     int compareErrors( const vector<float>& calcErrors, const vector<float>& validErrors,
@@ -480,10 +479,12 @@ int CV_StereoMatchingTest::processStereoMatchingResults( FileStorage& fs, int da
     Mat leftUnknMask, rightUnknMask;
     absdiff( trueLeftDisp, Scalar(dispUnknownVal[datasetIdx]), leftUnknMask );
     leftUnknMask = leftUnknMask < numeric_limits<float>::epsilon();
+    assert(leftUnknMask.type() == CV_8UC1);
     if( !trueRightDisp.empty() )
     {
         absdiff( trueRightDisp, Scalar(dispUnknownVal[datasetIdx]), rightUnknMask );
         rightUnknMask = rightUnknMask < numeric_limits<float>::epsilon();
+        assert(leftUnknMask.type() == CV_8UC1);
     }
 
     // calculate errors
@@ -578,13 +579,14 @@ int CV_StereoMatchingTest::compareErrors( const vector<float>& calcErrors, const
     vector<float>::const_iterator calcIt = calcErrors.begin(),
                                   validIt = validErrors.begin(),
                                   epsIt = eps.begin();
+    bool ok = true;
     for( int i = 0; i < ERROR_KINDS_COUNT; i++, ++calcIt, ++validIt, ++epsIt )
         if( fabs(*calcIt - *validIt) > *epsIt )
         {
-            ts->printf( CvTS::LOG, "bad accuracy of %s\n", string(ERROR_PREFIXES[i]+errName).c_str());
-            return CvTS::FAIL_BAD_ACCURACY;
+            ts->printf( CvTS::LOG, "bad accuracy of %s\n", string(ERROR_PREFIXES[i]+errName).c_str() );
+            ok = false;
         }
-    return CvTS::OK;
+    return ok ? CvTS::OK : CvTS::FAIL_BAD_ACCURACY;
 }
 
 //----------------------------------- StereoBM test -----------------------------------------------------
