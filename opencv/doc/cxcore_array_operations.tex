@@ -3133,15 +3133,14 @@ Performs singular value decomposition of a real floating-point matrix.
 
 \begin{description}
 \cvarg{A}{Source $\texttt{M} \times \texttt{N}$ matrix}
-\cvarg{W}{Resulting singular value matrix ($\texttt{M} \times \texttt{N}$ or $\texttt{N} \times \texttt{N}$) or vector ($\texttt{N} \times 1$)}
-\cvarg{U}{Optional left orthogonal matrix ($\texttt{M} \times \texttt{M}$ or $\texttt{M} \times \texttt{N}$).
-If \texttt{CV\_SVD\_U\_T} is specified, the number of rows and columns in the preceeding sentence should be swapped.}
-\cvarg{V}{Optional right orthogonal matrix ($\texttt{N} \times \texttt{N}$)}
+\cvarg{W}{Resulting singular value diagonal matrix ($\texttt{M} \times \texttt{N}$ or $\min(\texttt{M}, \texttt{N})  \times \min(\texttt{M}, \texttt{N})$) or $\min(\texttt{M},\texttt{N}) \times 1$ vector of the singular values}
+\cvarg{U}{Optional left orthogonal matrix, $\texttt{M} \times \min(\texttt{M}, \texttt{N})$ (when \texttt{CV\_SVD\_U\_T} is not set), or $\min(\texttt{M},\texttt{N}) \times \texttt{M}$ (when \texttt{CV\_SVD\_U\_T} is set), or $\texttt{M} \times \texttt{M}$ (regardless of \texttt{CV\_SVD\_U\_T} flag).}
+\cvarg{V}{Optional right orthogonal matrix, $\texttt{N} \times \min(\texttt{M}, \texttt{N})$ (when \texttt{CV\_SVD\_V\_T} is not set), or $\min(\texttt{M},\texttt{N}) \times \texttt{N}$ (when \texttt{CV\_SVD\_V\_T} is set), or $\texttt{N} \times \texttt{N}$ (regardless of \texttt{CV\_SVD\_V\_T} flag).}
 \cvarg{flags}{Operation flags; can be 0 or a combination of the following values:
 \begin{description}
-  \cvarg{CV\_SVD\_MODIFY\_A}{enables modification of matrix \texttt{src1} during the operation. It speeds up the processing.}
-  \cvarg{CV\_SVD\_U\_T}{means that the tranposed matrix \texttt{U} is returned. Specifying the flag speeds up the processing.}
-  \cvarg{CV\_SVD\_V\_T}{means that the tranposed matrix \texttt{V} is returned. Specifying the flag speeds up the processing.}
+  \cvarg{CV\_SVD\_MODIFY\_A}{enables modification of matrix \texttt{A} during the operation. It speeds up the processing.}
+  \cvarg{CV\_SVD\_U\_T}{means that the transposed matrix \texttt{U} is returned. Specifying the flag speeds up the processing.}
+  \cvarg{CV\_SVD\_V\_T}{means that the transposed matrix \texttt{V} is returned. Specifying the flag speeds up the processing.}
 \end{description}}
 \end{description}
 
@@ -3163,13 +3162,11 @@ An SVD algorithm is numerically robust and its typical applications include:
 \begin{itemize}
   \item accurate eigenvalue problem solution when matrix \texttt{A}
   is a square, symmetric, and positively defined matrix, for example, when
-  it is a covariance matrix. $W$ in this case will be a vector
-  of eigen values, and $U = V$
-  (thus, only one of $U$ or $V$ needs to be calculated if
-  the eigen vectors are required).
-  \item accurate solution of poor-conditioned linear systems.
-  \item least-squares solution of overdetermined linear systems. This and the preceeding is done by using the \cvCPyCross{Solve} function with the \texttt{CV\_SVD} method.
-  \item accurate calculation of different matrix characteristics such as rank (number of non-zero singular values), condition number (ratio of the largest singular value to the smallest one), and determinant (absolute value of determinant is equal to the product of singular values). 
+  it is a covariance matrix. $W$ in this case will be a vector/matrix
+  of the eigenvalues, and $U = V$ will be a matrix of the eigenvectors.
+  \item accurate solution of a poor-conditioned linear system.
+  \item least-squares solution of an overdetermined linear system. This and the preceeding is done by using the \cvCPyCross{Solve} function with the \texttt{CV\_SVD} method.
+  \item accurate calculation of different matrix characteristics such as the matrix rank (the number of non-zero singular values), condition number (ratio of the largest singular value to the smallest one), and determinant (absolute value of the determinant is equal to the product of singular values). 
 \end{itemize}
 
 \cvCPyFunc{Trace}

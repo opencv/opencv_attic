@@ -208,7 +208,7 @@ Sub-pixel accurate corner locator is based on the observation that every vector 
 where ${DI_{p_i}}$ is the image gradient at the one of the points $p_i$ in a neighborhood of $q$. The value of $q$ is to be found such that $\epsilon_i$ is minimized. A system of equations may be set up with $\epsilon_i$ set to zero:
 
 \[
-\sum_i(DI_{p_i} \cdot {DI_{p_i}}^T) - \sum_i(DI_{p_i} \cdot {DI_{p_i}}^T \cdot p_i)
+\sum_i(DI_{p_i} \cdot {DI_{p_i}}^T) q = \sum_i(DI_{p_i} \cdot {DI_{p_i}}^T \cdot p_i)
 \]
 
 where the gradients are summed within a neighborhood ("search window") of $q$. Calling the first gradient term $G$ and the second gradient term $b$ gives:
@@ -349,21 +349,15 @@ void cvGoodFeaturesToTrack(
 \cvarg{k}{Free parameter of Harris detector; used only if ($\texttt{useHarris} != 0$)}
 \end{description}
 
-The function finds corners with big
-eigenvalues in the image. The function first calculates the minimal
+The function finds the corners with big eigenvalues in the image. The function first calculates the minimal
 eigenvalue for every source image pixel using the \cvCPyCross{CornerMinEigenVal}
 function and stores them in \texttt{eigImage}. Then it performs
-non-maxima suppression (only local maxima in $3\times 3$ neighborhood
-remain). The next step is rejecting the corners with the minimal
-eigenvalue less than
-$\texttt{qualityLevel} \cdot max(\texttt{eigImage}(x,y))$
-.
-Finally, the function ensures that all the corners found are distanced
-enough from one another by considering the corners (the strongest
-corners are considered first) and checking that the distance between
-the newly considered feature and the features considered earlier
-is larger than \texttt{minDistance}. So, the function removes the
-features than are too close to the stronger features.
+non-maxima suppression (only the local maxima in $3\times 3$ neighborhood
+are retained). The next step rejects the corners with the minimal
+eigenvalue less than $\texttt{qualityLevel} \cdot max(\texttt{eigImage}(x,y))$.
+Finally, the function ensures that the distance between any two corners is not smaller than \texttt{minDistance}. The weaker corners (with a smaller min eigenvalue) that are too close to the stronger corners are rejected.
+
+Note that the if the function is called with different values \texttt{A} and \texttt{B} of the parameter \texttt{qualityLevel}, and \texttt{A} > {B}, the array of returned corners with \texttt{qualityLevel=A} will be the prefix of the output corners array with \texttt{qualityLevel=B}.
 
 \cvCPyFunc{HoughLines2}
 Finds lines in a binary image using a Hough transform.
@@ -726,6 +720,8 @@ are retained).
 \end{enumerate}
 
 The function can be used to initialize a point-based tracker of an object.
+
+Note that the if the function is called with different values \texttt{A} and \texttt{B} of the parameter \texttt{qualityLevel}, and \texttt{A} > {B}, the vector of returned corners with \texttt{qualityLevel=A} will be the prefix of the output vector with \texttt{qualityLevel=B}.
 
 See also: \cvCppCross{cornerMinEigenVal}, \cvCppCross{cornerHarris}, \cvCppCross{calcOpticalFlowPyrLK}, \cvCppCross{estimateRigidMotion}, \cvCppCross{PlanarObjectDetector}, \cvCppCross{OneWayDescriptor}
 
