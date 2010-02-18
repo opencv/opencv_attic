@@ -1064,7 +1064,7 @@ void approxPolyDP( const Mat\& curve,\par
                    vector<Point2f>\& approxCurve,\par
                    double epsilon, bool closed );}
 \begin{description}
-\cvarg{curve}{The polygon or curve to approximate. Must be $1 \times N$ or $N \times 1$ matrix of type \texttt{CV\_32SC2} or \texttt{CV\_32FC2}. You can also pass \texttt{vector<Point>} or \texttt{vector<Point2f} that will be automatically converted to the matrix of the proper size and type}
+\cvarg{curve}{The polygon or curve to approximate. Must be $1 \times N$ or $N \times 1$ matrix of type \texttt{CV\_32SC2} or \texttt{CV\_32FC2}. You can also convert \texttt{vector<Point>} or \texttt{vector<Point2f} to the matrix by calling \texttt{Mat(const vector<T>\&)} constructor.}
 \cvarg{approxCurve}{The result of the approximation; The type should match the type of the input curve}
 \cvarg{epsilon}{Specifies the approximation accuracy. This is the maximum distance between the original curve and its approximation}
 \cvarg{closed}{If true, the approximated curve is closed (i.e. its first and last vertices are connected), otherwise it's not}
@@ -1077,7 +1077,7 @@ Calculates a contour perimeter or a curve length.
 
 \cvdefCpp{double arcLength( const Mat\& curve, bool closed );}
 \begin{description}
-\cvarg{curve}{The input vector of 2D points, represented by \texttt{CV\_32SC2} or \texttt{CV\_32FC2} matrix or by \texttt{vector<Point>} or \texttt{vector<Point2f>}}
+\cvarg{curve}{The input vector of 2D points, represented by \texttt{CV\_32SC2} or \texttt{CV\_32FC2} matrix, or by \texttt{vector<Point>} or \texttt{vector<Point2f>} converted to a matrix with \texttt{Mat(const vector<T>\&)} constructor}
 \cvarg{closed}{Indicates, whether the curve is closed or not}
 \end{description}
 
@@ -1088,7 +1088,7 @@ Calculates the up-right bounding rectangle of a point set.
 
 \cvdefCpp{Rect boundingRect( const Mat\& points );}
 \begin{description}
-\cvarg{points}{The input 2D point set, represented by \texttt{CV\_32SC2} or \texttt{CV\_32FC2} matrix or by \texttt{vector<Point>} or \texttt{vector<Point2f>}}
+\cvarg{points}{The input 2D point set, represented by \texttt{CV\_32SC2} or \texttt{CV\_32FC2} matrix, or by \texttt{vector<Point>} or \texttt{vector<Point2f>} converted to the matrix using \texttt{Mat(const vector<T>\&)} constructor.}
 \end{description}
 
 The function calculates and returns the minimal up-right bounding rectangle for the specified point set.
@@ -1138,7 +1138,7 @@ Calculates the contour area
 
 \cvdefCpp{double contourArea( const Mat\& contour );    }
 \begin{description}
-\cvarg{contour}{The contour vertices, represented by \texttt{CV\_32SC2} or \texttt{CV\_32FC2} matrix or by \texttt{vector<Point>} or \texttt{vector<Point2f>}}
+\cvarg{contour}{The contour vertices, represented by \texttt{CV\_32SC2} or \texttt{CV\_32FC2} matrix, or by \texttt{vector<Point>} or \texttt{vector<Point2f>} converted to the matrix using \texttt{Mat(const vector<T>\&)} constructor.}
 \end{description}
 
 The function computes the contour area. Similarly to \cvCppCross{moments} the area is computed using the Green formula, thus the returned area and the number of non-zero pixels, if you draw the contour using \cvCppCross{drawContours} or \cvCppCross{fillPoly}, can be different.
@@ -1171,8 +1171,7 @@ void convexHull( const Mat\& points, vector<Point>\& hull,\par
 void convexHull( const Mat\& points, vector<Point2f>\& hull,\par
                  bool clockwise=false );}
 \begin{description}
-\cvarg{points}{The input 2D point set, represented by \texttt{CV\_32SC2} or \texttt{CV\_32FC2} matrix or by
-\texttt{vector<Point>} or \texttt{vector<Point2f>}}
+\cvarg{points}{The input 2D point set, represented by \texttt{CV\_32SC2} or \texttt{CV\_32FC2} matrix, or by \texttt{vector<Point>} or \texttt{vector<Point2f>} converted to the matrix using \texttt{Mat(const vector<T>\&)} constructor.}
 \cvarg{hull}{The output convex hull. It is either a vector of points that form the hull, or a vector of 0-based point indices of the hull points in the original array (since the set of convex hull points is a subset of the original point set).}
 \cvarg{clockwise}{If true, the output convex hull will be oriented clockwise, otherwise it will be oriented counter-clockwise. Here, the usual screen coordinate system is assumed - the origin is at the top-left corner, x axis is oriented to the right, and y axis is oriented downwards.}
 \end{description}
@@ -1185,8 +1184,7 @@ Fits an ellipse around a set of 2D points.
 
 \cvdefCpp{RotatedRect fitEllipse( const Mat\& points );}
 \begin{description}
-\cvarg{points}{The input 2D point set, represented by \texttt{CV\_32SC2} or \texttt{CV\_32FC2} matrix or by
-\texttt{vector<Point>} or \texttt{vector<Point2f>}}
+\cvarg{points}{The input 2D point set, represented by \texttt{CV\_32SC2} or \texttt{CV\_32FC2} matrix, or by \texttt{vector<Point>} or \texttt{vector<Point2f>} converted to the matrix using \texttt{Mat(const vector<T>\&)} constructor.}
 \end{description}
 
 The function calculates the ellipse that fits best
@@ -1200,8 +1198,8 @@ Fits a line to a 2D or 3D point set.
 void fitLine( const Mat\& points, Vec6f\& line, int distType,\par
               double param, double reps, double aeps );}
 \begin{description}
-\cvarg{points}{The input 2D point set, represented by \texttt{CV\_32SC2} or \texttt{CV\_32FC2} matrix or by
-\texttt{vector<Point>}, \texttt{vector<Point2f>}, \texttt{vector<Point3i>} or \texttt{vector<Point3f>}}
+\cvarg{points}{The input 2D point set, represented by \texttt{CV\_32SC2} or \texttt{CV\_32FC2} matrix, or by
+\texttt{vector<Point>}, \texttt{vector<Point2f>}, \texttt{vector<Point3i>} or \texttt{vector<Point3f>} converted to the matrix by \texttt{Mat(const vector<T>\&)} constructor}
 \cvarg{line}{The output line parameters. In the case of a 2d fitting,
 it is a vector of 4 floats \texttt{(vx, vy,
 x0, y0)} where \texttt{(vx, vy)} is a normalized vector collinear to the
@@ -1247,7 +1245,7 @@ Tests contour convexity.
 
 \cvdefCpp{bool isContourConvex( const Mat\& contour );}
 \begin{description}
-\cvarg{contour}{The tested contour, a matrix of type \texttt{CV\_32SC2} or \texttt{CV\_32FC2}, or \texttt{vector<Point>} or \texttt{vector<Point2f>}}
+\cvarg{contour}{The tested contour, a matrix of type \texttt{CV\_32SC2} or \texttt{CV\_32FC2}, or \texttt{vector<Point>} or \texttt{vector<Point2f>} converted to the matrix using \texttt{Mat(const vector<T>\&)} constructor.}
 \end{description}
 
 The function tests whether the input contour is convex or not. The contour must be simple, i.e. without self-intersections, otherwise the function output is undefined.
@@ -1258,7 +1256,7 @@ Finds the minimum area rotated rectangle enclosing a 2D point set.
 
 \cvdefCpp{RotatedRect minAreaRect( const Mat\& points );}
 \begin{description}
-\cvarg{points}{The input 2D point set, represented by \texttt{CV\_32SC2} or \texttt{CV\_32FC2} matrix or by \texttt{vector<Point>} or \texttt{vector<Point2f>}}
+\cvarg{points}{The input 2D point set, represented by \texttt{CV\_32SC2} or \texttt{CV\_32FC2} matrix, or by \texttt{vector<Point>} or \texttt{vector<Point2f>} converted to the matrix using \texttt{Mat(const vector<T>\&)} constructor.}
 \end{description}
 
 The function calculates and returns the minimum area bounding rectangle (possibly rotated) for the specified point set. See the OpenCV sample \texttt{minarea.c}
@@ -1268,7 +1266,7 @@ Finds the minimum area circle enclosing a 2D point set.
 
 \cvdefCpp{void minEnclosingCircle( const Mat\& points, Point2f\& center, float\& radius );    }
 \begin{description}
-\cvarg{points}{The input 2D point set, represented by \texttt{CV\_32SC2} or \texttt{CV\_32FC2} matrix or by \texttt{vector<Point>} or \texttt{vector<Point2f>}}
+\cvarg{points}{The input 2D point set, represented by \texttt{CV\_32SC2} or \texttt{CV\_32FC2} matrix, or by \texttt{vector<Point>} or \texttt{vector<Point2f>} converted to the matrix using \texttt{Mat(const vector<T>\&)} constructor.}
 \cvarg{center}{The output center of the circle}
 \cvarg{radius}{The output radius of the circle}
 \end{description}
