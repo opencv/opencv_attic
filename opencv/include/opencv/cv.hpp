@@ -995,7 +995,7 @@ public:
 };
 
 
-class CV_EXPORTS StarDetector : CvStarDetectorParams
+class CV_EXPORTS StarDetector : public CvStarDetectorParams
 {
 public:
     StarDetector();
