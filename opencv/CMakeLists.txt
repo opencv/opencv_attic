@@ -144,6 +144,30 @@ if(CMAKE_COMPILER_IS_GNUCXX)
 endif()
 
 # ----------------------------------------------------------------------------
+# Detect Intel ICC compiler -- for -fPIC in 3rdparty ( UNIX ONLY ):
+#  see  include/opencv/cxtypes.h file for related   ICC & CV_ICC defines.
+# NOTE: The system needs to determine if the '-fPIC' option needs to be added
+#  for the 3rdparty static libs being compiled.  The CMakeLists.txt files
+#  in 3rdparty use the CV_ICC definition being set here to determine if
+#  the -fPIC flag should be used.
+# ----------------------------------------------------------------------------
+if(UNIX)
+	if  (__ICL)
+		set(CV_ICC   __ICL)
+	elseif(__ICC)
+		set(CV_ICC   __ICC)
+	elseif(__ECL)
+		set(CV_ICC   __ECL)
+	elseif(__ECC)
+		set(CV_ICC   __ECC)
+	elseif(__INTEL_COMPILER)
+		set(CV_ICC   __INTEL_COMPILER)
+	elseif(CMAKE_C_COMPILER MATCHES "icc")
+		set(CV_ICC   icc_matches_c_compiler)
+	endif()
+endif()
+
+# ----------------------------------------------------------------------------
 #       CHECK FOR SYSTEM LIBRARIES, OPTIONS, ETC..
 # ----------------------------------------------------------------------------
 

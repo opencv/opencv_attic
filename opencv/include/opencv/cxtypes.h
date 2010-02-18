@@ -66,6 +66,8 @@
     #define CV_ICC   __ECL
   #elif defined __ECC
     #define CV_ICC   __ECC
+  #elif defined __INTEL_COMPILER
+    #define CV_ICC   __INTEL_COMPILER
   #endif
 
   #if ((defined WIN32 || defined _WIN32 || defined WIN64 || defined _WIN64) && \
