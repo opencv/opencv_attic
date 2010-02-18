@@ -317,20 +317,22 @@ by the \cvCPyCross{KalmanPredict} and \cvCPyCross{KalmanCorrect} functions
 and released by the \cvCPyCross{ReleaseKalman} function. Normally, the
 structure is used for the standard Kalman filter (notation and the
 formulas below are borrowed from the excellent Kalman tutorial
-\cvCPyCross{Welch95}
+\cite{Welch95})
 
 \[
-x_k=A \cdot x_{k-1}+B \cdot u_k+w_k
+\begin{array}{l}
+x_k=A \cdot x_{k-1}+B \cdot u_k+w_k\\
 z_k=H \cdot x_k+v_k
+\end{array}
 \]
 
 where:
 
 \[
 \begin{array}{l l}
-x_k (x{k-1}) & \text{state of the system at the moment $k$ $(k-1)$ }\\
-z_k & \text{measurement of the system state at the moment $k$}\\
-u_k & \text{external control applied at the moment $k$}
+x_k\;(x_{k-1})& \text{state of the system at the moment \emph{k} (\emph{k-1})}\\
+z_k & \text{measurement of the system state at the moment \emph{k}}\\
+u_k & \text{external control applied at the moment \emph{k}}
 \end{array}
 \]
 
@@ -536,7 +538,7 @@ The function estimates the subsequent stochastic model state by its current stat
 
 \[
 \begin{array}{l}
-x'_k=A \cdot x_k+B \cdot u_k\\
+x'_k=A \cdot x_{k-1}+B \cdot u_k\\
 P'_k=A \cdot P_{k-1}+A^T + Q
 \end{array}
 \]

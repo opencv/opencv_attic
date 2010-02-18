@@ -546,6 +546,33 @@ where $x_c,y_c$ are the coordinates of the gravity center:
 x_c=\frac{M_{10}}{M_{00}}, y_c=\frac{M_{01}}{M_{00}}
 \]
 
+\cvCPyFunc{GetHuMoments}
+Calculates the seven Hu invariants.
+
+\cvdefC{void cvGetHuMoments( const CvMoments* moments,CvHuMoments* hu );}
+\begin{description}
+\cvarg{moments}{The input moments, computed with \cvCPyCross{Moments}}
+\cvarg{hu}{The output Hu invariants}
+\end{description}
+
+The function calculates the seven Hu invariants, see \url{http://en.wikipedia.org/wiki/Image_moment}, that are defined as:
+
+\[ \begin{array}{l}
+hu_1=\eta_{20}+\eta_{02}\\
+hu_2=(\eta_{20}-\eta_{02})^{2}+4\eta_{11}^{2}\\
+hu_3=(\eta_{30}-3\eta_{12})^{2}+ (3\eta_{21}-\eta_{03})^{2}\\
+hu_4=(\eta_{30}+\eta_{12})^{2}+ (\eta_{21}+\eta_{03})^{2}\\
+hu_5=(\eta_{30}-3\eta_{12})(\eta_{30}+\eta_{12})[(\eta_{30}+\eta_{12})^{2}-3(\eta_{21}+\eta_{03})^{2}]+(3\eta_{21}-\eta_{03})(\eta_{21}+\eta_{03})[3(\eta_{30}+\eta_{12})^{2}-(\eta_{21}+\eta_{03})^{2}]\\
+hu_6=(\eta_{20}-\eta_{02})[(\eta_{30}+\eta_{12})^{2}- (\eta_{21}+\eta_{03})^{2}]+4\eta_{11}(\eta_{30}+\eta_{12})(\eta_{21}+\eta_{03})\\
+hu_7=(3\eta_{21}-\eta_{03})(\eta_{21}+\eta_{03})[3(\eta_{30}+\eta_{12})^{2}-(\eta_{21}+\eta_{03})^{2}]-(\eta_{30}-3\eta_{12})(\eta_{21}+\eta_{03})[3(\eta_{30}+\eta_{12})^{2}-(\eta_{21}+\eta_{03})^{2}]\\
+\end{array}
+\]
+
+where $\eta_{ji}$ denote the normalized central moments.
+
+These values are proved to be invariant to the image scale, rotation, and reflection except the seventh one, whose sign is changed by reflection. Of course, this invariance was proved with the assumption of infinite image resolution. In case of a raster images the computed Hu invariants for the original and transformed images will be a bit different.
+
+
 \cvCPyFunc{GetNormalizedCentralMoment}
 Retrieves the normalized central moment from the moment state structure.
 
@@ -852,7 +879,7 @@ Calculates all of the moments up to the third order of a polygon or rasterized s
 
 \cvdefCpp{Moments moments( const Mat\& array, bool binaryImage=false );}
 
-where \texttt{Moments} is defined as:
+where the class \texttt{Moments} is defined as:
 \begin{lstlisting}
 class Moments
 {
@@ -904,10 +931,10 @@ See also: \cvCppCross{contourArea}, \cvCppCross{arcLength}
 \cvCppFunc{HuMoments}
 Calculates the seven Hu invariants.
 
-\cvdefCpp{void HuMoments( const Moments\& moments, double hu[7] );}
+\cvdefCpp{void HuMoments( const Moments\& moments, double h[7] );}
 \begin{description}
 \cvarg{moments}{The input moments, computed with \cvCppCross{moments}}
-\cvarg{hu}{The output Hu invariants}
+\cvarg{h}{The output Hu invariants}
 \end{description}
 
 The function calculates the seven Hu invariants, see \url{http://en.wikipedia.org/wiki/Image_moment}, that are defined as:
@@ -944,9 +971,9 @@ void findContours( const Mat\& image, vector<vector<Point> >\& contours,\par
 \cvarg{hiararchy}{The optional output vector that will contain information about the image topology. It will have as many elements as the number of contours. For each contour \texttt{contours[i]}, the elements \texttt{hierarchy[i][0]}, \texttt{hiearchy[i][1]}, \texttt{hiearchy[i][2]}, \texttt{hiearchy[i][3]} will be set to 0-based indices in \texttt{contours} of the next and previous contours at the same hierarchical level, the first child contour and the parent contour, respectively. If for some contour \texttt{i} there is no next, previous, parent or nested contours, the corresponding elements of \texttt{hierarchy[i]} will be negative}
 \cvarg{mode}{The contour retrieval mode
 \begin{description}
-  \cvarg{RETR\_EXTERNAL}{retrieves only the extreme outer contours; It will set \texttt{hierarchy[i][2]=hierarchy[i][3]=-1} for all the contours}
-  \cvarg{RETR\_LIST}{retrieves all of the contours without establishing any hierarchical relationships}
-  \cvarg{RETR\_CCOMP}{retrieves all of the contours and organizes them into a two-level hierarchy: on the top level are the external boundaries of the components, on the second level are the boundaries of the holes. If inside a hole of a connected component there is another contour, it will still be put on the top level}
+  \cvarg{CV\_RETR\_EXTERNAL}{retrieves only the extreme outer contours; It will set \texttt{hierarchy[i][2]=hierarchy[i][3]=-1} for all the contours}
+  \cvarg{CV\_RETR\_LIST}{retrieves all of the contours without establishing any hierarchical relationships}
+  \cvarg{CV\_RETR\_CCOMP}{retrieves all of the contours and organizes them into a two-level hierarchy: on the top level are the external boundaries of the components, on the second level are the boundaries of the holes. If inside a hole of a connected component there is another contour, it will still be put on the top level}
   \cvarg{CV\_RETR\_TREE}{retrieves all of the contours and reconstructs the full hierarchy of nested contours. This full hierarchy is built and shown in OpenCV \texttt{contours.c} demo}
 \end{description}}
 \cvarg{method}{The contour approximation method.

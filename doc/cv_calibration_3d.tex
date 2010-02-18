@@ -361,7 +361,7 @@ CvStereoBMState* cvCreateStereoBMState( int preset=CV\_STEREO\_BM\_BASIC,
 \cvarg{numberOfDisparities}{The number of disparities. If the parameter is 0, it is taken from the preset, otherwise the supplied value overrides the one from preset.}
 \end{description}
 
-The function creates the stereo correspondence structure and initializes it. It is possible to override any of the parameters at any time between the calls to \cvCPyCross{cvFindStereoCorrespondenceBM}.
+The function creates the stereo correspondence structure and initializes it. It is possible to override any of the parameters at any time between the calls to \cvCPyCross{FindStereoCorrespondenceBM}.
 
 \cvCPyFunc{CreateStereoGCState}
 Creates the state of graph cut-based stereo correspondence algorithm.
@@ -378,7 +378,7 @@ CvStereoGCState* cvCreateStereoGCState( int numberOfDisparities,
 \cvarg{maxIters}{Maximum number of iterations. On each iteration all possible (or reasonable) alpha-expansions are tried. The algorithm may terminate earlier if it could not find an alpha-expansion that decreases the overall cost function value. See \href{\#Kolmogorov03}{[Kolmogorov03]}  for details. }
 \end{description}
 
-The function creates the stereo correspondence structure and initializes it. It is possible to override any of the parameters at any time between the calls to \cvCPyCross{cvFindStereoCorrespondenceGC}.
+The function creates the stereo correspondence structure and initializes it. It is possible to override any of the parameters at any time between the calls to \cvCPyCross{FindStereoCorrespondenceGC}.
 
 \cvCPyFunc{CvStereoBMState}
 The structure for block matching stereo correspondence algorithm.
