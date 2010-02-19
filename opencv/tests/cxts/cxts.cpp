@@ -1573,13 +1573,14 @@ int CvTS::run( int argc, char** argv )
 void CvTS::print_help()
 {
     ::printf(
-        "Usage: <test_executable> [{-h|--help}][-l] [-r] [-w] [-t] [-f <config_name>] [-d <data_path>] [-O{0|1}]\n\n"
+        "Usage: <test_executable> [{-h|--help}][-l] [-r] [-w] [-t] [-f <config_name>] [-d <data_path>] [-O{0|1}] [-tn <test_name>]\n\n"
         "-d - specify the test data path\n"
         "-f - use parameters from the provided XML/YAML config file\n"
         "     instead of the default parameters\n"
         "-h or --help - print this help information\n"
         "-l - list all the registered tests or subset of the tests,\n"
         "     selected in the config file, and exit\n"
+        "-tn - only run a specific test\n"
         "-nc - do not use colors in the console output\n"     
         "-O{0|1} - disable/enable on-fly detection of IPP and other\n"
         "          supported optimized libs. It's enabled by default\n"
