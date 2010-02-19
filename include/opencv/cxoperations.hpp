@@ -197,11 +197,15 @@ template<> inline unsigned saturate_cast<unsigned>(double v) { return cvRound(v)
 
 /////////////////////////// short vector (Vec) /////////////////////////////
 
-template<typename _Tp, int cn> inline Vec<_Tp, cn>::Vec() {}
+template<typename _Tp, int cn> inline Vec<_Tp, cn>::Vec()
+{
+    for(int i = 0; i < cn; i++) val[i] = _Tp(0);
+}
+
 template<typename _Tp, int cn> inline Vec<_Tp, cn>::Vec(_Tp v0)
 {
     val[0] = v0;
-    for(int i = 1; i < cn; i++) val[i] = _Tp();
+    for(int i = 1; i < cn; i++) val[i] = _Tp(0);
 }
 
 template<typename _Tp, int cn> inline Vec<_Tp, cn>::Vec(_Tp v0, _Tp v1)

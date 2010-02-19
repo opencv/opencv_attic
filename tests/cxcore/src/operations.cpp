@@ -788,6 +788,12 @@ bool CV_OperationsTest::operations1()
         Vec<double, 8> v8d(1, 1, 1, 1, 1, 1, 1, 1);
         Vec<double, 9> v9d(1, 1, 1, 1, 1, 1, 1, 1, 1);
         Vec<double,10> v10d(1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
+
+        Vec<double,10> v10dzero;
+        for (int ii = 0; ii < 10; ++ii) {
+            if (!v10dzero[ii] == 0.0)
+                throw test_excep();
+        }
     }
     catch(const test_excep&)
     {
