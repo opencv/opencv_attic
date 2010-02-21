@@ -291,11 +291,18 @@ static void icvFindStereoCorrespondenceBM_SSE2( const CvMat* left, const CvMat* 
         for( y = -dy0; y < height + dy1; y++, hsad += ndisp, cbuf += ndisp, lptr += sstep, rptr += sstep )
         {
             int lval = lptr[0];
-            for( d = 0; d < ndisp; d++ )
+            __m128i lv = _mm_set1_epi8((char)lval), z = _mm_setzero_si128();
+            for( d = 0; d < ndisp; d += 16 )
             {
-                int diff = abs(lval - rptr[d]);
-                cbuf[d] = (uchar)diff;
-                hsad[d] = (ushort)(hsad[d] + diff);
+                __m128i rv = _mm_loadu_si128((const __m128i*)(rptr + d));
+                __m128i hsad_l = _mm_load_si128((__m128i*)(hsad + d));
+                __m128i hsad_h = _mm_load_si128((__m128i*)(hsad + d + 8));
+                __m128i diff = _mm_adds_epu8(_mm_subs_epu8(lv, rv), _mm_subs_epu8(rv, lv));
+                _mm_store_si128((__m128i*)(cbuf + d), diff);
+                hsad_l = _mm_add_epi16(hsad_l, _mm_unpacklo_epi8(diff,z));
+                hsad_h = _mm_add_epi16(hsad_h, _mm_unpackhi_epi8(diff,z));
+                _mm_store_si128((__m128i*)(hsad + d), hsad_l);
+                _mm_store_si128((__m128i*)(hsad + d + 8), hsad_h);
             }
             htext[y] += tab[lval];
         }
