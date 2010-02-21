@@ -167,18 +167,70 @@ icvPrefilterXSobel( const CvMat* src, CvMat* dst, int ftzero )
     
     for( x = 0; x < TABSZ; x++ )
         tab[x] = (uchar)(x - OFS < -ftzero ? 0 : x - OFS > ftzero ? ftzero*2 : x - OFS + ftzero);
+    uchar val0 = tab[0 + OFS];
     
-    for( y = 0; y < size.height; y++ )
+#if CV_SSE2
+    __m128i z = _mm_setzero_si128(), ftz = _mm_set1_epi16(ftzero), ftz2 = _mm_set1_epi8(CV_CAST_8U(ftzero*2));
+#endif
+    
+    for( y = 0; y < size.height-1; y += 2 )
     {
         const uchar* srow1 = src->data.ptr + y*src->step;
         const uchar* srow0 = y > 0 ? srow1 - src->step : size.height > 1 ? srow1 + src->step : srow1;
         const uchar* srow2 = y < size.height-1 ? srow1 + src->step : size.height > 1 ? srow1 - src->step : srow1;
+        const uchar* srow3 = y < size.height-2 ? srow1 + src->step*2 : srow1;
+        uchar* dptr0 = dst->data.ptr + dst->step*y;
+        uchar* dptr1 = dptr0 + dst->step;
+        
+        dptr0[0] = dptr0[size.width-1] = dptr1[0] = dptr1[size.width-1] = val0;
+        
+        x = 1;
+        
+    #if CV_SSE2
+        for( ; x <= size.width-9; x += 8 )
+        {
+            __m128i c0 = _mm_unpacklo_epi8(_mm_loadl_epi64((__m128i*)(srow0 + x - 1)), z);
+            __m128i c1 = _mm_unpacklo_epi8(_mm_loadl_epi64((__m128i*)(srow1 + x - 1)), z);
+            __m128i d0 = _mm_unpacklo_epi8(_mm_loadl_epi64((__m128i*)(srow0 + x + 1)), z);
+            __m128i d1 = _mm_unpacklo_epi8(_mm_loadl_epi64((__m128i*)(srow1 + x + 1)), z);
+
+            d0 = _mm_sub_epi16(d0, c0);
+            d1 = _mm_sub_epi16(d1, c1);
+            
+            __m128i c2 = _mm_unpacklo_epi8(_mm_loadl_epi64((__m128i*)(srow2 + x - 1)), z);
+            __m128i c3 = _mm_unpacklo_epi8(_mm_loadl_epi64((__m128i*)(srow2 + x - 1)), z);
+            __m128i d2 = _mm_unpacklo_epi8(_mm_loadl_epi64((__m128i*)(srow2 + x + 1)), z);
+            __m128i d3 = _mm_unpacklo_epi8(_mm_loadl_epi64((__m128i*)(srow2 + x + 1)), z);
+            
+            d2 = _mm_sub_epi16(d2, c2);
+            d3 = _mm_sub_epi16(d3, c3);
+            
+            __m128i v0 = _mm_add_epi16(d0, _mm_add_epi16(d2, _mm_add_epi16(d1, d1)));
+            __m128i v1 = _mm_add_epi16(d1, _mm_add_epi16(d3, _mm_add_epi16(d2, d2)));
+            v0 = _mm_packus_epi16(_mm_add_epi16(v0, ftz), _mm_add_epi16(v1, ftz));
+            v0 = _mm_min_epu8(v0, ftz2);
+            
+            _mm_storel_epi64((__m128i*)(dptr0 + x), v0);
+            _mm_storel_epi64((__m128i*)(dptr1 + x), _mm_unpackhi_epi64(v0, v0));
+        }
+    #endif
+        
+        for( ; x < size.width-1; x++ )
+        {
+            int d0 = srow0[x+1] - srow0[x-1], d1 = srow1[x+1] - srow1[x-1],
+                d2 = srow2[x+1] - srow2[x-1], d3 = srow3[x+1] - srow3[x-1];
+            int v0 = tab[d0 + d1*2 + d2 + OFS];
+            int v1 = tab[d1 + d2*2 + d3 + OFS];
+            dptr0[x] = (uchar)v0;
+            dptr1[x] = (uchar)v1;
+        }
+    }
+    
+    for( ; y < size.height; y++ )
+    {
         uchar* dptr = dst->data.ptr + dst->step*y;
-        
-        dptr[0] = dptr[size.width-1] = tab[0 + OFS];
-        
-        for( x = 1; x < size.width-1; x++ )
-            dptr[x] = tab[(srow1[x+1] - srow1[x-1])*2 + srow2[x+1] - srow2[x-1] + srow0[x+1] - srow0[x-1] + OFS];
+        for( x = 0; x < size.width; x++ )
+            dptr[x] = val0;
     }
 }
 
@@ -187,12 +239,11 @@ static const int DISPARITY_SHIFT = 4;
 
 #if CV_SSE2
 static void icvFindStereoCorrespondenceBM_SSE2( const CvMat* left, const CvMat* right,
-                                    CvMat* disp, const CvMat* dbmin,
-                                    const CvMat* dbmax, CvStereoBMState* state,
-                                    int realSADWin, uchar* buf, int _dy0, int _dy1 )
+                                    CvMat* disp, CvStereoBMState* state,
+                                    uchar* buf, int _dy0, int _dy1 )
 {
     int x, y, d;
-    int wsz = realSADWin, wsz2 = wsz/2;
+    int wsz = state->SADWindowSize, wsz2 = wsz/2;
     int dy0 = MIN(_dy0, wsz2+1), dy1 = MIN(_dy1, wsz2+1);
     int ndisp = state->numberOfDisparities;
     int mindisp = state->minDisparity;
@@ -202,9 +253,8 @@ static void icvFindStereoCorrespondenceBM_SSE2( const CvMat* left, const CvMat* 
     int width1 = width - rofs - ndisp + 1;
     int ftzero = state->preFilterCap;
     int textureThreshold = state->textureThreshold;
-    int uniquenessRatio = state->uniquenessRatio;
+    int uniquenessRatio = state->uniquenessRatio*256/100;
     short FILTERED = (short)((mindisp - 1) << DISPARITY_SHIFT);
-    int DELTA = (state->numberOfDisparities - 1 - state->minDisparity) << DISPARITY_SHIFT;
 
     ushort *sad, *hsad0, *hsad, *hsad_sub;
     int *htext;
@@ -306,8 +356,17 @@ static void icvFindStereoCorrespondenceBM_SSE2( const CvMat* left, const CvMat* 
         
         hsad = hsad0 + (1 - dy0)*ndisp;
         for( y = 1 - dy0; y < wsz2; y++, hsad += ndisp )
-            for( d = 0; d < ndisp; d++ )
-                sad[d] = (ushort)(sad[d] + hsad[d]);
+            for( d = 0; d < ndisp; d += 16 )
+            {
+                __m128i s0 = _mm_load_si128((__m128i*)(sad + d));
+                __m128i s1 = _mm_load_si128((__m128i*)(sad + d + 8));
+                __m128i t0 = _mm_load_si128((__m128i*)(hsad + d));
+                __m128i t1 = _mm_load_si128((__m128i*)(hsad + d + 8));
+                s0 = _mm_add_epi16(s0, t0);
+                s1 = _mm_add_epi16(s1, t1);
+                _mm_store_si128((__m128i*)(sad + d), s0);
+                _mm_store_si128((__m128i*)(sad + d + 8), s1);
+            }
         int tsum = 0;
         for( y = -wsz2-1; y < wsz2; y++ )
             tsum += htext[y];
@@ -319,89 +378,104 @@ static void icvFindStereoCorrespondenceBM_SSE2( const CvMat* left, const CvMat* 
             hsad = hsad0 + MIN(y + wsz2, height+dy1-1)*ndisp;
             hsad_sub = hsad0 + MAX(y - wsz2 - 1, -dy0)*ndisp;
             __m128i minsad8 = _mm_set1_epi16(SHRT_MAX);
-            __m128i mind8 = _mm_set1_epi16(-1), d8 = d0_8, mask;
+            __m128i mind8 = _mm_set1_epi16(0), d8 = d0_8, mask;
 
-            for( d = 0; d < ndisp; d += 8 )
+            for( d = 0; d < ndisp; d += 16 )
             {
-                __m128i v0 = _mm_load_si128((__m128i*)(hsad_sub + d));
-                __m128i v1 = _mm_load_si128((__m128i*)(hsad + d));
-                __m128i sad8 = _mm_load_si128((__m128i*)(sad + d));
-                sad8 = _mm_sub_epi16(sad8, v0);
-                sad8 = _mm_add_epi16(sad8, v1);
-
-                mask = _mm_cmpgt_epi16(minsad8, sad8);
-                _mm_store_si128((__m128i*)(sad + d), sad8);
-                minsad8 = _mm_min_epi16(minsad8, sad8);
-                mind8 = _mm_xor_si128(mind8,_mm_and_si128(_mm_xor_si128(d8,mind8),mask));
+                __m128i u0 = _mm_load_si128((__m128i*)(hsad_sub + d));
+                __m128i u1 = _mm_load_si128((__m128i*)(hsad + d));
+                                
+                __m128i v0 = _mm_load_si128((__m128i*)(hsad_sub + d + 8));
+                __m128i v1 = _mm_load_si128((__m128i*)(hsad + d + 8));
+                
+                __m128i usad8 = _mm_load_si128((__m128i*)(sad + d));
+                __m128i vsad8 = _mm_load_si128((__m128i*)(sad + d + 8));
+                
+                u1 = _mm_sub_epi16(u1, u0);
+                v1 = _mm_sub_epi16(v1, v0);
+                usad8 = _mm_add_epi16(usad8, u1);
+                vsad8 = _mm_add_epi16(vsad8, v1);
+                
+                mask = _mm_cmpgt_epi16(minsad8, usad8);
+                minsad8 = _mm_min_epi16(minsad8, usad8);
+                mind8 = _mm_max_epi16(mind8, _mm_and_si128(mask, d8));
+                                
+                _mm_store_si128((__m128i*)(sad + d), usad8);
+                _mm_store_si128((__m128i*)(sad + d + 8), vsad8);
+                
+                mask = _mm_cmpgt_epi16(minsad8, vsad8);
+                minsad8 = _mm_min_epi16(minsad8, vsad8);
+                
+                d8 = _mm_add_epi16(d8, dd_8);
+                mind8 = _mm_max_epi16(mind8, _mm_and_si128(mask, d8));
                 d8 = _mm_add_epi16(d8, dd_8);
             }
 
+            tsum += htext[y + wsz2] - htext[y - wsz2 - 1];
+            if( tsum < textureThreshold )
+            {
+                dptr[y*dstep] = FILTERED;
+                continue;
+            }
+            
             __m128i minsad82 = _mm_unpackhi_epi64(minsad8, minsad8);
             __m128i mind82 = _mm_unpackhi_epi64(mind8, mind8);
             mask = _mm_cmpgt_epi16(minsad8, minsad82);
             mind8 = _mm_xor_si128(mind8,_mm_and_si128(_mm_xor_si128(mind82,mind8),mask));
             minsad8 = _mm_min_epi16(minsad8, minsad82);
-
+             
             minsad82 = _mm_shufflelo_epi16(minsad8, _MM_SHUFFLE(3,2,3,2));
             mind82 = _mm_shufflelo_epi16(mind8, _MM_SHUFFLE(3,2,3,2));
             mask = _mm_cmpgt_epi16(minsad8, minsad82);
             mind8 = _mm_xor_si128(mind8,_mm_and_si128(_mm_xor_si128(mind82,mind8),mask));
             minsad8 = _mm_min_epi16(minsad8, minsad82);
-
+             
             minsad82 = _mm_shufflelo_epi16(minsad8, 1);
             mind82 = _mm_shufflelo_epi16(mind8, 1);
             mask = _mm_cmpgt_epi16(minsad8, minsad82);
             mind8 = _mm_xor_si128(mind8,_mm_and_si128(_mm_xor_si128(mind82,mind8),mask));
             mind = (short)_mm_cvtsi128_si32(mind8);
             minsad = sad[mind];
-            tsum += htext[y + wsz2] - htext[y - wsz2 - 1];
-            if( tsum < textureThreshold )
-            {
-                if( !dbmin )
-                    dptr[y*dstep] = FILTERED;
-                continue;
-            }
-
+             
             if( uniquenessRatio > 0 )
             {
-                int thresh = minsad + (minsad * uniquenessRatio/100);
+                int thresh = minsad + ((minsad * uniquenessRatio) >> 8);
                 __m128i thresh8 = _mm_set1_epi16((short)(thresh + 1));
                 __m128i d1 = _mm_set1_epi16((short)(mind-1)), d2 = _mm_set1_epi16((short)(mind+1));
-                __m128i d8 = d0_8;
+                __m128i dd_16 = _mm_add_epi16(dd_8, dd_8), d8 = _mm_sub_epi16(d0_8, dd_16);
 
-                for( d = 0; d < ndisp; d += 8 )
+                for( d = 0; d < ndisp; d += 16 )
                 {
-                    __m128i sad8 = _mm_load_si128((__m128i*)(sad + d));
-                    __m128i mask = _mm_cmpgt_epi16( thresh8, sad8 );
+                    __m128i usad8 = _mm_load_si128((__m128i*)(sad + d));
+                    __m128i vsad8 = _mm_load_si128((__m128i*)(sad + d + 8));
+                    mask = _mm_cmpgt_epi16( thresh8, _mm_min_epi16(usad8,vsad8));
+                    d8 = _mm_add_epi16(d8, dd_16);
+                    if( !_mm_movemask_epi8(mask) )
+                        continue;
+                    mask = _mm_cmpgt_epi16( thresh8, usad8);
                     mask = _mm_and_si128(mask, _mm_or_si128(_mm_cmpgt_epi16(d1,d8), _mm_cmpgt_epi16(d8,d2)));
                     if( _mm_movemask_epi8(mask) )
                         break;
-                    d8 = _mm_add_epi16(d8, dd_8);
+                    __m128i t8 = _mm_add_epi16(d8, dd_8);
+                    mask = _mm_cmpgt_epi16( thresh8, vsad8);
+                    mask = _mm_and_si128(mask, _mm_or_si128(_mm_cmpgt_epi16(d1,t8), _mm_cmpgt_epi16(t8,d2)));
+                    if( _mm_movemask_epi8(mask) )
+                        break;
                 }
                 if( d < ndisp )
                 {
-                    if( !dbmin )
-                        dptr[y*dstep] = FILTERED;
+                    dptr[y*dstep] = FILTERED;
                     continue;
                 }
             }
-            
-            if( dbmin )
-            {
-                int maxval = ((const short*)(dbmin->data.ptr + dbmin->step*y))[x];
-                int minval = ((const short*)(dbmax->data.ptr + dbmax->step*y))[x];
-                minval = (DELTA - minval) >> DISPARITY_SHIFT;
-                maxval = (DELTA - maxval + (1<<DISPARITY_SHIFT)-1) >> DISPARITY_SHIFT;
-                if( d < minval || d > maxval )
-                    continue;
-            }
 
+            if( 0 < mind && mind < ndisp - 1 )
             {
-            sad[-1] = sad[1];
-            sad[ndisp] = sad[ndisp-2];
-            int p = sad[mind+1], n = sad[mind-1], d = p + n - 2*sad[mind];
-            dptr[y*dstep] = (short)(((ndisp - mind - 1 + mindisp)*256 + (d != 0 ? (p-n)*128/d : 0) + 15) >> 4);
+                int p = sad[mind+1], n = sad[mind-1], d = p + n - 2*sad[mind];
+                dptr[y*dstep] = (short)(((ndisp - mind - 1 + mindisp)*256 + (d != 0 ? (p-n)*128/d : 0) + 15) >> 4);
             }
+            else
+                dptr[y*dstep] = (ndisp - mind - 1)*16;
         }
     }
 }
@@ -409,12 +483,11 @@ static void icvFindStereoCorrespondenceBM_SSE2( const CvMat* left, const CvMat* 
 
 static void
 icvFindStereoCorrespondenceBM( const CvMat* left, const CvMat* right,
-                               CvMat* disp, const CvMat* dbmin,
-                               const CvMat* dbmax, CvStereoBMState* state,
-                               int realSADWin, uchar* buf, int _dy0, int _dy1 )
+                               CvMat* disp, const CvStereoBMState* state,
+                               uchar* buf, int _dy0, int _dy1 )
 {
     int x, y, d;
-    int wsz = realSADWin, wsz2 = wsz/2;
+    int wsz = state->SADWindowSize, wsz2 = wsz/2;
     int dy0 = MIN(_dy0, wsz2+1), dy1 = MIN(_dy1, wsz2+1);
     int ndisp = state->numberOfDisparities;
     int mindisp = state->minDisparity;
@@ -426,7 +499,6 @@ icvFindStereoCorrespondenceBM( const CvMat* left, const CvMat* right,
     int textureThreshold = state->textureThreshold;
     int uniquenessRatio = state->uniquenessRatio;
     short FILTERED = (short)((mindisp - 1) << DISPARITY_SHIFT);
-    int DELTA = (state->numberOfDisparities - 1 - state->minDisparity) << DISPARITY_SHIFT;
 
     int *sad, *hsad0, *hsad, *hsad_sub, *htext;
     uchar *cbuf0, *cbuf;
@@ -542,8 +614,7 @@ icvFindStereoCorrespondenceBM( const CvMat* left, const CvMat* right,
             tsum += htext[y + wsz2] - htext[y - wsz2 - 1];
             if( tsum < textureThreshold )
             {
-                if( !dbmin )
-                    dptr[y*dstep] = FILTERED;
+                dptr[y*dstep] = FILTERED;
                 continue;
             }
 
@@ -557,22 +628,11 @@ icvFindStereoCorrespondenceBM( const CvMat* left, const CvMat* right,
                 }
                 if( d < ndisp )
                 {
-                    if( !dbmin )
-                        dptr[y*dstep] = FILTERED;
+                    dptr[y*dstep] = FILTERED;
                     continue;
                 }
             }
 
-            if( dbmin )
-            {
-                int maxval = ((const short*)(dbmin->data.ptr + dbmin->step*y))[x];
-                int minval = ((const short*)(dbmax->data.ptr + dbmax->step*y))[x];
-                minval = (DELTA - minval) >> DISPARITY_SHIFT;
-                maxval = (DELTA - maxval + (1<<DISPARITY_SHIFT)-1) >> DISPARITY_SHIFT;
-                if( d < minval || d > maxval )
-                    continue;
-            }
-            
             {
             sad[-1] = sad[1];
             sad[ndisp] = sad[ndisp-2];
@@ -693,7 +753,7 @@ CV_IMPL void cvFindStereoCorrespondenceBM( const CvArr* leftarr, const CvArr* ri
     int bufSize0, bufSize1, bufSize2 = 0, bufSize, width, width1, height;
     int wsz, ndisp, mindisp, lofs, rofs, disptype;
     int i, n = cvGetNumThreads();
-    int FILTERED, SMALL_WIN_SIZE;
+    int FILTERED;
 
     if( !CV_ARE_SIZES_EQ(left0, right0) ||
         !CV_ARE_SIZES_EQ(disp, left0) )
@@ -756,7 +816,7 @@ CV_IMPL void cvFindStereoCorrespondenceBM( const CvArr* leftarr, const CvArr* ri
     
     if( lofs >= width || rofs >= width || width1 < 1 )
     {
-        cvSet( disp, cvScalarAll(FILTERED*(disptype == CV_32S ? 1 : 1./(1 << DISPARITY_SHIFT))) );
+        cvSet( disp, cvScalarAll(FILTERED*(disptype < CV_32F ? 1 : 1./(1 << DISPARITY_SHIFT))) );
         return;
     }
               
@@ -824,82 +884,16 @@ CV_IMPL void cvFindStereoCorrespondenceBM( const CvArr* leftarr, const CvArr* ri
     #if CV_SSE2
         if( state->preFilterCap <= 31 && state->SADWindowSize <= 21 )
         {
-            icvFindStereoCorrespondenceBM_SSE2( &left_i, &right_i, &disp_i, 0, 0, state,
-                state->SADWindowSize, state->slidingSumBuf->data.ptr + thread_id*bufSize0,
+            icvFindStereoCorrespondenceBM_SSE2( &left_i, &right_i, &disp_i, state,
+                state->slidingSumBuf->data.ptr + thread_id*bufSize0,
                 row0, left.rows-row1 );
         }
         else
     #endif
         {
-            icvFindStereoCorrespondenceBM( &left_i, &right_i, &disp_i, 0, 0, state,
-                state->SADWindowSize, state->slidingSumBuf->data.ptr + thread_id*bufSize0,
+            icvFindStereoCorrespondenceBM( &left_i, &right_i, &disp_i, state,
+                state->slidingSumBuf->data.ptr + thread_id*bufSize0,
                 row0, left.rows-row1 );
-        }
-    }
-
-    SMALL_WIN_SIZE = MAX((state->SADWindowSize/2)|1, 9);
-
-    if( state->trySmallerWindows && SMALL_WIN_SIZE < state->SADWindowSize )
-    {
-        if( !state->dbmin || !CV_ARE_SIZES_EQ(state->dbmin, disp) )
-        {
-            cvReleaseMat( &state->dbmin );
-            cvReleaseMat( &state->dbmax );
-            state->dbmin = cvCreateMat( disp->rows, disp->cols, CV_16SC1 );
-            state->dbmax = cvCreateMat( disp->rows, disp->cols, CV_16SC1 );
-        }
-        
-        for( i = 0; i < disp->rows; i++ )
-        {
-            int j;
-            short* minptr = (short*)(state->dbmin->data.ptr + state->dbmin->step*i);
-            short* maxptr = (short*)(state->dbmax->data.ptr + state->dbmax->step*i);
-
-            for( j = 0; j < disp->cols; j++ )
-            {
-                short dval = ((const short*)(disp->data.ptr + disp->step*i))[j];
-                if( dval < (state->minDisparity << DISPARITY_SHIFT) )
-                    minptr[j] = maxptr[j] = dval;
-                else
-                {
-                    minptr[j] = SHRT_MAX;
-                    maxptr[j] = SHRT_MIN;
-                }
-            }
-        }
-
-        cvErode(state->dbmin, state->dbmin, 0, SMALL_WIN_SIZE );
-        cvDilate(state->dbmax, state->dbmax, 0, SMALL_WIN_SIZE );
-
-    #ifdef _OPENMP
-        #pragma omp parallel for num_threads(n) schedule(static)
-    #endif
-        for( i = 0; i < n; i++ )
-        {
-            int thread_id = cvGetThreadNum();
-            CvMat left_i, right_i, disp_i, dbmin_i, dbmax_i;
-            int row0 = i*left.rows/n, row1 = (i+1)*left.rows/n;
-            cvGetRows( &left, &left_i, row0, row1 );
-            cvGetRows( &right, &right_i, row0, row1 );
-            cvGetRows( disp, &disp_i, row0, row1 );
-            cvGetRows( state->dbmin, &dbmin_i, row0, row1 );
-            cvGetRows( state->dbmax, &dbmax_i, row0, row1 );
-        #if CV_SSE2
-            if( state->preFilterCap <= 31 && SMALL_WIN_SIZE <= 21 )
-            {
-                icvFindStereoCorrespondenceBM_SSE2( &left_i, &right_i,
-                    &disp_i, &dbmin_i, &dbmax_i, state, SMALL_WIN_SIZE,
-                    state->slidingSumBuf->data.ptr + thread_id*bufSize0,
-                    row0, left.rows-row1 );
-            }
-            else
-        #endif
-            {
-                icvFindStereoCorrespondenceBM( &left_i, &right_i,
-                    &disp_i, &dbmin_i, &dbmax_i, state, SMALL_WIN_SIZE,
-                    state->slidingSumBuf->data.ptr + thread_id*bufSize0,
-                    row0, left.rows-row1 );
-            }
         }
     }
     
