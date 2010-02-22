@@ -43,9 +43,11 @@ if(MSVC)
     add_definitions(-DJAS_WIN_MSVC_BUILD)
 endif()
 
-if(UNIX AND (CMAKE_COMPILER_IS_GNUCXX OR CV_ICC))
+if(UNIX)
+  if(CMAKE_COMPILER_IS_GNUCXX OR CV_ICC)
      set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
+  endif()
 endif()
 
 set_target_properties(${the_target}
