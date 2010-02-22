@@ -1320,7 +1320,10 @@ public:
     void release()
     {
         if( hdr.refcount && CV_XADD(hdr.refcount, -1) == 1 )
-            deallocate<_Tp>(hdr.datastart, hdr.capacity);
+        {
+            delete[] hdr.datastart;
+            delete hdr.refcount;
+        }
         hdr = Hdr();
     }
     
@@ -1350,15 +1353,10 @@ public:
         if( (!hdr.refcount || *hdr.refcount == 1) && hdr.capacity >= newCapacity )
             return;
         newCapacity = std::max(newCapacity, oldSize);
-        size_t datasize = alignSize(newCapacity*sizeof(_Tp), (size_t)sizeof(*newRefcount));
-        newData = (_Tp*)fastMalloc(datasize + sizeof(*newRefcount));
+        newData = new _Tp[newCapacity];
+        newRefcount = new int(1);
         for( i = 0; i < oldSize; i++ )
-            ::new(newData + i) _Tp(hdr.data[i]);
-        _Tp dummy = _Tp();
-        for( ; i < newCapacity; i++ )
-            ::new(newData + i) _Tp(dummy);
-        newRefcount = (int*)((uchar*)newData + datasize);
-        *newRefcount = 1;
+            newData[i] = hdr.data[i];
         release();
         hdr.data = hdr.datastart = newData;
         hdr.capacity = newCapacity;
