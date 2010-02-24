@@ -27,8 +27,10 @@ if(MSVC)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /W3")
 endif()
 
-if(UNIX AND (CMAKE_COMPILER_IS_GNUCXX OR CV_ICC))
-     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
+if(UNIX)
+    if(CMAKE_COMPILER_IS_GNUCXX OR CV_ICC)
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
+    endif()
 endif()
 
 set_target_properties(${the_target}
