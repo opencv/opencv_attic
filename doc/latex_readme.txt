@@ -49,3 +49,4 @@ First:
 Then
   sudo python ez_setup.py
 
+sudo apt-get install texlive texlive-latex-extra latex-xcolor texlive-fonts-extra 

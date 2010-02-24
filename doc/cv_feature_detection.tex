@@ -333,13 +333,15 @@ void cvGoodFeaturesToTrack(
 \par int useHarris=0
 \par double k=0.04 );
 }
-\cvdefPy{GoodFeaturesToTrack(image,eigImage,tempImage,qualityLevel,minDistance,mask=NULL,blockSize=3,useHarris=0,k=0.04)-> corners}
+\cvdefPy{GoodFeaturesToTrack(image,eigImage,tempImage,cornerCount,qualityLevel,minDistance,mask=NULL,blockSize=3,useHarris=0,k=0.04)-> corners}
 
 \begin{description}
 \cvarg{image}{The source 8-bit or floating-point 32-bit, single-channel image}
 \cvarg{eigImage}{Temporary floating-point 32-bit image, the same size as \texttt{image}}
 \cvarg{tempImage}{Another temporary image, the same size and format as \texttt{eigImage}}
+\ifC
 \cvarg{corners}{Output parameter; detected corners}
+\fi
 \cvarg{cornerCount}{Output parameter; number of detected corners}
 \cvarg{qualityLevel}{Multiplier for the max/min eigenvalue; specifies the minimal accepted quality of image corners}
 \cvarg{minDistance}{Limit, specifying the minimum possible distance between the returned corners; Euclidian distance is used}
