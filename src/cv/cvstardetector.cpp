@@ -131,11 +131,13 @@ icvStarDetectorComputeResponses( const CvMat* img, CvMat* responses, CvMat* size
         CV_MAT_TYPE(sizes->type) == CV_16SC1 &&
         CV_ARE_SIZES_EQ(responses, sizes) );
 
-    for(; pairs[i][0] >= 0; i++ )
+    while( pairs[i][0] >= 0 && !
+          ( sizes0[pairs[i][0]] >= params->maxSize 
+           || sizes0[pairs[i+1][0]] + sizes0[pairs[i+1][0]]/2 >= std::min(rows, cols) ) )
     {
-        if( sizes0[pairs[i][0]] >= params->maxSize )
-            break;
+        ++i;
     }
+    
     npatterns = i;
     npatterns += (pairs[npatterns-1][0] >= 0);
     maxIdx = pairs[npatterns-1][0];
