@@ -1,6 +1,9 @@
 Introduction
 ------------
 
+Here is a small collection of code samples demonstrating some features
+of the OpenCV Python bindings.
+
 Convert an image from png to jpg
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
