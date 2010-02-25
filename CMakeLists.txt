@@ -10,7 +10,11 @@
 # ----------------------------------------------------------------------------
 
 set(CMAKE_ALLOW_LOOSE_LOOP_CONSTRUCTS true)
-
+# Add these standard paths to the search paths for FIND_LIBRARY
+# to find libraries from these locations first
+if(UNIX)
+  set(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} /lib /usr/lib)
+endif()
 # it _must_ go before PROJECT(OpenCV) in order to work
 if (NOT CMAKE_INSTALL_PREFIX)
     if (WIN32)
