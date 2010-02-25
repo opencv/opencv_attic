@@ -55,7 +55,7 @@ Using CreateMat, and accessing an element
 ROS image message to OpenCV
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-See this tutorial: http://www.ros.org/wiki/opencv_latest/Tutorials/UsingCvBridgeToConvertBetweenROSImagesAndOpenCVImages
+See this tutorial: http://www.ros.org/wiki/cv_bridge/Tutorials/UsingCvBridgeToConvertBetweenROSImagesAndOpenCVImages
 
 PIL Image to OpenCV
 ^^^^^^^^^^^^^^^^^^^
