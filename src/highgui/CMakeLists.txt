@@ -92,7 +92,9 @@ if(UNIX)
 
     if(HAVE_FFMPEG)
         set(highgui_srcs ${highgui_srcs} cvcap_ffmpeg.cpp)
-        set(HIGHGUI_LIBRARIES ${HIGHGUI_LIBRARIES} bz2)
+        if(BZIP2_LIBRARIES)
+            set(HIGHGUI_LIBRARIES ${HIGHGUI_LIBRARIES} ${BZIP2_LIBRARIES})
+        endif()
     endif()
     
     if(HAVE_PVAPI)
