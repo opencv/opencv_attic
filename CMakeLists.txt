@@ -276,6 +276,8 @@ if(UNIX)
     set(WITH_XINE ON CACHE BOOL "Include Xine support")
 endif()
 
+set(WITH_TBB ON CACHE BOOL "Include TBB support")
+
 # ===================================================
 # Macros that checks if module have been installed.
 # After it adds module to build and define
@@ -476,6 +478,41 @@ if(PYTHONLIBS_FOUND AND BUILD_SWIG_PYTHON_SUPPORT)
     find_package(SWIG)
 endif()
 
+############################### TBB ################################
+
+if (WITH_TBB)
+    if (WIN32 OR APPLE)
+        include(OpenCVFindTBB.cmake)
+        if (TBB_FOUND)
+            set(HAVE_TBB 1)
+
+            if(NOT "${TBB_INCLUDE_DIRS}" STREQUAL "")
+                include_directories("${TBB_INCLUDE_DIRS}")
+            endif()
+
+            link_directories("${TBB_LIBRARY_DIRS}")
+            if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+                set(OPENCV_LINKER_LIBS ${OPENCV_LINKER_LIBS} ${TBB_DEBUG_LIBRARIES})
+            else()
+                set(OPENCV_LINKER_LIBS ${OPENCV_LINKER_LIBS} ${TBB_LIBRARIES})
+            endif()
+        endif()
+    else()
+        PKG_CHECK_MODULES(TBB tbb)
+        message(STATUS "TBB detected: ${TBBLIB_FOUND}")
+
+        if (TBB_FOUND)
+            set(HAVE_TBB 1)
+
+            if(NOT "${TBB_INCLUDE_DIRS}" STREQUAL "")
+                include_directories("${TBB_INCLUDE_DIRS}")
+            endif()
+
+            link_directories("${TBB_LIBRARY_DIRS}")
+            set(OPENCV_LINKER_LIBS ${OPENCV_LINKER_LIBS} ${TBB_LIBRARIES})
+        endif()
+    endif()
+endif()
 
 ############################### IPP ################################
 set(IPP_FOUND)

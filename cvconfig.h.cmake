@@ -154,3 +154,5 @@
    first (like Motorola and SPARC, unlike Intel and VAX). */
 #cmakedefine  WORDS_BIGENDIAN
 
+/* Intel Threading Building Blocks */
+#cmakedefine  HAVE_TBB
