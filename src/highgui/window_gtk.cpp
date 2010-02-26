@@ -445,6 +445,7 @@ typedef struct CvWindow
 
     int last_key;
     int flags;
+	int status;//0 normal, 1 fullscreen (YV)
 
     CvMouseCallback on_mouse;
     void* on_mouse_param;
@@ -569,6 +570,74 @@ static CvWindow* icvWindowByWidget( GtkWidget* widget )
     return window;
 }
 
+double cvGetMode_GTK(const char* name)//YV
+{
+	double result = -1;
+	
+	CV_FUNCNAME( "cvGetMode_GTK" );
+
+    __BEGIN__;
+
+    CvWindow* window;
+
+    if(!name)
+        CV_ERROR( CV_StsNullPtr, "NULL name string" );
+
+    window = icvFindWindowByName( name );
+    if( !window )
+        CV_ERROR( CV_StsNullPtr, "NULL window" );
+    
+    CV_LOCK_MUTEX();    
+    result = window->status;
+    CV_UNLOCK_MUTEX();    
+        
+    __END__;
+    return result;   
+}
+
+
+void cvChangeMode_GTK( const char* name, double prop_value)//Yannick Verdie
+{
+
+	CV_FUNCNAME( "cvChangeMode_GTK" );
+
+    __BEGIN__;
+
+    CvWindow* window;
+
+    if(!name)
+        CV_ERROR( CV_StsNullPtr, "NULL name string" );
+
+    window = icvFindWindowByName( name );
+    if( !window )
+        CV_ERROR( CV_StsNullPtr, "NULL window" );
+
+	if(window->flags & CV_WINDOW_AUTOSIZE)//if the flag CV_WINDOW_AUTOSIZE is set
+        EXIT;
+
+	//so easy to do fullscreen here, Linux rocks !
+	
+	if (window->status==CV_WINDOW_FULLSCREEN && prop_value==CV_WINDOW_NORMAL)
+	{
+		CV_LOCK_MUTEX();
+		gtk_window_unfullscreen(GTK_WINDOW(window->frame));
+		window->status=CV_WINDOW_NORMAL;
+		CV_UNLOCK_MUTEX();
+		EXIT;
+	}
+	
+	if (window->status==CV_WINDOW_NORMAL && prop_value==CV_WINDOW_FULLSCREEN)
+	{
+		CV_LOCK_MUTEX();
+		gtk_window_fullscreen(GTK_WINDOW(window->frame));
+		window->status=CV_WINDOW_FULLSCREEN;
+		CV_UNLOCK_MUTEX();
+		EXIT;
+	}
+
+    __END__;
+}
+
 CV_IMPL int cvNamedWindow( const char* name, int flags )
 {
     int result = 0;
@@ -603,6 +672,7 @@ CV_IMPL int cvNamedWindow( const char* name, int flags )
     memset( &window->toolbar, 0, sizeof(window->toolbar));
     window->next = hg_windows;
     window->prev = 0;
+    window->status = CV_WINDOW_NORMAL;//YV
 
 	CV_LOCK_MUTEX();
 

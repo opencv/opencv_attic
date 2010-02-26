@@ -124,6 +124,15 @@ CVAPI(int) cvStartWindowThread();
 /* create window */
 CVAPI(int) cvNamedWindow( const char* name, int flags CV_DEFAULT(CV_WINDOW_AUTOSIZE) );
 
+// ---------  YV ---------
+#define CV_WND_PROP_FULLSCREEN	 0
+#define CV_WND_PROP_AUTOSIZE	 1
+#define CV_WINDOW_NORMAL	 	 0
+#define CV_WINDOW_FULLSCREEN	 1
+/* Set and Get Property of the window */
+CVAPI(void) cvSetWindowProperty(const char* name, int prop_id, double prop_value);
+CVAPI(double) cvGetWindowProperty(const char* name, int prop_id);
+
 /* display image within window (highgui windows remember their content) */
 CVAPI(void) cvShowImage( const char* name, const CvArr* image );
 
