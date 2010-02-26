@@ -58,6 +58,10 @@
 #include <limits.h>
 #include <float.h>
 
+#ifdef HAVE_CONFIG_H
+    #include <cvconfig.h>
+#endif
+
 #ifdef __BORLANDC__
 #ifndef WIN32
     #define     WIN32
@@ -138,5 +142,19 @@ CvPyramid;
 
 #include "_cvgeom.h"
 #include "_cvimgproc.h"
+
+
+
+#ifdef HAVE_TBB
+    #include "tbb/tbb_stddef.h"
+    #if TBB_VERSION_MAJOR*100 + TBB_VERSION_MINOR >= 202
+        #include "tbb/tbb.h"
+        #undef min
+        #undef max
+    #else
+        #undef HAVE_TBB
+    #endif
+#endif
+
 
 #endif /*_CV_INTERNAL_H_*/
