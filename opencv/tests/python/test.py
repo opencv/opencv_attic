@@ -313,6 +313,8 @@ class FunctionTests(OpenCVTests):
                     m = cv.CreateMat(rows, cols, t)
                     self.assertEqual(cv.GetElemType(m), t)
                     self.assertEqual(m.type, t)
+        self.assertRaises(cv.error, lambda: cv.CreateMat(0, 100, cv.CV_8SC4))
+        self.assertRaises(cv.error, lambda: cv.CreateMat(100, 0, cv.CV_8SC4))
         # Uncomment when ticket #100 is fixed
         # self.assertRaises(cv.error, lambda: cv.CreateMat(100, 100, 666666))
 
@@ -1460,6 +1462,19 @@ class AreaTests(OpenCVTests):
         self.assertEqual(sys.getrefcount(data), start_count)
         del im
         self.assertEqual(sys.getrefcount(data), start_count - 1)
+
+    def failing_test_getmat_nd(self):
+        # 1D CvMatND should yield 1D CvMat
+        matnd = cv.CreateMatND([13], cv.CV_8UC1)
+        self.assertEqual(cv.GetDims(cv.GetMat(matnd, allowND = True)), (13,))
+
+        # 2D CvMatND should yield 2D CvMat
+        matnd = cv.CreateMatND([11,12], cv.CV_8UC1)
+        self.assertEqual(cv.GetDims(cv.GetMat(matnd, allowND = True)), (11, 12))
+
+        # 3D CvMatND should yield 1D CvMat
+        matnd = cv.CreateMatND([8,8,8], cv.CV_8UC1)
+        self.assertEqual(cv.GetDims(cv.GetMat(matnd, allowND = True)), (8 * 8 * 8,))
 
     def test_clipline(self):
         self.assert_(cv.ClipLine((100,100), (-100,0), (500,0)) == ((0,0), (99,0)))
