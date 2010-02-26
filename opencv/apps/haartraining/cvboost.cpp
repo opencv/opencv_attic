@@ -130,7 +130,7 @@ void cvGetSortedIndices( CvMat* val, CvMat* idx, int sortcols )
                 {
                     CV_MAT_ELEM( *idx, short, i, j ) = (short) j;
                 }
-                icvSortIndexedValArray_16s( (short*) (idx->data.ptr + i * idx->step),
+                icvSortIndexedValArray_16s( (short*) (idx->data.ptr + (size_t)i * idx->step),
                                             idx->cols, &va );
                 va.data += istep;
             }
@@ -143,7 +143,7 @@ void cvGetSortedIndices( CvMat* val, CvMat* idx, int sortcols )
                 {
                     CV_MAT_ELEM( *idx, int, i, j ) = j;
                 }
-                icvSortIndexedValArray_32s( (int*) (idx->data.ptr + i * idx->step),
+                icvSortIndexedValArray_32s( (int*) (idx->data.ptr + (size_t)i * idx->step),
                                             idx->cols, &va );
                 va.data += istep;
             }
@@ -156,7 +156,7 @@ void cvGetSortedIndices( CvMat* val, CvMat* idx, int sortcols )
                 {
                     CV_MAT_ELEM( *idx, float, i, j ) = (float) j;
                 }
-                icvSortIndexedValArray_32f( (float*) (idx->data.ptr + i * idx->step),
+                icvSortIndexedValArray_32f( (float*) (idx->data.ptr + (size_t)i * idx->step),
                                             idx->cols, &va );
                 va.data += istep;
             }
