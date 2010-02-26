@@ -1,128 +1,139 @@
+
+
+************
 Introduction
-------------
+************
 
-Here is a small collection of code samples demonstrating some features
-of the OpenCV Python bindings.
+.. toctree::
+   :maxdepth: 2
 
-Convert an image from png to jpg
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-::
-
-    import cv
-    cv.SaveImage("foo.png", cv.LoadImage("foo.jpg"))
-
-Compute the Laplacian
-^^^^^^^^^^^^^^^^^^^^^
-
-::
-
-    im = cv.LoadImage("foo.png", 1)
-    dst = cv.CreateImage(cv.GetSize(im), cv.IPL_DEPTH_16S, 3);
-    laplace = cv.Laplace(im, dst)
-    cv.SaveImage("foo-laplace.png", dst)
+   c++_cheatsheet
+   namespace_:cfunc:`cv()`_and_function_naming
+   memory_management
+   memory_management_part_ii._automatic_data_allocation
+   algebraic_operations
+   fast_element_access
+   saturation_arithmetics
+   error_handling
+   threading_and_reenterability
 
 
-Using cvGoodFeaturesToTrack
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-::
-
-    img = cv.LoadImage("foo.jpg")
-    eig_image = cv.CreateImage(cv.GetSize(img), cv.IPL_DEPTH_32F, 1)
-    temp_image = cv.CreateImage(cv.GetSize(img), cv.IPL_DEPTH_32F, 1)
-    # Find up to 300 corners using Harris
-    for (x,y) in cv.GoodFeaturesToTrack(img, eig_image, temp_image, 300, None, 1.0, use_harris = True):
-        print "good feature at", x,y
-
-Using GetSubRect
-^^^^^^^^^^^^^^^^
-
-GetSubRect returns a rectangular part of another image.  It does this without copying any data.
-
-::
-
-    img = cv.LoadImage("foo.jpg")
-    sub = cv.GetSubRect(img, (0, 0, 32, 32))  # sub is 32x32 patch from img top-left
-    cv.SetZero(sub)                           # clear sub to zero, which also clears 32x32 pixels in img
-
-Using CreateMat, and accessing an element
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-::
-
-    mat = cv.CreateMat(5, 5, cv.CV_32FC1)
-    mat[3,2] += 0.787
+Starting from OpenCV 2.0 the new modern C++ interface has been introduced. It is crisp (less typing is needed to code the same thing), type-safe (no more :ctype:`CvArr*` a.k.a. ``void*``) and, in general, more convenient to use. Here is a short example of what it looks like: 
 
 
-ROS image message to OpenCV
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-See this tutorial: http://www.ros.org/wiki/cv_bridge/Tutorials/UsingCvBridgeToConvertBetweenROSImagesAndOpenCVImages
+  ::
 
-PIL Image to OpenCV
-^^^^^^^^^^^^^^^^^^^
-
-(For details on PIL see the `PIL manual <http://www.pythonware.com/library/pil/handbook/image.htm>`_).
-
-::
-
-    import Image
-    import cv
-    pi = Image.open('foo.png')       # PIL image
-    cv_im = cv.CreateImageHeader(pi.size, cv.IPL_DEPTH_8U, 1)
-    cv.SetData(cv_im, pi.tostring())
-
-OpenCV to PIL Image
-^^^^^^^^^^^^^^^^^^^
-
-::
-
-    cv_im = cv.CreateImage((320,200), cv.IPL_DEPTH_8U, 1)
-    pi = Image.fromstring("L", cv.GetSize(cv_im), cv_im.tostring())
-
-numpy and OpenCV
-^^^^^^^^^^^^^^^^
-
-Numpy and OpenCV have different orderings for dimensions, hence the tuple reversals here::
-
-    def cv2array(im):
-      depth2dtype = {
-            cv.IPL_DEPTH_8U: 'uint8',
-            cv.IPL_DEPTH_8S: 'int8',
-            cv.IPL_DEPTH_16U: 'uint16',
-            cv.IPL_DEPTH_16S: 'int16',
-            cv.IPL_DEPTH_32S: 'int32',
-            cv.IPL_DEPTH_32F: 'float32',
-            cv.IPL_DEPTH_64F: 'float64',
-        }
+      //
+      // Simple retro-style photo effect done by adding noise to
+      // the luminance channel and reducing intensity of the chroma channels
+      //
       
-      arrdtype=im.depth
-      a = np.fromstring(
-             im.tostring(),
-             dtype=depth2dtype[im.depth],
-             count=im.width*im.height*im.nChannels)
-      a.shape = (im.height,im.width,im.nChannels)
-      return a
-        
-    def array2cv(a):
-      dtype2depth = {
-            'uint8':   cv.IPL_DEPTH_8U,
-            'int8':    cv.IPL_DEPTH_8S,
-            'uint16':  cv.IPL_DEPTH_16U,
-            'int16':   cv.IPL_DEPTH_16S,
-            'int32':   cv.IPL_DEPTH_32S,
-            'float32': cv.IPL_DEPTH_32F,
-            'float64': cv.IPL_DEPTH_64F,
-        }
-      try:
-        nChannels = a.shape[2]
-      except:
-        nChannels = 1
-      cv_im = cv.CreateImageHeader((a.shape[1],a.shape[0]), 
-              dtype2depth[str(a.dtype)],
-              nChannels)
-      cv.SetData(cv_im, a.tostring(), 
-                 a.dtype.itemsize*nChannels*a.shape[1])
-      return cv_im
+      // include standard OpenCV headers, same as before
+      #include "cv.h"
+      #include "highgui.h"
+      
+      // all the new API is put into "cv" namespace. Export its content
+      using namespace cv;
+      
+      // enable/disable use of mixed API in the code below.
+      #define DEMO_MIXED_API_USE 1
+      
+      int main( int argc, char** argv )
+      {
+          const char* imagename = argc > 1 ? argv[1] : "lena.jpg";
+      #if DEMO_MIXED_API_USE
+          // Ptr<T> is safe ref-conting pointer class
+          Ptr<IplImage> iplimg = cvLoadImage(imagename);
+          
+          // cv::Mat replaces the CvMat and IplImage, but it's easy to convert
+          // between the old and the new data structures
+          // (by default, only the header is converted and the data is shared)
+          Mat img(iplimg); 
+      #else
+          // the newer cvLoadImage alternative with MATLAB-style name
+          Mat img = imread(imagename);
+      #endif
+      
+          if( !img.data ) // check if the image has been loaded properly
+              return -1;
+      
+          Mat img_yuv;
+          // convert image to YUV color space.
+          // The output image will be allocated automatically
+          cvtColor(img, img_yuv, CV_BGR2YCrCb); 
+      
+          // split the image into separate color planes
+          vector<Mat> planes;
+          split(img_yuv, planes);
+      
+          // another Mat constructor; allocates a matrix of the specified
+      	// size and type
+          Mat noise(img.size(), CV_8U);
+          
+          // fills the matrix with normally distributed random values;
+          // there is also randu() for uniformly distributed random numbers. 
+          // Scalar replaces CvScalar, Scalar::all() replaces cvScalarAll().
+          randn(noise, Scalar::all(128), Scalar::all(20));
+                                                           
+          // blur the noise a bit, kernel size is 3x3 and both sigma's 
+      	// are set to 0.5
+          GaussianBlur(noise, noise, Size(3, 3), 0.5, 0.5);
+      
+          const double brightness_gain = 0;
+          const double contrast_gain = 1.7;
+      #if DEMO_MIXED_API_USE
+          // it's easy to pass the new matrices to the functions that
+          // only work with IplImage or CvMat:
+          // step 1) - convert the headers, data will not be copied
+          IplImage cv_planes_0 = planes[0], cv_noise = noise;
+          // step 2) call the function; do not forget unary "&" to form pointers
+          cvAddWeighted(&cv_planes_0, contrast_gain, &cv_noise, 1,
+                       -128 + brightness_gain, &cv_planes_0);
+      #else
+          addWeighted(planes[0], constrast_gain, noise, 1,
+                      -128 + brightness_gain, planes[0]);
+      #endif
+          const double color_scale = 0.5;
+          // Mat::convertTo() replaces cvConvertScale.
+          // One must explicitly specify the output matrix type
+          // (we keep it intact, i.e. pass planes[1].type())
+          planes[1].convertTo(planes[1], planes[1].type(),
+                              color_scale, 128*(1-color_scale));
+      
+          // alternative form of convertTo if we know the datatype
+          // at compile time ("uchar" here).
+          // This expression will not create any temporary arrays
+          // and should be almost as fast as the above variant
+          planes[2] = Mat_<uchar>(planes[2]*color_scale + 128*(1-color_scale));
+      
+          // Mat::mul replaces cvMul(). Again, no temporary arrays are
+          // created in the case of simple expressions.
+          planes[0] = planes[0].mul(planes[0], 1./255);
+      
+          // now merge the results back
+          merge(planes, img_yuv);
+          // and produce the output RGB image
+          cvtColor(img_yuv, img, CV_YCrCb2BGR);
+      
+          // this is counterpart for cvNamedWindow
+          namedWindow("image with grain", CV_WINDOW_AUTOSIZE);
+      #if DEMO_MIXED_API_USE
+          // this is to demonstrate that img and iplimg really share the data -
+          // the result of the above processing is stored to img and thus 
+      	// in iplimg too.
+          cvShowImage("image with grain", iplimg);
+      #else
+          imshow("image with grain", img);
+      #endif
+          waitKey();
+      
+          return 0;
+          // all the memory will automatically be released
+          // by vector<>, Mat and Ptr<> destructors.
+      }
 
+
+
+Following a summary "cheatsheet" below, the rest of the introduction will discuss the key features of the new interface in more detail. 
