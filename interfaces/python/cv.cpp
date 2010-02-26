@@ -3006,11 +3006,13 @@ static PyObject *pycvGetImage(PyObject *self, PyObject *args)
   return r;
 }
 
-static PyObject *pycvGetMat(PyObject *self, PyObject *args)
+static PyObject *pycvGetMat(PyObject *self, PyObject *args, PyObject *kw)
 {
+  const char *keywords[] = { "arr", "allowND", NULL };
   PyObject *o, *r;
+  int allowND = 0;
 
-  if (!PyArg_ParseTuple(args, "O", &o))
+  if (!PyArg_ParseTupleAndKeywords(args, kw, "O|i", (char**)keywords, &o, &allowND))
     return NULL;
   if (is_cvmat(o)) {
     r = o;
@@ -3020,7 +3022,7 @@ static PyObject *pycvGetMat(PyObject *self, PyObject *args)
     CvArr *cva;
     if (!convert_to_CvArr(o, &cva, "src"))
       return NULL;
-    ERRWRAP(cvGetMat(cva, m));
+    ERRWRAP(cvGetMat(cva, m, NULL, allowND));
 
     cvmat_t *om = PyObject_NEW(cvmat_t, &cvmat_Type);
     om->a = m;
@@ -3579,7 +3581,7 @@ static PyMethodDef methods[] = {
   {"CreateData", pycvCreateData, METH_VARARGS, "CreateData(arr) -> None"},
   {"GetDims", pycvGetDims, METH_VARARGS, "GetDims(arr) -> dims"},
   {"GetImage", pycvGetImage, METH_VARARGS, "GetImage(cvmat) -> image"},
-  {"GetMat", pycvGetMat, METH_VARARGS, "GetMat(image) -> cvmat"},
+  {"GetMat", (PyCFunction)pycvGetMat, METH_KEYWORDS, "GetMat(image, allowND=0) -> cvmat"},
   {"Reshape", pycvReshape, METH_VARARGS, "Reshape(arr, new_cn, new_rows=0) -> cvmat"},
   {"InitLineIterator", pycvInitLineIterator, METH_VARARGS, "InitLineIterator(image, pt1, pt2, connectivity=8, left_to_right=0) -> None"},
   {"LoadImage", (PyCFunction)pycvLoadImage, METH_KEYWORDS, "LoadImage(filename, iscolor=CV_LOAD_IMAGE_COLOR)"},
