@@ -523,8 +523,7 @@ int cvFindChessboardCorners( const void* arr, CvSize pattern_size,
         }
         else
         {
-            gray = img;
-            gray.addref();
+            gray = cvCloneMat(img);
         }
         int wsize = 2;
         cvFindCornerSubPix( gray, out_corners, pattern_size.width*pattern_size.height,

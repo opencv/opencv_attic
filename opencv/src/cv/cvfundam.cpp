@@ -240,8 +240,7 @@ cvFindHomography( const CvMat* objectPoints, const CvMat* imagePoints,
         CV_Assert( CV_IS_MASK_ARR(mask) && CV_IS_MAT_CONT(mask->type) &&
             (mask->rows == 1 || mask->cols == 1) &&
             mask->rows*mask->cols == count );
-        tempMask = mask;
-        tempMask.addref();
+        tempMask = cvCloneMat(mask);
     }
     else if( count > 4 )
         tempMask = cvCreateMat( 1, count, CV_8U );
