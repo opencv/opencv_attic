@@ -43,12 +43,81 @@
 
 // in later times, use this file as a dispatcher to implementations like cvcap.cpp
 
+CV_IMPL void cvSetWindowProperty(const char* name, int prop_id, double prop_value)
+{
+	switch(prop_id)
+	{
+		case CV_WND_PROP_FULLSCREEN://accept CV_WINDOW_NORMAL or CV_WINDOW_FULLSCREEN 
+		
+			if (!name || (prop_value!=CV_WINDOW_NORMAL && prop_value!=CV_WINDOW_FULLSCREEN))//bag argument
+				break;
+		
+			#if   defined WIN32 || defined _WIN32 
+			cvChangeMode_W32(name,prop_value);
+			#elif defined (HAVE_GTK)
+			cvChangeMode_GTK(name,prop_value);
+			#elif defined (HAVE_CARBON)
+			cvChangeMode_QT(name,prop_value);
+			#endif
+		break;
+		
+		case CV_WND_PROP_AUTOSIZE:
+		
+		break;
+		
+	default:;
+	}
+}
+
+/* return -1 if error */
+CV_IMPL double cvGetWindowProperty(const char* name, int prop_id)
+{
+	switch(prop_id)
+	{
+		case CV_WND_PROP_FULLSCREEN:
+		
+			if (!name)//bad argument
+				return -1;
+				
+			#if   defined WIN32 || defined _WIN32 
+				return cvGetMode_W32(name);
+			#elif defined (HAVE_GTK)
+				return cvGetMode_GTK(name);
+			#elif defined (HAVE_CARBON)
+				return cvGetMode_QT(name);
+			#endif
+		return -1;
+		
+		case CV_WND_PROP_AUTOSIZE:
+		
+			if (!name)//bad argument
+				return -1;
+				
+		return -1;
+		
+	default:
+		return -1;
+	}
+}
+
 namespace cv
 {
 
 void namedWindow( const string& winname, int flags )
 {
     cvNamedWindow( winname.c_str(), flags );
+}
+
+//YV
+void setWindowProperty(const string& winname, int prop_id, double prop_value)
+{
+	cvSetWindowProperty( winname.c_str(),prop_id,prop_value);
+}
+
+//YV
+double getWindowProperty(const string& winname, int prop_id)
+{
+	return  cvGetWindowProperty(winname.c_str(),prop_id);
 }
 
 void imshow( const string& winname, const Mat& img )
@@ -110,6 +179,17 @@ CV_IMPL int cvNamedWindow( const char*, int )
     CV_NO_GUI_ERROR("cvNamedWindow");
     return -1;
 }    
+
+CV_IMPL void cvSetWindowProperty(const char* name, int prop_id, double prop_value)//YV
+{
+	CV_NO_GUI_ERROR("cvSetWindowProperty");
+}
+
+CV_IMPL double cvGetWindowProperty(const char* name, int prop_id)//YV
+{
+	CV_NO_GUI_ERROR("cvGetWindowProperty");
+    return -1;
+}
 
 CV_IMPL void cvDestroyWindow( const char* )
 {

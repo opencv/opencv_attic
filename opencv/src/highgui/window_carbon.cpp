@@ -42,6 +42,7 @@
 #include "_highgui.h"
 
 #include <Carbon/Carbon.h>
+#include <Quicktime/Quicktime.h>//YV
 
 #include <unistd.h>
 #include <cstdio>
@@ -86,6 +87,7 @@ typedef struct CvWindow
     CvWindow* next;
     
     WindowRef window;
+    WindowRef oldwindow;//YV
     CGImageRef imageRef;
     int imageWidth;//FD
     int imageHeight;//FD
@@ -95,6 +97,8 @@ typedef struct CvWindow
     int converted;
     int last_key;
     int flags;
+    int status;//YV
+    Ptr restoreState;//YV
     
     CvMouseCallback on_mouse;
     void* on_mouse_param;
@@ -222,7 +226,7 @@ static void icvDrawImage( CvWindow* window )
     
         GetWindowPortBounds(window->window, &portrect);
     
-    if( window->flags & CV_WINDOW_AUTOSIZE ) 
+    if(!( window->flags & CV_WINDOW_AUTOSIZE) ) //YV
 	{ 
         CGPoint origin = {0,0}; 
         CGSize size = {portrect.right-portrect.left, portrect.bottom-portrect.top-window->trackbarheight};
@@ -753,6 +757,81 @@ CV_IMPL const char* cvGetWindowName( void* window_handle )
     return window_name;
 }
 
+double cvGetMode_QT(const char* name)//YV
+{
+	double result = -1;
+	
+	CV_FUNCNAME( "cvGetMode_QT" );
+
+    __BEGIN__;
+
+    CvWindow* window;
+
+    if(!name)
+        CV_ERROR( CV_StsNullPtr, "NULL name string" );
+
+    window = icvFindWindowByName( name );
+    if( !window )
+        CV_ERROR( CV_StsNullPtr, "NULL window" );
+        
+    result = window->status;
+        
+    __END__;
+    return result;   
+}
+
+void cvChangeMode_QT( const char* name, double prop_value)//Yannick Verdie
+{
+	OSStatus err = noErr;
+	
+	
+	CV_FUNCNAME( "cvChangeMode_QT" );
+
+    __BEGIN__;
+
+    CvWindow* window;
+
+    if(!name)
+        CV_ERROR( CV_StsNullPtr, "NULL name string" );
+
+    window = icvFindWindowByName( name );
+    if( !window )
+        CV_ERROR( CV_StsNullPtr, "NULL window" );
+
+	if(window->flags & CV_WINDOW_AUTOSIZE)//if the flag CV_WINDOW_AUTOSIZE is set
+        EXIT;
+	
+	if (window->status==CV_WINDOW_FULLSCREEN && prop_value==CV_WINDOW_NORMAL)
+	{
+		err = EndFullScreen(window->restoreState,0);
+		if (err != noErr)
+			fprintf(stdout,"Error EndFullScreen\n");
+		window->window = window->oldwindow;
+		ShowWindow( window->window );
+	
+		window->status=CV_WINDOW_NORMAL;
+		EXIT;
+	}
+	
+	if (window->status==CV_WINDOW_NORMAL && prop_value==CV_WINDOW_FULLSCREEN)
+	{
+		GDHandle device;
+		err = GetWindowGreatestAreaDevice(window->window, kWindowTitleBarRgn, &device, NULL);
+		if (err != noErr)
+			fprintf(stdout,"Error GetWindowGreatestAreaDevice\n");
+		
+		HideWindow(window->window);
+		window->oldwindow = window->window;
+		err = BeginFullScreen(&(window->restoreState), device, 0, 0, &window->window, 0, fullScreenAllowEvents | fullScreenDontSwitchMonitorResolution);
+		if (err != noErr)
+			fprintf(stdout,"Error BeginFullScreen\n");
+	
+		window->status=CV_WINDOW_FULLSCREEN;
+		EXIT;
+	}
+	
+    __END__;
+}
 
 CV_IMPL int cvNamedWindow( const char* name, int flags )
 {
@@ -814,6 +893,7 @@ CV_IMPL int cvNamedWindow( const char* name, int flags )
     window->name = (char*)(window + 1);
     memcpy( window->name, name, len + 1 );
     window->flags = flags;
+    window->status = CV_WINDOW_NORMAL;//YV
     window->signature = CV_WINDOW_MAGIC_VAL;
     window->image = 0;
     window->last_key = 0;
@@ -827,6 +907,13 @@ CV_IMPL int cvNamedWindow( const char* name, int flags )
     hg_windows = window;
     wAttributes =  kWindowStandardDocumentAttributes | kWindowStandardHandlerAttribute | kWindowLiveResizeAttribute;
     
+     
+	if (window->flags & CV_WINDOW_AUTOSIZE)//Yannick verdie, remove the handler at the bottom-right position of the window in AUTORESIZE mode
+	{
+	wAttributes = 0;	
+	wAttributes = kWindowCloseBoxAttribute | kWindowFullZoomAttribute | kWindowCollapseBoxAttribute | kWindowStandardHandlerAttribute  |  kWindowLiveResizeAttribute;
+	}
+	
     err = CreateNewWindow ( kDocumentWindowClass,wAttributes,&contentBounds,&outWindow);
     if (err != noErr)
         fprintf(stderr,"Error while creating the window\n");
@@ -836,7 +923,8 @@ CV_IMPL int cvNamedWindow( const char* name, int flags )
         fprintf(stdout,"Error SetWindowTitleWithCFString\n");
     
     window->window = outWindow;
-    
+	window->oldwindow = 0;//YV
+	
     err = InstallWindowEventHandler(outWindow, NewEventHandlerUPP(windowEventHandler), GetEventTypeCount(genericWindowEventHandler), genericWindowEventHandler, outWindow, NULL);
     
     ShowWindow( outWindow );
