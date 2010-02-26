@@ -791,8 +791,7 @@ CV_IMPL void cvProjectPoints2( const CvMat* objectPoints,
         ((objectPoints->rows == 1 && CV_MAT_CN(objectPoints->type) == 3) ||
         (objectPoints->rows == count && CV_MAT_CN(objectPoints->type)*objectPoints->cols == 3)))
     {
-        _M = (CvMat*)objectPoints;
-        _M.addref();
+        _M = cvCloneMat(objectPoints);
     }
     else
     {
@@ -804,8 +803,7 @@ CV_IMPL void cvProjectPoints2( const CvMat* objectPoints,
         ((imagePoints->rows == 1 && CV_MAT_CN(imagePoints->type) == 2) ||
         (imagePoints->rows == count && CV_MAT_CN(imagePoints->type)*imagePoints->cols == 2)))
     {
-        _m = imagePoints;
-        _m.addref();
+        _m = cvCloneMat(imagePoints);
     }
     else
         _m = cvCreateMat( 1, count, CV_64FC2 );
@@ -880,8 +878,7 @@ CV_IMPL void cvProjectPoints2( const CvMat* objectPoints,
 
         if( CV_MAT_TYPE(dpdr->type) == CV_64FC1 )
         {
-            _dpdr = dpdr;
-            _dpdr.addref();
+            _dpdr = cvCloneMat(dpdr);
         }
         else
             _dpdr = cvCreateMat( 2*count, 3, CV_64FC1 );
@@ -899,8 +896,7 @@ CV_IMPL void cvProjectPoints2( const CvMat* objectPoints,
 
         if( CV_MAT_TYPE(dpdt->type) == CV_64FC1 )
         {
-            _dpdt = dpdt;
-            _dpdt.addref();
+            _dpdt = cvCloneMat(dpdt);
         }
         else
             _dpdt = cvCreateMat( 2*count, 3, CV_64FC1 );
@@ -917,8 +913,7 @@ CV_IMPL void cvProjectPoints2( const CvMat* objectPoints,
 
         if( CV_MAT_TYPE(dpdf->type) == CV_64FC1 )
         {
-            _dpdf = dpdf;
-            _dpdf.addref();
+            _dpdf = cvCloneMat(dpdf);
         }
         else
             _dpdf = cvCreateMat( 2*count, 2, CV_64FC1 );
@@ -935,8 +930,7 @@ CV_IMPL void cvProjectPoints2( const CvMat* objectPoints,
 
         if( CV_MAT_TYPE(dpdc->type) == CV_64FC1 )
         {
-            _dpdc = dpdc;
-            _dpdc.addref();
+            _dpdc = cvCloneMat(dpdc);
         }
         else
             _dpdc = cvCreateMat( 2*count, 2, CV_64FC1 );
@@ -956,8 +950,7 @@ CV_IMPL void cvProjectPoints2( const CvMat* objectPoints,
 
         if( CV_MAT_TYPE(dpdk->type) == CV_64FC1 )
         {
-            _dpdk = dpdk;
-            _dpdk.addref();
+            _dpdk = cvCloneMat(dpdk);
         }
         else
             _dpdk = cvCreateMat( dpdk->rows, dpdk->cols, CV_64FC1 );

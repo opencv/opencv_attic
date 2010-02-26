@@ -113,10 +113,9 @@ bool CvModelEstimator2::runRANSAC( const CvMat* m1, const CvMat* m2, CvMat* mode
                                     double confidence, int maxIters )
 {
     bool result = false;
-    cv::Ptr<CvMat> mask = mask0;
+    cv::Ptr<CvMat> mask = cvCloneMat(mask0);
     cv::Ptr<CvMat> models, err, tmask;
     cv::Ptr<CvMat> ms1, ms2;
-    mask.addref();
 
     int iter, niters = maxIters;
     int count = m1->rows*m1->cols, maxGoodCount = 0;
@@ -137,10 +136,8 @@ bool CvModelEstimator2::runRANSAC( const CvMat* m1, const CvMat* m2, CvMat* mode
     else
     {
         niters = 1;
-        ms1 = (CvMat*)m1;
-        ms2 = (CvMat*)m2;
-        ms1.addref();
-        ms2.addref();
+        ms1 = cvCloneMat(m1);
+        ms2 = cvCloneMat(m2);
     }
 
     for( iter = 0; iter < niters; iter++ )
@@ -222,10 +219,8 @@ bool CvModelEstimator2::runLMeDS( const CvMat* m1, const CvMat* m2, CvMat* model
     else
     {
         niters = 1;
-        ms1 = (CvMat*)m1;
-        ms2 = (CvMat*)m2;
-        ms1.addref();
-        ms2.addref();
+        ms1 = cvCloneMat(m1);
+        ms2 = cvCloneMat(m2);
     }
 
     niters = cvRound(log(1-confidence)/log(1-pow(1-outlierRatio,(double)modelPoints)));
