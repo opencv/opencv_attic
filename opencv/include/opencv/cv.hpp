@@ -916,7 +916,8 @@ public:
     StereoSGBM(int minDisparity, int numDisparities, int SADWindowSize,
                int P1=0, int P2=0, int disp12MaxDiff=0,
                int preFilterCap=0, int uniquenessRatio=0,
-               int speckleWindowSize=0, int speckleRange=0);
+               int speckleWindowSize=0, int speckleRange=0,
+               bool fullDP=false);
     virtual ~StereoSGBM();
     
     virtual void operator()(const Mat& left, const Mat& right, Mat& disp);
@@ -930,6 +931,7 @@ public:
     int speckleWindowSize;
     int speckleRange;
     int disp12MaxDiff;
+    bool fullDP;
     
 protected:
     Mat buffer;
@@ -937,6 +939,10 @@ protected:
 
     
 CV_EXPORTS void filterSpeckles( Mat& img, double newVal, int maxSpeckleSize, double maxDiff, Mat& buf );
+    
+CV_EXPORTS Rect getValidDisparityROI( Rect roi1, Rect roi2,
+                                int minDisparity, int numberOfDisparities,
+                                int SADWindowSize );
 
 CV_EXPORTS void reprojectImageTo3D( const Mat& disparity,
                                     Mat& _3dImage, const Mat& Q,
