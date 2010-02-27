@@ -41,26 +41,26 @@
 //M*/
 
 /*
-  This is a variation of
-  "Stereo Processing by Semiglobal Matching and Mutual Information"
-  by Heiko Hirschmuller.
-  
-  We match blocks rather than individual pixels, thus the algorithm is called
-  SGBM (Semi-global block matching)
-*/ 
+ This is a variation of
+ "Stereo Processing by Semiglobal Matching and Mutual Information"
+ by Heiko Hirschmuller.
+ 
+ We match blocks rather than individual pixels, thus the algorithm is called
+ SGBM (Semi-global block matching)
+ */ 
 
 #include "_cv.h"
 #include <limits.h>
 
 namespace cv
 {
-
+    
 typedef uchar PixType;
 typedef short CostType;
 typedef short DispType;
-    
+
 enum { NR = 16, NR2 = NR/2 };
-    
+
 StereoSGBM::StereoSGBM()
 {
     minDisparity = numberOfDisparities = 0;
@@ -71,12 +71,14 @@ StereoSGBM::StereoSGBM()
     uniquenessRatio = 0;
     speckleWindowSize = 0;
     speckleRange = 0;
+    fullDP = false;
 }
 
-    
+
 StereoSGBM::StereoSGBM( int _minDisparity, int _numDisparities, int _SADWindowSize,
-                    int _P1, int _P2, int _disp12MaxDiff, int _preFilterCap,
-                    int _uniquenessRatio, int _speckleWindowSize, int _speckleRange )
+                   int _P1, int _P2, int _disp12MaxDiff, int _preFilterCap,
+                   int _uniquenessRatio, int _speckleWindowSize, int _speckleRange,
+                   bool _fullDP )
 {
     minDisparity = _minDisparity;
     numberOfDisparities = _numDisparities;
@@ -88,26 +90,27 @@ StereoSGBM::StereoSGBM( int _minDisparity, int _numDisparities, int _SADWindowSi
     uniquenessRatio = _uniquenessRatio;
     speckleWindowSize = _speckleWindowSize;
     speckleRange = _speckleRange;
+    fullDP = _fullDP;
 }
 
-    
+
 StereoSGBM::~StereoSGBM()
 {
 }
 
 /*
-  For each pixel row1[x], max(-maxD, 0) <= minX <= x < maxX <= width - max(0, -minD),
-  and for each disparity minD<=d<maxD the function
-  computes the cost (cost[(x-minX)*(maxD - minD) + (d - minD)]), depending on the difference between
-  row1[x] and row2[x-d]. The subpixel algorithm from
-  "Depth Discontinuities by Pixel-to-Pixel Stereo" by Stan Birchfield and C. Tomasi
-  is used, hence the suffix BT.
+ For each pixel row1[x], max(-maxD, 0) <= minX <= x < maxX <= width - max(0, -minD),
+ and for each disparity minD<=d<maxD the function
+ computes the cost (cost[(x-minX)*(maxD - minD) + (d - minD)]), depending on the difference between
+ row1[x] and row2[x-d]. The subpixel algorithm from
+ "Depth Discontinuities by Pixel-to-Pixel Stereo" by Stan Birchfield and C. Tomasi
+ is used, hence the suffix BT.
  
-  the temporary buffer should contain width2*2 elements
+ the temporary buffer should contain width2*2 elements
  */
 static void calcPixelCostBT( const Mat& img1, const Mat& img2, int y,
-                             int minD, int maxD, CostType* cost,
-                             PixType* buffer, const PixType* tab, int tabOfs )
+                            int minD, int maxD, CostType* cost,
+                            PixType* buffer, const PixType* tab, int tabOfs )
 {
     int x, c, width = img1.cols, cn = img1.channels();
     int minX1 = max(maxD, 0), maxX1 = width + min(minD, 0);
@@ -245,31 +248,45 @@ static void calcPixelCostBT( const Mat& img1, const Mat& img2, int y,
 #endif
 }
 
-    
+
 /*
-  computes disparity for "roi" in img1 w.r.t. img2 and write it to disp1buf.
-  that is, disp1buf(x, y)=d means that img1(x+roi.x, y+roi.y) ~ img2(x+roi.x-d, y+roi.y).
-  minD <= d < maxD.
-  disp2full is the reverse disparity map, that is:
-    disp2full(x+roi.x,y+roi.y)=d means that img2(x+roi.x, y+roi.y) ~ img1(x+roi.x+d, y+roi.y)
+ computes disparity for "roi" in img1 w.r.t. img2 and write it to disp1buf.
+ that is, disp1buf(x, y)=d means that img1(x+roi.x, y+roi.y) ~ img2(x+roi.x-d, y+roi.y).
+ minD <= d < maxD.
+ disp2full is the reverse disparity map, that is:
+ disp2full(x+roi.x,y+roi.y)=d means that img2(x+roi.x, y+roi.y) ~ img1(x+roi.x+d, y+roi.y)
  
-  note that disp1buf will have the same size as the roi and
-  disp2full will have the same size as img1 (or img2).
-  On exit disp2buf is not the final disparity, it is an intermediate result that becomes
-  final after all the tiles are processed.
+ note that disp1buf will have the same size as the roi and
+ disp2full will have the same size as img1 (or img2).
+ On exit disp2buf is not the final disparity, it is an intermediate result that becomes
+ final after all the tiles are processed.
  
-  the disparity in disp1buf is written with sub-pixel accuracy
-  (4 fractional bits, see CvStereoSGBM::DISP_SCALE),
-  using quadratic interpolation, while the disparity in disp2buf
-  is written as is, without interpolation.
+ the disparity in disp1buf is written with sub-pixel accuracy
+ (4 fractional bits, see CvStereoSGBM::DISP_SCALE),
+ using quadratic interpolation, while the disparity in disp2buf
+ is written as is, without interpolation.
  
-  disp2cost also has the same size as img1 (or img2).
-  It contains the minimum current cost, used to find the best disparity, corresponding to the minimal cost.
-*/ 
+ disp2cost also has the same size as img1 (or img2).
+ It contains the minimum current cost, used to find the best disparity, corresponding to the minimal cost.
+ */ 
 static void computeDisparitySGBM( const Mat& img1, const Mat& img2,
-                                  Mat& disp1, const StereoSGBM& params, 
-                                  Mat& buffer )
+                                 Mat& disp1, const StereoSGBM& params, 
+                                 Mat& buffer )
 {
+#if CV_SSE2
+    static const uchar LSBTab[] =
+    {
+        0, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, 4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
+        5, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, 4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
+        6, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, 4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
+        5, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, 4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
+        7, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, 4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
+        5, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, 4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
+        6, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, 4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
+        5, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, 4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0
+    };
+#endif    
+    
     const int ALIGN = 16;
     const int DISP_SHIFT = StereoSGBM::DISP_SHIFT;
     const int DISP_SCALE = StereoSGBM::DISP_SCALE;
@@ -287,6 +304,7 @@ static void computeDisparitySGBM( const Mat& img1, const Mat& img2,
     int D = maxD - minD, width1 = maxX1 - minX1;
     int INVALID_DISP = minD - 1, INVALID_DISP_SCALED = INVALID_DISP*DISP_SCALE;
     int SW2 = SADWindowSize.width/2, SH2 = SADWindowSize.height/2;
+    int npasses = params.fullDP ? 2 : 1;
     const int TAB_OFS = 256*4, TAB_SIZE = 256 + TAB_OFS*2;
     PixType clipTab[TAB_SIZE];
     
@@ -308,142 +326,171 @@ static void computeDisparitySGBM( const Mat& img1, const Mat& img2,
     // the number of L_r(.,.) and min_k L_r(.,.) lines in the buffer:
     // for 8-way dynamic programming we need the current row and
     // the previous row, i.e. 2 rows in total
-    const int NLR = 3;
+    const int NLR = 2;
     const int LrBorder = NLR - 1;
     
     // for each possible stereo match (img1(x,y) <=> img2(x-d,y))
     // we keep pixel difference cost (C) and the summary cost over NR directions (S).
     // we also keep all the partial costs for the previous line L_r(x,d) and also min_k L_r(x, k)
     size_t costBufSize = width1*D;
+    size_t CSBufSize = costBufSize*(params.fullDP ? height : 1);
     size_t minLrSize = (width1 + LrBorder*2)*NR2, LrSize = minLrSize*D2;
     int hsumBufNRows = SH2*2 + 2;
     size_t totalBufSize = (LrSize + minLrSize)*NLR*sizeof(CostType) + // minLr[] and Lr[]
-        costBufSize*(hsumBufNRows + 3)*sizeof(CostType) + // hsumBuf, pixdiff, C and S
-        width*8*img1.channels()*sizeof(PixType) + // temp buffer for computing per-pixel cost
-        width*(sizeof(CostType) + sizeof(DispType)) + 1024; // disp2cost + disp2
+    costBufSize*(hsumBufNRows + 1)*sizeof(CostType) + // hsumBuf, pixdiff
+    CSBufSize*2*sizeof(CostType) + // C, S
+    width*8*img1.channels()*sizeof(PixType) + // temp buffer for computing per-pixel cost
+    width*(sizeof(CostType) + sizeof(DispType)) + 1024; // disp2cost + disp2
     
     if( !buffer.data || !buffer.isContinuous() ||
-        buffer.cols*buffer.rows*buffer.elemSize() < totalBufSize )
+       buffer.cols*buffer.rows*buffer.elemSize() < totalBufSize )
         buffer.create(1, totalBufSize, CV_8U);
     
     // summary cost over different (nDirs) directions
-    CostType* C = (CostType*)alignPtr(buffer.data, ALIGN);
-    CostType* hsumBuf = C + costBufSize;
+    CostType* Cbuf = (CostType*)alignPtr(buffer.data, ALIGN);
+    CostType* Sbuf = Cbuf + CSBufSize;
+    CostType* hsumBuf = Sbuf + CSBufSize;
     CostType* pixDiff = hsumBuf + costBufSize*hsumBufNRows;
-    CostType* S = pixDiff + costBufSize;
-    CostType *Lr[NLR]={0}, *minLr[NLR]={0};
-    for( k = 0; k < NLR; k++ )
-    {
-        // shift Lr[k] and minLr[k] pointers, because we allocated them with the borders,
-        // and will occasionally use negative indices with the arrays
-        Lr[k] = S + costBufSize + LrSize*k + NRD2*LrBorder + 8;
-        memset( Lr[k] - LrBorder*NRD2 - 8, 0, LrSize*sizeof(CostType) );
-        minLr[k] = S + costBufSize + LrSize*NLR + minLrSize*k + NR2*2;
-        memset( minLr[k] - LrBorder*NR2, 0, minLrSize*sizeof(CostType) );
-    }
     
-    CostType* disp2cost = S + costBufSize + (LrSize + minLrSize)*NLR;
+    CostType* disp2cost = pixDiff + costBufSize + (LrSize + minLrSize)*NLR;
     DispType* disp2ptr = (DispType*)(disp2cost + width);
-    
     PixType* tempBuf = (PixType*)(disp2ptr + width);
     
+    // add P2 to every C(x,y). it saves a few operations in the inner loops
     for( k = 0; k < width1*D; k++ )
-        C[k] = P2;
+        Cbuf[k] = P2;
     
-    for( int y = 0; y < height; y++ )
+    for( int pass = 1; pass <= npasses; pass++ )
     {
-        int x, d, y1 = y == 0 ? 0 : y + SH2, y2 = y == 0 ? SH2 : y1;
-        DispType* disp1ptr = disp1.ptr<DispType>(y);
+        int x1, y1, x2, y2, dx, dy;
         
-        for( x = 0; x < width; x++ )
+        if( pass == 1 )
         {
-            disp1ptr[x] = disp2ptr[x] = INVALID_DISP_SCALED;
-            disp2cost[x] = MAX_COST;
+            y1 = 0; y2 = height; dy = 1;
+            x1 = 0; x2 = width1; dx = 1;
+        }
+        else
+        {
+            y1 = height-1; y2 = -1; dy = -1;
+            x1 = width1-1; x2 = -1; dx = -1;
         }
         
-        for( k = y1; k <= y2; k++ )
+        CostType *Lr[NLR]={0}, *minLr[NLR]={0};
+        
+        for( k = 0; k < NLR; k++ )
         {
-            CostType* hsumAdd = hsumBuf + (min(k, height-1) % hsumBufNRows)*costBufSize;
+            // shift Lr[k] and minLr[k] pointers, because we allocated them with the borders,
+            // and will occasionally use negative indices with the arrays
+            // we need to shift Lr[k] pointers by 1, to give the space for d=-1.
+            // however, then the alignment will be imperfect, i.e. bad for SSE,
+            // thus we shift the pointers by 8 (8*sizeof(short) == 16 - ideal alignment)
+            Lr[k] = pixDiff + costBufSize + LrSize*k + NRD2*LrBorder + 8;
+            memset( Lr[k] - LrBorder*NRD2 - 8, 0, LrSize*sizeof(CostType) );
+            minLr[k] = pixDiff + costBufSize + LrSize*NLR + minLrSize*k + NR2*2;
+            memset( minLr[k] - LrBorder*NR2, 0, minLrSize*sizeof(CostType) );
+        }
+        
+        for( int y = y1; y != y2; y += dy )
+        {
+            int x, d;
+            DispType* disp1ptr = disp1.ptr<DispType>(y);
+            CostType* C = Cbuf + (!params.fullDP ? 0 : y*costBufSize);
+            CostType* S = Sbuf + (!params.fullDP ? 0 : y*costBufSize);
             
-            if( k < height )
+            if( pass == 1 ) // compute C on the first pass, and reuse it on the second pass, if any.
             {
-                calcPixelCostBT( img1, img2, k, minD, maxD, pixDiff, tempBuf, clipTab, TAB_OFS );
+                int dy1 = y == 0 ? 0 : y + SH2, dy2 = y == 0 ? SH2 : dy1;
                 
-                memset(hsumAdd, 0, D*sizeof(CostType));
-                for( x = 0; x <= SW2*D; x += D )
+                for( k = dy1; k <= dy2; k++ )
                 {
-                    int scale = x == 0 ? SW2 + 1 : 1;
-                    for( d = 0; d < D; d++ )
-                        hsumAdd[d] = (CostType)(hsumAdd[d] + pixDiff[x + d]*scale);
-                }
-
-                if( y > 0 )
-                {
-                    const CostType* hsumSub = hsumBuf + (max(y - SH2 - 1, 0) % hsumBufNRows)*costBufSize;
-                    for( x = D; x < width1*D; x += D )
+                    CostType* hsumAdd = hsumBuf + (min(k, height-1) % hsumBufNRows)*costBufSize;
+                    
+                    if( k < height )
                     {
-                        const CostType* pixAdd = pixDiff + min(x + SW2*D, (width1-1)*D);
-                        const CostType* pixSub = pixDiff + max(x - (SW2+1)*D, 0);
+                        calcPixelCostBT( img1, img2, k, minD, maxD, pixDiff, tempBuf, clipTab, TAB_OFS );
                         
-                    #if CV_SSE2
-                        for( d = 0; d < D; d += 8 )
+                        memset(hsumAdd, 0, D*sizeof(CostType));
+                        for( x = 0; x <= SW2*D; x += D )
                         {
-                            __m128i hv = _mm_load_si128((const __m128i*)(hsumAdd + x - D + d));
-                            __m128i Cx = _mm_load_si128((__m128i*)(C + x + d));
-                            hv = _mm_adds_epi16(_mm_subs_epi16(hv,
-                                            _mm_load_si128((const __m128i*)(pixSub + d))),
-                                            _mm_load_si128((const __m128i*)(pixAdd + d)));
-                            Cx = _mm_adds_epi16(_mm_subs_epi16(Cx,
-                                                _mm_load_si128((const __m128i*)(hsumSub + x + d))),
-                                                hv);
-                            _mm_store_si128((__m128i*)(hsumAdd + x + d), hv);
-                            _mm_store_si128((__m128i*)(C + x + d), Cx);
+                            int scale = x == 0 ? SW2 + 1 : 1;
+                            for( d = 0; d < D; d++ )
+                                hsumAdd[d] = (CostType)(hsumAdd[d] + pixDiff[x + d]*scale);
                         }
-                    #else
-                        for( d = 0; d < D; d++ )
+                        
+                        if( y > 0 )
                         {
-                            int hv = hsumAdd[x + d] = (CostType)(hsumAdd[x - D + d] + pixAdd[d] - pixSub[d]);
-                            C[x + d] = (CostType)(C[x + d] + hv - hsumSub[x + d]);
+                            const CostType* hsumSub = hsumBuf + (max(y - SH2 - 1, 0) % hsumBufNRows)*costBufSize;
+                            const CostType* Cprev = !params.fullDP || y == 0 ? C : C - costBufSize;
+                            
+                            for( x = D; x < width1*D; x += D )
+                            {
+                                const CostType* pixAdd = pixDiff + min(x + SW2*D, (width1-1)*D);
+                                const CostType* pixSub = pixDiff + max(x - (SW2+1)*D, 0);
+                                
+                            #if CV_SSE2
+                                for( d = 0; d < D; d += 8 )
+                                {
+                                    __m128i hv = _mm_load_si128((const __m128i*)(hsumAdd + x - D + d));
+                                    __m128i Cx = _mm_load_si128((__m128i*)(Cprev + x + d));
+                                    hv = _mm_adds_epi16(_mm_subs_epi16(hv,
+                                                                       _mm_load_si128((const __m128i*)(pixSub + d))),
+                                                        _mm_load_si128((const __m128i*)(pixAdd + d)));
+                                    Cx = _mm_adds_epi16(_mm_subs_epi16(Cx,
+                                                                       _mm_load_si128((const __m128i*)(hsumSub + x + d))),
+                                                        hv);
+                                    _mm_store_si128((__m128i*)(hsumAdd + x + d), hv);
+                                    _mm_store_si128((__m128i*)(C + x + d), Cx);
+                                }
+                            #else
+                                for( d = 0; d < D; d++ )
+                                {
+                                    int hv = hsumAdd[x + d] = (CostType)(hsumAdd[x - D + d] + pixAdd[d] - pixSub[d]);
+                                    C[x + d] = (CostType)(Cprev[x + d] + hv - hsumSub[x + d]);
+                                }
+                            #endif
+                            }
                         }
-                    #endif
+                        else
+                        {
+                            for( x = D; x < width1*D; x += D )
+                            {
+                                const CostType* pixAdd = pixDiff + min(x + SW2*D, (width1-1)*D);
+                                const CostType* pixSub = pixDiff + max(x - (SW2+1)*D, 0);
+                                
+                                for( d = 0; d < D; d++ )
+                                    hsumAdd[x + d] = (CostType)(hsumAdd[x - D + d] + pixAdd[d] - pixSub[d]);
+                            }
+                        }
+                    }
+                    
+                    if( y == 0 )
+                    {
+                        int scale = k == 0 ? SH2 + 1 : 1;
+                        for( x = 0; x < width1*D; x++ )
+                            C[x] = (CostType)(C[x] + hsumAdd[x]*scale);
                     }
                 }
-                else
-                {
-                    for( x = D; x < width1*D; x += D )
-                    {
-                        const CostType* pixAdd = pixDiff + min(x + SW2*D, (width1-1)*D);
-                        const CostType* pixSub = pixDiff + max(x - (SW2+1)*D, 0);
-                        
-                        for( d = 0; d < D; d++ )
-                            hsumAdd[x + d] = (CostType)(hsumAdd[x - D + d] + pixAdd[d] - pixSub[d]);
-                    }
-                }
+                
+                // also, clear the S buffer
+                for( k = 0; k < width1*D; k++ )
+                    S[k] = 0;
             }
             
-            if( y == 0 )
-            {
-                int scale = k == 0 ? SH2 + 1 : 1;
-                for( x = 0; x < width1*D; x++ )
-                    C[x] = (CostType)(C[x] + hsumAdd[x]*scale);
-            }
-        }
-        
-        // clear the left and the right borders
-        memset( Lr[0] - NRD2*LrBorder - 8, 0, NRD2*LrBorder*sizeof(CostType) );
-        memset( Lr[0] + width1*NRD2 - 8, 0, NRD2*LrBorder*sizeof(CostType) );
-        memset( minLr[0] - NR2*LrBorder, 0, NR2*LrBorder*sizeof(CostType) );
-        memset( minLr[0] + width1*NR2, 0, NR2*LrBorder*sizeof(CostType) );
-        
-        /*
-           [formula 13 in the paper]
-           compute L_r(p, d) = C(p, d) +
-                min(L_r(p-r, d),
-                    L_r(p-r, d-1) + P1,
-                    L_r(p-r, d+1) + P1,
-                    min_k L_r(p-r, k) + P2) - min_k L_r(p-r, k)
-           where p = (x,y), r is one of the directions.
-           we process all the directions at once:
+            // clear the left and the right borders
+            memset( Lr[0] - NRD2*LrBorder - 8, 0, NRD2*LrBorder*sizeof(CostType) );
+            memset( Lr[0] + width1*NRD2 - 8, 0, NRD2*LrBorder*sizeof(CostType) );
+            memset( minLr[0] - NR2*LrBorder, 0, NR2*LrBorder*sizeof(CostType) );
+            memset( minLr[0] + width1*NR2, 0, NR2*LrBorder*sizeof(CostType) );
+            
+            /*
+             [formula 13 in the paper]
+             compute L_r(p, d) = C(p, d) +
+             min(L_r(p-r, d),
+             L_r(p-r, d-1) + P1,
+             L_r(p-r, d+1) + P1,
+             min_k L_r(p-r, k) + P2) - min_k L_r(p-r, k)
+             where p = (x,y), r is one of the directions.
+             we process all the directions at once:
              0: r=(-dx, 0)
              1: r=(-1, -dy)
              2: r=(0, -dy)
@@ -452,269 +499,284 @@ static void computeDisparitySGBM( const Mat& img1, const Mat& img2,
              5: r=(-1, -dy*2)
              6: r=(1, -dy*2)
              7: r=(2, -dy)
-        */
-        for( x = 0; x < width1; x++ )
-        {
-            int xm = x*NR2, xd = xm*D2;
-            
-            int delta0 = minLr[0][xm - NR2] + P2, delta1 = minLr[1][xm - NR2 + 1] + P2;
-            int delta2 = minLr[1][xm + 2] + P2, delta3 = minLr[1][xm + NR2 + 3] + P2;
-            
-            CostType* Lr_p0 = Lr[0] + xd - NRD2;
-            CostType* Lr_p1 = Lr[1] + xd - NRD2 + D2;
-            CostType* Lr_p2 = Lr[1] + xd + D2*2;
-            CostType* Lr_p3 = Lr[1] + xd + NRD2 + D2*3;
-            
-            Lr_p0[-1] = Lr_p0[D] = Lr_p1[-1] = Lr_p1[D] =
-            Lr_p2[-1] = Lr_p2[D] = Lr_p3[-1] = Lr_p3[D] = MAX_COST;
-            
-            CostType* Lr_p = Lr[0] + xd;
-            const CostType* Cp = C + x*D;
-            CostType* Sp = S + x*D;
-            
-        #if CV_SSE2
-            __m128i _P1 = _mm_set1_epi16((short)P1);
-            
-            __m128i _delta0 = _mm_set1_epi16((short)delta0);
-            __m128i _delta1 = _mm_set1_epi16((short)delta1);
-            __m128i _delta2 = _mm_set1_epi16((short)delta2);
-            __m128i _delta3 = _mm_set1_epi16((short)delta3);
-            __m128i _minL0 = _mm_set1_epi16((short)MAX_COST);
-            
-            for( d = 0; d < D; d += 8 )
+             */
+            for( x = x1; x != x2; x += dx )
             {
-                __m128i Cpd = _mm_load_si128((const __m128i*)(Cp + d));
-                __m128i L0, L1, L2, L3;
+                int xm = x*NR2, xd = xm*D2;
                 
-                L0 = _mm_load_si128((const __m128i*)(Lr_p0 + d));
-                L1 = _mm_load_si128((const __m128i*)(Lr_p1 + d));
-                L2 = _mm_load_si128((const __m128i*)(Lr_p2 + d));
-                L3 = _mm_load_si128((const __m128i*)(Lr_p3 + d));
+                int delta0 = minLr[0][xm - dx*NR2] + P2, delta1 = minLr[1][xm - NR2 + 1] + P2;
+                int delta2 = minLr[1][xm + 2] + P2, delta3 = minLr[1][xm + NR2 + 3] + P2;
                 
-                L0 = _mm_min_epi16(L0, _mm_adds_epi16(_mm_loadu_si128((const __m128i*)(Lr_p0 + d - 1)), _P1));
-                L0 = _mm_min_epi16(L0, _mm_adds_epi16(_mm_loadu_si128((const __m128i*)(Lr_p0 + d + 1)), _P1));
+                CostType* Lr_p0 = Lr[0] + xd - dx*NRD2;
+                CostType* Lr_p1 = Lr[1] + xd - NRD2 + D2;
+                CostType* Lr_p2 = Lr[1] + xd + D2*2;
+                CostType* Lr_p3 = Lr[1] + xd + NRD2 + D2*3;
                 
-                L1 = _mm_min_epi16(L1, _mm_adds_epi16(_mm_loadu_si128((const __m128i*)(Lr_p1 + d - 1)), _P1));
-                L1 = _mm_min_epi16(L1, _mm_adds_epi16(_mm_loadu_si128((const __m128i*)(Lr_p1 + d + 1)), _P1));
+                Lr_p0[-1] = Lr_p0[D] = Lr_p1[-1] = Lr_p1[D] =
+                Lr_p2[-1] = Lr_p2[D] = Lr_p3[-1] = Lr_p3[D] = MAX_COST;
                 
-                L2 = _mm_min_epi16(L2, _mm_adds_epi16(_mm_loadu_si128((const __m128i*)(Lr_p2 + d - 1)), _P1));
-                L2 = _mm_min_epi16(L2, _mm_adds_epi16(_mm_loadu_si128((const __m128i*)(Lr_p2 + d + 1)), _P1));
+                CostType* Lr_p = Lr[0] + xd;
+                const CostType* Cp = C + x*D;
+                CostType* Sp = S + x*D;
                 
-                L3 = _mm_min_epi16(L3, _mm_adds_epi16(_mm_loadu_si128((const __m128i*)(Lr_p3 + d - 1)), _P1));
-                L3 = _mm_min_epi16(L3, _mm_adds_epi16(_mm_loadu_si128((const __m128i*)(Lr_p3 + d + 1)), _P1));
+            #if CV_SSE2
+                __m128i _P1 = _mm_set1_epi16((short)P1);
                 
-                L0 = _mm_min_epi16(L0, _delta0);
-                L0 = _mm_adds_epi16(_mm_subs_epi16(L0, _delta0), Cpd);
+                __m128i _delta0 = _mm_set1_epi16((short)delta0);
+                __m128i _delta1 = _mm_set1_epi16((short)delta1);
+                __m128i _delta2 = _mm_set1_epi16((short)delta2);
+                __m128i _delta3 = _mm_set1_epi16((short)delta3);
+                __m128i _minL0 = _mm_set1_epi16((short)MAX_COST);
                 
-                L1 = _mm_min_epi16(L1, _delta1);
-                L1 = _mm_adds_epi16(_mm_subs_epi16(L1, _delta1), Cpd);
-                
-                L2 = _mm_min_epi16(L2, _delta2);
-                L2 = _mm_adds_epi16(_mm_subs_epi16(L2, _delta2), Cpd);
-                
-                L3 = _mm_min_epi16(L3, _delta3);
-                L3 = _mm_adds_epi16(_mm_subs_epi16(L3, _delta3), Cpd);
-                
-                _mm_store_si128( (__m128i*)(Lr_p + d), L0);
-                _mm_store_si128( (__m128i*)(Lr_p + d + D2), L1);
-                _mm_store_si128( (__m128i*)(Lr_p + d + D2*2), L2);
-                _mm_store_si128( (__m128i*)(Lr_p + d + D2*3), L3);
-                
-                __m128i t0 = _mm_min_epi16(_mm_unpacklo_epi16(L0, L2), _mm_unpackhi_epi16(L0, L2));
-                __m128i t1 = _mm_min_epi16(_mm_unpacklo_epi16(L1, L3), _mm_unpackhi_epi16(L1, L3));
-                t0 = _mm_min_epi16(_mm_unpacklo_epi16(t0, t1), _mm_unpackhi_epi16(t0, t1));
-                _minL0 = _mm_min_epi16(_minL0, t0);
-                
-                L0 = _mm_adds_epi16(L0, L1);
-                L2 = _mm_adds_epi16(L2, L3);
-                L0 = _mm_adds_epi16(L0, L2);
-                
-                _mm_store_si128((__m128i*)(Sp + d), L0);
-            }
-            
-            _minL0 = _mm_min_epi16(_minL0, _mm_srli_si128(_minL0, 8));
-            _mm_storel_epi64((__m128i*)&minLr[0][xm], _minL0);
-            
-        #else
-            int minL0 = MAX_COST, minL1 = MAX_COST, minL2 = MAX_COST, minL3 = MAX_COST;
-            
-            for( d = 0; d < D; d++ )
-            {
-                int Cpd = Cp[d], L0, L1, L2, L3;
-                
-                L0 = Cpd + min((int)Lr_p0[d], min(Lr_p0[d-1] + P1, min(Lr_p0[d+1] + P1, delta0))) - delta0;
-                L1 = Cpd + min((int)Lr_p1[d], min(Lr_p1[d-1] + P1, min(Lr_p1[d+1] + P1, delta1))) - delta1;                    
-                L2 = Cpd + min((int)Lr_p2[d], min(Lr_p2[d-1] + P1, min(Lr_p2[d+1] + P1, delta2))) - delta2;
-                L3 = Cpd + min((int)Lr_p3[d], min(Lr_p3[d-1] + P1, min(Lr_p3[d+1] + P1, delta3))) - delta3;
-                
-                Lr_p[d] = (CostType)L0;
-                minL0 = min(minL0, L0);
-                
-                Lr_p[d + D2] = (CostType)L1;
-                minL1 = min(minL1, L1);
-                
-                Lr_p[d + D2*2] = (CostType)L2;
-                minL2 = min(minL2, L2);
-                
-                Lr_p[d + D2*3] = (CostType)L3;
-                minL3 = min(minL3, L3);
-                
-                Sp[d] = saturate_cast<CostType>(L0 + L1 + L2 + L3);
-            }
-            minLr[0][xm] = (CostType)minL0;
-            minLr[0][xm+1] = (CostType)minL1;
-            minLr[0][xm+2] = (CostType)minL2;
-            minLr[0][xm+3] = (CostType)minL3;
-        #endif
-        }
-        
-        for( x = width1 - 1; x >= 0; x-- )
-        {
-            int xm = x*NR2, xd = xm*D2;
-            
-            int minL0 = MAX_COST;
-            int delta0 = minLr[0][xm + NR2] + P2;
-            CostType* Lr_p0 = Lr[0] + xd + NRD2;
-            Lr_p0[-1] = Lr_p0[D] = MAX_COST;
-            CostType* Lr_p = Lr[0] + xd;
-            
-            const CostType* Cp = C + x*D;
-            CostType* Sp = S + x*D;
-            CostType minS = MAX_COST;
-            int bestDisp = -1;
-
-        #if CV_SSE2
-            __m128i _P1 = _mm_set1_epi16((short)P1);
-            __m128i _delta0 = _mm_set1_epi16((short)delta0);
-            
-            __m128i _minL0 = _mm_set1_epi16((short)minL0);
-            __m128i _minS = _mm_set1_epi16(MAX_COST), _bestDisp = _mm_set1_epi16(-1);
-            __m128i _d8 = _mm_setr_epi16(0, 1, 2, 3, 4, 5, 6, 7), _8 = _mm_set1_epi16(8);
-            
-            for( d = 0; d < D; d += 8 )
-            {
-                __m128i Cpd = _mm_load_si128((const __m128i*)(Cp + d)), L0;
-                
-                L0 = _mm_load_si128((const __m128i*)(Lr_p0 + d));
-                L0 = _mm_min_epi16(L0, _mm_adds_epi16(_mm_loadu_si128((const __m128i*)(Lr_p0 + d - 1)), _P1));
-                L0 = _mm_min_epi16(L0, _mm_adds_epi16(_mm_loadu_si128((const __m128i*)(Lr_p0 + d + 1)), _P1));
-                L0 = _mm_min_epi16(L0, _delta0);
-                L0 = _mm_adds_epi16(_mm_subs_epi16(L0, _delta0), Cpd);
-                
-                _mm_store_si128((__m128i*)(Lr_p + d), L0);
-                _minL0 = _mm_min_epi16(_minL0, L0);
-                L0 = _mm_adds_epi16(L0, *(__m128i*)(Sp + d));
-                _mm_store_si128((__m128i*)(Sp + d), L0);
-                
-                __m128i mask = _mm_cmpgt_epi16(_minS, L0);
-                _minS = _mm_min_epi16(_minS, L0);
-                _bestDisp = _mm_xor_si128(_bestDisp, _mm_and_si128(_mm_xor_si128(_bestDisp,_d8), mask));
-                _d8 = _mm_adds_epi16(_d8, _8);
-            }
-            
-            short CV_DECL_ALIGNED(16) bestDispBuf[8];
-            _mm_store_si128((__m128i*)bestDispBuf, _bestDisp);
-            
-            _minL0 = _mm_min_epi16(_minL0, _mm_srli_si128(_minL0, 8));
-            _minL0 = _mm_min_epi16(_minL0, _mm_srli_si128(_minL0, 4));
-            _minL0 = _mm_min_epi16(_minL0, _mm_srli_si128(_minL0, 2));
-            
-            __m128i _S = _mm_min_epi16(_minS, _mm_srli_si128(_minS, 8));
-            _S = _mm_min_epi16(_S, _mm_srli_si128(_S, 4));
-            _S = _mm_min_epi16(_S, _mm_srli_si128(_S, 2));
-            
-            minLr[0][xm] = (CostType)_mm_cvtsi128_si32(_minL0);
-            minS = (CostType)_mm_cvtsi128_si32(_S);
-            
-            _S = _mm_shuffle_epi32(_mm_unpacklo_epi16(_S, _S), 0);
-            _S = _mm_cmpeq_epi16(_minS, _S);
-            int idx = _mm_movemask_epi8(_mm_packs_epi16(_S, _S)) & 255;
-            
-            static const uchar LSBTab[] =
-            {
-                0, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, 4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
-                5, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, 4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
-                6, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, 4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
-                5, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, 4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
-                7, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, 4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
-                5, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, 4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
-                6, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, 4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
-                5, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, 4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0
-            };
-            
-            bestDisp = bestDispBuf[LSBTab[idx]];
-        #else
-            for( d = 0; d < D; d++ )
-            {
-                int L0 = Cp[d] + min((int)Lr_p0[d], min(Lr_p0[d-1] + P1, min(Lr_p0[d+1] + P1, delta0))) - delta0;
-                
-                Lr_p[d] = (CostType)L0;
-                minL0 = min(minL0, L0);
-                
-                int Sval = Sp[d] = saturate_cast<CostType>(Sp[d] + L0);
-                if( Sval < minS )
+                for( d = 0; d < D; d += 8 )
                 {
-                    minS = Sval;
-                    bestDisp = d;
+                    __m128i Cpd = _mm_load_si128((const __m128i*)(Cp + d));
+                    __m128i L0, L1, L2, L3;
+                    
+                    L0 = _mm_load_si128((const __m128i*)(Lr_p0 + d));
+                    L1 = _mm_load_si128((const __m128i*)(Lr_p1 + d));
+                    L2 = _mm_load_si128((const __m128i*)(Lr_p2 + d));
+                    L3 = _mm_load_si128((const __m128i*)(Lr_p3 + d));
+                    
+                    L0 = _mm_min_epi16(L0, _mm_adds_epi16(_mm_loadu_si128((const __m128i*)(Lr_p0 + d - 1)), _P1));
+                    L0 = _mm_min_epi16(L0, _mm_adds_epi16(_mm_loadu_si128((const __m128i*)(Lr_p0 + d + 1)), _P1));
+                    
+                    L1 = _mm_min_epi16(L1, _mm_adds_epi16(_mm_loadu_si128((const __m128i*)(Lr_p1 + d - 1)), _P1));
+                    L1 = _mm_min_epi16(L1, _mm_adds_epi16(_mm_loadu_si128((const __m128i*)(Lr_p1 + d + 1)), _P1));
+                    
+                    L2 = _mm_min_epi16(L2, _mm_adds_epi16(_mm_loadu_si128((const __m128i*)(Lr_p2 + d - 1)), _P1));
+                    L2 = _mm_min_epi16(L2, _mm_adds_epi16(_mm_loadu_si128((const __m128i*)(Lr_p2 + d + 1)), _P1));
+                    
+                    L3 = _mm_min_epi16(L3, _mm_adds_epi16(_mm_loadu_si128((const __m128i*)(Lr_p3 + d - 1)), _P1));
+                    L3 = _mm_min_epi16(L3, _mm_adds_epi16(_mm_loadu_si128((const __m128i*)(Lr_p3 + d + 1)), _P1));
+                    
+                    L0 = _mm_min_epi16(L0, _delta0);
+                    L0 = _mm_adds_epi16(_mm_subs_epi16(L0, _delta0), Cpd);
+                    
+                    L1 = _mm_min_epi16(L1, _delta1);
+                    L1 = _mm_adds_epi16(_mm_subs_epi16(L1, _delta1), Cpd);
+                    
+                    L2 = _mm_min_epi16(L2, _delta2);
+                    L2 = _mm_adds_epi16(_mm_subs_epi16(L2, _delta2), Cpd);
+                    
+                    L3 = _mm_min_epi16(L3, _delta3);
+                    L3 = _mm_adds_epi16(_mm_subs_epi16(L3, _delta3), Cpd);
+                    
+                    _mm_store_si128( (__m128i*)(Lr_p + d), L0);
+                    _mm_store_si128( (__m128i*)(Lr_p + d + D2), L1);
+                    _mm_store_si128( (__m128i*)(Lr_p + d + D2*2), L2);
+                    _mm_store_si128( (__m128i*)(Lr_p + d + D2*3), L3);
+                    
+                    __m128i t0 = _mm_min_epi16(_mm_unpacklo_epi16(L0, L2), _mm_unpackhi_epi16(L0, L2));
+                    __m128i t1 = _mm_min_epi16(_mm_unpacklo_epi16(L1, L3), _mm_unpackhi_epi16(L1, L3));
+                    t0 = _mm_min_epi16(_mm_unpacklo_epi16(t0, t1), _mm_unpackhi_epi16(t0, t1));
+                    _minL0 = _mm_min_epi16(_minL0, t0);
+                    
+                    __m128i Sval = _mm_load_si128((const __m128i*)(Sp + d));
+                    
+                    L0 = _mm_adds_epi16(L0, L1);
+                    L2 = _mm_adds_epi16(L2, L3);
+                    Sval = _mm_adds_epi16(Sval, L0);
+                    Sval = _mm_adds_epi16(Sval, L2);
+                    
+                    _mm_store_si128((__m128i*)(Sp + d), Sval);
+                }
+                
+                _minL0 = _mm_min_epi16(_minL0, _mm_srli_si128(_minL0, 8));
+                _mm_storel_epi64((__m128i*)&minLr[0][xm], _minL0);
+                
+            #else
+                int minL0 = MAX_COST, minL1 = MAX_COST, minL2 = MAX_COST, minL3 = MAX_COST;
+                
+                for( d = 0; d < D; d++ )
+                {
+                    int Cpd = Cp[d], L0, L1, L2, L3;
+                    
+                    L0 = Cpd + min((int)Lr_p0[d], min(Lr_p0[d-1] + P1, min(Lr_p0[d+1] + P1, delta0))) - delta0;
+                    L1 = Cpd + min((int)Lr_p1[d], min(Lr_p1[d-1] + P1, min(Lr_p1[d+1] + P1, delta1))) - delta1;                    
+                    L2 = Cpd + min((int)Lr_p2[d], min(Lr_p2[d-1] + P1, min(Lr_p2[d+1] + P1, delta2))) - delta2;
+                    L3 = Cpd + min((int)Lr_p3[d], min(Lr_p3[d-1] + P1, min(Lr_p3[d+1] + P1, delta3))) - delta3;
+                    
+                    Lr_p[d] = (CostType)L0;
+                    minL0 = min(minL0, L0);
+                    
+                    Lr_p[d + D2] = (CostType)L1;
+                    minL1 = min(minL1, L1);
+                    
+                    Lr_p[d + D2*2] = (CostType)L2;
+                    minL2 = min(minL2, L2);
+                    
+                    Lr_p[d + D2*3] = (CostType)L3;
+                    minL3 = min(minL3, L3);
+                    
+                    Sp[d] = saturate_cast<CostType>(Sp[d] + L0 + L1 + L2 + L3);
+                }
+                minLr[0][xm] = (CostType)minL0;
+                minLr[0][xm+1] = (CostType)minL1;
+                minLr[0][xm+2] = (CostType)minL2;
+                minLr[0][xm+3] = (CostType)minL3;
+            #endif
+            }
+            
+            if( pass == npasses )
+            {
+                for( x = 0; x < width; x++ )
+                {
+                    disp1ptr[x] = disp2ptr[x] = INVALID_DISP_SCALED;
+                    disp2cost[x] = MAX_COST;
+                }
+                
+                for( x = width1 - 1; x >= 0; x-- )
+                {
+                    CostType* Sp = S + x*D;
+                    CostType minS = MAX_COST;
+                    int bestDisp = -1;
+                    
+                    if( npasses == 1 )
+                    {
+                        int xm = x*NR2, xd = xm*D2;
+                        
+                        int minL0 = MAX_COST;
+                        int delta0 = minLr[0][xm + NR2] + P2;
+                        CostType* Lr_p0 = Lr[0] + xd + NRD2;
+                        Lr_p0[-1] = Lr_p0[D] = MAX_COST;
+                        CostType* Lr_p = Lr[0] + xd;
+                        
+                        const CostType* Cp = C + x*D;
+                        
+                    #if CV_SSE2
+                        __m128i _P1 = _mm_set1_epi16((short)P1);
+                        __m128i _delta0 = _mm_set1_epi16((short)delta0);
+                        
+                        __m128i _minL0 = _mm_set1_epi16((short)minL0);
+                        __m128i _minS = _mm_set1_epi16(MAX_COST), _bestDisp = _mm_set1_epi16(-1);
+                        __m128i _d8 = _mm_setr_epi16(0, 1, 2, 3, 4, 5, 6, 7), _8 = _mm_set1_epi16(8);
+                        
+                        for( d = 0; d < D; d += 8 )
+                        {
+                            __m128i Cpd = _mm_load_si128((const __m128i*)(Cp + d)), L0;
+                            
+                            L0 = _mm_load_si128((const __m128i*)(Lr_p0 + d));
+                            L0 = _mm_min_epi16(L0, _mm_adds_epi16(_mm_loadu_si128((const __m128i*)(Lr_p0 + d - 1)), _P1));
+                            L0 = _mm_min_epi16(L0, _mm_adds_epi16(_mm_loadu_si128((const __m128i*)(Lr_p0 + d + 1)), _P1));
+                            L0 = _mm_min_epi16(L0, _delta0);
+                            L0 = _mm_adds_epi16(_mm_subs_epi16(L0, _delta0), Cpd);
+                            
+                            _mm_store_si128((__m128i*)(Lr_p + d), L0);
+                            _minL0 = _mm_min_epi16(_minL0, L0);
+                            L0 = _mm_adds_epi16(L0, *(__m128i*)(Sp + d));
+                            _mm_store_si128((__m128i*)(Sp + d), L0);
+                            
+                            __m128i mask = _mm_cmpgt_epi16(_minS, L0);
+                            _minS = _mm_min_epi16(_minS, L0);
+                            _bestDisp = _mm_xor_si128(_bestDisp, _mm_and_si128(_mm_xor_si128(_bestDisp,_d8), mask));
+                            _d8 = _mm_adds_epi16(_d8, _8);
+                        }
+                        
+                        short CV_DECL_ALIGNED(16) bestDispBuf[8];
+                        _mm_store_si128((__m128i*)bestDispBuf, _bestDisp);
+                        
+                        _minL0 = _mm_min_epi16(_minL0, _mm_srli_si128(_minL0, 8));
+                        _minL0 = _mm_min_epi16(_minL0, _mm_srli_si128(_minL0, 4));
+                        _minL0 = _mm_min_epi16(_minL0, _mm_srli_si128(_minL0, 2));
+                        
+                        __m128i _S = _mm_min_epi16(_minS, _mm_srli_si128(_minS, 8));
+                        _S = _mm_min_epi16(_S, _mm_srli_si128(_S, 4));
+                        _S = _mm_min_epi16(_S, _mm_srli_si128(_S, 2));
+                        
+                        minLr[0][xm] = (CostType)_mm_cvtsi128_si32(_minL0);
+                        minS = (CostType)_mm_cvtsi128_si32(_S);
+                        
+                        _S = _mm_shuffle_epi32(_mm_unpacklo_epi16(_S, _S), 0);
+                        _S = _mm_cmpeq_epi16(_minS, _S);
+                        int idx = _mm_movemask_epi8(_mm_packs_epi16(_S, _S)) & 255;
+                        
+                        bestDisp = bestDispBuf[LSBTab[idx]];
+                    #else
+                        for( d = 0; d < D; d++ )
+                        {
+                            int L0 = Cp[d] + min((int)Lr_p0[d], min(Lr_p0[d-1] + P1, min(Lr_p0[d+1] + P1, delta0))) - delta0;
+                            
+                            Lr_p[d] = (CostType)L0;
+                            minL0 = min(minL0, L0);
+                            
+                            int Sval = Sp[d] = saturate_cast<CostType>(Sp[d] + L0);
+                            if( Sval < minS )
+                            {
+                                minS = Sval;
+                                bestDisp = d;
+                            }
+                        }
+                        minLr[0][xm] = (CostType)minL0;
+                    #endif
+                    }
+                    else
+                    {
+                        for( d = 0; d < D; d++ )
+                        {
+                            int Sval = Sp[d];
+                            if( Sval < minS )
+                            {
+                                minS = Sval;
+                                bestDisp = d;
+                            }
+                        }
+                    }
+                    
+                    for( d = 0; d < D; d++ )
+                    {
+                        if( Sp[d]*(100 - uniquenessRatio) < minS*100 && std::abs(bestDisp - d) > 1 )
+                            break;
+                    }
+                    if( d < D )
+                        continue;
+                    d = bestDisp;
+                    int x2 = x + minX1 - d - minD;
+                    if( disp2cost[x2] > minS )
+                    {
+                        disp2cost[x2] = (CostType)minS;
+                        disp2ptr[x2] = (DispType)(d + minD);
+                    }
+                    
+                    if( 0 < d && d < D-1 )
+                    {
+                        // do subpixel quadratic interpolation:
+                        //   fit parabola into (x1=d-1, y1=Sp[d-1]), (x2=d, y2=Sp[d]), (x3=d+1, y3=Sp[d+1])
+                        //   then find minimum of the parabola.
+                        int denom2 = max(Sp[d-1] + Sp[d+1] - 2*Sp[d], 1);
+                        d = d*DISP_SCALE + ((Sp[d-1] - Sp[d+1])*DISP_SCALE + denom2)/(denom2*2);
+                    }
+                    else
+                        d *= DISP_SCALE;
+                    disp1ptr[x + minX1] = (DispType)(d + minD*DISP_SCALE);
+                }
+                
+                for( x = minX1; x < maxX1; x++ )
+                {
+                    // we round the computed disparity both towards -inf and +inf and check
+                    // if either of the corresponding disparities in disp2 is consistent.
+                    // This is to give the computed disparity a chance to look valid if it is.
+                    int d = disp1ptr[x];
+                    if( d == INVALID_DISP_SCALED )
+                        continue;
+                    int _d = d >> DISP_SHIFT;
+                    int d_ = (d + DISP_SCALE-1) >> DISP_SHIFT;
+                    int _x = x - _d, x_ = x - d_;
+                    if( 0 <= _x && _x < width && disp2ptr[_x] >= minD && std::abs(disp2ptr[_x] - _d) > disp12MaxDiff &&
+                       0 <= x_ && x_ < width && disp2ptr[x_] >= minD && std::abs(disp2ptr[x_] - d_) > disp12MaxDiff )
+                        disp1ptr[x] = (DispType)INVALID_DISP_SCALED;
                 }
             }
-            minLr[0][xm] = (CostType)minL0;
-        #endif
             
-            for( d = 0; d < D; d++ )
-            {
-                if( Sp[d]*(100 - uniquenessRatio) < minS*100 && std::abs(bestDisp - d) > 1 )
-                    break;
-            }
-            if( d < D )
-                continue;
-            d = bestDisp;
-            int x2 = x + minX1 - d - minD;
-            if( disp2cost[x2] > minS )
-            {
-                disp2cost[x2] = (CostType)minS;
-                disp2ptr[x2] = (DispType)(d + minD);
-            }
-            
-            if( 0 < d && d < D-1 )
-            {
-                // do subpixel quadratic interpolation:
-                //   fit parabola into (x1=d-1, y1=Sp[d-1]), (x2=d, y2=Sp[d]), (x3=d+1, y3=Sp[d+1])
-                //   then find minimum of the parabola.
-                int denom2 = max(Sp[d-1] + Sp[d+1] - 2*Sp[d], 1);
-                d = d*DISP_SCALE + ((Sp[d-1] - Sp[d+1])*DISP_SCALE + denom2)/(denom2*2);
-            }
-            else
-                d *= DISP_SCALE;
-            disp1ptr[x + minX1] = (DispType)(d + minD*DISP_SCALE);
+            // now shift the cyclic buffers
+            std::swap( Lr[0], Lr[1] );
+            std::swap( minLr[0], minLr[1] );
         }
-        
-        for( x = minX1; x < maxX1; x++ )
-        {
-            // we round the computed disparity both towards -inf and +inf and check
-            // if either of the corresponding disparities in disp2 is consistent.
-            // This is to give the computed disparity a chance to look valid if it is.
-            int d = disp1ptr[x];
-            if( d == INVALID_DISP_SCALED )
-                continue;
-            int _d = d >> DISP_SHIFT;
-            int d_ = (d + DISP_SCALE-1) >> DISP_SHIFT;
-            int _x = x - _d, x_ = x - d_;
-            if( 0 <= _x && _x < width && disp2ptr[_x] >= minD && std::abs(disp2ptr[_x] - _d) > disp12MaxDiff &&
-               0 <= x_ && x_ < width && disp2ptr[x_] >= minD && std::abs(disp2ptr[x_] - d_) > disp12MaxDiff )
-                disp1ptr[x] = (DispType)INVALID_DISP_SCALED;
-        }
-        
-        // now shift the cyclic buffers
-        std::swap( Lr[0], Lr[1] );
-        std::swap( Lr[0], Lr[2] );
-        std::swap( minLr[0], minLr[1] );
-        std::swap( minLr[0], minLr[2] );
     }
 }
 
 typedef cv::Point_<short> Point2s;
-    
+
 void filterSpeckles( Mat& img, double _newval, int maxSpeckleSize, double _maxDiff, Mat& _buf )
 {
     CV_Assert( img.type() == CV_16SC1 );
@@ -812,12 +874,12 @@ void filterSpeckles( Mat& img, double _newval, int maxSpeckleSize, double _maxDi
         }
     }
 }    
-    
-    
+
+
 void StereoSGBM::operator ()( const Mat& left, const Mat& right, Mat& disp )
 {
     CV_Assert( left.size() == right.size() && left.type() == right.type() &&
-               left.depth() == DataType<PixType>::depth );
+              left.depth() == DataType<PixType>::depth );
     
     disp.create( left.size(), CV_16S );
     
@@ -828,5 +890,30 @@ void StereoSGBM::operator ()( const Mat& left, const Mat& right, Mat& disp )
         filterSpeckles(disp, (minDisparity - 1)*DISP_SCALE, 100, DISP_SCALE, buffer);
 }
     
+    
+Rect getValidDisparityROI( Rect roi1, Rect roi2,
+                           int minDisparity,
+                           int numberOfDisparities,
+                           int SADWindowSize )
+{
+    int SW2 = SADWindowSize/2;
+    int minD = minDisparity, maxD = minDisparity + numberOfDisparities - 1;
+    
+    int xmin = max(roi1.x, roi2.x + maxD) + SW2;
+    int xmax = min(roi1.x + roi1.width, roi2.x + roi2.width - minD) - SW2;
+    int ymin = max(roi1.y, roi2.y) + SW2;
+    int ymax = min(roi1.y + roi1.height, roi2.y + roi2.height) - SW2;
+    
+    Rect r(xmin, ymin, xmax - xmin, ymax - ymin);
+    
+    return r.width > 0 && r.height > 0 ? r : Rect();
+}
+    
 }
 
+CvRect cvGetValidDisparityROI( CvRect roi1, CvRect roi2, int minDisparity,
+                               int numberOfDisparities, int SADWindowSize )
+{
+    return (CvRect)cv::getValidDisparityROI( roi1, roi2, minDisparity,
+                                             numberOfDisparities, SADWindowSize );
+}

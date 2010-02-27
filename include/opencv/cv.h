@@ -1560,6 +1560,9 @@ CVAPI(void) cvReleaseStereoBMState( CvStereoBMState** state );
 
 CVAPI(void) cvFindStereoCorrespondenceBM( const CvArr* left, const CvArr* right,
                                           CvArr* disparity, CvStereoBMState* state );
+    
+CVAPI(CvRect) cvGetValidDisparityROI( CvRect roi1, CvRect roi2, int minDisparity,
+                                      int numberOfDisparities, int SADWindowSize );
 
 /* Kolmogorov-Zabin stereo-correspondence algorithm (a.k.a. KZ1) */
 #define CV_STEREO_GC_OCCLUDED  SHRT_MAX
