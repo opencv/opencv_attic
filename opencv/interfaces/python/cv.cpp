@@ -10,6 +10,8 @@
 
 #define MODULESTR "cv"
 
+#define PYTHON_NUMPY 1
+
 static PyObject *opencv_error;
 
 struct memtrack_t {
@@ -464,6 +466,155 @@ static PyObject *cvmat_getcols(cvmat_t *cva)
   return PyInt_FromLong(cva->a->cols);
 }
 
+#if PYTHON_NUMPY
+#include "numpy/ndarrayobject.h"
+
+// A PyArrayInterface, with an associated python object that should be DECREF'ed on release
+struct arrayTrack {
+  PyArrayInterface s;
+  PyObject *o;
+};
+
+static void arrayTrackDtor(void *p)
+{
+  struct arrayTrack *at = (struct arrayTrack *)p;
+  delete at->s.shape;
+  delete at->s.strides;
+  if (at->s.descr)
+    Py_DECREF(at->s.descr);
+  Py_DECREF(at->o);
+}
+
+// Fill in fields of PyArrayInterface s using mtype.  This code is common
+// to cvmat and cvmatnd
+
+static void arrayinterface_common(PyArrayInterface *s, int mtype)
+{
+  s->two = 2;
+
+  switch (CV_MAT_DEPTH(mtype)) {
+  case CV_8U:
+    s->typekind = 'u';
+    s->itemsize = 1;
+    break;
+  case CV_8S:
+    s->typekind = 'i';
+    s->itemsize = 1;
+    break;
+  case CV_16U:
+    s->typekind = 'u';
+    s->itemsize = 2;
+    break;
+  case CV_16S:
+    s->typekind = 'i';
+    s->itemsize = 2;
+    break;
+  case CV_32S:
+    s->typekind = 'i';
+    s->itemsize = 4;
+    break;
+  case CV_32F:
+    s->typekind = 'f';
+    s->itemsize = 4;
+    break;
+  case CV_64F:
+    s->typekind = 'f';
+    s->itemsize = 8;
+    break;
+  default:
+    assert(0);
+  }
+
+  s->flags = NPY_WRITEABLE | NPY_NOTSWAPPED;
+}
+
+static PyObject *cvmat_array_struct(cvmat_t *cva)
+{
+  CvMat *m;
+  convert_to_CvMat((PyObject *)cva, &m, "");
+
+  arrayTrack *at = new arrayTrack;
+  PyArrayInterface *s = &at->s;
+
+  at->o = cva->data;
+  Py_INCREF(at->o);
+
+  arrayinterface_common(s, m->type);
+
+  if (CV_MAT_CN(m->type) == 1) {
+    s->nd = 2;
+    s->shape = new npy_intp[2];
+    s->shape[0] = m->rows;
+    s->shape[1] = m->cols;
+    s->strides = new npy_intp[2];
+    s->strides[0] = m->step;
+    s->strides[1] = s->itemsize;
+  } else {
+    s->nd = 3;
+    s->shape = new npy_intp[3];
+    s->shape[0] = m->rows;
+    s->shape[1] = m->cols;
+    s->shape[2] = CV_MAT_CN(m->type);
+    s->strides = new npy_intp[3];
+    s->strides[0] = m->step;
+    s->strides[1] = s->itemsize * CV_MAT_CN(m->type);
+    s->strides[2] = s->itemsize;
+  }
+  s->data = (void*)(m->data.ptr);
+  s->descr = PyList_New(1);
+  char typestr[10];
+  sprintf(typestr, "<%c%d", s->typekind, s->itemsize);
+  PyList_SetItem(s->descr, 0, Py_BuildValue("(ss)", "x", typestr));
+
+  return PyCObject_FromVoidPtr(s, arrayTrackDtor);
+}
+
+static PyObject *cvmatnd_array_struct(cvmatnd_t *cva)
+{
+  CvMatND *m;
+  convert_to_CvMatND((PyObject *)cva, &m, "");
+
+  arrayTrack *at = new arrayTrack;
+  PyArrayInterface *s = &at->s;
+
+  at->o = cva->data;
+  Py_INCREF(at->o);
+
+  arrayinterface_common(s, m->type);
+
+  int i;
+  if (CV_MAT_CN(m->type) == 1) {
+    s->nd = m->dims;
+    s->shape = new npy_intp[s->nd];
+    for (i = 0; i < s->nd; i++)
+      s->shape[i] = m->dim[i].size;
+    s->strides = new npy_intp[s->nd];
+    for (i = 0; i < (s->nd - 1); i++)
+      s->strides[i] = m->dim[i].step;
+    s->strides[s->nd - 1] = s->itemsize;
+  } else {
+    s->nd = m->dims + 1;
+    s->shape = new npy_intp[s->nd];
+    for (i = 0; i < (s->nd - 1); i++)
+      s->shape[i] = m->dim[i].size;
+    s->shape[s->nd - 1] = CV_MAT_CN(m->type);
+
+    s->strides = new npy_intp[s->nd];
+    for (i = 0; i < (s->nd - 2); i++)
+      s->strides[i] = m->dim[i].step;
+    s->strides[s->nd - 2] = s->itemsize * CV_MAT_CN(m->type);
+    s->strides[s->nd - 1] = s->itemsize;
+  }
+  s->data = (void*)(m->data.ptr);
+  s->descr = PyList_New(1);
+  char typestr[10];
+  sprintf(typestr, "<%c%d", s->typekind, s->itemsize);
+  PyList_SetItem(s->descr, 0, Py_BuildValue("(ss)", "x", typestr));
+
+  return PyCObject_FromVoidPtr(s, arrayTrackDtor);
+}
+#endif
+
 static PyGetSetDef cvmat_getseters[] = {
   {(char*)"type",   (getter)cvmat_gettype, (setter)NULL, (char*)"type",   NULL},
   {(char*)"step",   (getter)cvmat_getstep, (setter)NULL, (char*)"step",   NULL},
@@ -471,6 +622,9 @@ static PyGetSetDef cvmat_getseters[] = {
   {(char*)"cols",   (getter)cvmat_getcols, (setter)NULL, (char*)"cols",   NULL},
   {(char*)"width",  (getter)cvmat_getcols, (setter)NULL, (char*)"width",  NULL},
   {(char*)"height", (getter)cvmat_getrows, (setter)NULL, (char*)"height", NULL},
+#if PYTHON_NUMPY
+  {(char*)"__array_struct__", (getter)cvmat_array_struct, (setter)NULL, (char*)"__array_struct__", NULL},
+#endif
   {NULL}  /* Sentinel */
 };
 
@@ -617,6 +771,13 @@ static struct PyMethodDef cvmatnd_methods[] =
   {NULL,          NULL}
 };
 
+static PyGetSetDef cvmatnd_getseters[] = {
+#if PYTHON_NUMPY
+  {(char*)"__array_struct__", (getter)cvmatnd_array_struct, (setter)NULL, (char*)"__array_struct__", NULL},
+#endif
+  {NULL}  /* Sentinel */
+};
+
 static PyMappingMethods cvmatnd_as_map = {
   NULL,
   &cvarr_GetItem,
@@ -636,6 +797,7 @@ static void cvmatnd_specials(void)
   cvmatnd_Type.tp_as_mapping = &cvmatnd_as_map;
   cvmatnd_Type.tp_repr = cvmatnd_repr;
   cvmatnd_Type.tp_methods = cvmatnd_methods;
+  cvmatnd_Type.tp_getset = cvmatnd_getseters;
 }
 
 static int is_cvmatnd(PyObject *o)
@@ -1090,7 +1252,6 @@ static PyObject* cvseq_seq_getitem(PyObject *o, Py_ssize_t i)
 
 static PyObject* cvseq_map_getitem(PyObject *o, PyObject *item)
 {
-  cvseq_t *ps = (cvseq_t*)o;
   if (PyInt_Check(item)) {
     long i = PyInt_AS_LONG(item);
     if (i < 0)
@@ -1395,6 +1556,7 @@ static int convert_to_CvPoint2D32fPTR(PyObject *o, CvPoint2D32f **p, const char 
   return 1;
 }
 
+#if 0 // not used
 static int convert_to_CvPoint3D32fPTR(PyObject *o, CvPoint3D32f **p, const char *name = "no_name")
 {
   PyObject *fi = PySequence_Fast(o, name);
@@ -1412,6 +1574,7 @@ static int convert_to_CvPoint3D32fPTR(PyObject *o, CvPoint3D32f **p, const char 
   Py_DECREF(fi);
   return 1;
 }
+#endif
 
 static int convert_to_CvStarDetectorParams(PyObject *o, CvStarDetectorParams *dst, const char *name = "no_name")
 {
@@ -2162,20 +2325,19 @@ static PyObject *pythonize_CvMatND(cvmatnd_t *m)
 
   CvMatND *mat = m->a;
   assert(mat->dim[0].step != 0);
-#if 1
+#if 0
   PyObject *data = PyString_FromStringAndSize((char*)(mat->data.ptr), mat->dim[0].size * mat->dim[0].step);
 #else
   memtrack_t *o = PyObject_NEW(memtrack_t, &memtrack_Type);
-  size_t gap = mat->data.ptr - (uchar*)mat->refcount;
-  o->ptr = mat->refcount;
-  o->size = gap + mat->rows * mat->step;
-  PyObject *data = PyBuffer_FromReadWriteObject((PyObject*)o, (size_t)gap, mat->rows * mat->step);
+  o->ptr = cvPtr1D(mat, 0);
+  o->size = cvmatnd_size(mat);
+  PyObject *data = PyBuffer_FromReadWriteObject((PyObject*)o, (size_t)0, o->size);
   if (data == NULL)
     return NULL;
 #endif
   m->data = data;
   m->offset = 0;
-  cvDecRefData(mat); // Ref count should be zero here, so this is a release
+  // cvDecRefData(mat); // Ref count should be zero here, so this is a release
 
   return (PyObject*)m;
 }
@@ -2673,6 +2835,58 @@ static PyObject *pycvCreateMatND(PyObject *self, PyObject *args)
   ERRWRAP(m->a = cvCreateMatND(dims.count, dims.i, type));
   return pythonize_CvMatND(m);
 }
+
+#if PYTHON_NUMPY
+static PyObject *pycvfromarray(PyObject *self, PyObject *args)
+{
+  PyObject *o;
+  if (!PyArg_ParseTuple(args, "O", &o)) {
+    return NULL;
+  }
+
+  PyObject *ao = PyObject_GetAttrString(o, "__array_struct__");
+  if ((ao == NULL) || !PyCObject_Check(ao)) {
+    PyErr_SetString(PyExc_TypeError, "object does not have array interface");
+    return NULL;
+  }
+  PyArrayInterface *pai = (PyArrayInterface*)PyCObject_AsVoidPtr(ao);
+  if (pai->two != 2) {
+    PyErr_SetString(PyExc_TypeError, "object does not have array interface");
+    return NULL;
+  }
+
+  cvmatnd_t *m = PyObject_NEW(cvmatnd_t, &cvmatnd_Type);
+  int type = -1;
+
+  switch (pai->typekind) {
+  case 'i':
+    if (pai->itemsize == 1)
+      type = CV_8SC1;
+    else if (pai->itemsize == 2)
+      type = CV_16SC1;
+    else if (pai->itemsize == 4)
+      type = CV_32SC1;
+    break;
+
+  case 'u':
+    if (pai->itemsize == 1)
+      type = CV_8UC1;
+    else if (pai->itemsize == 2)
+      type = CV_16UC1;
+    break;
+
+  case 'f':
+    if (pai->itemsize == 4)
+      type = CV_32FC1;
+    else if (pai->itemsize == 8)
+      type = CV_64FC1;
+    break;
+  }
+  ERRWRAP(m->a = cvCreateMatND(pai->nd, pai->shape, type));
+  m->a->data.ptr = (uchar*)pai->data;
+  return pythonize_CvMatND(m);
+}
+#endif
 
 static PyObject *pycvCreateHist(PyObject *self, PyObject *args)
 {
@@ -3567,6 +3781,10 @@ static int zero = 0;
 #include "generated0.i"
 
 static PyMethodDef methods[] = {
+
+#if PYTHON_NUMPY
+  {"fromarray", pycvfromarray, METH_VARARGS, "fromarray(array) -> cvmatnd"},
+#endif
 
   {"CreateHist", pycvCreateHist, METH_VARARGS, "CreateHist(dims, type, ranges, uniform = 1) -> hist"},
   {"CreateImage", pycvCreateImage, METH_VARARGS, "CreateImage(size, depth, channels) -> image"},
