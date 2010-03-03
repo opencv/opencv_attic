@@ -9,6 +9,8 @@ import tarfile
 import hashlib
 import os
 import getopt
+import operator
+import functools
 
 import cv
 
@@ -682,9 +684,46 @@ class FunctionTests(OpenCVTests):
 
 class AreaTests(OpenCVTests):
 
+    def test_numpy(self):
+        if 'fromarray' in dir(cv):
+            import numpy
+            for t in [cv.CV_16UC1, cv.CV_32SC1, cv.CV_32FC1]:
+                for d in [ (8,), (1,7), (2,3,4), (7,9,2,1,8), (1,2,3,4,5,6,7,8) ]:
+                    total = reduce(operator.__mul__, d)
+                    m = cv.CreateMatND(d, t)
+                    for i in range(total):
+                        cv.Set1D(m, i, i)
+                    na = numpy.asarray(m).reshape((total,))
+                    self.assertEqual(list(na), range(total))
+
+                    # now do numpy -> cvmat, and verify
+                    m2 = cv.fromarray(na)
+
+                    # Check that new cvmat m2 contains same counting sequence
+                    for i in range(total):
+                        self.assertEqual(cv.Get1D(m, i)[0], i)
+
+            im = cv.CreateMatND([2, 13], cv.CV_16UC1)
+            cv.SetZero(im)
+            im[0,0] = 3
+            a = numpy.asarray(im)
+            cvmatnd = cv.fromarray(a)
+            self.assertEqual(cv.GetDims(cvmatnd), (2, 13))
+
+            # im, a and cvmatnd all point to the same data, so...
+            a[0, 1] = 77
+            self.assertEqual(im[0, 1], 77)
+            cvmatnd[1, 0] = 12
+            self.assertEqual(a[1, 0], 12)
+
+            im = cv.CreateMatND([2, 13], cv.CV_16UC3)
+            self.assertEqual(numpy.asarray(im).shape, (2, 13, 3))
+        else:
+            print "SKIPPING test_numpy - numpy support not built"
+
     def failing_test_exception(self):
-        a = cv.CreateImage((640,480), cv.IPL_DEPTH_8U, 1)
-        b = cv.CreateImage((640,480), cv.IPL_DEPTH_8U, 1)
+        a = cv.CreateImage((640, 480), cv.IPL_DEPTH_8U, 1)
+        b = cv.CreateImage((640, 480), cv.IPL_DEPTH_8U, 1)
         self.assertRaises(cv.error, lambda: cv.Laplace(a, b))
 
     def test_cvmat_accessors(self):
