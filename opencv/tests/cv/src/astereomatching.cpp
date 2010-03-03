@@ -616,7 +616,7 @@ protected:
         Mat leftImg; cvtColor( _leftImg, leftImg, CV_BGR2GRAY );
         Mat rightImg; cvtColor( _rightImg, rightImg, CV_BGR2GRAY );
 
-        StereoBM bm( StereoBM::BASIC_PRESET, ndisp*16 );
+        StereoBM bm( StereoBM::BASIC_PRESET, ndisp*16, winSize );
         bm( leftImg, rightImg, leftDisp, CV_32F );
     }
 };
