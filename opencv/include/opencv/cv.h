@@ -1538,13 +1538,14 @@ typedef struct CvStereoBMState
 
     int trySmallerWindows; // if 1, the results may be more accurate,
                            // at the expense of slower processing 
+    CvRect roi1, roi2;
+    int disp12MaxDiff;
 
     // temporary buffers
     CvMat* preFilteredImg0;
     CvMat* preFilteredImg1;
     CvMat* slidingSumBuf;
-    CvMat* dbmin;
-    CvMat* dbmax;
+    CvMat* cost;
     CvMat* disp;
 }
 CvStereoBMState;
@@ -1563,6 +1564,10 @@ CVAPI(void) cvFindStereoCorrespondenceBM( const CvArr* left, const CvArr* right,
     
 CVAPI(CvRect) cvGetValidDisparityROI( CvRect roi1, CvRect roi2, int minDisparity,
                                       int numberOfDisparities, int SADWindowSize );
+    
+CVAPI(void) cvValidateDisparity( CvArr* disparity, const CvArr* cost,
+                                 int minDisparity, int numberOfDisparities,
+                                 int disp12MaxDiff CV_DEFAULT(1) );  
 
 /* Kolmogorov-Zabin stereo-correspondence algorithm (a.k.a. KZ1) */
 #define CV_STEREO_GC_OCCLUDED  SHRT_MAX

@@ -143,8 +143,6 @@ CvPyramid;
 #include "_cvgeom.h"
 #include "_cvimgproc.h"
 
-
-
 #ifdef HAVE_TBB
     #include "tbb/tbb_stddef.h"
     #if TBB_VERSION_MAJOR*100 + TBB_VERSION_MINOR >= 202
@@ -156,5 +154,52 @@ CvPyramid;
     #endif
 #endif
 
+#ifdef HAVE_TBB
+    namespace cv
+    {
+        typedef tbb::blocked_range<int> BlockedRange;
+        
+        template<typename Body>
+        void parallel_for( const BlockedRange& range, const Body& body )
+        {
+            tbb::parallel_for(range, body);
+        }
+        
+        template<typename Iterator, typename Body>
+        void parallel_do( Iterator first, Iterator last, const Body& body )
+        {
+            tbb::parallel_do(first, last, body);
+        }
+    }
+#else
+    namespace cv
+    {
+        class BlockedRange
+        {
+        public:
+            BlockedRange() : _begin(0), _end(0), _grainsize(0) {}
+            BlockedRange(int b, int e, int g=1) : _begin(b), _end(e), _grainsize(g) {}
+            int begin() const { return _begin; }
+            int end() const { return _end; }
+            int grainsize() const { return _grainsize; }
+            
+        protected:
+            int _begin, _end, _grainsize;
+        };
+
+        template<typename Body>
+        void parallel_for( const BlockedRange& range, const Body& body )
+        {
+            body(range);
+        }
+        
+        template<typename Iterator, typename Body>
+        void parallel_do( Iterator first, Iterator last, const Body& body )
+        {
+            for( ; first != last; ++first )
+                body(*first);
+        }
+    }
+#endif
 
 #endif /*_CV_INTERNAL_H_*/

@@ -909,6 +909,86 @@ Rect getValidDisparityROI( Rect roi1, Rect roi2,
     return r.width > 0 && r.height > 0 ? r : Rect();
 }
     
+    
+void validateDisparity( Mat& disp, const Mat& cost, int minDisparity, int numberOfDisparities, int disp12MaxDiff )
+{
+    int cols = disp.cols, rows = disp.rows;
+    int minD = minDisparity, maxD = minDisparity + numberOfDisparities;
+    int x, minX1 = max(maxD, 0), maxX1 = cols + min(minD, 0);
+    AutoBuffer<int> _disp2buf(cols*2);
+    int* disp2buf = _disp2buf;
+    int* disp2cost = disp2buf + cols;
+    const int DISP_SHIFT = 4, DISP_SCALE = 1 << DISP_SHIFT;
+    int INVALID_DISP = minD - 1, INVALID_DISP_SCALED = INVALID_DISP*DISP_SCALE;
+    int costType = cost.type();
+    
+    disp12MaxDiff *= DISP_SCALE;
+    
+    CV_Assert( numberOfDisparities > 0 && disp.type() == CV_16S &&
+              (costType == CV_16S || costType == CV_32S) &&
+              disp.size() == cost.size() );
+    
+    for( int y = 0; y < rows; y++ )
+    {
+        short* dptr = disp.ptr<short>(y);
+        
+        for( x = 0; x < cols; x++ )
+        {
+            disp2buf[x] = INVALID_DISP;
+            disp2cost[x] = INT_MAX;
+        }
+        
+        if( costType == CV_16S )
+        {
+            const short* cptr = cost.ptr<short>(y);
+            
+            for( x = minX1; x < maxX1; x++ )
+            {
+                int d = dptr[x], c = cptr[x];
+                int x2 = x - ((d + DISP_SCALE/2) >> DISP_SHIFT);
+                
+                if( disp2cost[x2] > c )
+                {
+                    disp2cost[x2] = c;
+                    disp2buf[x2] = d;
+                }
+            }
+        }
+        else
+        {
+            const int* cptr = cost.ptr<int>(y);
+            
+            for( x = minX1; x < maxX1; x++ )
+            {
+                int d = dptr[x], c = cptr[x];
+                int x2 = x - ((d + DISP_SCALE/2) >> DISP_SHIFT);
+                
+                if( disp2cost[x2] < c )
+                {
+                    disp2cost[x2] = c;
+                    disp2buf[x2] = d;
+                }
+            }
+        }
+        
+        for( x = minX1; x < maxX1; x++ )
+        {
+            // we round the computed disparity both towards -inf and +inf and check
+            // if either of the corresponding disparities in disp2 is consistent.
+            // This is to give the computed disparity a chance to look valid if it is.
+            int d = dptr[x];
+            if( d == INVALID_DISP_SCALED )
+                continue;
+            int d0 = d >> DISP_SHIFT;
+            int d1 = (d + DISP_SCALE-1) >> DISP_SHIFT;
+            int x0 = x - d0, x1 = x - d1;
+            if( (0 <= x0 && x0 < cols && disp2buf[x0] > INVALID_DISP && std::abs(disp2buf[x0] - d) > disp12MaxDiff) &&
+                (0 <= x1 && x1 < cols && disp2buf[x1] > INVALID_DISP && std::abs(disp2buf[x1] - d) > disp12MaxDiff) )
+                dptr[x] = (short)INVALID_DISP_SCALED;
+        }
+    }
+}
+    
 }
 
 CvRect cvGetValidDisparityROI( CvRect roi1, CvRect roi2, int minDisparity,
@@ -916,4 +996,11 @@ CvRect cvGetValidDisparityROI( CvRect roi1, CvRect roi2, int minDisparity,
 {
     return (CvRect)cv::getValidDisparityROI( roi1, roi2, minDisparity,
                                              numberOfDisparities, SADWindowSize );
+}
+
+void cvValidateDisparity( CvArr* _disp, const CvArr* _cost, int minDisparity,
+                          int numberOfDisparities, int disp12MaxDiff )
+{
+    cv::Mat disp = cv::cvarrToMat(_disp), cost = cv::cvarrToMat(_cost);
+    cv::validateDisparity( disp, cost, minDisparity, numberOfDisparities, disp12MaxDiff );
 }
