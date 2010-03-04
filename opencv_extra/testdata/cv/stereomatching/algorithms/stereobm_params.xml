@@ -2,13 +2,13 @@
 <opencv_storage>
 <params>
 	<!-- numDisp and winSize -->
-	<barn2> 1 19 </barn2>
-	<bull> 1 39 </bull>
-	<cones> 4 7 </cones>
-	<poster> 3 9 </poster>
-	<sawtooth> 1 13 </sawtooth>
-	<teddy> 3 9 </teddy>
-	<tsukuba> 1 7 </tsukuba>
-	<venus> 2 43 </venus>
+	<barn2> 16 19 </barn2>
+	<bull> 16 39 </bull>
+	<cones> 64 7 </cones>
+	<poster> 48 9 </poster>
+	<sawtooth> 16 13 </sawtooth>
+	<teddy> 48 9 </teddy>
+	<tsukuba> 16 7 </tsukuba>
+	<venus> 32 43 </venus>
 </params>
 </opencv_storage>

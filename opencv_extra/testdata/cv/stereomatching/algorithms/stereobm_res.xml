@@ -3,122 +3,122 @@
 <stereo_matching>
   <barn2>
     <!-- RMS -->
-    <borderedAllRMS>2.9392745494842529e+00</borderedAllRMS>
-    <borderedNoOcclRMS>2.6558723449707031e+00</borderedNoOcclRMS>
-    <borderedOcclRMS>9.0826406478881836e+00</borderedOcclRMS>
-    <borderedTexturedRMS>2.7199440002441406e+00</borderedTexturedRMS>
-    <borderedTexturelessRMS>2.5953481197357178e+00</borderedTexturelessRMS>
-    <borderedDepthDiscontRMS>5.5574588775634766e+00</borderedDepthDiscontRMS>
-    <!-- BadPxlsPercentage -->
-    <borderedAllBadPxlsPercentage>1.0922910273075104e-01</borderedAllBadPxlsPercentage>
-    <borderedNoOcclBadPxlsPercentage>9.1056533157825470e-02</borderedNoOcclBadPxlsPercentage>
-    <borderedOcclBadPxlsPercentage>9.5564126968383789e-01</borderedOcclBadPxlsPercentage>
-    <borderedTexturedBadPxlsPercentage>7.9280391335487366e-02</borderedTexturedBadPxlsPercentage>
-    <borderedTexturelessBadPxlsPercentage>1.0192274302244186e-01</borderedTexturelessBadPxlsPercentage>
-    <borderedDepthDiscontBadPxlsPercentage>4.4630819559097290e-01</borderedDepthDiscontBadPxlsPercentage></barn2>
+    <borderedAllRMS>2.9697046279907227e+00</borderedAllRMS>
+    <borderedNoOcclRMS>2.6947205066680908e+00</borderedNoOcclRMS>
+    <borderedOcclRMS>9.0204029083251953e+00</borderedOcclRMS>
+    <borderedTexturedRMS>2.7905969619750977e+00</borderedTexturedRMS>
+    <borderedTexturelessRMS>2.6031212806701660e+00</borderedTexturelessRMS>
+    <borderedDepthDiscontRMS>5.6081957817077637e+00</borderedDepthDiscontRMS>
+    <!-- BadPxlsFraction -->
+    <borderedAllBadPxlsFraction>1.0510776191949844e-01</borderedAllBadPxlsFraction>
+    <borderedNoOcclBadPxlsFraction>8.6825996637344360e-02</borderedNoOcclBadPxlsFraction>
+    <borderedOcclBadPxlsFraction>9.5660561323165894e-01</borderedOcclBadPxlsFraction>
+    <borderedTexturedBadPxlsFraction>7.7511578798294067e-02</borderedTexturedBadPxlsFraction>
+    <borderedTexturelessBadPxlsFraction>9.5420710742473602e-02</borderedTexturelessBadPxlsFraction>
+    <borderedDepthDiscontBadPxlsFraction>4.3494275212287903e-01</borderedDepthDiscontBadPxlsFraction></barn2>
   <bull>
     <!-- RMS -->
-    <borderedAllRMS>3.0391242504119873e+00</borderedAllRMS>
-    <borderedNoOcclRMS>2.8795669078826904e+00</borderedNoOcclRMS>
-    <borderedOcclRMS>1.3057669639587402e+01</borderedOcclRMS>
-    <borderedTexturedRMS>3.3086073398590088e+00</borderedTexturedRMS>
-    <borderedTexturelessRMS>2.4831306934356689e+00</borderedTexturelessRMS>
-    <borderedDepthDiscontRMS>4.3863167762756348e+00</borderedDepthDiscontRMS>
-    <!-- BadPxlsPercentage -->
-    <borderedAllBadPxlsPercentage>8.4752470254898071e-02</borderedAllBadPxlsPercentage>
-    <borderedNoOcclBadPxlsPercentage>7.9467028379440308e-02</borderedNoOcclBadPxlsPercentage>
-    <borderedOcclBadPxlsPercentage>9.8732715845108032e-01</borderedOcclBadPxlsPercentage>
-    <borderedTexturedBadPxlsPercentage>8.2731522619724274e-02</borderedTexturedBadPxlsPercentage>
-    <borderedTexturelessBadPxlsPercentage>7.6852984726428986e-02</borderedTexturelessBadPxlsPercentage>
-    <borderedDepthDiscontBadPxlsPercentage>4.4987043738365173e-01</borderedDepthDiscontBadPxlsPercentage></bull>
+    <borderedAllRMS>2.6354846954345703e+00</borderedAllRMS>
+    <borderedNoOcclRMS>2.4656887054443359e+00</borderedNoOcclRMS>
+    <borderedOcclRMS>1.2444130897521973e+01</borderedOcclRMS>
+    <borderedTexturedRMS>2.7558054924011230e+00</borderedTexturedRMS>
+    <borderedTexturelessRMS>2.2060399055480957e+00</borderedTexturelessRMS>
+    <borderedDepthDiscontRMS>4.6247014999389648e+00</borderedDepthDiscontRMS>
+    <!-- BadPxlsFraction -->
+    <borderedAllBadPxlsFraction>9.3270637094974518e-02</borderedAllBadPxlsFraction>
+    <borderedNoOcclBadPxlsFraction>8.8075563311576843e-02</borderedNoOcclBadPxlsFraction>
+    <borderedOcclBadPxlsFraction>9.8041474819183350e-01</borderedOcclBadPxlsFraction>
+    <borderedTexturedBadPxlsFraction>8.6934097111225128e-02</borderedTexturedBadPxlsFraction>
+    <borderedTexturelessBadPxlsFraction>8.8989585638046265e-02</borderedTexturelessBadPxlsFraction>
+    <borderedDepthDiscontBadPxlsFraction>4.7518435120582581e-01</borderedDepthDiscontBadPxlsFraction></bull>
   <cones>
     <!-- RMS -->
-    <borderedAllRMS>1.6124671936035156e+01</borderedAllRMS>
-    <borderedNoOcclRMS>1.2502026557922363e+01</borderedNoOcclRMS>
-    <borderedOcclRMS>3.4613716125488281e+01</borderedOcclRMS>
-    <borderedTexturedRMS>1.1545760154724121e+01</borderedTexturedRMS>
-    <borderedTexturelessRMS>1.4701871871948242e+01</borderedTexturelessRMS>
-    <borderedDepthDiscontRMS>1.8458795547485352e+01</borderedDepthDiscontRMS>
-    <!-- BadPxlsPercentage -->
-    <borderedAllBadPxlsPercentage>2.6062533259391785e-01</borderedAllBadPxlsPercentage>
-    <borderedNoOcclBadPxlsPercentage>1.8288080394268036e-01</borderedNoOcclBadPxlsPercentage>
-    <borderedOcclBadPxlsPercentage>9.6128243207931519e-01</borderedOcclBadPxlsPercentage>
-    <borderedTexturedBadPxlsPercentage>1.8263737857341766e-01</borderedTexturedBadPxlsPercentage>
-    <borderedTexturelessBadPxlsPercentage>1.8351431190967560e-01</borderedTexturelessBadPxlsPercentage>
-    <borderedDepthDiscontBadPxlsPercentage>4.1969665884971619e-01</borderedDepthDiscontBadPxlsPercentage></cones>
+    <borderedAllRMS>1.6001134872436523e+01</borderedAllRMS>
+    <borderedNoOcclRMS>1.2243816375732422e+01</borderedNoOcclRMS>
+    <borderedOcclRMS>3.4841300964355469e+01</borderedOcclRMS>
+    <borderedTexturedRMS>1.1300376892089844e+01</borderedTexturedRMS>
+    <borderedTexturelessRMS>1.4412364959716797e+01</borderedTexturelessRMS>
+    <borderedDepthDiscontRMS>1.7307678222656250e+01</borderedDepthDiscontRMS>
+    <!-- BadPxlsFraction -->
+    <borderedAllBadPxlsFraction>2.5203987956047058e-01</borderedAllBadPxlsFraction>
+    <borderedNoOcclBadPxlsFraction>1.7092128098011017e-01</borderedNoOcclBadPxlsFraction>
+    <borderedOcclBadPxlsFraction>9.8274689912796021e-01</borderedOcclBadPxlsFraction>
+    <borderedTexturedBadPxlsFraction>1.7283539474010468e-01</borderedTexturedBadPxlsFraction>
+    <borderedTexturelessBadPxlsFraction>1.6594004631042480e-01</borderedTexturelessBadPxlsFraction>
+    <borderedDepthDiscontBadPxlsFraction>3.6046066880226135e-01</borderedDepthDiscontBadPxlsFraction></cones>
   <poster>
     <!-- RMS -->
-    <borderedAllRMS>3.6020145416259766e+00</borderedAllRMS>
-    <borderedNoOcclRMS>3.3747549057006836e+00</borderedNoOcclRMS>
-    <borderedOcclRMS>7.9826788902282715e+00</borderedOcclRMS>
-    <borderedTexturedRMS>2.7516682147979736e+00</borderedTexturedRMS>
-    <borderedTexturelessRMS>4.2754120826721191e+00</borderedTexturelessRMS>
-    <borderedDepthDiscontRMS>6.0338129997253418e+00</borderedDepthDiscontRMS>
-    <!-- BadPxlsPercentage -->
-    <borderedAllBadPxlsPercentage>1.6449931263923645e-01</borderedAllBadPxlsPercentage>
-    <borderedNoOcclBadPxlsPercentage>1.3975124061107635e-01</borderedNoOcclBadPxlsPercentage>
-    <borderedOcclBadPxlsPercentage>9.5661699771881104e-01</borderedOcclBadPxlsPercentage>
-    <borderedTexturedBadPxlsPercentage>9.9689364433288574e-02</borderedTexturedBadPxlsPercentage>
-    <borderedTexturelessBadPxlsPercentage>2.1206244826316833e-01</borderedTexturelessBadPxlsPercentage>
-    <borderedDepthDiscontBadPxlsPercentage>3.0151432752609253e-01</borderedDepthDiscontBadPxlsPercentage></poster>
+    <borderedAllRMS>4.6672196388244629e+00</borderedAllRMS>
+    <borderedNoOcclRMS>4.4640636444091797e+00</borderedNoOcclRMS>
+    <borderedOcclRMS>9.0088157653808594e+00</borderedOcclRMS>
+    <borderedTexturedRMS>3.4275686740875244e+00</borderedTexturedRMS>
+    <borderedTexturelessRMS>5.8899931907653809e+00</borderedTexturelessRMS>
+    <borderedDepthDiscontRMS>4.9208250045776367e+00</borderedDepthDiscontRMS>
+    <!-- BadPxlsFraction -->
+    <borderedAllBadPxlsFraction>2.0945931971073151e-01</borderedAllBadPxlsFraction>
+    <borderedNoOcclBadPxlsFraction>1.8584211170673370e-01</borderedNoOcclBadPxlsFraction>
+    <borderedOcclBadPxlsFraction>9.6538126468658447e-01</borderedOcclBadPxlsFraction>
+    <borderedTexturedBadPxlsFraction>1.1097636073827744e-01</borderedTexturedBadPxlsFraction>
+    <borderedTexturelessBadPxlsFraction>3.2097390294075012e-01</borderedTexturelessBadPxlsFraction>
+    <borderedDepthDiscontBadPxlsFraction>2.4112132191658020e-01</borderedDepthDiscontBadPxlsFraction></poster>
   <sawtooth>
     <!-- RMS -->
-    <borderedAllRMS>5.8943996429443359e+00</borderedAllRMS>
-    <borderedNoOcclRMS>5.7378568649291992e+00</borderedNoOcclRMS>
-    <borderedOcclRMS>9.9867849349975586e+00</borderedOcclRMS>
-    <borderedTexturedRMS>5.3858566284179688e+00</borderedTexturedRMS>
-    <borderedTexturelessRMS>6.2841501235961914e+00</borderedTexturelessRMS>
-    <borderedDepthDiscontRMS>3.8425085544586182e+00</borderedDepthDiscontRMS>
-    <!-- BadPxlsPercentage -->
-    <borderedAllBadPxlsPercentage>1.9308239221572876e-01</borderedAllBadPxlsPercentage>
-    <borderedNoOcclBadPxlsPercentage>1.7128115892410278e-01</borderedNoOcclBadPxlsPercentage>
-    <borderedOcclBadPxlsPercentage>9.7119647264480591e-01</borderedOcclBadPxlsPercentage>
-    <borderedTexturedBadPxlsPercentage>1.5352262556552887e-01</borderedTexturedBadPxlsPercentage>
-    <borderedTexturelessBadPxlsPercentage>2.0106737315654755e-01</borderedTexturelessBadPxlsPercentage>
-    <borderedDepthDiscontBadPxlsPercentage>2.9831713438034058e-01</borderedDepthDiscontBadPxlsPercentage></sawtooth>
+    <borderedAllRMS>5.9703788757324219e+00</borderedAllRMS>
+    <borderedNoOcclRMS>5.8280234336853027e+00</borderedNoOcclRMS>
+    <borderedOcclRMS>9.7770729064941406e+00</borderedOcclRMS>
+    <borderedTexturedRMS>5.5007767677307129e+00</borderedTexturedRMS>
+    <borderedTexturelessRMS>6.3390936851501465e+00</borderedTexturelessRMS>
+    <borderedDepthDiscontRMS>3.4384808540344238e+00</borderedDepthDiscontRMS>
+    <!-- BadPxlsFraction -->
+    <borderedAllBadPxlsFraction>1.8721148371696472e-01</borderedAllBadPxlsFraction>
+    <borderedNoOcclBadPxlsFraction>1.6506642103195190e-01</borderedNoOcclBadPxlsFraction>
+    <borderedOcclBadPxlsFraction>9.7759723663330078e-01</borderedOcclBadPxlsFraction>
+    <borderedTexturedBadPxlsFraction>1.5190416574478149e-01</borderedTexturedBadPxlsFraction>
+    <borderedTexturelessBadPxlsFraction>1.8714335560798645e-01</borderedTexturelessBadPxlsFraction>
+    <borderedDepthDiscontBadPxlsFraction>2.5391057133674622e-01</borderedDepthDiscontBadPxlsFraction></sawtooth>
   <teddy>
     <!-- RMS -->
-    <borderedAllRMS>1.4010182380676270e+01</borderedAllRMS>
-    <borderedNoOcclRMS>1.1385601043701172e+01</borderedNoOcclRMS>
-    <borderedOcclRMS>2.9705608367919922e+01</borderedOcclRMS>
-    <borderedTexturedRMS>1.0683773040771484e+01</borderedTexturedRMS>
-    <borderedTexturelessRMS>1.2071896553039551e+01</borderedTexturelessRMS>
-    <borderedDepthDiscontRMS>1.7000143051147461e+01</borderedDepthDiscontRMS>
-    <!-- BadPxlsPercentage -->
-    <borderedAllBadPxlsPercentage>2.6770639419555664e-01</borderedAllBadPxlsPercentage>
-    <borderedNoOcclBadPxlsPercentage>1.9725959002971649e-01</borderedNoOcclBadPxlsPercentage>
-    <borderedOcclBadPxlsPercentage>9.9023723602294922e-01</borderedOcclBadPxlsPercentage>
-    <borderedTexturedBadPxlsPercentage>1.9194893538951874e-01</borderedTexturedBadPxlsPercentage>
-    <borderedTexturelessBadPxlsPercentage>2.0277936756610870e-01</borderedTexturelessBadPxlsPercentage>
-    <borderedDepthDiscontBadPxlsPercentage>4.4740623235702515e-01</borderedDepthDiscontBadPxlsPercentage></teddy>
+    <borderedAllRMS>1.3826770782470703e+01</borderedAllRMS>
+    <borderedNoOcclRMS>1.1086133956909180e+01</borderedNoOcclRMS>
+    <borderedOcclRMS>2.9921604156494141e+01</borderedOcclRMS>
+    <borderedTexturedRMS>1.0002259254455566e+01</borderedTexturedRMS>
+    <borderedTexturelessRMS>1.2110310554504395e+01</borderedTexturelessRMS>
+    <borderedDepthDiscontRMS>1.5429952621459961e+01</borderedDepthDiscontRMS>
+    <!-- BadPxlsFraction -->
+    <borderedAllBadPxlsFraction>2.5868907570838928e-01</borderedAllBadPxlsFraction>
+    <borderedNoOcclBadPxlsFraction>1.8721485137939453e-01</borderedNoOcclBadPxlsFraction>
+    <borderedOcclBadPxlsFraction>9.9260163307189941e-01</borderedOcclBadPxlsFraction>
+    <borderedTexturedBadPxlsFraction>1.8982644379138947e-01</borderedTexturedBadPxlsFraction>
+    <borderedTexturelessBadPxlsFraction>1.8450041115283966e-01</borderedTexturelessBadPxlsFraction>
+    <borderedDepthDiscontBadPxlsFraction>3.8109087944030762e-01</borderedDepthDiscontBadPxlsFraction></teddy>
   <tsukuba>
     <!-- RMS -->
-    <borderedAllRMS>2.5117847919464111e+00</borderedAllRMS>
-    <borderedNoOcclRMS>2.3997657299041748e+00</borderedNoOcclRMS>
-    <borderedOcclRMS>5.2020101547241211e+00</borderedOcclRMS>
-    <borderedTexturedRMS>2.4129407405853271e+00</borderedTexturedRMS>
-    <borderedTexturelessRMS>2.3844866752624512e+00</borderedTexturelessRMS>
-    <borderedDepthDiscontRMS>5.1767106056213379e+00</borderedDepthDiscontRMS>
-    <!-- BadPxlsPercentage -->
-    <borderedAllBadPxlsPercentage>1.2156768888235092e-01</borderedAllBadPxlsPercentage>
-    <borderedNoOcclBadPxlsPercentage>1.0655383020639420e-01</borderedNoOcclBadPxlsPercentage>
-    <borderedOcclBadPxlsPercentage>6.8785870075225830e-01</borderedOcclBadPxlsPercentage>
-    <borderedTexturedBadPxlsPercentage>9.9258996546268463e-02</borderedTexturedBadPxlsPercentage>
-    <borderedTexturelessBadPxlsPercentage>1.1496396362781525e-01</borderedTexturelessBadPxlsPercentage>
-    <borderedDepthDiscontBadPxlsPercentage>4.2114612460136414e-01</borderedDepthDiscontBadPxlsPercentage></tsukuba>
+    <borderedAllRMS>3.0015664100646973e+00</borderedAllRMS>
+    <borderedNoOcclRMS>2.8946506977081299e+00</borderedNoOcclRMS>
+    <borderedOcclRMS>5.7259650230407715e+00</borderedOcclRMS>
+    <borderedTexturedRMS>2.3235607147216797e+00</borderedTexturedRMS>
+    <borderedTexturelessRMS>3.4372513294219971e+00</borderedTexturelessRMS>
+    <borderedDepthDiscontRMS>4.4766321182250977e+00</borderedDepthDiscontRMS>
+    <!-- BadPxlsFraction -->
+    <borderedAllBadPxlsFraction>1.8038451671600342e-01</borderedAllBadPxlsFraction>
+    <borderedNoOcclBadPxlsFraction>1.6085496544837952e-01</borderedNoOcclBadPxlsFraction>
+    <borderedOcclBadPxlsFraction>9.1699779033660889e-01</borderedOcclBadPxlsFraction>
+    <borderedTexturedBadPxlsFraction>9.2220596969127655e-02</borderedTexturedBadPxlsFraction>
+    <borderedTexturelessBadPxlsFraction>2.3998285830020905e-01</borderedTexturelessBadPxlsFraction>
+    <borderedDepthDiscontBadPxlsFraction>3.1393453478813171e-01</borderedDepthDiscontBadPxlsFraction></tsukuba>
   <venus>
     <!-- RMS -->
-    <borderedAllRMS>3.4050817489624023e+00</borderedAllRMS>
-    <borderedNoOcclRMS>3.0841722488403320e+00</borderedNoOcclRMS>
-    <borderedOcclRMS>1.1204956054687500e+01</borderedOcclRMS>
-    <borderedTexturedRMS>3.0311031341552734e+00</borderedTexturedRMS>
-    <borderedTexturelessRMS>3.1296222209930420e+00</borderedTexturelessRMS>
-    <borderedDepthDiscontRMS>3.7195005416870117e+00</borderedDepthDiscontRMS>
-    <!-- BadPxlsPercentage -->
-    <borderedAllBadPxlsPercentage>1.1623481661081314e-01</borderedAllBadPxlsPercentage>
-    <borderedNoOcclBadPxlsPercentage>1.0077582299709320e-01</borderedNoOcclBadPxlsPercentage>
-    <borderedOcclBadPxlsPercentage>9.6218025684356689e-01</borderedOcclBadPxlsPercentage>
-    <borderedTexturedBadPxlsPercentage>7.5693152844905853e-02</borderedTexturedBadPxlsPercentage>
-    <borderedTexturelessBadPxlsPercentage>1.2260337173938751e-01</borderedTexturelessBadPxlsPercentage>
-    <borderedDepthDiscontBadPxlsPercentage>3.5707512497901917e-01</borderedDepthDiscontBadPxlsPercentage></venus></stereo_matching>
+    <borderedAllRMS>3.3121912479400635e+00</borderedAllRMS>
+    <borderedNoOcclRMS>2.9800443649291992e+00</borderedNoOcclRMS>
+    <borderedOcclRMS>1.1195376396179199e+01</borderedOcclRMS>
+    <borderedTexturedRMS>3.0973603725433350e+00</borderedTexturedRMS>
+    <borderedTexturelessRMS>2.8740589618682861e+00</borderedTexturelessRMS>
+    <borderedDepthDiscontRMS>4.4652504920959473e+00</borderedDepthDiscontRMS>
+    <!-- BadPxlsFraction -->
+    <borderedAllBadPxlsFraction>1.2740714848041534e-01</borderedAllBadPxlsFraction>
+    <borderedNoOcclBadPxlsFraction>1.1219297349452972e-01</borderedNoOcclBadPxlsFraction>
+    <borderedOcclBadPxlsFraction>9.5995551347732544e-01</borderedOcclBadPxlsFraction>
+    <borderedTexturedBadPxlsFraction>8.5449673235416412e-02</borderedTexturedBadPxlsFraction>
+    <borderedTexturelessBadPxlsFraction>1.3546563684940338e-01</borderedTexturelessBadPxlsFraction>
+    <borderedDepthDiscontBadPxlsFraction>4.1135340929031372e-01</borderedDepthDiscontBadPxlsFraction></venus></stereo_matching>
 </opencv_storage>
