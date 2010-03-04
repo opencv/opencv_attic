@@ -767,7 +767,7 @@ template<typename _Tp> static inline Point3_<_Tp> operator + (const Point3_<_Tp>
                       saturate_cast<_Tp>(a.z + b.z)); }
 
 template<typename _Tp> static inline Point3_<_Tp> operator - (const Point3_<_Tp>& a, const Point3_<_Tp>& b)
-{ return Point3_<_Tp>( saturate_cast<_Tp>(a.x + b.x),
+{ return Point3_<_Tp>( saturate_cast<_Tp>(a.x - b.x),
                         saturate_cast<_Tp>(a.y - b.y),
                         saturate_cast<_Tp>(a.z - b.z)); }
 
