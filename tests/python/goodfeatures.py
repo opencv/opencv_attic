@@ -15,6 +15,11 @@ class TestGoodFeaturesToTrack(unittest.TestCase):
         # Check that GoodFeaturesToTrack has not modified input image
         self.assert_(arr.tostring() == original.tostring())
 
+        # Check for repeatability
+        for i in range(10):
+            results2 = dict([(t, cv.GoodFeaturesToTrack(arr, eig_image, temp_image, 20000, t, 2, use_harris = 1)) for t in threshes])
+            self.assert_(results == results2)
+
         for t0,t1 in zip(threshes, threshes[1:]):
              r0 = results[t0]
              r1 = results[t1]

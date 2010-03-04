@@ -721,6 +721,28 @@ class AreaTests(OpenCVTests):
         else:
             print "SKIPPING test_numpy - numpy support not built"
 
+    def test_stereo(self):
+        bm = cv.CreateStereoBMState()
+        def illegal_delete():
+            bm = cv.CreateStereoBMState()
+            del bm.preFilterType
+        def illegal_assign():
+            bm = cv.CreateStereoBMState()
+            bm.preFilterType = "foo"
+
+        self.assertRaises(TypeError, illegal_delete)
+        self.assertRaises(TypeError, illegal_assign)
+
+        left = self.get_sample("samples/c/lena.jpg", 0)
+        right = self.get_sample("samples/c/lena.jpg", 0)
+        disparity = cv.CreateMat(512, 512, cv.CV_16SC1)
+        cv.FindStereoCorrespondenceBM(left, right, disparity, bm)
+
+        gc = cv.CreateStereoGCState(16, 2)
+        left_disparity = cv.CreateMat(512, 512, cv.CV_16SC1)
+        right_disparity = cv.CreateMat(512, 512, cv.CV_16SC1)
+        cv.FindStereoCorrespondenceGC(left, right, left_disparity, right_disparity, gc)
+
     def failing_test_exception(self):
         a = cv.CreateImage((640, 480), cv.IPL_DEPTH_8U, 1)
         b = cv.CreateImage((640, 480), cv.IPL_DEPTH_8U, 1)

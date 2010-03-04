@@ -222,6 +222,7 @@ static Py_ssize_t what_size(PyObject *o)
 
 
 /************************************************************************/
+#include "generated3.i"
 
 /* iplimage */
 
@@ -3871,6 +3872,8 @@ void initcv()
   MKTYPE(iplconvkernel);
   MKTYPE(iplimage);
   MKTYPE(memtrack);
+
+#include "generated4.i"
 
   m = Py_InitModule(MODULESTR"", methods);
   d = PyModule_GetDict(m);
