@@ -68,7 +68,8 @@ static double* _cv_max_element( double* start, double* end )
 
 static void CV_CDECL icvReleaseFGDStatModel( CvFGDStatModel** model );
 static int CV_CDECL icvUpdateFGDStatModel( IplImage* curr_frame,
-                                           CvFGDStatModel*  model );
+                                           CvFGDStatModel*  model,
+                                           double );
 
 // Function cvCreateFGDStatModel initializes foreground detection process
 // parameters:
@@ -326,7 +327,7 @@ cvChangeDetection( IplImage*  prev_frame,
 //      curr_frame  - current frame from video sequence
 //      p_model     - pointer to CvFGDStatModel structure
 static int CV_CDECL
-icvUpdateFGDStatModel( IplImage* curr_frame, CvFGDStatModel*  model )
+icvUpdateFGDStatModel( IplImage* curr_frame, CvFGDStatModel*  model, double )
 {
     int            mask_step = model->Ftd->widthStep;
     CvSeq         *first_seq = NULL, *prev_seq = NULL, *seq = NULL;
