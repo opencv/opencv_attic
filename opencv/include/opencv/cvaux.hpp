@@ -1824,6 +1824,35 @@ struct DefaultRngAuto
     
 CV_EXPORTS bool find4QuadCornerSubpix(const Mat& img, std::vector<Point2f>& corners, Size region_size);
 
+    
+class CV_EXPORTS BackgroundSubtractor
+{
+public:
+    virtual ~BackgroundSubtractor();
+    virtual void operator()(const Mat& image, Mat& fgmask, double learningRate=0);
+};
+    
+    
+class CV_EXPORTS BackgroundSubtractorMOG : public BackgroundSubtractor
+{
+public:
+    BackgroundSubtractorMOG();
+    BackgroundSubtractorMOG(int history, int nmixtures, double backgroundRatio);
+    virtual ~BackgroundSubtractorMOG();
+    virtual void operator()(const Mat& image, Mat& fgmask, double learningRate=0);
+    
+    virtual void initialize(Size frameSize, int frameType);
+    
+    Size frameSize;
+    int frameType;
+    Mat bgmodel;
+    int nframes;
+    int history;
+    int nmixtures;
+    double varThreshold;
+    double backgroundRatio;
+};
+    
 
 }
 

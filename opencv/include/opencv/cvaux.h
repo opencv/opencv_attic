@@ -1171,7 +1171,8 @@ CVAPI(void)  cvDeleteMoire( IplImage*  img );
 struct CvBGStatModel;
 
 typedef void (CV_CDECL * CvReleaseBGStatModel)( struct CvBGStatModel** bg_model );
-typedef int (CV_CDECL * CvUpdateBGStatModel)( IplImage* curr_frame, struct CvBGStatModel* bg_model );
+typedef int (CV_CDECL * CvUpdateBGStatModel)( IplImage* curr_frame, struct CvBGStatModel* bg_model,
+                                              double learningRate );
 
 #define CV_BG_STAT_MODEL_FIELDS()                                                   \
     int             type; /*type of BG model*/                                      \
@@ -1200,9 +1201,9 @@ CV_INLINE void cvReleaseBGStatModel( CvBGStatModel** bg_model )
 }
 
 // Updates statistical model and returns number of found foreground regions
-CV_INLINE int cvUpdateBGStatModel( IplImage* current_frame, CvBGStatModel*  bg_model )
+CV_INLINE int cvUpdateBGStatModel( IplImage* current_frame, CvBGStatModel*  bg_model, double learningRate CV_DEFAULT(-1))
 {
-    return bg_model && bg_model->update ? bg_model->update( current_frame, bg_model ) : 0;
+    return bg_model && bg_model->update ? bg_model->update( current_frame, bg_model, learningRate ) : 0;
 }
 
 // Performs FG post-processing using segmentation
