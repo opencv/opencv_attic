@@ -1,4 +1,5 @@
 import sys
+from string import Template
 
 class argument:
   def __init__(self, fields):
@@ -61,6 +62,8 @@ conversion_types = [
 'CvBox2D', # '((ff)(ff)f)',
 'CvBox2D*',
 'CvCapture*',
+'CvStereoBMState*',
+'CvStereoGCState*',
 'CvVideoWriter*',
 'CvContourTree*',
 'CvFont',
@@ -239,6 +242,8 @@ def gen(name, args, ty):
       'CvSubdiv2DPoint*',
       'CvSubdiv2DEdge',
       'ROIplImage*',
+      'CvStereoBMState*',
+      'CvStereoGCState*',
       'float',
       'generic',
       'unsigned' ]
@@ -272,7 +277,7 @@ def gen(name, args, ty):
 
   yield '}'
 
-gen_c = [ open("generated%d.i" % i, "w") for i in range(3) ]
+gen_c = [ open("generated%d.i" % i, "w") for i in range(5) ]
 
 print "Generated %d functions" % len(api)
 for nm,args,ty in sorted(api):
@@ -304,6 +309,156 @@ for nm,args,ty in sorted(api):
 
 for l in open("%s/defs" % sys.argv[1]):
   print >>gen_c[2], "PUBLISH(%s);" % l.split()[1]
+
+# Generated objects.  gen_c[3] is the code, gen_c[4] initializers
+
+s = Template("""
+/*
+  ${cvtype} is the OpenCV C struct
+  ${ourname}_t is the Python object
+*/
+
+struct ${ourname}_t {
+  PyObject_HEAD
+  ${cvtype} *v;
+};
+
+static void ${ourname}_dealloc(PyObject *self)
+{
+  ${ourname}_t *p = (${ourname}_t*)self;
+  cvRelease${ourname}(&p->v);
+  PyObject_Del(self);
+}
+
+static PyObject *${ourname}_repr(PyObject *self)
+{
+  ${ourname}_t *p = (${ourname}_t*)self;
+  char str[1000];
+  sprintf(str, "<${ourname} %p>", p->v);
+  return PyString_FromString(str);
+}
+
+${getset_funcs}
+
+static PyGetSetDef ${ourname}_getseters[] = {
+
+  ${getset_inits}
+  {NULL}  /* Sentinel */
+};
+
+static PyTypeObject ${ourname}_Type = {
+  PyObject_HEAD_INIT(&PyType_Type)
+  0,                                      /*size*/
+  MODULESTR".${ourname}",              /*name*/
+  sizeof(${ourname}_t),                /*basicsize*/
+};
+
+static void ${ourname}_specials(void)
+{
+  ${ourname}_Type.tp_dealloc = ${ourname}_dealloc;
+  ${ourname}_Type.tp_repr = ${ourname}_repr;
+  ${ourname}_Type.tp_getset = ${ourname}_getseters;
+}
+
+static PyObject *FROM_${cvtype}PTR(${cvtype} *r)
+{
+  ${ourname}_t *m = PyObject_NEW(${ourname}_t, &${ourname}_Type);
+  m->v = r;
+  return (PyObject*)m;
+}
+
+static int convert_to_${cvtype}PTR(PyObject *o, ${cvtype}** dst, const char *name = "no_name")
+{
+  if (PyType_IsSubtype(o->ob_type, &${ourname}_Type)) {
+    *dst = ((${ourname}_t*)o)->v;
+    return 1;
+  } else {
+    (*dst) = (${cvtype}*)NULL;
+    return failmsg("Expected ${cvtype} for argument '%s'", name);
+  }
+}
+
+""")
+
+getset_func_template = Template("""
+static PyObject *${ourname}_get_${member}(${ourname}_t *p, void *closure)
+{
+  return ${rconverter}(p->v->${member});
+}
+
+static int ${ourname}_set_${member}(${ourname}_t *p, PyObject *value, void *closure)
+{
+  if (value == NULL) {
+    PyErr_SetString(PyExc_TypeError, "Cannot delete the ${member} attribute");
+    return -1;
+  }
+
+  if (! ${checker}(value)) {
+    PyErr_SetString(PyExc_TypeError, "The ${member} attribute value must be a ${typename}");
+    return -1;
+  }
+
+  p->v->${member} = ${converter}(value);
+  return 0;
+}
+
+""")
+
+getset_init_template = Template("""
+  {(char*)"${member}", (getter)${ourname}_get_${member}, (setter)${ourname}_set_${member}, (char*)"${member}", NULL},
+""")
+
+objects = [
+    ( 'CvStereoBMState', {
+        "preFilterType" : 'i',
+        "preFilterSize" : 'i',
+        "preFilterCap" : 'i',
+        "SADWindowSize" : 'i',
+        "minDisparity" : 'i',
+        "numberOfDisparities" : 'i',
+        "textureThreshold" : 'i',
+        "uniquenessRatio" : 'i',
+        "speckleWindowSize" : 'i',
+        "speckleRange" : 'i',
+    }),
+    ( 'CvStereoGCState', {
+        "Ithreshold" : 'i',
+        "interactionRadius" : 'i',
+        "K" : 'f',
+        "lambda" : 'f',
+        "lambda1" : 'f',
+        "lambda2" : 'f',
+        "occlusionCost" : 'i',
+        "minDisparity" : 'i',
+        "numberOfDisparities" : 'i',
+        "maxIters" : 'i',
+    })
+]
+
+checkers = {
+    'i' : 'PyNumber_Check',
+    'f' : 'PyNumber_Check',
+}
+converters = {
+    'i' : 'PyInt_AsLong',
+    'f' : 'PyFloat_AsDouble',
+}
+rconverters = {
+    'i' : 'PyInt_FromLong',
+    'f' : 'PyFloat_FromDouble',
+}
+typenames = {
+    'i' : 'integer',
+    'f' : 'float',
+}
+
+for (t, members) in objects:
+    map = {'cvtype' : t,
+           'ourname' : t.replace('Cv', '')}
+    gsf = "".join([getset_func_template.substitute(map, member = m, checker = checkers[t], converter = converters[t], rconverter = rconverters[t], typename = typenames[t]) for (m, t) in members.items()])
+    gsi = "".join([getset_init_template.substitute(map, member = m) for (m, t) in members.items()])
+    print >>gen_c[3], s.substitute(map, getset_funcs = gsf, getset_inits = gsi)
+    print >>gen_c[4], "MKTYPE(%s);" % map['ourname']
 
 for f in gen_c:
   f.close()

@@ -1250,6 +1250,24 @@ FindHomography homography
   int method 0
   double ransacReprojThreshold 0.0
   CvMat mask NULL
+CreateStereoBMState CvStereoBMState*
+  int preset CV_STEREO_BM_BASIC
+  int numberOfDisparities 0
+CreateStereoGCState CvStereoGCState*
+  int numberOfDisparities
+  int maxIters
+FindStereoCorrespondenceBM
+  CvArr left
+  CvArr right
+  CvArr disparity
+  CvStereoBMState* state
+FindStereoCorrespondenceGC
+  CvArr left
+  CvArr right
+  CvArr dispLeft
+  CvArr dispRight
+  CvStereoGCState* state
+  int useDisparityGuess 0
 CalibrateCamera2 
   CvMat object_points
   CvMat image_points
