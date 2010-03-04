@@ -532,9 +532,9 @@ void CvCascadeBoostTrainData::precalculate()
                 *(idst + fi*sample_count + si) = si;
         }
         if ( is_buf_16u )
-            icvSortUShAux( udst + fi*sample_count, sample_count, (float*)valCache.data );
+            icvSortUShAux( udst + fi*sample_count, sample_count, valCache.ptr<float>(fi) );
         else
-            icvSortIntAux( idst + fi*sample_count, sample_count, (float*)valCache.data );
+            icvSortIntAux( idst + fi*sample_count, sample_count, valCache.ptr<float>(fi) );
     }
 #ifdef _OPENMP
 #pragma omp parallel for num_threads(maxNumThreads) schedule(dynamic)
