@@ -943,6 +943,10 @@ CV_EXPORTS void filterSpeckles( Mat& img, double newVal, int maxSpeckleSize, dou
 CV_EXPORTS Rect getValidDisparityROI( Rect roi1, Rect roi2,
                                 int minDisparity, int numberOfDisparities,
                                 int SADWindowSize );
+    
+CV_EXPORTS void validateDisparity( Mat& disparity, const Mat& cost,
+                                   int minDisparity, int numberOfDisparities,
+                                   int disp12MaxDisp=1 );
 
 CV_EXPORTS void reprojectImageTo3D( const Mat& disparity,
                                     Mat& _3dImage, const Mat& Q,
