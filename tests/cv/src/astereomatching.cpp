@@ -277,9 +277,9 @@ float dispRMS( const Mat& computedDisp, const Mat& groundTruthDisp, const Mat& m
 }
 
 /*
-  Calculate percentage of bad matching pixels.
+  Calculate fraction of bad matching pixels.
 */
-float badMatchPxlsPercentage( const Mat& computedDisp, const Mat& groundTruthDisp, const Mat& mask,
+float badMatchPxlsFraction( const Mat& computedDisp, const Mat& groundTruthDisp, const Mat& mask,
                               int badThresh = EVAL_BAD_THRESH )
 {
     checkSizeAndTypeOfDispMaps( computedDisp, groundTruthDisp );
@@ -319,13 +319,13 @@ string ERROR_PREFIXES[] = { "borderedAll",
 
 
 const string RMS_STR = "RMS";
-const string BAD_PXLS_PERCENTAGE_STR = "BadPxlsPercentage";
+const string BAD_PXLS_FRACTION_STR = "BadPxlsFraction";
 
 class CV_StereoMatchingTest : public CvTest
 {
 public:
-    CV_StereoMatchingTest( const char* testName ) :
-            CvTest( testName, "stereo-matching" ) { rmsEps = perEps = 0.01f; }
+    CV_StereoMatchingTest( const char* testName ) : CvTest( testName, "stereo-matching" )
+        { rmsEps.resize( ERROR_KINDS_COUNT, 0.01f );  fracEps.resize( ERROR_KINDS_COUNT, 1.e-6f ); }
 protected:
     // assumed that left image is a reference image
     virtual void runStereoMatchingAlgorithm( const Mat& leftImg, const Mat& rightImg,
@@ -346,8 +346,8 @@ protected:
     vector<int> dispScaleFactors;
     vector<int> dispUnknownVal;
 
-    float rmsEps;
-    float perEps;
+    vector<float> rmsEps;
+    vector<float> fracEps;
 };
 
 void CV_StereoMatchingTest::run(int)
@@ -429,7 +429,7 @@ void calcErrors( const Mat& leftImg, const Mat& rightImg,
                  const Mat& trueLeftDisp, const Mat& trueRightDisp,
                  const Mat& trueLeftUnknDispMask, const Mat& trueRightUnknDispMask,
                  const Mat& calcLeftDisp, const Mat& calcRightDisp,
-                 vector<float>& rms, vector<float>& badPxlsPercentages )
+                 vector<float>& rms, vector<float>& badPxlsFractions )
 {
     Mat texturelessMask, texturedMask;
     computeTextureBasedMasks( leftImg, &texturelessMask, &texturedMask );
@@ -455,13 +455,13 @@ void calcErrors( const Mat& leftImg, const Mat& rightImg,
     rms[4] = dispRMS( calcLeftDisp, trueLeftDisp, texturelessMask );
     rms[5] = dispRMS( calcLeftDisp, trueLeftDisp, depthDiscontMask );
 
-    badPxlsPercentages.resize(ERROR_KINDS_COUNT);
-    badPxlsPercentages[0] = badMatchPxlsPercentage( calcLeftDisp, trueLeftDisp, borderedKnownMask );
-    badPxlsPercentages[1] = badMatchPxlsPercentage( calcLeftDisp, trueLeftDisp, nonOccludedMask );
-    badPxlsPercentages[2] = badMatchPxlsPercentage( calcLeftDisp, trueLeftDisp, occludedMask );
-    badPxlsPercentages[3] = badMatchPxlsPercentage( calcLeftDisp, trueLeftDisp, texturedMask );
-    badPxlsPercentages[4] = badMatchPxlsPercentage( calcLeftDisp, trueLeftDisp, texturelessMask );
-    badPxlsPercentages[5] = badMatchPxlsPercentage( calcLeftDisp, trueLeftDisp, depthDiscontMask );
+    badPxlsFractions.resize(ERROR_KINDS_COUNT);
+    badPxlsFractions[0] = badMatchPxlsFraction( calcLeftDisp, trueLeftDisp, borderedKnownMask );
+    badPxlsFractions[1] = badMatchPxlsFraction( calcLeftDisp, trueLeftDisp, nonOccludedMask );
+    badPxlsFractions[2] = badMatchPxlsFraction( calcLeftDisp, trueLeftDisp, occludedMask );
+    badPxlsFractions[3] = badMatchPxlsFraction( calcLeftDisp, trueLeftDisp, texturedMask );
+    badPxlsFractions[4] = badMatchPxlsFraction( calcLeftDisp, trueLeftDisp, texturelessMask );
+    badPxlsFractions[5] = badMatchPxlsFraction( calcLeftDisp, trueLeftDisp, depthDiscontMask );
 }
 
 int CV_StereoMatchingTest::processStereoMatchingResults( FileStorage& fs, int datasetIdx, bool isWrite,
@@ -488,9 +488,9 @@ int CV_StereoMatchingTest::processStereoMatchingResults( FileStorage& fs, int da
     }
 
     // calculate errors
-    vector<float> rmss, badPxlsPercentages;
+    vector<float> rmss, badPxlsFractions;
     calcErrors( leftImg, rightImg, trueLeftDisp, trueRightDisp, leftUnknMask, rightUnknMask,
-                leftDisp, rightDisp, rmss, badPxlsPercentages );
+                leftDisp, rightDisp, rmss, badPxlsFractions );
 
     const string& datasetName = datasetsNames[datasetIdx];
     if( isWrite )
@@ -498,8 +498,8 @@ int CV_StereoMatchingTest::processStereoMatchingResults( FileStorage& fs, int da
         fs << datasetName << "{";
         cvWriteComment( fs.fs, RMS_STR.c_str(), 0 );
         writeErrors( RMS_STR, rmss, &fs );
-        cvWriteComment( fs.fs, BAD_PXLS_PERCENTAGE_STR.c_str(), 0 );
-        writeErrors( BAD_PXLS_PERCENTAGE_STR, badPxlsPercentages, &fs );
+        cvWriteComment( fs.fs, BAD_PXLS_FRACTION_STR.c_str(), 0 );
+        writeErrors( BAD_PXLS_FRACTION_STR, badPxlsFractions, &fs );
         fs << "}"; // datasetName
     }
     else // compare
@@ -507,19 +507,17 @@ int CV_StereoMatchingTest::processStereoMatchingResults( FileStorage& fs, int da
         ts->printf( CvTS::LOG, "\nquality on dataset %s\n", datasetName.c_str() );
         ts->printf( CvTS::LOG, "%s\n", RMS_STR.c_str() );
         writeErrors( RMS_STR, rmss );
-        ts->printf( CvTS::LOG, "%s\n", BAD_PXLS_PERCENTAGE_STR.c_str() );
-        writeErrors( BAD_PXLS_PERCENTAGE_STR, badPxlsPercentages );
+        ts->printf( CvTS::LOG, "%s\n", BAD_PXLS_FRACTION_STR.c_str() );
+        writeErrors( BAD_PXLS_FRACTION_STR, badPxlsFractions );
 
         FileNode fn = fs.getFirstTopLevelNode()[datasetName];
-        vector<float> validRmss, validBadPxlsPercentages;
+        vector<float> validRmss, validBadPxlsFractions;
 
         readErrors( fn, RMS_STR, validRmss );
-        readErrors( fn, BAD_PXLS_PERCENTAGE_STR, validBadPxlsPercentages );
-        int tempCode = compareErrors( rmss, validRmss,
-                      vector<float>(ERROR_KINDS_COUNT, rmsEps), RMS_STR );
+        readErrors( fn, BAD_PXLS_FRACTION_STR, validBadPxlsFractions );
+        int tempCode = compareErrors( rmss, validRmss, rmsEps, RMS_STR );
         code = tempCode==CvTS::OK ? code : tempCode;
-        tempCode = compareErrors( badPxlsPercentages, validBadPxlsPercentages,
-                      vector<float>(ERROR_KINDS_COUNT, perEps), BAD_PXLS_PERCENTAGE_STR );
+        tempCode = compareErrors( badPxlsFractions, validBadPxlsFractions, fracEps, BAD_PXLS_FRACTION_STR );
         code = tempCode==CvTS::OK ? code : tempCode;
     }
     return code;
@@ -583,7 +581,7 @@ int CV_StereoMatchingTest::compareErrors( const vector<float>& calcErrors, const
     for( int i = 0; i < ERROR_KINDS_COUNT; i++, ++calcIt, ++validIt, ++epsIt )
         if( fabs(*calcIt - *validIt) > *epsIt )
         {
-            ts->printf( CvTS::LOG, "bad accuracy of %s\n", string(ERROR_PREFIXES[i]+errName).c_str() );
+            ts->printf( CvTS::LOG, "bad accuracy of %s (valid=%f; calc=%f)\n", string(ERROR_PREFIXES[i]+errName).c_str(), *validIt, *calcIt );
             ok = false;
         }
     return ok ? CvTS::OK : CvTS::FAIL_BAD_ACCURACY;
@@ -594,13 +592,13 @@ int CV_StereoMatchingTest::compareErrors( const vector<float>& calcErrors, const
 class CV_StereoBMTest : public CV_StereoMatchingTest
 {
 public:
-    CV_StereoBMTest() :
-            CV_StereoMatchingTest( "stereobm" ) { rmsEps = 2.5f; perEps = 0.1f; }
+    CV_StereoBMTest() : CV_StereoMatchingTest( "stereobm" )
+    { fill(rmsEps.begin(), rmsEps.end(), 0.001f); fill(fracEps.begin(), fracEps.end(), 0.00001f); }
 protected:
     virtual void runStereoMatchingAlgorithm( const Mat& _leftImg, const Mat& _rightImg,
                    Mat& leftDisp, Mat& rightDisp, FileStorage& paramsFS, const string& datasetName )
     {
-        int ndisp = 7;
+        int ndisp = 16;
         int winSize = 21;
         assert( !datasetName.empty() );
         if( paramsFS.isOpened() )
@@ -610,13 +608,13 @@ protected:
         }
         else
             ts->printf( CvTS::LOG, "%s was tested with default params "
-                        "(ndisp = 7, winSize = 21)\n", datasetName.c_str());
-
+                        "(ndisp = 16, winSize = 21)\n", datasetName.c_str());
+        assert( ndisp%16 == 0 );
         assert( _leftImg.type() == CV_8UC3 && _rightImg.type() == CV_8UC3 );
         Mat leftImg; cvtColor( _leftImg, leftImg, CV_BGR2GRAY );
         Mat rightImg; cvtColor( _rightImg, rightImg, CV_BGR2GRAY );
 
-        StereoBM bm( StereoBM::BASIC_PRESET, ndisp*16, winSize );
+        StereoBM bm( StereoBM::BASIC_PRESET, ndisp, winSize );
         bm( leftImg, rightImg, leftDisp, CV_32F );
     }
 };
@@ -628,8 +626,16 @@ CV_StereoBMTest stereoBM;
 class CV_StereoGCTest : public CV_StereoMatchingTest
 {
 public:
-    CV_StereoGCTest() :
-            CV_StereoMatchingTest( "stereogc" ) { rmsEps = 1.f; perEps = 0.08f; }
+    CV_StereoGCTest() : CV_StereoMatchingTest( "stereogc" )
+    {
+        fill(rmsEps.begin(), rmsEps.end(), 3.f);
+        fracEps[0] = 0.05f; // all
+        fracEps[1] = 0.05f; // noOccl
+        fracEps[2] = 0.25f; // occl
+        fracEps[3] = 0.05f; // textured
+        fracEps[4] = 0.10f; // textureless
+        fracEps[5] = 0.10f; // borderedDepthDiscont
+    }
 protected:
     virtual void runStereoMatchingAlgorithm( const Mat& _leftImg, const Mat& _rightImg,
                    Mat& leftDisp, Mat& rightDisp, FileStorage& paramsFS, const string& datasetName )
