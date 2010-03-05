@@ -145,6 +145,7 @@ static int convert_to_IplImage(PyObject *o, IplImage **dst, const char *name = "
 static int convert_to_CvMat(PyObject *o, CvMat **dst, const char *name = "no_name");
 static int convert_to_CvMatND(PyObject *o, CvMatND **dst, const char *name = "no_name");
 static PyObject *what_data(PyObject *o);
+static PyObject *FROM_CvMat(CvMat *r);
 
 static void translate_error_to_exception(void)
 {
@@ -222,6 +223,13 @@ static Py_ssize_t what_size(PyObject *o)
 
 
 /************************************************************************/
+
+CvMat *PyCvMat_AsCvMat(PyObject *o)
+{
+  assert(0); // not yet implemented: reference counting for CvMat in Kalman is unclear...
+  return NULL;
+}
+
 #include "generated3.i"
 
 /* iplimage */
@@ -2287,7 +2295,6 @@ static PyObject *pythonize_CvMat(cvmat_t *m)
 
   // Now m has a reference to data, which has a reference to o.
 
-  // cvDecRefData(mat); // Ref count should be zero here, so this is a release
   return (PyObject*)m;
 }
 
@@ -2355,6 +2362,7 @@ static PyObject *pythonize_CvMatND(cvmatnd_t *m)
 #define FROM_double(r)  PyFloat_FromDouble(r)
 #define FROM_float(r)  PyFloat_FromDouble(r)
 #define FROM_int(r)  PyInt_FromLong(r)
+#define FROM_int64(r)  PyLong_FromLongLong(r)
 #define FROM_unsigned(r)  PyLong_FromUnsignedLong(r)
 #define FROM_CvBox2D(r) Py_BuildValue("(ff)(ff)f", r.center.x, r.center.y, r.size.width, r.size.height, r.angle)
 #define FROM_CvScalar(r)  Py_BuildValue("(ffff)", r.val[0], r.val[1], r.val[2], r.val[3])
@@ -3779,6 +3787,10 @@ static int zero = 0;
 /************************************************************************/
 /* Generated functions */
 
+#define constCvMat const CvMat
+#define FROM_constCvMatPTR(x) FROM_CvMatPTR((CvMat*)x)
+
+
 #include "generated0.i"
 
 static PyMethodDef methods[] = {
@@ -3900,30 +3912,37 @@ void initcv()
   PUBLISH(CV_LOAD_IMAGE_UNCHANGED);
   PUBLISH(CV_HIST_ARRAY);
   PUBLISH(CV_HIST_SPARSE);
+  PUBLISH(CV_8U);
   PUBLISH(CV_8UC1);
   PUBLISH(CV_8UC2);
   PUBLISH(CV_8UC3);
   PUBLISH(CV_8UC4);
+  PUBLISH(CV_8S);
   PUBLISH(CV_8SC1);
   PUBLISH(CV_8SC2);
   PUBLISH(CV_8SC3);
   PUBLISH(CV_8SC4);
+  PUBLISH(CV_16U);
   PUBLISH(CV_16UC1);
   PUBLISH(CV_16UC2);
   PUBLISH(CV_16UC3);
   PUBLISH(CV_16UC4);
+  PUBLISH(CV_16S);
   PUBLISH(CV_16SC1);
   PUBLISH(CV_16SC2);
   PUBLISH(CV_16SC3);
   PUBLISH(CV_16SC4);
+  PUBLISH(CV_32S);
   PUBLISH(CV_32SC1);
   PUBLISH(CV_32SC2);
   PUBLISH(CV_32SC3);
   PUBLISH(CV_32SC4);
+  PUBLISH(CV_32F);
   PUBLISH(CV_32FC1);
   PUBLISH(CV_32FC2);
   PUBLISH(CV_32FC3);
   PUBLISH(CV_32FC4);
+  PUBLISH(CV_64F);
   PUBLISH(CV_64FC1);
   PUBLISH(CV_64FC2);
   PUBLISH(CV_64FC3);

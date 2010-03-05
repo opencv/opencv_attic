@@ -64,6 +64,7 @@ conversion_types = [
 'CvCapture*',
 'CvStereoBMState*',
 'CvStereoGCState*',
+'CvKalman*',
 'CvVideoWriter*',
 'CvContourTree*',
 'CvFont',
@@ -217,6 +218,7 @@ def gen(name, args, ty):
   else:
     Rtypes = [
       'int',
+      'int64',
       'double',
       'CvCapture*',
       'CvVideoWriter*',
@@ -235,6 +237,7 @@ def gen(name, args, ty):
       'IplConvKernel*',
       'IplImage*',
       'CvMat*',
+      'constCvMat*',
       'CvMatND*',
       'CvPoint2D32f_4',
       'CvRNG',
@@ -244,6 +247,7 @@ def gen(name, args, ty):
       'ROIplImage*',
       'CvStereoBMState*',
       'CvStereoGCState*',
+      'CvKalman*',
       'float',
       'generic',
       'unsigned' ]
@@ -310,7 +314,11 @@ for nm,args,ty in sorted(api):
 for l in open("%s/defs" % sys.argv[1]):
   print >>gen_c[2], "PUBLISH(%s);" % l.split()[1]
 
-# Generated objects.  gen_c[3] is the code, gen_c[4] initializers
+########################################################################
+# Generated objects.
+########################################################################
+
+# gen_c[3] is the code, gen_c[4] initializers
 
 s = Template("""
 /*
@@ -432,24 +440,37 @@ objects = [
         "minDisparity" : 'i',
         "numberOfDisparities" : 'i',
         "maxIters" : 'i',
-    })
+    }),
+    ( 'CvKalman', {
+        "MP" : 'i',
+        "DP" : 'i',
+        "CP" : 'i',
+        "state_pre" : 'm',
+    }),
 ]
 
 checkers = {
     'i' : 'PyNumber_Check',
     'f' : 'PyNumber_Check',
+    'm' : 'is_cvmat'
 }
+# Python -> C
 converters = {
     'i' : 'PyInt_AsLong',
     'f' : 'PyFloat_AsDouble',
+    'm' : 'PyCvMat_AsCvMat'
 }
+# C -> Python
 rconverters = {
     'i' : 'PyInt_FromLong',
     'f' : 'PyFloat_FromDouble',
+    'm' : 'FROM_CvMat'
 }
+# Human-readable type names
 typenames = {
     'i' : 'integer',
     'f' : 'float',
+    'm' : 'list of CvMat'
 }
 
 for (t, members) in objects:
