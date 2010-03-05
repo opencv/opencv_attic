@@ -1229,7 +1229,7 @@ HaarDetectObjects CvSeqOfCvAvgComp*
   double scale_factor 1.1   /ch_doubleAbove1
   int min_neighbors 3
   int flags 0
-#  CvSize min_size cvSize(0,0)
+  CvSize min_size cvSize(0,0)
 
 ProjectPoints2
   CvMat object_points
@@ -1453,6 +1453,13 @@ CamShift int,comp,box
   CvTermCriteria criteria
   CvConnectedComp comp /O
   CvBox2D box /O
+CreateKalman CvKalman*
+  int dynam_params
+  int measure_params
+  int control_params 0
+KalmanCorrect constCvMat*
+  CvKalman* kalman
+  CvMat measurement
 SnakeImage
   IplImage image
   CvPoints points
@@ -1569,6 +1576,9 @@ DecodeImageM CvMat*
   CvMat buf
   int iscolor CV_LOAD_IMAGE_COLOR
 StartWindowThread
+
+GetTickCount int64
+GetTickFrequency int64
 
 # cvaux stuff
 HOGDetectMultiScale CvSeq*
