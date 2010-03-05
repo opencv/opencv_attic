@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <opencv_storage>
 <stereo_matching>
-  <barn2>
+  <case_barn2>
     <!-- RMS -->
     <borderedAllRMS>8.8603770732879639e-01</borderedAllRMS>
     <borderedNoOcclRMS>6.9244784116744995e-01</borderedNoOcclRMS>
@@ -15,8 +15,8 @@
     <borderedOcclBadPxlsFraction>5.4741239547729492e-01</borderedOcclBadPxlsFraction>
     <borderedTexturedBadPxlsFraction>1.1144985444843769e-02</borderedTexturedBadPxlsFraction>
     <borderedTexturelessBadPxlsFraction>3.2244794070720673e-02</borderedTexturelessBadPxlsFraction>
-    <borderedDepthDiscontBadPxlsFraction>8.4495998919010162e-02</borderedDepthDiscontBadPxlsFraction></barn2>
-  <bull>
+    <borderedDepthDiscontBadPxlsFraction>8.4495998919010162e-02</borderedDepthDiscontBadPxlsFraction></case_barn2>
+  <case_bull>
     <!-- RMS -->
     <borderedAllRMS>3.7193709611892700e-01</borderedAllRMS>
     <borderedNoOcclRMS>3.6503484845161438e-01</borderedNoOcclRMS>
@@ -30,8 +30,8 @@
     <borderedOcclBadPxlsFraction>2.0391705632209778e-01</borderedOcclBadPxlsFraction>
     <borderedTexturedBadPxlsFraction>5.6590605527162552e-03</borderedTexturedBadPxlsFraction>
     <borderedTexturelessBadPxlsFraction>2.0203370600938797e-02</borderedTexturelessBadPxlsFraction>
-    <borderedDepthDiscontBadPxlsFraction>1.3673509657382965e-01</borderedDepthDiscontBadPxlsFraction></bull>
-  <cones>
+    <borderedDepthDiscontBadPxlsFraction>1.3673509657382965e-01</borderedDepthDiscontBadPxlsFraction></case_bull>
+  <case_cones>
     <!-- RMS -->
     <borderedAllRMS>3.7660238742828369e+00</borderedAllRMS>
     <borderedNoOcclRMS>2.2453501224517822e+00</borderedNoOcclRMS>
@@ -45,8 +45,8 @@
     <borderedOcclBadPxlsFraction>7.0024454593658447e-01</borderedOcclBadPxlsFraction>
     <borderedTexturedBadPxlsFraction>1.1467904597520828e-01</borderedTexturedBadPxlsFraction>
     <borderedTexturelessBadPxlsFraction>1.2472582608461380e-01</borderedTexturelessBadPxlsFraction>
-    <borderedDepthDiscontBadPxlsFraction>1.9106541574001312e-01</borderedDepthDiscontBadPxlsFraction></cones>
-  <poster>
+    <borderedDepthDiscontBadPxlsFraction>1.9106541574001312e-01</borderedDepthDiscontBadPxlsFraction></case_cones>
+  <case_poster>
     <!-- RMS -->
     <borderedAllRMS>4.7536170482635498e-01</borderedAllRMS>
     <borderedNoOcclRMS>3.3776870369911194e-01</borderedNoOcclRMS>
@@ -60,8 +60,8 @@
     <borderedOcclBadPxlsFraction>1.1853637546300888e-01</borderedOcclBadPxlsFraction>
     <borderedTexturedBadPxlsFraction>1.7978340620175004e-03</borderedTexturedBadPxlsFraction>
     <borderedTexturelessBadPxlsFraction>5.7604793255450204e-05</borderedTexturelessBadPxlsFraction>
-    <borderedDepthDiscontBadPxlsFraction>8.2927709445357323e-03</borderedDepthDiscontBadPxlsFraction></poster>
-  <sawtooth>
+    <borderedDepthDiscontBadPxlsFraction>8.2927709445357323e-03</borderedDepthDiscontBadPxlsFraction></case_poster>
+  <case_sawtooth>
     <!-- RMS -->
     <borderedAllRMS>1.1130944490432739e+00</borderedAllRMS>
     <borderedNoOcclRMS>8.3637070655822754e-01</borderedNoOcclRMS>
@@ -75,8 +75,8 @@
     <borderedOcclBadPxlsFraction>3.0674543976783752e-01</borderedOcclBadPxlsFraction>
     <borderedTexturedBadPxlsFraction>8.1253368407487869e-03</borderedTexturedBadPxlsFraction>
     <borderedTexturelessBadPxlsFraction>1.0415319353342056e-02</borderedTexturelessBadPxlsFraction>
-    <borderedDepthDiscontBadPxlsFraction>6.5905548632144928e-02</borderedDepthDiscontBadPxlsFraction></sawtooth>
-  <teddy>
+    <borderedDepthDiscontBadPxlsFraction>6.5905548632144928e-02</borderedDepthDiscontBadPxlsFraction></case_sawtooth>
+  <case_teddy>
     <!-- RMS -->
     <borderedAllRMS>2.4008355140686035e+00</borderedAllRMS>
     <borderedNoOcclRMS>1.8177765607833862e+00</borderedNoOcclRMS>
@@ -90,8 +90,8 @@
     <borderedOcclBadPxlsFraction>7.4075204133987427e-01</borderedOcclBadPxlsFraction>
     <borderedTexturedBadPxlsFraction>8.8783964514732361e-02</borderedTexturedBadPxlsFraction>
     <borderedTexturelessBadPxlsFraction>2.5913196802139282e-01</borderedTexturelessBadPxlsFraction>
-    <borderedDepthDiscontBadPxlsFraction>2.3737339675426483e-01</borderedDepthDiscontBadPxlsFraction></teddy>
-  <tsukuba>
+    <borderedDepthDiscontBadPxlsFraction>2.3737339675426483e-01</borderedDepthDiscontBadPxlsFraction></case_teddy>
+  <case_tsukuba>
     <!-- RMS -->
     <borderedAllRMS>9.2417442798614502e-01</borderedAllRMS>
     <borderedNoOcclRMS>7.7376806735992432e-01</borderedNoOcclRMS>
@@ -105,8 +105,8 @@
     <borderedOcclBadPxlsFraction>3.6732891201972961e-01</borderedOcclBadPxlsFraction>
     <borderedTexturedBadPxlsFraction>2.0044153556227684e-02</borderedTexturedBadPxlsFraction>
     <borderedTexturelessBadPxlsFraction>2.8173983097076416e-02</borderedTexturelessBadPxlsFraction>
-    <borderedDepthDiscontBadPxlsFraction>8.9960016310214996e-02</borderedDepthDiscontBadPxlsFraction></tsukuba>
-  <venus>
+    <borderedDepthDiscontBadPxlsFraction>8.9960016310214996e-02</borderedDepthDiscontBadPxlsFraction></case_tsukuba>
+  <case_venus>
     <!-- RMS -->
     <borderedAllRMS>7.1949613094329834e-01</borderedAllRMS>
     <borderedNoOcclRMS>6.6295725107192993e-01</borderedNoOcclRMS>
@@ -120,5 +120,5 @@
     <borderedOcclBadPxlsFraction>4.4901743531227112e-01</borderedOcclBadPxlsFraction>
     <borderedTexturedBadPxlsFraction>1.2435927987098694e-02</borderedTexturedBadPxlsFraction>
     <borderedTexturelessBadPxlsFraction>5.0676062703132629e-02</borderedTexturelessBadPxlsFraction>
-    <borderedDepthDiscontBadPxlsFraction>1.1578573286533356e-01</borderedDepthDiscontBadPxlsFraction></venus></stereo_matching>
+    <borderedDepthDiscontBadPxlsFraction>1.1578573286533356e-01</borderedDepthDiscontBadPxlsFraction></case_venus></stereo_matching>
 </opencv_storage>
