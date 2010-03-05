@@ -304,13 +304,13 @@ bin ranges, they assume thy are equally spaced in 0 to 255 bins.
 Returns a pointer to the histogram bin.
 
 \begin{lstlisting}
-#define cvGetHistValue\_1D( hist, idx0 ) \
+#define cvGetHistValue_1D( hist, idx0 ) 
     ((float*)(cvPtr1D( (hist)->bins, (idx0), 0 ))
-#define cvGetHistValue\_2D( hist, idx0, idx1 ) \
+#define cvGetHistValue_2D( hist, idx0, idx1 ) 
     ((float*)(cvPtr2D( (hist)->bins, (idx0), (idx1), 0 )))
-#define cvGetHistValue\_3D( hist, idx0, idx1, idx2 ) \
+#define cvGetHistValue_3D( hist, idx0, idx1, idx2 ) 
     ((float*)(cvPtr3D( (hist)->bins, (idx0), (idx1), (idx2), 0 )))
-#define cvGetHistValue\_nD( hist, idx ) \
+#define cvGetHistValue_nD( hist, idx ) 
     ((float*)(cvPtrND( (hist)->bins, (idx), 0 )))
 \end{lstlisting}
 
