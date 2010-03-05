@@ -329,32 +329,39 @@ public:
 protected:
     // assumed that left image is a reference image
     virtual void runStereoMatchingAlgorithm( const Mat& leftImg, const Mat& rightImg,
-                   Mat& leftDisp, Mat& rightDisp, FileStorage& paramsFS, const string& datasetName ) = 0;
+                   Mat& leftDisp, Mat& rightDisp, int caseIdx ) = 0;
 
-    int readDatasetsInfo();
+    int readDatasetsParams( FileStorage& fs );
+    virtual int readRunParams( FileStorage& fs );
     void writeErrors( const string& errName, const vector<float>& errors, FileStorage* fs = 0 );
     void readErrors( FileNode& fn, const string& errName, vector<float>& errors );
     int compareErrors( const vector<float>& calcErrors, const vector<float>& validErrors,
                        const vector<float>& eps, const string& errName );
-    int processStereoMatchingResults( FileStorage& fs, int datasetIdx, bool isWrite,
+    int processStereoMatchingResults( FileStorage& fs, int caseIdx, bool isWrite,
                   const Mat& leftImg, const Mat& rightImg,
                   const Mat& trueLeftDisp, const Mat& trueRightDisp,
                   const Mat& leftDisp, const Mat& rightDisp );
     void run( int );
 
-    vector<string> datasetsNames;
-    vector<int> dispScaleFactors;
-    vector<int> dispUnknownVal;
-
     vector<float> rmsEps;
     vector<float> fracEps;
+
+    struct DatasetParams
+    {
+        int dispScaleFactor;
+        int dispUnknVal;
+    };
+    map<string, DatasetParams> datasetsParams;
+
+    vector<string> caseNames;
+    vector<string> caseDatasets;
 };
 
 void CV_StereoMatchingTest::run(int)
 {
     string dataPath = ts->get_data_path();
-    string algoritmName = name;
-    assert( !algoritmName.empty() );
+    string algorithmName = name;
+    assert( !algorithmName.empty() );
     if( dataPath.empty() )
     {
         ts->printf( CvTS::LOG, "dataPath is empty" );
@@ -362,17 +369,24 @@ void CV_StereoMatchingTest::run(int)
         return;
     }
 
-    int code = readDatasetsInfo();
+    FileStorage datasetsFS( dataPath + DATASETS_DIR + DATASETS_FILE, FileStorage::READ );
+    int code = readDatasetsParams( datasetsFS );
     if( code != CvTS::OK )
     {
         ts->set_failed_test_info( code );
         return;
     }
-
-    string fullResultFilename = dataPath + ALGORITHMS_DIR + algoritmName + RESULT_FILE;
-    bool isWrite = true; // write or compare results
-    FileStorage runParamsFS( dataPath + ALGORITHMS_DIR + algoritmName + RUN_PARAMS_FILE, FileStorage::READ );
+    FileStorage runParamsFS( dataPath + ALGORITHMS_DIR + algorithmName + RUN_PARAMS_FILE, FileStorage::READ );
+    code = readRunParams( runParamsFS );
+    if( code != CvTS::OK )
+    {
+        ts->set_failed_test_info( code );
+        return;
+    }
+    
+    string fullResultFilename = dataPath + ALGORITHMS_DIR + algorithmName + RESULT_FILE;
     FileStorage resFS( fullResultFilename, FileStorage::READ );
+    bool isWrite = true; // write or compare results
     if( resFS.isOpened() )
         isWrite = false;
     else
@@ -380,41 +394,42 @@ void CV_StereoMatchingTest::run(int)
         resFS.open( fullResultFilename, FileStorage::WRITE );
         if( !resFS.isOpened() )
         {
-            ts->printf( CvTS::LOG, "file named %s can not be read or written\n", fullResultFilename.c_str() );
+            ts->printf( CvTS::LOG, "file %s can not be read or written\n", fullResultFilename.c_str() );
             ts->set_failed_test_info( CvTS::FAIL_BAD_ARG_CHECK );
             return;
         }
         resFS << "stereo_matching" << "{";
     }
 
-    int progress = 0;
-    for( int dsi = 0; dsi < (int)datasetsNames.size(); dsi++)
+    int progress = 0, caseCount = caseNames.size();
+    for( int ci = 0; ci < caseCount; ci++)
     {
-        progress = update_progress( progress, dsi, (int)datasetsNames.size(), 0 );
-        string datasetFullDirName = dataPath + DATASETS_DIR + datasetsNames[dsi] + "/";
+        progress = update_progress( progress, ci, caseCount, 0 );
+
+        string datasetName = caseDatasets[ci];
+        string datasetFullDirName = dataPath + DATASETS_DIR + datasetName + "/";
         Mat leftImg = imread(datasetFullDirName + LEFT_IMG_NAME);
         Mat rightImg = imread(datasetFullDirName + RIGHT_IMG_NAME);
         Mat trueLeftDisp = imread(datasetFullDirName + TRUE_LEFT_DISP_NAME, 0);
         Mat trueRightDisp = imread(datasetFullDirName + TRUE_RIGHT_DISP_NAME, 0);
 
-        if( leftImg.empty() || rightImg.empty() || trueLeftDisp.empty()/* || trueRightDisp.empty()*/ )
+        if( leftImg.empty() || rightImg.empty() || trueLeftDisp.empty() )
         {
-            ts->printf( CvTS::LOG, "images or left ground-truth disparities of dataset %s can not be read", datasetsNames[dsi].c_str() );
+            ts->printf( CvTS::LOG, "images or left ground-truth disparities of dataset %s can not be read", datasetName.c_str() );
             code = CvTS::FAIL_INVALID_TEST_DATA;
             continue;
         }
-        Mat tmp;
-        int dispScaleFactor = dispScaleFactors[dsi];
-        trueLeftDisp.convertTo( tmp, CV_32FC1, 1.f/dispScaleFactor ); trueLeftDisp = tmp; tmp.release();
+        int dispScaleFactor = datasetsParams[datasetName].dispScaleFactor;
+        Mat tmp; trueLeftDisp.convertTo( tmp, CV_32FC1, 1.f/dispScaleFactor ); trueLeftDisp = tmp; tmp.release();
         if( !trueRightDisp.empty() )
             trueRightDisp.convertTo( tmp, CV_32FC1, 1.f/dispScaleFactor ); trueRightDisp = tmp; tmp.release();
 
         Mat leftDisp, rightDisp;
-        runStereoMatchingAlgorithm( leftImg, rightImg, leftDisp, rightDisp, runParamsFS, datasetsNames[dsi] );
+        runStereoMatchingAlgorithm( leftImg, rightImg, leftDisp, rightDisp, ci );
         leftDisp.convertTo( tmp, CV_32FC1 ); leftDisp = tmp; tmp.release();
         rightDisp.convertTo( tmp, CV_32FC1 ); rightDisp = tmp; tmp.release();
 
-        int tempCode = processStereoMatchingResults( resFS, dsi, isWrite,
+        int tempCode = processStereoMatchingResults( resFS, ci, isWrite,
                    leftImg, rightImg, trueLeftDisp, trueRightDisp, leftDisp, rightDisp);
         code = tempCode==CvTS::OK ? code : tempCode;
     }
@@ -464,7 +479,7 @@ void calcErrors( const Mat& leftImg, const Mat& rightImg,
     badPxlsFractions[5] = badMatchPxlsFraction( calcLeftDisp, trueLeftDisp, depthDiscontMask );
 }
 
-int CV_StereoMatchingTest::processStereoMatchingResults( FileStorage& fs, int datasetIdx, bool isWrite,
+int CV_StereoMatchingTest::processStereoMatchingResults( FileStorage& fs, int caseIdx, bool isWrite,
               const Mat& leftImg, const Mat& rightImg,
               const Mat& trueLeftDisp, const Mat& trueRightDisp,
               const Mat& leftDisp, const Mat& rightDisp )
@@ -477,12 +492,13 @@ int CV_StereoMatchingTest::processStereoMatchingResults( FileStorage& fs, int da
 
     // get masks for unknown ground truth disparity values
     Mat leftUnknMask, rightUnknMask;
-    absdiff( trueLeftDisp, Scalar(dispUnknownVal[datasetIdx]), leftUnknMask );
+    DatasetParams params = datasetsParams[caseDatasets[caseIdx]];
+    absdiff( trueLeftDisp, Scalar(params.dispUnknVal), leftUnknMask );
     leftUnknMask = leftUnknMask < numeric_limits<float>::epsilon();
     assert(leftUnknMask.type() == CV_8UC1);
     if( !trueRightDisp.empty() )
     {
-        absdiff( trueRightDisp, Scalar(dispUnknownVal[datasetIdx]), rightUnknMask );
+        absdiff( trueRightDisp, Scalar(params.dispUnknVal), rightUnknMask );
         rightUnknMask = rightUnknMask < numeric_limits<float>::epsilon();
         assert(leftUnknMask.type() == CV_8UC1);
     }
@@ -492,10 +508,9 @@ int CV_StereoMatchingTest::processStereoMatchingResults( FileStorage& fs, int da
     calcErrors( leftImg, rightImg, trueLeftDisp, trueRightDisp, leftUnknMask, rightUnknMask,
                 leftDisp, rightDisp, rmss, badPxlsFractions );
 
-    const string& datasetName = datasetsNames[datasetIdx];
     if( isWrite )
     {
-        fs << datasetName << "{";
+        fs << caseNames[caseIdx] << "{";
         cvWriteComment( fs.fs, RMS_STR.c_str(), 0 );
         writeErrors( RMS_STR, rmss, &fs );
         cvWriteComment( fs.fs, BAD_PXLS_FRACTION_STR.c_str(), 0 );
@@ -504,13 +519,13 @@ int CV_StereoMatchingTest::processStereoMatchingResults( FileStorage& fs, int da
     }
     else // compare
     {
-        ts->printf( CvTS::LOG, "\nquality on dataset %s\n", datasetName.c_str() );
+        ts->printf( CvTS::LOG, "\nquality of case named %s\n", caseNames[caseIdx].c_str() );
         ts->printf( CvTS::LOG, "%s\n", RMS_STR.c_str() );
         writeErrors( RMS_STR, rmss );
         ts->printf( CvTS::LOG, "%s\n", BAD_PXLS_FRACTION_STR.c_str() );
         writeErrors( BAD_PXLS_FRACTION_STR, badPxlsFractions );
 
-        FileNode fn = fs.getFirstTopLevelNode()[datasetName];
+        FileNode fn = fs.getFirstTopLevelNode()[caseNames[caseIdx]];
         vector<float> validRmss, validBadPxlsFractions;
 
         readErrors( fn, RMS_STR, validRmss );
@@ -523,28 +538,36 @@ int CV_StereoMatchingTest::processStereoMatchingResults( FileStorage& fs, int da
     return code;
 }
 
-int CV_StereoMatchingTest::readDatasetsInfo()
+int CV_StereoMatchingTest::readDatasetsParams( FileStorage& fs )
 {
-    string datasetsFilename = string(ts->get_data_path()) + DATASETS_DIR + DATASETS_FILE;
-
-    FileStorage fs( datasetsFilename, FileStorage::READ );
     if( !fs.isOpened() )
     {
-        ts->printf( CvTS::LOG, "%s can not be read\n", datasetsFilename.c_str() );
+        ts->printf( CvTS::LOG, "datasetsParams can not be read " );
         return CvTS::FAIL_INVALID_TEST_DATA;
     }
-    FileNode fn = fs.getFirstTopLevelNode()["names_scale_unknown"];
+    datasetsParams.clear();
+    FileNode fn = fs.getFirstTopLevelNode();
     assert(fn.isSeq());
-    datasetsNames.clear();
-    dispScaleFactors.clear();
-    dispUnknownVal.clear();
     for( int i = 0; i < (int)fn.size(); i+=3 )
     {
-        string name = fn[i]; datasetsNames.push_back(name);
-        string scale = fn[i+1]; dispScaleFactors.push_back(atoi(scale.c_str()));
-        string unkn = fn[i+2]; dispUnknownVal.push_back(atoi(unkn.c_str()));
+        string name = fn[i];
+        DatasetParams params;
+        string sf = fn[i+1]; params.dispScaleFactor = atoi(sf.c_str());
+        string uv = fn[i+2]; params.dispUnknVal = atoi(uv.c_str());
+        datasetsParams[name] = params;
     }
+    return CvTS::OK;
+}
 
+int CV_StereoMatchingTest::readRunParams( FileStorage& fs )
+{
+    if( !fs.isOpened() )
+    {
+        ts->printf( CvTS::LOG, "runParams can not be read " );
+        return CvTS::FAIL_INVALID_TEST_DATA;
+    }
+    caseNames.clear();;
+    caseDatasets.clear();
     return CvTS::OK;
 }
 
@@ -593,28 +616,44 @@ class CV_StereoBMTest : public CV_StereoMatchingTest
 {
 public:
     CV_StereoBMTest() : CV_StereoMatchingTest( "stereobm" )
-    { fill(rmsEps.begin(), rmsEps.end(), 0.001f); fill(fracEps.begin(), fracEps.end(), 0.00001f); }
+    { fill(rmsEps.begin(), rmsEps.end(), 0.4f); fill(fracEps.begin(), fracEps.end(), 0.02f); }
+
 protected:
-    virtual void runStereoMatchingAlgorithm( const Mat& _leftImg, const Mat& _rightImg,
-                   Mat& leftDisp, Mat& rightDisp, FileStorage& paramsFS, const string& datasetName )
+    struct RunParams
     {
-        int ndisp = 16;
-        int winSize = 21;
-        assert( !datasetName.empty() );
-        if( paramsFS.isOpened() )
+        int ndisp;
+        int winSize;
+    };
+    vector<RunParams> caseRunParams;
+
+    virtual int readRunParams( FileStorage& fs )
+    {
+        int code = CV_StereoMatchingTest::readRunParams( fs );
+        FileNode fn = fs.getFirstTopLevelNode();
+        assert(fn.isSeq());
+        for( int i = 0; i < (int)fn.size(); i+=4 )
         {
-            FileNodeIterator fni = paramsFS.getFirstTopLevelNode()[datasetName].begin();
-            fni >> ndisp >> winSize;
+            string caseName = fn[i], datasetName = fn[i+1];
+            RunParams params;
+            string ndisp = fn[i+2]; params.ndisp = atoi(ndisp.c_str());
+            string winSize = fn[i+3]; params.winSize = atoi(winSize.c_str());
+            caseNames.push_back( caseName );
+            caseDatasets.push_back( datasetName );
+            caseRunParams.push_back( params );
         }
-        else
-            ts->printf( CvTS::LOG, "%s was tested with default params "
-                        "(ndisp = 16, winSize = 21)\n", datasetName.c_str());
-        assert( ndisp%16 == 0 );
+        return code;
+    }
+
+    virtual void runStereoMatchingAlgorithm( const Mat& _leftImg, const Mat& _rightImg,
+                   Mat& leftDisp, Mat& rightDisp, int caseIdx )
+    {
+        RunParams params = caseRunParams[caseIdx];
+        assert( params.ndisp%16 == 0 );
         assert( _leftImg.type() == CV_8UC3 && _rightImg.type() == CV_8UC3 );
         Mat leftImg; cvtColor( _leftImg, leftImg, CV_BGR2GRAY );
         Mat rightImg; cvtColor( _rightImg, rightImg, CV_BGR2GRAY );
 
-        StereoBM bm( StereoBM::BASIC_PRESET, ndisp, winSize );
+        StereoBM bm( StereoBM::BASIC_PRESET, params.ndisp, params.winSize );
         bm( leftImg, rightImg, leftDisp, CV_32F );
     }
 };
@@ -637,21 +676,35 @@ public:
         fracEps[5] = 0.10f; // borderedDepthDiscont
     }
 protected:
-    virtual void runStereoMatchingAlgorithm( const Mat& _leftImg, const Mat& _rightImg,
-                   Mat& leftDisp, Mat& rightDisp, FileStorage& paramsFS, const string& datasetName )
+    struct RunParams
     {
-        int ndisp = 20;
-        int icount = 2;
-        assert( !datasetName.empty() );
-        if( paramsFS.isOpened() )
-        {
-            FileNodeIterator fni = paramsFS.getFirstTopLevelNode()[datasetName].begin();
-            fni >> ndisp >> icount;
-        }
-        else
-            ts->printf( CvTS::LOG, "%s was tested with default params "
-                        "(ndisp = 20, icount = 2)\n", datasetName.c_str());
+        int ndisp;
+        int iterCount;
+    };
+    vector<RunParams> caseRunParams;
 
+    virtual int readRunParams( FileStorage& fs )
+    {
+        int code = CV_StereoMatchingTest::readRunParams(fs);
+        FileNode fn = fs.getFirstTopLevelNode();
+        assert(fn.isSeq());
+        for( int i = 0; i < (int)fn.size(); i+=4 )
+        {
+            string caseName = fn[i], datasetName = fn[i+1];
+            RunParams params;
+            string ndisp = fn[i+2]; params.ndisp = atoi(ndisp.c_str());
+            string iterCount = fn[i+3]; params.iterCount = atoi(iterCount.c_str());
+            caseNames.push_back( caseName );
+            caseDatasets.push_back( datasetName );
+            caseRunParams.push_back( params );
+        }
+        return code;
+    }
+
+    virtual void runStereoMatchingAlgorithm( const Mat& _leftImg, const Mat& _rightImg,
+                   Mat& leftDisp, Mat& rightDisp, int caseIdx )
+    {
+        RunParams params = caseRunParams[caseIdx];
         assert( _leftImg.type() == CV_8UC3 && _rightImg.type() == CV_8UC3 );
         Mat leftImg, rightImg, tmp;
         cvtColor( _leftImg, leftImg, CV_BGR2GRAY );
@@ -661,7 +714,7 @@ protected:
         rightDisp.create( rightImg.size(), CV_16SC1 );
 
         CvMat _limg = leftImg, _rimg = rightImg, _ldisp = leftDisp, _rdisp = rightDisp;
-        CvStereoGCState *state = cvCreateStereoGCState( ndisp, icount );
+        CvStereoGCState *state = cvCreateStereoGCState( params.ndisp, params.iterCount );
         cvFindStereoCorrespondenceGC( &_limg, &_rimg, &_ldisp, &_rdisp, state );
         cvReleaseStereoGCState( &state );
 
@@ -671,3 +724,55 @@ protected:
 };
 
 CV_StereoGCTest stereoGC;
+
+//----------------------------------- StereoSGBM test -----------------------------------------------------
+
+class CV_StereoSGBMTest : public CV_StereoMatchingTest
+{
+public:
+    CV_StereoSGBMTest() : CV_StereoMatchingTest( "stereosgbm" )
+    { fill(rmsEps.begin(), rmsEps.end(), 0.1f); fill(fracEps.begin(), fracEps.end(), 0.01f); }
+
+protected:
+    struct RunParams
+    {
+        int ndisp;
+        int winSize;
+        bool fullDP;
+    };
+    vector<RunParams> caseRunParams;
+
+    virtual int readRunParams( FileStorage& fs )
+    {
+        int code = CV_StereoMatchingTest::readRunParams(fs);
+        FileNode fn = fs.getFirstTopLevelNode();
+        assert(fn.isSeq());
+        for( int i = 0; i < (int)fn.size(); i+=5 )
+        {
+            string caseName = fn[i], datasetName = fn[i+1];
+            RunParams params;
+            string ndisp = fn[i+2]; params.ndisp = atoi(ndisp.c_str());
+            string winSize = fn[i+3]; params.winSize = atoi(winSize.c_str());
+            string fullDP = fn[i+4]; params.fullDP = atoi(fullDP.c_str()) == 0 ? false : true;
+            caseNames.push_back( caseName );
+            caseDatasets.push_back( datasetName );
+            caseRunParams.push_back( params );
+        }
+        return code;
+    }
+
+    virtual void runStereoMatchingAlgorithm( const Mat& leftImg, const Mat& rightImg,
+                   Mat& leftDisp, Mat& rightDisp, int caseIdx )
+    {
+        RunParams params = caseRunParams[caseIdx];
+        assert( params.ndisp%16 == 0 );
+        StereoSGBM sgbm( 0, params.ndisp, params.winSize, 6*params.winSize*params.winSize, 15*params.winSize*params.winSize,
+                         1, 63, 10, 100, 32, params.fullDP );
+        sgbm( leftImg, rightImg, leftDisp );
+        assert( leftDisp.type() == CV_16SC1 );
+        leftDisp/=16;
+    }
+};
+
+CV_StereoSGBMTest stereoSGBM;
+
