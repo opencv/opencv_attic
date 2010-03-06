@@ -472,6 +472,21 @@ if(BUILD_SWIG_PYTHON_SUPPORT OR BUILD_NEW_PYTHON_SUPPORT)
         set(PYTHON_PLUGIN_INSTALL_PATH "${PYTHON_PATH}/Lib/site-packages/opencv")
         set(PYTHON_PACKAGES_PATH "${PYTHON_PATH}/Lib/site-packages")
     endif()
+
+    # Attempt to discover the NumPy include directory.  If this succeeds, build with NumPy
+
+    execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "import numpy.distutils; print numpy.distutils.misc_util.get_numpy_include_dirs()[0]"
+                    RESULT_VARIABLE PYTHON_NUMPY_PROCESS
+                    OUTPUT_VARIABLE PYTHON_NUMPY_INCLUDE_DIRS)
+    if(PYTHON_NUMPY_PROCESS EQUAL 0)
+      set(PYTHON_USE_NUMPY 1)
+      add_definitions(-D PYTHON_USE_NUMPY=1)
+      include_directories("${PYTHON_NUMPY_INCLUDE_DIRS}")
+    else()
+      set(PYTHON_USE_NUMPY 0)
+    endif()
+
+
 endif()
     
 if(PYTHONLIBS_FOUND AND BUILD_SWIG_PYTHON_SUPPORT)
@@ -1069,6 +1084,8 @@ else()
 message(STATUS "    Old Python:                0")
 endif()
 message(STATUS "    Python:                    ${BUILD_NEW_PYTHON_SUPPORT}")
+message(STATUS "    Python interpreter:        ${PYTHON_EXECUTABLE}")
+message(STATUS "    Python numpy:              ${PYTHON_USE_NUMPY}")
 if(IPP_FOUND AND USE_IPP)
 message(STATUS "    Use IPP:                   ${IPP_PATH}")
 else()
