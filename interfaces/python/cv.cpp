@@ -2891,7 +2891,11 @@ static PyObject *pycvfromarray(PyObject *self, PyObject *args)
       type = CV_64FC1;
     break;
   }
-  ERRWRAP(m->a = cvCreateMatND(pai->nd, pai->shape, type));
+  int dims[CV_MAX_DIM];
+  int i;
+  for (i = 0; i < pai->nd; i++)
+    dims[i] = pai->shape[i];
+  ERRWRAP(m->a = cvCreateMatND(pai->nd, dims, type));
   m->a->data.ptr = (uchar*)pai->data;
   return pythonize_CvMatND(m);
 }
