@@ -477,11 +477,13 @@ if(BUILD_SWIG_PYTHON_SUPPORT OR BUILD_NEW_PYTHON_SUPPORT)
 
     execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "import numpy.distutils; print numpy.distutils.misc_util.get_numpy_include_dirs()[0]"
                     RESULT_VARIABLE PYTHON_NUMPY_PROCESS
-                    OUTPUT_VARIABLE PYTHON_NUMPY_INCLUDE_DIRS)
+                    OUTPUT_VARIABLE PYTHON_NUMPY_INCLUDE_DIRS
+                    OUTPUT_STRIP_TRAILING_WHITESPACE)
     if(PYTHON_NUMPY_PROCESS EQUAL 0)
       set(PYTHON_USE_NUMPY 1)
       add_definitions(-D PYTHON_USE_NUMPY=1)
-      include_directories("${PYTHON_NUMPY_INCLUDE_DIRS}")
+      include_directories(AFTER ${PYTHON_NUMPY_INCLUDE_DIRS})
+      message(STATUS "    Use INCLUDE: ${PYTHON_NUMPY_INCLUDE_DIRS}")
     else()
       set(PYTHON_USE_NUMPY 0)
     endif()
