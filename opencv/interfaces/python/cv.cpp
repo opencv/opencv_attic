@@ -10,8 +10,6 @@
 
 #define MODULESTR "cv"
 
-#define PYTHON_NUMPY 1
-
 static PyObject *opencv_error;
 
 struct memtrack_t {
@@ -475,7 +473,7 @@ static PyObject *cvmat_getcols(cvmat_t *cva)
   return PyInt_FromLong(cva->a->cols);
 }
 
-#if PYTHON_NUMPY
+#if PYTHON_USE_NUMPY
 #include "numpy/ndarrayobject.h"
 
 // A PyArrayInterface, with an associated python object that should be DECREF'ed on release
@@ -631,7 +629,7 @@ static PyGetSetDef cvmat_getseters[] = {
   {(char*)"cols",   (getter)cvmat_getcols, (setter)NULL, (char*)"cols",   NULL},
   {(char*)"width",  (getter)cvmat_getcols, (setter)NULL, (char*)"width",  NULL},
   {(char*)"height", (getter)cvmat_getrows, (setter)NULL, (char*)"height", NULL},
-#if PYTHON_NUMPY
+#if PYTHON_USE_NUMPY
   {(char*)"__array_struct__", (getter)cvmat_array_struct, (setter)NULL, (char*)"__array_struct__", NULL},
 #endif
   {NULL}  /* Sentinel */
@@ -781,7 +779,7 @@ static struct PyMethodDef cvmatnd_methods[] =
 };
 
 static PyGetSetDef cvmatnd_getseters[] = {
-#if PYTHON_NUMPY
+#if PYTHON_USE_NUMPY
   {(char*)"__array_struct__", (getter)cvmatnd_array_struct, (setter)NULL, (char*)"__array_struct__", NULL},
 #endif
   {NULL}  /* Sentinel */
@@ -2845,7 +2843,7 @@ static PyObject *pycvCreateMatND(PyObject *self, PyObject *args)
   return pythonize_CvMatND(m);
 }
 
-#if PYTHON_NUMPY
+#if PYTHON_USE_NUMPY
 static PyObject *pycvfromarray(PyObject *self, PyObject *args)
 {
   PyObject *o;
@@ -3799,7 +3797,7 @@ static int zero = 0;
 
 static PyMethodDef methods[] = {
 
-#if PYTHON_NUMPY
+#if PYTHON_USE_NUMPY
   {"fromarray", pycvfromarray, METH_VARARGS, "fromarray(array) -> cvmatnd"},
 #endif
 
