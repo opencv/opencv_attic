@@ -800,12 +800,12 @@ void filterSpeckles( Mat& img, double _newval, int maxSpeckleSize, double _maxDi
     // clear out label assignments
     memset(labels, 0, npixels*sizeof(labels[0]));
     
-    for( i = 1; i < height-1; i++ )
+    for( i = 0; i < height; i++ )
     {
         short* ds = img.ptr<short>(i);
         int* ls = labels + width*i;
         
-        for( j = 1; j < width-1; j++ )
+        for( j = 0; j < width; j++ )
         {
             if( ds[j] != newVal )	// not a bad disparity
             {
