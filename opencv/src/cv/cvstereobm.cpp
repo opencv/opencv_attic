@@ -887,11 +887,10 @@ static void findStereoCorrespondenceBM( const Mat& left0, const Mat& right0, Mat
     parallel_do(idx, idx+2, PrefilterInvoker(left0, right0, left, right, _buf, _buf + bufSize1, state));
     
     Rect validDisparityRect(0, 0, width, height), R1 = state->roi1, R2 = state->roi2;
-    if( R1.area() > 0 || R2.area() > 0 )
-        validDisparityRect = getValidDisparityROI(R1.area() > 0 ? R1 : validDisparityRect,
-                                                  R2.area() > 0 ? R2 : validDisparityRect,
-                                                  state->minDisparity, state->numberOfDisparities,
-                                                  state->SADWindowSize); 
+    validDisparityRect = getValidDisparityROI(R1.area() > 0 ? Rect(0, 0, width, height) : validDisparityRect,
+                                              R2.area() > 0 ? Rect(0, 0, width, height) : validDisparityRect,
+                                              state->minDisparity, state->numberOfDisparities,
+                                              state->SADWindowSize); 
     
     parallel_for(BlockedRange(0, nstripes),
                  FindStereoCorrespInvoker(left, right, disp, state, nstripes,
