@@ -49,7 +49,7 @@ aggregate = {
   'CvPoints' :           '!.p,!.count',
   'CvPoint2D32fs' :      '!.p,!.count',
   'CvPoint3D32fs' :      '!.p,!.count',
-  'cvarrseq' :           '!.v',
+  'cvarrseq' :           '!.seq',
   'CvArrs' :             '!.ims',
   'IplImages' :          '!.ims',
   'intpair' :            '!.pairs,!.count',
