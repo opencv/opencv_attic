@@ -1534,6 +1534,21 @@ class AreaTests(OpenCVTests):
         del im
         self.assertEqual(sys.getrefcount(data), start_count - 1)
 
+    def test_morphological(self):
+        im = cv.CreateImage((128, 128), cv.IPL_DEPTH_8U, 1)
+        cv.Resize(cv.GetImage(self.get_sample("samples/c/lena.jpg", 0)), im)
+        dst = cv.CloneImage(im)
+        shapes = [eval("cv.CV_SHAPE_%s" % s) for s in ['RECT', 'CROSS', 'ELLIPSE']]
+        elements = [cv.CreateStructuringElementEx(sz, sz, sz / 2 + 1, sz / 2 + 1, shape) for sz in [3, 4, 7, 20] for shape in shapes]
+        elements += [cv.CreateStructuringElementEx(7, 7, 3, 3, cv.CV_SHAPE_CUSTOM, [1] * 49)]
+        for e in elements:
+            for iter in [1, 2]:
+                cv.Dilate(im, dst, e, iter)
+                cv.Erode(im, dst, e, iter)
+                temp = cv.CloneImage(im)
+                for op in ["OPEN", "CLOSE", "GRADIENT", "TOPHAT", "BLACKHAT"]:
+                        cv.MorphologyEx(im, dst, temp, e, eval("cv.CV_MOP_%s" % op), iter)
+        
     def failing_test_getmat_nd(self):
         # 1D CvMatND should yield 1D CvMat
         matnd = cv.CreateMatND([13], cv.CV_8UC1)

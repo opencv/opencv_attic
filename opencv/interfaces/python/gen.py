@@ -417,6 +417,12 @@ getset_init_template = Template("""
 """)
 
 objects = [
+    ( 'IplConvKernel', {
+        "nCols" : 'i',
+        "nRows" : 'i',
+        "anchorX" : 'i',
+        "anchorY" : 'i',
+    }),
     ( 'CvStereoBMState', {
         "preFilterType" : 'i',
         "preFilterSize" : 'i',
