@@ -88,11 +88,6 @@ struct cvlineiterator_t {
   int type;
 };
 
-struct iplconvkernel_t {
-  PyObject_HEAD
-  IplConvKernel *a;
-};
-
 struct cvcapture_t {
   PyObject_HEAD
   CvCapture *a;
@@ -228,6 +223,7 @@ CvMat *PyCvMat_AsCvMat(PyObject *o)
   return NULL;
 }
 
+#define cvReleaseIplConvKernel(x) cvReleaseStructuringElement(x)
 #include "generated3.i"
 
 /* iplimage */
@@ -935,29 +931,6 @@ static void memtrack_specials(void)
 {
   memtrack_Type.tp_dealloc = memtrack_dealloc;
   memtrack_Type.tp_as_buffer = &memtrack_as_buffer;
-}
-
-/************************************************************************/
-
-/* iplconvkernel */
-
-static void iplconvkernel_dealloc(PyObject *self)
-{
-  iplconvkernel_t *pi = (iplconvkernel_t*)self;
-  cvReleaseStructuringElement(&(pi->a));
-  PyObject_Del(self);
-}
-
-static PyTypeObject iplconvkernel_Type = {
-  PyObject_HEAD_INIT(&PyType_Type)
-  0,                                      /*size*/
-  MODULESTR".iplconvkernel",                          /*name*/
-  sizeof(iplconvkernel_t),                        /*basicsize*/
-};
-
-static void iplconvkernel_specials(void)
-{
-  iplconvkernel_Type.tp_dealloc = iplconvkernel_dealloc;
 }
 
 /************************************************************************/
@@ -2109,17 +2082,6 @@ static int convert_to_floatPTRPTR(PyObject *o, float*** dst, const char *name = 
   return 1;
 }
 
-static int convert_to_IplConvKernelPTR(PyObject *o, IplConvKernel** dst, const char *name = "no_name")
-{
-  if (PyType_IsSubtype(o->ob_type, &iplconvkernel_Type)) {
-    *dst = ((iplconvkernel_t*)o)->a;
-    return 1;
-  } else {
-    (*dst) = (IplConvKernel*)NULL;
-    return failmsg("Expected IplConvKernel for argument '%s'", name);
-  }
-}
-
 static int convert_to_CvCapturePTR(PyObject *o, CvCapture** dst, const char *name = "no_name")
 {
   if (PyType_IsSubtype(o->ob_type, &cvcapture_Type)) {
@@ -2531,13 +2493,6 @@ static PyObject *FROM_CvSeqOfCvSURFDescriptorPTR(CvSeqOfCvSURFDescriptor *r)
   // CvSeq is not being returned to the caller.  Hence, no reference
   // count increase for the storage, unlike _FROM_CvSeqPTR.
   return pr;
-}
-
-static PyObject *FROM_IplConvKernelPTR(IplConvKernel *r)
-{
-  iplconvkernel_t *ick = PyObject_NEW(iplconvkernel_t, &iplconvkernel_Type);
-  ick->a = r;
-  return (PyObject*)ick;
 }
 
 static PyObject *FROM_CvCapturePTR(CvCapture *r)
@@ -3938,7 +3893,6 @@ void initcv()
   MKTYPE(cvsubdiv2d);
   MKTYPE(cvsubdiv2dpoint);
   MKTYPE(cvvideowriter);
-  MKTYPE(iplconvkernel);
   MKTYPE(iplimage);
   MKTYPE(memtrack);
 
