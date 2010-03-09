@@ -120,11 +120,6 @@ struct cvcontourtree_t {
   CvContourTree *a;
 };
 
-struct cvpositobject_t {
-  PyObject_HEAD
-  CvPOSITObject *a;
-};
-
 struct cvrng_t {
   PyObject_HEAD
   CvRNG a;
@@ -1031,29 +1026,6 @@ static PyTypeObject cvfont_Type = {
 };
 
 static void cvfont_specials(void) { }
-
-/************************************************************************/
-
-/* cvpositobject */
-
-static void cvpositobject_dealloc(PyObject *self)
-{
-  cvpositobject_t *pi = (cvpositobject_t*)self;
-  cvReleasePOSITObject(&(pi->a));
-  PyObject_Del(self);
-}
-
-static PyTypeObject cvpositobject_Type = {
-  PyObject_HEAD_INIT(&PyType_Type)
-  0,                                      /*size*/
-  MODULESTR".cvpositobject",                     /*name*/
-  sizeof(cvpositobject_t),                       /*basicsize*/
-};
-
-static void cvpositobject_specials(void)
-{
-  cvpositobject_Type.tp_dealloc = cvpositobject_dealloc;
-}
 
 /************************************************************************/
 
@@ -2148,17 +2120,6 @@ static int convert_to_CvContourTreePTR(PyObject *o, CvContourTree** dst, const c
   }
 }
 
-static int convert_to_CvPOSITObjectPTR(PyObject *o, CvPOSITObject** dst, const char *name = "no_name")
-{
-  if (PyType_IsSubtype(o->ob_type, &cvpositobject_Type)) {
-    (*dst) = ((cvpositobject_t*)o)->a;
-    return 1;
-  } else {
-    (*dst) = (CvPOSITObject*)NULL;
-    return failmsg("Expected CvPOSITObject for argument '%s'", name);
-  }
-}
-
 static int convert_to_CvRNGPTR(PyObject *o, CvRNG** dst, const char *name = "no_name")
 {
   if (PyType_IsSubtype(o->ob_type, &cvrng_Type)) {
@@ -2596,13 +2557,6 @@ static PyObject *FROM_CvMatNDPTR(CvMatND *r)
   cvmatnd_t *m = PyObject_NEW(cvmatnd_t, &cvmatnd_Type);
   m->a = r;
   return pythonize_CvMatND(m);
-}
-
-static PyObject *FROM_CvPOSITObjectPTR(CvPOSITObject *r)
-{
-  cvpositobject_t *m = PyObject_NEW(cvpositobject_t, &cvpositobject_Type);
-  m->a = r;
-  return (PyObject*)m;
 }
 
 static PyObject *FROM_CvRNG(CvRNG r)
@@ -3885,7 +3839,6 @@ void initcv()
   MKTYPE(cvmatnd);
   MKTYPE(cvmemstorage);
   MKTYPE(cvmoments);
-  MKTYPE(cvpositobject);
   MKTYPE(cvsubdiv2dedge);
   MKTYPE(cvrng);
   MKTYPE(cvseq);
