@@ -153,7 +153,7 @@ int getTrackbarPos( const string& trackbarName, const string& winName )
 
 #if   defined WIN32 || defined _WIN32         // see window_w32.cpp
 #elif defined (HAVE_GTK)      // see window_gtk.cpp
-#elif defined (HAVE_CARBON)   // see window_carbon.cpp
+#elif defined (HAVE_COCOA)   // see window_carbon.cpp
 
 
 #else
