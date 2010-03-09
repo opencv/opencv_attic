@@ -379,7 +379,7 @@ static void cvmat_dealloc(PyObject *self)
 {
   cvmat_t *pc = (cvmat_t*)self;
   Py_DECREF(pc->data);
-  cvFree((void**)&pc->a);
+  cvFree(&pc->a);
   PyObject_Del(self);
 }
 
@@ -687,7 +687,7 @@ static PyObject *cvmatnd_repr(PyObject *self)
 
 static size_t cvmatnd_size(CvMatND *m)
 {
-  int bps;
+  int bps = 1;
   switch (CV_MAT_DEPTH(m->type)) {
   case CV_8U:
   case CV_8S:
@@ -1771,13 +1771,16 @@ static int convert_to_pts_npts_contours(PyObject *o, pts_npts_contours *dst, con
 }
 
 struct cvarrseq {
-  void *v;
+  union {
+    CvSeq *seq;
+    CvArr *mat;
+  };
 };
 
 static int convert_to_cvarrseq(PyObject *o, cvarrseq *dst, const char *name = "no_name")
 {
   if (PyType_IsSubtype(o->ob_type, &cvseq_Type)) {
-    return convert_to_CvSeq(o, (CvSeq**)&(dst->v), name);
+    return convert_to_CvSeq(o, &(dst->seq), name);
   } else if (PySequence_Check(o)) {
     PyObject *fi = PySequence_Fast(o, name);
     if (fi == NULL)
@@ -1808,10 +1811,10 @@ static int convert_to_cvarrseq(PyObject *o, cvarrseq *dst, const char *name = "n
       Py_DECREF(fe);
     }
     Py_DECREF(fi);
-    dst->v = mt;
+    dst->mat = mt;
     return 1;
   } else {
-    return convert_to_CvArr(o, (CvArr**)&(dst->v), name);
+    return convert_to_CvArr(o, &(dst->mat), name);
   }
 }
 
@@ -3299,9 +3302,9 @@ static PyObject *pycvReshapeMatND(PyObject *self, PyObject *args)
   ints dims;
   if (!convert_to_ints(new_dims, &dims, "new_dims"))
     return NULL;
-  int dummy[1] = { 1 };
 
 #if 0
+  int dummy[1] = { 1 };
   CvMatND *m = cvCreateMatNDHeader(1, dummy, 1); // these args do not matter, because overwritten
   ERRWRAP(cvReshapeND(cva, m, new_cn, dims.count + 1, dims.i));
 
@@ -3449,7 +3452,7 @@ static PyObject *pycvApproxPoly(PyObject *self, PyObject *args, PyObject *kw)
   if (!convert_to_cvarrseq(pyobj_src_seq, &src_seq, "src_seq")) return NULL;
   if (!convert_to_CvMemStorage(pyobj_storage, &storage, "storage")) return NULL;
   CvSeq* r;
-  ERRWRAP(r = cvApproxPoly(src_seq.v, header_size, storage, method, parameter, parameter2));
+  ERRWRAP(r = cvApproxPoly(src_seq.mat, header_size, storage, method, parameter, parameter2));
   return FROM_CvSeqPTR(r);
 }
 
@@ -3757,10 +3760,10 @@ static PyObject *pycvFitLine(PyObject *self, PyObject *args, PyObject *kw)
   if (!PyArg_ParseTuple(args, "Oifff", &pyobj_points, &dist_type, &param, &reps, &aeps))
     return NULL;
   if (!convert_to_cvarrseq(pyobj_points, &points, "points")) return NULL;
-  ERRWRAP(cvFitLine(points.v, dist_type, param, reps, aeps, r));
+  ERRWRAP(cvFitLine(points.mat, dist_type, param, reps, aeps, r));
   int dimension;
-  if (strcmp("opencv-matrix", cvTypeOf(points.v)->type_name) == 0)
-    dimension = CV_MAT_CN(cvGetElemType(points.v));
+  if (strcmp("opencv-matrix", cvTypeOf(points.mat)->type_name) == 0)
+    dimension = CV_MAT_CN(cvGetElemType(points.mat));
   else {
     // sequence case... don't think there is a sequence of 3d points,
     // so assume 2D
@@ -3947,8 +3950,15 @@ void initcv()
   opencv_error = PyErr_NewException((char*)MODULESTR".error", NULL, NULL);
   PyDict_SetItemString(d, "error", opencv_error);
 
-  PyDict_SetItemString(d, "iplimage", (PyObject*)&iplimage_Type);
-  PyDict_SetItemString(d, "cvmat", (PyObject*)&cvmat_Type);
+  // Couple of warnings about strict aliasing here.  Not clear how to fix.
+  union {
+    PyObject *o;
+    PyTypeObject *to;
+  } convert;
+  convert.to = &iplimage_Type;
+  PyDict_SetItemString(d, "iplimage", convert.o);
+  convert.to = &cvmat_Type;
+  PyDict_SetItemString(d, "cvmat", convert.o);
 
 #define PUBLISH(I) PyDict_SetItemString(d, #I, PyInt_FromLong(I))
 #define PUBLISHU(I) PyDict_SetItemString(d, #I, PyLong_FromUnsignedLong(I))
