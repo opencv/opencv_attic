@@ -276,7 +276,7 @@ if(UNIX)
     set(WITH_XINE ON CACHE BOOL "Include Xine support")
 endif()
 
-set(WITH_TBB ON CACHE BOOL "Include TBB support")
+set(WITH_TBB OFF CACHE BOOL "Include TBB support")
 
 # ===================================================
 # Macros that checks if module have been installed.
