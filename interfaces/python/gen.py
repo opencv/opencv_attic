@@ -423,6 +423,7 @@ objects = [
         "anchorX" : 'i',
         "anchorY" : 'i',
     }),
+    ( 'CvPOSITObject', {}),
     ( 'CvStereoBMState', {
         "preFilterType" : 'i',
         "preFilterSize" : 'i',
