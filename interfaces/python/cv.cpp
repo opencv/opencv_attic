@@ -3284,6 +3284,57 @@ static PyObject *pycvReshape(PyObject *self, PyObject *args)
   return (PyObject*)om;
 }
 
+static PyObject *pycvReshapeMatND(PyObject *self, PyObject *args)
+{
+  PyObject *o;
+  int new_cn;
+  PyObject *new_dims;
+
+  if (!PyArg_ParseTuple(args, "OiO", &o, &new_cn, &new_dims))
+    return NULL;
+
+  CvMatND *cva;
+  if (!convert_to_CvMatND(o, &cva, "src"))
+    return NULL;
+  ints dims;
+  if (!convert_to_ints(new_dims, &dims, "new_dims"))
+    return NULL;
+  int dummy[1] = { 1 };
+
+#if 0
+  CvMatND *m = cvCreateMatNDHeader(1, dummy, 1); // these args do not matter, because overwritten
+  ERRWRAP(cvReshapeND(cva, m, new_cn, dims.count + 1, dims.i));
+
+  cvmatnd_t *om = PyObject_NEW(cvmatnd_t, &cvmatnd_Type);
+  om->a = m;
+  om->data = what_data(o);
+  Py_INCREF(om->data);
+  om->offset = 0;
+  return (PyObject*)om;
+#endif
+#if 0
+  CvMat *m = cvCreateMatHeader(100, 100, 1); // these args do not matter, because overwritten
+  ERRWRAP(cvReshapeND(cva, m, 0, 1, 0)); // new_cn, dims.count + 1, dims.i));
+
+  cvmat_t *om = PyObject_NEW(cvmat_t, &cvmat_Type);
+  om->a = m;
+  om->data = what_data(o);
+  Py_INCREF(om->data);
+  om->offset = 0;
+  return (PyObject*)om;
+#endif
+#if 1
+  {
+    int size[] = { 2, 2, 2 };
+    CvMatND* mat = cvCreateMatND(3, size, CV_32F);
+    CvMat row_header;
+    CvArr *row;
+    row = cvReshapeND(mat, &row_header, 0, 1, 0);
+  }
+  Py_RETURN_NONE;
+#endif
+}
+
 static void OnMouse(int event, int x, int y, int flags, void* param)
 {
   PyGILState_STATE gstate;
@@ -3816,6 +3867,7 @@ static PyMethodDef methods[] = {
   {"GetImage", pycvGetImage, METH_VARARGS, "GetImage(cvmat) -> image"},
   {"GetMat", (PyCFunction)pycvGetMat, METH_KEYWORDS, "GetMat(image, allowND=0) -> cvmat"},
   {"Reshape", pycvReshape, METH_VARARGS, "Reshape(arr, new_cn, new_rows=0) -> cvmat"},
+  {"ReshapeMatND", pycvReshapeMatND, METH_VARARGS, "Reshape(arr, new_cn, new_dims) -> matnd"},
   {"InitLineIterator", pycvInitLineIterator, METH_VARARGS, "InitLineIterator(image, pt1, pt2, connectivity=8, left_to_right=0) -> None"},
   {"LoadImage", (PyCFunction)pycvLoadImage, METH_KEYWORDS, "LoadImage(filename, iscolor=CV_LOAD_IMAGE_COLOR)"},
   {"SetData", pycvSetData, METH_VARARGS, "SetData(arr, data, step)"},

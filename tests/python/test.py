@@ -625,6 +625,12 @@ class FunctionTests(OpenCVTests):
         self.assert_(nd == 3)
         self.assert_((nc * nr * nd) == elems)
 
+        return # XXX - blocked by fixes for #166, #150
+
+        # Now test ReshapeMatND
+        mat = cv.CreateMatND([2, 2, 2], cv.CV_32F)
+        print cv.ReshapeMatND(mat, 0, []);
+
     def test_Save(self):
         for o in [ cv.CreateImage((128,128), cv.IPL_DEPTH_8U, 1), cv.CreateMat(16, 16, cv.CV_32FC1) ]:
             cv.Save("test.save", o)
@@ -742,6 +748,10 @@ class AreaTests(OpenCVTests):
         left_disparity = cv.CreateMat(512, 512, cv.CV_16SC1)
         right_disparity = cv.CreateMat(512, 512, cv.CV_16SC1)
         cv.FindStereoCorrespondenceGC(left, right, left_disparity, right_disparity, gc)
+
+    def test_kalman(self):
+        k = cv.CreateKalman(2, 1, 0)
+        print dir(k)
 
     def failing_test_exception(self):
         a = cv.CreateImage((640, 480), cv.IPL_DEPTH_8U, 1)
