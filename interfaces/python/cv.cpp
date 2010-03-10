@@ -100,11 +100,6 @@ struct cvfont_t {
   CvFont a;
 };
 
-struct cvhaarclassifiercascade_t {
-  PyObject_HEAD
-  CvHaarClassifierCascade *a;
-};
-
 struct cvcontourtree_t {
   PyObject_HEAD
   CvContourTree *a;
@@ -983,19 +978,6 @@ static PyTypeObject cvrng_Type = {
 static void cvrng_specials(void)
 {
 }
-
-/************************************************************************/
-
-/* cvhaarclassifiercascade */
-
-static PyTypeObject cvhaarclassifiercascade_Type = {
-  PyObject_HEAD_INIT(&PyType_Type)
-  0,                                      /*size*/
-  MODULESTR".cvhaarclassifiercascade",                     /*name*/
-  sizeof(cvhaarclassifiercascade_t),                       /*basicsize*/
-};
-
-static void cvhaarclassifiercascade_specials(void) { }
 
 /************************************************************************/
 
@@ -2018,17 +2000,6 @@ static int convert_to_CvFontPTR(PyObject *o, CvFont** dst, const char *name = "n
   }
 }
 
-static int convert_to_CvHaarClassifierCascadePTR(PyObject *o, CvHaarClassifierCascade** dst, const char *name = "no_name")
-{
-  if (PyType_IsSubtype(o->ob_type, &cvhaarclassifiercascade_Type)) {
-    (*dst) = ((cvhaarclassifiercascade_t*)o)->a;
-    return 1;
-  } else {
-    (*dst) = (CvHaarClassifierCascade*)NULL;
-    return failmsg("Expected CvHaarClassifierCascade for argument '%s'", name);
-  }
-}
-
 static int convert_to_CvContourTreePTR(PyObject *o, CvContourTree** dst, const char *name = "no_name")
 {
   if (PyType_IsSubtype(o->ob_type, &cvcontourtree_Type)) {
@@ -2472,13 +2443,6 @@ static PyObject *FROM_CvRNG(CvRNG r)
   return (PyObject*)m;
 }
 
-static PyObject *FROM_CvHaarClassifierCascade(CvHaarClassifierCascade *r)
-{
-  cvhaarclassifiercascade_t *m = PyObject_NEW(cvhaarclassifiercascade_t, &cvhaarclassifiercascade_Type);
-  m->a = r;
-  return (PyObject*)m;
-}
-
 static PyObject *FROM_CvMoments(CvMoments r)
 {
   cvmoments_t *m = PyObject_NEW(cvmoments_t, &cvmoments_Type);
@@ -2504,7 +2468,7 @@ static PyObject *FROM_generic(generic r)
   else if (strcmp(t->type_name, "opencv-matrix") == 0)
     return FROM_CvMat((CvMat*)r);
   else if (strcmp(t->type_name, "opencv-haar-classifier") == 0)
-    return FROM_CvHaarClassifierCascade((CvHaarClassifierCascade*)r);
+    return FROM_CvHaarClassifierCascadePTR((CvHaarClassifierCascade*)r);
   else {
     failmsg("Unknown OpenCV type '%s'", t->type_name);
     return NULL;
@@ -3737,7 +3701,6 @@ void initcv()
 
   MKTYPE(cvcontourtree);
   MKTYPE(cvfont);
-  MKTYPE(cvhaarclassifiercascade);
   MKTYPE(cvhistogram);
   MKTYPE(cvlineiterator);
   MKTYPE(cvmat);
