@@ -423,6 +423,7 @@ objects = [
         "anchorX" : 'i',
         "anchorY" : 'i',
     }),
+    ( 'CvCapture', {}),
     ( 'CvPOSITObject', {}),
     ( 'CvVideoWriter', {}),
     ( 'CvStereoBMState', {

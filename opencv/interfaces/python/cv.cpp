@@ -88,11 +88,6 @@ struct cvlineiterator_t {
   int type;
 };
 
-struct cvcapture_t {
-  PyObject_HEAD
-  CvCapture *a;
-};
-
 typedef IplImage ROIplImage;
 
 struct cvmoments_t {
@@ -921,29 +916,6 @@ static void memtrack_specials(void)
 {
   memtrack_Type.tp_dealloc = memtrack_dealloc;
   memtrack_Type.tp_as_buffer = &memtrack_as_buffer;
-}
-
-/************************************************************************/
-
-/* cvcapture */
-
-static void cvcapture_dealloc(PyObject *self)
-{
-  cvcapture_t *pi = (cvcapture_t*)self;
-  cvReleaseCapture(&(pi->a));
-  PyObject_Del(self);
-}
-
-static PyTypeObject cvcapture_Type = {
-  PyObject_HEAD_INIT(&PyType_Type)
-  0,                                      /*size*/
-  MODULESTR".cvcapture",                  /*name*/
-  sizeof(cvcapture_t),                    /*basicsize*/
-};
-
-static void cvcapture_specials(void)
-{
-  cvcapture_Type.tp_dealloc = cvcapture_dealloc;
 }
 
 /************************************************************************/
@@ -2024,17 +1996,6 @@ static int convert_to_floatPTRPTR(PyObject *o, float*** dst, const char *name = 
   return 1;
 }
 
-static int convert_to_CvCapturePTR(PyObject *o, CvCapture** dst, const char *name = "no_name")
-{
-  if (PyType_IsSubtype(o->ob_type, &cvcapture_Type)) {
-    *dst = ((cvcapture_t*)o)->a;
-    return 1;
-  } else {
-    (*dst) = (CvCapture*)NULL;
-    return failmsg("Expected CvCapture for argument '%s'", name);
-  }
-}
-
 static int convert_to_CvMomentsPTR(PyObject *o, CvMoments** dst, const char *name = "no_name")
 {
   if (PyType_IsSubtype(o->ob_type, &cvmoments_Type)) {
@@ -2413,13 +2374,6 @@ static PyObject *FROM_CvSeqOfCvSURFDescriptorPTR(CvSeqOfCvSURFDescriptor *r)
   // CvSeq is not being returned to the caller.  Hence, no reference
   // count increase for the storage, unlike _FROM_CvSeqPTR.
   return pr;
-}
-
-static PyObject *FROM_CvCapturePTR(CvCapture *r)
-{
-  cvcapture_t *c = PyObject_NEW(cvcapture_t, &cvcapture_Type);
-  c->a = r;
-  return (PyObject*)c;
 }
 
 typedef CvPoint2D32f CvPoint2D32f_4[4];
@@ -3781,7 +3735,6 @@ void initcv()
 
   cvSetErrMode(CV_ErrModeParent);
 
-  MKTYPE(cvcapture);
   MKTYPE(cvcontourtree);
   MKTYPE(cvfont);
   MKTYPE(cvhaarclassifiercascade);
