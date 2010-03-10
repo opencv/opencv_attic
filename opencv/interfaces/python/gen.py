@@ -30,6 +30,19 @@ for l in open("%s/api" % sys.argv[1]):
     else:
       api[-1][1].append(argument(f))
 
+# Validation: check that any optional arguments are last
+had_error = False
+for (f, args, ty) in api:
+    if f == 'PolarToCart':
+        print f, [(a.init != None) for a in args]
+    has_init = [(a.init != None) for a in args if not 'O' in a.flags]
+    if True in has_init and not all(has_init[has_init.index(True):]):
+        print 'Error in definition for "%s", optional arguments must be last' % f
+        had_error = True
+
+if had_error:
+    sys.exit(1)
+
 def cname(n):
   if n.startswith("CV"):
     return '_' + n
