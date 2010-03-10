@@ -1,14 +1,14 @@
 #! /usr/bin/env python
 
-import opencv
-from opencv import highgui
+import urllib2
+import cv
 
-cap = highgui.cvCreateFileCapture("../c/tree.avi")
-img = highgui.cvQueryFrame(cap)
-print "Got frame of dimensions (", img.width, " x ", img.height, " )"
+cap = highgui.cv.CreateFileCapture("../c/tree.avi")
+img = highgui.cv.QueryFrame(cap)
+print "Got frame of dimensions (", img.width, " x ", img.height, ")"
 
-highgui.cvNamedWindow("win", highgui.CV_WINDOW_AUTOSIZE)
-highgui.cvShowImage("win", img)
-highgui.cvMoveWindow("win", 200, 200)
-highgui.cvWaitKey(0)
+highgui.cv.NamedWindow("win", highgui.cv.CV_WINDOW_AUTOSIZE)
+highgui.cv.ShowImage("win", img)
+highgui.cv.MoveWindow("win", 200, 200)
+highgui.cv.WaitKey(0)
 
