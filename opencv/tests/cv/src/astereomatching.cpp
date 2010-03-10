@@ -91,23 +91,17 @@ void computeTextureBasedMasks( const Mat& _img, Mat* texturelessMask, Mat* textu
         *texturedMask = avgDxI2 >= texturelessThresh;
 }
 
-void checkSizeAndTypeOfDispMaps( const Mat& leftDispMap, const Mat& rightDispMap )
+void checkTypeAndSizeOfDisp( const Mat& dispMap, const Size* sz )
 {
-    if( leftDispMap.empty() )
-        CV_Error( CV_StsBadArg, "leftDispMap is empty" );
-    if( leftDispMap.type() != CV_32FC1 )
-        CV_Error( CV_StsBadArg, "leftDispMap must have CV_32FC1 type" );
-
-    if( !rightDispMap.empty() )
-    {
-        if( rightDispMap.type() != CV_32FC1 )
-            CV_Error( CV_StsBadArg, "rightDispMap must have CV_32FC1 type" );
-        if( rightDispMap.cols != leftDispMap.cols || rightDispMap.rows != leftDispMap.rows )
-            CV_Error( CV_StsBadArg, "leftDispMap and rightDispMap must have the same size" );
-    }
+    if( dispMap.empty() )
+        CV_Error( CV_StsBadArg, "dispMap is empty" );
+    if( dispMap.type() != CV_32FC1 )
+        CV_Error( CV_StsBadArg, "dispMap must have CV_32FC1 type" );
+    if( sz && (dispMap.rows != sz->height || dispMap.cols != sz->width) )
+        CV_Error( CV_StsBadArg, "dispMap has incorrect size" );
 }
 
-void checkSizeAndTypeOfMask( const Mat& mask, Size sz )
+void checkTypeAndSizeOfMask( const Mat& mask, Size sz )
 {
     if( mask.empty() )
         CV_Error( CV_StsBadArg, "mask is empty" );
@@ -120,13 +114,21 @@ void checkSizeAndTypeOfMask( const Mat& mask, Size sz )
 void checkDispMapsAndUnknDispMasks( const Mat& leftDispMap, const Mat& rightDispMap,
                                     const Mat& leftUnknDispMask, const Mat& rightUnknDispMask )
 {
-    checkSizeAndTypeOfDispMaps( leftDispMap, rightDispMap );
+    // check type and size of disparity maps
+    checkTypeAndSizeOfDisp( leftDispMap, 0 );
+    if( !rightDispMap.empty() )
+    {
+        Size sz = leftDispMap.size();
+        checkTypeAndSizeOfDisp( rightDispMap, &sz );
+    }
 
+    // check size and type of unknown disparity maps
     if( !leftUnknDispMask.empty() )
-        checkSizeAndTypeOfMask( leftUnknDispMask, leftDispMap.size() );
+        checkTypeAndSizeOfMask( leftUnknDispMask, leftDispMap.size() );
     if( !rightUnknDispMask.empty() )
-        checkSizeAndTypeOfMask( rightUnknDispMask, rightDispMap.size() );
+        checkTypeAndSizeOfMask( rightUnknDispMask, rightDispMap.size() );
 
+    // check values of disparity maps (known disparity values musy be positive)
     double leftMinVal = 0, rightMinVal = 0;
     if( leftUnknDispMask.empty() )
         minMaxLoc( leftDispMap, &leftMinVal );
@@ -231,7 +233,7 @@ void computeDepthDiscontMask( const Mat& disp, Mat& depthDiscontMask, const Mat&
     if( disp.type() != CV_32FC1 )
         CV_Error( CV_StsBadArg, "disp must have CV_32FC1 type" );
     if( !unknDispMask.empty() )
-        checkSizeAndTypeOfMask( unknDispMask, disp.size() );
+        checkTypeAndSizeOfMask( unknDispMask, disp.size() );
 
     Mat curDisp; disp.copyTo( curDisp );
     if( !unknDispMask.empty() )
@@ -266,11 +268,14 @@ Mat getBorderedMask( Size maskSize, int border = EVAL_IGNORE_BORDER )
 */
 float dispRMS( const Mat& computedDisp, const Mat& groundTruthDisp, const Mat& mask )
 {
-    checkSizeAndTypeOfDispMaps( computedDisp, groundTruthDisp );
-    int pointsCount = computedDisp.cols*computedDisp.rows;
+    checkTypeAndSizeOfDisp( groundTruthDisp, 0 );
+    Size sz = groundTruthDisp.size();
+    checkTypeAndSizeOfDisp( computedDisp, &sz );
+
+    int pointsCount = sz.height*sz.width;
     if( !mask.empty() )
     {
-        checkSizeAndTypeOfMask( mask, computedDisp.size() );
+        checkTypeAndSizeOfMask( mask, sz );
         pointsCount = countNonZero(mask);
     }
     return 1.f/sqrt((float)pointsCount) * (float)norm(computedDisp, groundTruthDisp, NORM_L2, mask);
@@ -282,14 +287,17 @@ float dispRMS( const Mat& computedDisp, const Mat& groundTruthDisp, const Mat& m
 float badMatchPxlsFraction( const Mat& computedDisp, const Mat& groundTruthDisp, const Mat& mask,
                               int badThresh = EVAL_BAD_THRESH )
 {
-    checkSizeAndTypeOfDispMaps( computedDisp, groundTruthDisp );
+    checkTypeAndSizeOfDisp( groundTruthDisp, 0 );
+    Size sz = groundTruthDisp.size();
+    checkTypeAndSizeOfDisp( computedDisp, &sz );
+
     Mat badPxlsMap;
     absdiff( computedDisp, groundTruthDisp, badPxlsMap );
     badPxlsMap = badPxlsMap > badThresh;
-    int pointsCount = computedDisp.cols*computedDisp.rows;
+    int pointsCount = sz.height*sz.width;
     if( !mask.empty() )
     {
-        checkSizeAndTypeOfMask( mask, computedDisp.size() );
+        checkTypeAndSizeOfMask( mask, sz );
         badPxlsMap = badPxlsMap & mask;
         pointsCount = countNonZero(mask);
     }
