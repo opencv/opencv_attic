@@ -49,7 +49,7 @@ def minarea_seq(img, count, storage):
     cv.ClearMemStorage(storage)
 
 if __name__ == "__main__":
-    img = cv.CreateImage(cv.Size(500, 500), 8, 3)
+    img = cv.CreateImage((500, 500), 8, 3)
     storage = cv.CreateMemStorage(0)
 
     cv.NamedWindow("rect & circle", 1)

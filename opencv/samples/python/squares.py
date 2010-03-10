@@ -24,10 +24,10 @@ def angle(pt1, pt2, pt0):
 
 def findSquares4(img, storage):
     N = 11
-    sz = cv.Size(img.width & -2, img.height & -2)
+    sz = (img.width & -2, img.height & -2)
     timg = cv.CloneImage(img); # make a copy of input image
     gray = cv.CreateImage(sz, 8, 1)
-    pyr = cv.CreateImage(cv.Size(sz.width/2, sz.height/2), 8, 3)
+    pyr = cv.CreateImage((sz.width/2, sz.height/2), 8, 3)
     # create empty sequence that will contain points -
     # 4 points per square (the square's vertices)
     squares = cv.CreateSeq(0, sizeof_CvSeq, sizeof_CvPoint, storage)
