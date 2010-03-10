@@ -424,6 +424,7 @@ objects = [
         "anchorY" : 'i',
     }),
     ( 'CvCapture', {}),
+    ( 'CvHaarClassifierCascade', {}),
     ( 'CvPOSITObject', {}),
     ( 'CvVideoWriter', {}),
     ( 'CvStereoBMState', {
