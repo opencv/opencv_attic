@@ -286,7 +286,7 @@ can be used for PCA, for comparing vectors using Mahalanobis distance and so for
 Calculates the magnitude and/or angle of 2d vectors.
 
 \cvdefC{void cvCartToPolar(\par const CvArr* x,\par const CvArr* y,\par CvArr* magnitude,\par CvArr* angle=NULL,\par int angleInDegrees=0);}
-\cvdefPy{CartToPolar(x,y,magnitude,angle=NULL,angleInDegrees)-> None}
+\cvdefPy{CartToPolar(x,y,magnitude,angle=NULL,angleInDegrees=0)-> None}
 
 \begin{description}
 \cvarg{x}{The array of x-coordinates}
@@ -2213,7 +2213,7 @@ and
 Calculates Cartesian coordinates of 2d vectors represented in polar form.
 
 \cvdefC{void cvPolarToCart(\par const CvArr* magnitude,\par const CvArr* angle,\par CvArr* x,\par CvArr* y,\par int angleInDegrees=0);}
-\cvdefPy{PolarToCart(magnitude,angle=NULL,x,y,angleInDegrees)-> None}
+\cvdefPy{PolarToCart(magnitude,angle,x,y,angleInDegrees=0)-> None}
 
 \begin{description}
 \cvarg{magnitude}{The array of magnitudes. If it is NULL, the magnitudes are assumed to be all 1's.}
