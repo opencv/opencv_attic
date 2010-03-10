@@ -424,6 +424,7 @@ objects = [
         "anchorY" : 'i',
     }),
     ( 'CvPOSITObject', {}),
+    ( 'CvVideoWriter', {}),
     ( 'CvStereoBMState', {
         "preFilterType" : 'i',
         "preFilterSize" : 'i',

@@ -93,11 +93,6 @@ struct cvcapture_t {
   CvCapture *a;
 };
 
-struct cvvideowriter_t {
-  PyObject_HEAD
-  CvVideoWriter *a;
-};
-
 typedef IplImage ROIplImage;
 
 struct cvmoments_t {
@@ -950,31 +945,6 @@ static void cvcapture_specials(void)
 {
   cvcapture_Type.tp_dealloc = cvcapture_dealloc;
 }
-
-/************************************************************************/
-
-/* cvvideowriter */
-
-static void cvvideowriter_dealloc(PyObject *self)
-{
-  cvvideowriter_t *pi = (cvvideowriter_t*)self;
-  cvReleaseVideoWriter(&(pi->a));
-  PyObject_Del(self);
-}
-
-static PyTypeObject cvvideowriter_Type = {
-  PyObject_HEAD_INIT(&PyType_Type)
-  0,                                      /*size*/
-  MODULESTR".cvvideowriter",              /*name*/
-  sizeof(cvvideowriter_t),                /*basicsize*/
-};
-
-static void cvvideowriter_specials(void)
-{
-  cvvideowriter_Type.tp_dealloc = cvvideowriter_dealloc;
-}
-
-
 
 /************************************************************************/
 
@@ -2065,17 +2035,6 @@ static int convert_to_CvCapturePTR(PyObject *o, CvCapture** dst, const char *nam
   }
 }
 
-static int convert_to_CvVideoWriterPTR(PyObject *o, CvVideoWriter** dst, const char *name = "no_name")
-{
-  if (PyType_IsSubtype(o->ob_type, &cvvideowriter_Type)) {
-    *dst = ((cvvideowriter_t*)o)->a;
-    return 1;
-  } else {
-    (*dst) = (CvVideoWriter*)NULL;
-    return failmsg("Expected CvVideoWriter for argument '%s'", name);
-  }
-}
-
 static int convert_to_CvMomentsPTR(PyObject *o, CvMoments** dst, const char *name = "no_name")
 {
   if (PyType_IsSubtype(o->ob_type, &cvmoments_Type)) {
@@ -2459,13 +2418,6 @@ static PyObject *FROM_CvSeqOfCvSURFDescriptorPTR(CvSeqOfCvSURFDescriptor *r)
 static PyObject *FROM_CvCapturePTR(CvCapture *r)
 {
   cvcapture_t *c = PyObject_NEW(cvcapture_t, &cvcapture_Type);
-  c->a = r;
-  return (PyObject*)c;
-}
-
-static PyObject *FROM_CvVideoWriterPTR(CvVideoWriter *r)
-{
-  cvvideowriter_t *c = PyObject_NEW(cvvideowriter_t, &cvvideowriter_Type);
   c->a = r;
   return (PyObject*)c;
 }
@@ -3845,7 +3797,6 @@ void initcv()
   MKTYPE(cvset);
   MKTYPE(cvsubdiv2d);
   MKTYPE(cvsubdiv2dpoint);
-  MKTYPE(cvvideowriter);
   MKTYPE(iplimage);
   MKTYPE(memtrack);
 
