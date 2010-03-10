@@ -772,7 +772,6 @@ class AreaTests(OpenCVTests):
 
     def test_kalman(self):
         k = cv.CreateKalman(2, 1, 0)
-        print dir(k)
 
     def failing_test_exception(self):
         a = cv.CreateImage((640, 480), cv.IPL_DEPTH_8U, 1)

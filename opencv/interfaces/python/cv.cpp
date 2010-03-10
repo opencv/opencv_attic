@@ -89,6 +89,7 @@ struct cvlineiterator_t {
 };
 
 typedef IplImage ROIplImage;
+typedef const CvMat ROCvMat;
 
 struct cvmoments_t {
   PyObject_HEAD
@@ -119,6 +120,7 @@ static int convert_to_CvMat(PyObject *o, CvMat **dst, const char *name = "no_nam
 static int convert_to_CvMatND(PyObject *o, CvMatND **dst, const char *name = "no_name");
 static PyObject *what_data(PyObject *o);
 static PyObject *FROM_CvMat(CvMat *r);
+static PyObject *FROM_ROCvMatPTR(ROCvMat *r);
 
 static void translate_error_to_exception(void)
 {
@@ -2407,6 +2409,20 @@ static PyObject *FROM_ROIplImagePTR(ROIplImage *r)
     cva->a = cvCreateImageHeader(cvSize(100,100), 8, 1);
     *(cva->a) = *r;
     cva->data = PyBuffer_FromReadWriteMemory(r->imageData, r->height * r->widthStep);
+    cva->offset = 0;
+    return (PyObject*)cva;
+  } else {
+    Py_RETURN_NONE;
+  }
+}
+
+static PyObject *FROM_ROCvMatPTR(ROCvMat *r)
+{
+  if (r != NULL) {
+    cvmat_t *cva = PyObject_NEW(cvmat_t, &cvmat_Type);
+    cva->a = cvCreateMatHeader(100, 100, CV_8U);
+    *(cva->a) = *r;
+    cva->data = PyBuffer_FromReadWriteMemory(r->data.ptr, r->rows * r->step);
     cva->offset = 0;
     return (PyObject*)cva;
   } else {

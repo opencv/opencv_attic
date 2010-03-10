@@ -251,6 +251,7 @@ def gen(name, args, ty):
       'IplImage*',
       'CvMat*',
       'constCvMat*',
+      'ROCvMat*',
       'CvMatND*',
       'CvPoint2D32f_4',
       'CvRNG',
@@ -468,32 +469,46 @@ objects = [
         "MP" : 'i',
         "DP" : 'i',
         "CP" : 'i',
-        "state_pre" : 'm',
+        "state_pre" : 'mr',
+        "state_post" : 'mr',
+        "transition_matrix" : 'mr',
+        "control_matrix" : 'mr',
+        "measurement_matrix" : 'mr',
+        "control_matrix" : 'mr',
+        "process_noise_cov" : 'mr',
+        "measurement_noise_cov" : 'mr',
+        "error_cov_pre" : 'mr',
+        "gain" : 'mr',
+        "error_cov_post" : 'mr',
     }),
 ]
 
 checkers = {
     'i' : 'PyNumber_Check',
     'f' : 'PyNumber_Check',
-    'm' : 'is_cvmat'
+    'm' : 'is_cvmat',
+    'mr' : 'is_cvmat'
 }
 # Python -> C
 converters = {
     'i' : 'PyInt_AsLong',
     'f' : 'PyFloat_AsDouble',
-    'm' : 'PyCvMat_AsCvMat'
+    'm' : 'PyCvMat_AsCvMat',
+    'mr' : 'PyCvMat_AsCvMat'
 }
 # C -> Python
 rconverters = {
     'i' : 'PyInt_FromLong',
     'f' : 'PyFloat_FromDouble',
-    'm' : 'FROM_CvMat'
+    'm' : 'FROM_CvMat',
+    'mr' : 'FROM_ROCvMatPTR'
 }
 # Human-readable type names
 typenames = {
     'i' : 'integer',
     'f' : 'float',
-    'm' : 'list of CvMat'
+    'm' : 'list of CvMat',
+    'mr' : 'list of CvMat',
 }
 
 for (t, members) in objects:

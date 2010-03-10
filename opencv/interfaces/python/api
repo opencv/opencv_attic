@@ -1457,9 +1457,12 @@ CreateKalman CvKalman*
   int dynam_params
   int measure_params
   int control_params 0
-KalmanCorrect constCvMat*
+KalmanCorrect ROCvMat*
   CvKalman* kalman
   CvMat measurement
+KalmanPredict ROCvMat*
+  CvKalman* kalman
+  CvMat control NULL
 SnakeImage
   IplImage image
   CvPoints points
