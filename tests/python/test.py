@@ -240,6 +240,27 @@ class FunctionTests(OpenCVTests):
         vely = cv.CreateImage(vel_size, cv.IPL_DEPTH_32F, 1)
         cv.CalcOpticalFlowBM(a, b, (8,8), (1,1), (8,8), 0, velx, vely)
 
+    def test_CartToPolar(self):
+        x = cv.CreateMat(5, 5, cv.CV_32F)
+        y = cv.CreateMat(5, 5, cv.CV_32F)
+        mag = cv.CreateMat(5, 5, cv.CV_32F)
+        angle = cv.CreateMat(5, 5, cv.CV_32F)
+        x2 = cv.CreateMat(5, 5, cv.CV_32F)
+        y2 = cv.CreateMat(5, 5, cv.CV_32F)
+
+        for i in range(5):
+            for j in range(5):
+                x[i, j] = i
+                y[i, j] = j
+
+        for in_degrees in [False, True]:
+            cv.CartToPolar(x, y, mag, angle, in_degrees)
+            cv.PolarToCart(mag, angle, x2, y2, in_degrees)
+            for i in range(5):
+                for j in range(5):
+                    self.assertAlmostEqual(x[i, j], x2[i, j], 1)
+                    self.assertAlmostEqual(y[i, j], y2[i, j], 1)
+
     def test_Circle(self):
         for w,h in [(2,77), (77,2), (256, 256), (640,480)]:
             img = cv.CreateImage((w,h), cv.IPL_DEPTH_8U, 1)

@@ -684,13 +684,13 @@ CartToPolar
   CvArr y
   CvArr magnitude
   CvArr angle NULL
-  int angle_in_degrees
+  int angle_in_degrees 0
 PolarToCart
   CvArr magnitude
-  CvArr angle NULL
+  CvArr angle
   CvArr x
   CvArr y
-  int angle_in_degrees
+  int angle_in_degrees 0
 Pow
   CvArr src
   CvArr dst
