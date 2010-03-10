@@ -34,7 +34,7 @@ if __name__ == "__main__":
     cv.NamedWindow("inverse log-polar", 1)
   
     
-    dst = cv.CreateImage(cv.Size(256, 256), 8, 3)
+    dst = cv.CreateImage((256, 256), 8, 3)
     src2 = cv.CreateImage(cv.GetSize(src), 8, 3)
     
     cv.SetMouseCallback("original", on_mouse)

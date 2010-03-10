@@ -26,7 +26,7 @@ def update_mhi(img, dst, diff_threshold):
     global orient
     global segmask
     timestamp = time.clock()/CLOCKS_PER_SEC # get current time in seconds
-    size = cv.Size(img.width, img.height) # get current frame size
+    size = (img.width, img.height) # get current frame size
     idx1 = last
     if not mhi or mhi.width != size.width or mhi.height != size.height: 
         for i in range(N):
@@ -101,7 +101,7 @@ if __name__ == "__main__":
         image = cv.QueryFrame(capture)
         if(image):
             if(not motion):
-                    motion = cv.CreateImage(cv.Size(image.width, image.height), 8, 3)
+                    motion = cv.CreateImage((image.width, image.height), 8, 3)
                     cv.Zero(motion)
                     #motion.origin = image.origin
             update_mhi(image, motion, 30)

@@ -66,7 +66,7 @@ def process_image( slider_pos ):
         box = cv.FitEllipse2(PointArray2D32f)
         
         # Draw current contour.
-        cv.DrawContours(image04, c, cv.CV_RGB(255,255,255), cv.CV_RGB(255,255,255),0,1,8,cv.Point(0,0))
+        cv.DrawContours(image04, c, cv.CV_RGB(255,255,255), cv.CV_RGB(255,255,255),0,1,8,(0,0))
         
         # Convert ellipse data from float to integer representation.
         center = cv.CvPoint()
