@@ -95,9 +95,7 @@ if __name__ == '__main__':
                 break
     else:
         image = cv.LoadImage(input_name, 1)
-
-        if image:
-            detect_and_draw(image, cascade)
-            cv.WaitKey(0)
+        detect_and_draw(image, cascade)
+        cv.WaitKey(0)
 
     cv.DestroyWindow("result")
