@@ -360,6 +360,10 @@ Allocates the Kalman filter structure.
 CvKalman* cvCreateKalman( \par int dynam\_params,\par int measure\_params,\par int control\_params=0 );
 }
 
+\cvdefPy{
+CreateKalman(dynam\_params, measure\_params, control\_params=0) -> CvKalman
+}
+
 \begin{description}
 \cvarg{dynam\_params}{dimensionality of the state vector}
 \cvarg{measure\_params}{dimensionality of the measurement vector}
@@ -375,14 +379,21 @@ Adjusts the model state.
 \cvdefC{
 const CvMat* cvKalmanCorrect( CvKalman* kalman, const CvMat* measurement );
 }
+\cvdefPy{
+KalmanCorrect(kalman, measurement) -> cvmat
+}
 
 \begin{lstlisting}
 #define cvKalmanUpdateByMeasurement cvKalmanCorrect
 \end{lstlisting}
 
 \begin{description}
+\ifC
 \cvarg{kalman}{Pointer to the structure to be updated}
-\cvarg{measurement}{Pointer to the structure CvMat containing the measurement vector}
+\else
+\cvarg{kalman}{Kalman filter object returned by \cvCPyCross{CreateKalman}}
+\fi
+\cvarg{measurement}{CvMat containing the measurement vector}
 \end{description}
 
 The function adjusts the stochastic model state on the basis of the given measurement of the model state:
@@ -405,7 +416,7 @@ $K_k$ & Kalman "gain" matrix.
 The function stores the adjusted state at \texttt{kalman->state\_post} and returns it on output.
 
 \ifC
-\cvfunc{Example. Using Kalman filter to track a rotating point}
+Example. Using Kalman filter to track a rotating point
 \begin{lstlisting}
 #include "cv.h"
 #include "highgui.h"
@@ -525,12 +536,19 @@ Estimates the subsequent model state.
 \cvdefC{
 const CvMat* cvKalmanPredict( \par CvKalman* kalman, \par const CvMat* control=NULL );
 }
+\cvdefPy{
+cvKalmanPredict(kalman, control=None) -> cvmat
+}
 \begin{lstlisting}
 #define cvKalmanUpdateByTime cvKalmanPredict
 \end{lstlisting}
 
 \begin{description}
+\ifC
 \cvarg{kalman}{Kalman filter state}
+\else
+\cvarg{kalman}{Kalman filter object returned by \cvCPyCross{CreateKalman}}
+\fi
 \cvarg{control}{Control vector $u_k$, should be NULL iff there is no external control (\texttt{control\_params} =0)}
 \end{description}
 
