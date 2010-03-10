@@ -1684,6 +1684,10 @@ class AreaTests(OpenCVTests):
         self.assertEqual(doreduce((1,3), lambda dst: cv.Reduce(srcmat, dst, op = cv.CV_REDUCE_MAX)), [3, 4, 5])
         self.assertEqual(doreduce((1,3), lambda dst: cv.Reduce(srcmat, dst, op = cv.CV_REDUCE_MIN)), [0, 1, 2])
 
+        # exercise both dim and op
+        self.assertEqual(doreduce((1,3), lambda dst: cv.Reduce(srcmat, dst, 0, cv.CV_REDUCE_MAX)), [3, 4, 5])
+        self.assertEqual(doreduce((2,1), lambda dst: cv.Reduce(srcmat, dst, 1, cv.CV_REDUCE_MAX)), [2, 5])
+
     def test_operations(self):
         class Im:
 
