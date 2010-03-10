@@ -1,50 +1,52 @@
 #!/usr/bin/python
 import sys
-from opencv.cv import *
-from opencv.highgui import *
-src = 0;
-image = 0;
-dest = 0;
-element = 0;
-element_shape = CV_SHAPE_RECT;
-global_pos = 0;
+import urllib2
+import cv
+
+src = 0
+image = 0
+dest = 0
+element_shape = cv.CV_SHAPE_RECT
 
 def Opening(pos):
-    element = cvCreateStructuringElementEx( pos*2+1, pos*2+1, pos, pos, element_shape, None );
-    cvErode(src,image,element,1);
-    cvDilate(image,dest,element,1);
-    cvShowImage("Opening&Closing window",dest);
+    element = cv.CreateStructuringElementEx(pos*2+1, pos*2+1, pos, pos, element_shape)
+    cv.Erode(src, image, element, 1)
+    cv.Dilate(image, dest, element, 1)
+    cv.ShowImage("Opening & Closing", dest)
 def Closing(pos):
-    element = cvCreateStructuringElementEx( pos*2+1, pos*2+1, pos, pos, element_shape, None );
-    cvDilate(src,image,element,1);
-    cvErode(image,dest,element,1);
-    cvShowImage("Opening&Closing window",dest);
+    element = cv.CreateStructuringElementEx(pos*2+1, pos*2+1, pos, pos, element_shape)
+    cv.Dilate(src, image, element, 1)
+    cv.Erode(image, dest, element, 1)
+    cv.ShowImage("Opening & Closing", dest)
 def Erosion(pos):
-    element = cvCreateStructuringElementEx( pos*2+1, pos*2+1, pos, pos, element_shape, None );
-    cvErode(src,dest,element,1);
-    cvShowImage("Erosion&Dilation window",dest);
+    element = cv.CreateStructuringElementEx(pos*2+1, pos*2+1, pos, pos, element_shape)
+    cv.Erode(src, dest, element, 1)
+    cv.ShowImage("Erosion & Dilation", dest)
 def Dilation(pos):
-    element = cvCreateStructuringElementEx( pos*2+1, pos*2+1, pos, pos, element_shape, None );
-    cvDilate(src,dest,element,1);
-    cvShowImage("Erosion&Dilation window",dest);
+    element = cv.CreateStructuringElementEx(pos*2+1, pos*2+1, pos, pos, element_shape)
+    cv.Dilate(src, dest, element, 1)
+    cv.ShowImage("Erosion & Dilation", dest)
 
 if __name__ == "__main__":
-    filename = "../c/baboon.jpg"
-    if len(sys.argv)==2:
-        filename = sys.argv[1]
-    src = cvLoadImage(filename,1)
-    if not src:
-        sys.exit(-1)
-    image = cvCloneImage(src);
-    dest = cvCloneImage(src);
-    cvNamedWindow("Opening&Closing window",1);
-    cvNamedWindow("Erosion&Dilation window",1);
-    cvShowImage("Opening&Closing window",src);
-    cvShowImage("Erosion&Dilation window",src);
-    cvCreateTrackbar("Open","Opening&Closing window",global_pos,10,Opening);
-    cvCreateTrackbar("Close","Opening&Closing window",global_pos,10,Closing);
-    cvCreateTrackbar("Dilate","Erosion&Dilation window",global_pos,10,Dilation);
-    cvCreateTrackbar("Erode","Erosion&Dilation window",global_pos,10,Erosion);
-    cvWaitKey(0);
-    cvDestroyWindow("Opening&Closing window");
-    cvDestroyWindow("Erosion&Dilation window");
+    if len(sys.argv) > 1:
+        src = cv.LoadImage(sys.argv[1], cv.cv.CV_LOAD_IMAGE_COLOR)
+    else:
+        url = 'https://code.ros.org/svn/opencv/trunk/opencv/samples/c/fruits.jpg'
+        filedata = urllib2.urlopen(url).read()
+        imagefiledata = cv.CreateMatHeader(1, len(filedata), cv.CV_8UC1)
+        cv.SetData(imagefiledata, filedata, len(filedata))
+        src = cv.DecodeImage(imagefiledata, cv.CV_LOAD_IMAGE_COLOR)
+
+    image = cv.CloneImage(src)
+    dest = cv.CloneImage(src)
+    cv.NamedWindow("Opening & Closing", 1)
+    cv.NamedWindow("Erosion & Dilation", 1)
+    cv.ShowImage("Opening & Closing", src)
+    cv.ShowImage("Erosion & Dilation", src)
+    cv.CreateTrackbar("Open", "Opening & Closing", 0, 10, Opening)
+    cv.CreateTrackbar("Close", "Opening & Closing", 0, 10, Closing)
+    cv.CreateTrackbar("Dilate", "Erosion & Dilation", 0, 10, Dilation)
+    cv.CreateTrackbar("Erode", "Erosion & Dilation", 0, 10, Erosion)
+    cv.WaitKey(0)
+    cv.DestroyWindow("Opening & Closing")
+    cv.DestroyWindow("Erosion & Dilation")
