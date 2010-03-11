@@ -18,8 +18,8 @@ void CvLBPEvaluator::setImage(const Mat &img, uchar clsLabel, int idx)
 {
     CV_DbgAssert( !sum.empty() );
     CvFeatureEvaluator::setImage( img, clsLabel, idx );
-    Mat sum(winSize.height + 1, winSize.width + 1, sum.type(), sum.ptr<int>((int)idx));
-    integral( img, sum );
+    Mat innSum(winSize.height + 1, winSize.width + 1, sum.type(), sum.ptr<int>((int)idx));
+    integral( img, innSum );
 }
 
 void CvLBPEvaluator::writeFeatures( FileStorage &fs, const Mat& featureMap ) const
