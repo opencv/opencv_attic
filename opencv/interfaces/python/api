@@ -1187,7 +1187,7 @@ PointPolygonTest double
   int measure_dist
 MinAreaRect2 CvBox2D
   cvarrseq points
-  CvMemStorage storage
+  CvMemStorage storage NULL
 MinEnclosingCircle int,center,radius
   cvarrseq points
   CvPoint2D32f center /O
@@ -1434,7 +1434,7 @@ CalcGlobalOrientation double
   CvArr mhi
   double timestamp
   double duration
-SegmentMotion
+SegmentMotion CvSeq*
   CvArr mhi
   CvArr seg_mask
   CvMemStorage storage
@@ -1541,6 +1541,8 @@ SaveImage
   char* filename
   CvArr image
 CaptureFromFile CvCapture*
+  char* filename
+CreateFileCapture CvCapture*
   char* filename
 CaptureFromCAM CvCapture*
   int index

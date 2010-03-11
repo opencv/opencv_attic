@@ -122,6 +122,22 @@ static PyObject *what_data(PyObject *o);
 static PyObject *FROM_CvMat(CvMat *r);
 static PyObject *FROM_ROCvMatPTR(ROCvMat *r);
 
+#define FROM_double(r)  PyFloat_FromDouble(r)
+#define FROM_float(r)  PyFloat_FromDouble(r)
+#define FROM_int(r)  PyInt_FromLong(r)
+#define FROM_int64(r)  PyLong_FromLongLong(r)
+#define FROM_unsigned(r)  PyLong_FromUnsignedLong(r)
+#define FROM_CvBox2D(r) Py_BuildValue("(ff)(ff)f", r.center.x, r.center.y, r.size.width, r.size.height, r.angle)
+#define FROM_CvScalar(r)  Py_BuildValue("(ffff)", r.val[0], r.val[1], r.val[2], r.val[3])
+#define FROM_CvPoint(r)  Py_BuildValue("(ii)", r.x, r.y)
+#define FROM_CvPoint2D32f(r) Py_BuildValue("(ff)", r.x, r.y)
+#define FROM_CvSize(r) Py_BuildValue("(ii)", r.width, r.height)
+#define FROM_CvRect(r) Py_BuildValue("(iiii)", r.x, r.y, r.width, r.height)
+#define FROM_CvSeqPTR(r) _FROM_CvSeqPTR(r, pyobj_storage)
+#define FROM_CvSubdiv2DPTR(r) _FROM_CvSubdiv2DPTR(r, pyobj_storage)
+#define FROM_CvPoint2D64f(r) Py_BuildValue("(ff)", r.x, r.y)
+#define FROM_CvConnectedComp(r) Py_BuildValue("(fNN)", (r).area, FROM_CvScalar((r).value), FROM_CvRect((r).rect))
+
 static void translate_error_to_exception(void)
 {
   PyErr_SetString(opencv_error, cvErrorStr(cvGetErrStatus()));
@@ -1095,6 +1111,11 @@ static PyObject* cvseq_seq_getitem(PyObject *o, Py_ssize_t i)
           r->container = ps->container;
           Py_INCREF(r->container);
           return (PyObject*)r;
+        }
+      case sizeof(CvConnectedComp):
+        {
+          CvConnectedComp *cc = CV_GET_SEQ_ELEM(CvConnectedComp, ps->a, i);
+          return FROM_CvConnectedComp(*cc);
         }
       default:
         printf("seq elem size is %d\n", ps->a->elem_size);
@@ -2176,21 +2197,6 @@ static PyObject *pythonize_CvMatND(cvmatnd_t *m)
  * All these functions and macros return a new reference.
  */
 
-#define FROM_double(r)  PyFloat_FromDouble(r)
-#define FROM_float(r)  PyFloat_FromDouble(r)
-#define FROM_int(r)  PyInt_FromLong(r)
-#define FROM_int64(r)  PyLong_FromLongLong(r)
-#define FROM_unsigned(r)  PyLong_FromUnsignedLong(r)
-#define FROM_CvBox2D(r) Py_BuildValue("(ff)(ff)f", r.center.x, r.center.y, r.size.width, r.size.height, r.angle)
-#define FROM_CvScalar(r)  Py_BuildValue("(ffff)", r.val[0], r.val[1], r.val[2], r.val[3])
-#define FROM_CvPoint(r)  Py_BuildValue("(ii)", r.x, r.y)
-#define FROM_CvConnectedComp(r) Py_BuildValue("(fNN)", r.area, FROM_CvScalar(r.value), FROM_CvRect(r.rect))
-#define FROM_CvPoint2D32f(r) Py_BuildValue("(ff)", r.x, r.y)
-#define FROM_CvSize(r) Py_BuildValue("(ii)", r.width, r.height)
-#define FROM_CvRect(r) Py_BuildValue("(iiii)", r.x, r.y, r.width, r.height)
-#define FROM_CvSeqPTR(r) _FROM_CvSeqPTR(r, pyobj_storage)
-#define FROM_CvSubdiv2DPTR(r) _FROM_CvSubdiv2DPTR(r, pyobj_storage)
-#define FROM_CvPoint2D64f(r) Py_BuildValue("(ff)", r.x, r.y)
 
 static PyObject *_FROM_CvSeqPTR(CvSeq *s, PyObject *storage)
 {
