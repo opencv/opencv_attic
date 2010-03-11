@@ -1,124 +1,105 @@
 #!/usr/bin/python
 """
-This program is demonstration for ellipse fitting. Program finds 
-contours and approximate it by ellipses.
+This program is a demonstration of ellipse fitting.
 
-Trackbar specify threshold parametr.
+Trackbar controls threshold parameter.
 
-White lines is contours. Red lines is fitting ellipses.
+Gray lines are contours.  Colored lines are fit ellipses.
 
 Original C implementation by:  Denis Burenkov.
-Python implementation by: Roman Stanchak
+Python implementation by: Roman Stanchak, James Bowman
 """
 
 import sys
 import urllib2
+import random
 import cv
 
-image02 = None
-image03 = None
-image04 = None
+def contour_iterator(contour):
+    while contour:
+        yield contour
+        contour = contour.h_next()
 
-def process_image( slider_pos ): 
-    """
-    Define trackbar callback functon. This function find contours,
-    draw it and approximate it by ellipses.
-    """
-    stor = cv.CreateMemStorage()
-    
-    # Threshold the source image. This needful for cv.FindContours().
-    cv.Threshold( image03, image02, slider_pos, 255, cv.CV_THRESH_BINARY )
-    
-    # Find all contours.
-    cont = cv.FindContours (image02,
+class FitEllipse:
+
+    def __init__(self, source_image, slider_pos):
+        self.source_image = source_image
+        cv.CreateTrackbar("Threshold", "Result", slider_pos, 255, self.process_image)
+        self.process_image(slider_pos)
+
+    def process_image(self, slider_pos): 
+        """
+        This function finds contours, draws them and their approximation by ellipses.
+        """
+        stor = cv.CreateMemStorage()
+        
+        # Create the destination images
+        image02 = cv.CloneImage(self.source_image)
+        cv.Zero(image02)
+        image04 = cv.CreateImage(cv.GetSize(self.source_image), cv.IPL_DEPTH_8U, 3)
+        cv.Zero(image04)
+
+        # Threshold the source image. This needful for cv.FindContours().
+        cv.Threshold(self.source_image, image02, slider_pos, 255, cv.CV_THRESH_BINARY)
+
+        # Find all contours.
+        cont = cv.FindContours(image02,
             stor,
             cv.CV_RETR_LIST,
             cv.CV_CHAIN_APPROX_NONE,
             (0, 0))
-    
-    # Clear images. IPL use.
-    cv.Zero(image02)
-    cv.Zero(image04)
-    
-    print 'h_next', cont.h_next()
-    print 'v_next', cont.v_next()
 
-    # This cycle draw all contours and approximate it by ellipses.
-    for (count, c) in enumerate(cont):
+        for c in contour_iterator(cont):
+            # Number of points must be more than or equal to 6 for cv.FitEllipse2
+            if len(c) >= 6:
+                # Copy the contour into an array of (x,y)s
+                PointArray2D32f = cv.CreateMat(1, len(c), cv.CV_32FC2)
+                for (i, (x, y)) in enumerate(c):
+                    PointArray2D32f[0, i] = (x, y)
+                
+                # Draw the current contour in gray
+                gray = cv.CV_RGB(100, 100, 100)
+                cv.DrawContours(image04, c, gray, gray,0,1,8,(0,0))
+                
+                # Fits ellipse to current contour.
+                (center, size, angle) = cv.FitEllipse2(PointArray2D32f)
+                
+                # Convert ellipse data from float to integer representation.
+                center = (cv.Round(center[0]), cv.Round(center[1]))
+                size = (cv.Round(size[0] * 0.5), cv.Round(size[1] * 0.5))
+                angle = -angle
+                
+                # Draw ellipse in random color
+                color = cv.CV_RGB(random.randrange(256),random.randrange(256),random.randrange(256))
+                cv.Ellipse(image04, center, size,
+                          angle, 0, 360,
+                          color, 2, cv.CV_AA, 0)
 
-        # Number point must be more than or equal to 6 (for cv.FitEllipse_32f).        
-        if( count < 6 ):
-            continue
-        
-        # Alloc memory for contour point set.    
-        PointArray = cv.CreateMat(1, count, cv.CV_32SC2)
-        PointArray2D32f= cv.CreateMat( 1, count, cv.CV_32FC2)
-        
-        # Get contour point set.
-        cv.CvtSeqToArray(c, PointArray, cv.Slice(0, cv.CV_WHOLE_SEQ_END_INDEX))
-        
-        # Convert CvPoint set to CvBox2D32f set.
-        cv.Convert( PointArray, PointArray2D32f )
-        
-        box = cv.CvBox2D()
-
-        # Fits ellipse to current contour.
-        box = cv.FitEllipse2(PointArray2D32f)
-        
-        # Draw current contour.
-        cv.DrawContours(image04, c, cv.CV_RGB(255,255,255), cv.CV_RGB(255,255,255),0,1,8,(0,0))
-        
-        # Convert ellipse data from float to integer representation.
-        center = cv.CvPoint()
-        size = cv.CvSize()
-        center.x = cv.Round(box.center.x)
-        center.y = cv.Round(box.center.y)
-        size.width = cv.Round(box.size.width*0.5)
-        size.height = cv.Round(box.size.height*0.5)
-        box.angle = -box.angle
-        
-        # Draw ellipse.
-        cv.Ellipse(image04, center, size,
-                  box.angle, 0, 360,
-                  cv.CV_RGB(0,0,255), 1, cv.CV_AA, 0)
-    
-    # Show image. HighGUI use.
-    cv.ShowImage( "Result", image04 )
+        # Show image. HighGUI use.
+        cv.ShowImage( "Result", image04 )
 
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
-        image03 = cv.LoadImage(sys.argv[1], cv.CV_LOAD_IMAGE_GRAYSCALE)
+        source_image = cv.LoadImage(sys.argv[1], cv.CV_LOAD_IMAGE_GRAYSCALE)
     else:
         url = 'https://code.ros.org/svn/opencv/trunk/opencv/samples/c/stuff.jpg'
         filedata = urllib2.urlopen(url).read()
         imagefiledata = cv.CreateMatHeader(1, len(filedata), cv.CV_8UC1)
         cv.SetData(imagefiledata, filedata, len(filedata))
-        image03 = cv.DecodeImage(imagefiledata, cv.CV_LOAD_IMAGE_GRAYSCALE)
+        source_image = cv.DecodeImage(imagefiledata, cv.CV_LOAD_IMAGE_GRAYSCALE)
     
-    slider_pos = 70
-
-    # Create the destination images
-    image02 = cv.CloneImage( image03 )
-    image04 = cv.CloneImage( image03 )
-
     # Create windows.
     cv.NamedWindow("Source", 1)
     cv.NamedWindow("Result", 1)
 
     # Show the image.
-    cv.ShowImage("Source", image03)
+    cv.ShowImage("Source", source_image)
 
-    # Create toolbars. HighGUI use.
-    cv.CreateTrackbar( "Threshold", "Result", slider_pos, 255, process_image )
+    fe = FitEllipse(source_image, 70)
 
-
-    process_image( 1 )
-
-    #Wait for a key stroke; the same function arranges events processing                
     print "Press any key to exit"
     cv.WaitKey(0)
 
     cv.DestroyWindow("Source")
     cv.DestroyWindow("Result")
-
