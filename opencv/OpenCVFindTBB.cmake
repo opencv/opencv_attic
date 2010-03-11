@@ -15,7 +15,7 @@
 #   which compiler to use (detected automatically on Windows)
 
 # This module respects
-# TBB_INSTALL_DIR or $ENV{TBB21_INSTALL_DIR} or $ENV{TBB_INSTALL_DIR}
+# TBB_INSTALL_DIR or $ENV{TBB22_INSTALL_DIR} or $ENV{TBB_INSTALL_DIR}
 
 # This module defines
 # TBB_INCLUDE_DIRS, where to find task_scheduler_init.h, etc.
@@ -98,10 +98,10 @@ if (NOT _TBB_INSTALL_DIR)
     if (NOT "$ENV{TBB_INSTALL_DIR}" STREQUAL "")
         set (_TBB_INSTALL_DIR $ENV{TBB_INSTALL_DIR})
     endif (NOT "$ENV{TBB_INSTALL_DIR}" STREQUAL "")
-    # Intel recommends setting TBB21_INSTALL_DIR
-    if (NOT "$ENV{TBB21_INSTALL_DIR}" STREQUAL "")
-        set (_TBB_INSTALL_DIR $ENV{TBB21_INSTALL_DIR})
-    endif (NOT "$ENV{TBB21_INSTALL_DIR}" STREQUAL "")
+    # Intel recommends setting TBB22_INSTALL_DIR
+    if (NOT "$ENV{TBB22_INSTALL_DIR}" STREQUAL "")
+        set (_TBB_INSTALL_DIR $ENV{TBB22_INSTALL_DIR})
+    endif (NOT "$ENV{TBB22_INSTALL_DIR}" STREQUAL "")
 endif (NOT _TBB_INSTALL_DIR)
 # third: try to find path automatically
 if (NOT _TBB_INSTALL_DIR)
