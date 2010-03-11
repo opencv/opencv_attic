@@ -133,8 +133,8 @@ bool CvCascadeClassifier::train( const String _cascadeDirName,
     if( _cascadeDirName.empty() || _posFilename.empty() || _negFilename.empty() )
         CV_Error( CV_StsBadArg, "_cascadeDirName or _bgfileName or _vecFileName is NULL" );
 
-    String dirName;
-    if ( _cascadeDirName.find('/') )
+    string dirName;
+    if ( _cascadeDirName.find('/') != string::npos )
         dirName = _cascadeDirName + '/';
     else
         dirName = _cascadeDirName + '\\';
