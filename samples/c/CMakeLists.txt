@@ -69,6 +69,7 @@ if (BUILD_EXAMPLES)
     MY_DEFINE_EXAMPLE(calibration	calibration.cpp)
     MY_DEFINE_EXAMPLE(calibration_artificial calibration_artificial.cpp)
     MY_DEFINE_EXAMPLE(mser mser_sample.cpp)
+    MY_DEFINE_EXAMPLE(calonder calonder_sample.cpp)
 endif(BUILD_EXAMPLES)
 
 if (INSTALL_C_EXAMPLES AND NOT WIN32)
