@@ -3,41 +3,37 @@ import urllib2
 import sys
 import cv
 
-marker_mask = None
-markers = None
-img0 = None
-img = None
-img_gray = None 
-wshed = None
-prev_pt = (-1, -1)
+class Sketcher:
+    def __init__(self, windowname, dests):
+        self.prev_pt = None
+        self.windowname = windowname
+        self.dests = dests
+        cv.SetMouseCallback(self.windowname, self.on_mouse)
 
-def on_mouse(event, x, y, flags, param):
-    global prev_pt
-    if(not img):
-        return
-    if(event == cv.CV_EVENT_LBUTTONUP or not (flags & cv. CV_EVENT_FLAG_LBUTTON)):
-        prev_pt = (-1, -1)
-    elif(event == cv.CV_EVENT_LBUTTONDOWN):
-        prev_pt = (x, y)
-    elif(event == cv.CV_EVENT_MOUSEMOVE and (flags & cv. CV_EVENT_FLAG_LBUTTON)):
+    def on_mouse(self, event, x, y, flags, param):
         pt = (x, y)
-        if(prev_pt.x < 0):
-            prev_pt = pt
-        cv.Line(marker_mask, prev_pt, pt, cv.ScalarAll(255), 5, 8, 0)
-        cv.Line(img, prev_pt, pt, cv.ScalarAll(255), 5, 8, 0)
-        prev_pt = pt
-        cv.ShowImage("image", img)
+        if event == cv.CV_EVENT_LBUTTONUP or not (flags & cv.CV_EVENT_FLAG_LBUTTON):
+            self.prev_pt = None
+        elif event == cv.CV_EVENT_LBUTTONDOWN:
+            self.prev_pt = pt
+        elif event == cv.CV_EVENT_MOUSEMOVE and (flags & cv.CV_EVENT_FLAG_LBUTTON) :
+            if self.prev_pt:
+                for dst in self.dests:
+                    cv.Line(dst, self.prev_pt, pt, cv.ScalarAll(255), 5, 8, 0)
+            self.prev_pt = pt
+            cv.ShowImage(self.windowname, img)
 
 if __name__ == "__main__":
-    filename = "../c/fruits.jpg"
-    if len(sys.argv)>1:
-        filename = sys.argv[1]
+    if len(sys.argv) > 1:
+        img0 = cv.LoadImage( sys.argv[1], cv.cv.CV_LOAD_IMAGE_COLOR)
+    else:
+        url = 'https://code.ros.org/svn/opencv/trunk/opencv/samples/c/fruits.jpg'
+        filedata = urllib2.urlopen(url).read()
+        imagefiledata = cv.CreateMatHeader(1, len(filedata), cv.CV_8UC1)
+        cv.SetData(imagefiledata, filedata, len(filedata))
+        img0 = cv.DecodeImage(imagefiledata, cv.CV_LOAD_IMAGE_COLOR)
 
     rng = cv.RNG(-1)
-    img0 = cv.LoadImage(filename, 1)
-    if not img0:
-        print "Error opening image '%s'" % filename
-        sys.exit(-1)
 
     print "Hot keys:"
     print "\tESC - quit the program"
@@ -52,7 +48,7 @@ if __name__ == "__main__":
     img_gray = cv.CloneImage(img0)
     wshed = cv.CloneImage(img0)
     marker_mask = cv.CreateImage(cv.GetSize(img), 8, 1)
-    markers = cv.CreateImage(cv.GetSize(img), IPL_DEPTH_32S, 1)
+    markers = cv.CreateImage(cv.GetSize(img), cv.IPL_DEPTH_32S, 1)
 
     cv.CvtColor(img, marker_mask, cv.CV_BGR2GRAY)
     cv.CvtColor(marker_mask, img_gray, cv.CV_GRAY2BGR)
@@ -63,49 +59,49 @@ if __name__ == "__main__":
     cv.ShowImage("image", img)
     cv.ShowImage("watershed transform", wshed)
 
-    cv.SetMouseCallback("image", on_mouse, None)
+    sk = Sketcher("image", [img, marker_mask])
+
     while True:
         c = cv.WaitKey(0)
-        if c=='\x1b':
+        if c == 27 or c == ord('q'):
             break
-        if c == 'r':
+        if c == ord('r'):
             cv.Zero(marker_mask)
             cv.Copy(img0, img)
             cv.ShowImage("image", img)
-        if c == 'w':
+        if c == ord('w'):
             storage = cv.CreateMemStorage(0)
-            comp_count = 0
             #cv.SaveImage("wshed_mask.png", marker_mask)
             #marker_mask = cv.LoadImage("wshed_mask.png", 0)
-            nb_cont, contours = cv.FindContours(marker_mask, storage, sizeof_CvContour,
-                            cv.CV_RETR_CCOMP, cv. CV_CHAIN_APPROX_SIMPLE)
+            contours = cv.FindContours(marker_mask, storage, cv.CV_RETR_CCOMP, cv.CV_CHAIN_APPROX_SIMPLE)
+            def contour_iterator(contour):
+                while contour:
+                    yield contour
+                    contour = contour.h_next()
+
             cv.Zero(markers)
-            while contours:
-                cv.DrawContours(markers, contours, cv.ScalarAll(comp_count+1),
-                                cv.ScalarAll(comp_count+1), -1, -1, 8, (0, 0))
-                contours=contours.h_next
-                comp_count+=1
-            color_tab = cv.CreateMat(comp_count, 1, cv.CV_8UC3)
-            for i in range(comp_count):
-                color_tab[i] = cv.Scalar(cv.RandInt(rng)%180 + 50, 
-                                 cv.RandInt(rng)%180 + 50, 
-                                 cv.RandInt(rng)%180 + 50)
-            t = cv.GetTickCount()
+            comp_count = 0
+            for c in contour_iterator(contours):
+                cv.DrawContours(markers,
+                                c,
+                                cv.ScalarAll(comp_count + 1),
+                                cv.ScalarAll(comp_count + 1),
+                                -1,
+                                -1,
+                                8)
+                comp_count += 1
+
             cv.Watershed(img0, markers)
-            t = cv.GetTickCount() - t
-            #print "exec time = %f" % t/(cv.GetTickFrequency()*1000.)
 
             cv.Set(wshed, cv.ScalarAll(255))
 
             # paint the watershed image
+            color_tab = [(cv.RandInt(rng) % 180 + 50, cv.RandInt(rng) % 180 + 50, cv.RandInt(rng) % 180 + 50) for i in range(comp_count)]
             for j in range(markers.height):
                 for i in range(markers.width):
                     idx = markers[j, i]
-                    if idx==-1:
-                        continue
-                    idx = idx-1
-                    wshed[j, i] = color_tab[idx, 0]
+                    if idx != -1:
+                        wshed[j, i] = color_tab[int(idx - 1)]
 
             cv.AddWeighted(wshed, 0.5, img_gray, 0.5, 0, wshed)
             cv.ShowImage("watershed transform", wshed)
-            cv.WaitKey()
