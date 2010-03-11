@@ -862,7 +862,7 @@ static void findStereoCorrespondenceBM( const Mat& left0, const Mat& right0, Mat
 #else
     N0 /= 4;
 #endif
-    double maxStripeSize = min(max(N0 / (width * ndisp), (wsz-1) * SAD_overhead_coeff), height);
+    double maxStripeSize = min(max(N0 / (width * ndisp), (wsz-1) * SAD_overhead_coeff), (double)height);
     int nstripes = cvCeil(height / maxStripeSize);
 #else
     const int nstripes = 1;
