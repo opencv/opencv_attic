@@ -39,6 +39,7 @@ void on_mouse( int event, int x, int y, int flags, void* param )
 int main( int argc, char** argv )
 {
     char* filename = argc >= 2 ? argv[1] : (char*)"fruits.jpg";
+    CvMemStorage* storage = cvCreateMemStorage(0);
     CvRNG rng = cvRNG(-1);
 
     if( (img0 = cvLoadImage(filename,1)) == 0 )
@@ -84,10 +85,12 @@ int main( int argc, char** argv )
 
         if( (char)c == 'w' || (char)c == ' ' )
         {
-            CvMemStorage* storage = cvCreateMemStorage(0);
             CvSeq* contours = 0;
-            CvMat* color_tab;
+            CvMat* color_tab = 0;
             int i, j, comp_count = 0;
+            
+            cvClearMemStorage(storage);
+            
             //cvSaveImage( "wshed_mask.png", marker_mask );
             //marker_mask = cvLoadImage( "wshed_mask.png", 0 );
             cvFindContours( marker_mask, storage, &contours, sizeof(CvContour),
@@ -99,6 +102,9 @@ int main( int argc, char** argv )
                                 cvScalarAll(comp_count+1), -1, -1, 8, cvPoint(0,0) );
             }
 
+            if( comp_count == 0 )
+                continue;
+            
             color_tab = cvCreateMat( 1, comp_count, CV_8UC3 );
             for( i = 0; i < comp_count; i++ )
             {
@@ -134,7 +140,6 @@ int main( int argc, char** argv )
 
             cvAddWeighted( wshed, 0.5, img_gray, 0.5, 0, wshed );
             cvShowImage( "watershed transform", wshed );
-            cvReleaseMemStorage( &storage );
             cvReleaseMat( &color_tab );
         }
     }
