@@ -99,6 +99,19 @@ typedef unsigned long ulong;
 #include "ipp.h"
 #endif
 
+#if defined __SSE2__ || _MSC_VER >= 1300
+    #include "emmintrin.h"
+    #define CV_SSE 1
+    #define CV_SSE2 1
+    #if defined __SSE3__ || _MSC_VER >= 1400
+        #include "pmmintrin.h"
+        #define CV_SSE3 1
+    #endif
+#else
+    #define CV_SSE 0
+    #define CV_SSE2 0
+    #define CV_SSE3 0
+#endif
 
 #define CV_MEMCPY_CHAR( dst, src, len )                 \
 {                                                       \
@@ -202,6 +215,7 @@ void deleteThreadAllocData();
 void deleteThreadRNGData();
 #endif
 
+    
 template<typename T1, typename T2=T1, typename T3=T1> struct OpAdd
 {
     typedef T1 type1;
@@ -297,7 +311,8 @@ struct NoVec
 {
     int operator()(const void*, const void*, void*, int) const { return 0; }
 };
-
+    
+    
 template<class Op, class VecOp> static void
 binaryOpC1_( const Mat& srcmat1, const Mat& srcmat2, Mat& dstmat )
 {

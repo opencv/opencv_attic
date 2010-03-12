@@ -44,6 +44,7 @@
 
 #if defined WIN32 || defined WIN64 || defined _WIN64 || defined WINCE
 #include <tchar.h>
+#include <intrin.h>
 #else
 #include <pthread.h>
 #include <sys/time.h>
@@ -65,6 +66,63 @@
 namespace cv
 {
 
+struct HWFeatures
+{
+    enum { MAX_FEATURE = CV_HARDWARE_MAX_FEATURE };
+    
+    HWFeatures()
+    {
+        memset( have, 0, sizeof(have) );
+        x86_family = 0;
+    }
+    
+    static HWFeatures initialize()
+    {
+        HWFeatures f;
+        
+        int cpuid_data[4]={0,0,0,0};
+    #if defined _MSC_VER && (defined _M_IX86 || defined _M_X64)
+        __cpuid(cpuid_data, 1);
+    #elif defined __GNUC__ && (defined __i386__ || defined __x86_64__)
+        asm volatile
+        (
+         "movl $1,%%eax\n"
+         ".byte 0x0f; .byte 0xa2\n"
+         : "=a"(cpuid_data[0]), "=c" (cpuid_data[2]), "=d" (cpuid_data[3])
+         :
+         : "%ebx", "%esi", "%edi"
+         );
+    #endif
+        
+        f.x86_family = (cpuid_data[0] >> 8) & 15;
+        if( f.x86_family >= 6 )
+        {
+            f.have[CV_CPU_MMX] = (cpuid_data[3] & (1 << 23)) != 0;
+            f.have[CV_CPU_SSE] = (cpuid_data[3] & (1<<25)) != 0;
+            f.have[CV_CPU_SSE2] = (cpuid_data[3] & (1<<26)) != 0;
+            f.have[CV_CPU_SSE3] = (cpuid_data[2] & (1<<0)) != 0;
+            f.have[CV_CPU_SSSE3] = (cpuid_data[2] & (1<<9)) != 0;
+            f.have[CV_CPU_SSE4_1] = (cpuid_data[2] & (1<<19)) != 0;
+            f.have[CV_CPU_SSE4_2] = (cpuid_data[2] & (1<<20)) != 0;
+            f.have[CV_CPU_AVX] = (cpuid_data[2] & (1<<28)) != 0;
+            
+            f.have[CV_CPU_SSE] = f.have[CV_CPU_SSE4_2] ? CV_CPU_SSE4_2 :
+                  f.have[CV_CPU_SSE4_1] ? CV_CPU_SSE4_1 :
+                  f.have[CV_CPU_SSSE3] ? CV_CPU_SSSE3 :
+                  f.have[CV_CPU_SSE3] ? CV_CPU_SSE3 :
+                  f.have[CV_CPU_SSE2] ? CV_CPU_SSE2 :
+                  f.have[CV_CPU_SSE] ? CV_CPU_SSE : 0;
+        }
+        
+        return f;
+    }
+    
+    int x86_family;
+    int have[MAX_FEATURE+1];
+};
+    
+static HWFeatures featuresEnabled = HWFeatures::initialize(), featuresDisabled = HWFeatures();
+    
 #ifdef HAVE_IPP
 volatile bool useOptimizedFlag = true;
 
@@ -81,13 +139,14 @@ volatile bool useOptimizedFlag = false;
 void setUseOptimized( bool flag )
 {
     useOptimizedFlag = flag;
+    cvHardwareSupport = flag ? featuresEnabled.have : featuresDisabled.have;
 }
 
 bool useOptimized()
 {
     return useOptimizedFlag;
 }
-
+    
 int64 getTickCount()
 {
 #if defined WIN32 || defined WIN64 || defined _WIN64 || defined WINCE
@@ -236,8 +295,8 @@ int getThreadNum(void)
     return 0;
 #endif
 }
-
-
+    
+    
 string format( const char* fmt, ... )
 {
     char buf[1 << 16];
@@ -329,6 +388,8 @@ cvGuiBoxReport( int code, const char *func_name, const char *err_msg,
     return 0;
 #endif
 }*/
+
+const int* cvHardwareSupport = cv::featuresEnabled.have;
 
 CV_IMPL int cvUseOptimized( int flag )
 {

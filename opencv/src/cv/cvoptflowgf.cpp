@@ -415,8 +415,12 @@ FarnebackUpdateFlow_GaussianBlur( const Mat& _R0, const Mat& _R1,
 
 #if CV_SSE2
     float* simd_kernel = alignPtr(kernel + m+1, 16);
-    for( i = 0; i <= m; i++ )
-        _mm_store_ps(simd_kernel + i*4, _mm_set1_ps(kernel[i]));
+    volatile bool useSIMD = checkHardwareSupport(CV_CPU_SSE);
+    if( useSIMD )
+    {
+        for( i = 0; i <= m; i++ )
+            _mm_store_ps(simd_kernel + i*4, _mm_set1_ps(kernel[i]));
+    }
 #endif
 
     // compute blur(G)*flow=blur(h)
@@ -434,51 +438,54 @@ FarnebackUpdateFlow_GaussianBlur( const Mat& _R0, const Mat& _R1,
 
         x = 0;
 #if CV_SSE2
-        for( ; x <= width*5 - 16; x += 16 )
+        if( useSIMD )
         {
-            const float *sptr0 = srow[m], *sptr1;
-            __m128 g4 = _mm_load_ps(simd_kernel);
-            __m128 s0, s1, s2, s3;
-            s0 = _mm_mul_ps(_mm_loadu_ps(sptr0 + x), g4);
-            s1 = _mm_mul_ps(_mm_loadu_ps(sptr0 + x + 4), g4);
-            s2 = _mm_mul_ps(_mm_loadu_ps(sptr0 + x + 8), g4);
-            s3 = _mm_mul_ps(_mm_loadu_ps(sptr0 + x + 12), g4);
-
-            for( i = 1; i <= m; i++ )
+            for( ; x <= width*5 - 16; x += 16 )
             {
-                __m128 x0, x1;
-                sptr0 = srow[m+i], sptr1 = srow[m-i];
-                g4 = _mm_load_ps(simd_kernel + i*4);
-                x0 = _mm_add_ps(_mm_loadu_ps(sptr0 + x), _mm_loadu_ps(sptr1 + x));
-                x1 = _mm_add_ps(_mm_loadu_ps(sptr0 + x + 4), _mm_loadu_ps(sptr1 + x + 4));
-                s0 = _mm_add_ps(s0, _mm_mul_ps(x0, g4));
-                s1 = _mm_add_ps(s1, _mm_mul_ps(x1, g4));
-                x0 = _mm_add_ps(_mm_loadu_ps(sptr0 + x + 8), _mm_loadu_ps(sptr1 + x + 8));
-                x1 = _mm_add_ps(_mm_loadu_ps(sptr0 + x + 12), _mm_loadu_ps(sptr1 + x + 12));
-                s2 = _mm_add_ps(s2, _mm_mul_ps(x0, g4));
-                s3 = _mm_add_ps(s3, _mm_mul_ps(x1, g4));
+                const float *sptr0 = srow[m], *sptr1;
+                __m128 g4 = _mm_load_ps(simd_kernel);
+                __m128 s0, s1, s2, s3;
+                s0 = _mm_mul_ps(_mm_loadu_ps(sptr0 + x), g4);
+                s1 = _mm_mul_ps(_mm_loadu_ps(sptr0 + x + 4), g4);
+                s2 = _mm_mul_ps(_mm_loadu_ps(sptr0 + x + 8), g4);
+                s3 = _mm_mul_ps(_mm_loadu_ps(sptr0 + x + 12), g4);
+
+                for( i = 1; i <= m; i++ )
+                {
+                    __m128 x0, x1;
+                    sptr0 = srow[m+i], sptr1 = srow[m-i];
+                    g4 = _mm_load_ps(simd_kernel + i*4);
+                    x0 = _mm_add_ps(_mm_loadu_ps(sptr0 + x), _mm_loadu_ps(sptr1 + x));
+                    x1 = _mm_add_ps(_mm_loadu_ps(sptr0 + x + 4), _mm_loadu_ps(sptr1 + x + 4));
+                    s0 = _mm_add_ps(s0, _mm_mul_ps(x0, g4));
+                    s1 = _mm_add_ps(s1, _mm_mul_ps(x1, g4));
+                    x0 = _mm_add_ps(_mm_loadu_ps(sptr0 + x + 8), _mm_loadu_ps(sptr1 + x + 8));
+                    x1 = _mm_add_ps(_mm_loadu_ps(sptr0 + x + 12), _mm_loadu_ps(sptr1 + x + 12));
+                    s2 = _mm_add_ps(s2, _mm_mul_ps(x0, g4));
+                    s3 = _mm_add_ps(s3, _mm_mul_ps(x1, g4));
+                }
+                
+                _mm_store_ps(vsum + x, s0);
+                _mm_store_ps(vsum + x + 4, s1);
+                _mm_store_ps(vsum + x + 8, s2);
+                _mm_store_ps(vsum + x + 12, s3);
             }
-            
-            _mm_store_ps(vsum + x, s0);
-            _mm_store_ps(vsum + x + 4, s1);
-            _mm_store_ps(vsum + x + 8, s2);
-            _mm_store_ps(vsum + x + 12, s3);
-        }
 
-        for( ; x <= width*5 - 4; x += 4 )
-        {
-            const float *sptr0 = srow[m], *sptr1;
-            __m128 g4 = _mm_load_ps(simd_kernel);
-            __m128 s0 = _mm_mul_ps(_mm_loadu_ps(sptr0 + x), g4);
-
-            for( i = 1; i <= m; i++ )
+            for( ; x <= width*5 - 4; x += 4 )
             {
-                sptr0 = srow[m+i], sptr1 = srow[m-i];
-                g4 = _mm_load_ps(simd_kernel + i*4);
-                __m128 x0 = _mm_add_ps(_mm_loadu_ps(sptr0 + x), _mm_loadu_ps(sptr1 + x));
-                s0 = _mm_add_ps(s0, _mm_mul_ps(x0, g4));
+                const float *sptr0 = srow[m], *sptr1;
+                __m128 g4 = _mm_load_ps(simd_kernel);
+                __m128 s0 = _mm_mul_ps(_mm_loadu_ps(sptr0 + x), g4);
+
+                for( i = 1; i <= m; i++ )
+                {
+                    sptr0 = srow[m+i], sptr1 = srow[m-i];
+                    g4 = _mm_load_ps(simd_kernel + i*4);
+                    __m128 x0 = _mm_add_ps(_mm_loadu_ps(sptr0 + x), _mm_loadu_ps(sptr1 + x));
+                    s0 = _mm_add_ps(s0, _mm_mul_ps(x0, g4));
+                }
+                _mm_store_ps(vsum + x, s0);
             }
-            _mm_store_ps(vsum + x, s0);
         }
 #endif
         for( ; x < width*5; x++ )
@@ -499,25 +506,28 @@ FarnebackUpdateFlow_GaussianBlur( const Mat& _R0, const Mat& _R1,
         // horizontal blur
         x = 0;
 #if CV_SSE2
-        for( ; x <= width*5 - 8; x += 8 )
+        if( useSIMD )
         {
-            __m128 g4 = _mm_load_ps(simd_kernel);
-            __m128 s0 = _mm_mul_ps(_mm_loadu_ps(vsum + x), g4);
-            __m128 s1 = _mm_mul_ps(_mm_loadu_ps(vsum + x + 4), g4);
-
-            for( i = 1; i <= m; i++ )
+            for( ; x <= width*5 - 8; x += 8 )
             {
-                g4 = _mm_load_ps(simd_kernel + i*4);
-                __m128 x0 = _mm_add_ps(_mm_loadu_ps(vsum + x - i*5),
-                                       _mm_loadu_ps(vsum + x + i*5));
-                __m128 x1 = _mm_add_ps(_mm_loadu_ps(vsum + x - i*5 + 4),
-                                       _mm_loadu_ps(vsum + x + i*5 + 4));
-                s0 = _mm_add_ps(s0, _mm_mul_ps(x0, g4));
-                s1 = _mm_add_ps(s1, _mm_mul_ps(x1, g4));
-            }
+                __m128 g4 = _mm_load_ps(simd_kernel);
+                __m128 s0 = _mm_mul_ps(_mm_loadu_ps(vsum + x), g4);
+                __m128 s1 = _mm_mul_ps(_mm_loadu_ps(vsum + x + 4), g4);
 
-            _mm_store_ps(hsum + x, s0);
-            _mm_store_ps(hsum + x + 4, s1);
+                for( i = 1; i <= m; i++ )
+                {
+                    g4 = _mm_load_ps(simd_kernel + i*4);
+                    __m128 x0 = _mm_add_ps(_mm_loadu_ps(vsum + x - i*5),
+                                           _mm_loadu_ps(vsum + x + i*5));
+                    __m128 x1 = _mm_add_ps(_mm_loadu_ps(vsum + x - i*5 + 4),
+                                           _mm_loadu_ps(vsum + x + i*5 + 4));
+                    s0 = _mm_add_ps(s0, _mm_mul_ps(x0, g4));
+                    s1 = _mm_add_ps(s1, _mm_mul_ps(x1, g4));
+                }
+
+                _mm_store_ps(hsum + x, s0);
+                _mm_store_ps(hsum + x + 4, s1);
+            }
         }
 #endif
         for( ; x < width*5; x++ )

@@ -88,6 +88,20 @@ CV_INLINE IppiSize ippiSize(int width, int height)
 }
 #endif
 
+#if defined __SSE2__ || _MSC_VER >= 1300
+#include "emmintrin.h"
+#define CV_SSE 1
+#define CV_SSE2 1
+#if defined __SSE3__ || _MSC_VER >= 1400
+#include "pmmintrin.h"
+#define CV_SSE3 1
+#endif
+#else
+#define CV_SSE 0
+#define CV_SSE2 0
+#define CV_SSE3 0
+#endif
+
 /* helper tables */
 extern const uchar icvSaturate8u_cv[];
 #define CV_FAST_CAST_8U(t)  (assert(-256 <= (t) || (t) <= 512), icvSaturate8u_cv[(t)+256])

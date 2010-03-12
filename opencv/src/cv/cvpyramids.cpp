@@ -72,6 +72,9 @@ struct PyrDownVec_32s8u
 {
     int operator()(const uchar** _src, uchar* dst, int, int width) const
     {
+        if( !checkHardwareSupport(CV_CPU_SSE2) )
+            return 0;
+        
         int x = 0;
         const int** src = (const int**)_src;
         const int *row0 = src[0], *row1 = src[1], *row2 = src[2], *row3 = src[3], *row4 = src[4];
@@ -137,6 +140,9 @@ struct PyrDownVec_32f
 {
     int operator()(const uchar** _src, uchar* _dst, int, int width) const
     {
+        if( !checkHardwareSupport(CV_CPU_SSE) )
+            return 0;
+        
         int x = 0;
         const float** src = (const float**)_src;
         float* dst = (float*)_dst;

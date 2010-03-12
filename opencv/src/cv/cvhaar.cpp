@@ -44,7 +44,7 @@
 #include "_cv.h"
 #include <stdio.h>
 
-#if CV_SSE2
+/*#if CV_SSE2
 #   if CV_SSE4 || defined __SSE4__
 #       include <smmintrin.h>
 #   else
@@ -54,7 +54,7 @@
 #if defined CV_ICC
 #   define CV_HAAR_USE_SSE 1
 #endif
-#endif
+#endif*/
 
 /* these settings affect the quality of detection: change with care */
 #define CV_ADJUST_FEATURES 1

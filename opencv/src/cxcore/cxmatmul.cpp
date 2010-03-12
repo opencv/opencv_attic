@@ -1409,7 +1409,7 @@ transformC3_<uchar, float>( const Mat& srcmat, Mat& dstmat, Mat& tmat )
     int dst_cn = dstmat.channels();
     int x, y, k;
 
-    if( dst_cn == 3 &&
+    if( checkHardwareSupport(CV_CPU_SSE2) && dst_cn == 3 &&
         std::abs(m[0]) < MAX_M && std::abs(m[1]) < MAX_M && std::abs(m[2]) < MAX_M && std::abs(m[3]) < MAX_M*256 &&
         std::abs(m[4]) < MAX_M && std::abs(m[5]) < MAX_M && std::abs(m[6]) < MAX_M && std::abs(m[7]) < MAX_M*256 &&
         std::abs(m[8]) < MAX_M && std::abs(m[9]) < MAX_M && std::abs(m[10]) < MAX_M && std::abs(m[11]) < MAX_M*256 )
@@ -1555,7 +1555,7 @@ transformC3_<ushort, float>( const Mat& srcmat, Mat& dstmat, Mat& tmat )
     int dst_cn = dstmat.channels();
     int x, y, k;
 
-    if( dst_cn == 3 )
+    if( checkHardwareSupport(CV_CPU_SSE2) && dst_cn == 3 )
     {
         __m128 m0, m1, m2, m3;
         __m128i delta = _mm_setr_epi16(0,-32768,-32768,-32768,-32768,-32768,-32768,0);
@@ -1571,7 +1571,7 @@ transformC3_<ushort, float>( const Mat& srcmat, Mat& dstmat, Mat& tmat )
             for( ; x <= (size.width - 4)*3; x += 4*3 )
             {
                 __m128i z = _mm_setzero_si128();
-                __m128i v0 = _cv_loadu_si128((const __m128i*)(src + x)), v1;
+                __m128i v0 = _mm_loadu_si128((const __m128i*)(src + x)), v1;
                 __m128i v2 = _mm_loadl_epi64((const __m128i*)(src + x + 8)), v3;
                 v1 = _mm_unpacklo_epi16(_mm_srli_si128(v0, 6), z); // b1 g1 r1
                 v3 = _mm_unpacklo_epi16(_mm_srli_si128(v2, 2), z); // b3 g3 r3
@@ -1647,7 +1647,7 @@ transformC3_<float, float>( const Mat& srcmat, Mat& dstmat, Mat& tmat )
     int dst_cn = dstmat.channels();
     int x, y, k;
 
-    if( dst_cn == 3 )
+    if( checkHardwareSupport(CV_CPU_SSE2) && dst_cn == 3 )
     {
         __m128 m0, m1, m2, m3;
         load3x3Matrix(m, m0, m1, m2, m3);
@@ -1710,7 +1710,7 @@ transformC4_<float, float>( const Mat& srcmat, Mat& dstmat, Mat& tmat )
     int dst_cn = dstmat.channels();
     int x, y, k;
 
-    if( dst_cn == 4 )
+    if( checkHardwareSupport(CV_CPU_SSE2) && dst_cn == 4 )
     {
         __m128 m0, m1, m2, m3, m4;
         load4x4Matrix(m, m0, m1, m2, m3, m4);
@@ -1744,7 +1744,6 @@ transformC4_<float, float>( const Mat& srcmat, Mat& dstmat, Mat& tmat )
                                                  _m[2]*src[x*4+2] + _m[3]*src[x*4+3] + _m[4]);
     }
 }
-
 
 #endif
 

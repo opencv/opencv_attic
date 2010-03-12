@@ -176,7 +176,7 @@ prefilterXSobel( const Mat& src, Mat& dst, int ftzero )
     uchar val0 = tab[0 + OFS];
     
 #if CV_SSE2
-    __m128i z = _mm_setzero_si128(), ftz = _mm_set1_epi16(ftzero), ftz2 = _mm_set1_epi8(CV_CAST_8U(ftzero*2));
+    volatile bool useSIMD = checkHardwareSupport(CV_CPU_SSE2);
 #endif
     
     for( y = 0; y < size.height-1; y += 2 )
@@ -192,31 +192,35 @@ prefilterXSobel( const Mat& src, Mat& dst, int ftzero )
         x = 1;
         
     #if CV_SSE2
-        for( ; x <= size.width-9; x += 8 )
+        if( useSIMD )
         {
-            __m128i c0 = _mm_unpacklo_epi8(_mm_loadl_epi64((__m128i*)(srow0 + x - 1)), z);
-            __m128i c1 = _mm_unpacklo_epi8(_mm_loadl_epi64((__m128i*)(srow1 + x - 1)), z);
-            __m128i d0 = _mm_unpacklo_epi8(_mm_loadl_epi64((__m128i*)(srow0 + x + 1)), z);
-            __m128i d1 = _mm_unpacklo_epi8(_mm_loadl_epi64((__m128i*)(srow1 + x + 1)), z);
+            __m128i z = _mm_setzero_si128(), ftz = _mm_set1_epi16(ftzero), ftz2 = _mm_set1_epi8(CV_CAST_8U(ftzero*2));
+            for( ; x <= size.width-9; x += 8 )
+            {
+                __m128i c0 = _mm_unpacklo_epi8(_mm_loadl_epi64((__m128i*)(srow0 + x - 1)), z);
+                __m128i c1 = _mm_unpacklo_epi8(_mm_loadl_epi64((__m128i*)(srow1 + x - 1)), z);
+                __m128i d0 = _mm_unpacklo_epi8(_mm_loadl_epi64((__m128i*)(srow0 + x + 1)), z);
+                __m128i d1 = _mm_unpacklo_epi8(_mm_loadl_epi64((__m128i*)(srow1 + x + 1)), z);
 
-            d0 = _mm_sub_epi16(d0, c0);
-            d1 = _mm_sub_epi16(d1, c1);
-            
-            __m128i c2 = _mm_unpacklo_epi8(_mm_loadl_epi64((__m128i*)(srow2 + x - 1)), z);
-            __m128i c3 = _mm_unpacklo_epi8(_mm_loadl_epi64((__m128i*)(srow2 + x - 1)), z);
-            __m128i d2 = _mm_unpacklo_epi8(_mm_loadl_epi64((__m128i*)(srow2 + x + 1)), z);
-            __m128i d3 = _mm_unpacklo_epi8(_mm_loadl_epi64((__m128i*)(srow2 + x + 1)), z);
-            
-            d2 = _mm_sub_epi16(d2, c2);
-            d3 = _mm_sub_epi16(d3, c3);
-            
-            __m128i v0 = _mm_add_epi16(d0, _mm_add_epi16(d2, _mm_add_epi16(d1, d1)));
-            __m128i v1 = _mm_add_epi16(d1, _mm_add_epi16(d3, _mm_add_epi16(d2, d2)));
-            v0 = _mm_packus_epi16(_mm_add_epi16(v0, ftz), _mm_add_epi16(v1, ftz));
-            v0 = _mm_min_epu8(v0, ftz2);
-            
-            _mm_storel_epi64((__m128i*)(dptr0 + x), v0);
-            _mm_storel_epi64((__m128i*)(dptr1 + x), _mm_unpackhi_epi64(v0, v0));
+                d0 = _mm_sub_epi16(d0, c0);
+                d1 = _mm_sub_epi16(d1, c1);
+                
+                __m128i c2 = _mm_unpacklo_epi8(_mm_loadl_epi64((__m128i*)(srow2 + x - 1)), z);
+                __m128i c3 = _mm_unpacklo_epi8(_mm_loadl_epi64((__m128i*)(srow2 + x - 1)), z);
+                __m128i d2 = _mm_unpacklo_epi8(_mm_loadl_epi64((__m128i*)(srow2 + x + 1)), z);
+                __m128i d3 = _mm_unpacklo_epi8(_mm_loadl_epi64((__m128i*)(srow2 + x + 1)), z);
+                
+                d2 = _mm_sub_epi16(d2, c2);
+                d3 = _mm_sub_epi16(d3, c3);
+                
+                __m128i v0 = _mm_add_epi16(d0, _mm_add_epi16(d2, _mm_add_epi16(d1, d1)));
+                __m128i v1 = _mm_add_epi16(d1, _mm_add_epi16(d3, _mm_add_epi16(d2, d2)));
+                v0 = _mm_packus_epi16(_mm_add_epi16(v0, ftz), _mm_add_epi16(v1, ftz));
+                v0 = _mm_min_epu8(v0, ftz2);
+                
+                _mm_storel_epi64((__m128i*)(dptr0 + x), v0);
+                _mm_storel_epi64((__m128i*)(dptr1 + x), _mm_unpackhi_epi64(v0, v0));
+            }
         }
     #endif
         
@@ -855,25 +859,21 @@ static void findStereoCorrespondenceBM( const Mat& left0, const Mat& right0, Mat
     if( state->speckleRange >= 0 && state->speckleWindowSize > 0 )
         bufSize2 = width*height*(sizeof(cv::Point_<short>) + sizeof(int) + sizeof(uchar));
     
+#if CV_SSE2
+    bool useShorts = state->preFilterCap <= 31 && state->SADWindowSize <= 21 && checkHardwareSupport(CV_CPU_SSE2);
+#else
+    const bool useShorts = false;
+#endif
+    
 #ifdef HAVE_TBB    
     const double SAD_overhead_coeff = 10.0;
-    double N0 = 100000;  // approx tbb's min number instructions reasonable for one thread    
-#if CV_SSE2
-#else
-    N0 /= 4;
-#endif
+    double N0 = 100000 / (useShorts ? 1 : 4);  // approx tbb's min number instructions reasonable for one thread    
     double maxStripeSize = min(max(N0 / (width * ndisp), (wsz-1) * SAD_overhead_coeff), (double)height);
     int nstripes = cvCeil(height / maxStripeSize);
 #else
     const int nstripes = 1;
 #endif
 
-#if CV_SSE2    
-    bool useShorts = state->preFilterCap <= 31 && state->SADWindowSize <= 21;
-#else
-    const bool useShorts = false;
-#endif
-    
     int bufSize = max(bufSize0 * nstripes, max(bufSize1 * 2, bufSize2));
     
     if( !state->slidingSumBuf || state->slidingSumBuf->cols < bufSize )

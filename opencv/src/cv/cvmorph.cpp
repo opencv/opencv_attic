@@ -84,6 +84,9 @@ template<class VecUpdate> struct MorphRowIVec
     MorphRowIVec(int _ksize, int _anchor) : ksize(_ksize), anchor(_anchor) {}
     int operator()(const uchar* src, uchar* dst, int width, int cn) const
     {
+        if( !checkHardwareSupport(CV_CPU_SSE2) )
+            return 0;
+        
         cn *= ESZ;
         int i, k, _ksize = ksize*cn;
         width *= cn;
@@ -91,10 +94,10 @@ template<class VecUpdate> struct MorphRowIVec
 
         for( i = 0; i <= width - 16; i += 16 )
         {
-            __m128i s = _cv_loadu_si128((const __m128i*)(src + i));
+            __m128i s = _mm_loadu_si128((const __m128i*)(src + i));
             for( k = cn; k < _ksize; k += cn )
             {
-                __m128i x = _cv_loadu_si128((const __m128i*)(src + i + k));
+                __m128i x = _mm_loadu_si128((const __m128i*)(src + i + k));
                 s = updateOp(s, x);
             }
             _mm_storeu_si128((__m128i*)(dst + i), s);
@@ -123,6 +126,9 @@ template<class VecUpdate> struct MorphRowFVec
     MorphRowFVec(int _ksize, int _anchor) : ksize(_ksize), anchor(_anchor) {}
     int operator()(const uchar* src, uchar* dst, int width, int cn) const
     {
+        if( !checkHardwareSupport(CV_CPU_SSE) )
+            return 0;
+        
         int i, k, _ksize = ksize*cn;
         width *= cn;
         VecUpdate updateOp;
@@ -152,6 +158,9 @@ template<class VecUpdate> struct MorphColumnIVec
     MorphColumnIVec(int _ksize, int _anchor) : ksize(_ksize), anchor(_anchor) {}
     int operator()(const uchar** src, uchar* dst, int dststep, int count, int width) const
     {
+        if( !checkHardwareSupport(CV_CPU_SSE2) )
+            return 0;
+        
         int i = 0, k, _ksize = ksize;
         width *= ESZ;
         VecUpdate updateOp;
@@ -253,6 +262,9 @@ template<class VecUpdate> struct MorphColumnFVec
     MorphColumnFVec(int _ksize, int _anchor) : ksize(_ksize), anchor(_anchor) {}
     int operator()(const uchar** _src, uchar* _dst, int dststep, int count, int width) const
     {
+        if( !checkHardwareSupport(CV_CPU_SSE) )
+            return 0;
+        
         int i = 0, k, _ksize = ksize;
         VecUpdate updateOp;
 
@@ -379,6 +391,9 @@ template<class VecUpdate> struct MorphIVec
 
     int operator()(uchar** src, int nz, uchar* dst, int width) const
     {
+        if( !checkHardwareSupport(CV_CPU_SSE2) )
+            return 0;
+        
         int i, k;
         width *= ESZ;
         VecUpdate updateOp;
@@ -386,15 +401,15 @@ template<class VecUpdate> struct MorphIVec
         for( i = 0; i <= width - 32; i += 32 )
         {
             const uchar* sptr = src[0] + i;
-            __m128i s0 = _cv_loadu_si128((const __m128i*)sptr);
-            __m128i s1 = _cv_loadu_si128((const __m128i*)(sptr + 16));
+            __m128i s0 = _mm_loadu_si128((const __m128i*)sptr);
+            __m128i s1 = _mm_loadu_si128((const __m128i*)(sptr + 16));
             __m128i x0, x1;
 
             for( k = 1; k < nz; k++ )
             {
                 sptr = src[k] + i;
-                x0 = _cv_loadu_si128((const __m128i*)sptr);
-                x1 = _cv_loadu_si128((const __m128i*)(sptr + 16));
+                x0 = _mm_loadu_si128((const __m128i*)sptr);
+                x1 = _mm_loadu_si128((const __m128i*)(sptr + 16));
                 s0 = updateOp(s0, x0);
                 s1 = updateOp(s1, x1);
             }
@@ -423,6 +438,9 @@ template<class VecUpdate> struct MorphFVec
 {
     int operator()(uchar** _src, int nz, uchar* _dst, int width) const
     {
+        if( !checkHardwareSupport(CV_CPU_SSE) )
+            return 0;
+        
         const float** src = (const float**)_src;
         float* dst = (float*)_dst;
         int i, k;
@@ -482,7 +500,6 @@ template<class VecUpdate> struct MorphFVec
         return i;
     }
 };
-
 
 struct VMin8u
 {

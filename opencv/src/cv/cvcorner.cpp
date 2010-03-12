@@ -52,40 +52,45 @@ calcMinEigenVal( const Mat& _cov, Mat& _dst )
 {
     int i, j;
     Size size = _cov.size();
+#if CV_SSE
+    volatile bool simd = checkHardwareSupport(CV_CPU_SSE);
+#endif
+    
     if( _cov.isContinuous() && _dst.isContinuous() )
     {
         size.width *= size.height;
         size.height = 1;
     }
-#if CV_SSE2
-    __m128 half = _mm_set1_ps(0.5f);
-#endif
 
     for( i = 0; i < size.height; i++ )
     {
         const float* cov = (const float*)(_cov.data + _cov.step*i);
         float* dst = (float*)(_dst.data + _dst.step*i);
         j = 0;
-    #if CV_SSE2
-        for( ; j <= size.width - 5; j += 4 )
+    #if CV_SSE
+        if( simd )
         {
-            __m128 t0 = _mm_loadu_ps(cov + j*3); // a0 b0 c0 x
-            __m128 t1 = _mm_loadu_ps(cov + j*3 + 3); // a1 b1 c1 x
-            __m128 t2 = _mm_loadu_ps(cov + j*3 + 6); // a2 b2 c2 x
-            __m128 t3 = _mm_loadu_ps(cov + j*3 + 9); // a3 b3 c3 x
-            __m128 a, b, c, t;
-            t = _mm_unpacklo_ps(t0, t1); // a0 a1 b0 b1
-            c = _mm_unpackhi_ps(t0, t1); // c0 c1 x x
-            b = _mm_unpacklo_ps(t2, t3); // a2 a3 b2 b3
-            c = _mm_movelh_ps(c, _mm_unpackhi_ps(t2, t3)); // c0 c1 c2 c3
-            a = _mm_movelh_ps(t, b);
-            b = _mm_movehl_ps(b, t);
-            a = _mm_mul_ps(a, half);
-            c = _mm_mul_ps(c, half);
-            t = _mm_sub_ps(a, c);
-            t = _mm_add_ps(_mm_mul_ps(t, t), _mm_mul_ps(b,b));
-            a = _mm_sub_ps(_mm_add_ps(a, c), _mm_sqrt_ps(t));
-            _mm_storeu_ps(dst + j, a);
+            __m128 half = _mm_set1_ps(0.5f);
+            for( ; j <= size.width - 5; j += 4 )
+            {
+                __m128 t0 = _mm_loadu_ps(cov + j*3); // a0 b0 c0 x
+                __m128 t1 = _mm_loadu_ps(cov + j*3 + 3); // a1 b1 c1 x
+                __m128 t2 = _mm_loadu_ps(cov + j*3 + 6); // a2 b2 c2 x
+                __m128 t3 = _mm_loadu_ps(cov + j*3 + 9); // a3 b3 c3 x
+                __m128 a, b, c, t;
+                t = _mm_unpacklo_ps(t0, t1); // a0 a1 b0 b1
+                c = _mm_unpackhi_ps(t0, t1); // c0 c1 x x
+                b = _mm_unpacklo_ps(t2, t3); // a2 a3 b2 b3
+                c = _mm_movelh_ps(c, _mm_unpackhi_ps(t2, t3)); // c0 c1 c2 c3
+                a = _mm_movelh_ps(t, b);
+                b = _mm_movehl_ps(b, t);
+                a = _mm_mul_ps(a, half);
+                c = _mm_mul_ps(c, half);
+                t = _mm_sub_ps(a, c);
+                t = _mm_add_ps(_mm_mul_ps(t, t), _mm_mul_ps(b,b));
+                a = _mm_sub_ps(_mm_add_ps(a, c), _mm_sqrt_ps(t));
+                _mm_storeu_ps(dst + j, a);
+            }
         }
     #endif
         for( ; j < size.width; j++ )
@@ -104,14 +109,15 @@ calcHarris( const Mat& _cov, Mat& _dst, double k )
 {
     int i, j;
     Size size = _cov.size();
+#if CV_SSE
+    volatile bool simd = checkHardwareSupport(CV_CPU_SSE);
+#endif
+    
     if( _cov.isContinuous() && _dst.isContinuous() )
     {
         size.width *= size.height;
         size.height = 1;
     }
-#if CV_SSE2
-    __m128 k4 = _mm_set1_ps((float)k);
-#endif
 
     for( i = 0; i < size.height; i++ )
     {
@@ -119,25 +125,29 @@ calcHarris( const Mat& _cov, Mat& _dst, double k )
         float* dst = (float*)(_dst.data + _dst.step*i);
         j = 0;
 
-    #if CV_SSE2
-        for( ; j <= size.width - 5; j += 4 )
+    #if CV_SSE
+        if( simd )
         {
-            __m128 t0 = _mm_loadu_ps(cov + j*3); // a0 b0 c0 x
-            __m128 t1 = _mm_loadu_ps(cov + j*3 + 3); // a1 b1 c1 x
-            __m128 t2 = _mm_loadu_ps(cov + j*3 + 6); // a2 b2 c2 x
-            __m128 t3 = _mm_loadu_ps(cov + j*3 + 9); // a3 b3 c3 x
-            __m128 a, b, c, t;
-            t = _mm_unpacklo_ps(t0, t1); // a0 a1 b0 b1
-            c = _mm_unpackhi_ps(t0, t1); // c0 c1 x x
-            b = _mm_unpacklo_ps(t2, t3); // a2 a3 b2 b3
-            c = _mm_movelh_ps(c, _mm_unpackhi_ps(t2, t3)); // c0 c1 c2 c3
-            a = _mm_movelh_ps(t, b);
-            b = _mm_movehl_ps(b, t);
-            t = _mm_add_ps(a, c);
-            a = _mm_sub_ps(_mm_mul_ps(a, c), _mm_mul_ps(b, b));
-            t = _mm_mul_ps(_mm_mul_ps(t, t), k4);
-            a = _mm_sub_ps(a, t);
-            _mm_storeu_ps(dst + j, a);
+            __m128 k4 = _mm_set1_ps((float)k);
+            for( ; j <= size.width - 5; j += 4 )
+            {
+                __m128 t0 = _mm_loadu_ps(cov + j*3); // a0 b0 c0 x
+                __m128 t1 = _mm_loadu_ps(cov + j*3 + 3); // a1 b1 c1 x
+                __m128 t2 = _mm_loadu_ps(cov + j*3 + 6); // a2 b2 c2 x
+                __m128 t3 = _mm_loadu_ps(cov + j*3 + 9); // a3 b3 c3 x
+                __m128 a, b, c, t;
+                t = _mm_unpacklo_ps(t0, t1); // a0 a1 b0 b1
+                c = _mm_unpackhi_ps(t0, t1); // c0 c1 x x
+                b = _mm_unpacklo_ps(t2, t3); // a2 a3 b2 b3
+                c = _mm_movelh_ps(c, _mm_unpackhi_ps(t2, t3)); // c0 c1 c2 c3
+                a = _mm_movelh_ps(t, b);
+                b = _mm_movehl_ps(b, t);
+                t = _mm_add_ps(a, c);
+                a = _mm_sub_ps(_mm_mul_ps(a, c), _mm_mul_ps(b, b));
+                t = _mm_mul_ps(_mm_mul_ps(t, t), k4);
+                a = _mm_sub_ps(a, t);
+                _mm_storeu_ps(dst + j, a);
+            }
         }
     #endif
 
