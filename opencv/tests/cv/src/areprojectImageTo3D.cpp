@@ -66,33 +66,34 @@ protected:
     {        
         ts->set_failed_test_info(CvTS::OK);
         int progress = 0;
+        int caseId = 0;
 
         progress = update_progress( progress, 1, 14, 0 );
-        runCase<float, float>(-100.f, 100.f);
+        runCase<float, float>(++caseId, -100.f, 100.f);
         progress = update_progress( progress, 2, 14, 0 );
-        runCase<int, float>(-100, 100);
+        runCase<int, float>(++caseId, -100, 100);
         progress = update_progress( progress, 3, 14, 0 );
-        runCase<short, float>(-100, 100);
+        runCase<short, float>(++caseId, -100, 100);
         progress = update_progress( progress, 4, 14, 0 );
-        runCase<unsigned char, float>(10, 100);
+        runCase<unsigned char, float>(++caseId, 10, 100);
         progress = update_progress( progress, 5, 14, 0 );
 
-        runCase<float, int>(-100.f, 100.f);
+        runCase<float, int>(++caseId, -100.f, 100.f);
         progress = update_progress( progress, 6, 14, 0 );
-        runCase<int, int>(-100, 100);
+        runCase<int, int>(++caseId, -100, 100);
         progress = update_progress( progress, 7, 14, 0 );
-        runCase<short, int>(-100, 100);
+        runCase<short, int>(++caseId, -100, 100);
         progress = update_progress( progress, 8, 14, 0 );
-        runCase<unsigned char, int>(10, 100);
+        runCase<unsigned char, int>(++caseId, 10, 100);
         progress = update_progress( progress, 10, 14, 0 );
 
-        runCase<float, short>(-100.f, 100.f);
+        runCase<float, short>(++caseId, -100.f, 100.f);
         progress = update_progress( progress, 11, 14, 0 );
-        runCase<int, short>(-100, 100);
+        runCase<int, short>(++caseId, -100, 100);
         progress = update_progress( progress, 12, 14, 0 );
-        runCase<short, short>(-100, 100);
+        runCase<short, short>(++caseId, -100, 100);
         progress = update_progress( progress, 13, 14, 0 );
-        runCase<unsigned char, short>(10, 100);        
+        runCase<unsigned char, short>(++caseId, 10, 100);        
         progress = update_progress( progress, 14, 14, 0 );
     }
 
@@ -109,10 +110,10 @@ protected:
             sum += tmp * tmp;
             
         }        
-        return sqrt(sum)/sqrt(nsum);
+        return sqrt(sum)/(sqrt(nsum)+1.);
     }
 
-    template<class InT, class OutT> void runCase(InT min, InT max)
+    template<class InT, class OutT> void runCase(int caseId, InT min, InT max)
     {                     
         typedef Vec<OutT, 3> out3d_t;
 
@@ -141,8 +142,8 @@ protected:
                 InT d = disp(y, x);                
 
                 double from[4] = { x, y, d, 1 };
-                Mat res = Q * Mat_<double>(4, 1, from);
-                res /= res.at<double>(3, 0);
+                Mat_<double> res = Q * Mat_<double>(4, 1, from);
+                res /= res(3, 0);
 
                 out3d_t pixel_exp = *res.ptr<Vec3d>();
                 out3d_t pixel_out = _3dImg(y, x);
@@ -154,15 +155,22 @@ protected:
                     if (pixel_out[2] == largeZValue)
                         continue;
 
+                    ts->printf(CvTS::LOG, "Missing values are handled improperly\n");
                     ts->set_failed_test_info( CvTS::FAIL_BAD_ACCURACY );                       
                     return;
                 }
-                else                                
-                    if (error(pixel_exp, pixel_out) > thres<OutT>())
+                else
+                {
+                    double err = error(pixel_out, pixel_exp), t = thres<OutT>();
+                    if ( err > t )
                     {
-                        ts->set_failed_test_info( CvTS::FAIL_BAD_ACCURACY );                       
+                        ts->printf(CvTS::LOG, "case %d. too big error at (%d, %d): %g vs expected %g: res = (%g, %g, %g, w=%g) vs pixel_out = (%g, %g, %g)\n",
+                            caseId, x, y, err, t, res(0,0), res(1,0), res(2,0), res(3,0),
+                            (double)pixel_out[0], (double)pixel_out[1], (double)pixel_out[2]);
+                        ts->set_failed_test_info( CvTS::FAIL_BAD_ACCURACY );
                         return;
                     }
+                }
             }    
     }
 };   
