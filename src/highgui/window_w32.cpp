@@ -397,62 +397,64 @@ void cvChangeMode_W32( const char* name, double prop_value)//Yannick Verdie
 
 	CV_FUNCNAME( "cvChangeMode_W32" );
 
-    __BEGIN__;
+	__BEGIN__;
 
-    CvWindow* window;
+	CvWindow* window;
 
-    if(!name)
-        CV_ERROR( CV_StsNullPtr, "NULL name string" );
+	if(!name)
+		CV_ERROR( CV_StsNullPtr, "NULL name string" );
 
-    window = icvFindWindowByName( name );
-    if( !window )
-        CV_ERROR( CV_StsNullPtr, "NULL window" );
+	window = icvFindWindowByName( name );
+	if( !window )
+		CV_ERROR( CV_StsNullPtr, "NULL window" );
 
 	if(window->flags & CV_WINDOW_AUTOSIZE)//if the flag CV_WINDOW_AUTOSIZE is set
-        EXIT;
-
-	DWORD dwStyle = GetWindowLongPtr(window->frame, GWL_STYLE);
-	CvRect position;
-	
-	if (window->status==CV_WINDOW_FULLSCREEN && prop_value==CV_WINDOW_NORMAL)
-	{
-		icvLoadWindowPos(window->name,position );
-		SetWindowLongPtr(window->frame, GWL_STYLE, dwStyle | WS_CAPTION);
-		
-		SetWindowPos(window->frame, HWND_TOP, position.x, position.y , position.width,position.height, SWP_NOZORDER | SWP_FRAMECHANGED);
-		window->status=CV_WINDOW_NORMAL;
-		
 		EXIT;
-	}
-	
-	if (window->status==CV_WINDOW_NORMAL && prop_value==CV_WINDOW_FULLSCREEN)
+
 	{
-		//save dimension
-		RECT rect;
-		GetWindowRect(window->frame, &rect);
-		CvRect RectCV = cvRect(rect.left, rect.top,rect.right - rect.left, rect.bottom - rect.top);
-		icvSaveWindowPos(window->name,RectCV );
-	
-		//Look at coordinate for fullscreen
-		HMONITOR hMonitor;
-		MONITORINFO mi;
-		hMonitor = MonitorFromRect(&rect, MONITOR_DEFAULTTONEAREST);
-		
-		mi.cbSize = sizeof(mi);
-		GetMonitorInfo(hMonitor, &mi);
-	
-		//fullscreen
-		position.x=mi.rcMonitor.left;position.y=mi.rcMonitor.top;
-		position.width=mi.rcMonitor.right - mi.rcMonitor.left;position.height=mi.rcMonitor.bottom - mi.rcMonitor.top;
-		SetWindowLongPtr(window->frame, GWL_STYLE, dwStyle & ~WS_CAPTION);
-	
-		SetWindowPos(window->frame, HWND_TOP, position.x, position.y , position.width,position.height, SWP_NOZORDER | SWP_FRAMECHANGED);
-		window->status=CV_WINDOW_FULLSCREEN;
-		
-		EXIT;
+		DWORD dwStyle = GetWindowLongPtr(window->frame, GWL_STYLE);
+		CvRect position;
+
+		if (window->status==CV_WINDOW_FULLSCREEN && prop_value==CV_WINDOW_NORMAL)
+		{
+			icvLoadWindowPos(window->name,position );
+			SetWindowLongPtr(window->frame, GWL_STYLE, dwStyle | WS_CAPTION);
+
+			SetWindowPos(window->frame, HWND_TOP, position.x, position.y , position.width,position.height, SWP_NOZORDER | SWP_FRAMECHANGED);
+			window->status=CV_WINDOW_NORMAL;
+
+			EXIT;
+		}
+
+		if (window->status==CV_WINDOW_NORMAL && prop_value==CV_WINDOW_FULLSCREEN)
+		{
+			//save dimension
+			RECT rect;
+			GetWindowRect(window->frame, &rect);
+			CvRect RectCV = cvRect(rect.left, rect.top,rect.right - rect.left, rect.bottom - rect.top);
+			icvSaveWindowPos(window->name,RectCV );
+
+			//Look at coordinate for fullscreen
+			HMONITOR hMonitor;
+			MONITORINFO mi;
+			hMonitor = MonitorFromRect(&rect, MONITOR_DEFAULTTONEAREST);
+
+			mi.cbSize = sizeof(mi);
+			GetMonitorInfo(hMonitor, &mi);
+
+			//fullscreen
+			position.x=mi.rcMonitor.left;position.y=mi.rcMonitor.top;
+			position.width=mi.rcMonitor.right - mi.rcMonitor.left;position.height=mi.rcMonitor.bottom - mi.rcMonitor.top;
+			SetWindowLongPtr(window->frame, GWL_STYLE, dwStyle & ~WS_CAPTION);
+
+			SetWindowPos(window->frame, HWND_TOP, position.x, position.y , position.width,position.height, SWP_NOZORDER | SWP_FRAMECHANGED);
+			window->status=CV_WINDOW_FULLSCREEN;
+
+			EXIT;
+		}
 	}
 
-    __END__;
+	__END__;
 }
 
 CV_IMPL int cvNamedWindow( const char* name, int flags )

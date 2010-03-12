@@ -683,6 +683,13 @@ if(MSVC)
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCXX)
+
+	if(WIN32)
+		if(CMAKE_CXX_COMPILER MATCHES "64")
+			set(MINGW64 1)
+		endif()
+	endif()
+
     # High level of warnings.
     set(EXTRA_C_FLAGS "${EXTRA_C_FLAGS} -Wall")
 
