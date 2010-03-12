@@ -745,29 +745,35 @@ static void generateRandomCenter(const vector<Vec2f>& box, float* center, RNG& r
 }
 
 
-static inline float distance(const float* a, const float* b, int n)
+static inline float distance(const float* a, const float* b, int n, bool simd)
 {
     int j = 0; float d = 0.f;
-#if CV_SSE2
-    float CV_DECL_ALIGNED(16) buf[4];
-    __m128 d0 = _mm_setzero_ps(), d1 = _mm_setzero_ps();
+#if CV_SSE
+    if( simd )
+    {
+        float CV_DECL_ALIGNED(16) buf[4];
+        __m128 d0 = _mm_setzero_ps(), d1 = _mm_setzero_ps();
 
-    for( ; j <= n - 8; j += 8 )
-    {
-        __m128 t0 = _mm_sub_ps(_mm_loadu_ps(a + j), _mm_loadu_ps(b + j));
-        __m128 t1 = _mm_sub_ps(_mm_loadu_ps(a + j + 4), _mm_loadu_ps(b + j + 4));
-        d0 = _mm_add_ps(d0, _mm_mul_ps(t0, t0));
-        d1 = _mm_add_ps(d1, _mm_mul_ps(t1, t1));
+        for( ; j <= n - 8; j += 8 )
+        {
+            __m128 t0 = _mm_sub_ps(_mm_loadu_ps(a + j), _mm_loadu_ps(b + j));
+            __m128 t1 = _mm_sub_ps(_mm_loadu_ps(a + j + 4), _mm_loadu_ps(b + j + 4));
+            d0 = _mm_add_ps(d0, _mm_mul_ps(t0, t0));
+            d1 = _mm_add_ps(d1, _mm_mul_ps(t1, t1));
+        }
+        _mm_store_ps(buf, _mm_add_ps(d0, d1));
+        d = buf[0] + buf[1] + buf[2] + buf[3];
     }
-    _mm_store_ps(buf, _mm_add_ps(d0, d1));
-    d = buf[0] + buf[1] + buf[2] + buf[3];
-#else
-    for( ; j <= n - 4; j += 4 )
-    {
-        float t0 = a[j] - b[j], t1 = a[j+1] - b[j+1], t2 = a[j+2] - b[j+2], t3 = a[j+3] - b[j+3];
-        d += t0*t0 + t1*t1 + t2*t2 + t3*t3;
-    }
+    else
 #endif
+    {
+        for( ; j <= n - 4; j += 4 )
+        {
+            float t0 = a[j] - b[j], t1 = a[j+1] - b[j+1], t2 = a[j+2] - b[j+2], t3 = a[j+3] - b[j+3];
+            d += t0*t0 + t1*t1 + t2*t2 + t3*t3;
+        }
+    }
+
     for( ; j < n; j++ )
     {
         float t = a[j] - b[j];
@@ -791,12 +797,13 @@ static void generateCentersPP(const Mat& _data, Mat& _out_centers,
     vector<float> _dist(N*3);
     float* dist = &_dist[0], *tdist = dist + N, *tdist2 = tdist + N;
     double sum0 = 0;
+    bool simd = checkHardwareSupport(CV_CPU_SSE);
 
     centers[0] = (unsigned)rng % N;
 
     for( i = 0; i < N; i++ )
     {
-        dist[i] = distance(data + step*i, data + step*centers[0], dims);
+        dist[i] = distance(data + step*i, data + step*centers[0], dims, simd);
         sum0 += dist[i];
     }
     
@@ -814,7 +821,7 @@ static void generateCentersPP(const Mat& _data, Mat& _out_centers,
             int ci = i;
             for( i = 0; i < N; i++ )
             {
-                tdist2[i] = std::min(distance(data + step*i, data + step*ci, dims), dist[i]);
+                tdist2[i] = std::min(distance(data + step*i, data + step*ci, dims, simd), dist[i]);
                 s += tdist2[i];
             }
             
@@ -847,6 +854,7 @@ double kmeans( const Mat& data, int K, Mat& best_labels,
     int N = data.rows > 1 ? data.rows : data.cols;
     int dims = (data.rows > 1 ? data.cols : 1)*data.channels();
     int type = data.depth();
+    bool simd = checkHardwareSupport(CV_CPU_SSE);
 
     attempts = std::max(attempts, 1);
     CV_Assert( type == CV_32F && K > 0 );
@@ -1006,7 +1014,7 @@ double kmeans( const Mat& data, int K, Mat& best_labels,
                 for( k = 0; k < K; k++ )
                 {
                     const float* center = centers.ptr<float>(k);
-                    double dist = distance(sample, center, dims);
+                    double dist = distance(sample, center, dims, simd);
 
                     if( min_dist > dist )
                     {

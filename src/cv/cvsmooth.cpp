@@ -427,19 +427,6 @@ void GaussianBlur( const Mat& src, Mat& dst, Size ksize,
                                       Median Filter
 \****************************************************************************************/
 
-//#undef CV_SSE2
-
-//#if defined __VEC__ || defined __ALTIVEC__
-//#define CV_ALTIVEC 1
-//#endif
-
-#undef CV_ALTIVEC
-
-#if CV_ALTIVEC
-#include <altivec.h>
-#undef bool
-#endif
-
 #if _MSC_VER >= 1200
 #pragma warning( disable: 4244 )
 #endif
@@ -463,18 +450,10 @@ typedef struct
 } Histogram;
 
 
-#if CV_SSE2 || defined __MMX__ || CV_ALTIVEC
-#define MEDIAN_HAVE_SIMD 1
-#else
-#define MEDIAN_HAVE_SIMD 0
-#endif
-
-/**
- * histogram_add - adds histograms x and y.
- * histogram_sub - subtracts histogram x from y.
- */
 #if CV_SSE2
-static inline void histogram_add( const HT x[16], HT y[16] )
+#define MEDIAN_HAVE_SIMD 1
+    
+static inline void histogram_add_simd( const HT x[16], HT y[16] )
 {
     const __m128i* rx = (const __m128i*)x;
     __m128i* ry = (__m128i*)y;
@@ -484,7 +463,7 @@ static inline void histogram_add( const HT x[16], HT y[16] )
     _mm_store_si128(ry+1, r1);
 }
 
-static inline void histogram_sub( const HT x[16], HT y[16] )
+static inline void histogram_sub_simd( const HT x[16], HT y[16] )
 {
     const __m128i* rx = (const __m128i*)x;
     __m128i* ry = (__m128i*)y;
@@ -493,35 +472,12 @@ static inline void histogram_sub( const HT x[16], HT y[16] )
     _mm_store_si128(ry+0, r0);
     _mm_store_si128(ry+1, r1);
 }
-#elif defined(__MMX__)
-static inline void histogram_add( const HT x[16], HT y[16] )
-{
-    *(__m64*) &y[0]  = _mm_add_pi16( *(__m64*) &y[0],  *(__m64*) &x[0]  );
-    *(__m64*) &y[4]  = _mm_add_pi16( *(__m64*) &y[4],  *(__m64*) &x[4]  );
-    *(__m64*) &y[8]  = _mm_add_pi16( *(__m64*) &y[8],  *(__m64*) &x[8]  );
-    *(__m64*) &y[12] = _mm_add_pi16( *(__m64*) &y[12], *(__m64*) &x[12] );
-}
-
-static inline void histogram_sub( const HT x[16], HT y[16] )
-{
-    *(__m64*) &y[0]  = _mm_sub_pi16( *(__m64*) &y[0],  *(__m64*) &x[0]  );
-    *(__m64*) &y[4]  = _mm_sub_pi16( *(__m64*) &y[4],  *(__m64*) &x[4]  );
-    *(__m64*) &y[8]  = _mm_sub_pi16( *(__m64*) &y[8],  *(__m64*) &x[8]  );
-    *(__m64*) &y[12] = _mm_sub_pi16( *(__m64*) &y[12], *(__m64*) &x[12] );
-}
-#elif CV_ALTIVEC
-static inline void histogram_add( const HT x[16], HT y[16] )
-{
-    *(vector HT*) &y[0] = vec_add( *(vector HT*) &y[0], *(vector HT*) &x[0] );
-    *(vector HT*) &y[8] = vec_add( *(vector HT*) &y[8], *(vector HT*) &x[8] );
-}
-
-static inline void histogram_sub( const HT x[16], HT y[16] )
-{
-    *(vector HT*) &y[0] = vec_sub( *(vector HT*) &y[0], *(vector HT*) &x[0] );
-    *(vector HT*) &y[8] = vec_sub( *(vector HT*) &y[8], *(vector HT*) &x[8] );
-}
+    
 #else
+#define MEDIAN_HAVE_SIMD 0
+#endif
+
+    
 static inline void histogram_add( const HT x[16], HT y[16] )
 {
     int i;
@@ -535,7 +491,6 @@ static inline void histogram_sub( const HT x[16], HT y[16] )
     for( i = 0; i < 16; ++i )
         y[i] = (HT)(y[i] - x[i]);
 }
-#endif
 
 static inline void histogram_muladd( int a, const HT x[16],
         HT y[16] )
@@ -570,6 +525,9 @@ medianBlur_8u_O1( const Mat& _src, Mat& _dst, int ksize )
     vector<HT> _h_fine(16 * 16 * (STRIPE_SIZE + 2*r) * cn + 16);
     HT* h_coarse = alignPtr(&_h_coarse[0], 16);
     HT* h_fine = alignPtr(&_h_fine[0], 16);
+#if MEDIAN_HAVE_SIMD
+    volatile bool useSIMD = checkHardwareSupport(CV_CPU_SSE2);
+#endif
 
     for( int x = 0; x < _dst.cols; x += STRIPE_SIZE )
     {
@@ -611,73 +569,138 @@ medianBlur_8u_O1( const Mat& _src, Mat& _dst, int ksize )
                 }
 
                 // First column initialization
-                for( j = 0; j < 2*r; ++j )
-                    histogram_add( &h_coarse[16*(n*c+j)], H[c].coarse );
                 for( k = 0; k < 16; ++k )
                     histogram_muladd( 2*r+1, &h_fine[16*n*(16*c+k)], &H[c].fine[k][0] );
 
-                for( j = r; j < n-r; j++ )
+            #if MEDIAN_HAVE_SIMD
+                if( useSIMD )
                 {
-                    int t = 2*r*r + 2*r, b, sum = 0;
-                    HT* segment;
+                    for( j = 0; j < 2*r; ++j )
+                        histogram_add_simd( &h_coarse[16*(n*c+j)], H[c].coarse );
 
-                    histogram_add( &h_coarse[16*(n*c + std::min(j+r,n-1))], H[c].coarse );
-
-                    // Find median at coarse level
-                    for ( k = 0; k < 16 ; ++k )
+                    for( j = r; j < n-r; j++ )
                     {
-                        sum += H[c].coarse[k];
-                        if ( sum > t )
-                        {
-                            sum -= H[c].coarse[k];
-                            break;
-                        }
-                    }
-                    assert( k < 16 );
+                        int t = 2*r*r + 2*r, b, sum = 0;
+                        HT* segment;
 
-                    /* Update corresponding histogram segment */
-                    if ( luc[c][k] <= j-r )
+                        histogram_add_simd( &h_coarse[16*(n*c + std::min(j+r,n-1))], H[c].coarse );
+
+                        // Find median at coarse level
+                        for ( k = 0; k < 16 ; ++k )
+                        {
+                            sum += H[c].coarse[k];
+                            if ( sum > t )
+                            {
+                                sum -= H[c].coarse[k];
+                                break;
+                            }
+                        }
+                        assert( k < 16 );
+
+                        /* Update corresponding histogram segment */
+                        if ( luc[c][k] <= j-r )
+                        {
+                            memset( &H[c].fine[k], 0, 16 * sizeof(HT) );
+                            for ( luc[c][k] = j-r; luc[c][k] < MIN(j+r+1,n); ++luc[c][k] )
+                                histogram_add_simd( &h_fine[16*(n*(16*c+k)+luc[c][k])], H[c].fine[k] );
+
+                            if ( luc[c][k] < j+r+1 )
+                            {
+                                histogram_muladd( j+r+1 - n, &h_fine[16*(n*(16*c+k)+(n-1))], &H[c].fine[k][0] );
+                                luc[c][k] = (HT)(j+r+1);
+                            }
+                        }
+                        else
+                        {
+                            for ( ; luc[c][k] < j+r+1; ++luc[c][k] )
+                            {
+                                histogram_sub_simd( &h_fine[16*(n*(16*c+k)+MAX(luc[c][k]-2*r-1,0))], H[c].fine[k] );
+                                histogram_add_simd( &h_fine[16*(n*(16*c+k)+MIN(luc[c][k],n-1))], H[c].fine[k] );
+                            }
+                        }
+
+                        histogram_sub_simd( &h_coarse[16*(n*c+MAX(j-r,0))], H[c].coarse );
+
+                        /* Find median in segment */
+                        segment = H[c].fine[k];
+                        for ( b = 0; b < 16 ; b++ )
+                        {
+                            sum += segment[b];
+                            if ( sum > t )
+                            {
+                                dst[dstep*i+cn*j+c] = (uchar)(16*k + b);
+                                break;
+                            }
+                        }
+                        assert( b < 16 );
+                    }
+                }
+                else
+            #endif
+                {
+                    for( j = 0; j < 2*r; ++j )
+                        histogram_add( &h_coarse[16*(n*c+j)], H[c].coarse );
+                    
+                    for( j = r; j < n-r; j++ )
                     {
-                        memset( &H[c].fine[k], 0, 16 * sizeof(HT) );
-                        for ( luc[c][k] = j-r; luc[c][k] < MIN(j+r+1,n); ++luc[c][k] )
-                            histogram_add( &h_fine[16*(n*(16*c+k)+luc[c][k])], H[c].fine[k] );
-
-                        if ( luc[c][k] < j+r+1 )
+                        int t = 2*r*r + 2*r, b, sum = 0;
+                        HT* segment;
+                        
+                        histogram_add( &h_coarse[16*(n*c + std::min(j+r,n-1))], H[c].coarse );
+                        
+                        // Find median at coarse level
+                        for ( k = 0; k < 16 ; ++k )
                         {
-                            histogram_muladd( j+r+1 - n, &h_fine[16*(n*(16*c+k)+(n-1))], &H[c].fine[k][0] );
-                            luc[c][k] = (HT)(j+r+1);
+                            sum += H[c].coarse[k];
+                            if ( sum > t )
+                            {
+                                sum -= H[c].coarse[k];
+                                break;
+                            }
                         }
-                    }
-                    else
-                    {
-                        for ( ; luc[c][k] < j+r+1; ++luc[c][k] )
+                        assert( k < 16 );
+                        
+                        /* Update corresponding histogram segment */
+                        if ( luc[c][k] <= j-r )
                         {
-                            histogram_sub( &h_fine[16*(n*(16*c+k)+MAX(luc[c][k]-2*r-1,0))], H[c].fine[k] );
-                            histogram_add( &h_fine[16*(n*(16*c+k)+MIN(luc[c][k],n-1))], H[c].fine[k] );
+                            memset( &H[c].fine[k], 0, 16 * sizeof(HT) );
+                            for ( luc[c][k] = j-r; luc[c][k] < MIN(j+r+1,n); ++luc[c][k] )
+                                histogram_add( &h_fine[16*(n*(16*c+k)+luc[c][k])], H[c].fine[k] );
+                            
+                            if ( luc[c][k] < j+r+1 )
+                            {
+                                histogram_muladd( j+r+1 - n, &h_fine[16*(n*(16*c+k)+(n-1))], &H[c].fine[k][0] );
+                                luc[c][k] = (HT)(j+r+1);
+                            }
                         }
-                    }
-
-                    histogram_sub( &h_coarse[16*(n*c+MAX(j-r,0))], H[c].coarse );
-
-                    /* Find median in segment */
-                    segment = H[c].fine[k];
-                    for ( b = 0; b < 16 ; b++ )
-                    {
-                        sum += segment[b];
-                        if ( sum > t )
+                        else
                         {
-                            dst[dstep*i+cn*j+c] = (uchar)(16*k + b);
-                            break;
+                            for ( ; luc[c][k] < j+r+1; ++luc[c][k] )
+                            {
+                                histogram_sub( &h_fine[16*(n*(16*c+k)+MAX(luc[c][k]-2*r-1,0))], H[c].fine[k] );
+                                histogram_add( &h_fine[16*(n*(16*c+k)+MIN(luc[c][k],n-1))], H[c].fine[k] );
+                            }
                         }
+                        
+                        histogram_sub( &h_coarse[16*(n*c+MAX(j-r,0))], H[c].coarse );
+                        
+                        /* Find median in segment */
+                        segment = H[c].fine[k];
+                        for ( b = 0; b < 16 ; b++ )
+                        {
+                            sum += segment[b];
+                            if ( sum > t )
+                            {
+                                dst[dstep*i+cn*j+c] = (uchar)(16*k + b);
+                                break;
+                            }
+                        }
+                        assert( b < 16 );
                     }
-                    assert( b < 16 );
                 }
             }
         }
     }
-    #if defined(__MMX__)
-        _mm_empty();
-    #endif
 
 #undef HOP
 #undef COP
@@ -898,7 +921,7 @@ struct MinMaxVec8u
     typedef uchar value_type;
     typedef __m128i arg_type;
     enum { SIZE = 16 };
-    arg_type load(const uchar* ptr) { return _cv_loadu_si128((const __m128i*)ptr); }
+    arg_type load(const uchar* ptr) { return _mm_loadu_si128((const __m128i*)ptr); }
     void store(uchar* ptr, arg_type val) { _mm_storeu_si128((__m128i*)ptr, val); }
     void operator()(arg_type& a, arg_type& b) const
     {
@@ -914,7 +937,7 @@ struct MinMaxVec16u
     typedef ushort value_type;
     typedef __m128i arg_type;
     enum { SIZE = 8 };
-    arg_type load(const ushort* ptr) { return _cv_loadu_si128((const __m128i*)ptr); }
+    arg_type load(const ushort* ptr) { return _mm_loadu_si128((const __m128i*)ptr); }
     void store(ushort* ptr, arg_type val) { _mm_storeu_si128((__m128i*)ptr, val); }
     void operator()(arg_type& a, arg_type& b) const
     {
@@ -930,7 +953,7 @@ struct MinMaxVec16s
     typedef short value_type;
     typedef __m128i arg_type;
     enum { SIZE = 8 };
-    arg_type load(const short* ptr) { return _cv_loadu_si128((const __m128i*)ptr); }
+    arg_type load(const short* ptr) { return _mm_loadu_si128((const __m128i*)ptr); }
     void store(short* ptr, arg_type val) { _mm_storeu_si128((__m128i*)ptr, val); }
     void operator()(arg_type& a, arg_type& b) const
     {
@@ -982,7 +1005,8 @@ medianBlur_SortNet( const Mat& _src, Mat& _dst, int m )
     int i, j, k, cn = _src.channels();
     Op op;
     VecOp vop;
-
+    volatile bool useSIMD = checkHardwareSupport(CV_CPU_SSE2);
+    
     if( m == 3 )
     {
         if( size.width == 1 || size.height == 1 )
@@ -1011,7 +1035,7 @@ medianBlur_SortNet( const Mat& _src, Mat& _dst, int m )
             const T* row0 = src + std::max(i - 1, 0)*sstep;
             const T* row1 = src + i*sstep;
             const T* row2 = src + std::min(i + 1, size.height-1)*sstep;
-            int limit = cn;
+            int limit = useSIMD ? cn : size.width;
 
             for(j = 0;; )
             {
@@ -1086,7 +1110,7 @@ medianBlur_SortNet( const Mat& _src, Mat& _dst, int m )
             row[2] = src + i*sstep;
             row[3] = src + std::min(i + 1, size.height-1)*sstep;
             row[4] = src + std::min(i + 2, size.height-1)*sstep;
-            int limit = cn*2;
+            int limit = useSIMD ? cn*2 : size.width;
 
             for(j = 0;; )
             {
@@ -1226,7 +1250,7 @@ void medianBlur( const Mat& src0, Mat& dst, int ksize )
     CV_Assert( src.depth() == CV_8U && (cn == 1 || cn == 3 || cn == 4) );
 
     double img_size_mp = (double)(size.width*size.height)/(1 << 20);
-    if( ksize <= 3 + (img_size_mp < 1 ? 12 : img_size_mp < 4 ? 6 : 2)*(MEDIAN_HAVE_SIMD ? 1 : 3))
+    if( ksize <= 3 + (img_size_mp < 1 ? 12 : img_size_mp < 4 ? 6 : 2)*(MEDIAN_HAVE_SIMD && checkHardwareSupport(CV_CPU_SSE2) ? 1 : 3))
         medianBlur_8u_Om( src, dst, ksize );
     else
         medianBlur_8u_O1( src, dst, ksize );

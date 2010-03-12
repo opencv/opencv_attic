@@ -1770,6 +1770,22 @@ CVAPI(void*) cvLoad( const char* filename,
 CVAPI(int64)  cvGetTickCount( void );
 CVAPI(double) cvGetTickFrequency( void );
 
+/*********************************** CPU capabilities ***********************************/
+
+#define CV_CPU_NONE    0    
+#define CV_CPU_MMX     1
+#define CV_CPU_SSE     2
+#define CV_CPU_SSE_ANY CV_CPU_SSE
+#define CV_CPU_SSE2    3
+#define CV_CPU_SSE3    4
+#define CV_CPU_SSSE3   5
+#define CV_CPU_SSE4_1  6
+#define CV_CPU_SSE4_2  7
+#define CV_CPU_AVX    10
+#define CV_HARDWARE_MAX_FEATURE 255
+
+extern CV_EXPORTS const int* cvHardwareSupport;
+    
 /*********************************** Multi-Threading ************************************/
 
 /* retrieve/set the number of threads used in OpenMP implementations */
@@ -1777,8 +1793,7 @@ CVAPI(int)  cvGetNumThreads( void );
 CVAPI(void) cvSetNumThreads( int threads CV_DEFAULT(0) );
 /* get index of the thread being executed */
 CVAPI(int)  cvGetThreadNum( void );
-
-/*************** Convenience functions for better interaction with HighGUI **************/
+    
 
 #ifdef __cplusplus
 }

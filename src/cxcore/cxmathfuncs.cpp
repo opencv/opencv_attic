@@ -89,32 +89,35 @@ static CvStatus CV_STDCALL FastAtan2_32f(const float *Y, const float *X, float *
 	float scale = angleInDegrees ? (float)(180/CV_PI) : 1.f;
 
 #if CV_SSE2
-	static const int CV_DECL_ALIGNED(16) iabsmask[] = {0x7fffffff, 0x7fffffff, 0x7fffffff, 0x7fffffff};
-	__m128 eps = _mm_set1_ps((float)DBL_EPSILON), absmask = _mm_load_ps((const float*)iabsmask);
-	__m128 _90 = _mm_set1_ps((float)(CV_PI*0.5)), _180 = _mm_set1_ps((float)CV_PI), _360 = _mm_set1_ps((float)(CV_PI*2));
-	__m128 zero = _mm_setzero_ps(), _0_28 = _mm_set1_ps(0.28f), scale4 = _mm_set1_ps(scale);
-	
-	for( ; i <= len - 4; i += 4 )
-	{
-		__m128 x4 = _mm_loadu_ps(X + i), y4 = _mm_loadu_ps(Y + i);
-		__m128 xq4 = _mm_mul_ps(x4, x4), yq4 = _mm_mul_ps(y4, y4);
-		__m128 xly = _mm_cmplt_ps(xq4, yq4);
-		__m128 z4 = _mm_div_ps(_mm_mul_ps(x4, y4), _mm_add_ps(_mm_add_ps(_mm_max_ps(xq4, yq4),
-			_mm_mul_ps(_mm_min_ps(xq4, yq4), _0_28)), eps));
-		
-		// a4 <- x < y ? 90 : 0;
-		__m128 a4 = _mm_and_ps(xly, _90);
-		// a4 <- (y < 0 ? 360 - a4 : a4) == ((x < y ? y < 0 ? 270 : 90) : (y < 0 ? 360 : 0))
-		__m128 mask = _mm_cmplt_ps(y4, zero);
-		a4 = _mm_or_ps(_mm_and_ps(_mm_sub_ps(_360, a4), mask), _mm_andnot_ps(mask, a4));
-		// a4 <- (x < 0 && !(x < y) ? 180 : a4)
-		mask = _mm_andnot_ps(xly, _mm_cmplt_ps(x4, zero));
-		a4 = _mm_or_ps(_mm_and_ps(_180, mask), _mm_andnot_ps(mask, a4));
-		
-		// a4 <- (x < y ? a4 - z4 : a4 + z4)
-		a4 = _mm_mul_ps(_mm_add_ps(_mm_xor_ps(z4, _mm_andnot_ps(absmask, xly)), a4), scale4);
-		_mm_storeu_ps(angle + i, a4);
-	}
+    if( checkHardwareSupport(CV_CPU_SSE) )
+    {
+        static const int CV_DECL_ALIGNED(16) iabsmask[] = {0x7fffffff, 0x7fffffff, 0x7fffffff, 0x7fffffff};
+        __m128 eps = _mm_set1_ps((float)DBL_EPSILON), absmask = _mm_load_ps((const float*)iabsmask);
+        __m128 _90 = _mm_set1_ps((float)(CV_PI*0.5)), _180 = _mm_set1_ps((float)CV_PI), _360 = _mm_set1_ps((float)(CV_PI*2));
+        __m128 zero = _mm_setzero_ps(), _0_28 = _mm_set1_ps(0.28f), scale4 = _mm_set1_ps(scale);
+        
+        for( ; i <= len - 4; i += 4 )
+        {
+            __m128 x4 = _mm_loadu_ps(X + i), y4 = _mm_loadu_ps(Y + i);
+            __m128 xq4 = _mm_mul_ps(x4, x4), yq4 = _mm_mul_ps(y4, y4);
+            __m128 xly = _mm_cmplt_ps(xq4, yq4);
+            __m128 z4 = _mm_div_ps(_mm_mul_ps(x4, y4), _mm_add_ps(_mm_add_ps(_mm_max_ps(xq4, yq4),
+                _mm_mul_ps(_mm_min_ps(xq4, yq4), _0_28)), eps));
+            
+            // a4 <- x < y ? 90 : 0;
+            __m128 a4 = _mm_and_ps(xly, _90);
+            // a4 <- (y < 0 ? 360 - a4 : a4) == ((x < y ? y < 0 ? 270 : 90) : (y < 0 ? 360 : 0))
+            __m128 mask = _mm_cmplt_ps(y4, zero);
+            a4 = _mm_or_ps(_mm_and_ps(_mm_sub_ps(_360, a4), mask), _mm_andnot_ps(mask, a4));
+            // a4 <- (x < 0 && !(x < y) ? 180 : a4)
+            mask = _mm_andnot_ps(xly, _mm_cmplt_ps(x4, zero));
+            a4 = _mm_or_ps(_mm_and_ps(_180, mask), _mm_andnot_ps(mask, a4));
+            
+            // a4 <- (x < y ? a4 - z4 : a4 + z4)
+            a4 = _mm_mul_ps(_mm_add_ps(_mm_xor_ps(z4, _mm_andnot_ps(absmask, xly)), a4), scale4);
+            _mm_storeu_ps(angle + i, a4);
+        }
+    }
 #endif
 	
 	for( ; i < len; i++ )
@@ -173,168 +176,168 @@ float  cubeRoot( float value )
     return v.f;
 }
 
-template<typename T> static CvStatus CV_STDCALL InvSqrt(const T* src, T* dst, int len)
+static CvStatus CV_STDCALL
+Magnitude_32f(const float* x, const float* y, float* mag, int len)
 {
-    for( int i = 0; i < len; i++ )
-        dst[i] = 1/std::sqrt(src[i]);
-    return CV_OK;
-
-}
-
-#if !CV_SSE2
-template<typename T> static CvStatus CV_STDCALL Sqrt(const T* src, T* dst, int len)
-{
-    for( int i = 0; i < len; i++ )
-        dst[i] = std::sqrt(src[i]);
-    return CV_OK;
-}
+    int i = 0;
+    
+#if CV_SSE
+    if( checkHardwareSupport(CV_CPU_SSE) )
+    {
+        for( ; i <= len - 8; i += 8 )
+        {
+            __m128 x0 = _mm_loadu_ps(x + i), x1 = _mm_loadu_ps(x + i + 4);
+            __m128 y0 = _mm_loadu_ps(y + i), y1 = _mm_loadu_ps(y + i + 4);
+            x0 = _mm_add_ps(_mm_mul_ps(x0, x0), _mm_mul_ps(y0, y0));
+            x1 = _mm_add_ps(_mm_mul_ps(x1, x1), _mm_mul_ps(y1, y1));
+            x0 = _mm_sqrt_ps(x0); x1 = _mm_sqrt_ps(x1);
+            _mm_storeu_ps(mag + i, x0); _mm_storeu_ps(mag + i + 4, x1);
+        }
+    }
 #endif
 
-template<typename T> static CvStatus CV_STDCALL
-Magnitude(const T* x, const T* y, T* mag, int len)
-{
-    int i;
-    for( i = 0; i <= len - 4; i += 4 )
-    {
-        T x0 = x[i], y0 = y[i], x1 = x[i+1], y1 = y[i+1];
-
-        x0 = x0*x0 + y0*y0;
-        x1 = x1*x1 + y1*y1;
-        mag[i] = x0;
-        mag[i+1] = x1;
-        x0 = x[i+2], y0 = y[i+2];
-        x1 = x[i+3], y1 = y[i+3];
-        x0 = x0*x0 + y0*y0;
-        x1 = x1*x1 + y1*y1;
-        mag[i+2] = x0;
-        mag[i+3] = x1;
-    }
-
-    for( ; i < len; i++ )
-    {
-        T x0 = x[i], y0 = y[i];
-        mag[i] = x0*x0 + y0*y0;
-    }
-    Sqrt( mag, mag, len );
-
-    return CV_OK;
-}
-
-
-#if CV_SSE2
-template<> CvStatus CV_STDCALL InvSqrt(const float* src, float* dst, int len)
-{
-    int i = 0;
-    __m128 _0_5 = _mm_set1_ps(0.5f), _1_5 = _mm_set1_ps(1.5f);
-    if( (((size_t)src|(size_t)dst) & 15) == 0 )
-        for( ; i <= len - 8; i += 8 )
-        {
-            __m128 t0 = _mm_load_ps(src + i), t1 = _mm_load_ps(src + i + 4);
-            __m128 h0 = _mm_mul_ps(t0, _0_5), h1 = _mm_mul_ps(t1, _0_5);
-            t0 = _mm_rsqrt_ps(t0); t1 = _mm_rsqrt_ps(t1);
-            t0 = _mm_mul_ps(t0, _mm_sub_ps(_1_5, _mm_mul_ps(_mm_mul_ps(t0,t0),h0)));
-            t1 = _mm_mul_ps(t1, _mm_sub_ps(_1_5, _mm_mul_ps(_mm_mul_ps(t1,t1),h1)));
-            _mm_store_ps(dst + i, t0); _mm_store_ps(dst + i + 4, t1);
-        }
-    else
-        for( ; i <= len - 8; i += 8 )
-        {
-            __m128 t0 = _mm_loadu_ps(src + i), t1 = _mm_loadu_ps(src + i + 4);
-            __m128 h0 = _mm_mul_ps(t0, _0_5), h1 = _mm_mul_ps(t1, _0_5);
-            t0 = _mm_rsqrt_ps(t0); t1 = _mm_rsqrt_ps(t1);
-            t0 = _mm_mul_ps(t0, _mm_sub_ps(_1_5, _mm_mul_ps(_mm_mul_ps(t0,t0),h0)));
-            t1 = _mm_mul_ps(t1, _mm_sub_ps(_1_5, _mm_mul_ps(_mm_mul_ps(t1,t1),h1)));
-            _mm_storeu_ps(dst + i, t0); _mm_storeu_ps(dst + i + 4, t1);
-        }
-    for( ; i < len; i++ )
-        dst[i] = 1/std::sqrt(src[i]);
-    return CV_OK;
-}
-
-CvStatus CV_STDCALL Sqrt(const float* src, float* dst, int len)
-{
-    int i = 0;
-    if( (((size_t)src|(size_t)dst) & 15) == 0 )
-        for( ; i <= len - 8; i += 8 )
-        {
-            __m128 t0 = _mm_load_ps(src + i), t1 = _mm_load_ps(src + i + 4);
-            t0 = _mm_sqrt_ps(t0); t1 = _mm_sqrt_ps(t1);
-            _mm_store_ps(dst + i, t0); _mm_store_ps(dst + i + 4, t1);
-        }
-    else
-        for( ; i <= len - 8; i += 8 )
-        {
-            __m128 t0 = _mm_loadu_ps(src + i), t1 = _mm_loadu_ps(src + i + 4);
-            t0 = _mm_sqrt_ps(t0); t1 = _mm_sqrt_ps(t1);
-            _mm_storeu_ps(dst + i, t0); _mm_storeu_ps(dst + i + 4, t1);
-        }
-    for( ; i < len; i++ )
-        dst[i] = std::sqrt(src[i]);
-    return CV_OK;
-}
-
-CvStatus CV_STDCALL Sqrt(const double* src, double* dst, int len)
-{
-    int i = 0;
-    if( (((size_t)src|(size_t)dst) & 15) == 0 )
-        for( ; i <= len - 4; i += 4 )
-        {
-            __m128d t0 = _mm_load_pd(src + i), t1 = _mm_load_pd(src + i + 2);
-            t0 = _mm_sqrt_pd(t0); t1 = _mm_sqrt_pd(t1);
-            _mm_store_pd(dst + i, t0); _mm_store_pd(dst + i + 2, t1);
-        }
-    else
-        for( ; i <= len - 4; i += 4 )
-        {
-            __m128d t0 = _mm_loadu_pd(src + i), t1 = _mm_loadu_pd(src + i + 2);
-            t0 = _mm_sqrt_pd(t0); t1 = _mm_sqrt_pd(t1);
-            _mm_storeu_pd(dst + i, t0); _mm_storeu_pd(dst + i + 2, t1);
-        }
-    for( ; i < len; i++ )
-        dst[i] = std::sqrt(src[i]);
-    return CV_OK;
-}
-
-template<>  CvStatus CV_STDCALL
-Magnitude(const float* x, const float* y, float* mag, int len)
-{
-    int i = 0;
-    for( ; i <= len - 8; i += 8 )
-    {
-        __m128 x0 = _mm_loadu_ps(x + i), x1 = _mm_loadu_ps(x + i + 4);
-        __m128 y0 = _mm_loadu_ps(y + i), y1 = _mm_loadu_ps(y + i + 4);
-        x0 = _mm_add_ps(_mm_mul_ps(x0, x0), _mm_mul_ps(y0, y0));
-        x1 = _mm_add_ps(_mm_mul_ps(x1, x1), _mm_mul_ps(y1, y1));
-        x0 = _mm_sqrt_ps(x0); x1 = _mm_sqrt_ps(x1);
-        _mm_storeu_ps(mag + i, x0); _mm_storeu_ps(mag + i + 4, x1);
-    }
     for( ; i < len; i++ )
     {
         float x0 = x[i], y0 = y[i];
         mag[i] = std::sqrt(x0*x0 + y0*y0);
     }
+
     return CV_OK;
 }
-#endif
 
-static CvStatus CV_STDCALL Sqrt_32f(const float* src, float* dst, int len)
+static CvStatus CV_STDCALL
+Magnitude_64f(const double* x, const double* y, double* mag, int len)
 {
-    return Sqrt( src, dst, len );
+    int i = 0;
+    
+#if CV_SSE2   
+    if( checkHardwareSupport(CV_CPU_SSE2) )
+    {
+        for( ; i <= len - 4; i += 4 )
+        {
+            __m128d x0 = _mm_loadu_pd(x + i), x1 = _mm_loadu_pd(x + i + 2);
+            __m128d y0 = _mm_loadu_pd(y + i), y1 = _mm_loadu_pd(y + i + 2);
+            x0 = _mm_add_pd(_mm_mul_pd(x0, x0), _mm_mul_pd(y0, y0));
+            x1 = _mm_add_pd(_mm_mul_pd(x1, x1), _mm_mul_pd(y1, y1));
+            x0 = _mm_sqrt_pd(x0); x1 = _mm_sqrt_pd(x1);
+            _mm_storeu_pd(mag + i, x0); _mm_storeu_pd(mag + i + 2, x1);
+        }
+    }
+#endif
+    
+    for( ; i < len; i++ )
+    {
+        double x0 = x[i], y0 = y[i];
+        mag[i] = std::sqrt(x0*x0 + y0*y0);
+    }
+    
+    return CV_OK;
 }
 
+    
 static CvStatus CV_STDCALL InvSqrt_32f(const float* src, float* dst, int len)
 {
-    return InvSqrt( src, dst, len );
+    int i = 0;
+    
+#if CV_SSE   
+    if( checkHardwareSupport(CV_CPU_SSE) )
+    {    
+        __m128 _0_5 = _mm_set1_ps(0.5f), _1_5 = _mm_set1_ps(1.5f);
+        if( (((size_t)src|(size_t)dst) & 15) == 0 )
+            for( ; i <= len - 8; i += 8 )
+            {
+                __m128 t0 = _mm_load_ps(src + i), t1 = _mm_load_ps(src + i + 4);
+                __m128 h0 = _mm_mul_ps(t0, _0_5), h1 = _mm_mul_ps(t1, _0_5);
+                t0 = _mm_rsqrt_ps(t0); t1 = _mm_rsqrt_ps(t1);
+                t0 = _mm_mul_ps(t0, _mm_sub_ps(_1_5, _mm_mul_ps(_mm_mul_ps(t0,t0),h0)));
+                t1 = _mm_mul_ps(t1, _mm_sub_ps(_1_5, _mm_mul_ps(_mm_mul_ps(t1,t1),h1)));
+                _mm_store_ps(dst + i, t0); _mm_store_ps(dst + i + 4, t1);
+            }
+        else
+            for( ; i <= len - 8; i += 8 )
+            {
+                __m128 t0 = _mm_loadu_ps(src + i), t1 = _mm_loadu_ps(src + i + 4);
+                __m128 h0 = _mm_mul_ps(t0, _0_5), h1 = _mm_mul_ps(t1, _0_5);
+                t0 = _mm_rsqrt_ps(t0); t1 = _mm_rsqrt_ps(t1);
+                t0 = _mm_mul_ps(t0, _mm_sub_ps(_1_5, _mm_mul_ps(_mm_mul_ps(t0,t0),h0)));
+                t1 = _mm_mul_ps(t1, _mm_sub_ps(_1_5, _mm_mul_ps(_mm_mul_ps(t1,t1),h1)));
+                _mm_storeu_ps(dst + i, t0); _mm_storeu_ps(dst + i + 4, t1);
+            }
+    }
+#endif
+    
+    for( ; i < len; i++ )
+        dst[i] = 1/std::sqrt(src[i]);
+    return CV_OK;
 }
 
-static CvStatus CV_STDCALL Sqrt_64f(const double* src, double* dst, int len)
-{
-    return Sqrt( src, dst, len );
-}
-
+    
 static CvStatus CV_STDCALL InvSqrt_64f(const double* src, double* dst, int len)
 {
-    return InvSqrt( src, dst, len );
+    for( int i = 0; i < len; i++ )
+        dst[i] = 1/std::sqrt(src[i]);
+    return CV_OK;
+}    
+    
+    
+static CvStatus CV_STDCALL Sqrt_32f(const float* src, float* dst, int len)
+{
+    int i = 0;
+    
+#if CV_SSE    
+    if( checkHardwareSupport(CV_CPU_SSE) )
+    {
+        if( (((size_t)src|(size_t)dst) & 15) == 0 )
+            for( ; i <= len - 8; i += 8 )
+            {
+                __m128 t0 = _mm_load_ps(src + i), t1 = _mm_load_ps(src + i + 4);
+                t0 = _mm_sqrt_ps(t0); t1 = _mm_sqrt_ps(t1);
+                _mm_store_ps(dst + i, t0); _mm_store_ps(dst + i + 4, t1);
+            }
+        else
+            for( ; i <= len - 8; i += 8 )
+            {
+                __m128 t0 = _mm_loadu_ps(src + i), t1 = _mm_loadu_ps(src + i + 4);
+                t0 = _mm_sqrt_ps(t0); t1 = _mm_sqrt_ps(t1);
+                _mm_storeu_ps(dst + i, t0); _mm_storeu_ps(dst + i + 4, t1);
+            }
+    }
+#endif    
+    
+    for( ; i < len; i++ )
+        dst[i] = std::sqrt(src[i]);
+    
+    return CV_OK;
+}
+
+    
+static CvStatus CV_STDCALL Sqrt_64f(const double* src, double* dst, int len)
+{
+    int i = 0;
+    
+#if CV_SSE2    
+    if( checkHardwareSupport(CV_CPU_SSE2) )
+    {
+        if( (((size_t)src|(size_t)dst) & 15) == 0 )
+            for( ; i <= len - 4; i += 4 )
+            {
+                __m128d t0 = _mm_load_pd(src + i), t1 = _mm_load_pd(src + i + 2);
+                t0 = _mm_sqrt_pd(t0); t1 = _mm_sqrt_pd(t1);
+                _mm_store_pd(dst + i, t0); _mm_store_pd(dst + i + 2, t1);
+            }
+        else
+            for( ; i <= len - 4; i += 4 )
+            {
+                __m128d t0 = _mm_loadu_pd(src + i), t1 = _mm_loadu_pd(src + i + 2);
+                t0 = _mm_sqrt_pd(t0); t1 = _mm_sqrt_pd(t1);
+                _mm_storeu_pd(dst + i, t0); _mm_storeu_pd(dst + i + 2, t1);
+            }
+    }
+#endif
+    
+    for( ; i < len; i++ )
+        dst[i] = std::sqrt(src[i]);
+    return CV_OK;
 }
 
 
@@ -358,7 +361,7 @@ void magnitude( const Mat& X, const Mat& Y, Mat& Mag )
         size_t mstep = Mag.step/sizeof(mag[0]);
 
         for( ; size.height--; x += xstep, y += ystep, mag += mstep )
-            Magnitude( x, y, mag, size.width );
+            Magnitude_32f( x, y, mag, size.width );
     }
     else
     {
@@ -368,7 +371,7 @@ void magnitude( const Mat& X, const Mat& Y, Mat& Mag )
         size_t mstep = Mag.step/sizeof(mag[0]);
 
         for( ; size.height--; x += xstep, y += ystep, mag += mstep )
-            Magnitude( x, y, mag, size.width );
+            Magnitude_64f( x, y, mag, size.width );
     }
 }
 
@@ -441,7 +444,7 @@ void cartToPolar( const Mat& X, const Mat& Y, Mat& Mag, Mat& Angle, bool angleIn
             for( i = 0; i < size.width; i += MAX_BLOCK_SIZE )
             {
                 int block_size = std::min(MAX_BLOCK_SIZE, size.width - i);
-                Magnitude( x + i, y + i, inplace ? buf[0] : mag + i, block_size );
+                Magnitude_32f( x + i, y + i, inplace ? buf[0] : mag + i, block_size );
                 FastAtan2_32f( y + i, x + i, angle + i, block_size, angleInDegrees );
                 if( inplace )
                     for( j = 0; j < block_size; j++ )
@@ -467,7 +470,7 @@ void cartToPolar( const Mat& X, const Mat& Y, Mat& Mag, Mat& Angle, bool angleIn
                     buf[1][j] = (float)y[i + j];
                 }
                 FastAtan2_32f( buf[1], buf[0], buf[0], block_size, angleInDegrees );
-                Magnitude( x + i, y + i, mag + i, block_size );
+                Magnitude_64f( x + i, y + i, mag + i, block_size );
 				for( j = 0; j < block_size; j++ )
 					angle[i + j] = buf[0][j];
             }

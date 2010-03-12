@@ -137,6 +137,11 @@ CV_EXPORTS int64 getTickCount();
 CV_EXPORTS double getTickFrequency();
 CV_EXPORTS int64 getCPUTickCount();
 
+CV_INLINE int checkHardwareSupport(int feature)
+{
+    CV_DbgAssert( 0 <= feature && feature <= CV_HARDWARE_MAX_FEATURE );
+    return cvHardwareSupport[feature]; }
+
 CV_EXPORTS void* fastMalloc(size_t);
 CV_EXPORTS void fastFree(void* ptr);
 

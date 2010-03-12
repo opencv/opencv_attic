@@ -554,6 +554,9 @@ struct RowVec_8u32s
 
     int operator()(const uchar* _src, uchar* _dst, int width, int cn) const
     {
+        if( !checkHardwareSupport(CV_CPU_SSE2) )
+            return 0;
+        
         int i = 0, k, _ksize = kernel.rows + kernel.cols - 1;
         int* dst = (int*)_dst;
         const int* _kx = (const int*)kernel.data;
@@ -573,7 +576,7 @@ struct RowVec_8u32s
                     f = _mm_shuffle_epi32(f, 0);
                     f = _mm_packs_epi32(f, f);
 
-                    x0 = _cv_loadu_si128((const __m128i*)src);
+                    x0 = _mm_loadu_si128((const __m128i*)src);
                     x2 = _mm_unpackhi_epi8(x0, z);
                     x0 = _mm_unpacklo_epi8(x0, z);
                     x1 = _mm_mulhi_epi16(x0, f);
@@ -643,6 +646,9 @@ struct SymmRowSmallVec_8u32s
 
     int operator()(const uchar* src, uchar* _dst, int width, int cn) const
     {
+        if( !checkHardwareSupport(CV_CPU_SSE2) )
+            return 0;
+        
         int i = 0, j, k, _ksize = kernel.rows + kernel.cols - 1;
         int* dst = (int*)_dst;
         bool symmetrical = (symmetryType & KERNEL_SYMMETRICAL) != 0;
@@ -664,9 +670,9 @@ struct SymmRowSmallVec_8u32s
                     for( ; i <= width - 16; i += 16, src += 16 )
                     {
                         __m128i x0, x1, x2, y0, y1, y2;
-                        x0 = _cv_loadu_si128((__m128i*)(src - cn));
-                        x1 = _cv_loadu_si128((__m128i*)src);
-                        x2 = _cv_loadu_si128((__m128i*)(src + cn));
+                        x0 = _mm_loadu_si128((__m128i*)(src - cn));
+                        x1 = _mm_loadu_si128((__m128i*)src);
+                        x2 = _mm_loadu_si128((__m128i*)(src + cn));
                         y0 = _mm_unpackhi_epi8(x0, z);
                         x0 = _mm_unpacklo_epi8(x0, z);
                         y1 = _mm_unpackhi_epi8(x1, z);
@@ -684,9 +690,9 @@ struct SymmRowSmallVec_8u32s
                     for( ; i <= width - 16; i += 16, src += 16 )
                     {
                         __m128i x0, x1, x2, y0, y1, y2;
-                        x0 = _cv_loadu_si128((__m128i*)(src - cn));
-                        x1 = _cv_loadu_si128((__m128i*)src);
-                        x2 = _cv_loadu_si128((__m128i*)(src + cn));
+                        x0 = _mm_loadu_si128((__m128i*)(src - cn));
+                        x1 = _mm_loadu_si128((__m128i*)src);
+                        x2 = _mm_loadu_si128((__m128i*)(src + cn));
                         y0 = _mm_unpackhi_epi8(x0, z);
                         x0 = _mm_unpacklo_epi8(x0, z);
                         y1 = _mm_unpackhi_epi8(x1, z);
@@ -710,9 +716,9 @@ struct SymmRowSmallVec_8u32s
                     for( ; i <= width - 16; i += 16, src += 16 )
                     {
                         __m128i x0, x1, x2, y0, y1, t0, t1, z0, z1, z2, z3;
-                        x0 = _cv_loadu_si128((__m128i*)(src - cn));
-                        x1 = _cv_loadu_si128((__m128i*)src);
-                        x2 = _cv_loadu_si128((__m128i*)(src + cn));
+                        x0 = _mm_loadu_si128((__m128i*)(src - cn));
+                        x1 = _mm_loadu_si128((__m128i*)src);
+                        x2 = _mm_loadu_si128((__m128i*)(src + cn));
                         y0 = _mm_add_epi16(_mm_unpackhi_epi8(x0, z), _mm_unpackhi_epi8(x2, z));
                         x0 = _mm_add_epi16(_mm_unpacklo_epi8(x0, z), _mm_unpacklo_epi8(x2, z));
                         y1 = _mm_unpackhi_epi8(x1, z);
@@ -748,9 +754,9 @@ struct SymmRowSmallVec_8u32s
                     for( ; i <= width - 16; i += 16, src += 16 )
                     {
                         __m128i x0, x1, x2, y0, y1, y2;
-                        x0 = _cv_loadu_si128((__m128i*)(src - cn*2));
-                        x1 = _cv_loadu_si128((__m128i*)src);
-                        x2 = _cv_loadu_si128((__m128i*)(src + cn*2));
+                        x0 = _mm_loadu_si128((__m128i*)(src - cn*2));
+                        x1 = _mm_loadu_si128((__m128i*)src);
+                        x2 = _mm_loadu_si128((__m128i*)(src + cn*2));
                         y0 = _mm_unpackhi_epi8(x0, z);
                         x0 = _mm_unpacklo_epi8(x0, z);
                         y1 = _mm_unpackhi_epi8(x1, z);
@@ -776,9 +782,9 @@ struct SymmRowSmallVec_8u32s
                     for( ; i <= width - 16; i += 16, src += 16 )
                     {
                         __m128i x0, x1, x2, y0, y1, t0, t1, z0, z1, z2, z3;
-                        x0 = _cv_loadu_si128((__m128i*)(src - cn));
-                        x1 = _cv_loadu_si128((__m128i*)src);
-                        x2 = _cv_loadu_si128((__m128i*)(src + cn));
+                        x0 = _mm_loadu_si128((__m128i*)(src - cn));
+                        x1 = _mm_loadu_si128((__m128i*)src);
+                        x2 = _mm_loadu_si128((__m128i*)(src + cn));
                         y0 = _mm_add_epi16(_mm_unpackhi_epi8(x0, z), _mm_unpackhi_epi8(x2, z));
                         x0 = _mm_add_epi16(_mm_unpacklo_epi8(x0, z), _mm_unpacklo_epi8(x2, z));
                         y1 = _mm_unpackhi_epi8(x1, z);
@@ -802,8 +808,8 @@ struct SymmRowSmallVec_8u32s
                         z2 = _mm_add_epi32(z2, _mm_unpacklo_epi16(y0, y1));
                         z3 = _mm_add_epi32(z3, _mm_unpackhi_epi16(y0, y1));
 
-                        x0 = _cv_loadu_si128((__m128i*)(src - cn*2));
-                        x1 = _cv_loadu_si128((__m128i*)(src + cn*2));
+                        x0 = _mm_loadu_si128((__m128i*)(src - cn*2));
+                        x1 = _mm_loadu_si128((__m128i*)(src + cn*2));
                         y1 = _mm_add_epi16(_mm_unpackhi_epi8(x0, z), _mm_unpackhi_epi8(x1, z));
                         y0 = _mm_add_epi16(_mm_unpacklo_epi8(x0, z), _mm_unpacklo_epi8(x1, z));
 
@@ -832,8 +838,8 @@ struct SymmRowSmallVec_8u32s
                     for( ; i <= width - 16; i += 16, src += 16 )
                     {
                         __m128i x0, x1, y0;
-                        x0 = _cv_loadu_si128((__m128i*)(src + cn));
-                        x1 = _cv_loadu_si128((__m128i*)(src - cn));
+                        x0 = _mm_loadu_si128((__m128i*)(src + cn));
+                        x1 = _mm_loadu_si128((__m128i*)(src - cn));
                         y0 = _mm_sub_epi16(_mm_unpackhi_epi8(x0, z), _mm_unpackhi_epi8(x1, z));
                         x0 = _mm_sub_epi16(_mm_unpacklo_epi8(x0, z), _mm_unpacklo_epi8(x1, z));
                         _mm_store_si128((__m128i*)(dst + i), _mm_srai_epi32(_mm_unpacklo_epi16(x0, x0),16));
@@ -849,8 +855,8 @@ struct SymmRowSmallVec_8u32s
                     for( ; i <= width - 16; i += 16, src += 16 )
                     {
                         __m128i x0, x1, y0, y1, z0, z1, z2, z3;
-                        x0 = _cv_loadu_si128((__m128i*)(src + cn));
-                        x1 = _cv_loadu_si128((__m128i*)(src - cn));
+                        x0 = _mm_loadu_si128((__m128i*)(src + cn));
+                        x1 = _mm_loadu_si128((__m128i*)(src - cn));
                         y0 = _mm_sub_epi16(_mm_unpackhi_epi8(x0, z), _mm_unpackhi_epi8(x1, z));
                         x0 = _mm_sub_epi16(_mm_unpacklo_epi8(x0, z), _mm_unpacklo_epi8(x1, z));
 
@@ -882,8 +888,8 @@ struct SymmRowSmallVec_8u32s
                 for( ; i <= width - 16; i += 16, src += 16 )
                 {
                     __m128i x0, x1, x2, y0, y1, t0, t1, z0, z1, z2, z3;
-                    x0 = _cv_loadu_si128((__m128i*)(src + cn));
-                    x2 = _cv_loadu_si128((__m128i*)(src - cn));
+                    x0 = _mm_loadu_si128((__m128i*)(src + cn));
+                    x2 = _mm_loadu_si128((__m128i*)(src - cn));
                     y0 = _mm_sub_epi16(_mm_unpackhi_epi8(x0, z), _mm_unpackhi_epi8(x2, z));
                     x0 = _mm_sub_epi16(_mm_unpacklo_epi8(x0, z), _mm_unpacklo_epi8(x2, z));
 
@@ -896,8 +902,8 @@ struct SymmRowSmallVec_8u32s
                     z2 = _mm_unpacklo_epi16(y0, y1);
                     z3 = _mm_unpackhi_epi16(y0, y1);
 
-                    x0 = _cv_loadu_si128((__m128i*)(src + cn*2));
-                    x1 = _cv_loadu_si128((__m128i*)(src - cn*2));
+                    x0 = _mm_loadu_si128((__m128i*)(src + cn*2));
+                    x1 = _mm_loadu_si128((__m128i*)(src - cn*2));
                     y1 = _mm_sub_epi16(_mm_unpackhi_epi8(x0, z), _mm_unpackhi_epi8(x1, z));
                     y0 = _mm_sub_epi16(_mm_unpacklo_epi8(x0, z), _mm_unpacklo_epi8(x1, z));
 
@@ -961,6 +967,9 @@ struct SymmColumnVec_32s8u
 
     int operator()(const uchar** _src, uchar* dst, int width) const
     {
+        if( !checkHardwareSupport(CV_CPU_SSE2) )
+            return 0;
+        
         int ksize2 = (kernel.rows + kernel.cols - 1)/2;
         const float* ky = (const float*)kernel.data + ksize2;
         int i = 0, k;
@@ -1106,6 +1115,9 @@ struct SymmColumnSmallVec_32s16s
 
     int operator()(const uchar** _src, uchar* _dst, int width) const
     {
+        if( !checkHardwareSupport(CV_CPU_SSE2) )
+            return 0;
+        
         int ksize2 = (kernel.rows + kernel.cols - 1)/2;
         const float* ky = (const float*)kernel.data + ksize2;
         int i = 0;
@@ -1234,6 +1246,9 @@ struct RowVec_32f
 
     int operator()(const uchar* _src, uchar* _dst, int width, int cn) const
     {
+        if( !checkHardwareSupport(CV_CPU_SSE) )
+            return 0;
+        
         int i = 0, k, _ksize = kernel.rows + kernel.cols - 1;
         float* dst = (float*)_dst;
         const float* _kx = (const float*)kernel.data;
@@ -1274,6 +1289,9 @@ struct SymmRowSmallVec_32f
 
     int operator()(const uchar* _src, uchar* _dst, int width, int cn) const
     {
+        if( !checkHardwareSupport(CV_CPU_SSE) )
+            return 0;
+        
         int i = 0, _ksize = kernel.rows + kernel.cols - 1;
         float* dst = (float*)_dst;
         const float* src = (const float*)_src + (_ksize/2)*cn;
@@ -1466,6 +1484,9 @@ struct SymmColumnVec_32f
 
     int operator()(const uchar** _src, uchar* _dst, int width) const
     {
+        if( !checkHardwareSupport(CV_CPU_SSE) )
+            return 0;
+        
         int ksize2 = (kernel.rows + kernel.cols - 1)/2;
         const float* ky = (const float*)kernel.data + ksize2;
         int i = 0, k;
@@ -1605,6 +1626,9 @@ struct SymmColumnSmallVec_32f
 
     int operator()(const uchar** _src, uchar* _dst, int width) const
     {
+        if( !checkHardwareSupport(CV_CPU_SSE) )
+            return 0;
+        
         int ksize2 = (kernel.rows + kernel.cols - 1)/2;
         const float* ky = (const float*)kernel.data + ksize2;
         int i = 0;
@@ -1736,6 +1760,9 @@ struct FilterVec_8u
 
     int operator()(const uchar** src, uchar* dst, int width) const
     {
+        if( !checkHardwareSupport(CV_CPU_SSE2) )
+            return 0;
+        
         const float* kf = (const float*)&coeffs[0];
         int i = 0, k, nz = _nz;
         __m128 d4 = _mm_set1_ps(delta);
@@ -1750,7 +1777,7 @@ struct FilterVec_8u
                 __m128 f = _mm_load_ss(kf+k), t0, t1;
                 f = _mm_shuffle_ps(f, f, 0);
 
-                x0 = _cv_loadu_si128((const __m128i*)(src[k] + i));
+                x0 = _mm_loadu_si128((const __m128i*)(src[k] + i));
                 x1 = _mm_unpackhi_epi8(x0, z);
                 x0 = _mm_unpacklo_epi8(x0, z);
 
@@ -1816,6 +1843,9 @@ struct FilterVec_8u16s
 
     int operator()(const uchar** src, uchar* _dst, int width) const
     {
+        if( !checkHardwareSupport(CV_CPU_SSE2) )
+            return 0;
+        
         const float* kf = (const float*)&coeffs[0];
         short* dst = (short*)_dst;
         int i = 0, k, nz = _nz;
@@ -1831,7 +1861,7 @@ struct FilterVec_8u16s
                 __m128 f = _mm_load_ss(kf+k), t0, t1;
                 f = _mm_shuffle_ps(f, f, 0);
 
-                x0 = _cv_loadu_si128((const __m128i*)(src[k] + i));
+                x0 = _mm_loadu_si128((const __m128i*)(src[k] + i));
                 x1 = _mm_unpackhi_epi8(x0, z);
                 x0 = _mm_unpacklo_epi8(x0, z);
 
@@ -1894,6 +1924,9 @@ struct FilterVec_32f
 
     int operator()(const uchar** _src, uchar* _dst, int width) const
     {
+        if( !checkHardwareSupport(CV_CPU_SSE) )
+            return 0;
+        
         const float* kf = (const float*)&coeffs[0];
         const float** src = (const float**)_src;
         float* dst = (float*)_dst;
@@ -2953,7 +2986,7 @@ void filter2D( const Mat& src, Mat& dst, int ddepth,
 
 #if CV_SSE2
     int dft_filter_size = (src.depth() == CV_8U && (ddepth == CV_8U || ddepth == CV_16S)) ||
-        (src.depth() == CV_32F && ddepth == CV_32F) ? 130 : 50;
+        (src.depth() == CV_32F && ddepth == CV_32F) && checkHardwareSupport(CV_CPU_SSE3)? 130 : 50;
 #else
     int dft_filter_size = 50;
 #endif

@@ -656,7 +656,7 @@ DFT( const Complex<T>* src, Complex<T>* dst, int n,
     // 1. power-2 transforms
     if( (factors[0] & 1) == 0 )
     {
-        if( factors[0] >= 4 )
+        if( factors[0] >= 4 && checkHardwareSupport(CV_CPU_SSE3))
         {
             DFT_VecR4<T> vr4;
             n = vr4(dst, factors[0], n0, dw0, wave);

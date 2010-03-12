@@ -70,29 +70,11 @@
     #define CV_ICC   __INTEL_COMPILER
   #endif
 
-  #if ((defined WIN32 || defined _WIN32 || defined WIN64 || defined _WIN64) && \
-      (_MSC_VER >= 1400 || defined CV_ICC)) \
-      || (defined __SSE2__ && defined __GNUC__ && __GNUC__ >= 4)
+  #if (_MSC_VER >= 1400 && defined _M_X64) || (__GNUC__ >= 4 && defined __x86_64__)
     #if defined WIN64
 		#include <intrin.h>
 	#endif
     #include <emmintrin.h>
-    #define CV_SSE2 1
-    #if (_MSC_VER >= 1500 || defined CV_ICC) || \
-        (defined __SSE3__ && defined __GNUC__ && __GNUC__ >= 4)
-        #include <pmmintrin.h>
-        #define CV_SSE3 1
-        #define _cv_loadu_si128 _mm_lddqu_si128
-    #else
-        #define CV_SSE3 0
-        #define _cv_loadu_si128 _mm_loadu_si128
-    #endif
-  #else
-    #define CV_SSE2 0
-  #endif
-
-  #if ((defined __SSE__ || defined __MMX__) && defined __GNUC__ && __GNUC__ >= 3)
-    #include <mmintrin.h>
   #endif
 
   #if defined __BORLANDC__
@@ -231,10 +213,10 @@ Cv64suf;
 
 CV_INLINE  int  cvRound( double value )
 {
-#if CV_SSE2 && !defined __APPLE__
+#if (defined _MSC_VER && defined _M_X64) || (defined __GNUC__ && defined __x86_64__ && !defined __APPLE__)
     __m128d t = _mm_set_sd( value );
     return _mm_cvtsd_si32(t);
-#elif (defined WIN32 || defined _WIN32) && !defined WIN64 && !defined _WIN64 && defined _MSC_VER
+#elif defined _MSC_VER && defined _M_X86
     int t;
     __asm
     {
@@ -256,7 +238,7 @@ CV_INLINE  int  cvFloor( double value )
 #ifdef __GNUC__
     int i = (int)value;
     return i - (i > value);
-#elif CV_SSE2
+#elif defined _MSC_VER && defined _M_X64
     __m128d t = _mm_set_sd( value );
     int i = _mm_cvtsd_si32(t);
     return i - _mm_movemask_pd(_mm_cmplt_sd(t, _mm_cvtsi32_sd(t,i)));
@@ -274,7 +256,7 @@ CV_INLINE  int  cvCeil( double value )
 #ifdef __GNUC__
     int i = (int)value;
     return i + (i < value);
-#elif CV_SSE2
+#elif defined _MSC_VER && defined _M_X64
     __m128d t = _mm_set_sd( value );
     int i = _mm_cvtsd_si32(t);
     return i + _mm_movemask_pd(_mm_cmplt_sd(_mm_cvtsi32_sd(t,i), t));

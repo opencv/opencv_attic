@@ -48,23 +48,17 @@ namespace cv
 static void
 thresh_8u( const Mat& _src, Mat& _dst, uchar thresh, uchar maxval, int type )
 {
-    int i, j;
+    int i, j, j_scalar = 0;
     uchar tab[256];
     Size roi = _src.size();
     roi.width *= _src.channels();
-#if CV_SSE2
-    __m128i _x80 = _mm_set1_epi8('\x80');
-    __m128i thresh_u = _mm_set1_epi8(thresh);
-    __m128i thresh_s = _mm_set1_epi8(thresh ^ 0x80);
-    __m128i maxval_ = _mm_set1_epi8(maxval);
-#endif
 
     if( _src.isContinuous() && _dst.isContinuous() )
     {
         roi.width *= roi.height;
         roi.height = 1;
     }
-
+    
     switch( type )
     {
     case THRESH_BINARY:
@@ -101,140 +95,157 @@ thresh_8u( const Mat& _src, Mat& _dst, uchar thresh, uchar maxval, int type )
         CV_Error( CV_StsBadArg, "Unknown threshold type" );
     }
 
-    for( i = 0; i < roi.height; i++ )
+#if CV_SSE2
+    if( checkHardwareSupport(CV_CPU_SSE2) )
     {
-        const uchar* src = (const uchar*)(_src.data + _src.step*i);
-        uchar* dst = (uchar*)(_dst.data + _dst.step*i);
-        j = 0;
-
-    #if CV_SSE2
-        switch( type )
+        __m128i _x80 = _mm_set1_epi8('\x80');
+        __m128i thresh_u = _mm_set1_epi8(thresh);
+        __m128i thresh_s = _mm_set1_epi8(thresh ^ 0x80);
+        __m128i maxval_ = _mm_set1_epi8(maxval);
+        j_scalar = roi.width & -8;
+        
+        for( i = 0; i < roi.height; i++ )
         {
-        case THRESH_BINARY:
-            for( ; j <= roi.width - 32; j += 32 )
-            {
-                __m128i v0, v1;
-                v0 = _cv_loadu_si128( (const __m128i*)(src + j) );
-                v1 = _cv_loadu_si128( (const __m128i*)(src + j + 16) );
-                v0 = _mm_cmpgt_epi8( _mm_xor_si128(v0, _x80), thresh_s );
-                v1 = _mm_cmpgt_epi8( _mm_xor_si128(v1, _x80), thresh_s );
-                v0 = _mm_and_si128( v0, maxval_ );
-                v1 = _mm_and_si128( v1, maxval_ );
-                _mm_storeu_si128( (__m128i*)(dst + j), v0 );
-                _mm_storeu_si128( (__m128i*)(dst + j + 16), v1 );
-            }
+            const uchar* src = (const uchar*)(_src.data + _src.step*i);
+            uchar* dst = (uchar*)(_dst.data + _dst.step*i);
 
-            for( ; j <= roi.width - 8; j += 8 )
+            switch( type )
             {
-                __m128i v0 = _mm_loadl_epi64( (const __m128i*)(src + j) );
-                v0 = _mm_cmpgt_epi8( _mm_xor_si128(v0, _x80), thresh_s );
-                v0 = _mm_and_si128( v0, maxval_ );
-                _mm_storel_epi64( (__m128i*)(dst + j), v0 );
-            }
-            break;
+            case THRESH_BINARY:
+                for( j = 0; j <= roi.width - 32; j += 32 )
+                {
+                    __m128i v0, v1;
+                    v0 = _mm_loadu_si128( (const __m128i*)(src + j) );
+                    v1 = _mm_loadu_si128( (const __m128i*)(src + j + 16) );
+                    v0 = _mm_cmpgt_epi8( _mm_xor_si128(v0, _x80), thresh_s );
+                    v1 = _mm_cmpgt_epi8( _mm_xor_si128(v1, _x80), thresh_s );
+                    v0 = _mm_and_si128( v0, maxval_ );
+                    v1 = _mm_and_si128( v1, maxval_ );
+                    _mm_storeu_si128( (__m128i*)(dst + j), v0 );
+                    _mm_storeu_si128( (__m128i*)(dst + j + 16), v1 );
+                }
 
-        case THRESH_BINARY_INV:
-            for( ; j <= roi.width - 32; j += 32 )
-            {
-                __m128i v0, v1;
-                v0 = _cv_loadu_si128( (const __m128i*)(src + j) );
-                v1 = _cv_loadu_si128( (const __m128i*)(src + j + 16) );
-                v0 = _mm_cmpgt_epi8( _mm_xor_si128(v0, _x80), thresh_s );
-                v1 = _mm_cmpgt_epi8( _mm_xor_si128(v1, _x80), thresh_s );
-                v0 = _mm_andnot_si128( v0, maxval_ );
-                v1 = _mm_andnot_si128( v1, maxval_ );
-                _mm_storeu_si128( (__m128i*)(dst + j), v0 );
-                _mm_storeu_si128( (__m128i*)(dst + j + 16), v1 );
-            }
+                for( ; j <= roi.width - 8; j += 8 )
+                {
+                    __m128i v0 = _mm_loadl_epi64( (const __m128i*)(src + j) );
+                    v0 = _mm_cmpgt_epi8( _mm_xor_si128(v0, _x80), thresh_s );
+                    v0 = _mm_and_si128( v0, maxval_ );
+                    _mm_storel_epi64( (__m128i*)(dst + j), v0 );
+                }
+                break;
 
-            for( ; j <= roi.width - 8; j += 8 )
-            {
-                __m128i v0 = _mm_loadl_epi64( (const __m128i*)(src + j) );
-                v0 = _mm_cmpgt_epi8( _mm_xor_si128(v0, _x80), thresh_s );
-                v0 = _mm_andnot_si128( v0, maxval_ );
-                _mm_storel_epi64( (__m128i*)(dst + j), v0 );
-            }
-            break;
+            case THRESH_BINARY_INV:
+                for( j = 0; j <= roi.width - 32; j += 32 )
+                {
+                    __m128i v0, v1;
+                    v0 = _mm_loadu_si128( (const __m128i*)(src + j) );
+                    v1 = _mm_loadu_si128( (const __m128i*)(src + j + 16) );
+                    v0 = _mm_cmpgt_epi8( _mm_xor_si128(v0, _x80), thresh_s );
+                    v1 = _mm_cmpgt_epi8( _mm_xor_si128(v1, _x80), thresh_s );
+                    v0 = _mm_andnot_si128( v0, maxval_ );
+                    v1 = _mm_andnot_si128( v1, maxval_ );
+                    _mm_storeu_si128( (__m128i*)(dst + j), v0 );
+                    _mm_storeu_si128( (__m128i*)(dst + j + 16), v1 );
+                }
 
-        case THRESH_TRUNC:
-            for( ; j <= roi.width - 32; j += 32 )
-            {
-                __m128i v0, v1;
-                v0 = _cv_loadu_si128( (const __m128i*)(src + j) );
-                v1 = _cv_loadu_si128( (const __m128i*)(src + j + 16) );
-                v0 = _mm_subs_epu8( v0, _mm_subs_epu8( v0, thresh_u ));
-                v1 = _mm_subs_epu8( v1, _mm_subs_epu8( v1, thresh_u ));
-                _mm_storeu_si128( (__m128i*)(dst + j), v0 );
-                _mm_storeu_si128( (__m128i*)(dst + j + 16), v1 );
-            }
+                for( ; j <= roi.width - 8; j += 8 )
+                {
+                    __m128i v0 = _mm_loadl_epi64( (const __m128i*)(src + j) );
+                    v0 = _mm_cmpgt_epi8( _mm_xor_si128(v0, _x80), thresh_s );
+                    v0 = _mm_andnot_si128( v0, maxval_ );
+                    _mm_storel_epi64( (__m128i*)(dst + j), v0 );
+                }
+                break;
 
-            for( ; j <= roi.width - 8; j += 8 )
-            {
-                __m128i v0 = _mm_loadl_epi64( (const __m128i*)(src + j) );
-                v0 = _mm_subs_epu8( v0, _mm_subs_epu8( v0, thresh_u ));
-                _mm_storel_epi64( (__m128i*)(dst + j), v0 );
-            }
-            break;
+            case THRESH_TRUNC:
+                for( j = 0; j <= roi.width - 32; j += 32 )
+                {
+                    __m128i v0, v1;
+                    v0 = _mm_loadu_si128( (const __m128i*)(src + j) );
+                    v1 = _mm_loadu_si128( (const __m128i*)(src + j + 16) );
+                    v0 = _mm_subs_epu8( v0, _mm_subs_epu8( v0, thresh_u ));
+                    v1 = _mm_subs_epu8( v1, _mm_subs_epu8( v1, thresh_u ));
+                    _mm_storeu_si128( (__m128i*)(dst + j), v0 );
+                    _mm_storeu_si128( (__m128i*)(dst + j + 16), v1 );
+                }
 
-        case THRESH_TOZERO:
-            for( ; j <= roi.width - 32; j += 32 )
-            {
-                __m128i v0, v1;
-                v0 = _cv_loadu_si128( (const __m128i*)(src + j) );
-                v1 = _cv_loadu_si128( (const __m128i*)(src + j + 16) );
-                v0 = _mm_and_si128( v0, _mm_cmpgt_epi8(_mm_xor_si128(v0, _x80), thresh_s ));
-                v1 = _mm_and_si128( v1, _mm_cmpgt_epi8(_mm_xor_si128(v1, _x80), thresh_s ));
-                _mm_storeu_si128( (__m128i*)(dst + j), v0 );
-                _mm_storeu_si128( (__m128i*)(dst + j + 16), v1 );
-            }
+                for( ; j <= roi.width - 8; j += 8 )
+                {
+                    __m128i v0 = _mm_loadl_epi64( (const __m128i*)(src + j) );
+                    v0 = _mm_subs_epu8( v0, _mm_subs_epu8( v0, thresh_u ));
+                    _mm_storel_epi64( (__m128i*)(dst + j), v0 );
+                }
+                break;
 
-            for( ; j <= roi.width - 8; j += 8 )
-            {
-                __m128i v0 = _mm_loadl_epi64( (const __m128i*)(src + j) );
-                v0 = _mm_and_si128( v0, _mm_cmpgt_epi8(_mm_xor_si128(v0, _x80), thresh_s ));
-                _mm_storel_epi64( (__m128i*)(dst + j), v0 );
-            }
-            break;
+            case THRESH_TOZERO:
+                for( j = 0; j <= roi.width - 32; j += 32 )
+                {
+                    __m128i v0, v1;
+                    v0 = _mm_loadu_si128( (const __m128i*)(src + j) );
+                    v1 = _mm_loadu_si128( (const __m128i*)(src + j + 16) );
+                    v0 = _mm_and_si128( v0, _mm_cmpgt_epi8(_mm_xor_si128(v0, _x80), thresh_s ));
+                    v1 = _mm_and_si128( v1, _mm_cmpgt_epi8(_mm_xor_si128(v1, _x80), thresh_s ));
+                    _mm_storeu_si128( (__m128i*)(dst + j), v0 );
+                    _mm_storeu_si128( (__m128i*)(dst + j + 16), v1 );
+                }
 
-        case THRESH_TOZERO_INV:
-            for( ; j <= roi.width - 32; j += 32 )
-            {
-                __m128i v0, v1;
-                v0 = _cv_loadu_si128( (const __m128i*)(src + j) );
-                v1 = _cv_loadu_si128( (const __m128i*)(src + j + 16) );
-                v0 = _mm_andnot_si128( _mm_cmpgt_epi8(_mm_xor_si128(v0, _x80), thresh_s ), v0 );
-                v1 = _mm_andnot_si128( _mm_cmpgt_epi8(_mm_xor_si128(v1, _x80), thresh_s ), v1 );
-                _mm_storeu_si128( (__m128i*)(dst + j), v0 );
-                _mm_storeu_si128( (__m128i*)(dst + j + 16), v1 );
-            }
+                for( ; j <= roi.width - 8; j += 8 )
+                {
+                    __m128i v0 = _mm_loadl_epi64( (const __m128i*)(src + j) );
+                    v0 = _mm_and_si128( v0, _mm_cmpgt_epi8(_mm_xor_si128(v0, _x80), thresh_s ));
+                    _mm_storel_epi64( (__m128i*)(dst + j), v0 );
+                }
+                break;
 
-            for( ; j <= roi.width - 8; j += 8 )
-            {
-                __m128i v0 = _mm_loadl_epi64( (const __m128i*)(src + j) );
-                v0 = _mm_andnot_si128( _mm_cmpgt_epi8(_mm_xor_si128(v0, _x80), thresh_s ), v0 );
-                _mm_storel_epi64( (__m128i*)(dst + j), v0 );
+            case THRESH_TOZERO_INV:
+                for( j = 0; j <= roi.width - 32; j += 32 )
+                {
+                    __m128i v0, v1;
+                    v0 = _mm_loadu_si128( (const __m128i*)(src + j) );
+                    v1 = _mm_loadu_si128( (const __m128i*)(src + j + 16) );
+                    v0 = _mm_andnot_si128( _mm_cmpgt_epi8(_mm_xor_si128(v0, _x80), thresh_s ), v0 );
+                    v1 = _mm_andnot_si128( _mm_cmpgt_epi8(_mm_xor_si128(v1, _x80), thresh_s ), v1 );
+                    _mm_storeu_si128( (__m128i*)(dst + j), v0 );
+                    _mm_storeu_si128( (__m128i*)(dst + j + 16), v1 );
+                }
+
+                for( ; j <= roi.width - 8; j += 8 )
+                {
+                    __m128i v0 = _mm_loadl_epi64( (const __m128i*)(src + j) );
+                    v0 = _mm_andnot_si128( _mm_cmpgt_epi8(_mm_xor_si128(v0, _x80), thresh_s ), v0 );
+                    _mm_storel_epi64( (__m128i*)(dst + j), v0 );
+                }
+                break;
             }
-            break;
         }
-    #endif        
+    }
+#endif        
 
-        for( ; j <= roi.width - 4; j += 4 )
+    if( j_scalar < roi.width )
+    {
+        for( i = 0; i < roi.height; i++ )
         {
-            uchar t0 = tab[src[j]];
-            uchar t1 = tab[src[j+1]];
+            const uchar* src = (const uchar*)(_src.data + _src.step*i);
+            uchar* dst = (uchar*)(_dst.data + _dst.step*i);
+            
+            for( j = j_scalar; j <= roi.width - 4; j += 4 )
+            {
+                uchar t0 = tab[src[j]];
+                uchar t1 = tab[src[j+1]];
 
-            dst[j] = t0;
-            dst[j+1] = t1;
+                dst[j] = t0;
+                dst[j+1] = t1;
 
-            t0 = tab[src[j+2]];
-            t1 = tab[src[j+3]];
+                t0 = tab[src[j+2]];
+                t1 = tab[src[j+3]];
 
-            dst[j+2] = t0;
-            dst[j+3] = t1;
+                dst[j+2] = t0;
+                dst[j+3] = t1;
+            }
+
+            for( ; j < roi.width; j++ )
+                dst[j] = tab[src[j]];
         }
-
-        for( ; j < roi.width; j++ )
-            dst[j] = tab[src[j]];
     }
 }
 
@@ -249,8 +260,9 @@ thresh_32f( const Mat& _src, Mat& _dst, float thresh, float maxval, int type )
     float* dst = (float*)_dst.data;
     size_t src_step = _src.step/sizeof(src[0]);
     size_t dst_step = _dst.step/sizeof(dst[0]);
+    
 #if CV_SSE2
-    __m128 thresh4 = _mm_set1_ps(thresh), maxval4 = _mm_set1_ps(maxval);
+    volatile bool useSIMD = checkHardwareSupport(CV_CPU_SSE);
 #endif
 
     if( _src.isContinuous() && _dst.isContinuous() )
@@ -266,17 +278,21 @@ thresh_32f( const Mat& _src, Mat& _dst, float thresh, float maxval, int type )
         {
             j = 0;
         #if CV_SSE2
-            for( ; j <= roi.width - 8; j += 8 )
+            if( useSIMD )
             {
-                __m128 v0, v1;
-                v0 = _mm_loadu_ps( src + j );
-                v1 = _mm_loadu_ps( src + j + 4 );
-                v0 = _mm_cmpgt_ps( v0, thresh4 );
-                v1 = _mm_cmpgt_ps( v1, thresh4 );
-                v0 = _mm_and_ps( v0, maxval4 );
-                v1 = _mm_and_ps( v1, maxval4 );
-                _mm_storeu_ps( dst + j, v0 );
-                _mm_storeu_ps( dst + j + 4, v1 );
+                __m128 thresh4 = _mm_set1_ps(thresh), maxval4 = _mm_set1_ps(maxval);
+                for( ; j <= roi.width - 8; j += 8 )
+                {
+                    __m128 v0, v1;
+                    v0 = _mm_loadu_ps( src + j );
+                    v1 = _mm_loadu_ps( src + j + 4 );
+                    v0 = _mm_cmpgt_ps( v0, thresh4 );
+                    v1 = _mm_cmpgt_ps( v1, thresh4 );
+                    v0 = _mm_and_ps( v0, maxval4 );
+                    v1 = _mm_and_ps( v1, maxval4 );
+                    _mm_storeu_ps( dst + j, v0 );
+                    _mm_storeu_ps( dst + j + 4, v1 );
+                }
             }
         #endif
 
@@ -290,17 +306,21 @@ thresh_32f( const Mat& _src, Mat& _dst, float thresh, float maxval, int type )
         {
             j = 0;
         #if CV_SSE2
-            for( ; j <= roi.width - 8; j += 8 )
+            if( useSIMD )
             {
-                __m128 v0, v1;
-                v0 = _mm_loadu_ps( src + j );
-                v1 = _mm_loadu_ps( src + j + 4 );
-                v0 = _mm_cmple_ps( v0, thresh4 );
-                v1 = _mm_cmple_ps( v1, thresh4 );
-                v0 = _mm_and_ps( v0, maxval4 );
-                v1 = _mm_and_ps( v1, maxval4 );
-                _mm_storeu_ps( dst + j, v0 );
-                _mm_storeu_ps( dst + j + 4, v1 );
+                __m128 thresh4 = _mm_set1_ps(thresh), maxval4 = _mm_set1_ps(maxval);
+                for( ; j <= roi.width - 8; j += 8 )
+                {
+                    __m128 v0, v1;
+                    v0 = _mm_loadu_ps( src + j );
+                    v1 = _mm_loadu_ps( src + j + 4 );
+                    v0 = _mm_cmple_ps( v0, thresh4 );
+                    v1 = _mm_cmple_ps( v1, thresh4 );
+                    v0 = _mm_and_ps( v0, maxval4 );
+                    v1 = _mm_and_ps( v1, maxval4 );
+                    _mm_storeu_ps( dst + j, v0 );
+                    _mm_storeu_ps( dst + j + 4, v1 );
+                }
             }
         #endif            
             
@@ -314,15 +334,19 @@ thresh_32f( const Mat& _src, Mat& _dst, float thresh, float maxval, int type )
         {
             j = 0;
         #if CV_SSE2
-            for( ; j <= roi.width - 8; j += 8 )
+            if( useSIMD )
             {
-                __m128 v0, v1;
-                v0 = _mm_loadu_ps( src + j );
-                v1 = _mm_loadu_ps( src + j + 4 );
-                v0 = _mm_min_ps( v0, thresh4 );
-                v1 = _mm_min_ps( v1, thresh4 );
-                _mm_storeu_ps( dst + j, v0 );
-                _mm_storeu_ps( dst + j + 4, v1 );
+                __m128 thresh4 = _mm_set1_ps(thresh);
+                for( ; j <= roi.width - 8; j += 8 )
+                {
+                    __m128 v0, v1;
+                    v0 = _mm_loadu_ps( src + j );
+                    v1 = _mm_loadu_ps( src + j + 4 );
+                    v0 = _mm_min_ps( v0, thresh4 );
+                    v1 = _mm_min_ps( v1, thresh4 );
+                    _mm_storeu_ps( dst + j, v0 );
+                    _mm_storeu_ps( dst + j + 4, v1 );
+                }
             }
         #endif            
             
@@ -336,15 +360,19 @@ thresh_32f( const Mat& _src, Mat& _dst, float thresh, float maxval, int type )
         {
             j = 0;
         #if CV_SSE2
-            for( ; j <= roi.width - 8; j += 8 )
+            if( useSIMD )
             {
-                __m128 v0, v1;
-                v0 = _mm_loadu_ps( src + j );
-                v1 = _mm_loadu_ps( src + j + 4 );
-                v0 = _mm_and_ps(v0, _mm_cmpgt_ps(v0, thresh4));
-                v1 = _mm_and_ps(v1, _mm_cmpgt_ps(v1, thresh4));
-                _mm_storeu_ps( dst + j, v0 );
-                _mm_storeu_ps( dst + j + 4, v1 );
+                __m128 thresh4 = _mm_set1_ps(thresh);
+                for( ; j <= roi.width - 8; j += 8 )
+                {
+                    __m128 v0, v1;
+                    v0 = _mm_loadu_ps( src + j );
+                    v1 = _mm_loadu_ps( src + j + 4 );
+                    v0 = _mm_and_ps(v0, _mm_cmpgt_ps(v0, thresh4));
+                    v1 = _mm_and_ps(v1, _mm_cmpgt_ps(v1, thresh4));
+                    _mm_storeu_ps( dst + j, v0 );
+                    _mm_storeu_ps( dst + j + 4, v1 );
+                }
             }
         #endif
             
@@ -361,15 +389,19 @@ thresh_32f( const Mat& _src, Mat& _dst, float thresh, float maxval, int type )
         {
             j = 0;
         #if CV_SSE2
-            for( ; j <= roi.width - 8; j += 8 )
+            if( useSIMD )
             {
-                __m128 v0, v1;
-                v0 = _mm_loadu_ps( src + j );
-                v1 = _mm_loadu_ps( src + j + 4 );
-                v0 = _mm_and_ps(v0, _mm_cmple_ps(v0, thresh4));
-                v1 = _mm_and_ps(v1, _mm_cmple_ps(v1, thresh4));
-                _mm_storeu_ps( dst + j, v0 );
-                _mm_storeu_ps( dst + j + 4, v1 );
+                __m128 thresh4 = _mm_set1_ps(thresh);
+                for( ; j <= roi.width - 8; j += 8 )
+                {
+                    __m128 v0, v1;
+                    v0 = _mm_loadu_ps( src + j );
+                    v1 = _mm_loadu_ps( src + j + 4 );
+                    v0 = _mm_and_ps(v0, _mm_cmple_ps(v0, thresh4));
+                    v1 = _mm_and_ps(v1, _mm_cmple_ps(v1, thresh4));
+                    _mm_storeu_ps( dst + j, v0 );
+                    _mm_storeu_ps( dst + j + 4, v1 );
+                }
             }
         #endif
             for( ; j < roi.width; j++ )

@@ -346,6 +346,9 @@ struct VResizeLinearVec_32s8u
 {
     int operator()(const uchar** _src, uchar* dst, const uchar* _beta, int width ) const
     {
+        if( !checkHardwareSupport(CV_CPU_SSE2) )
+            return 0;
+        
         const int** src = (const int**)_src;
         const short* beta = (const short*)_beta;
         const int *S0 = src[0], *S1 = src[1];
@@ -382,17 +385,17 @@ struct VResizeLinearVec_32s8u
             for( ; x <= width - 16; x += 16 )
             {
                 __m128i x0, x1, x2, y0, y1, y2;
-                x0 = _cv_loadu_si128((const __m128i*)(S0 + x));
-                x1 = _cv_loadu_si128((const __m128i*)(S0 + x + 4));
-                y0 = _cv_loadu_si128((const __m128i*)(S1 + x));
-                y1 = _cv_loadu_si128((const __m128i*)(S1 + x + 4));
+                x0 = _mm_loadu_si128((const __m128i*)(S0 + x));
+                x1 = _mm_loadu_si128((const __m128i*)(S0 + x + 4));
+                y0 = _mm_loadu_si128((const __m128i*)(S1 + x));
+                y1 = _mm_loadu_si128((const __m128i*)(S1 + x + 4));
                 x0 = _mm_packs_epi32(_mm_srai_epi32(x0, 4), _mm_srai_epi32(x1, 4));
                 y0 = _mm_packs_epi32(_mm_srai_epi32(y0, 4), _mm_srai_epi32(y1, 4));
 
-                x1 = _cv_loadu_si128((const __m128i*)(S0 + x + 8));
-                x2 = _cv_loadu_si128((const __m128i*)(S0 + x + 12));
-                y1 = _cv_loadu_si128((const __m128i*)(S1 + x + 8));
-                y2 = _cv_loadu_si128((const __m128i*)(S1 + x + 12));
+                x1 = _mm_loadu_si128((const __m128i*)(S0 + x + 8));
+                x2 = _mm_loadu_si128((const __m128i*)(S0 + x + 12));
+                y1 = _mm_loadu_si128((const __m128i*)(S1 + x + 8));
+                y2 = _mm_loadu_si128((const __m128i*)(S1 + x + 12));
                 x1 = _mm_packs_epi32(_mm_srai_epi32(x1, 4), _mm_srai_epi32(x2, 4));
                 y1 = _mm_packs_epi32(_mm_srai_epi32(y1, 4), _mm_srai_epi32(y2, 4));
 
@@ -407,8 +410,8 @@ struct VResizeLinearVec_32s8u
         for( ; x < width - 4; x += 4 )
         {
             __m128i x0, y0;
-            x0 = _mm_srai_epi32(_cv_loadu_si128((const __m128i*)(S0 + x)), 4);
-            y0 = _mm_srai_epi32(_cv_loadu_si128((const __m128i*)(S1 + x)), 4);
+            x0 = _mm_srai_epi32(_mm_loadu_si128((const __m128i*)(S0 + x)), 4);
+            y0 = _mm_srai_epi32(_mm_loadu_si128((const __m128i*)(S1 + x)), 4);
             x0 = _mm_packs_epi32(x0, x0);
             y0 = _mm_packs_epi32(y0, y0);
             x0 = _mm_adds_epi16(_mm_mulhi_epi16(x0, b0), _mm_mulhi_epi16(y0, b1));
@@ -426,6 +429,9 @@ struct VResizeLinearVec_32f16u
 {
     int operator()(const uchar** _src, uchar* _dst, const uchar* _beta, int width ) const
     {
+        if( !checkHardwareSupport(CV_CPU_SSE2) )
+            return 0;
+        
         const float** src = (const float**)_src;
         const float* beta = (const float*)_beta;
         const float *S0 = src[0], *S1 = src[1];
@@ -519,6 +525,9 @@ struct VResizeLinearVec_32f
 {
     int operator()(const uchar** _src, uchar* _dst, const uchar* _beta, int width ) const
     {
+        if( !checkHardwareSupport(CV_CPU_SSE) )
+            return 0;
+        
         const float** src = (const float**)_src;
         const float* beta = (const float*)_beta;
         const float *S0 = src[0], *S1 = src[1];
@@ -567,6 +576,9 @@ struct VResizeCubicVec_32s8u
 {
     int operator()(const uchar** _src, uchar* dst, const uchar* _beta, int width ) const
     {
+        if( !checkHardwareSupport(CV_CPU_SSE2) )
+            return 0;
+        
         const int** src = (const int**)_src;
         const short* beta = (const short*)_beta;
         const int *S0 = src[0], *S1 = src[1], *S2 = src[2], *S3 = src[3];
@@ -617,10 +629,10 @@ struct VResizeCubicVec_32s8u
             {
                 __m128i x0, x1, y0, y1;
                 __m128 s0, s1, f0, f1;
-                x0 = _cv_loadu_si128((const __m128i*)(S0 + x));
-                x1 = _cv_loadu_si128((const __m128i*)(S0 + x + 4));
-                y0 = _cv_loadu_si128((const __m128i*)(S1 + x));
-                y1 = _cv_loadu_si128((const __m128i*)(S1 + x + 4));
+                x0 = _mm_loadu_si128((const __m128i*)(S0 + x));
+                x1 = _mm_loadu_si128((const __m128i*)(S0 + x + 4));
+                y0 = _mm_loadu_si128((const __m128i*)(S1 + x));
+                y1 = _mm_loadu_si128((const __m128i*)(S1 + x + 4));
 
                 s0 = _mm_mul_ps(_mm_cvtepi32_ps(x0), b0);
                 s1 = _mm_mul_ps(_mm_cvtepi32_ps(x1), b0);
@@ -629,10 +641,10 @@ struct VResizeCubicVec_32s8u
                 s0 = _mm_add_ps(s0, f0);
                 s1 = _mm_add_ps(s1, f1);
 
-                x0 = _cv_loadu_si128((const __m128i*)(S2 + x));
-                x1 = _cv_loadu_si128((const __m128i*)(S2 + x + 4));
-                y0 = _cv_loadu_si128((const __m128i*)(S3 + x));
-                y1 = _cv_loadu_si128((const __m128i*)(S3 + x + 4));
+                x0 = _mm_loadu_si128((const __m128i*)(S2 + x));
+                x1 = _mm_loadu_si128((const __m128i*)(S2 + x + 4));
+                y0 = _mm_loadu_si128((const __m128i*)(S3 + x));
+                y1 = _mm_loadu_si128((const __m128i*)(S3 + x + 4));
 
                 f0 = _mm_mul_ps(_mm_cvtepi32_ps(x0), b2);
                 f1 = _mm_mul_ps(_mm_cvtepi32_ps(x1), b2);
@@ -659,6 +671,9 @@ struct VResizeCubicVec_32f16u
 {
     int operator()(const uchar** _src, uchar* _dst, const uchar* _beta, int width ) const
     {
+        if( !checkHardwareSupport(CV_CPU_SSE2) )
+            return 0;
+        
         const float** src = (const float**)_src;
         const float* beta = (const float*)_beta;
         const float *S0 = src[0], *S1 = src[1], *S2 = src[2], *S3 = src[3];
@@ -715,6 +730,9 @@ struct VResizeCubicVec_32f
 {
     int operator()(const uchar** _src, uchar* _dst, const uchar* _beta, int width ) const
     {
+        if( !checkHardwareSupport(CV_CPU_SSE) )
+            return 0;
+        
         const float** src = (const float**)_src;
         const float* beta = (const float*)_beta;
         const float *S0 = src[0], *S1 = src[1], *S2 = src[2], *S3 = src[3];
@@ -1678,7 +1696,7 @@ struct RemapVec_8u
     {
         int cn = _src.channels();
 
-        if( cn != 1 && cn != 3 && cn != 4 )
+        if( (cn != 1 && cn != 3 && cn != 4) || !checkHardwareSupport(CV_CPU_SSE2) )
             return 0;
 
         const uchar *S0 = _src.data, *S1 = _src.data + _src.step;
@@ -1694,8 +1712,8 @@ struct RemapVec_8u
         {
             for( ; x <= width - 8; x += 8 )
             {
-                __m128i xy0 = _cv_loadu_si128( (const __m128i*)(XY + x*2));
-                __m128i xy1 = _cv_loadu_si128( (const __m128i*)(XY + x*2 + 8));
+                __m128i xy0 = _mm_loadu_si128( (const __m128i*)(XY + x*2));
+                __m128i xy1 = _mm_loadu_si128( (const __m128i*)(XY + x*2 + 8));
                 __m128i v0, v1, v2, v3, a0, a1, b0, b1;
                 unsigned i0, i1;
 
@@ -1752,7 +1770,7 @@ struct RemapVec_8u
         {
             for( ; x <= width - 5; x += 4, D += 12 )
             {
-                __m128i xy0 = _cv_loadu_si128( (const __m128i*)(XY + x*2));
+                __m128i xy0 = _mm_loadu_si128( (const __m128i*)(XY + x*2));
                 __m128i u0, v0, u1, v1;
 
                 xy0 = _mm_madd_epi16( xy0, xy2ofs );
@@ -1811,7 +1829,7 @@ struct RemapVec_8u
         {
             for( ; x <= width - 4; x += 4, D += 16 )
             {
-                __m128i xy0 = _cv_loadu_si128( (const __m128i*)(XY + x*2));
+                __m128i xy0 = _mm_loadu_si128( (const __m128i*)(XY + x*2));
                 __m128i u0, v0, u1, v1;
 
                 xy0 = _mm_madd_epi16( xy0, xy2ofs );
@@ -2391,6 +2409,9 @@ void remap( const Mat& src, Mat& dst, const Mat& map1, const Mat& map2,
     int brows0 = std::min(128, dst.rows);
     int bcols0 = std::min(buf_size/brows0, dst.cols);
     brows0 = std::min(buf_size/bcols0, dst.rows);
+#if CV_SSE2
+    bool useSIMD = checkHardwareSupport(CV_CPU_SSE2);
+#endif
 
     Mat _bufxy(brows0, bcols0, CV_16SC2), _bufa;
     if( !nnfunc )
@@ -2435,22 +2456,25 @@ void remap( const Mat& src, Mat& dst, const Mat& map1, const Mat& map2,
                         x1 = 0;
 
                     #if CV_SSE2
-                        for( ; x1 <= bcols - 8; x1 += 8 )
+                        if( useSIMD )
                         {
-                            __m128 fx0 = _mm_loadu_ps(sX + x1);
-                            __m128 fx1 = _mm_loadu_ps(sX + x1 + 4);
-                            __m128 fy0 = _mm_loadu_ps(sY + x1);
-                            __m128 fy1 = _mm_loadu_ps(sY + x1 + 4);
-                            __m128i ix0 = _mm_cvtps_epi32(fx0);
-                            __m128i ix1 = _mm_cvtps_epi32(fx1);
-                            __m128i iy0 = _mm_cvtps_epi32(fy0);
-                            __m128i iy1 = _mm_cvtps_epi32(fy1);
-                            ix0 = _mm_packs_epi32(ix0, ix1);
-                            iy0 = _mm_packs_epi32(iy0, iy1);
-                            ix1 = _mm_unpacklo_epi16(ix0, iy0);
-                            iy1 = _mm_unpackhi_epi16(ix0, iy0);
-                            _mm_storeu_si128((__m128i*)(XY + x1*2), ix1);
-                            _mm_storeu_si128((__m128i*)(XY + x1*2 + 8), iy1);
+                            for( ; x1 <= bcols - 8; x1 += 8 )
+                            {
+                                __m128 fx0 = _mm_loadu_ps(sX + x1);
+                                __m128 fx1 = _mm_loadu_ps(sX + x1 + 4);
+                                __m128 fy0 = _mm_loadu_ps(sY + x1);
+                                __m128 fy1 = _mm_loadu_ps(sY + x1 + 4);
+                                __m128i ix0 = _mm_cvtps_epi32(fx0);
+                                __m128i ix1 = _mm_cvtps_epi32(fx1);
+                                __m128i iy0 = _mm_cvtps_epi32(fy0);
+                                __m128i iy1 = _mm_cvtps_epi32(fy1);
+                                ix0 = _mm_packs_epi32(ix0, ix1);
+                                iy0 = _mm_packs_epi32(iy0, iy1);
+                                ix1 = _mm_unpacklo_epi16(ix0, iy0);
+                                iy1 = _mm_unpackhi_epi16(ix0, iy0);
+                                _mm_storeu_si128((__m128i*)(XY + x1*2), ix1);
+                                _mm_storeu_si128((__m128i*)(XY + x1*2 + 8), iy1);
+                            }
                         }
                     #endif
 
@@ -2478,37 +2502,40 @@ void remap( const Mat& src, Mat& dst, const Mat& map1, const Mat& map2,
 
                     x1 = 0;
                 #if CV_SSE2
-                    __m128 scale = _mm_set1_ps((float)INTER_TAB_SIZE);
-                    __m128i mask = _mm_set1_epi32(INTER_TAB_SIZE-1);
-                    for( ; x1 <= bcols - 8; x1 += 8 )
+                    if( useSIMD )
                     {
-                        __m128 fx0 = _mm_loadu_ps(sX + x1);
-                        __m128 fx1 = _mm_loadu_ps(sX + x1 + 4);
-                        __m128 fy0 = _mm_loadu_ps(sY + x1);
-                        __m128 fy1 = _mm_loadu_ps(sY + x1 + 4);
-                        __m128i ix0 = _mm_cvtps_epi32(_mm_mul_ps(fx0, scale));
-                        __m128i ix1 = _mm_cvtps_epi32(_mm_mul_ps(fx1, scale));
-                        __m128i iy0 = _mm_cvtps_epi32(_mm_mul_ps(fy0, scale));
-                        __m128i iy1 = _mm_cvtps_epi32(_mm_mul_ps(fy1, scale));
-                        __m128i mx0 = _mm_and_si128(ix0, mask);
-                        __m128i mx1 = _mm_and_si128(ix1, mask);
-                        __m128i my0 = _mm_and_si128(iy0, mask);
-                        __m128i my1 = _mm_and_si128(iy1, mask);
-                        mx0 = _mm_packs_epi32(mx0, mx1);
-                        my0 = _mm_packs_epi32(my0, my1);
-                        my0 = _mm_slli_epi16(my0, INTER_BITS);
-                        mx0 = _mm_or_si128(mx0, my0);
-                        _mm_storeu_si128((__m128i*)(A + x1), mx0);
-                        ix0 = _mm_srai_epi32(ix0, INTER_BITS);
-                        ix1 = _mm_srai_epi32(ix1, INTER_BITS);
-                        iy0 = _mm_srai_epi32(iy0, INTER_BITS);
-                        iy1 = _mm_srai_epi32(iy1, INTER_BITS);
-                        ix0 = _mm_packs_epi32(ix0, ix1);
-                        iy0 = _mm_packs_epi32(iy0, iy1);
-                        ix1 = _mm_unpacklo_epi16(ix0, iy0);
-                        iy1 = _mm_unpackhi_epi16(ix0, iy0);
-                        _mm_storeu_si128((__m128i*)(XY + x1*2), ix1);
-                        _mm_storeu_si128((__m128i*)(XY + x1*2 + 8), iy1);
+                        __m128 scale = _mm_set1_ps((float)INTER_TAB_SIZE);
+                        __m128i mask = _mm_set1_epi32(INTER_TAB_SIZE-1);
+                        for( ; x1 <= bcols - 8; x1 += 8 )
+                        {
+                            __m128 fx0 = _mm_loadu_ps(sX + x1);
+                            __m128 fx1 = _mm_loadu_ps(sX + x1 + 4);
+                            __m128 fy0 = _mm_loadu_ps(sY + x1);
+                            __m128 fy1 = _mm_loadu_ps(sY + x1 + 4);
+                            __m128i ix0 = _mm_cvtps_epi32(_mm_mul_ps(fx0, scale));
+                            __m128i ix1 = _mm_cvtps_epi32(_mm_mul_ps(fx1, scale));
+                            __m128i iy0 = _mm_cvtps_epi32(_mm_mul_ps(fy0, scale));
+                            __m128i iy1 = _mm_cvtps_epi32(_mm_mul_ps(fy1, scale));
+                            __m128i mx0 = _mm_and_si128(ix0, mask);
+                            __m128i mx1 = _mm_and_si128(ix1, mask);
+                            __m128i my0 = _mm_and_si128(iy0, mask);
+                            __m128i my1 = _mm_and_si128(iy1, mask);
+                            mx0 = _mm_packs_epi32(mx0, mx1);
+                            my0 = _mm_packs_epi32(my0, my1);
+                            my0 = _mm_slli_epi16(my0, INTER_BITS);
+                            mx0 = _mm_or_si128(mx0, my0);
+                            _mm_storeu_si128((__m128i*)(A + x1), mx0);
+                            ix0 = _mm_srai_epi32(ix0, INTER_BITS);
+                            ix1 = _mm_srai_epi32(ix1, INTER_BITS);
+                            iy0 = _mm_srai_epi32(iy0, INTER_BITS);
+                            iy1 = _mm_srai_epi32(iy1, INTER_BITS);
+                            ix0 = _mm_packs_epi32(ix0, ix1);
+                            iy0 = _mm_packs_epi32(iy0, iy1);
+                            ix1 = _mm_unpacklo_epi16(ix0, iy0);
+                            iy1 = _mm_unpackhi_epi16(ix0, iy0);
+                            _mm_storeu_si128((__m128i*)(XY + x1*2), ix1);
+                            _mm_storeu_si128((__m128i*)(XY + x1*2 + 8), iy1);
+                        }
                     }
                 #endif
 
@@ -2710,6 +2737,9 @@ void warpAffine( const Mat& src, Mat& dst, const Mat& M0, Size dsize,
     const int AB_BITS = MAX(10, (int)INTER_BITS);
     const int AB_SCALE = 1 << AB_BITS;
     int round_delta = interpolation == INTER_NEAREST ? AB_SCALE/2 : AB_SCALE/INTER_TAB_SIZE/2;
+#if CV_SSE2
+    bool useSIMD = checkHardwareSupport(CV_CPU_SSE2);
+#endif
 
     for( x = 0; x < width; x++ )
     {
@@ -2720,9 +2750,6 @@ void warpAffine( const Mat& src, Mat& dst, const Mat& M0, Size dsize,
     int bh0 = std::min(BLOCK_SZ/2, height);
     int bw0 = std::min(BLOCK_SZ*BLOCK_SZ/bh0, width);
     bh0 = std::min(BLOCK_SZ*BLOCK_SZ/bw0, height);
-#if CV_SSE2
-    __m128i fxy_mask = _mm_set1_epi32(INTER_TAB_SIZE - 1);
-#endif
 
     for( y = 0; y < height; y += bh0 )
     {
@@ -2753,33 +2780,37 @@ void warpAffine( const Mat& src, Mat& dst, const Mat& M0, Size dsize,
                     short* alpha = A + y1*bw;
                     x1 = 0;
                 #if CV_SSE2
-                    __m128i XX = _mm_set1_epi32(X0), YY = _mm_set1_epi32(Y0);
-                    for( ; x1 <= bw - 8; x1 += 8 )
+                    if( useSIMD )
                     {
-                        __m128i tx0, tx1, ty0, ty1;
-                        tx0 = _mm_add_epi32(_cv_loadu_si128((const __m128i*)(adelta + x + x1)), XX);
-                        ty0 = _mm_add_epi32(_cv_loadu_si128((const __m128i*)(bdelta + x + x1)), YY);
-                        tx1 = _mm_add_epi32(_cv_loadu_si128((const __m128i*)(adelta + x + x1 + 4)), XX);
-                        ty1 = _mm_add_epi32(_cv_loadu_si128((const __m128i*)(bdelta + x + x1 + 4)), YY);
+                        __m128i fxy_mask = _mm_set1_epi32(INTER_TAB_SIZE - 1);
+                        __m128i XX = _mm_set1_epi32(X0), YY = _mm_set1_epi32(Y0);
+                        for( ; x1 <= bw - 8; x1 += 8 )
+                        {
+                            __m128i tx0, tx1, ty0, ty1;
+                            tx0 = _mm_add_epi32(_mm_loadu_si128((const __m128i*)(adelta + x + x1)), XX);
+                            ty0 = _mm_add_epi32(_mm_loadu_si128((const __m128i*)(bdelta + x + x1)), YY);
+                            tx1 = _mm_add_epi32(_mm_loadu_si128((const __m128i*)(adelta + x + x1 + 4)), XX);
+                            ty1 = _mm_add_epi32(_mm_loadu_si128((const __m128i*)(bdelta + x + x1 + 4)), YY);
 
-                        tx0 = _mm_srai_epi32(tx0, AB_BITS - INTER_BITS);
-                        ty0 = _mm_srai_epi32(ty0, AB_BITS - INTER_BITS);
-                        tx1 = _mm_srai_epi32(tx1, AB_BITS - INTER_BITS);
-                        ty1 = _mm_srai_epi32(ty1, AB_BITS - INTER_BITS);
+                            tx0 = _mm_srai_epi32(tx0, AB_BITS - INTER_BITS);
+                            ty0 = _mm_srai_epi32(ty0, AB_BITS - INTER_BITS);
+                            tx1 = _mm_srai_epi32(tx1, AB_BITS - INTER_BITS);
+                            ty1 = _mm_srai_epi32(ty1, AB_BITS - INTER_BITS);
 
-                        __m128i fx_ = _mm_packs_epi32(_mm_and_si128(tx0, fxy_mask),
-                                                      _mm_and_si128(tx1, fxy_mask));
-                        __m128i fy_ = _mm_packs_epi32(_mm_and_si128(ty0, fxy_mask),
-                                                      _mm_and_si128(ty1, fxy_mask));
-                        tx0 = _mm_packs_epi32(_mm_srai_epi32(tx0, INTER_BITS),
-                                                      _mm_srai_epi32(tx1, INTER_BITS));
-                        ty0 = _mm_packs_epi32(_mm_srai_epi32(ty0, INTER_BITS),
-                                              _mm_srai_epi32(ty1, INTER_BITS));
-                        fx_ = _mm_add_epi16(fx_, _mm_slli_epi16(fy_, INTER_BITS));
+                            __m128i fx_ = _mm_packs_epi32(_mm_and_si128(tx0, fxy_mask),
+                                                          _mm_and_si128(tx1, fxy_mask));
+                            __m128i fy_ = _mm_packs_epi32(_mm_and_si128(ty0, fxy_mask),
+                                                          _mm_and_si128(ty1, fxy_mask));
+                            tx0 = _mm_packs_epi32(_mm_srai_epi32(tx0, INTER_BITS),
+                                                          _mm_srai_epi32(tx1, INTER_BITS));
+                            ty0 = _mm_packs_epi32(_mm_srai_epi32(ty0, INTER_BITS),
+                                                  _mm_srai_epi32(ty1, INTER_BITS));
+                            fx_ = _mm_add_epi16(fx_, _mm_slli_epi16(fy_, INTER_BITS));
 
-                        _mm_storeu_si128((__m128i*)(xy + x1*2), _mm_unpacklo_epi16(tx0, ty0));
-                        _mm_storeu_si128((__m128i*)(xy + x1*2 + 8), _mm_unpackhi_epi16(tx0, ty0));
-                        _mm_storeu_si128((__m128i*)(alpha + x1), fx_);
+                            _mm_storeu_si128((__m128i*)(xy + x1*2), _mm_unpacklo_epi16(tx0, ty0));
+                            _mm_storeu_si128((__m128i*)(xy + x1*2 + 8), _mm_unpackhi_epi16(tx0, ty0));
+                            _mm_storeu_si128((__m128i*)(alpha + x1), fx_);
+                        }
                     }
                 #endif
                     for( ; x1 < bw; x1++ )

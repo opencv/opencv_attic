@@ -271,10 +271,6 @@ void computeSpinImages( const Octree& Octree, const vector<Point3f>& points, con
         
         float rotmat[9];
         initRotationMat(normal, rotmat);
-#if CV_SSE2
-        __m128 rotmatSSE[3];
-        convertTransformMatrix(rotmat, (float*)rotmatSSE);
-#endif
         Point3f new_center;
         transform(center, rotmat, new_center);
 
@@ -286,8 +282,11 @@ void computeSpinImages( const Octree& Octree, const vector<Point3f>& points, con
         float alpha, beta;
         size_t j = 0;
 #if CV_SSE2
-        if (inSphere_size > 4)
+        if (inSphere_size > 4 && checkHardwareSupport(CV_CPU_SSE2))
         {
+            __m128 rotmatSSE[3];
+            convertTransformMatrix(rotmat, (float*)rotmatSSE);
+            
             __m128 center_x4 = _mm_set1_ps(new_center.x);
             __m128 center_y4 = _mm_set1_ps(new_center.y);
             __m128 center_z4 = _mm_set1_ps(new_center.z + halfSuppport);

@@ -53,6 +53,8 @@ namespace cv
 
 #if CV_SSE2
 
+enum { ARITHM_SIMD = CV_CPU_SSE2 };
+    
 template<class Op8> struct VBinOp8
 {
     int operator()(const uchar* src1, const uchar* src2, uchar* dst, int len) const
@@ -60,10 +62,10 @@ template<class Op8> struct VBinOp8
         int x = 0;
         for( ; x <= len - 32; x += 32 )
         {
-            __m128i r0 = _cv_loadu_si128((const __m128i*)(src1 + x));
-            __m128i r1 = _cv_loadu_si128((const __m128i*)(src1 + x + 16));
-            r0 = op(r0,_cv_loadu_si128((const __m128i*)(src2 + x)));
-            r1 = op(r1,_cv_loadu_si128((const __m128i*)(src2 + x + 16)));
+            __m128i r0 = _mm_loadu_si128((const __m128i*)(src1 + x));
+            __m128i r1 = _mm_loadu_si128((const __m128i*)(src1 + x + 16));
+            r0 = op(r0,_mm_loadu_si128((const __m128i*)(src2 + x)));
+            r1 = op(r1,_mm_loadu_si128((const __m128i*)(src2 + x + 16)));
             _mm_storeu_si128((__m128i*)(dst + x), r0);
             _mm_storeu_si128((__m128i*)(dst + x + 16), r1);
         }
@@ -85,10 +87,10 @@ template<typename T, class Op16> struct VBinOp16
         int x = 0;
         for( ; x <= len - 16; x += 16 )
         {
-            __m128i r0 = _cv_loadu_si128((const __m128i*)(src1 + x));
-            __m128i r1 = _cv_loadu_si128((const __m128i*)(src1 + x + 8));
-            r0 = op(r0,_cv_loadu_si128((const __m128i*)(src2 + x)));
-            r1 = op(r1,_cv_loadu_si128((const __m128i*)(src2 + x + 8)));
+            __m128i r0 = _mm_loadu_si128((const __m128i*)(src1 + x));
+            __m128i r1 = _mm_loadu_si128((const __m128i*)(src1 + x + 8));
+            r0 = op(r0,_mm_loadu_si128((const __m128i*)(src2 + x)));
+            r1 = op(r1,_mm_loadu_si128((const __m128i*)(src2 + x + 8)));
             _mm_storeu_si128((__m128i*)(dst + x), r0);
             _mm_storeu_si128((__m128i*)(dst + x + 8), r1);
         }
@@ -226,6 +228,8 @@ typedef VBinOp8<_VXor8u> VXor8u;
 
 #else
 
+enum { ARITHM_SIMD = CV_CPU_NONE };    
+    
 typedef NoVec VAdd8u;
 typedef NoVec VSub8u;
 typedef NoVec VMin8u;
@@ -295,10 +299,11 @@ bitwiseOp_( const Mat& srcmat1, const Mat& srcmat2, Mat& dstmat )
     uchar* dst = dstmat.data;
     size_t step1 = srcmat1.step, step2 = srcmat2.step, step = dstmat.step;
     Size size = getContinuousSize( srcmat1, srcmat2, dstmat, (int)srcmat1.elemSize() );
+    bool useSIMD = checkHardwareSupport(ARITHM_SIMD);
 
     for( ; size.height--; src1 += step1, src2 += step2, dst += step )
     {
-        int i = opv(src1, src2, dst, size.width);
+        int i = useSIMD ? opv(src1, src2, dst, size.width) : 0;
 
         if( (((size_t)src1 | (size_t)src2 | (size_t)dst) & 3) == 0 )
         {
@@ -341,6 +346,7 @@ bitwiseSOp_( const Mat& srcmat, Mat& dstmat, const Scalar& _scalar )
     const int delta = 96;
     uchar scalar[delta];
     scalarToRawData(_scalar, scalar, srcmat.type(), (int)(delta/srcmat.elemSize1()) );
+    bool useSIMD = checkHardwareSupport(ARITHM_SIMD);
 
     for( ; size.height--; src0 += step1, dst0 += step )
     {
@@ -352,7 +358,7 @@ bitwiseSOp_( const Mat& srcmat, Mat& dstmat, const Scalar& _scalar )
         {
             while( (len -= delta) >= 0 )
             {
-                i = opv(src, scalar, dst, delta);
+                i = useSIMD ? opv(src, scalar, dst, delta) : 0;
                 for( ; i < delta; i += 16 )
                 {
                     int t0 = opi(((const int*)(src+i))[0], ((const int*)(scalar+i))[0]);
