@@ -91,8 +91,8 @@ static CvStatus CV_STDCALL FastAtan2_32f(const float *Y, const float *X, float *
 #if CV_SSE2
     if( checkHardwareSupport(CV_CPU_SSE) )
     {
-        static const int CV_DECL_ALIGNED(16) iabsmask[] = {0x7fffffff, 0x7fffffff, 0x7fffffff, 0x7fffffff};
-        __m128 eps = _mm_set1_ps((float)DBL_EPSILON), absmask = _mm_load_ps((const float*)iabsmask);
+        Cv32suf iabsmask; iabsmask.i = 0x7fffffff;
+        __m128 eps = _mm_set1_ps((float)DBL_EPSILON), absmask = _mm_set1_ps(iabsmask.f);
         __m128 _90 = _mm_set1_ps((float)(CV_PI*0.5)), _180 = _mm_set1_ps((float)CV_PI), _360 = _mm_set1_ps((float)(CV_PI*2));
         __m128 zero = _mm_setzero_ps(), _0_28 = _mm_set1_ps(0.28f), scale4 = _mm_set1_ps(scale);
         

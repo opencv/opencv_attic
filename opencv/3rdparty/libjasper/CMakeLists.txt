@@ -36,6 +36,10 @@ if(UNIX)
     endif()
 endif()
 
+if(CMAKE_COMPILER_IS_GNUCXX)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-implicit-function-declaration -Wno-unused")
+endif()
+
 set_target_properties(${the_target}
 	PROPERTIES
 	OUTPUT_NAME "${the_target}"

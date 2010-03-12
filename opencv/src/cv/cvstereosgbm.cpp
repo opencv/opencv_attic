@@ -159,7 +159,9 @@ static void calcPixelCostBT( const Mat& img1, const Mat& img2, int y,
     buffer -= minX2;
     cost -= minX1*D + minD; // simplify the cost indices inside the loop
     
+#if CV_SSE2    
     volatile bool useSIMD = checkHardwareSupport(CV_CPU_SSE2);
+#endif
     
 #if 1    
     for( c = 0; c < cn; c++, prow1 += width, prow2 += width )
@@ -297,6 +299,8 @@ static void computeDisparitySGBM( const Mat& img1, const Mat& img2,
         6, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, 4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
         5, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, 4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0
     };
+    
+    volatile bool useSIMD = checkHardwareSupport(CV_CPU_SSE2);
 #endif    
     
     const int ALIGN = 16;
@@ -367,8 +371,6 @@ static void computeDisparitySGBM( const Mat& img1, const Mat& img2,
     CostType* disp2cost = pixDiff + costBufSize + (LrSize + minLrSize)*NLR;
     DispType* disp2ptr = (DispType*)(disp2cost + width);
     PixType* tempBuf = (PixType*)(disp2ptr + width);
-    
-    volatile bool useSIMD = checkHardwareSupport(CV_CPU_SSE2);
     
     // add P2 to every C(x,y). it saves a few operations in the inner loops
     for( k = 0; k < width1*D; k++ )

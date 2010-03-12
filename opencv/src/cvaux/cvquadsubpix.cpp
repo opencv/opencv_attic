@@ -176,16 +176,16 @@ void findCorner(const vector<Point2f>& contour, Point2f point, Point2f& corner)
 int segment_hist_max(const MatND& hist, int& low_thresh, int& high_thresh)
 {
     Mat bw;
-    const double max_bell_width = 20; // we expect two bells with width bounded above
-    const double min_bell_width = 5; // and below
+    //const double max_bell_width = 20; // we expect two bells with width bounded above
+    //const double min_bell_width = 5; // and below
     
     double total_sum = sum(hist).val[0];
-    double thresh = total_sum/(2*max_bell_width)*0.25f; // quarter of a bar inside a bell
+    //double thresh = total_sum/(2*max_bell_width)*0.25f; // quarter of a bar inside a bell
     
 //    threshold(hist, bw, thresh, 255.0, CV_THRESH_BINARY);
     
     double quantile_sum = 0.0;
-    double min_quantile = 0.2;
+    //double min_quantile = 0.2;
     double low_sum = 0;
     double max_segment_length = 0;
     int max_start_x = -1;

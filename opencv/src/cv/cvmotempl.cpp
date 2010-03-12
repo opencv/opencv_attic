@@ -74,7 +74,9 @@ cvUpdateMotionHistory( const void* silhouette, void* mhimg,
     float ts = (float)timestamp;
     float delbound = (float)(timestamp - mhi_duration);
     int x, y;
+#if CV_SSE2
     volatile bool useSIMD = cv::checkHardwareSupport(CV_CPU_SSE2);
+#endif
     
     for( y = 0; y < size.height; y++ )
     {
