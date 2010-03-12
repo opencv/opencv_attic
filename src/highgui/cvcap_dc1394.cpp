@@ -128,7 +128,7 @@ static void y2bgr(const unsigned char *src, unsigned char *dest, unsigned long l
 static void y162bgr(const unsigned char *src, unsigned char *dest, unsigned long long int NumPixels, int bits);
 static void rgb482bgr(const unsigned char *src8, unsigned char *dest, unsigned long long int NumPixels, int bits);
 
-static char * videodev[4]={
+static const char * videodev[4]={
   "/dev/video1394/0",
   "/dev/video1394/1",
   "/dev/video1394/2",
@@ -144,7 +144,7 @@ typedef struct CvCaptureCAM_DC1394
     int mode;
     int color_mode;
     int frame_rate;
-    char * device_name;
+    const char * device_name;
     IplImage frame;
 	int convert;
 	int buffer_is_writeable;  // indicates whether frame.imageData is allocated by OpenCV or DC1394
@@ -812,7 +812,7 @@ icvSetFeatureCAM_DC1394( CvCaptureCAM_DC1394* capture, int feature_id, int val){
 
 			// now check if the auto is on.
 			if( dc1394_is_feature_auto(capture->handle, capture->camera->node, feature_id, &isAutoOn ) == DC1394_FAILURE ) {
-				fprintf(stderr, "error determining if feature %d has auto on!\n", index);
+				fprintf(stderr, "error determining if feature %d has auto on!\n", feature_id);
 				return 0;
 			}
 		}
@@ -844,7 +844,7 @@ icvSetFeatureCAM_DC1394( CvCaptureCAM_DC1394* capture, int feature_id, int val){
 		// Clamp val to within feature range
 		CV_DC1394_CALL(	dc1394_get_min_value(capture->handle, capture->camera->node, feature_id, &minval));
 		CV_DC1394_CALL(	dc1394_get_max_value(capture->handle, capture->camera->node, feature_id, &maxval));
-		val = MIN(maxval, MAX(val, minval));
+		val = (int)MIN(maxval, MAX((unsigned)val, minval));
 
 
 		if (dc1394_set_feature_value(capture->handle, capture->camera->node, feature_id, val) ==

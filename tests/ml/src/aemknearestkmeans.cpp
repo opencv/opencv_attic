@@ -62,10 +62,10 @@ void defaultDistribs( vector<Mat>& means, vector<Mat>& covs )
 void generateData( Mat& data, Mat& labels, const vector<int>& sizes, const vector<Mat>& means, const vector<Mat>& covs, int labelType )
 {
     vector<int>::const_iterator sit = sizes.begin();
-    int total = 0, setCount = (int)sizes.size();
+    int total = 0;
     for( ; sit != sizes.end(); ++sit )
         total += *sit;
-    assert( (int)means.size() == setCount && (int)covs.size() == setCount );
+    assert( means.size() == sizes.size() && covs.size() == sizes.size() );
     assert( !data.empty() && data.rows == total );
     assert( data.type() == CV_32FC1 );
     

@@ -61,22 +61,21 @@ template<typename T, int shift> struct FltCast
     rtype operator ()(type1 arg) const { return arg*(T)(1./(1 << shift)); }
 };
 
-struct NoVec
+template<typename T1, typename T2> struct NoVec
 {
-    int operator()(const uchar**, uchar*, int, int) const { return 0; }
+    int operator()(T1**, T2*, int, int) const { return 0; }
 };
 
 #if CV_SSE2
 
 struct PyrDownVec_32s8u
 {
-    int operator()(const uchar** _src, uchar* dst, int, int width) const
+    int operator()(int** src, uchar* dst, int, int width) const
     {
         if( !checkHardwareSupport(CV_CPU_SSE2) )
             return 0;
         
         int x = 0;
-        const int** src = (const int**)_src;
         const int *row0 = src[0], *row1 = src[1], *row2 = src[2], *row3 = src[3], *row4 = src[4];
         __m128i delta = _mm_set1_epi16(128);
 
@@ -138,14 +137,12 @@ struct PyrDownVec_32s8u
 
 struct PyrDownVec_32f
 {
-    int operator()(const uchar** _src, uchar* _dst, int, int width) const
+    int operator()(float** src, float* dst, int, int width) const
     {
         if( !checkHardwareSupport(CV_CPU_SSE) )
             return 0;
         
         int x = 0;
-        const float** src = (const float**)_src;
-        float* dst = (float*)_dst;
         const float *row0 = src[0], *row1 = src[1], *row2 = src[2], *row3 = src[3], *row4 = src[4];
         __m128 _4 = _mm_set1_ps(4.f), _scale = _mm_set1_ps(1.f/256);
         for( ; x <= width - 8; x += 8 )
@@ -184,8 +181,8 @@ struct PyrDownVec_32f
 
 #else
 
-typedef NoVec PyrDownVec_32s8u;
-typedef NoVec PyrDownVec_32f;
+typedef NoVec<int, uchar> PyrDownVec_32s8u;
+typedef NoVec<float, float> PyrDownVec_32f;
 
 #endif
 
@@ -305,7 +302,7 @@ pyrDown_( const Mat& _src, Mat& _dst )
             rows[k] = buf + ((y*2 - PD_SZ/2 + k - sy0) % PD_SZ)*bufstep;
         row0 = rows[0]; row1 = rows[1]; row2 = rows[2]; row3 = rows[3]; row4 = rows[4];
 
-        x = vecOp((const uchar**)rows, (uchar*)dst, (int)_dst.step, dsize.width);
+        x = vecOp(rows, dst, (int)_dst.step, dsize.width);
         for( ; x < dsize.width; x++ )
             dst[x] = castOp(row2[x]*6 + (row1[x] + row3[x])*4 + row0[x] + row4[x]);
     }
@@ -392,7 +389,7 @@ pyrUp_( const Mat& _src, Mat& _dst )
             rows[k] = buf + ((y - PU_SZ/2 + k - sy0) % PU_SZ)*bufstep;
         row0 = rows[0]; row1 = rows[1]; row2 = rows[2];
 
-        x = vecOp((const uchar**)rows, (uchar*)dst0, (int)_dst.step, dsize.width);
+        x = vecOp(rows, dst0, (int)_dst.step, dsize.width);
         for( ; x < dsize.width; x++ )
         {
             T t1 = castOp((row1[x] + row2[x])*4);
@@ -413,11 +410,11 @@ void pyrDown( const Mat& _src, Mat& _dst, const Size& _dsz )
     if( depth == CV_8U )
         func = pyrDown_<FixPtCast<uchar, 8>, PyrDownVec_32s8u>;
     else if( depth == CV_16U )
-        func = pyrDown_<FixPtCast<ushort, 8>, NoVec>;
+        func = pyrDown_<FixPtCast<ushort, 8>, NoVec<int, ushort> >;
     else if( depth == CV_32F )
         func = pyrDown_<FltCast<float, 8>, PyrDownVec_32f>;
     else if( depth == CV_64F )
-        func = pyrDown_<FltCast<double, 8>, NoVec>;
+        func = pyrDown_<FltCast<double, 8>, NoVec<double, double> >;
     else
         CV_Error( CV_StsUnsupportedFormat, "" );
 
@@ -431,13 +428,13 @@ void pyrUp( const Mat& _src, Mat& _dst, const Size& _dsz )
     int depth = _src.depth();
     PyrFunc func = 0;
     if( depth == CV_8U )
-        func = pyrUp_<FixPtCast<uchar, 6>, NoVec>;
+        func = pyrUp_<FixPtCast<uchar, 6>, NoVec<int, uchar> >;
     else if( depth == CV_16U )
-        func = pyrUp_<FixPtCast<ushort, 6>, NoVec>;
+        func = pyrUp_<FixPtCast<ushort, 6>, NoVec<int, ushort> >;
     else if( depth == CV_32F )
-        func = pyrUp_<FltCast<float, 6>, NoVec>;
+        func = pyrUp_<FltCast<float, 6>, NoVec<float, float> >;
     else if( depth == CV_64F )
-        func = pyrUp_<FltCast<double, 6>, NoVec>;
+        func = pyrUp_<FltCast<double, 6>, NoVec<double, double> >;
     else
         CV_Error( CV_StsUnsupportedFormat, "" );
 
