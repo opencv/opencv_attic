@@ -555,9 +555,15 @@ That's all there is to it!
 #pragma comment(lib, "libmsvcrtd_.a")
 #endif
 #endif
+#ifdef WIN64
+#pragma comment(lib, "libavformat64.a")
+#pragma comment(lib, "libavcodec64.a")
+#pragma comment(lib, "libavutil64.a")
+#else
 #pragma comment(lib, "libavformat.a")
 #pragma comment(lib, "libavcodec.a")
 #pragma comment(lib, "libavutil.a")
+#endif
 #pragma comment(lib, "libwsock32_.a")
 
 #endif

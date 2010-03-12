@@ -15,11 +15,18 @@ else ()
 add_dependencies(${the_target} cxcore)
 target_link_libraries(${the_target} cxcore 
                       ${CMAKE_SOURCE_DIR}/3rdparty/lib/libgcc_.a
-                      ${CMAKE_SOURCE_DIR}/3rdparty/lib/libmingwex_.a
-                      ${CMAKE_SOURCE_DIR}/3rdparty/lib/libavformat.a
-                      ${CMAKE_SOURCE_DIR}/3rdparty/lib/libavcodec.a
-                      ${CMAKE_SOURCE_DIR}/3rdparty/lib/libavutil.a
-                      ${CMAKE_SOURCE_DIR}/3rdparty/lib/libwsock32_.a)
+                      ${CMAKE_SOURCE_DIR}/3rdparty/lib/libmingwex_.a)
+	if(WIN32 AND MINGW64)
+    	target_link_libraries(${the_target} ${CMAKE_SOURCE_DIR}/3rdparty/lib/libavformat64.a
+                              ${CMAKE_SOURCE_DIR}/3rdparty/lib/libavcodec64.a
+                              ${CMAKE_SOURCE_DIR}/3rdparty/lib/libavutil64.a
+							  libws2_32.a)
+    else()
+		target_link_libraries(${the_target} ${CMAKE_SOURCE_DIR}/3rdparty/lib/libavformat.a
+                              ${CMAKE_SOURCE_DIR}/3rdparty/lib/libavcodec.a
+                              ${CMAKE_SOURCE_DIR}/3rdparty/lib/libavutil.a
+							  ${CMAKE_SOURCE_DIR}/3rdparty/lib/libwsock32_.a)
+    endif()
 endif ()
 
 set_target_properties(${the_target} PROPERTIES

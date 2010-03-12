@@ -2581,7 +2581,7 @@ template<typename _Tp> inline ptrdiff_t operator - (const SeqIterator<_Tp>& a,
                                                     const SeqIterator<_Tp>& b)
 {
     ptrdiff_t delta = a.index - b.index, n = a.seq->total;
-    if( std::abs(delta) > n )
+    if( std::abs(static_cast<long>(delta)) > n )
         delta += delta < 0 ? n : -n;
     return delta;
 }
