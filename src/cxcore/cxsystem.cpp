@@ -86,11 +86,13 @@ struct HWFeatures
     #elif defined __GNUC__ && (defined __i386__ || defined __x86_64__)
         asm volatile
         (
+         "pushl %%ebx\n"
          "movl $1,%%eax\n"
          ".byte 0x0f; .byte 0xa2\n"
+         "popl %%ebx\n"
          : "=a"(cpuid_data[0]), "=c" (cpuid_data[2]), "=d" (cpuid_data[3])
          :
-         : "%ebx", "%esi", "%edi"
+         : "%esi", "%edi"
          );
     #endif
         
