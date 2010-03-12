@@ -329,6 +329,34 @@ string ERROR_PREFIXES[] = { "borderedAll",
 const string RMS_STR = "RMS";
 const string BAD_PXLS_FRACTION_STR = "BadPxlsFraction";
 
+class QualityEvalParams
+{
+public:
+    QualityEvalParams() { setDefaults(); }
+    QualityEvalParams( int _ignoreBorder )
+    {
+        setDefaults();
+        ignoreBorder = _ignoreBorder;
+    }
+    void setDefaults()
+    {
+        badThresh = EVAL_BAD_THRESH;
+        texturelessWidth = EVAL_TEXTURELESS_WIDTH;
+        texturelessThresh = EVAL_TEXTURELESS_THRESH;
+        dispThresh = EVAL_DISP_THRESH;
+        dispGap = EVAL_DISP_GAP;
+        discontWidth = EVAL_DISCONT_WIDTH;
+        ignoreBorder = EVAL_IGNORE_BORDER;
+    }
+    float badThresh;
+    int texturelessWidth;
+    float texturelessThresh;
+    float dispThresh;
+    float dispGap;
+    int discontWidth;
+    int ignoreBorder;
+};
+
 class CV_StereoMatchingTest : public CvTest
 {
 public:
@@ -336,8 +364,8 @@ public:
         { rmsEps.resize( ERROR_KINDS_COUNT, 0.01f );  fracEps.resize( ERROR_KINDS_COUNT, 1.e-6f ); }
 protected:
     // assumed that left image is a reference image
-    virtual void runStereoMatchingAlgorithm( const Mat& leftImg, const Mat& rightImg,
-                   Mat& leftDisp, Mat& rightDisp, int caseIdx ) = 0;
+    virtual int runStereoMatchingAlgorithm( const Mat& leftImg, const Mat& rightImg,
+                   Mat& leftDisp, Mat& rightDisp, int caseIdx ) = 0; // return ignored border width
 
     int readDatasetsParams( FileStorage& fs );
     virtual int readRunParams( FileStorage& fs );
@@ -348,7 +376,8 @@ protected:
     int processStereoMatchingResults( FileStorage& fs, int caseIdx, bool isWrite,
                   const Mat& leftImg, const Mat& rightImg,
                   const Mat& trueLeftDisp, const Mat& trueRightDisp,
-                  const Mat& leftDisp, const Mat& rightDisp );
+                  const Mat& leftDisp, const Mat& rightDisp,
+                  const QualityEvalParams& qualityEvalParams  );
     void run( int );
 
     vector<float> rmsEps;
@@ -433,12 +462,12 @@ void CV_StereoMatchingTest::run(int)
             trueRightDisp.convertTo( tmp, CV_32FC1, 1.f/dispScaleFactor ); trueRightDisp = tmp; tmp.release();
 
         Mat leftDisp, rightDisp;
-        runStereoMatchingAlgorithm( leftImg, rightImg, leftDisp, rightDisp, ci );
+        int ignBorder = max(runStereoMatchingAlgorithm(leftImg, rightImg, leftDisp, rightDisp, ci), EVAL_IGNORE_BORDER);
         leftDisp.convertTo( tmp, CV_32FC1 ); leftDisp = tmp; tmp.release();
         rightDisp.convertTo( tmp, CV_32FC1 ); rightDisp = tmp; tmp.release();
 
         int tempCode = processStereoMatchingResults( resFS, ci, isWrite,
-                   leftImg, rightImg, trueLeftDisp, trueRightDisp, leftDisp, rightDisp);
+                   leftImg, rightImg, trueLeftDisp, trueRightDisp, leftDisp, rightDisp, QualityEvalParams(ignBorder));
         code = tempCode==CvTS::OK ? code : tempCode;
     }
 
@@ -452,17 +481,20 @@ void calcErrors( const Mat& leftImg, const Mat& rightImg,
                  const Mat& trueLeftDisp, const Mat& trueRightDisp,
                  const Mat& trueLeftUnknDispMask, const Mat& trueRightUnknDispMask,
                  const Mat& calcLeftDisp, const Mat& calcRightDisp,
-                 vector<float>& rms, vector<float>& badPxlsFractions )
+                 vector<float>& rms, vector<float>& badPxlsFractions,
+                 const QualityEvalParams& qualityEvalParams )
 {
     Mat texturelessMask, texturedMask;
-    computeTextureBasedMasks( leftImg, &texturelessMask, &texturedMask );
+    computeTextureBasedMasks( leftImg, &texturelessMask, &texturedMask,
+                              qualityEvalParams.texturelessWidth, qualityEvalParams.texturelessThresh );
     Mat occludedMask, nonOccludedMask;
     computeOcclusionBasedMasks( trueLeftDisp, trueRightDisp, &occludedMask, &nonOccludedMask,
-                                trueLeftUnknDispMask, trueRightUnknDispMask);
+                                trueLeftUnknDispMask, trueRightUnknDispMask, qualityEvalParams.dispThresh);
     Mat depthDiscontMask;
-    computeDepthDiscontMask( trueLeftDisp, depthDiscontMask, trueLeftUnknDispMask);
+    computeDepthDiscontMask( trueLeftDisp, depthDiscontMask, trueLeftUnknDispMask,
+                             qualityEvalParams.dispGap, qualityEvalParams.discontWidth);
 
-    Mat borderedKnownMask = getBorderedMask( leftImg.size() ) & ~trueLeftUnknDispMask;
+    Mat borderedKnownMask = getBorderedMask( leftImg.size(), qualityEvalParams.ignoreBorder ) & ~trueLeftUnknDispMask;
 
     nonOccludedMask &= borderedKnownMask;
     occludedMask &= borderedKnownMask;
@@ -479,18 +511,19 @@ void calcErrors( const Mat& leftImg, const Mat& rightImg,
     rms[5] = dispRMS( calcLeftDisp, trueLeftDisp, depthDiscontMask );
 
     badPxlsFractions.resize(ERROR_KINDS_COUNT);
-    badPxlsFractions[0] = badMatchPxlsFraction( calcLeftDisp, trueLeftDisp, borderedKnownMask );
-    badPxlsFractions[1] = badMatchPxlsFraction( calcLeftDisp, trueLeftDisp, nonOccludedMask );
-    badPxlsFractions[2] = badMatchPxlsFraction( calcLeftDisp, trueLeftDisp, occludedMask );
-    badPxlsFractions[3] = badMatchPxlsFraction( calcLeftDisp, trueLeftDisp, texturedMask );
-    badPxlsFractions[4] = badMatchPxlsFraction( calcLeftDisp, trueLeftDisp, texturelessMask );
-    badPxlsFractions[5] = badMatchPxlsFraction( calcLeftDisp, trueLeftDisp, depthDiscontMask );
+    badPxlsFractions[0] = badMatchPxlsFraction( calcLeftDisp, trueLeftDisp, borderedKnownMask, qualityEvalParams.badThresh );
+    badPxlsFractions[1] = badMatchPxlsFraction( calcLeftDisp, trueLeftDisp, nonOccludedMask, qualityEvalParams.badThresh );
+    badPxlsFractions[2] = badMatchPxlsFraction( calcLeftDisp, trueLeftDisp, occludedMask, qualityEvalParams.badThresh );
+    badPxlsFractions[3] = badMatchPxlsFraction( calcLeftDisp, trueLeftDisp, texturedMask, qualityEvalParams.badThresh );
+    badPxlsFractions[4] = badMatchPxlsFraction( calcLeftDisp, trueLeftDisp, texturelessMask, qualityEvalParams.badThresh );
+    badPxlsFractions[5] = badMatchPxlsFraction( calcLeftDisp, trueLeftDisp, depthDiscontMask, qualityEvalParams.badThresh );
 }
 
 int CV_StereoMatchingTest::processStereoMatchingResults( FileStorage& fs, int caseIdx, bool isWrite,
               const Mat& leftImg, const Mat& rightImg,
               const Mat& trueLeftDisp, const Mat& trueRightDisp,
-              const Mat& leftDisp, const Mat& rightDisp )
+              const Mat& leftDisp, const Mat& rightDisp,
+              const QualityEvalParams& qualityEvalParams )
 {
     // rightDisp is not used in current test virsion
     int code = CvTS::OK;
@@ -514,7 +547,7 @@ int CV_StereoMatchingTest::processStereoMatchingResults( FileStorage& fs, int ca
     // calculate errors
     vector<float> rmss, badPxlsFractions;
     calcErrors( leftImg, rightImg, trueLeftDisp, trueRightDisp, leftUnknMask, rightUnknMask,
-                leftDisp, rightDisp, rmss, badPxlsFractions );
+                leftDisp, rightDisp, rmss, badPxlsFractions, qualityEvalParams );
 
     if( isWrite )
     {
@@ -652,7 +685,7 @@ protected:
         return code;
     }
 
-    virtual void runStereoMatchingAlgorithm( const Mat& _leftImg, const Mat& _rightImg,
+    virtual int runStereoMatchingAlgorithm( const Mat& _leftImg, const Mat& _rightImg,
                    Mat& leftDisp, Mat& rightDisp, int caseIdx )
     {
         RunParams params = caseRunParams[caseIdx];
@@ -663,6 +696,7 @@ protected:
 
         StereoBM bm( StereoBM::BASIC_PRESET, params.ndisp, params.winSize );
         bm( leftImg, rightImg, leftDisp, CV_32F );
+        return params.winSize/2;
     }
 };
 
@@ -709,7 +743,7 @@ protected:
         return code;
     }
 
-    virtual void runStereoMatchingAlgorithm( const Mat& _leftImg, const Mat& _rightImg,
+    virtual int runStereoMatchingAlgorithm( const Mat& _leftImg, const Mat& _rightImg,
                    Mat& leftDisp, Mat& rightDisp, int caseIdx )
     {
         RunParams params = caseRunParams[caseIdx];
@@ -727,6 +761,7 @@ protected:
         cvReleaseStereoGCState( &state );
 
         leftDisp = - leftDisp;
+        return 0;
     }
 
 };
@@ -769,7 +804,7 @@ protected:
         return code;
     }
 
-    virtual void runStereoMatchingAlgorithm( const Mat& leftImg, const Mat& rightImg,
+    virtual int runStereoMatchingAlgorithm( const Mat& leftImg, const Mat& rightImg,
                    Mat& leftDisp, Mat& rightDisp, int caseIdx )
     {
         RunParams params = caseRunParams[caseIdx];
@@ -779,6 +814,7 @@ protected:
         sgbm( leftImg, rightImg, leftDisp );
         assert( leftDisp.type() == CV_16SC1 );
         leftDisp/=16;
+        return 0;
     }
 };
 
