@@ -340,8 +340,8 @@ icvSaveWindowPos( const char* name, CvRect rect )
                 break;
             count++;
             if( oldestTime.dwHighDateTime > accesstime.dwHighDateTime ||
-                oldestTime.dwHighDateTime == accesstime.dwHighDateTime &&
-                oldestTime.dwLowDateTime > accesstime.dwLowDateTime )
+                (oldestTime.dwHighDateTime == accesstime.dwHighDateTime &&
+                oldestTime.dwLowDateTime > accesstime.dwLowDateTime) )
             {
                 oldestTime = accesstime;
                 strcpy( oldestKey, currentKey );
@@ -392,9 +392,9 @@ double cvGetMode_W32(const char* name)//YV
     return result;   
 }
 
+#ifdef MONITOR_DEFAULTTONEAREST
 void cvChangeMode_W32( const char* name, double prop_value)//Yannick Verdie
 {
-
 	CV_FUNCNAME( "cvChangeMode_W32" );
 
 	__BEGIN__;
@@ -456,6 +456,11 @@ void cvChangeMode_W32( const char* name, double prop_value)//Yannick Verdie
 
 	__END__;
 }
+#else
+void cvChangeMode_W32( const char*, double)
+{
+}
+#endif
 
 CV_IMPL int cvNamedWindow( const char* name, int flags )
 {
@@ -495,7 +500,7 @@ CV_IMPL int cvNamedWindow( const char* name, int flags )
     ShowWindow(mainhWnd, SW_SHOW);
 
 	//YV- remove one border by changing the style
-    hWnd = CreateWindow("HighGUI class", "", defStyle&~WS_SIZEBOX | WS_CHILD ,CW_USEDEFAULT, 0, rect.width, rect.height, mainhWnd, 0, hg_hinstance, 0);
+    hWnd = CreateWindow("HighGUI class", "", (defStyle & ~WS_SIZEBOX) | WS_CHILD, CW_USEDEFAULT, 0, rect.width, rect.height, mainhWnd, 0, hg_hinstance, 0);
     if( !hWnd )
         CV_ERROR( CV_StsError, "Frame window can not be created" );
 
@@ -1275,7 +1280,7 @@ cvWaitKey( int delay )
 
                 case WM_KEYDOWN:
                     TranslateMessage(&message);
-                    if( message.wParam >= VK_F1 && message.wParam <= VK_F24 ||
+                    if( (message.wParam >= VK_F1 && message.wParam <= VK_F24) ||
                         message.wParam == VK_HOME || message.wParam == VK_END ||
                         message.wParam == VK_UP || message.wParam == VK_DOWN ||
                         message.wParam == VK_LEFT || message.wParam == VK_RIGHT ||
@@ -1419,8 +1424,12 @@ icvCreateTrackbar( const char* trackbar_name, const char* window_name,
         tbs.fsStyle = 0;
         tbs.iString = 0;
 #else
+
 #ifndef TBSTYLE_AUTOSIZE
 #define TBSTYLE_AUTOSIZE        0x0010
+#endif
+
+#ifndef TBSTYLE_GROUP
 #define TBSTYLE_GROUP           0x0004
 #endif
         //tbs.fsStyle = TBSTYLE_AUTOSIZE;

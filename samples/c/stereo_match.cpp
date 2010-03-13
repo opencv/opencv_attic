@@ -127,7 +127,7 @@ int main(int argc, char** argv)
         return -1;
     }
     
-    if( (intrinsic_filename != 0) ^ (extrinsic_filename) != 0 )
+    if( (intrinsic_filename != 0) ^ (extrinsic_filename != 0) )
     {
         printf("Command-line parameter error: either both intrinsic and extrinsic parameters must be specified, or none of them (when the stereo pair is already rectified)\n");
         return -1;
