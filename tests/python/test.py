@@ -468,6 +468,35 @@ class FunctionTests(OpenCVTests):
                     return sorted(r)
             self.assert_(traverse(seq.v_next()) == actual)
 
+        if 1:
+            original = cv.CreateImage((800,800), 8, 1)
+            cv.SetZero(original)
+            cv.Circle(original, (400, 400), 200, 255, -1)
+            cv.Circle(original, (100, 100), 20, 255, -1)
+        else:
+            original = self.get_sample("samples/c/lena.jpg", 0)
+            cv.Threshold(original, original, 128, 255, cv.CV_THRESH_BINARY);
+
+        contours = cv.FindContours(original, storage, cv.CV_RETR_CCOMP, cv.CV_CHAIN_APPROX_SIMPLE)
+
+
+        def contour_iterator(contour):
+            while contour:
+                yield contour
+                contour = contour.h_next()
+
+        # Should be 2 contours from the two circles above
+        self.assertEqual(len(list(contour_iterator(contours))), 2)
+
+        # Smoke DrawContours
+        sketch = cv.CreateImage(cv.GetSize(original), 8, 3)
+        cv.SetZero(sketch)
+        red = cv.RGB(255, 0, 0)
+        green = cv.RGB(0, 255, 0)
+        for c in contour_iterator(contours):
+            cv.DrawContours(sketch, c, red, green, 0)
+        # self.snap(sketch)
+
     def test_GetAffineTransform(self):
         mapping = cv.CreateMat(2, 3, cv.CV_32FC1)
         cv.GetAffineTransform([ (0,0), (1,0), (0,1) ], [ (0,0), (17,0), (0,17) ], mapping)
@@ -714,6 +743,22 @@ class AreaTests(OpenCVTests):
     def test_numpy(self):
         if 'fromarray' in dir(cv):
             import numpy
+
+            def convert(numpydims):
+                """ Create a numpy array with specified dims, return the OpenCV CvMat """
+                a1 = numpy.array([1] * reduce(operator.__mul__, numpydims)).reshape(*numpydims)
+                return cv.fromarray(a1)
+            def row_col_chan(m):
+                (col, row) = cv.GetSize(m)
+                chan = cv.CV_MAT_CN(cv.GetElemType(m))
+                return (row, col, chan)
+
+            self.assertEqual(row_col_chan(convert((2, 13))), (2, 13, 1))
+            self.assertEqual(row_col_chan(convert((2, 13, 4))), (2, 13, 4))
+            self.assertEqual(row_col_chan(convert((2, 13, cv.CV_CN_MAX))), (2, 13, cv.CV_CN_MAX))
+            self.assertRaises(TypeError, lambda: convert((2,)))
+            self.assertRaises(TypeError, lambda: convert((11, 17, cv.CV_CN_MAX + 1)))
+
             for t in [cv.CV_16UC1, cv.CV_32SC1, cv.CV_32FC1]:
                 for d in [ (8,), (1,7), (2,3,4), (7,9,2,1,8), (1,2,3,4,5,6,7,8) ]:
                     total = reduce(operator.__mul__, d)
@@ -724,27 +769,34 @@ class AreaTests(OpenCVTests):
                     self.assertEqual(list(na), range(total))
 
                     # now do numpy -> cvmat, and verify
-                    m2 = cv.fromarray(na)
+                    m2 = cv.fromarray(na, True)
 
                     # Check that new cvmat m2 contains same counting sequence
                     for i in range(total):
                         self.assertEqual(cv.Get1D(m, i)[0], i)
 
-            im = cv.CreateMatND([2, 13], cv.CV_16UC1)
-            cv.SetZero(im)
-            im[0,0] = 3
-            a = numpy.asarray(im)
-            cvmatnd = cv.fromarray(a)
-            self.assertEqual(cv.GetDims(cvmatnd), (2, 13))
+            # Verify round-trip for 2D arrays
+            for rows in [2, 3, 7, 13]:
+                for cols in [2, 3, 7, 13]:
+                    for allowND in [False, True]:
+                        im = cv.CreateMatND([rows, cols], cv.CV_16UC1)
+                        cv.SetZero(im)
+                        a = numpy.asarray(im)
+                        self.assertEqual(a.shape, (rows, cols))
+                        cvmatnd = cv.fromarray(a, allowND)
+                        self.assertEqual(cv.GetDims(cvmatnd), (rows, cols))
 
-            # im, a and cvmatnd all point to the same data, so...
-            a[0, 1] = 77
-            self.assertEqual(im[0, 1], 77)
-            cvmatnd[1, 0] = 12
-            self.assertEqual(a[1, 0], 12)
+                        # im, a and cvmatnd all point to the same data, so...
+                        for i,coord in enumerate([(0,0), (0,1), (1,0), (1,1)]):
+                            v = 5 + i + 7
+                            a[coord] = v
+                            self.assertEqual(im[coord], v)
+                            self.assertEqual(cvmatnd[coord], v)
 
+            # Cv -> Numpy 3 channel check
             im = cv.CreateMatND([2, 13], cv.CV_16UC3)
             self.assertEqual(numpy.asarray(im).shape, (2, 13, 3))
+
         else:
             print "SKIPPING test_numpy - numpy support not built"
 
