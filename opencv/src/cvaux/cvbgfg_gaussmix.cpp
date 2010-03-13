@@ -59,7 +59,7 @@ namespace cv
 {
     
 BackgroundSubtractor::~BackgroundSubtractor() {}
-void BackgroundSubtractor::operator()(const Mat&, Mat&, double learningRate)
+void BackgroundSubtractor::operator()(const Mat&, Mat&, double)
 {
 }
 

@@ -194,7 +194,8 @@ prefilterXSobel( const Mat& src, Mat& dst, int ftzero )
     #if CV_SSE2
         if( useSIMD )
         {
-            __m128i z = _mm_setzero_si128(), ftz = _mm_set1_epi16(ftzero), ftz2 = _mm_set1_epi8(CV_CAST_8U(ftzero*2));
+            __m128i z = _mm_setzero_si128(), ftz = _mm_set1_epi16((short)ftzero),
+                ftz2 = _mm_set1_epi8(CV_CAST_8U(ftzero*2));
             for( ; x <= size.width-9; x += 8 )
             {
                 __m128i c0 = _mm_unpacklo_epi8(_mm_loadl_epi64((__m128i*)(srow0 + x - 1)), z);
@@ -495,7 +496,7 @@ static void findStereoCorrespondenceBM_SSE2( const Mat& left, const Mat& right,
                 dptr[y*dstep] = (short)(((ndisp - mind - 1 + mindisp)*256 + (d != 0 ? (p-n)*128/d : 0) + 15) >> 4);
             }
             else
-                dptr[y*dstep] = (ndisp - mind - 1)*16;
+                dptr[y*dstep] = (short)((ndisp - mind - 1)*16);
             costptr[y*coststep] = sad[mind];
         }
     }

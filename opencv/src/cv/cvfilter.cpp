@@ -2985,8 +2985,8 @@ void filter2D( const Mat& src, Mat& dst, int ddepth,
         ddepth = src.depth();
 
 #if CV_SSE2
-    int dft_filter_size = (src.depth() == CV_8U && (ddepth == CV_8U || ddepth == CV_16S)) ||
-        (src.depth() == CV_32F && ddepth == CV_32F) && checkHardwareSupport(CV_CPU_SSE3)? 130 : 50;
+    int dft_filter_size = ((src.depth() == CV_8U && (ddepth == CV_8U || ddepth == CV_16S)) ||
+        (src.depth() == CV_32F && ddepth == CV_32F)) && checkHardwareSupport(CV_CPU_SSE3)? 130 : 50;
 #else
     int dft_filter_size = 50;
 #endif

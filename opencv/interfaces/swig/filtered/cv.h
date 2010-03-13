@@ -3829,34 +3829,36 @@ extern "C" void cvCorrectMatches(CvMat* F, CvMat* points1, CvMat* points2,
 
 typedef struct CvStereoBMState
 {
+    // pre-filtering (normalization of input images)
+    int preFilterType; // =CV_STEREO_BM_NORMALIZED_RESPONSE now
+    int preFilterSize; // averaging window size: ~5x5..21x21
+    int preFilterCap; // the output of pre-filtering is clipped by [-preFilterCap,preFilterCap]
 
-    int preFilterType;
-    int preFilterSize;
-    int preFilterCap;
+    // correspondence using Sum of Absolute Difference (SAD)
+    int SADWindowSize; // ~5x5..21x21
+    int minDisparity;  // minimum disparity (can be negative)
+    int numberOfDisparities; // maximum disparity - minimum disparity (> 0)
 
+    // post-filtering
+    int textureThreshold;  // the disparity is only computed for pixels
+                           // with textured enough neighborhood
+    int uniquenessRatio;   // accept the computed disparity d* only if
+                           // SAD(d) >= SAD(d*)*(1 + uniquenessRatio/100.)
+                           // for any d != d*+/-1 within the search range.
+    int speckleWindowSize; // disparity variation window
+    int speckleRange; // acceptable range of variation in window
 
-    int SADWindowSize;
-    int minDisparity;
-    int numberOfDisparities;
+    int trySmallerWindows; // if 1, the results may be more accurate,
+                           // at the expense of slower processing 
+    CvRect roi1, roi2;
+    int disp12MaxDiff;
 
-
-    int textureThreshold;
-
-    int uniquenessRatio;
-
-
-    int speckleWindowSize;
-    int speckleRange;
-
-    int trySmallerWindows;
-
-
-
+    // temporary buffers
     CvMat* preFilteredImg0;
     CvMat* preFilteredImg1;
     CvMat* slidingSumBuf;
-    CvMat* dbmin;
-    CvMat* dbmax;
+    CvMat* cost;
+    CvMat* disp;
 }
 CvStereoBMState;
 
