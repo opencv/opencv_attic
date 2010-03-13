@@ -2112,8 +2112,6 @@ static PyObject *pythonize_CvMat(cvmat_t *m)
 {
   // Need to make this CvMat look like any other, with a Python 
   // buffer object as its data.
-  // So copy the image data into a Python string object, then release 
-  // the original.
   CvMat *mat = m->a;
   assert(mat->step != 0);
 #if 0
@@ -2126,6 +2124,33 @@ static PyObject *pythonize_CvMat(cvmat_t *m)
   PyObject *data = PyBuffer_FromReadWriteObject((PyObject*)o, (size_t)gap, mat->rows * mat->step);
   if (data == NULL)
     return NULL;
+#endif
+  m->data = data;
+  m->offset = 0;
+  Py_DECREF(o);
+
+  // Now m has a reference to data, which has a reference to o.
+
+  return (PyObject*)m;
+}
+
+static PyObject *pythonize_foreign_CvMat(cvmat_t *m)
+{
+  // Need to make this CvMat look like any other, with a Python 
+  // buffer object as its data.
+  // Difference here is that the buffer is 'foreign' (from NumPy, for example)
+  CvMat *mat = m->a;
+  assert(mat->step != 0);
+#if 0
+  PyObject *data = PyString_FromStringAndSize((char*)(mat->data.ptr), mat->rows * mat->step);
+#else
+  memtrack_t *o = PyObject_NEW(memtrack_t, &memtrack_Type);
+  o->ptr = mat->data.ptr;
+  o->size = mat->rows * mat->step;
+  PyObject *data = PyBuffer_FromReadWriteObject((PyObject*)o, (size_t)0, mat->rows * mat->step);
+  if (data == NULL)
+    return NULL;
+  Py_INCREF(o);   // XXX - hack to prevent free of this foreign memory
 #endif
   m->data = data;
   m->offset = 0;
@@ -2651,7 +2676,8 @@ static PyObject *pycvCreateMatND(PyObject *self, PyObject *args)
 static PyObject *pycvfromarray(PyObject *self, PyObject *args)
 {
   PyObject *o;
-  if (!PyArg_ParseTuple(args, "O", &o)) {
+  int allowND = 0;
+  if (!PyArg_ParseTuple(args, "O|i", &o, &allowND)) {
     return NULL;
   }
 
@@ -2666,7 +2692,6 @@ static PyObject *pycvfromarray(PyObject *self, PyObject *args)
     return NULL;
   }
 
-  cvmatnd_t *m = PyObject_NEW(cvmatnd_t, &cvmatnd_Type);
   int type = -1;
 
   switch (pai->typekind) {
@@ -2692,14 +2717,34 @@ static PyObject *pycvfromarray(PyObject *self, PyObject *args)
     else if (pai->itemsize == 8)
       type = CV_64FC1;
     break;
+
   }
-  int dims[CV_MAX_DIM];
-  int i;
-  for (i = 0; i < pai->nd; i++)
-    dims[i] = pai->shape[i];
-  ERRWRAP(m->a = cvCreateMatND(pai->nd, dims, type));
-  m->a->data.ptr = (uchar*)pai->data;
-  return pythonize_CvMatND(m);
+
+  if (!allowND) {
+    cvmat_t *m = PyObject_NEW(cvmat_t, &cvmat_Type);
+    if (pai->nd == 2) {
+      ERRWRAP(m->a = cvCreateMatHeader(pai->shape[0], pai->shape[1], type));
+      m->a->step = pai->strides[0];
+    } else if (pai->nd == 3) {
+      if (pai->shape[2] > CV_CN_MAX)
+        return (PyObject*)failmsg("cv.fromarray too many channels, see allowND argument");
+      ERRWRAP(m->a = cvCreateMatHeader(pai->shape[0], pai->shape[1], type + ((pai->shape[2] - 1) << CV_CN_SHIFT)));
+      m->a->step = pai->strides[0];
+    } else {
+      return (PyObject*)failmsg("cv.fromarray array can be 2D or 3D only, see allowND argument");
+    }
+    m->a->data.ptr = (uchar*)pai->data;
+    return pythonize_foreign_CvMat(m);
+  } else {
+    int dims[CV_MAX_DIM];
+    int i;
+    for (i = 0; i < pai->nd; i++)
+      dims[i] = pai->shape[i];
+    cvmatnd_t *m = PyObject_NEW(cvmatnd_t, &cvmatnd_Type);
+    ERRWRAP(m->a = cvCreateMatND(pai->nd, dims, type));
+    m->a->data.ptr = (uchar*)pai->data;
+    return pythonize_CvMatND(m);
+  }
 }
 #endif
 
