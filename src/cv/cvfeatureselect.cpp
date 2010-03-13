@@ -100,9 +100,9 @@ void goodFeaturesToTrack( const Mat& image, vector<Point2f>& corners,
         int w = image.cols;
         int h = image.rows;
 
-        const int cell_size = (int)(minDistance);
-        const int grid_width = (float)w / cell_size + 0.5; // round up
-        const int grid_height = (float)h / cell_size + 0.5; // round up
+        const int cell_size = cvRound(minDistance);
+        const int grid_width = cvRound(w / cell_size); // round up
+        const int grid_height = cvRound(h / cell_size); // round up
 
         std::vector <  std::vector <Point2f> > grid(grid_width*grid_height);
 

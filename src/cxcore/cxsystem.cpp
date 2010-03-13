@@ -44,7 +44,9 @@
 
 #if defined WIN32 || defined WIN64 || defined _WIN64 || defined WINCE
 #include <tchar.h>
+#ifdef _MSC_VER
 #include <intrin.h>
+#endif
 #else
 #include <pthread.h>
 #include <sys/time.h>
@@ -107,24 +109,24 @@ struct HWFeatures
             f.have[CV_CPU_SSE4_1] = (cpuid_data[2] & (1<<19)) != 0;
             f.have[CV_CPU_SSE4_2] = (cpuid_data[2] & (1<<20)) != 0;
             f.have[CV_CPU_AVX] = (cpuid_data[2] & (1<<28)) != 0;
-            
-            f.have[CV_CPU_SSE] = f.have[CV_CPU_SSE4_2] ? CV_CPU_SSE4_2 :
-                  f.have[CV_CPU_SSE4_1] ? CV_CPU_SSE4_1 :
-                  f.have[CV_CPU_SSSE3] ? CV_CPU_SSSE3 :
-                  f.have[CV_CPU_SSE3] ? CV_CPU_SSE3 :
-                  f.have[CV_CPU_SSE2] ? CV_CPU_SSE2 :
-                  f.have[CV_CPU_SSE] ? CV_CPU_SSE : 0;
         }
         
         return f;
     }
     
     int x86_family;
-    int have[MAX_FEATURE+1];
+    bool have[MAX_FEATURE+1];
 };
     
 static HWFeatures featuresEnabled = HWFeatures::initialize(), featuresDisabled = HWFeatures();
-    
+static HWFeatures* currentFeatures = &featuresEnabled;
+
+bool checkHardwareSupport(int feature)
+{
+    CV_DbgAssert( 0 <= feature && feature <= CV_HARDWARE_MAX_FEATURE );
+    return currentFeatures->have[feature];
+}
+
 #ifdef HAVE_IPP
 volatile bool useOptimizedFlag = true;
 
@@ -141,7 +143,7 @@ volatile bool useOptimizedFlag = false;
 void setUseOptimized( bool flag )
 {
     useOptimizedFlag = flag;
-    cvHardwareSupport = flag ? featuresEnabled.have : featuresDisabled.have;
+    currentFeatures = flag ? &featuresEnabled : &featuresDisabled;
 }
 
 bool useOptimized()
@@ -391,7 +393,11 @@ cvGuiBoxReport( int code, const char *func_name, const char *err_msg,
 #endif
 }*/
 
-const int* cvHardwareSupport = cv::featuresEnabled.have;
+CV_IMPL int cvCheckHardwareSupport(int feature)
+{
+    CV_DbgAssert( 0 <= feature && feature <= CV_HARDWARE_MAX_FEATURE );
+    return cv::currentFeatures->have[feature];
+}
 
 CV_IMPL int cvUseOptimized( int flag )
 {

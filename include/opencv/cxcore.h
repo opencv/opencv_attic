@@ -1784,8 +1784,8 @@ CVAPI(double) cvGetTickFrequency( void );
 #define CV_CPU_AVX    10
 #define CV_HARDWARE_MAX_FEATURE 255
 
-extern CV_EXPORTS const int* cvHardwareSupport;
-    
+CVAPI(int) cvCheckHardwareSupport(int feature);
+
 /*********************************** Multi-Threading ************************************/
 
 /* retrieve/set the number of threads used in OpenMP implementations */

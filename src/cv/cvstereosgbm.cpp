@@ -129,8 +129,8 @@ static void calcPixelCostBT( const Mat& img1, const Mat& img2, int y,
     
     if( cn == 1 )
     {
-        int n1 = y > 0 ? -img1.step : 0, s1 = y < img1.rows-1 ? img1.step : 0;
-        int n2 = y > 0 ? -img2.step : 0, s2 = y < img2.rows-1 ? img2.step : 0;
+        int n1 = y > 0 ? -(int)img1.step : 0, s1 = y < img1.rows-1 ? (int)img1.step : 0;
+        int n2 = y > 0 ? -(int)img2.step : 0, s2 = y < img2.rows-1 ? (int)img2.step : 0;
         
         for( x = 1; x < width-1; x++ )
         {
@@ -191,8 +191,8 @@ static void calcPixelCostBT( const Mat& img1, const Mat& img2, int y,
         #if CV_SSE2
             if( useSIMD )
             {
-                __m128i _u = _mm_set1_epi8(u), _u0 = _mm_set1_epi8(u0);
-                __m128i _u1 = _mm_set1_epi8(u1), z = _mm_setzero_si128();
+                __m128i _u = _mm_set1_epi8((char)u), _u0 = _mm_set1_epi8((char)u0);
+                __m128i _u1 = _mm_set1_epi8((char)u1), z = _mm_setzero_si128();
                 
                 for( int d = minD; d < maxD; d += 16 )
                 {
@@ -374,7 +374,7 @@ static void computeDisparitySGBM( const Mat& img1, const Mat& img2,
     
     // add P2 to every C(x,y). it saves a few operations in the inner loops
     for( k = 0; k < width1*D; k++ )
-        Cbuf[k] = P2;
+        Cbuf[k] = (CostType)P2;
     
     for( int pass = 1; pass <= npasses; pass++ )
     {
@@ -647,15 +647,14 @@ static void computeDisparitySGBM( const Mat& img1, const Mat& img2,
             {
                 for( x = 0; x < width; x++ )
                 {
-                    disp1ptr[x] = disp2ptr[x] = INVALID_DISP_SCALED;
+                    disp1ptr[x] = disp2ptr[x] = (DispType)INVALID_DISP_SCALED;
                     disp2cost[x] = MAX_COST;
                 }
                 
                 for( x = width1 - 1; x >= 0; x-- )
                 {
                     CostType* Sp = S + x*D;
-                    CostType minS = MAX_COST;
-                    int bestDisp = -1;
+                    int minS = MAX_COST, bestDisp = -1;
                     
                     if( npasses == 1 )
                     {
@@ -842,13 +841,13 @@ void filterSpeckles( Mat& img, double _newval, int maxSpeckleSize, double _maxDi
                 if( ls[j] )		// has a label, check for bad label
                 {  
                     if( rtype[ls[j]] ) // small region, zero out disparity
-                        ds[j] = newVal;
+                        ds[j] = (short)newVal;
                 }
                 // no label, assign and propagate
                 else
                 {
                     Point2s* ws = wbuf;	// initialize wavefront
-                    Point2s p(j, i);	// current pixel
+                    Point2s p((short)j, (short)i);	// current pixel
                     curlabel++;	// next label
                     int count = 0;	// current region size
                     ls[j] = curlabel;
@@ -895,7 +894,7 @@ void filterSpeckles( Mat& img, double _newval, int maxSpeckleSize, double _maxDi
                     if( count <= maxSpeckleSize )	// speckle region
                     {
                         rtype[ls[j]] = 1;	// small region label
-                        ds[j] = newVal;
+                        ds[j] = (short)newVal;
                     }
                     else
                         rtype[ls[j]] = 0;	// large region label

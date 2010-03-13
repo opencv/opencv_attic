@@ -59,7 +59,7 @@ void drawCircles(Mat& img, const vector<Point2f>& corners, const vector<float>& 
 {
     for(size_t i = 0; i < corners.size(); i++)
     {
-        circle(img, corners[i], radius[i], CV_RGB(255, 0, 0));
+        circle(img, corners[i], cvRound(radius[i]), CV_RGB(255, 0, 0));
     }
 }
     
@@ -68,11 +68,11 @@ int histQuantile(const MatND& hist, float quantile)
     if(hist.dims > 1) return -1; // works for 1D histograms only
     
     float cur_sum = 0;
-    float total_sum = sum(hist).val[0];
+    float total_sum = (float)sum(hist).val[0];
     float quantile_sum = total_sum*quantile;
     for(int j = 0; j < hist.size[0]; j++)
     {
-        cur_sum += hist.at<double>(j);
+        cur_sum += (float)hist.at<double>(j);
         if(cur_sum > quantile_sum)
         {
             return j;
@@ -95,22 +95,22 @@ void orderContours(const vector<vector<Point> >& contours, Point2f point, vector
         double min_dist = std::numeric_limits<double>::max();
         for(size_t j = 0; j < contours[i].size(); j++)
         {
-            double dist = norm(Point2f(contours[i][j].x, contours[i][j].y) - point);
+            double dist = norm(Point2f((float)contours[i][j].x, (float)contours[i][j].y) - point);
             min_dist = MIN(min_dist, dist);
         }
-        order.push_back(std::pair<int, float>(i, min_dist));
+        order.push_back(std::pair<int, float>(i, (float)min_dist));
     }
     
     std::sort(order.begin(), order.end(), is_smaller);
 }
 
 // fit second order curve to a set of 2D points
-void fitCurve2Order(const vector<Point2f>& points, vector<float>& curve)
+void fitCurve2Order(const vector<Point2f>& /*points*/, vector<float>& /*curve*/)
 {
     // TBD
 }
     
-void findCurvesCross(const vector<float>& curve1, const vector<float>& curve2, Point2f& cross_point)
+void findCurvesCross(const vector<float>& /*curve1*/, const vector<float>& /*curve2*/, Point2f& /*cross_point*/)
 {
 }
     
@@ -134,7 +134,7 @@ void findCorner(const vector<Point>& contour, Point2f point, Point2f& corner)
     // find corner idx
     for(size_t i = 0; i < contour.size(); i++)
     {
-        double dist = norm(Point2f(contour[i].x, contour[i].y) - point);
+        double dist = norm(Point2f((float)contour[i].x, (float)contour[i].y) - point);
         if(dist < min_dist)
         {
             min_dist = dist;
@@ -217,8 +217,8 @@ int segment_hist_max(const MatND& hist, int& low_thresh, int& high_thresh)
     }
     else
     {
-        low_thresh = max_start_x + 0.25*(max_end_x - max_start_x);
-        high_thresh = max_start_x + 0.75*(max_end_x - max_start_x);
+        low_thresh = cvRound(max_start_x + 0.25*(max_end_x - max_start_x));
+        high_thresh = cvRound(max_start_x + 0.75*(max_end_x - max_start_x));
         return 1;
     }
 }
@@ -240,7 +240,8 @@ bool find4QuadCornerSubpix(const Mat& img, std::vector<Point2f>& corners, Size r
     for(size_t i = 0; i < corners.size(); i++)
     {        
         int channels = 0;
-        Rect roi(corners[i].x - region_size.width, corners[i].y - region_size.height, region_size.width*2 + 1, region_size.height*2 + 1);
+        Rect roi(cvRound(corners[i].x - region_size.width), cvRound(corners[i].y - region_size.height),
+            region_size.width*2 + 1, region_size.height*2 + 1);
         Mat img_roi = img(roi);
         calcHist(&img_roi, 1, &channels, Mat(), hist, 1, &nbins, &_ranges);
         
