@@ -183,12 +183,12 @@ struct _VAdd32f { __m128 operator()(const __m128& a, const __m128& b) const { re
 struct _VSub32f { __m128 operator()(const __m128& a, const __m128& b) const { return _mm_sub_ps(a,b); }};
 struct _VMin32f { __m128 operator()(const __m128& a, const __m128& b) const { return _mm_min_ps(a,b); }};
 struct _VMax32f { __m128 operator()(const __m128& a, const __m128& b) const { return _mm_max_ps(a,b); }};
-static const __m128i v32f_absmask = _mm_set1_epi32(0x7fffffff);
+static int CV_DECL_ALIGNED(16) v32f_absmask[] = { 0x7fffffff, 0x7fffffff, 0x7fffffff, 0x7fffffff };
 struct _VAbsDiff32f
 {
     __m128 operator()(const __m128& a, const __m128& b) const
     {
-        return _mm_and_ps(_mm_sub_ps(a,b), (__m128&)v32f_absmask);
+        return _mm_and_ps(_mm_sub_ps(a,b), *(const __m128*)v32f_absmask);
     }
 };
 

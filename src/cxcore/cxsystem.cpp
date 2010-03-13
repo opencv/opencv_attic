@@ -81,21 +81,32 @@ struct HWFeatures
     static HWFeatures initialize()
     {
         HWFeatures f;
-        
         int cpuid_data[4]={0,0,0,0};
+        
     #if defined _MSC_VER && (defined _M_IX86 || defined _M_X64)
         __cpuid(cpuid_data, 1);
     #elif defined __GNUC__ && (defined __i386__ || defined __x86_64__)
+        #ifdef __x86_64__
+        asm __volatile__
+        (
+         "movl $1, %%eax\n"
+         "cpuid\n"
+         :[eax]"=a"(cpuid_data[0]),[ebx]"=b"(cpuid_data[1]),[ecx]"=c"(cpuid_data[2]),[edx]"=d"(cpuid_data[3])
+         :
+         : "cc"
+        );
+        #else
         asm volatile
         (
          "pushl %%ebx\n"
          "movl $1,%%eax\n"
-         ".byte 0x0f; .byte 0xa2\n"
+         "cpuid\n"
          "popl %%ebx\n"
-         : "=a"(cpuid_data[0]), "=c" (cpuid_data[2]), "=d" (cpuid_data[3])
+         : [eax]"=a"(cpuid_data[0]), [ebx]"=b"(cpuid_data[1]), [ecx]"=c"(cpuid_data[2]), [edx]"=d"(cpuid_data[3])
          :
-         : "%esi", "%edi"
-         );
+         : "cc"
+        );
+        #endif
     #endif
         
         f.x86_family = (cpuid_data[0] >> 8) & 15;
