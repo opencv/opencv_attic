@@ -797,6 +797,11 @@ class AreaTests(OpenCVTests):
             im = cv.CreateMatND([2, 13], cv.CV_16UC3)
             self.assertEqual(numpy.asarray(im).shape, (2, 13, 3))
 
+            # multi-dimensional NumPy array
+            na = numpy.ones([7,9,2,1,8])
+            cm = cv.fromarray(na, True)
+            print cv.GetDims(cm)
+
         else:
             print "SKIPPING test_numpy - numpy support not built"
 
