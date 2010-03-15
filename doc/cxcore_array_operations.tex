@@ -2691,7 +2691,7 @@ gray_img = (IplImage*)cvReshapeND(color_img, &gray_img_hdr, 1, 0, 0);
 int size[] = { 2, 2, 2 };
 CvMatND* mat = cvCreateMatND(3, size, CV_32F);
 CvMat row_header, *row;
-row = cvReshapeND(mat, &row_header, 0, 1, 0);
+row = (CvMat*)cvReshapeND(mat, &row_header, 0, 1, 0);
 
 \end{lstlisting}
 \fi
