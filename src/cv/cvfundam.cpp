@@ -109,6 +109,9 @@ int CvHomographyEstimator::runKernel( const CvMat* m1, const CvMat* m2, CvMat* H
         sM.y += fabs(M[i].y - cM.y);
     }
 
+    if( fabs(sm.x) < DBL_EPSILON || fabs(sm.y) < DBL_EPSILON ||
+        fabs(sM.x) < DBL_EPSILON || fabs(sM.y) < DBL_EPSILON )
+        return 0;
     sm.x = count/sm.x; sm.y = count/sm.y;
     sM.x = count/sM.x; sM.y = count/sM.y;
 
@@ -247,7 +250,7 @@ cvFindHomography( const CvMat* objectPoints, const CvMat* imagePoints,
     if( !tempMask.empty() )
         cvSet( tempMask, cvScalarAll(1.) );
 
-    CvHomographyEstimator estimator( MIN(count, 5) );
+    CvHomographyEstimator estimator( MIN(count, 4) );
     if( count == 4 )
         method = 0;
     if( method == CV_LMEDS )

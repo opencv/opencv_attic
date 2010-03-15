@@ -343,7 +343,7 @@ bool CvModelEstimator2::checkSubset( const CvMat* m, int count )
             {
                 double dx2 = ptr[k].x - ptr[i].x;
                 double dy2 = ptr[k].y - ptr[i].y;
-                if( fabs(dx2*dy1 - dy2*dx1) < FLT_EPSILON*(fabs(dx1) + fabs(dy1) + fabs(dx2) + fabs(dy2)))
+                if( fabs(dx2*dy1 - dy2*dx1) <= FLT_EPSILON*(fabs(dx1) + fabs(dy1) + fabs(dx2) + fabs(dy2)))
                     break;
             }
             if( k < j )
