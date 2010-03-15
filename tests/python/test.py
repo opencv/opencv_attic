@@ -801,6 +801,13 @@ class AreaTests(OpenCVTests):
             na = numpy.ones([7,9,2,1,8])
             cm = cv.fromarray(na, True)
             print cv.GetDims(cm)
+
+            # Using an array object for a CvArr parameter
+            ones = numpy.ones((640, 480))
+            r = numpy.ones((640, 480))
+            cv.AddS(ones, 7, r)
+            self.assert_(numpy.alltrue(r == (8 * ones)))
+
         else:
             print "SKIPPING test_numpy - numpy support not built"
 

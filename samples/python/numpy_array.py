@@ -57,4 +57,9 @@ if __name__ == "__main__":
     linear_mono = 0.3 * red + 0.59 * grn + 0.11 * blu
     cv.ShowImage("monochrome", cv.fromarray(lin2srgb(linear_mono)))
 
+    # Apply a blur to the NumPy array using OpenCV
+    cv.NamedWindow("gaussian")
+    cv.Smooth(n, n, cv.CV_GAUSSIAN, 15, 15)
+    cv.ShowImage("gaussian", cv.fromarray(n))
+
     cv.WaitKey(0)

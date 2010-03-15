@@ -138,6 +138,10 @@ static PyObject *FROM_ROCvMatPTR(ROCvMat *r);
 #define FROM_CvPoint2D64f(r) Py_BuildValue("(ff)", r.x, r.y)
 #define FROM_CvConnectedComp(r) Py_BuildValue("(fNN)", (r).area, FROM_CvScalar((r).value), FROM_CvRect((r).rect))
 
+#if PYTHON_USE_NUMPY
+static PyObject *fromarray(PyObject *o, int allowND);
+#endif
+
 static void translate_error_to_exception(void)
 {
   PyErr_SetString(opencv_error, cvErrorStr(cvGetErrStatus()));
@@ -1622,7 +1626,15 @@ static int convert_to_CvArr(PyObject *o, CvArr **dst, const char *name)
   } else if (is_cvmatnd(o)) {
     return convert_to_CvMatND(o, (CvMatND**)dst, name);
   } else {
+#if !PYTHON_USE_NUMPY
     return failmsg("CvArr argument '%s' must be IplImage, CvMat or CvMatND", name);
+#else
+    PyObject *asmat = fromarray(o, 0);
+    if (asmat == NULL)
+      return failmsg("CvArr argument '%s' must be IplImage, CvMat, CvMatND, or support the array interface", name);
+    // now have the array obect as a cvmat, can use regular conversion
+    return convert_to_CvArr(asmat, dst, name);
+#endif
   }
 }
 
@@ -2577,6 +2589,33 @@ static PyObject *pycvLoadImage(PyObject *self, PyObject *args, PyObject *kw)
   }
 }
 
+static PyObject *pycvLoadImageM(PyObject *self, PyObject *args, PyObject *kw)
+{
+  const char *keywords[] = { "filename", "iscolor", NULL };
+  char *filename;
+  int iscolor = CV_LOAD_IMAGE_COLOR;
+
+  if (!PyArg_ParseTupleAndKeywords(args, kw, "s|i", (char**)keywords, &filename, &iscolor))
+    return NULL;
+
+  // Inside ALLOW_THREADS, must not reference 'filename' because it might move.
+  // So make a local copy 'filename_copy'.
+  char filename_copy[2048];
+  strncpy(filename_copy, filename, sizeof(filename_copy));
+
+  CvMat *r;
+  Py_BEGIN_ALLOW_THREADS
+  r = cvLoadImageM(filename_copy, iscolor);
+  Py_END_ALLOW_THREADS
+
+  if (r == NULL) {
+    PyErr_SetFromErrnoWithFilename(PyExc_IOError, filename);
+    return NULL;
+  } else {
+    return FROM_CvMatPTR(r);
+  }
+}
+
 static PyObject *pycvCreateImageHeader(PyObject *self, PyObject *args)
 {
   int w, h, depth, channels;
@@ -2680,7 +2719,11 @@ static PyObject *pycvfromarray(PyObject *self, PyObject *args)
   if (!PyArg_ParseTuple(args, "O|i", &o, &allowND)) {
     return NULL;
   }
+  return fromarray(o, allowND);
+}
 
+static PyObject *fromarray(PyObject *o, int allowND)
+{
   PyObject *ao = PyObject_GetAttrString(o, "__array_struct__");
   if ((ao == NULL) || !PyCObject_Check(ao)) {
     PyErr_SetString(PyExc_TypeError, "object does not have array interface");
@@ -3136,43 +3179,55 @@ static PyObject *pycvReshape(PyObject *self, PyObject *args)
 static PyObject *pycvReshapeMatND(PyObject *self, PyObject *args)
 {
   PyObject *o;
-  int new_cn;
-  PyObject *new_dims;
+  int new_cn = 0;
+  PyObject *new_dims = NULL;
 
-  if (!PyArg_ParseTuple(args, "OiO", &o, &new_cn, &new_dims))
+  if (!PyArg_ParseTuple(args, "O|iO", &o, &new_cn, &new_dims))
     return NULL;
 
   CvMatND *cva;
   if (!convert_to_CvMatND(o, &cva, "src"))
     return NULL;
   ints dims;
-  if (!convert_to_ints(new_dims, &dims, "new_dims"))
-    return NULL;
+  if (new_dims != NULL) {
+    if (!convert_to_ints(new_dims, &dims, "new_dims"))
+      return NULL;
+  }
 
 #if 0
-  int dummy[1] = { 1 };
-  CvMatND *m = cvCreateMatNDHeader(1, dummy, 1); // these args do not matter, because overwritten
-  ERRWRAP(cvReshapeND(cva, m, new_cn, dims.count + 1, dims.i));
+  if ((dims.count + 1) <= 2) {
+    CvMat *m = cvCreateMatHeader(100, 100, 1); // these args do not matter, because overwritten
+    if (new_dims != NULL) {
+      printf("newcn=%d newdims=%d newSizes=%p\n", new_cn, dims.count + 1, dims.i);
+      ERRWRAP(cvReshapeND(cva, m, new_cn, dims.count + 1, dims.i));
+    } else {
+      ERRWRAP(cvReshapeND(cva, m, new_cn, 0, NULL));
+    }
 
-  cvmatnd_t *om = PyObject_NEW(cvmatnd_t, &cvmatnd_Type);
-  om->a = m;
-  om->data = what_data(o);
-  Py_INCREF(om->data);
-  om->offset = 0;
-  return (PyObject*)om;
-#endif
-#if 0
-  CvMat *m = cvCreateMatHeader(100, 100, 1); // these args do not matter, because overwritten
-  ERRWRAP(cvReshapeND(cva, m, 0, 1, 0)); // new_cn, dims.count + 1, dims.i));
+    cvmat_t *om = PyObject_NEW(cvmat_t, &cvmat_Type);
+    om->a = m;
+    om->data = what_data(o);
+    Py_INCREF(om->data);
+    om->offset = 0;
+    return (PyObject*)om;
+  } else {
+    int dummy[1] = { 1 };
+    CvMatND *m = cvCreateMatNDHeader(1, dummy, 1); // these args do not matter, because overwritten
+    if (new_dims != NULL) {
+      printf("newcn=%d newdims=%d newSizes=%p\n", new_cn, dims.count + 1, dims.i);
+      ERRWRAP(cvReshapeND(cva, m, new_cn, dims.count + 1, dims.i));
+    } else {
+      ERRWRAP(cvReshapeND(cva, m, new_cn, 0, NULL));
+    }
 
-  cvmat_t *om = PyObject_NEW(cvmat_t, &cvmat_Type);
-  om->a = m;
-  om->data = what_data(o);
-  Py_INCREF(om->data);
-  om->offset = 0;
-  return (PyObject*)om;
-#endif
-#if 1
+    cvmatnd_t *om = PyObject_NEW(cvmatnd_t, &cvmatnd_Type);
+    om->a = m;
+    om->data = what_data(o);
+    Py_INCREF(om->data);
+    om->offset = 0;
+    return (PyObject*)om;
+  }
+#else
   {
     int size[] = { 2, 2, 2 };
     CvMatND* mat = cvCreateMatND(3, size, CV_32F);
@@ -3719,6 +3774,7 @@ static PyMethodDef methods[] = {
   {"ReshapeMatND", pycvReshapeMatND, METH_VARARGS, "Reshape(arr, new_cn, new_dims) -> matnd"},
   {"InitLineIterator", pycvInitLineIterator, METH_VARARGS, "InitLineIterator(image, pt1, pt2, connectivity=8, left_to_right=0) -> None"},
   {"LoadImage", (PyCFunction)pycvLoadImage, METH_KEYWORDS, "LoadImage(filename, iscolor=CV_LOAD_IMAGE_COLOR)"},
+  {"LoadImageM", (PyCFunction)pycvLoadImageM, METH_KEYWORDS, "LoadImageM(filename, iscolor=CV_LOAD_IMAGE_COLOR)"},
   {"SetData", pycvSetData, METH_VARARGS, "SetData(arr, data, step)"},
   {"SetMouseCallback", (PyCFunction)pycvSetMouseCallback, METH_KEYWORDS, "SetMouseCallback(window_name, on_mouse, param) -> None"},
   {"CreateTrackbar", (PyCFunction)pycvCreateTrackbar, METH_KEYWORDS, "CreateTrackbar(trackbar_name, window_name, value, count, on_change) -> None"},
