@@ -29,7 +29,7 @@ def Dilation(pos):
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
-        src = cv.LoadImage(sys.argv[1], cv.cv.CV_LOAD_IMAGE_COLOR)
+        src = cv.LoadImage(sys.argv[1], cv.CV_LOAD_IMAGE_COLOR)
     else:
         url = 'https://code.ros.org/svn/opencv/trunk/opencv/samples/c/fruits.jpg'
         filedata = urllib2.urlopen(url).read()
