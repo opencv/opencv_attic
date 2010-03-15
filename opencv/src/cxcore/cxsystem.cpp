@@ -89,8 +89,8 @@ struct HWFeatures
         #ifdef __x86_64__
         asm __volatile__
         (
-         "movl $1, %%eax\n"
-         "cpuid\n"
+         "movl $1, %%eax\n\t"
+         "cpuid\n\t"
          :[eax]"=a"(cpuid_data[0]),[ebx]"=b"(cpuid_data[1]),[ecx]"=c"(cpuid_data[2]),[edx]"=d"(cpuid_data[3])
          :
          : "cc"
@@ -98,11 +98,11 @@ struct HWFeatures
         #else
         asm volatile
         (
-         "pushl %%ebx\n"
-         "movl $1,%%eax\n"
-         "cpuid\n"
-         "popl %%ebx\n"
-         : [eax]"=a"(cpuid_data[0]), [ebx]"=b"(cpuid_data[1]), [ecx]"=c"(cpuid_data[2]), [edx]"=d"(cpuid_data[3])
+         "pushl %%ebx\n\t"
+         "movl $1,%%eax\n\t"
+         "cpuid\n\t"
+         "popl %%ebx\n\t"
+         : "=a"(cpuid_data[0]), "=c"(cpuid_data[2]), "=d"(cpuid_data[3])
          :
          : "cc"
         );
