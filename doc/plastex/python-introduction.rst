@@ -1,7 +1,10 @@
 Introduction
-------------
+============
 
-Here is a small collection of code samples demonstrating some features
+Cookbook
+--------
+
+Here is a small collection of code fragments demonstrating some features
 of the OpenCV Python bindings.
 
 Convert an image from png to jpg
@@ -84,18 +87,27 @@ OpenCV to PIL Image
 NumPy and OpenCV
 ^^^^^^^^^^^^^^^^
 
-Using the array interface, here is how you use an OpenCV Mat in NumPy::
+Using the `array interface <http://docs.scipy.org/doc/numpy/reference/arrays.interface.html>`_, to use an OpenCV CvMat in NumPy::
 
+    import cv
+    import numpy
     mat = cv.CreateMat(5, 5, cv.CV_32FC1)
     a = numpy.asarray(mat)
 
-and here is how you use a NumPy array in OpenCV:
+and to use a NumPy array in OpenCV::
 
-    a = numpy.array([1, 2, 3, 4, 5])
+    a = numpy.ones((640, 480))
     mat = cv.fromarray(a)
 
-These conversions work for CvMat and CvMatND.  N-channel images get
-turned into NumPy arrays with N as the smallest dimension.  For example
-a 640x480 RGB image would become a NumPy array of shape (640, 480, 3).
-When converting in the other direction, from NumPy arrays to OpenCV,
-the result is always a single channel CvMat.
+even easier, most OpenCV functions can work on NumPy arrays directly, for example::
+
+    picture = numpy.ones((640, 480))
+    cv.Smooth(picture, picture, cv.CV_GAUSSIAN, 15, 15)
+
+Given a 2D array, 
+the fromarray function (or the implicit version shown above)
+returns a single-channel CvMat of the same size.
+For a 3D array of size :math:`j \times k \times l`, it returns a 
+CvMat sized :math:`j \times k` with :math:`l` channels.
+
+Alternatively, use fromarray with the allowND option to always return a cvMatND.
