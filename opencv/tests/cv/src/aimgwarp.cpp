@@ -1546,6 +1546,7 @@ void CV_UndistortMapTest::run_func()
 	else
 		cvInitUndistortMap( &test_mat[INPUT][0], &test_mat[INPUT][1],
                         test_array[OUTPUT][0], 0 );
+
 }
 
 
@@ -1597,11 +1598,17 @@ int CV_UndistortMapTest::prepare_test_case( int test_case_idx )
     cvTsConvert( &_a, _a0 );
 	cvTsConvert( &_k, _k0 );
 
+	if (dualChannel)
+	{
+		cvZero(&test_mat[REF_OUTPUT][1]);
+		cvZero(&test_mat[OUTPUT][1]);
+	}
+
     return code;
 }
 
 
-void CV_UndistortMapTest::prepare_to_validation( int /*test_case_idx*/ )
+void CV_UndistortMapTest::prepare_to_validation( int test_case_idx )
 {
 	if (!dualChannel )
 		cvTsInitUndistortMap( &test_mat[INPUT][0], &test_mat[INPUT][1],
