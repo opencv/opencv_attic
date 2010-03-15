@@ -6,7 +6,7 @@ tput clear
 mkdir -p _build/html/python
 mkdir -p _build/html/cpp
 
-if false
+if true
 then
   rm -f *.rst
   svn up
@@ -24,7 +24,7 @@ then
   TEXINPUTS=$PWD: sphinx-build -b html -D 'highlight_language=python' -D 'html_title=OpenCV 2.0 Python Reference' -d _build/doctrees . _build/html/python
 fi
 
-if false
+if true
 then
   rm -f *.rst
   svn up
