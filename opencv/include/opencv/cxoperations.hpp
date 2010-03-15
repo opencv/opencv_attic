@@ -2511,8 +2511,7 @@ template<typename _Tp> inline SeqIterator<_Tp>::SeqIterator()
 template<typename _Tp> inline SeqIterator<_Tp>::SeqIterator(const Seq<_Tp>& seq, bool seekEnd)
 {
     cvStartReadSeq(seq.seq, this);
-    if( seekEnd )
-        index = seq.seq->total;
+    index = seekEnd ? seq.seq->total : 0;
 }
 
 template<typename _Tp> inline void SeqIterator<_Tp>::seek(size_t pos)
