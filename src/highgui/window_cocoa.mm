@@ -106,8 +106,9 @@ CV_IMPL int cvInitSystem( int argc, char** argv)
 	pool = [[NSAutoreleasePool alloc] init];
 	application = [NSApplication sharedApplication];
 	windows = [[NSMutableDictionary alloc] init];
-    
-    [application setActivationPolicy:NSApplicationActivationPolicyRegular];
+
+    if( floor(NSAppKitVersionNumber) > NSAppKitVersionNumber10_5 )
+        [application setActivationPolicy:0/*NSApplicationActivationPolicyRegular*/];
     [application finishLaunching];
     atexit(icvCocoaCleanup);
 	
@@ -400,7 +401,7 @@ CV_IMPL int cvWaitKey (int maxWait)
     CVWindow *window = (CVWindow *)[[self contentView] window];
     for(NSString *key in [window sliders]) {
         NSSlider *slider = [[window sliders] valueForKey:key];
-        viewHeight = std::min(viewHeight, [slider frame].origin.y);
+        viewHeight = std::min(viewHeight, (double)([slider frame].origin.y));
     }
     viewHeight -= TOP_BORDER;
     mp.y = viewHeight - mp.y;
