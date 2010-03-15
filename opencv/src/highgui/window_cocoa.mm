@@ -150,8 +150,9 @@ CV_IMPL void cvShowImage( const char* name, const CvArr* arr)
 {
 	CVWindow *window = cvGetWindow(name);
 	if(window) {
+        bool empty = [[window contentView] image] == nil;
 		[[window contentView] setImageData:(CvArr *)arr];
-		if([window autosize]) {
+		if([window autosize] || empty) {
 			NSRect rect = [window frame];
 			rect.size = [[[window contentView] image] size];
 			[window setFrame:rect display:YES];
@@ -329,9 +330,10 @@ CV_IMPL int cvNamedWindow( const char* name, int flags )
         cvInitSystem(0, 0);
     
 	CVWindow *window = [[CVWindow alloc] initWithContentRect:NSMakeRect(0,0,200,200)
-	styleMask:NSTitledWindowMask|NSClosableWindowMask|NSMiniaturizableWindowMask|NSResizableWindowMask
-	backing:NSBackingStoreBuffered  
-	defer:NO];
+        styleMask:NSTitledWindowMask|NSClosableWindowMask|NSMiniaturizableWindowMask|
+        (!(flags & CV_WND_PROP_AUTOSIZE) ? NSResizableWindowMask : 0)
+        backing:NSBackingStoreBuffered  
+	    defer:NO];
 	
 	NSString *windowName = [NSString stringWithFormat:@"%s", name];
 	
