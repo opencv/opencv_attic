@@ -2665,7 +2665,7 @@ cvReshapeMatND( const CvArr* arr,
         }
     }
 
-    if( !coi )
+    if( coi )
         CV_Error( CV_BadCOI, "COI is not supported by this operation" );
 
     result = _header;
