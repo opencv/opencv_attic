@@ -2512,21 +2512,22 @@ cvReshapeMatND( const CvArr* arr,
     if( new_dims <= 2 )
     {
         CvMat* mat = (CvMat*)arr;
-        CvMat* header = (CvMat*)_header;
+        CvMat header;
         int* refcount = 0;
         int  hdr_refcount = 0;
         int  total_width, new_rows, cn;
 
-        if( sizeof_header != sizeof(CvMat))
-            CV_Error( CV_StsBadArg, "The header should be CvMat" );
+        if( sizeof_header != sizeof(CvMat) && sizeof_header != sizeof(CvMatND) )
+            CV_Error( CV_StsBadArg, "The output header should be CvMat or CvMatND" );
 
-        if( mat == header )
+        if( mat == (CvMat*)_header )
         {
             refcount = mat->refcount;
             hdr_refcount = mat->hdr_refcount;
         }
-        else if( !CV_IS_MAT( mat ))
-            mat = cvGetMat( mat, header, &coi, 1 );
+        
+        if( !CV_IS_MAT( mat ))
+            mat = cvGetMat( mat, &header, &coi, 1 );
 
         cn = CV_MAT_CN( mat->type );
         total_width = mat->cols * cn;
@@ -2560,31 +2561,41 @@ cvReshapeMatND( const CvArr* arr,
                                         "is not divisible by the new number of rows" );
         }
 
-        header->rows = new_rows;
-        header->cols = total_width / new_cn;
+        header.rows = new_rows;
+        header.cols = total_width / new_cn;
 
-        if( header->cols * new_cn != total_width ||
-            (new_sizes && header->cols != new_sizes[1]) )
+        if( header.cols * new_cn != total_width ||
+            (new_sizes && header.cols != new_sizes[1]) )
             CV_Error( CV_StsBadArg, "The total matrix width is not "
                             "divisible by the new number of columns" );
 
-        header->type = (mat->type & ~CV_MAT_TYPE_MASK) | CV_MAKETYPE(mat->type, new_cn);
-        header->step = header->cols * CV_ELEM_SIZE(mat->type);
-        header->step &= new_rows > 1 ? -1 : 0;
-        header->refcount = refcount;
-        header->hdr_refcount = hdr_refcount;
+        header.type = (mat->type & ~CV_MAT_TYPE_MASK) | CV_MAKETYPE(mat->type, new_cn);
+        header.step = header.cols * CV_ELEM_SIZE(mat->type);
+        header.step &= new_rows > 1 ? -1 : 0;
+        header.refcount = refcount;
+        header.hdr_refcount = hdr_refcount;
+        
+        if( sizeof_header == sizeof(CvMat) )
+            *(CvMat*)_header = header;
+        else
+        {
+            CvMatND* __header = (CvMatND*)_header;
+            cvGetMatND(&header, __header, 0);
+            if( new_dims > 0 )
+                __header->dims = new_dims;
+        }
     }
     else
     {
         CvMatND* header = (CvMatND*)_header;
 
         if( sizeof_header != sizeof(CvMatND))
-            CV_Error( CV_StsBadSize, "The header should be CvMatND" );
+            CV_Error( CV_StsBadSize, "The output header should be CvMatND" );
         
         if( !new_sizes )
         {
             if( !CV_IS_MATND( arr ))
-                CV_Error( CV_StsBadArg, "The source array must be CvMatND" );
+                CV_Error( CV_StsBadArg, "The input array must be CvMatND" );
 
             {
             CvMatND* mat = (CvMatND*)arr;
