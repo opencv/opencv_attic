@@ -675,11 +675,11 @@ class FunctionTests(OpenCVTests):
         self.assert_(nd == 3)
         self.assert_((nc * nr * nd) == elems)
 
-        return # XXX - blocked by fixes for #166, #150
-
         # Now test ReshapeMatND
-        mat = cv.CreateMatND([2, 2, 2], cv.CV_32F)
-        print cv.ReshapeMatND(mat, 0, []);
+        mat = cv.CreateMatND([24], cv.CV_32F)
+        cv.Set(mat, 1.0)
+        self.assertEqual(cv.GetDims(cv.ReshapeMatND(mat, 0, [])), (24, 1))
+        self.assertEqual(cv.GetDims(cv.ReshapeMatND(mat, 0, [1])), (6, 4))
 
     def test_Save(self):
         for o in [ cv.CreateImage((128,128), cv.IPL_DEPTH_8U, 1), cv.CreateMat(16, 16, cv.CV_32FC1) ]:
@@ -801,7 +801,6 @@ class AreaTests(OpenCVTests):
             na = numpy.ones([7,9,2,1,8])
             cm = cv.fromarray(na, True)
             print cv.GetDims(cm)
-
         else:
             print "SKIPPING test_numpy - numpy support not built"
 
@@ -1626,18 +1625,18 @@ class AreaTests(OpenCVTests):
                 for op in ["OPEN", "CLOSE", "GRADIENT", "TOPHAT", "BLACKHAT"]:
                         cv.MorphologyEx(im, dst, temp, e, eval("cv.CV_MOP_%s" % op), iter)
         
-    def failing_test_getmat_nd(self):
-        # 1D CvMatND should yield 1D CvMat
+    def test_getmat_nd(self):
+        # 1D CvMatND should yield (N,1) CvMat
         matnd = cv.CreateMatND([13], cv.CV_8UC1)
-        self.assertEqual(cv.GetDims(cv.GetMat(matnd, allowND = True)), (13,))
+        self.assertEqual(cv.GetDims(cv.GetMat(matnd, allowND = True)), (13, 1))
 
         # 2D CvMatND should yield 2D CvMat
-        matnd = cv.CreateMatND([11,12], cv.CV_8UC1)
+        matnd = cv.CreateMatND([11, 12], cv.CV_8UC1)
         self.assertEqual(cv.GetDims(cv.GetMat(matnd, allowND = True)), (11, 12))
 
-        # 3D CvMatND should yield 1D CvMat
-        matnd = cv.CreateMatND([8,8,8], cv.CV_8UC1)
-        self.assertEqual(cv.GetDims(cv.GetMat(matnd, allowND = True)), (8 * 8 * 8,))
+        # 3D CvMatND should yield (N,1) CvMat
+        matnd = cv.CreateMatND([7, 8, 9], cv.CV_8UC1)
+        self.assertEqual(cv.GetDims(cv.GetMat(matnd, allowND = True)), (7 * 8 * 9, 1))
 
     def test_clipline(self):
         self.assert_(cv.ClipLine((100,100), (-100,0), (500,0)) == ((0,0), (99,0)))
