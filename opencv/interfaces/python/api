@@ -1231,6 +1231,14 @@ HaarDetectObjects CvSeqOfCvAvgComp*
   int flags 0
   CvSize min_size cvSize(0,0)
 
+ComputeCorrespondEpilines
+  CvMat points
+  int whichImage
+  CvMat F
+  CvMat lines
+ConvertPointsHomogeneous
+  CvMat src
+  CvMat dst
 ProjectPoints2
   CvMat object_points
   CvMat rotation_vector
@@ -1243,6 +1251,19 @@ ProjectPoints2
   CvMat dpdf NULL
   CvMat dpdc NULL
   CvMat dpddist NULL
+ReprojectImageTo3D
+  CvArr disparityImage
+  CvArr _3dImage
+  CvMat Q
+  int handleMissingValues 0
+RQDecomp3x3 eulerAngles
+  CvMat M
+  CvMat R
+  CvMat Q
+  CvMat Qx NULL
+  CvMat Qy NULL
+  CvMat Qz NULL
+  CvPoint3D64f eulerAngles /O
 FindHomography homography
   CvMat src_points
   CvMat dst_points
@@ -1295,6 +1316,14 @@ FindExtrinsicCameraParams2
   CvMat distortion_coeffs
   CvMat rotation_vector
   CvMat translation_vector
+FindFundamentalMat int
+  CvMat points1
+  CvMat points2
+  CvMat fundamentalMatrix
+  int method CV_FM_RANSAC
+  double param1 1.
+  double param2 0.99
+  CvMat status NULL
 StereoCalibrate
   CvMat object_points
   CvMat image_points1
@@ -1319,6 +1348,13 @@ GetOptimalNewCameraMatrix
   CvMat newCameraMatrix
   CvSize newImageSize cvSize(0,0)
   CvRect* validPixROI NULL
+InitIntrinsicParams2D
+  CvMat objectPoints
+  CvMat imagePoints
+  CvMat npoints
+  CvSize imageSize
+  CvMat cameraMatrix
+  double aspectRatio 1.
 StereoRectify
   CvMat camera_matrix1
   CvMat camera_matrix2
@@ -1373,6 +1409,15 @@ UndistortPoints
   CvMat dist_coeffs
   CvMat R NULL
   CvMat P NULL
+DecomposeProjectionMatrix eulerAngles
+  CvMat projMatrix
+  CvMat cameraMatrix
+  CvMat rotMatrix
+  CvMat transVect
+  CvMat rotMatrX NULL
+  CvMat rotMatrY NULL
+  CvMat rotMatrZ NULL
+  CvPoint3D64f eulerAngles /O
 DrawChessboardCorners
   CvArr image
   CvSize pattern_size

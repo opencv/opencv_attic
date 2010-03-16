@@ -95,6 +95,7 @@ conversion_types = [
 'CvPoint2D32f', # '(ff)',
 'CvPoint2D32f*',
 'CvPoint3D32f*',
+'CvPoint2D64f',
 'CvPOSITObject*',
 'CvRect',
 'CvRect*',
