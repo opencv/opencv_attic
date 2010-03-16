@@ -151,10 +151,15 @@ CV_IMPL void cvShowImage( const char* name, const CvArr* arr)
 	CVWindow *window = cvGetWindow(name);
 	if(window) {
         bool empty = [[window contentView] image] == nil;
+        NSRect rect = [window frame];
+        NSRect vrectOld = [[window contentView] frame];
+        
 		[[window contentView] setImageData:(CvArr *)arr];
 		if([window autosize] || empty) {
-			NSRect rect = [window frame];
-			rect.size = [[[window contentView] image] size];
+			NSRect vrectNew = vrectOld;
+            vrectNew.size = [[[window contentView] image] size];
+            rect.size.width += vrectNew.size.width - vrectOld.size.width;
+            rect.size.height += vrectNew.size.height - vrectOld.size.height;
 			[window setFrame:rect display:YES];
 		} else {
 			[window display];

@@ -188,29 +188,40 @@ int main(int argc, char** argv)
         img2 = img2r;
     }
     
+    numberOfDisparities = numberOfDisparities > 0 ? numberOfDisparities : img_size.width/8;
+    
     bm.state->roi1 = roi1;
     bm.state->roi2 = roi2;
     bm.state->preFilterCap = 31;
-    bm.state->SADWindowSize = SADWindowSize > 0 ? SADWindowSize : 11;
+    bm.state->SADWindowSize = SADWindowSize > 0 ? SADWindowSize : 9;
     bm.state->minDisparity = 0;
-    bm.state->numberOfDisparities = numberOfDisparities > 0 ? numberOfDisparities : img_size.width/8;
+    bm.state->numberOfDisparities = numberOfDisparities;
     bm.state->textureThreshold = 10;
     bm.state->uniquenessRatio = 15;
     bm.state->speckleWindowSize = 100;
     bm.state->speckleRange = 32;
+    bm.state->disp12MaxDiff = 1;
     
     sgbm.preFilterCap = 63;
-    sgbm.SADWindowSize = SADWindowSize > 0 ? SADWindowSize : 7;
-    sgbm.P1 = 2*sgbm.SADWindowSize*sgbm.SADWindowSize;
-    sgbm.P2 = 5*sgbm.SADWindowSize*sgbm.SADWindowSize;
+    sgbm.SADWindowSize = SADWindowSize > 0 ? SADWindowSize : 3;
+    
+    int cn = img1.channels();
+    
+    sgbm.P1 = 8*cn*sgbm.SADWindowSize*sgbm.SADWindowSize;
+    sgbm.P2 = 32*cn*sgbm.SADWindowSize*sgbm.SADWindowSize;
     sgbm.minDisparity = 0;
-    sgbm.numberOfDisparities = bm.state->numberOfDisparities;
+    sgbm.numberOfDisparities = numberOfDisparities;
     sgbm.uniquenessRatio = 10;
     sgbm.speckleWindowSize = bm.state->speckleWindowSize;
     sgbm.speckleRange = bm.state->speckleRange;
+    sgbm.disp12MaxDiff = 1;
     sgbm.fullDP = alg == STEREO_HH;
     
     Mat disp, disp8;
+    //Mat img1p, img2p, dispp;
+    //copyMakeBorder(img1, img1p, 0, 0, numberOfDisparities, 0, IPL_BORDER_REPLICATE);
+    //copyMakeBorder(img2, img2p, 0, 0, numberOfDisparities, 0, IPL_BORDER_REPLICATE);
+    
     int64 t = getTickCount();
     if( alg == STEREO_BM )
         bm(img1, img2, disp);
@@ -219,10 +230,15 @@ int main(int argc, char** argv)
     t = getTickCount() - t;
     printf("Time elapsed: %fms\n", t*1000/getTickFrequency());
 
+    //disp = dispp.colRange(numberOfDisparities, img1p.cols);
     disp.convertTo(disp8, CV_8U, 255/(numberOfDisparities*16.));
     if( !no_display )
     {
-        namedWindow("disparity", 1);
+        namedWindow("left", 1);
+        imshow("left", img1);
+        namedWindow("right", 1);
+        imshow("right", img2);
+        namedWindow("disparity", 0);
         imshow("disparity", disp8);
         printf("press any key to continue...");
         fflush(stdout);
