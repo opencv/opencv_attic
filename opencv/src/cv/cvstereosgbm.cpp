@@ -110,47 +110,57 @@ StereoSGBM::~StereoSGBM()
  */
 static void calcPixelCostBT( const Mat& img1, const Mat& img2, int y,
                             int minD, int maxD, CostType* cost,
-                            PixType* buffer, const PixType* tab, int tabOfs )
+                            PixType* buffer, const PixType* tab,
+                            int tabOfs, int ftzero )
 {
     int x, c, width = img1.cols, cn = img1.channels();
     int minX1 = max(maxD, 0), maxX1 = width + min(minD, 0);
     int minX2 = max(minX1 - maxD, 0), maxX2 = min(maxX1 - minD, width);
     int D = maxD - minD, width1 = maxX1 - minX1, width2 = maxX2 - minX2;
     const PixType *row1 = img1.ptr<PixType>(y), *row2 = img2.ptr<PixType>(y);
-    PixType *prow1 = buffer + width2*2, *prow2 = prow1 + width*cn;
+    PixType *prow1 = buffer + width2*2, *prow2 = prow1 + width*cn*2;
     
     tab += tabOfs;
     
-    for( c = 0; c < cn; c++ )
+    for( c = 0; c < cn*2; c++ )
     {
         prow1[width*c] = prow1[width*c + width-1] = 
         prow2[width*c] = prow2[width*c + width-1] = tab[0];
     }
     
+    int n1 = y > 0 ? -(int)img1.step : 0, s1 = y < img1.rows-1 ? (int)img1.step : 0;
+    int n2 = y > 0 ? -(int)img2.step : 0, s2 = y < img2.rows-1 ? (int)img2.step : 0;
+    
     if( cn == 1 )
     {
-        int n1 = y > 0 ? -(int)img1.step : 0, s1 = y < img1.rows-1 ? (int)img1.step : 0;
-        int n2 = y > 0 ? -(int)img2.step : 0, s2 = y < img2.rows-1 ? (int)img2.step : 0;
-        
         for( x = 1; x < width-1; x++ )
         {
-            //prow1[x] = tab[row1[x+1] - row1[x-1]];
-            //prow2[width-1-x] = tab[row2[x+1] - row2[x-1]];
             prow1[x] = tab[(row1[x+1] - row1[x-1])*2 + row1[x+n1+1] - row1[x+n1-1] + row1[x+s1+1] - row1[x+s1-1]];
             prow2[width-1-x] = tab[(row2[x+1] - row2[x-1])*2 + row2[x+n2+1] - row2[x+n2-1] + row2[x+s2+1] - row2[x+s2-1]];
+            
+            prow1[x+width] = row1[x];
+            prow2[width-1-x+width] = row2[x];
         }
     }
     else
     {
         for( x = 1; x < width-1; x++ )
         {
-            prow1[x] = tab[row1[x*3+3] - row1[x*3-3]];
-            prow1[x+width] = tab[row1[x*3+4] - row1[x*3-2]];
-            prow1[x+width*2] = tab[row1[x*3+5] - row1[x*3-1]];
+            prow1[x] = tab[(row1[x*3+3] - row1[x*3-3])*2 + row1[x*3+n1+3] - row1[x*3+n1-3] + row1[x*3+s1+3] - row1[x*3+s1-3]];
+            prow1[x+width] = tab[(row1[x*3+4] - row1[x*3-2])*2 + row1[x*3+n1+4] - row1[x*3+n1-2] + row1[x*3+s1+4] - row1[x*3+s1-2]];
+            prow1[x+width*2] = tab[(row1[x*3+5] - row1[x*3-1])*2 + row1[x*3+n1+5] - row1[x*3+n1-1] + row1[x*3+s1+5] - row1[x*3+s1-1]];
             
-            prow2[width-1-x] = tab[row2[x*3+3] - row2[x*3-3]];
-            prow2[width-1-x+width] = tab[row2[x*3+4] - row2[x*3-2]];
-            prow2[width-1-x+width*2] = tab[row2[x*3+5] - row2[x*3-1]];
+            prow2[width-1-x] = tab[(row2[x*3+3] - row2[x*3-3])*2 + row2[x*3+n2+3] - row2[x*3+n2-3] + row2[x*3+s2+3] - row2[x*3+s2-3]];
+            prow2[width-1-x+width] = tab[(row2[x*3+4] - row2[x*3-2])*2 + row2[x*3+n2+4] - row2[x*3+n2-2] + row2[x*3+s2+4] - row2[x*3+s2-2]];
+            prow2[width-1-x+width*2] = tab[(row2[x*3+5] - row2[x*3-1])*2 + row2[x*3+n2+5] - row2[x*3+n2-1] + row2[x*3+s2+5] - row2[x*3+s2-1]];
+            
+            prow1[x+width*3] = row1[x*3];
+            prow1[x+width*4] = row1[x*3+1];
+            prow1[x+width*5] = row1[x*3+2];
+            
+            prow2[width-1-x+width*3] = row2[x*3];
+            prow2[width-1-x+width*4] = row2[x*3+1];
+            prow2[width-1-x+width*5] = row2[x*3+2];
         }
     }
     
@@ -164,8 +174,10 @@ static void calcPixelCostBT( const Mat& img1, const Mat& img2, int y,
 #endif
     
 #if 1    
-    for( c = 0; c < cn; c++, prow1 += width, prow2 += width )
+    for( c = 0; c < cn*2; c++, prow1 += width, prow2 += width )
     {
+        int diff_scale = c < cn ? 0 : 2;
+        
         // precompute
         //   v0 = min(row2[x-1/2], row2[x], row2[x+1/2]) and
         //   v1 = max(row2[x-1/2], row2[x], row2[x+1/2]) and
@@ -193,6 +205,7 @@ static void calcPixelCostBT( const Mat& img1, const Mat& img2, int y,
             {
                 __m128i _u = _mm_set1_epi8((char)u), _u0 = _mm_set1_epi8((char)u0);
                 __m128i _u1 = _mm_set1_epi8((char)u1), z = _mm_setzero_si128();
+                __m128i ds = _mm_cvtsi32_si128(diff_scale);
                 
                 for( int d = minD; d < maxD; d += 16 )
                 {
@@ -206,8 +219,8 @@ static void calcPixelCostBT( const Mat& img1, const Mat& img2, int y,
                     c0 = _mm_load_si128((__m128i*)(cost + x*D + d));
                     c1 = _mm_load_si128((__m128i*)(cost + x*D + d + 8));
                     
-                    _mm_store_si128((__m128i*)(cost + x*D + d), _mm_adds_epi16(c0, _mm_unpacklo_epi8(diff,z)));
-                    _mm_store_si128((__m128i*)(cost + x*D + d + 8), _mm_adds_epi16(c1, _mm_unpackhi_epi8(diff,z)));
+                    _mm_store_si128((__m128i*)(cost + x*D + d), _mm_adds_epi16(c0, _mm_srl_epi16(_mm_unpacklo_epi8(diff,z), ds)));
+                    _mm_store_si128((__m128i*)(cost + x*D + d + 8), _mm_adds_epi16(c1, _mm_srl_epi16(_mm_unpackhi_epi8(diff,z), ds)));
                 }
             }
             else
@@ -221,13 +234,13 @@ static void calcPixelCostBT( const Mat& img1, const Mat& img2, int y,
                     int c0 = max(0, u - v1); c0 = max(c0, v0 - u);
                     int c1 = max(0, v - u1); c1 = max(c1, u0 - v);
                     
-                    cost[x*D + d] = (CostType)(cost[x*D+d] + min(c0, c1));
+                    cost[x*D + d] = (CostType)(cost[x*D+d] + (min(c0, c1) >> diff_scale));
                 }
             }
         }
     }
 #else
-    for( c = 0; c < cn; c++, prow1 += width, prow2 += width )
+    for( c = 0; c < cn*2; c++, prow1 += width, prow2 += width )
     {
         for( x = minX1; x < maxX1; x++ )
         {
@@ -254,7 +267,7 @@ static void calcPixelCostBT( const Mat& img1, const Mat& img2, int y,
                 for( int d = minD; d < maxD; d++ )
                 {
                     int v = prow2[width-1-x + d];
-                    cost[x*D + d] = (CostType)(cost[x*D + d] + std::abs(u - v));
+                    cost[x*D + d] = (CostType)(cost[x*D + d] + (CostType)std::abs(u - v));
                 }
             }
         }
@@ -355,7 +368,7 @@ static void computeDisparitySGBM( const Mat& img1, const Mat& img2,
     size_t totalBufSize = (LrSize + minLrSize)*NLR*sizeof(CostType) + // minLr[] and Lr[]
     costBufSize*(hsumBufNRows + 1)*sizeof(CostType) + // hsumBuf, pixdiff
     CSBufSize*2*sizeof(CostType) + // C, S
-    width*8*img1.channels()*sizeof(PixType) + // temp buffer for computing per-pixel cost
+    width*16*img1.channels()*sizeof(PixType) + // temp buffer for computing per-pixel cost
     width*(sizeof(CostType) + sizeof(DispType)) + 1024; // disp2cost + disp2
     
     if( !buffer.data || !buffer.isContinuous() ||
@@ -423,7 +436,7 @@ static void computeDisparitySGBM( const Mat& img1, const Mat& img2,
                     
                     if( k < height )
                     {
-                        calcPixelCostBT( img1, img2, k, minD, maxD, pixDiff, tempBuf, clipTab, TAB_OFS );
+                        calcPixelCostBT( img1, img2, k, minD, maxD, pixDiff, tempBuf, clipTab, TAB_OFS, ftzero );
                         
                         memset(hsumAdd, 0, D*sizeof(CostType));
                         for( x = 0; x <= SW2*D; x += D )
