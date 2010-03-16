@@ -251,7 +251,7 @@ The functions are used inside \cvCppCross{stereoCalibrate} but can also be used 
 For points in one image of a stereo pair, computes the corresponding epilines in the other image.
 
 \cvdefC{void cvComputeCorrespondEpilines( \par const CvMat* points,\par int whichImage,\par const CvMat* F, \par CvMat* lines);}
-\cvdefPy{ComputeCorrespondEpilines(points, which\_image, fundamentalMatrix, correspondent\_lines) -> None}
+\cvdefPy{ComputeCorrespondEpilines(points, whichImage, F, lines) -> None}
 \cvdefCpp{void computeCorrespondEpilines( const Mat\& points,\par
                                 int whichImage, const Mat\& F,\par
                                 vector<Vec3f>\& lines );}
@@ -279,15 +279,15 @@ and, vice versa, when \texttt{whichImage=2}, $l^{(1)}_i$ is computed from $p^{(2
 Line coefficients are defined up to a scale. They are normalized, such that $a_i^2+b_i^2=1$.
 
 
-\ifPy
-\else
-
 \cvFunc{ConvertPointsHomogeneous}{convertPointsHomogeneous}
-Convert points to/from homogenious coordinates.
+Convert points to/from homogeneous coordinates.
 
 \cvdefC{void cvConvertPointsHomogeneous( \par const CvMat* src,\par CvMat* dst );}
 
-\cvdefCpp{void convertPointsHomogeneous( const Mat\& src, vector<Point3f>\& dst );\newline
+\cvdefPy{ConvertPointsHomogeneous( src, dst ) -> None}
+
+\cvdefCpp{void convertPointsHomogeneous( const Mat\& src, vector<Point3f>\& dst );
+
 void convertPointsHomogeneous( const Mat\& src, vector<Point2f>\& dst );}
 
 \begin{description}
@@ -300,7 +300,7 @@ void convertPointsHomogeneous( const Mat\& src, vector<Point2f>\& dst );}
 \fi
 \end{description}
 
-The \cvC{function converts}\cvCpp{functions convert} 2D or 3D points from/to homogenious coordinates, or simply \cvC{copies or transposes}\cvCpp{copy or transpose} the array. If the input array dimensionality is larger than the output, each coordinate is divided by the last coordinate:
+The \cvC{function converts}\cvCpp{functions convert} 2D or 3D points from/to homogeneous coordinates, or simply \cvC{copies or transposes}\cvCpp{copy or transpose} the array. If the input array dimensionality is larger than the output, each coordinate is divided by the last coordinate:
 
 \[
 \begin{array}{l}
@@ -315,8 +315,6 @@ z' = z/w \quad \text{(if output is 3D)}
 If the output array dimensionality is larger, an extra 1 is appended to each point.  Otherwise, the input array is simply copied (with optional transposition) to the output.
 
 \cvC{\textbf{Note} because the function accepts a large variety of array layouts, it may report an error when input/output array dimensionality is ambiguous. It is always safe to use the function with number of points $\texttt{N} \ge 5$, or to use multi-channel \texttt{Nx1} or \texttt{1xN} arrays.}
-
-\fi
 
 \ifCPy
 
@@ -448,7 +446,10 @@ Decomposes the projection matrix into a rotation matrix and a camera matrix.
 
 \cvdefC{
 void cvDecomposeProjectionMatrix( \par const CvMat *projMatrix,\par CvMat *cameraMatrix,\par CvMat *rotMatrix,\par CvMat *transVect,\par CvMat *rotMatrX=NULL,\par CvMat *rotMatrY=NULL,\par CvMat *rotMatrZ=NULL,\par CvPoint3D64f *eulerAngles=NULL);
-}\cvdefPy{DecomposeProjectionMatrix(projMatrix, cameraMatrix, rotMatrix, transVect, rotMatrX = None, rotMatrY = None, rotMatrZ = None) -> eulerAngles}
+}
+
+\cvdefPy{DecomposeProjectionMatrix(projMatrix, cameraMatrix, rotMatrix, transVect, rotMatrX = None, rotMatrY = None, rotMatrZ = None) -> eulerAngles}
+
 \cvdefCpp{void decomposeProjectionMatrix( const Mat\& projMatrix,\par
                                 Mat\& cameraMatrix,\par
                                 Mat\& rotMatrix, Mat\& transVect );\newline
@@ -558,7 +559,8 @@ Calculates the fundamental matrix from the corresponding points in two images.
 
 \cvdefC{
 int cvFindFundamentalMat( \par const CvMat* points1,\par const CvMat* points2,\par CvMat* fundamentalMatrix,\par int    method=CV\_FM\_RANSAC,\par double param1=1.,\par double param2=0.99,\par CvMat* status=NULL);
-}\cvdefPy{FindFundamentalMat(points1, points2, fundamentalMatrix, method=CV\_FM\_RANSAC, param1=1., double param2=0.99, status = None) -> None}
+}
+\cvdefPy{FindFundamentalMat(points1, points2, fundamentalMatrix, method=CV\_FM\_RANSAC, param1=1., double param2=0.99, status = None) -> None}
 \cvdefCpp{Mat findFundamentalMat( const Mat\& points1, const Mat\& points2,\par
                         vector<uchar>\& status, int method=FM\_RANSAC,\par
                         double param1=3., double param2=0.99 );\newline
@@ -656,7 +658,7 @@ Mat findHomography( const Mat\& srcPoints, const Mat\& dstPoints,\par
 
 \begin{description}
 
-\cvCPy{\cvarg{srcPoints}{Coordinates of the points in the original plane, 2xN, Nx2, 3xN or Nx3 1-channel array (the latter two are for representation in homogenious coordinates), where N is the number of points. 1xN or Nx1 2- or 3-channel array can also be passed.}
+\cvCPy{\cvarg{srcPoints}{Coordinates of the points in the original plane, 2xN, Nx2, 3xN or Nx3 1-channel array (the latter two are for representation in homogeneous coordinates), where N is the number of points. 1xN or Nx1 2- or 3-channel array can also be passed.}
 \cvarg{dstPoints}{Point coordinates in the destination plane, 2xN, Nx2, 3xN or Nx3 1-channel, or 1xN or Nx1 2- or 3-channel array.}}
 \cvCpp{\cvarg{srcPoints}{Coordinates of the points in the original plane, a matrix of type \texttt{CV\_32FC2} or a \texttt{vector<Point2f>}.}
 \cvarg{dstPoints}{Coordinates of the points in the target plane, a matrix of type \texttt{CV\_32FC2} or a \texttt{vector<Point2f>}.}}
@@ -850,9 +852,6 @@ By default, the undistortion functions in OpenCV (see \texttt{initUndistortRecti
 
 \fi
 
-\ifPy
-\else
-
 \cvFunc{GetOptimalNewCameraMatrix}{getOptimalNewCameraMatrix}
 Returns the new camera matrix based on the free scaling parameter
 
@@ -862,6 +861,7 @@ Returns the new camera matrix based on the free scaling parameter
     \par CvMat* newCameraMatrix,
     \par CvSize newImageSize=cvSize(0,0),
     \par CvRect* validPixROI=0 );}
+\cvdefPy{getOptimalNewCameraMatrix(cameraMatrix, distCoeffs, imageSize, alpha, newImgSize=cvSize(0,0), validPixROI=0)}
 \cvdefCpp{Mat getOptimalNewCameraMatrix(
     \par const Mat\& cameraMatrix, const Mat\& distCoeffs,
     \par Size imageSize, double alpha, Size newImgSize=Size(),
@@ -887,6 +887,7 @@ Finds the initial camera matrix from the 3D-2D point correspondences
                                      \par const CvMat* npoints, CvSize imageSize,
                                      \par CvMat* cameraMatrix,
                                      \par double aspectRatio=1.);}                                     
+\cvdefPy{initCameraMatrix2D( objectPoints, imagePoints, npoints, imageSize, cameraMatrix, aspectRatio=1.) -> None}
 \cvdefCpp{Mat initCameraMatrix2D( const vector<vector<Point3f> >\& objectPoints,\par
                         const vector<vector<Point2f> >\& imagePoints,\par
                         Size imageSize, double aspectRatio=1.);}
@@ -907,8 +908,6 @@ Finds the initial camera matrix from the 3D-2D point correspondences
 
 The function estimates and returns the initial camera matrix for camera calibration process.
 Currently, the function only supports planar calibration patterns, i.e. patterns where each object point has z-coordinate =0.
-
-\fi
 
 \ifCPy
 \cvFunc{InitUndistortMap}
@@ -1077,6 +1076,9 @@ Reprojects disparity image to 3D space.
 \cvdefC{void cvReprojectImageTo3D( const CvArr* disparityImage,\par
                                    CvArr* \_3dImage, const CvMat* Q,\par
                                    int handleMissingValues=0);}
+
+\cvdefPy{ReprojectImageTo3D(disparityImage, \_3dImage, Q, handleMissingValues=0) -> None}
+
 \cvdefCpp{void reprojectImageTo3D( const Mat\& disparity,\par
                          Mat\& \_3dImage, const Mat\& Q,\par
                          bool handleMissingValues=false );}
@@ -1103,7 +1105,8 @@ Computes the 'RQ' decomposition of 3x3 matrices.
 
 \cvdefC{
 void cvRQDecomp3x3( \par const CvMat *M,\par CvMat *R,\par CvMat *Q,\par CvMat *Qx=NULL,\par CvMat *Qy=NULL,\par CvMat *Qz=NULL,\par CvPoint3D64f *eulerAngles=NULL);
-}\cvdefPy{RQDecomp3x3(M, R, Q, Qx = None, Qy = None, Qz = None) -> eulerAngles}
+}
+\cvdefPy{RQDecomp3x3(M, R, Q, Qx = None, Qy = None, Qz = None) -> eulerAngles}
 \cvdefCpp{void RQDecomp3x3( const Mat\& M, Mat\& R, Mat\& Q );\newline
 Vec3d RQDecomp3x3( const Mat\& M, Mat\& R, Mat\& Q,\par
                    Mat\& Qx, Mat\& Qy, Mat\& Qz );}
