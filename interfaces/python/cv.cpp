@@ -131,6 +131,7 @@ static PyObject *FROM_ROCvMatPTR(ROCvMat *r);
 #define FROM_CvScalar(r)  Py_BuildValue("(ffff)", r.val[0], r.val[1], r.val[2], r.val[3])
 #define FROM_CvPoint(r)  Py_BuildValue("(ii)", r.x, r.y)
 #define FROM_CvPoint2D32f(r) Py_BuildValue("(ff)", r.x, r.y)
+#define FROM_CvPoint3D64f(r) Py_BuildValue("(fff)", r.x, r.y, r.z)
 #define FROM_CvSize(r) Py_BuildValue("(ii)", r.width, r.height)
 #define FROM_CvRect(r) Py_BuildValue("(iiii)", r.x, r.y, r.width, r.height)
 #define FROM_CvSeqPTR(r) _FROM_CvSeqPTR(r, pyobj_storage)
