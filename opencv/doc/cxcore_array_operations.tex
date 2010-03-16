@@ -1114,7 +1114,6 @@ The function performs generalized matrix multiplication:
 
 All the matrices should have the same data type and coordinated sizes. Real or complex floating-point matrices are supported.
 
-\ifC
 \cvCPyFunc{Get?D}
 Return a specific array element.
 
@@ -1134,7 +1133,6 @@ CvScalar cvGetND(const CvArr* arr, int* idx);
 \end{description}
 
 The functions return a specific array element. In the case of a sparse array the functions return 0 if the requested node does not exist (no new node is created by the functions).
-\fi
 
 \cvCPyFunc{GetCol(s)}
 Returns array column or column span.
@@ -2772,7 +2770,6 @@ The function copies the scalar \texttt{value} to every selected element of the d
 
 If array \texttt{arr} is of \texttt{IplImage} type, then is ROI used, but COI must not be set.
 
-\ifC
 \cvCPyFunc{Set?D}
 Change the particular array element.
 
@@ -2798,6 +2795,7 @@ The functions assign the new value to a particular array element. In the case of
 Assigns user data to the array header.
 
 \cvdefC{void cvSetData(CvArr* arr, void* data, int step);}
+\cvdefPy{SetData(arr, data, step)-> None}
 
 \begin{description}
 \cvarg{arr}{Array header}
@@ -2806,7 +2804,6 @@ Assigns user data to the array header.
 \end{description}
 
 The function assigns user data to the array header. Header should be initialized before using \texttt{cvCreate*Header}, \texttt{cvInit*Header} or \cvCPyCross{Mat} (in the case of matrix) function.
-\fi
 
 \cvCPyFunc{SetIdentity}
 Initializes a scaled identity matrix.
@@ -2858,7 +2855,6 @@ If the original image ROI was \texttt{NULL} and the \texttt{rect} is not the who
 
 Most OpenCV functions support the use of ROI and treat the image rectangle as a separate image. For example, all of the pixel coordinates are counted from the top-left (or bottom-left) corner of the ROI, not the original image.
 
-\ifC
 \cvCPyFunc{SetReal?D}
 Change a specific array element.
 
@@ -2885,7 +2881,6 @@ safely for both single-channel and multiple-channel arrays, though they
 are a bit slower.
 
 In the case of a sparse array the functions create the node if it does not yet exist.
-\fi
 
 \cvCPyFunc{SetZero}
 Clears the array.
