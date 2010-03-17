@@ -1229,7 +1229,7 @@ void CvDTreeTrainData::get_ord_responses( CvDTreeNode* n, float* values_buf, con
     int* indices_buf = get_sample_idx_buf();
     const int* indices = 0;
 
-    int r_step = responses->step/CV_ELEM_SIZE(responses->type);
+    int r_step = CV_IS_MAT_CONT(responses->type) ? 1 : responses->step/CV_ELEM_SIZE(responses->type);
 
     get_sample_indices(n, indices_buf, &indices);
 
