@@ -150,17 +150,11 @@ int main( int argc, char** argv )
 	}
 
 	//Detector training
-    cv::CalonderRng rng( cvGetTickCount() );
-    cv::CalonderPatchGenerator gen(0,rng);
-    gen.setThetaBounds(-CV_PI/3,CV_PI/3);
-    gen.setPhiBounds(-CV_PI/3,CV_PI/3);
-    gen.setLambdaBounds(0.7,1.3);
-    gen.setRandomBackground(false);
-    gen.addWhiteNoise(false);
-    gen.setNoiseLevel(2);
+    cv::RNG rng( cvGetTickCount() );
+	cv::PatchGenerator gen(0,255,2,false,0.7,1.3,-CV_PI/3,CV_PI/3,-CV_PI/3,CV_PI/3);
 
 	printf("RTree Classifier training...\n");
-	detector.train(base_set,rng,gen,24,cv::DEFAULT_DEPTH,3000,(int)base_set.size(),detector.DEFAULT_NUM_QUANT_BITS);
+	detector.train(base_set,rng,gen,24,cv::DEFAULT_DEPTH,2000,(int)base_set.size(),detector.DEFAULT_NUM_QUANT_BITS);
 	printf("Done\n");
 
 	float* signature = new float[detector.original_num_classes()];
