@@ -577,7 +577,7 @@ public:
 \end{lstlisting}
 
 The class represents a 2D point, specified by its coordinates $x$ and $y$.
-Instance of the class is interchangeable with С structures \texttt{CvPoint} and \texttt{CvPoint2D32f}. There is also cast operator to convert point coordinates to the specified type. The conversion from floating-point coordinates to integer coordinates is done by rounding; in general case the conversion uses \hyperref[saturatecast]{saturate\_cast} operation on each of the coordinates. Besides the class members listed in the declaration above, the following operations on points are implemented:
+Instance of the class is interchangeable with C structures \texttt{CvPoint} and \texttt{CvPoint2D32f}. There is also cast operator to convert point coordinates to the specified type. The conversion from floating-point coordinates to integer coordinates is done by rounding; in general case the conversion uses \hyperref[saturatecast]{saturate\_cast} operation on each of the coordinates. Besides the class members listed in the declaration above, the following operations on points are implemented:
 
 \begin{lstlisting}
     pt1 = pt2 + pt3;
@@ -637,7 +637,7 @@ public:
 \end{lstlisting}
 
 The class represents a 3D point, specified by its coordinates $x$, $y$ and $z$.
-Instance of the class is interchangeable with С structure \texttt{CvPoint2D32f}. Similarly to \texttt{Point\_}, the 3D points' coordinates can be converted to another type, and the vector arithmetic and comparison operations are also supported.
+Instance of the class is interchangeable with C structure \texttt{CvPoint2D32f}. Similarly to \texttt{Point\_}, the 3D points' coordinates can be converted to another type, and the vector arithmetic and comparison operations are also supported.
 
 The following type aliases are available:
 
