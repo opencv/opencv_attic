@@ -51,6 +51,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
+#include <string>
 
 #if _MSC_VER >= 1200
 #pragma warning( disable: 4710 )
@@ -554,9 +555,7 @@ protected:
 
     StreamInfo output_streams[MAX_IDX];
     int ostream_testname_mask;
-    char* logbuf;
-    size_t logbufsize;
-    size_t logbufpos;
+    std::string logbuf;
 };
 
 

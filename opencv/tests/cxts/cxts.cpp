@@ -1035,9 +1035,6 @@ CvTS::CvTS()
     selected_tests = new CvTestPtrVec();
     failed_tests = new CvTestInfoVec();
     written_params = new CvTestPtrVec();
-    logbufsize = 1 << 18; // 256K
-    logbufpos = 0;
-    logbuf = new char[logbufsize];
 
     clear();
 }
@@ -1107,7 +1104,6 @@ CvTS::~CvTS()
 
     delete selected_tests;
     delete failed_tests;
-    delete[] logbuf;
 }
 
 
@@ -1496,7 +1492,7 @@ int CvTS::run( int argc, char** argv )
         current_test_info.rng_seed0 = current_test_info.rng_seed;
         
         ostream_testname_mask = 0; // reset "test name was printed" flags
-        logbufpos = 0;
+        logbuf = std::string();
         if( output_streams[LOG_IDX].f )
             fflush( output_streams[LOG_IDX].f );
 
@@ -1533,10 +1529,9 @@ int CvTS::run( int argc, char** argv )
                     current_test_info.test_case_idx,
                     (unsigned)(current_test_info.rng_seed>>32),
                     (unsigned)(current_test_info.rng_seed));
-            if(logbufpos > 0)
+            if(logbuf.size() > 0)
             {
-                logbuf[logbufpos] = '\0';
-                printf( SUMMARY + CONSOLE, ">>>\n%s\n", logbuf);
+                printf( SUMMARY + CONSOLE, ">>>\n%s\n", logbuf.c_str());
             }
             failed_tests->push(current_test_info);
             if( params.rerun_immediately )
@@ -1782,7 +1777,7 @@ void CvTS::vprintf( int streams, const char* fmt, va_list l )
     if( streams )
     {
         char str[1 << 14];
-        vsprintf( str, fmt, l );
+        vsnprintf( str, sizeof(str)-1, fmt, l );
 
         for( int i = 0; i < MAX_IDX; i++ )
         {
@@ -1802,16 +1797,11 @@ void CvTS::vprintf( int streams, const char* fmt, va_list l )
                         fflush( f );
                         ostream_testname_mask |= 1 << i;
                         if( i == LOG_IDX )
-                            logbufpos = 0;
+                            logbuf = std::string();
                     }
                     fputs( str, f );
                     if( i == LOG_IDX )
-                    {
-                        size_t len = strlen(str);
-                        CV_Assert(logbufpos + len < logbufsize);
-                        strcpy(logbuf + logbufpos, str);
-                        logbufpos += len;
-                    }
+                        logbuf += std::string(str);
                     if( i == CONSOLE_IDX )
                         fflush(f);
                 }

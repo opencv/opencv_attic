@@ -519,6 +519,4 @@ void CV_UndistortBadArgTest::run(int)
 
 CV_UndistortBadArgTest undistort_badarg_test;
 
-
-
 /* End of file. */
