@@ -1546,33 +1546,8 @@ struct DefaultRngAuto
 	/*!
 	A pseudo-random number generator usable with std::random_shuffle.
 	*/
-	class CV_EXPORTS CalonderRng
-	{
-	public:
-
-		typedef unsigned int int_type;
-
-		CalonderRng(int64 seed = -1);
-
-		~CalonderRng();
-
-		void seed(int64 seed);
-
-		//! Returns a random integer sampled uniformly over the range of int32.
-		// TODO: does this hold for Boost.Random?
-		unsigned int operator()();
-
-		//! Returns a random integer sampled uniformly from [0, N).
-		unsigned int operator()(unsigned int N);
-
-		double uniform(double a = 0, double b = 1);
-
-		//! Returns Gaussian random variate with mean zero.
-		double gaussian(double sigma);
-
-	private:
-		CvRNG rng;
-	};
+	typedef cv::RNG CalonderRng;
+	typedef unsigned int int_type;
 
 
 	//----------------------------
