@@ -1434,6 +1434,8 @@ inline RNG::operator schar() { return (schar)next(); }
 inline RNG::operator ushort() { return (ushort)next(); }
 inline RNG::operator short() { return (short)next(); }
 inline RNG::operator unsigned() { return next(); }
+inline unsigned RNG::operator ()(unsigned N) {return (unsigned)uniform(0,N);}
+inline unsigned RNG::operator ()() {return next();}
 inline RNG::operator int() { return (int)next(); }
 // * (2^32-1)^-1
 inline RNG::operator float() { return next()*2.3283064365386962890625e-10f; }
@@ -1446,6 +1448,16 @@ inline int RNG::uniform(int a, int b) { return a == b ? a : next()%(b - a) + a; 
 inline float RNG::uniform(float a, float b) { return ((float)*this)*(b - a) + a; }
 inline double RNG::uniform(double a, double b) { return ((float)*this)*(b - a) + a; }
 
+inline double RNG::gaussian(double sigma)
+{
+	CvMat* values = cvCreateMat( 1, 1, CV_64FC1 );
+
+	cvRandArr( &state, values, CV_RAND_NORMAL, cvRealScalar(0), cvRealScalar(sigma) );
+	double res = values->data.db[0];
+	cvReleaseMat(&values);
+	next();
+	return res;
+}
 
 inline TermCriteria::TermCriteria() : type(0), maxCount(0), epsilon(0) {}
 inline TermCriteria::TermCriteria(int _type, int _maxCount, double _epsilon)

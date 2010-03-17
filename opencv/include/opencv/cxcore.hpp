@@ -944,6 +944,9 @@ public:
     operator ushort();
     operator short();
     operator unsigned();
+	//! Returns a random integer sampled uniformly from [0, N).
+	unsigned operator()(unsigned N);
+	unsigned operator ()();
     operator int();
     operator float();
     operator double();
@@ -952,6 +955,8 @@ public:
     double uniform(double a, double b);
     void fill( Mat& mat, int distType, const Scalar& a, const Scalar& b );
     void fill( MatND& mat, int distType, const Scalar& a, const Scalar& b );
+	//! Returns Gaussian random variate with mean zero.
+	double gaussian(double sigma);
 
     uint64 state;
 };

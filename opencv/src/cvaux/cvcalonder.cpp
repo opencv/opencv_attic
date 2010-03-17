@@ -62,47 +62,6 @@ The code was integrated into OpenCV by Alexey Latyshev
 
 namespace cv {
 
-
-	//namespace features {
-	//rng
-	CalonderRng::CalonderRng(int64 seed)
-	{
-		rng = cvRNG(seed);
-	}
-
-	CalonderRng::~CalonderRng() {}
-
-	inline void CalonderRng::seed(int64 seed)
-	{
-		rng = cvRNG(seed);
-	}
-
-	inline unsigned int CalonderRng::operator()()
-	{
-		return cvRandInt(&rng);
-	}
-
-	inline unsigned int CalonderRng::operator()(unsigned int N)
-	{
-		return (unsigned int)(cvRandReal(&rng)*(N+1));
-	}
-
-	inline double CalonderRng::uniform(double a, double b)
-	{
-		double res = a<b ? a+(cvRandReal(&rng)*(b-a)) : b+(cvRandReal(&rng)*(a-b));
-		return res;
-	}
-
-	double CalonderRng::gaussian(double sigma)
-	{
-		// this did not work (got NANs): 
-		CvMat* values = cvCreateMat( 1, 1, CV_64FC1 );
-		cvRandArr( &rng, values, CV_RAND_NORMAL, cvRealScalar(0), cvRealScalar(sigma) );
-		double res = values->data.db[0];
-		cvReleaseMat(&values);
-		return res;
-	}
-
 	//patch_generator
 	const double CalonderPatchGenerator::DEFAULT_THETA_MIN = -CV_PI;
 	const double CalonderPatchGenerator::DEFAULT_THETA_MAX = CV_PI;
@@ -129,7 +88,7 @@ namespace cv {
 	{
 		// NOTE: for efficient random noise, we assume patch dimensions are
 		//       multiples of sizeof(CalonderRng::int_type)
-		typedef CalonderRng::int_type fill_type;
+		typedef int_type fill_type;
 		assert(patch && patch->depth == source_->depth);
 		assert(patch->width % sizeof(fill_type) == 0);
 		assert(patch->height % sizeof(fill_type) == 0);
