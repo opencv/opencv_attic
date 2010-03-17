@@ -643,7 +643,7 @@ int CV_StereoMatchingTest::compareErrors( const vector<float>& calcErrors, const
                                   epsIt = eps.begin();
     bool ok = true;
     for( int i = 0; i < ERROR_KINDS_COUNT; i++, ++calcIt, ++validIt, ++epsIt )
-        if( fabs(*calcIt - *validIt) > *epsIt )
+        if( *calcIt - *validIt > *epsIt )
         {
             ts->printf( CvTS::LOG, "bad accuracy of %s (valid=%f; calc=%f)\n", string(ERROR_PREFIXES[i]+errName).c_str(), *validIt, *calcIt );
             ok = false;
@@ -809,7 +809,7 @@ protected:
     {
         RunParams params = caseRunParams[caseIdx];
         assert( params.ndisp%16 == 0 );
-        StereoSGBM sgbm( 0, params.ndisp, params.winSize, 6*params.winSize*params.winSize, 15*params.winSize*params.winSize,
+        StereoSGBM sgbm( 0, params.ndisp, params.winSize, 10*params.winSize*params.winSize, 40*params.winSize*params.winSize,
                          1, 63, 10, 100, 32, params.fullDP );
         sgbm( leftImg, rightImg, leftDisp );
         assert( leftDisp.type() == CV_16SC1 );

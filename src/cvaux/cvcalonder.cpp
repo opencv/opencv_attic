@@ -1000,6 +1000,4 @@ namespace cv {
 	}
 
 	//} // namespace features
-
-
 }
