@@ -41,6 +41,9 @@
 //M*/
 
 #include "cvtest.h"
+
+#if 0
+
 #include "highgui.h"
 #include <vector>
 #include <string>
@@ -689,3 +692,5 @@ void CV_CalonderTest::run( int /* start_from */)
 }
 
 CV_CalonderTest calonder_test;
+
+#endif
