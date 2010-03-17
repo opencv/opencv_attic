@@ -1549,53 +1549,6 @@ struct DefaultRngAuto
 	typedef cv::RNG CalonderRng;
 	typedef unsigned int int_type;
 
-
-	//----------------------------
-	//patch_generator.h
-
-
-	class CV_EXPORTS CalonderPatchGenerator
-	{
-	public:
-		CalonderPatchGenerator(IplImage* source, CalonderRng &rng);
-
-		void operator() (CvPoint pt, IplImage* patch);
-
-		void setSource(IplImage* source);
-
-		//! Rotation
-		void setThetaBounds(double theta_min, double theta_max);
-		//! Skew rotation
-		void setPhiBounds(double phi_min, double phi_max);
-		//! Scaling
-		void setLambdaBounds(double lambda_min, double lambda_max);
-
-		void setRandomBackground(bool on_off);
-		void addWhiteNoise(bool on_off);
-		void setNoiseLevel(int level);
-
-		static const double DEFAULT_THETA_MIN;
-		static const double DEFAULT_THETA_MAX;
-		static const double DEFAULT_PHI_MIN;
-		static const double DEFAULT_PHI_MAX;
-		static const double DEFAULT_LAMBDA_MIN;
-		static const double DEFAULT_LAMBDA_MAX;
-		static const int DEFAULT_NOISE_LEVEL;
-
-	private:
-		IplImage* source_;
-		double theta_min_, theta_max_;
-		double phi_min_, phi_max_;
-		double lambda_min_, lambda_max_;
-		bool random_background_;
-		bool white_noise_;
-		int noise_level_;
-		CalonderRng &rng_;
-
-        CalonderPatchGenerator& operator=(const CalonderPatchGenerator&);
-	};
-
-	//}// namespace features
 	//----------------------------
 	//randomized_tree.h
 
@@ -1647,10 +1600,10 @@ struct DefaultRngAuto
 		RandomizedTree();
 		~RandomizedTree();
 
-		void train(std::vector<BaseKeypoint> const& base_set, CalonderRng &rng,
+		void train(std::vector<BaseKeypoint> const& base_set, cv::RNG &rng,
 			int depth, int views, size_t reduced_num_dim, int num_quant_bits);
-		void train(std::vector<BaseKeypoint> const& base_set, CalonderRng &rng,
-			CalonderPatchGenerator &make_patch, int depth, int views, size_t reduced_num_dim,
+		void train(std::vector<BaseKeypoint> const& base_set, cv::RNG &rng,
+			PatchGenerator &make_patch, int depth, int views, size_t reduced_num_dim,
 			int num_quant_bits);
 
 		// following two funcs are EXPERIMENTAL (do not use unless you know exactly what you do)
@@ -1688,10 +1641,10 @@ struct DefaultRngAuto
 		uchar **posteriors2_;     // 16-bytes aligned posteriors
 		std::vector<int> leaf_counts_;
 
-		void createNodes(int num_nodes, CalonderRng &rng);
+		void createNodes(int num_nodes, cv::RNG &rng);
 		void allocPosteriorsAligned(int num_leaves, int num_classes);
 		void freePosteriors(int which);    // which: 1=posteriors_, 2=posteriors2_, 3=both
-		void init(int classes, int depth, CalonderRng &rng);
+		void init(int classes, int depth, cv::RNG &rng);
 		void addExample(int class_id, uchar* patch_data);
 		void finalize(size_t reduced_num_dim, int num_quant_bits);  
 		int getIndex(uchar* patch_data) const;
@@ -1743,15 +1696,15 @@ struct DefaultRngAuto
 
 		//modified
 		void train(std::vector<BaseKeypoint> const& base_set, 
-			CalonderRng &rng,
+			cv::RNG &rng,
 			int num_trees = RTreeClassifier::DEFAULT_TREES,
 			int depth = DEFAULT_DEPTH,
 			int views = DEFAULT_VIEWS,
 			size_t reduced_num_dim = DEFAULT_REDUCED_NUM_DIM,
 			int num_quant_bits = DEFAULT_NUM_QUANT_BITS, bool print_status = true);
 		void train(std::vector<BaseKeypoint> const& base_set,
-			CalonderRng &rng, 
-			CalonderPatchGenerator &make_patch,
+			cv::RNG &rng, 
+			PatchGenerator &make_patch,
 			int num_trees = RTreeClassifier::DEFAULT_TREES,
 			int depth = DEFAULT_DEPTH,
 			int views = DEFAULT_VIEWS,
