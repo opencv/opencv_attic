@@ -1,0 +1,15 @@
+#!/bin/bash
+
+tput clear
+python latex.py ../online-opencv.tex
+exit
+
+TEXINPUTS=$PWD: sphinx-build -b html -D 'highlight_language=python' -D 'html_title=OpenCV 2.0 Python Reference' -d _build/doctrees . _build/html/python
+
+if false
+then
+  rm -f *.rst
+  svn up
+  TEXINPUTS=../: python renderer.py cpp > a || exit
+  TEXINPUTS=$PWD: sphinx-build -b html -D 'html_title=OpenCV 2.0 C++ Reference' -d _build/doctrees . _build/html/cpp
+fi
