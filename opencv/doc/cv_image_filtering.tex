@@ -22,7 +22,7 @@ void cvCopyMakeBorder(
 \cvarg{src}{The source image}
 \cvarg{dst}{The destination image}
 \cvarg{offset}{Coordinates of the top-left corner (or bottom-left in the case of images with bottom-left origin) of the destination image rectangle where the source image (or its ROI) is copied. Size of the rectanlge matches the source image size/ROI size}
-\cvarg{bordertype}{Type of the border to create around the copied source image rectangle; types inlude:
+\cvarg{bordertype}{Type of the border to create around the copied source image rectangle; types include:
 \begin{description}
 \cvarg{IPL\_BORDER\_CONSTANT}{border is filled with the fixed value, passed as last parameter of the function.}
 \cvarg{IPL\_BORDER\_REPLICATE}{the pixels from the top and bottom rows, the left-most and right-most columns are replicated to fill the border.}
@@ -239,7 +239,7 @@ Smooths the image in one of several ways.
   \cvarg{CV\_BLUR}{linear convolution with $\texttt{param1}\times\texttt{param2}$ box kernel (all 1's) with subsequent scaling by $1/(\texttt{param1}\cdot\texttt{param2})$}
   \cvarg{CV\_GAUSSIAN}{linear convolution with a $\texttt{param1}\times\texttt{param2}$ Gaussian kernel}
   \cvarg{CV\_MEDIAN}{median filter with a $\texttt{param1}\times\texttt{param1}$ square aperture}
-  \cvarg{CV\_BILATERAL}{bilateral filter with a $\texttt{param1}\times\texttt{param1}$ square aperture, color sigma=\texttt{param3} and spatial sigma=\texttt{param4}. If \texttt{param1=0}, the aperture square side is set to \newline \texttt{cvRound(param4*1.5)*2+1}. Information about bilateral filtering can be found at \url{http://www.dai.ed.ac.uk/CVonline/LOCAL\_COPIES/MANDUCHI1/Bilateral\_Filtering.html}}
+  \cvarg{CV\_BILATERAL}{bilateral filter with a $\texttt{param1}\times\texttt{param1}$ square aperture, color sigma=\texttt{param3} and spatial sigma=\texttt{param4}. If \texttt{param1=0}, the aperture square side is set to \texttt{cvRound(param4*1.5)*2+1}. Information about bilateral filtering can be found at \url{http://www.dai.ed.ac.uk/CVonline/LOCAL\_COPIES/MANDUCHI1/Bilateral\_Filtering.html}}
 \end{description}}
 \cvarg{param1}{The first parameter of the smoothing operation, the aperture width. Must be a positive odd number (1, 3, 5, ...)}
 \cvarg{param2}{The second parameter of the smoothing operation, the aperture height. Ignored by \texttt{CV\_MEDIAN} and \texttt{CV\_BILATERAL} methods. In the case of simple scaled/non-scaled and Gaussian blur if \texttt{param2} is zero, it is set to \texttt{param1}. Otherwise it must be a positive odd number.}

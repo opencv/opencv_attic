@@ -346,6 +346,7 @@ minimum index (in lexicographical order) are returned. In the case of several ma
 or minimums, the earliest in lexicographical order (extrema locations)
 is returned.
 
+\ifC % {
 \cvCPyFunc{MakeHistHeaderForArray}
 Makes a histogram out of an array.
 
@@ -363,6 +364,7 @@ CvHistogram*  cvMakeHistHeaderForArray( \par int dims,\par int* sizes,\par CvHis
 \end{description}
 
 The function initializes the histogram, whose header and bins are allocated by th user. \cvCPyCross{ReleaseHist} does not need to be called afterwards. Only dense histograms can be initialized this way. The function returns \texttt{hist}.
+\fi % }
 
 \cvCPyFunc{NormalizeHist}
 Normalizes the histogram.

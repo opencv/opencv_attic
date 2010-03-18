@@ -1,10 +1,9 @@
 #!/bin/bash
 
-rm *rst
 tput clear
-#python latex.py ../online-opencv.tex
+python latex.py ../online-opencv.tex || exit
 
-TEXINPUTS=$PWD: sphinx-build -b html -D 'highlight_language=python' -D 'html_title=OpenCV 2.0 Python Reference' -d _build/doctrees . _build/html/python
+TEXINPUTS=$PWD: sphinx-build -w sphinx.errors -b html -D 'highlight_language=python' -D 'html_title=OpenCV 2.0 Python Reference' -d _build/doctrees . _build/html/python
 exit
 
 if false

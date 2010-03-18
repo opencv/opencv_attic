@@ -23,7 +23,7 @@ def paramfun(s, loc, toks):
 class TexCmd:
     def __init__(self, s, loc, toks):
         self.cmd = str(toks[0])[1:]
-        print 'cmd', self.cmd
+        #print 'cmd', self.cmd
         self.args = toks[1].asList()
         self.params = toks[2].asList()
     def __repr__(self):
@@ -40,7 +40,7 @@ arg = '[' + CharsNotIn("]") + ']'
 arg.setParseAction(argfun)
 param = '{' + Optional(CharsNotIn("}")) + '}'
 param.setParseAction(paramfun)
-texcmd = Word("\\", "abcdefghijklmnopqrstuvwxyz") + ZeroOrMoreAsList(arg) + ZeroOrMoreAsList(param)
+texcmd = Word("\\", "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789") + ZeroOrMoreAsList(arg) + ZeroOrMoreAsList(param)
 def texcmdfun(s, loc, toks):
     if str(toks[0])[1:] == 'input':
         filename = toks[2].asList()[0].str + "-py.tex"
@@ -66,9 +66,10 @@ def parsefile(filename):
     lines = [uncomment(l) for l in lines]
 
     docstr = "".join(lines) + chr(127)
-    print docstr
     # document.setFailAction(None)
     return document.parseString(docstr)
 
 for x in parsefile(sys.argv[1]):
-    print x
+    if isinstance(x, TexCmd):
+        if x.cmd == 'chapter':
+            print repr(x)

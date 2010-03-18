@@ -207,7 +207,8 @@ First, it finds an object center using \cvCPyCross{MeanShift} and, after that, c
 
 The \cvCPyCross{CvCamShiftTracker} class declared in cv.hpp implements the color object tracker that uses the function.
 
-\cvCPyFunc{CvConDensation}
+\ifC % {
+\subsection{CvConDensation}
 ConDenstation state.
 
 \begin{lstlisting}
@@ -259,7 +260,7 @@ void cvConDensInitSampleSet( CvConDensation* condens, \par CvMat* lower\_bound, 
 \end{description}
 
 The function fills the samples arrays in the structure \cvCPyCross{CvConDensation} with values within the specified ranges.
-
+\fi
 
 \cvfunc{CvKalman}\label{CvKalman}
 Kalman filter state.
@@ -613,6 +614,7 @@ The function adds the product of 2 images or their selected regions to the accum
 
 \[ \texttt{acc}(x,y) \leftarrow \texttt{acc}(x,y) + \texttt{image1}(x,y) \cdot \texttt{image2}(x,y) \quad \text{if} \quad \texttt{mask}(x,y) \ne 0 \]
 
+\ifC % {
 \cvCPyFunc{ReleaseConDensation}
 Deallocates the ConDensation filter structure.
 
@@ -626,8 +628,12 @@ void cvReleaseConDensation( CvConDensation** condens );
 
 The function releases the structure \cvCPyCross{CvConDensation}) and frees all memory previously allocated for the structure.
 
+\fi % }
+
 \cvCPyFunc{ReleaseKalman}
 Deallocates the Kalman filter structure.
+
+\ifC % {
 
 \cvdefC{
 void cvReleaseKalman( \par CvKalman** kalman );
@@ -638,6 +644,8 @@ void cvReleaseKalman( \par CvKalman** kalman );
 \end{description}
 
 The function releases the structure \cvCPyCross{CvKalman} and all of the underlying matrices.
+
+\fi % }
 
 \cvCPyFunc{RunningAvg}
 Updates the running average.
