@@ -207,13 +207,13 @@ CvIntHaarFeatures* icvCreateIntHaarFeatures( CvSize winsize,
                         }
                     }
 
-                        // haar_y2
-                    if ( (x+dx*2 <= winsize.height) && (y+dy <= winsize.width) ) {
+                    // haar_y2
+                    if ( (x+dx <= winsize.width) && (y+dy*2 <= winsize.height) ) {
                         if (dx*2*dy < s0) continue;
-                        if (!symmetric || (y+y+dy <= winsize.width)) {
+                        if (!symmetric || (x+x+dx <= winsize.width)) {
                             haarFeature = cvHaarFeature( "haar_y2",
-                                y, x,    dy, dx*2, -1,
-                                y, x+dx, dy, dx,   +2 );
+                                x, y,    dx, dy*2, -1,
+                                x, y+dy, dx, dy,   +2 );
                             CV_WRITE_SEQ_ELEM( haarFeature, writer );
                         }
                     }
@@ -230,12 +230,12 @@ CvIntHaarFeatures* icvCreateIntHaarFeatures( CvSize winsize,
                     }
 
                     // haar_y3
-                    if ( (x+dx*3 <= winsize.height) && (y+dy <= winsize.width) ) {
+                    if ( (x+dx <= winsize.width) && (y+dy*3 <= winsize.height) ) {
                         if (dx*3*dy < s0) continue;
-                        if (!symmetric || (y+y+dy <= winsize.width)) {
+                        if (!symmetric || (x+x+dx <= winsize.width)) {
                             haarFeature = cvHaarFeature( "haar_y3",
-                                y, x,    dy, dx*3, -1,
-                                y, x+dx, dy, dx,   +3 );
+                                x, y,    dx, dy*3, -1,
+                                x, y+dy, dx, dy,   +3 );
                             CV_WRITE_SEQ_ELEM( haarFeature, writer );
                         }
                     }
@@ -253,12 +253,12 @@ CvIntHaarFeatures* icvCreateIntHaarFeatures( CvSize winsize,
                         }
                             
                         // haar_y4
-                        if ( (x+dx*4 <= winsize.height) && (y+dy <= winsize.width ) ) {
+                        if ( (x+dx <= winsize.width ) && (y+dy*4 <= winsize.height) ) {
                             if (dx*4*dy < s0) continue;
-                            if (!symmetric || (y+y+dy   <=winsize.width)) {
+                            if (!symmetric || (x+x+dx   <=winsize.width)) {
                                 haarFeature = cvHaarFeature( "haar_y4",
-                                    y, x,    dy, dx*4, -1,
-                                    y, x+dx, dy, dx*2, +2 );
+                                    x, y,    dx, dy*4, -1,
+                                    x, y+dy, dx, dy*2, +2 );
                                 CV_WRITE_SEQ_ELEM( haarFeature, writer );
                             }
                         }

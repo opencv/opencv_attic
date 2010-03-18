@@ -117,11 +117,11 @@ void CvHaarEvaluator::generateFeatures()
                             x+dx, y, dx  , dy, +2 ) );
                     }
                     // haar_y2
-                    if ( (x+dx*2 <= winSize.height) && (y+dy <= winSize.width) ) 
+                    if ( (x+dx <= winSize.width) && (y+dy*2 <= winSize.height) )
                     {
                         features.push_back( Feature( offset, false,
-                            y,    x, dy, dx*2, -1,
-                            y, x+dx, dy, dx,   +2 ) );
+                            x,    y, dx, dy*2, -1,
+                            x, y+dy, dx, dy,   +2 ) );
                     }
                     // haar_x3
                     if ( (x+dx*3 <= winSize.width) && (y+dy <= winSize.height) )
@@ -131,11 +131,11 @@ void CvHaarEvaluator::generateFeatures()
                             x+dx, y, dx  , dy, +3 ) );
                     }
                     // haar_y3
-                    if ( (x+dx*3 <= winSize.height) && (y+dy <= winSize.width) )
+                    if ( (x+dx <= winSize.width) && (y+dy*3 <= winSize.height) )
                     {
                         features.push_back( Feature( offset, false,
-                            y, x,    dy, dx*3, -1,
-                            y, x+dx, dy, dx,   +3 ) );
+                            x, y,    dx, dy*3, -1,
+                            x, y+dy, dx, dy,   +3 ) );
                     }
                     if( mode != CvHaarFeatureParams::BASIC )
                     {
@@ -147,11 +147,11 @@ void CvHaarEvaluator::generateFeatures()
                                 x+dx, y, dx*2, dy, +2 ) );
                         }
                         // haar_y4
-                        if ( (x+dx*4 <= winSize.height) && (y+dy <= winSize.width ) ) 
+                        if ( (x+dx <= winSize.width ) && (y+dy*4 <= winSize.height) )
                         {
                             features.push_back( Feature( offset, false,
-                                y, x,    dy, dx*4, -1,
-                                y, x+dx, dy, dx*2, +2 ) );
+                                x, y,    dx, dy*4, -1,
+                                x, y+dy, dx, dy*2, +2 ) );
                         }
                     }
                     // x2_y2
