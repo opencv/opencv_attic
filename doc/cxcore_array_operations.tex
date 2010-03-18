@@ -841,7 +841,7 @@ Here is the example of how to compute 2D convolution using DFT.
 CvMat* A = cvCreateMat(M1, N1, CVg32F);
 CvMat* B = cvCreateMat(M2, N2, A->type);
 
-// it is also possible to have only abs(M2-M1)+1 \times abs(N2-N1)+1
+// it is also possible to have only abs(M2-M1)+1 times abs(N2-N1)+1
 // part of the full convolution result
 CvMat* conv = cvCreateMat(A->rows + B->rows - 1, A->cols + B->cols - 1, 
 			   A->type);
@@ -1114,6 +1114,8 @@ The function performs generalized matrix multiplication:
 
 All the matrices should have the same data type and coordinated sizes. Real or complex floating-point matrices are supported.
 
+\ifC  % {
+
 \cvCPyFunc{Get?D}
 Return a specific array element.
 
@@ -1133,6 +1135,60 @@ CvScalar cvGetND(const CvArr* arr, int* idx);
 \end{description}
 
 The functions return a specific array element. In the case of a sparse array the functions return 0 if the requested node does not exist (no new node is created by the functions).
+\else % }{
+
+\cvCPyFunc{Get1D}
+Return a specific array element.
+
+\cvdefPy{ Get1D(arr, idx) -> scalar }
+
+\begin{description}
+\cvarg{arr}{Input array}
+\cvarg{idx}{Zero-based element index}
+\end{description}
+
+Return a specific array element.  Array must have dimension 3.
+
+\cvCPyFunc{Get2D}
+Return a specific array element.
+
+\cvdefPy{ Get2D(arr, idx0, idx1) -> scalar }
+
+\begin{description}
+\cvarg{arr}{Input array}
+\cvarg{idx0}{Zero-based element row index}
+\cvarg{idx1}{Zero-based element column index}
+\end{description}
+
+Return a specific array element.  Array must have dimension 2.
+
+\cvCPyFunc{Get3D}
+Return a specific array element.
+
+\cvdefPy{ Get3D(arr, idx0, idx1, idx2) -> scalar }
+
+\begin{description}
+\cvarg{arr}{Input array}
+\cvarg{idx0}{Zero-based element index}
+\cvarg{idx1}{Zero-based element index}
+\cvarg{idx2}{Zero-based element index}
+\end{description}
+
+Return a specific array element.  Array must have dimension 3.
+
+\cvCPyFunc{GetND}
+Return a specific array element.
+
+\cvdefPy{ GetND(arr, indices) -> scalar }
+
+\begin{description}
+\cvarg{arr}{Input array}
+\cvarg{indices}{List of zero-based element indices}
+\end{description}
+
+Return a specific array element.  The length of array indices must be the same as the dimension of the array.
+
+\fi % }
 
 \cvCPyFunc{GetCol(s)}
 Returns array column or column span.
@@ -2770,6 +2826,7 @@ The function copies the scalar \texttt{value} to every selected element of the d
 
 If array \texttt{arr} is of \texttt{IplImage} type, then is ROI used, but COI must not be set.
 
+\ifC % {
 \cvCPyFunc{Set?D}
 Change the particular array element.
 
@@ -2790,6 +2847,64 @@ void cvSetND(CvArr* arr, int* idx, CvScalar value);
 \end{description}
 
 The functions assign the new value to a particular array element. In the case of a sparse array the functions create the node if it does not exist yet.
+
+\else % }{
+
+\cvCPyFunc{Set1D}
+Set a specific array element.
+
+\cvdefPy{ Set1D(arr, idx, value) -> None }
+
+\begin{description}
+\cvarg{arr}{Input array}
+\cvarg{idx}{Zero-based element index}
+\cvarg{value}{The value to assign to the element}
+\end{description}
+
+Sets a specific array element.  Array must have dimension 3.
+
+\cvCPyFunc{Set2D}
+Set a specific array element.
+
+\cvdefPy{ Set2D(arr, idx0, idx1, value) -> None }
+
+\begin{description}
+\cvarg{arr}{Input array}
+\cvarg{idx0}{Zero-based element row index}
+\cvarg{idx1}{Zero-based element column index}
+\cvarg{value}{The value to assign to the element}
+\end{description}
+
+Sets a specific array element.  Array must have dimension 2.
+
+\cvCPyFunc{Set3D}
+Set a specific array element.
+
+\cvdefPy{ Set3D(arr, idx0, idx1, idx2, value) -> None }
+
+\begin{description}
+\cvarg{arr}{Input array}
+\cvarg{idx0}{Zero-based element index}
+\cvarg{idx1}{Zero-based element index}
+\cvarg{idx2}{Zero-based element index}
+\cvarg{value}{The value to assign to the element}
+\end{description}
+
+Sets a specific array element.  Array must have dimension 3.
+
+\cvCPyFunc{SetND}
+Set a specific array element.
+
+\cvdefPy{ SetND(arr, indices, value) -> None }
+
+\begin{description}
+\cvarg{arr}{Input array}
+\cvarg{indices}{List of zero-based element indices}
+\cvarg{value}{The value to assign to the element}
+\end{description}
+
+Sets a specific array element.  The length of array indices must be the same as the dimension of the array.
+\fi % }
 
 \cvCPyFunc{SetData}
 Assigns user data to the array header.

@@ -1,12 +1,14 @@
 #!/bin/bash
 
 tput clear
+python latex.py ../online-opencv.tex
+exit
 
 #cd .. && make && cd -
 mkdir -p _build/html/python
 mkdir -p _build/html/cpp
 
-if true
+if false
 then
   rm -f *.rst
   svn up
@@ -24,7 +26,7 @@ then
   TEXINPUTS=$PWD: sphinx-build -b html -D 'highlight_language=python' -D 'html_title=OpenCV 2.0 Python Reference' -d _build/doctrees . _build/html/python
 fi
 
-if true
+if false
 then
   rm -f *.rst
   svn up

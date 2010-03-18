@@ -152,10 +152,6 @@ Computes the "minimal work" distance between two weighted point configurations.
 float cvCalcEMD2( \par const CvArr* signature1,\par const CvArr* signature2,\par int distance\_type,\par CvDistanceFunction distance\_func=NULL,\par const CvArr* cost\_matrix=NULL,\par CvArr* flow=NULL,\par float* lower\_bound=NULL,\par void* userdata=NULL );
 }\cvdefPy{CalcEMD2(signature1, signature2, distance\_type, distance\_func = None, cost\_matrix=None, flow=None, lower\_bound=None, userdata = None) -> float}
 
-\begin{lstlisting}
-typedef float (*CvDistanceFunction)(const float* f1, const float* f2, void* userdata);
-\end{lstlisting}
-
 \begin{description}
 \cvarg{signature1}{First signature, a $\texttt{size1}\times \texttt{dims}+1$ floating-point matrix. Each row stores the point weight followed by the point coordinates. The matrix is allowed to have a single column (weights only) if the user-defined cost matrix is used}
 \cvarg{signature2}{Second signature of the same format as \texttt{signature1}, though the number of rows may be different. The total weights may be different, in this case an extra "dummy" point is added to either \texttt{signature1} or \texttt{signature2}}
@@ -166,6 +162,10 @@ typedef float (*CvDistanceFunction)(const float* f1, const float* f2, void* user
 \cvarg{lower\_bound}{Optional input/output parameter: lower boundary of distance between the two signatures that is a distance between mass centers. The lower boundary may not be calculated if the user-defined cost matrix is used, the total weights of point configurations are not equal, or if the signatures consist of weights only (i.e. the signature matrices have a single column). The user \textbf{must} initialize \texttt{*lower\_bound}. If the calculated distance between mass centers is greater or equal to \texttt{*lower\_bound} (it means that the signatures are far enough) the function does not calculate EMD. In any case \texttt{*lower\_bound} is set to the calculated distance between mass centers on return. Thus, if user wants to calculate both distance between mass centers and EMD, \texttt{*lower\_bound} should be set to 0}
 \cvarg{userdata}{Pointer to optional data that is passed into the user-defined distance function}
 \end{description}
+
+\begin{lstlisting}
+typedef float (*CvDistanceFunction)(const float* f1, const float* f2, void* userdata);
+\end{lstlisting}
 
 The function computes the earth mover distance and/or
 a lower boundary of the distance between the two weighted point
@@ -385,6 +385,8 @@ CvContourTree* cvCreateContourTree( \par const CvSeq* contour,\par CvMemStorage*
 
 The function creates a binary tree representation for the input \texttt{contour} and returns the pointer to its root. If the parameter \texttt{threshold} is less than or equal to 0, the function creates a full binary tree representation. If the threshold is greater than 0, the function creates a representation with the precision \texttt{threshold}: if the vertices with the interceptive area of its base line are less than \texttt{threshold}, the tree should not be built any further. The function returns the created tree.
 
+\ifC % {
+
 \cvCPyFunc{EndFindContours}
 Finishes the scanning process.
 
@@ -397,6 +399,8 @@ CvSeq* cvEndFindContours( \par CvContourScanner* scanner );
 \end{description}
 
 The function finishes the scanning process and returns a pointer to the first contour on the highest level.
+
+\fi % }
 
 \cvCPyFunc{FindContours}
 Finds the contours in a binary image.
@@ -444,6 +448,8 @@ analysis and object recognition - see \texttt{squares.c} in the OpenCV
 sample directory.
 
 
+\ifC % {
+
 \cvCPyFunc{FindNextContour}
 Finds the next contour in the image.
 
@@ -456,6 +462,8 @@ CvSeq* cvFindNextContour( \par CvContourScanner scanner );
 \end{description}
 
 The function locates and retrieves the next contour in the image and returns a pointer to it. The function returns NULL if there are no more contours.
+
+\fi % }
 
 \cvCPyFunc{FitEllipse}
 Fits an ellipse around a set of 2D points.
@@ -550,6 +558,8 @@ x_c=\frac{M_{10}}{M_{00}}, y_c=\frac{M_{01}}{M_{00}}
 Calculates the seven Hu invariants.
 
 \cvdefC{void cvGetHuMoments( const CvMoments* moments,CvHuMoments* hu );}
+\cvdefPy{cvGetHuMoments(moments) -> hu}
+
 \begin{description}
 \cvarg{moments}{The input moments, computed with \cvCPyCross{Moments}}
 \cvarg{hu}{The output Hu invariants}
