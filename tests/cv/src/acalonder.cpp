@@ -42,7 +42,7 @@
 
 #include "cvtest.h"
 
-#if 0
+#if 1
 
 #include "highgui.h"
 #include <vector>
@@ -196,14 +196,8 @@ void CV_CalonderTest::TrainDetector(RTreeClassifier& detector, int/* patch_size*
 
 	//Detector training
 	//CvRNG r = cvRNG(1);
-	CalonderRng rng( cvRandInt(this->ts->get_rng()));
-    CalonderPatchGenerator gen(0,rng);
-    gen.setThetaBounds(-CV_PI/3,CV_PI/3);
-    gen.setPhiBounds(-CV_PI/3,CV_PI/3);
-    gen.setLambdaBounds(0.7,1.3);
-    gen.setRandomBackground(false);
-    gen.addWhiteNoise(false);
-    gen.setNoiseLevel(2);
+	RNG rng( cvRandInt(this->ts->get_rng()));
+    PatchGenerator gen(0,255,2,false,0.7,1.3,-CV_PI/3,CV_PI/3,-CV_PI/3,CV_PI/3);
 
 	//int64 t0 = cvGetTickCount();
 	detector.train(base_set,rng,gen,6,DEFAULT_DEPTH,3000,(int)base_set.size(),detector.DEFAULT_NUM_QUANT_BITS,false);
