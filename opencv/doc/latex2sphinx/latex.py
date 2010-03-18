@@ -82,7 +82,7 @@ def parsefile(filename, startline):
     lines = [uncomment(l) for l in lines]
     print len(lines), "lines"
 
-    docstr = "".join(lines)
+    docstr = "".join(lines).replace('\\_', '_')
     # document.setFailAction(None)
     try:
         r = document.parseString(docstr)
@@ -141,9 +141,12 @@ class SphinxWriter:
     def __init__(self, filename):
         self.f_index = open(filename, 'wt')
         self.f = self.f_index
+        self.f_chapter = None
+        self.f_section = None
         self.indent = 0
         self.state = None
         self.envstack = []
+        self.tags = open('TAGS', 'w')
 
     def write(self, s):
         self.f.write(s.replace('\n', '\n' + self.indent * "    "))
@@ -155,14 +158,32 @@ class SphinxWriter:
             print >>self, s
 
     def docmd(self, c):
-        cname = "cmd_" + c.cmd
-        meth = getattr(self, cname, self.default_cmd)
-        meth(c)
+        if self.state == 'math':
+            if c.cmd != ']':
+                self.default_cmd(c)
+            else:
+                self.indent -= 1
+                self.state = None
+                print >>self
+        else:
+            if c.cmd == '[':
+                meth = self.cmd_gomath
+            else:
+                cname = "cmd_" + c.cmd
+                meth = getattr(self, cname, self.default_cmd)
+            meth(c)
+
+    def cmd_gomath(self, c):
+        self.state = 'math'
+        print >>self, "\n.. math::"
+        self.indent += 1
+        print >>self
 
     def cmd_chapter(self, c):
         filename = str(c.params[0]).lower().replace(' ', '_').replace('/','_')
-        self.f_index.write("   %s\n" % filename)
-        self.f_chapter = open(filename, 'wt')
+        self.f_index.write("    %s\n" % filename)
+        self.f_chapter = open(filename + '.rst', 'wt')
+        self.f_section = None
         self.f = self.f_chapter
         self.indent = 0
         title = str(c.params[0])
@@ -171,13 +192,13 @@ class SphinxWriter:
         print >>self, '*' * len(title)
         print >>self
         print >>self, '.. toctree::'
-        print >>self, '   :maxdepth: 2'
+        print >>self, '    :maxdepth: 2'
         print >>self
 
     def cmd_section(self, c):
         filename = str(c.params[0]).lower().replace(' ', '_').replace('/','_')
-        self.f_chapter.write("   %s\n" % filename)
-        self.f_section = open(filename, 'wt')
+        self.f_chapter.write("    %s\n" % filename)
+        self.f_section = open(filename + '.rst', 'wt')
         self.f = self.f_section
         self.indent = 0
         title = str(c.params[0])
@@ -186,6 +207,8 @@ class SphinxWriter:
         print >>self
 
     def cmd_cvCppCross(self, c):
+        print >>self, ":ref:`%s`" % str(c.params[0])
+    def cmd_cvCPyCross(self, c):
         print >>self, ":ref:`%s`" % str(c.params[0])
 
     def cmd_cvCPyFunc(self, c):
@@ -198,6 +221,7 @@ class SphinxWriter:
         print >>self
         self.state = 'fpreamble'
         self.description = ""
+        print >>self.tags, "%s\t%s\t%d" % (nm, c.filename, c.lineno)
 
     def cmd_cvdefPy(self, c):
         s = str(c.params[0])
@@ -235,9 +259,9 @@ class SphinxWriter:
     def cmd_cvarg(self, c):
         ee = [n for (n,_) in self.envstack[1:]]
         if ee == ['description']:
-            print >>self, ':param %s: ' % str(c.params[0]),
+            print >>self, '\n:param %s: ' % str(c.params[0]),
         elif ee == ['description', 'description']:
-            print >>self, '* **%s** ' % str(c.params[0]),
+            print >>self, '\n* **%s** ' % str(c.params[0]),
         else:
             print self.envstack
             assert 0
@@ -250,7 +274,8 @@ class SphinxWriter:
         print >>self, "``" + str(c.params[0]) + "``"
 
     def default_cmd(self, c):
-        print >>self, repr(c)
+        if self.f == self.f_section:
+            print >>self, repr(c)
 
     def doL(self, L):
         for x in L:
