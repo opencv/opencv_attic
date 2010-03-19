@@ -2327,21 +2327,24 @@ void remap( const Mat& src, Mat& dst, const Mat& map1, const Mat& map2,
     static RemapFunc linear_tab[] =
     {
         remapBilinear<FixedPtCast<int, uchar, INTER_REMAP_COEF_BITS>, RemapVec_8u, short>, 0,
-        remapBilinear<Cast<float, ushort>, RemapNoVec, float>, 0, 0,
+        remapBilinear<Cast<float, ushort>, RemapNoVec, float>,
+        remapBilinear<Cast<float, short>, RemapNoVec, float>, 0,
         remapBilinear<Cast<float, float>, RemapNoVec, float>, 0, 0
     };
 
     static RemapFunc cubic_tab[] =
     {
         remapBicubic<FixedPtCast<int, uchar, INTER_REMAP_COEF_BITS>, short, INTER_REMAP_COEF_SCALE>, 0,
-        remapBicubic<Cast<float, ushort>, float, 1>, 0, 0,
+        remapBicubic<Cast<float, ushort>, float, 1>,
+        remapBicubic<Cast<float, short>, float, 1>, 0,
         remapBicubic<Cast<float, float>, float, 1>, 0, 0
     };
 
     static RemapFunc lanczos4_tab[] =
     {
         remapLanczos4<FixedPtCast<int, uchar, INTER_REMAP_COEF_BITS>, short, INTER_REMAP_COEF_SCALE>, 0,
-        remapLanczos4<Cast<float, ushort>, float, 1>, 0, 0,
+        remapLanczos4<Cast<float, ushort>, float, 1>,
+        remapLanczos4<Cast<float, short>, float, 1>, 0,
         remapLanczos4<Cast<float, float>, float, 1>, 0, 0
     };
 
