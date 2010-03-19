@@ -83,7 +83,7 @@ class SphinxWriter:
 
     def doplain(self, s):
         if (len(s) > 1) and (s[0] == '$' and s[-1] == '$') and self.state != 'math':
-            s = ":math:`%s`" % s[1:-1]
+            s = ":math:`%s`" % s[1:-1].strip()
         elif self.state != 'math':
             s.replace('\\_', '_')
         if self.state == 'fpreamble':
@@ -139,6 +139,8 @@ class SphinxWriter:
         print >>self, title
         print >>self, '=' * len(title)
         print >>self
+        print >>self, '.. highlight:: python'
+        print >>self
 
     def cmd_subsection(self, c):
         print >>self, str(c.params[0])
@@ -186,16 +188,28 @@ class SphinxWriter:
         self.function_props['defpy'] = s
 
         pp.ParserElement.setDefaultWhitespaceChars(" \n\t")
+        def returnList(x):
+            def listify(s, loc, toks):
+                return [toks]
+            x.setParseAction(listify)
+            return x
+        def CommaList(word):
+            return returnList(pp.Optional(word + pp.ZeroOrMore(pp.Suppress(',') + word)))
+        def sl(s):
+            return pp.Suppress(pp.Literal(s))
+
         ident = pp.Word(pp.alphanums + "_.+-")
-        ident_or_tuple = ident | ('(' + ident + pp.ZeroOrMore(',' + ident) + ')')
+        ident_or_tuple = ident | (sl('(') + CommaList(ident) + sl(')'))
         initializer = ident_or_tuple
-        arg = ident + pp.Optional('=' + initializer)
-        decl = ident + '(' + pp.Optional(arg + pp.ZeroOrMore(',' + arg)) + ')' + pp.Literal("->") + ident_or_tuple + pp.StringEnd()
+        arg = returnList(ident + pp.Optional(sl('=') + initializer))
+
+        decl = ident + sl('(') + CommaList(arg) + sl(')') + sl("->") + ident_or_tuple + pp.StringEnd()
 
         try:
             l = decl.parseString(s)
             if str(l[0]) != self.function_props['name']:
                 self.report_error(c, 'Decl "%s" does not match function name "%s"' % (str(l[0]), self.function_props['name']))
+            self.function_props['signature'] = l
         except pp.ParseException, pe:
             self.report_error(c, str(pe))
             print s
@@ -233,6 +247,8 @@ class SphinxWriter:
         s = str(c.params[0])
         if self.envstack == []:
             print "Cannot pop at", (c.filename, c.lineno)
+        if self.envstack[-1][0] != s:
+            report_error(c, "end{%s} does not match current stack %s" % (s, repr(self.envstack)))
         self.envstack.pop()
         if s == 'description':
             self.indent -= 1
@@ -241,6 +257,8 @@ class SphinxWriter:
         elif s == 'lstlisting':
             print >>self
             self.indent -= 1
+            print >>self
+            print >>self, ".."      # otherwise a following :param: gets treated as more listing
         else:
             self.default_cmd(c)
         
@@ -277,12 +295,23 @@ class SphinxWriter:
 
     def cmd_cvarg(self, c):
         if self.ee() == ['description']:
-            print >>self, '\n:param %s: ' % self.render(c.params[0].str),
+            nm = self.render(c.params[0].str)
+            print >>self, '\n:param %s: ' % nm,
+            # For now, multiple args get a pass
+            if 'signature' in self.function_props and (not ',' in nm):
+                sig = self.function_props['signature']
+                argnames = [a[0] for a in sig[1]]
+                if isinstance(sig[2], str):
+                    resnames = [sig[2]]
+                else:
+                    resnames = list(sig[2])
+                    print resnames
+                if not nm in argnames + resnames:
+                    self.report_error(c, "Argument %s is not mentioned in signature (%s) (%s)" % (nm, ", ".join(argnames), ", ".join(resnames)))
         elif self.ee() == ['description', 'description']:
             print >>self, '\n* **%s** ' % self.render(c.params[0].str),
         else:
-            print self.envstack
-            assert 0
+            print 'strange env', self.envstack
         self.indent += 1
         self.doL(c.params[1].str, False)
         self.indent -= 1
@@ -352,6 +381,8 @@ class SphinxWriter:
 
     def close(self):
 
+        if self.envstack != []:
+            print >>self.errors, "Error envstack not empty at end of doc: " + repr(self.envstack)
         print >>self.errors, "unrecognized commands:"
         print >>self.errors, "\n    ".join(sorted(self.unhandled_commands))
         print >>self.errors
@@ -371,6 +402,11 @@ sr = SphinxWriter('index.rst')
 print >>sr, """
 OpenCV |version| Python Reference
 =================================
+
+Test code::
+
+    import foo
+    print a + 3
 
 The OpenCV Wiki is here: http://opencv.willowgarage.com/
 
