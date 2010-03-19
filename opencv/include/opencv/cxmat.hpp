@@ -3455,13 +3455,15 @@ template<typename _Tp> inline Point MatConstIterator_<_Tp>::pos() const
         return Point();
     if( m->isContinuous() )
     {
-        int ofs = ptr - (_Tp*)m->data, y = ofs / m->cols, x = ofs - y*m->cols;
-        return Point(x,y);
+        ptrdiff_t ofs = ptr - (_Tp*)m->data;
+        int y = (int)(ofs / m->cols), x = (int)(ofs - (ptrdiff_t)y*m->cols);
+        return Point(x, y);
     }
     else
     {
-        int stepT = m->stepT(), y = (ptr - (_Tp*)m->data)/stepT, x = (ptr - (_Tp*)m->data) - y*stepT;
-        return Point(x,y);
+        ptrdiff_t ofs = (uchar*)ptr - m->data;
+        int y = (int)(ofs / m->step), x = (int)((ofs - y*m->step)/sizeof(_Tp));
+        return Point(x, y);
     }
 }
 
