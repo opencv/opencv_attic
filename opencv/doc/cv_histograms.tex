@@ -46,11 +46,12 @@ That is the approximate algorithm of Camshift color object tracker, except for t
 Locates a template within an image by using a histogram comparison.
 
 \cvdefC{
-void cvCalcBackProjectPatch( \par IplImage** image,\par CvArr* dst,\par CvSize patch\_size,\par CvHistogram* hist,\par int method,\par float factor );
-}\cvdefPy{CalcBackProjectPatch(images,dst,patch\_size,hist,method,factor)-> None}
+void cvCalcBackProjectPatch( \par IplImage** images,\par CvArr* dst,\par CvSize patch\_size,\par CvHistogram* hist,\par int method,\par float factor );
+}
+\cvdefPy{CalcBackProjectPatch(images,dst,patch\_size,hist,method,factor)-> None}
 
 \begin{description}
-\cvarg{image}{Source images (though, you may pass CvMat** as well)}
+\cvarg{images}{Source images (though, you may pass CvMat** as well)}
 \cvarg{dst}{Destination image}
 \cvarg{patch\_size}{Size of the patch slid though the source image}
 \cvarg{hist}{Histogram}
@@ -152,7 +153,8 @@ Divides one histogram by another.
 
 \cvdefC{
 void  cvCalcProbDensity( \par const CvHistogram* hist1,\par const CvHistogram* hist2,\par CvHistogram* dst\_hist,\par double scale=255 );
-}\cvdefPy{CalcProbDensity(hist1,hist2,dst\_hst,scale=255)-> None}
+}
+\cvdefPy{CalcProbDensity(hist1,hist2,dst\_hist,scale=255)-> None}
 
 \begin{description}
 \cvarg{hist1}{first histogram (the divisor)}
@@ -332,14 +334,22 @@ Finds the minimum and maximum histogram bins.
 void cvGetMinMaxHistValue( \par const CvHistogram* hist,\par float* min\_value,\par float* max\_value,\par int* min\_idx=NULL,\par int* max\_idx=NULL );
 
 }
-\cvdefPy{GetMinMaxHistValue(hist)-> (min\_val,max\_val,min\_loc,max\_loc)}
+\cvdefPy{GetMinMaxHistValue(hist)-> (min\_value,max\_value,min\_idx,max\_idx)}
 
 \begin{description}
 \cvarg{hist}{Histogram}
+\ifC
 \cvarg{min\_value}{Pointer to the minimum value of the histogram}
 \cvarg{max\_value}{Pointer to the maximum value of the histogram}
 \cvarg{min\_idx}{Pointer to the array of coordinates for the minimum}
 \cvarg{max\_idx}{Pointer to the array of coordinates for the maximum}
+\else
+\cvarg{min\_value}{Minimum value of the histogram}
+\cvarg{max\_value}{Maximum value of the histogram}
+\cvarg{min\_idx}{Coordinates of the minimum}
+\cvarg{max\_idx}{Coordinates of the maximum}
+\fi
+
 \end{description}
 
 The function finds the minimum and

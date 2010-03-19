@@ -47,9 +47,9 @@ given center and radius.
 Clips the line against the image rectangle.
 
 \cvdefC{int cvClipLine( \par CvSize imgSize,\par CvPoint* pt1,\par CvPoint* pt2 );}
-\cvdefPy{ClipLine(img, pt1, pt2) -> (clipped\_pt1, clipped\_pt2)}
+\cvdefPy{ClipLine(imgSize, pt1, pt2) -> (clipped\_pt1, clipped\_pt2)}
 \begin{description}
-\cvarg{imgSize}{Size of the image \cvPy{as a 2-tuple}}
+\cvarg{imgSize}{Size of the image}
 \cvarg{pt1}{First ending point of the line segment. \cvC{It is modified by the function.}}
 \cvarg{pt2}{Second ending point of the line segment. \cvC{It is modified by the function.}}
 \end{description}
@@ -130,7 +130,7 @@ int main( int argc, char** argv )
 Draws a simple or thick elliptic arc or an fills ellipse sector.
 
 \cvdefC{void cvEllipse( \par CvArr* img,\par CvPoint center,\par CvSize axes,\par double angle,\par double start\_angle,\par double end\_angle,\par CvScalar color,\par int thickness=1,\par int lineType=8,\par int shift=0 );}
-\cvdefPy{Ellipse(img,pt1,axes,angle,start\_angle,end\_angle,color,thickness=1,lineType=8,shift=0)-> None}
+\cvdefPy{Ellipse(img,center,axes,angle,start\_angle,end\_angle,color,thickness=1,lineType=8,shift=0)-> None}
 
 \begin{description}
 \cvarg{img}{The image}
@@ -182,8 +182,12 @@ void cvFillConvexPoly( \par CvArr* img,\par CvPoint* pts,\par int npts,\par CvSc
 
 \begin{description}
 \cvarg{img}{Image}
+\ifC
 \cvarg{pts}{Array of pointers to a single polygon}
 \cvarg{npts}{Polygon vertex counter}
+\else
+\cvarg{pn}{List of coordinate pairs}
+\fi
 \cvarg{color}{Polygon color}
 \cvarg{lineType}{Type of the polygon boundaries, see \cross{Line} description}
 \cvarg{shift}{Number of fractional bits in the vertex coordinates}
@@ -372,7 +376,7 @@ Draws simple or thick polygons.
 
 \cvdefC{
 void cvPolyLine( \par CvArr* img,\par CvPoint** pts,\par int* npts,\par int contours,\par int is\_closed,\par CvScalar color,\par int thickness=1,\par int lineType=8,\par int shift=0 );}
-\cvdefPy{PolyLine(img,pts,is\_closed,color,thickness=1,lineType=8,shift=0)-> None}
+\cvdefPy{PolyLine(img,polys,is\_closed,color,thickness=1,lineType=8,shift=0)-> None}
 
 \begin{description}
 \ifC

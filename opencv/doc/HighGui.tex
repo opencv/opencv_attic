@@ -46,20 +46,20 @@ CV_EXTERN_C_FUNCPTR( void (*CvTrackbarCallback)(int pos) );
 \end{lstlisting}
 
 \begin{description}
-\cvarg{ trackbarName}{Name of the created trackbar.}
-\cvarg{ windowName}{Name of the window which will be used as a parent for created trackbar.}
+\cvarg{trackbarName}{Name of the created trackbar.}
+\cvarg{windowName}{Name of the window which will be used as a parent for created trackbar.}
 \ifPy
-\cvarg{ value}{Initial value for the slider position, between 0 and \texttt{count}.}
+\cvarg{value}{Initial value for the slider position, between 0 and \texttt{count}.}
 \else
-\cvarg{ value}{Pointer to an integer variable, whose value will reflect the position of the slider. Upon creation, the slider position is defined by this variable.}
+\cvarg{value}{Pointer to an integer variable, whose value will reflect the position of the slider. Upon creation, the slider position is defined by this variable.}
 \fi
-\cvarg{ count}{Maximal position of the slider. Minimal position is always 0.}
+\cvarg{count}{Maximal position of the slider. Minimal position is always 0.}
 \ifPy
-\cvarg{ onChange}{
+\cvarg{onChange}{
 Callable that OpenCV will call every time the slider changes position.
 OpenCV will call it as \texttt{func(x)} where \texttt{x} is the new position of the slider.}
 \else
-\cvarg{ onChange}{
+\cvarg{onChange}{
 Pointer to the function to be called every time the slider changes position.
 This function should be prototyped as \texttt{void Foo(int);}  Can be NULL if callback is not required.}
 \fi
@@ -83,7 +83,7 @@ Destroys a window.
 \cvdefPy{DestroyWindow(name)-> None}
 
 \begin{description}
-\cvarg{ name}{Name of the window to be destroyed.}
+\cvarg{name}{Name of the window to be destroyed.}
 \end{description}
 
 The function \texttt{cvDestroyWindow} destroys the window with the given name.
@@ -95,8 +95,8 @@ Returns the trackbar position.
 \cvdefPy{GetTrackbarPos(trackbarName,windowName)-> None}
 
 \begin{description}
-\cvarg{ trackbarName}{Name of the trackbar.}
-\cvarg{ windowName}{Name of the window which is the parent of the trackbar.}
+\cvarg{trackbarName}{Name of the trackbar.}
+\cvarg{windowName}{Name of the window which is the parent of the trackbar.}
 \end{description}
 
 The function \texttt{cvGetTrackbarPos} returns the current position of the specified trackbar.
@@ -109,7 +109,7 @@ Gets the window's handle by its name.
 \cvdefC{void* cvGetWindowHandle( const char* name );}
 
 \begin{description}
-\cvarg{ name}{Name of the window}.
+\cvarg{name}{Name of the window}.
 \end{description}
 
 The function \texttt{cvGetWindowHandle} returns the native window handle (HWND in case of Win32 and GtkWidget in case of GTK+).
@@ -120,7 +120,7 @@ Gets the window's name by its handle.
 \cvdefC{const char* cvGetWindowName( void* windowHandle );}
 
 \begin{description}
-\cvarg{ windowHandle}{Handle of the window.}
+\cvarg{windowHandle}{Handle of the window.}
 \end{description}
 
 The function \texttt{cvGetWindowName} returns the name of the window given its native handle (HWND in case of Win32 and GtkWidget in case of GTK+).
@@ -150,9 +150,9 @@ Sets the position of the window.
 \cvdefPy{MoveWindow(name,x,y)-> None}
 
 \begin{description}
-\cvarg{ name}{Name of the window to be moved.}
-\cvarg{ x}{New x coordinate of the top-left corner}
-\cvarg{ y}{New y coordinate of the top-left corner}
+\cvarg{name}{Name of the window to be moved.}
+\cvarg{x}{New x coordinate of the top-left corner}
+\cvarg{y}{New y coordinate of the top-left corner}
 \end{description}
 
 The function \texttt{cvMoveWindow} changes the position of the window.
@@ -164,8 +164,8 @@ Creates a window.
 \cvdefPy{NamedWindow(name,flags=CV\_WINDOW\_AUTOSIZE)-> None}
 
 \begin{description}
-\cvarg{ name}{Name of the window in the window caption that may be used as a window identifier.}
-\cvarg{ flags}{Flags of the window. Currently the only supported flag is \texttt{CV\_WINDOW\_AUTOSIZE}. If this is set, window size is automatically adjusted to fit the displayed image (see \cross{ShowImage}), and the user can not change the window size manually.}
+\cvarg{name}{Name of the window in the window caption that may be used as a window identifier.}
+\cvarg{flags}{Flags of the window. Currently the only supported flag is \texttt{CV\_WINDOW\_AUTOSIZE}. If this is set, window size is automatically adjusted to fit the displayed image (see \cross{ShowImage}), and the user can not change the window size manually.}
 \end{description}
 
 The function \texttt{cvNamedWindow} creates a window which can be used as a placeholder for images and trackbars. Created windows are referred to by their names.
@@ -179,9 +179,9 @@ Sets the window size.
 \cvdefPy{ResizeWindow(name,width,height)-> None}
 
 \begin{description}
-\cvarg{ name}{Name of the window to be resized.}
-\cvarg{ width}{New width}
-\cvarg{ height}{New height}
+\cvarg{name}{Name of the window to be resized.}
+\cvarg{width}{New width}
+\cvarg{height}{New height}
 \end{description}
 
 The function \texttt{cvResizeWindow} changes the size of the window.
@@ -219,14 +219,21 @@ CV_EXTERN_C_FUNCPTR( void (*CvMouseCallback )(int event,
 \end{lstlisting}
 
 \begin{description}
-\cvarg{ windowName}{Name of the window.}
-\cvarg{ onMouse}{Pointer to the function to be called every time a mouse event occurs in the specified window. This function should be prototyped as
-
-\cvdefC{
+\cvarg{windowName}{Name of the window.}
+\ifC  % {
+\cvarg{onMouse}{Pointer to the function to be called every time a mouse event occurs in the specified window. This function should be prototyped as
+\begin{lstlisting}
 void Foo(int event, int x, int y, int flags, void* param);
-}\cvdefPy{Foo(event,x,y,flags,param)-> None}
-
+\end{lstlisting}
 where \texttt{event} is one of \texttt{CV\_EVENT\_*}, \texttt{x} and \texttt{y} are the coordinates of the mouse pointer in image coordinates (not window coordinates), \texttt{flags} is a combination of \texttt{CV\_EVENT\_FLAG}, and \texttt{param} is a user-defined parameter passed to the \texttt{cvSetMouseCallback} function call.}
+\else % }{
+\cvarg{onMouse}{Callable to be called every time a mouse event occurs in the specified window. This callable should have signature
+\begin{lstlisting}
+Foo(event,x,y,flags,param)-> None
+\end{lstlisting}
+where \texttt{event} is one of \texttt{CV\_EVENT\_*}, \texttt{x} and \texttt{y} are the coordinates of the mouse pointer in image coordinates (not window coordinates), \texttt{flags} is a combination of \texttt{CV\_EVENT\_FLAG}, and \texttt{param} is a user-defined parameter passed to the \texttt{cvSetMouseCallback} function call.}
+\fi   % }
+
 \cvarg{param}{User-defined parameter to be passed to the callback function.}
 \end{description}
 
@@ -238,12 +245,12 @@ The function \texttt{cvSetMouseCallback} sets the callback function for mouse ev
 Sets the trackbar position.
 
 \cvdefC{void cvSetTrackbarPos( \par const char* trackbarName, \par const char* windowName, \par int pos );}
-\cvdefPy{SetTrackbarPos(trackbarName,windowName)-> None}
+\cvdefPy{SetTrackbarPos(trackbarName,windowName,pos)-> None}
 
 \begin{description}
-\cvarg{ trackbarName}{Name of the trackbar.}
-\cvarg{ windowName}{Name of the window which is the parent of trackbar.}
-\cvarg{ pos}{New position.}
+\cvarg{trackbarName}{Name of the trackbar.}
+\cvarg{windowName}{Name of the window which is the parent of trackbar.}
+\cvarg{pos}{New position.}
 \end{description}
 
 The function \texttt{cvSetTrackbarPos} sets the position of the specified trackbar.
@@ -273,7 +280,7 @@ Waits for a pressed key.
 \cvdefPy{WaitKey(delay=0)-> int}
 
 \begin{description}
-\cvarg{ delay}{Delay in milliseconds.}
+\cvarg{delay}{Delay in milliseconds.}
 \end{description}
 
 The function \texttt{cvWaitKey} waits for key event infinitely ($ \texttt{delay} <= 0$) or for \texttt{delay} milliseconds. Returns the code of the pressed key or -1 if no key was pressed before the specified time had elapsed.
@@ -319,8 +326,8 @@ Saves an image to a specified file.
 \cvdefPy{SaveImage(filename,image)-> None}
 
 \begin{description}
-\cvarg{ filename}{Name of the file.}
-\cvarg{ image}{Image to be saved.}
+\cvarg{filename}{Name of the file.}
+\cvarg{image}{Image to be saved.}
 \end{description}
 
 The function \texttt{cvSaveImage} saves the image to the specified file. The image format is chosen based on the \texttt{filename} extension, see \cross{LoadImage}. Only 8-bit single-channel or 3-channel (with 'BGR' channel order) images can be saved using this function. If the format, depth or channel order is different, use \texttt{cvCvtScale} and \texttt{cvCvtColor} to convert it before saving, or use universal \texttt{cvSave} to save the image to XML or YAML format.
@@ -396,7 +403,7 @@ Grabs the frame from a camera or file.
 \cvdefPy{GrabFrame(capture) -> int}
 
 \begin{description}
-\cvarg{ capture}{video capturing structure.}
+\cvarg{capture}{video capturing structure.}
 \end{description}
 
 The function \texttt{cvGrabFrame} grabs the frame from a camera or file. The grabbed frame is stored internally. The purpose of this function is to grab the frame \emph{quickly} so that syncronization can occur if it has to read from several cameras simultaneously. The grabbed frames are not exposed because they may be stored in a compressed format (as defined by the camera/driver). To retrieve the grabbed frame, \cross{RetrieveFrame} should be used.
@@ -409,7 +416,7 @@ Grabs and returns a frame from a camera or file.
 \cvdefPy{QueryFrame(capture) -> iplimage}
 
 \begin{description}
-\cvarg{ capture}{video capturing structure.}
+\cvarg{capture}{video capturing structure.}
 \end{description}
 
 The function \texttt{cvQueryFrame} grabs a frame from a camera or video file, decompresses it and returns it. This function is just a combination of \cross{GrabFrame} and \cross{RetrieveFrame}, but in one call. The returned image should not be released or modified by the user.  In the event of an error, the return value may be NULL.
@@ -434,7 +441,7 @@ Gets the image grabbed with cvGrabFrame.
 \cvdefPy{RetrieveFrame(capture) -> iplimage}
 
 \begin{description}
-\cvarg{ capture}{video capturing structure.}
+\cvarg{capture}{video capturing structure.}
 \end{description}
 
 The function \texttt{cvRetrieveFrame} returns the pointer to the image grabbed with the \cross{GrabFrame} function. The returned image should not be released or modified by the user.  In the event of an error, the return value may be NULL.
@@ -444,7 +451,7 @@ The function \texttt{cvRetrieveFrame} returns the pointer to the image grabbed w
 Sets video capturing properties.
 
 \cvdefC{int cvSetCaptureProperty( \par CvCapture* capture, \par int property\_id, \par double value );}
-\cvdefPy{SetCaptureProperty(capture, property\_id,double)->None}
+\cvdefPy{SetCaptureProperty(capture, property\_id,value)->None}
 
 \begin{description}
 \cvarg{capture}{video capturing structure.}
@@ -481,14 +488,14 @@ CvVideoWriter* cvCreateVideoWriter( \par const char* filename, \par int fourcc, 
 }\cvdefPy{CreateVideoWriter(filename, fourcc, fps, frame\_size, is\_color) -> CvVideoWriter}
 
 \begin{description}
-\cvarg{ filename}{Name of the output video file.}
-\cvarg{ fourcc}{4-character code of codec used to compress the frames. For example,
+\cvarg{filename}{Name of the output video file.}
+\cvarg{fourcc}{4-character code of codec used to compress the frames. For example,
 \texttt{CV\_FOURCC('P','I','M,'1')} is a MPEG-1 codec,
 \texttt{CV\_FOURCC('M','J','P','G')} is a motion-jpeg codec etc.
 Under Win32 it is possible to pass -1 in order to choose compression method and additional compression parameters from dialog. Under Win32 if 0 is passed while using an avi filename it will create a video writer that creates an uncompressed avi file.}
-\cvarg{ fps}{Framerate of the created video stream.}
-\cvarg{ frame\_size}{Size of the  video frames.}
-\cvarg{ is\_color}{If it is not zero, the encoder will expect and encode color frames, otherwise it will work with grayscale frames (the flag is currently supported on Windows only).}
+\cvarg{fps}{Framerate of the created video stream.}
+\cvarg{frame\_size}{Size of the  video frames.}
+\cvarg{is\_color}{If it is not zero, the encoder will expect and encode color frames, otherwise it will work with grayscale frames (the flag is currently supported on Windows only).}
 \end{description}
 
 The function \texttt{cvCreateVideoWriter} creates the video writer structure.
@@ -503,7 +510,7 @@ Releases the AVI writer.
 \cvdefC{void cvReleaseVideoWriter( CvVideoWriter** writer );}
 
 \begin{description}
-\cvarg{ writer}{Pointer to the video file writer structure.}
+\cvarg{writer}{Pointer to the video file writer structure.}
 \end{description}
 
 The function \texttt{cvReleaseVideoWriter} finishes writing to the video file and releases the structure.
@@ -517,8 +524,8 @@ Writes a frame to a video file.
 \cvdefPy{WriteFrame(writer, image)->int}
 
 \begin{description}
-\cvarg{ writer}{Video writer structure}
-\cvarg{ image}{The written frame}
+\cvarg{writer}{Video writer structure}
+\cvarg{image}{The written frame}
 \end{description}
 
 The function \texttt{cvWriteFrame} writes/appends one frame to a video file.

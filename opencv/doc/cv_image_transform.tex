@@ -11,7 +11,9 @@ void cvAdaptiveThreshold(
 int adaptive\_method=CV\_ADAPTIVE\_THRESH\_MEAN\_C,\par
 int thresholdType=CV\_THRESH\_BINARY,\par
 int blockSize=3,\par double param1=5 );
-}\cvdefPy{AdaptiveThreshold(src,dst,maxValue, adaptive\_method=CV\_ADAPTIVE\_THRESH\_MEAN\_C, thresholdType=CV\_THRESH\_BINARY,blockSize=3,param1=5)-> None}
+}
+
+\cvdefPy{AdaptiveThreshold(src,dst,maxValue, adaptive\_method=CV\_ADAPTIVE\_THRESH\_MEAN\_C, thresholdType=CV\_THRESH\_BINARY,blockSize=3,param1=5)-> None}
 
 \begin{description}
 \cvarg{src}{Source image}
@@ -610,7 +612,8 @@ double cvThreshold(
 \par double threshold,
 \par double maxValue,
 \par int thresholdType );
-}\cvdefPy{Threshold(src,dst,threshld,maxValue,thresholdType)-> None}
+}
+\cvdefPy{Threshold(src,dst,threshold,maxValue,thresholdType)-> None}
 
 \begin{description}
 \cvarg{src}{Source array (single-channel, 8-bit or 32-bit floating point)}

@@ -7,7 +7,8 @@ Approximates Freeman chain(s) with a polygonal curve.
 
 \cvdefC{
 CvSeq* cvApproxChains( \par CvSeq* src\_seq,\par CvMemStorage* storage,\par int method=CV\_CHAIN\_APPROX\_SIMPLE,\par double parameter=0,\par int minimal\_perimeter=0,\par int recursive=0 );
-}\cvdefPy{ApproxChains(src\_seq,storage,method=CV\_CHAIN\_APPROX\_SIMPLE,parameter=0,minimal\_perimiter=0,recursive=0)-> chains}
+}
+\cvdefPy{ApproxChains(src\_seq,storage,method=CV\_CHAIN\_APPROX\_SIMPLE,parameter=0,minimal\_perimeter=0,recursive=0)-> chains}
 
 \begin{description}
 \cvarg{src\_seq}{Pointer to the chain that can refer to other chains}
@@ -32,7 +33,9 @@ ApproxPoly(src\_seq, storage, method, parameter=0, parameter2=0) -> sequence
 
 \begin{description}
 \cvarg{src\_seq}{Sequence of an array of points}
+\ifC
 \cvarg{header\_size}{Header size of the approximated curve[s]}
+\fi
 \cvarg{storage}{Container for the approximated contours. If it is NULL, the input sequences' storage is used}
 \cvarg{method}{Approximation method; only \texttt{CV\_POLY\_APPROX\_DP} is supported, that corresponds to the Douglas-Peucker algorithm}
 \cvarg{parameter}{Method-specific parameter; in the case of \texttt{CV\_POLY\_APPROX\_DP} it is a desired approximation accuracy}
@@ -97,7 +100,7 @@ void cvBoxPoints( \par CvBox2D box,\par CvPoint2D32f pt[4] );
 
 \begin{description}
 \cvarg{box}{Box}
-\cvarg{pt}{Array of vertices}
+\cvarg{points}{Array of vertices}
 \end{description}
 
 The function calculates the vertices of the input 2d box. Here is the function code:
@@ -251,7 +254,8 @@ Finds the convex hull of a point set.
 
 \cvdefC{
 CvSeq* cvConvexHull2( \par const CvArr* input,\par void* hull\_storage=NULL,\par int orientation=CV\_CLOCKWISE,\par int return\_points=0 );
-}\cvdefPy{ConvexHull2(points,storage,orientaton=CV\_CLOCKWISE,return\_points=0)-> convex\_hull}
+}
+\cvdefPy{ConvexHull2(points,hull\_storage,orientation=CV\_CLOCKWISE,return\_points=0)-> convex\_hull}
 
 \begin{description}
 \cvarg{points}{Sequence or array of 2D points with 32-bit integer or floating-point coordinates}
@@ -417,9 +421,11 @@ int cvFindContours(\par CvArr* image,\par CvMemStorage* storage,\par CvSeq** fir
 \begin{description}
 \cvarg{image}{The source, an 8-bit single channel image. Non-zero pixels are treated as 1's, zero pixels remain 0's - the image is treated as \texttt{binary}. To get such a binary image from grayscale, one may use \cvCPyCross{Threshold}, \cvCPyCross{AdaptiveThreshold} or \cvCPyCross{Canny}. The function modifies the source image's content}
 \cvarg{storage}{Container of the retrieved contours}
+\ifC
 \cvarg{first\_contour}{Output parameter, will contain the pointer to the first outer contour}
 \cvarg{header\_size}{Size of the sequence header, $\ge \texttt{sizeof(CvChain)}$ if $\texttt{method} =\texttt{CV\_CHAIN\_CODE}$,
 and $\ge \texttt{sizeof(CvContour)}$ otherwise}
+\fi
 \cvarg{mode}{Retrieval mode
 \begin{description}
   \cvarg{CV\_RETR\_EXTERNAL}{retrives only the extreme outer contours}
@@ -497,7 +503,8 @@ void  cvFitLine( \par const CvArr* points,\par int dist\_type,\par double param,
 \cvarg{points}{Sequence or array of 2D or 3D points with 32-bit integer or floating-point coordinates}
 \cvarg{dist\_type}{The distance used for fitting (see the discussion)}
 \cvarg{param}{Numerical parameter (\texttt{C}) for some types of distances, if 0 then some optimal value is chosen}
-\cvarg{reps, aeps}{Sufficient accuracy for the radius (distance between the coordinate origin and the line) and angle, respectively; 0.01 would be a good default value for both.}
+\cvarg{reps}{Sufficient accuracy for the radius (distance between the coordinate origin and the line).  0.01 is a good default value.}
+\cvarg{aeps}{Sufficient accuracy for the angle.  0.01 is a good default value.}
 \cvarg{line}{The output line parameters. In the case of a 2d fitting,
 it is \cvC{an array} \cvPy{a tuple} of 4 floats \texttt{(vx, vy,
 x0, y0)} where \texttt{(vx, vy)} is a normalized vector collinear to the
@@ -538,7 +545,8 @@ Retrieves the central moment from the moment state structure.
 
 \cvdefC{
 double cvGetCentralMoment( \par CvMoments* moments,\par int x\_order,\par int y\_order );
-}\cvdefPy{GetCentralMoment(cvmoments, x\_order, y\_order) -> double}
+}
+\cvdefPy{GetCentralMoment(moments, x\_order, y\_order) -> double}
 
 \begin{description}
 \cvarg{moments}{Pointer to the moment state structure}
@@ -592,7 +600,7 @@ Retrieves the normalized central moment from the moment state structure.
 
 \cvdefC{
 double cvGetNormalizedCentralMoment( \par CvMoments* moments,\par int x\_order,\par int y\_order );
-}\cvdefPy{GetNormalizedCentralMoment(cvmoments, x\_order, y\_order) -> double}
+}\cvdefPy{GetNormalizedCentralMoment(moments, x\_order, y\_order) -> double}
 
 \begin{description}
 \cvarg{moments}{Pointer to the moment state structure}
@@ -611,7 +619,8 @@ Retrieves the spatial moment from the moment state structure.
 
 \cvdefC{
 double cvGetSpatialMoment( \par CvMoments* moments, \par int x\_order, \par int y\_order );
-}\cvdefPy{GetSpatialMoment(cvmoments, x\_order, y\_order) -> double}
+}
+\cvdefPy{GetSpatialMoment(moments, x\_order, y\_order) -> double}
 
 \begin{description}
 \cvarg{moments}{The moment state, calculated by \cvCPyCross{Moments}}
@@ -728,7 +737,8 @@ Calculates all of the moments up to the third order of a polygon or rasterized s
 
 \cvdefC{
 void cvMoments( \par const CvArr* arr,\par CvMoments* moments,\par int binary=0 );
-}\cvdefPy{Moments(arr) -> cvmoments}
+}
+\cvdefPy{Moments(arr, binary) -> moments}
 
 \begin{description}
 \cvarg{arr}{Image (1-channel or 3-channel with COI set) or polygon (CvSeq of points or a vector of points)}

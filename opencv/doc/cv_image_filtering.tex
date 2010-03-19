@@ -16,7 +16,7 @@ void cvCopyMakeBorder(
 \par CvPoint offset,
 \par int bordertype,
 \par CvScalar value=cvScalarAll(0) );}
-\cvdefPy{CopyMakeBorder(src,dst,offset,bordrtype,value=(0,0,0,0))-> None}
+\cvdefPy{CopyMakeBorder(src,dst,offset,bordertype,value=(0,0,0,0))-> None}
 
 \begin{description}
 \cvarg{src}{The source image}
@@ -82,7 +82,7 @@ The function supports the in-place mode. Dilation can be applied several (\textt
 Erodes an image by using a specific structuring element.
 
 \cvdefC{void cvErode(\par const CvArr* src,\par  CvArr* dst,\par  IplConvKernel* element=NULL,\par  int iterations=1);}
-\cvdefPy{Erode(src,dst,element=NULL,itertions=1)-> None}
+\cvdefPy{Erode(src,dst,element=NULL,iterations=1)-> None}
 
 \begin{description}
 \cvarg{src}{Source image}
@@ -279,7 +279,7 @@ Calculates the first, second, third or mixed image derivatives using an extended
 
 In all cases except 1, an $\texttt{apertureSize} \times
 \texttt{apertureSize}$ separable kernel will be used to calculate the
-derivative. For $\texttt{apertureSize} = 1$ $ 3 \times 1$ or $ 1 \times 3$
+derivative. For $\texttt{apertureSize} = 1$ a $3 \times 1$ or $1 \times 3$
 a kernel is used (Gaussian smoothing is not done). There is also the special
 value \texttt{CV\_SCHARR} (-1) that corresponds to a $3\times3$ Scharr
 filter that may give more accurate results than a $3\times3$ Sobel. Scharr
