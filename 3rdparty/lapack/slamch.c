@@ -56,7 +56,7 @@ doublereal slamc3_(real *a, real *b)
 doublereal
 slamch_(char *cmach) {
     char ch = cmach[0];
-    float eps=FLT_EPSILON*0.5f, sfmin, small;
+    float eps=FLT_EPSILON, sfmin, small;
 
     if ('B' == ch || 'b' == ch) {
         return FLT_RADIX;

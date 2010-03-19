@@ -56,7 +56,7 @@ doublereal dlamc3_(doublereal *a, doublereal *b)
 doublereal
 dlamch_(char *cmach) {
     char ch = cmach[0];
-    double eps = DBL_EPSILON*0.5, sfmin, small;
+    double eps = DBL_EPSILON, sfmin, small;
     
     if ('B' == ch || 'b' == ch) {
         return FLT_RADIX;
