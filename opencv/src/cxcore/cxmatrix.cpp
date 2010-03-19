@@ -2869,10 +2869,12 @@ uchar* SparseMat::newNode(const int* idx, size_t hashval)
         elem->idx[i] = idx[i];
     d = elemSize();
     uchar* p = &value<uchar>(elem);
-    for( i = 0; i <= d - (int)sizeof(int); i += sizeof(int) )
-        *(int*)(p + i) = 0;
-    for( ; i < d; i++ )
-        p[i] = 0;
+    if( d == sizeof(float) )
+        *((float*)p) = 0.f;
+    else if( d == sizeof(double) )
+        *((double*)p) = 0.;
+    else
+        memset(p, 0, d);
     
     return p;
 }
