@@ -2034,6 +2034,7 @@ cvDrawContours( void* _img, CvSeq* contour,
         h_next = contour->h_next;
         contour->h_next = 0;
         maxLevel = -maxLevel+1;
+        maxLevel -= maxLevel < 0;
     }
 
     cvInitTreeNodeIterator( &iterator, contour, maxLevel );
