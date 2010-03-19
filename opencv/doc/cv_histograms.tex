@@ -62,7 +62,7 @@ The function calculates the back projection by comparing histograms of the sourc
 
 Each new image is measured and then converted into an \texttt{image} image array over a chosen ROI. Histograms are taken from this \texttt{image} image in an area covered by a "patch" with an anchor at center as shown in the picture below. The histogram is normalized using the parameter \texttt{norm\_factor} so that it may be compared with \texttt{hist}. The calculated histogram is compared to the model histogram; \texttt{hist} uses The function \texttt{cvCompareHist} with the comparison method=\texttt{method}). The resulting output is placed at the location corresponding to the patch anchor in the probability image \texttt{dst}. This process is repeated as the patch is slid over the ROI. Iterative histogram update by subtracting trailing pixels covered by the patch and adding newly covered pixels to the histogram can save a lot of operations, though it is not implemented yet.
 
-\cvfunc{Back Project Calculation by Patches}
+Back Project Calculation by Patches
 
 \includegraphics[width=0.5\textwidth]{pics/backprojectpatch.png}
 
@@ -71,7 +71,8 @@ Calculates the histogram of image(s).
 
 \cvdefC{
 void cvCalcHist( \par IplImage** image,\par CvHistogram* hist,\par int accumulate=0,\par const CvArr* mask=NULL );
-}\cvdefPy{CalcHist(image,hist,ccumulate=0,mask=NULL)-> None}
+}
+\cvdefPy{CalcHist(image,hist,accumulate=0,mask=NULL)-> None}
 
 \begin{description}
 \cvarg{image}{Source images (though you may pass CvMat** as well)}
@@ -300,6 +301,7 @@ via the function \cvCPyCross{SetHistBinRanges}. Though \cvCPyCross{CalcHist}
 and \cvCPyCross{CalcBackProject} may process 8-bit images without setting
 bin ranges, they assume thy are equally spaced in 0 to 255 bins.
 
+\ifC % {
 \cvCPyFunc{GetHistValue*D}
 Returns a pointer to the histogram bin.
 
@@ -321,7 +323,7 @@ Returns a pointer to the histogram bin.
 \end{description}
 
 The macros \texttt{GetHistValue} return a pointer to the specified bin of the 1D, 2D, 3D or N-D histogram. In the case of a sparse histogram the function creates a new bin and sets it to 0, unless it exists already.
-
+\fi % }
 
 \cvCPyFunc{GetMinMaxHistValue}
 Finds the minimum and maximum histogram bins.
@@ -329,7 +331,8 @@ Finds the minimum and maximum histogram bins.
 \cvdefC{
 void cvGetMinMaxHistValue( \par const CvHistogram* hist,\par float* min\_value,\par float* max\_value,\par int* min\_idx=NULL,\par int* max\_idx=NULL );
 
-}\cvdefPy{GetMinMaxHistValue(hist)-> min\_val,max\_val,min\_loc,max\_loc}
+}
+\cvdefPy{GetMinMaxHistValue(hist)-> (min\_val,max\_val,min\_loc,max\_loc)}
 
 \begin{description}
 \cvarg{hist}{Histogram}
@@ -438,7 +441,8 @@ Thresholds the histogram.
 
 \cvdefC{
 void cvThreshHist( CvHistogram* hist, double threshold );
-}\cvdefPy{ThreshHist(hist,threshold)-> None}
+}
+\cvdefPy{ThreshHist(hist,threshold)-> None}
 
 \begin{description}
 \cvarg{hist}{Pointer to the histogram}

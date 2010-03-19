@@ -108,7 +108,8 @@ Extracts Speeded Up Robust Features from an image.
 
 \cvdefC{
 void cvExtractSURF( \par const CvArr* image,\par const CvArr* mask,\par CvSeq** keypoints,\par CvSeq** descriptors,\par CvMemStorage* storage,\par CvSURFParams params );
-}\cvdefPy{ExtractSURF(image,mask,storage,params)-> keypoints,descriptors}
+}
+\cvdefPy{ExtractSURF(image,mask,storage,params)-> (keypoints,descriptors)}
 
 \begin{description}
 \cvarg{image}{The input 8-bit grayscale image}

@@ -142,8 +142,9 @@ Calculates the optical flow for a sparse feature set using the iterative Lucas-K
 
 \cvdefC{
 void cvCalcOpticalFlowPyrLK( \par const CvArr* prev,\par const CvArr* curr,\par CvArr* prevPyr,\par CvArr* currPyr,\par const CvPoint2D32f* prevFeatures,\par CvPoint2D32f* currFeatures,\par int count,\par CvSize winSize,\par int level,\par char* status,\par float* track\_error,\par CvTermCriteria criteria,\par int flags );
-}\cvdefPy{
-CalcOpticalFlowPyrLK(  prev, curr, prevPyr, currPyr, prevFeatures, CvSize winSize, int level, criteria, flags, guesses = None) -> (currFeatures, status, track\_error)
+}
+\cvdefPy{
+CalcOpticalFlowPyrLK(  prev, curr, prevPyr, currPyr, prevFeatures, winSize, level, criteria, flags, guesses = None) -> (currFeatures, status, track\_error)
 }
 
 \begin{description}
@@ -538,7 +539,7 @@ Estimates the subsequent model state.
 const CvMat* cvKalmanPredict( \par CvKalman* kalman, \par const CvMat* control=NULL );
 }
 \cvdefPy{
-cvKalmanPredict(kalman, control=None) -> cvmat
+KalmanPredict(kalman, control=None) -> cvmat
 }
 \begin{lstlisting}
 #define cvKalmanUpdateByTime cvKalmanPredict
@@ -601,7 +602,8 @@ Adds the product of two input images to the accumulator.
 
 \cvdefC{
 void cvMultiplyAcc( \par const CvArr* image1,\par const CvArr* image2,\par CvArr* acc,\par const CvArr* mask=NULL );
-}\cvdefPy{MulitplyAcc(image1,image2,acc,mask=NULL)-> None}
+}
+\cvdefPy{MultiplyAcc(image1,image2,acc,mask=NULL)-> None}
 
 \begin{description}
 \cvarg{image1}{First input image, 1- or 3-channel, 8-bit or 32-bit floating point (each channel of multi-channel image is processed independently)}
@@ -630,10 +632,10 @@ The function releases the structure \cvCPyCross{CvConDensation}) and frees all m
 
 \fi % }
 
+\ifC % {
+
 \cvCPyFunc{ReleaseKalman}
 Deallocates the Kalman filter structure.
-
-\ifC % {
 
 \cvdefC{
 void cvReleaseKalman( \par CvKalman** kalman );
@@ -652,7 +654,8 @@ Updates the running average.
 
 \cvdefC{
 void cvRunningAvg( \par const CvArr* image,\par CvArr* acc,\par double alpha,\par const CvArr* mask=NULL );
-}\cvdefPy{RunningAvg(image,acc,alpha,mask=NULL)-> None}
+}
+\cvdefPy{RunningAvg(image,acc,alpha,mask=NULL)-> None}
 
 \begin{description}
 \cvarg{image}{Input image, 1- or 3-channel, 8-bit or 32-bit floating point (each channel of multi-channel image is processed independently)}
