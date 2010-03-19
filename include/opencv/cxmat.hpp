@@ -625,6 +625,7 @@ template<typename _Tp> inline Mat_<_Tp>& Mat_<_Tp>::operator = (const _Tp& s)
     Mat::operator=(Scalar((const VT&)s));
     return *this;
 }
+    
 
 template<typename _Tp> inline void Mat_<_Tp>::create(int _rows, int _cols)
 {
@@ -831,8 +832,8 @@ template<typename _Tp> inline Mat_<_Tp>& Mat_<_Tp>::operator = (const MatExpr_Ba
     return *this;
 }
 
-template<typename _Tp> inline Mat_<_Tp>::operator MatExpr_<Mat_<_Tp>, Mat_<_Tp> >() const
-{ return MatExpr_<Mat_<_Tp>, Mat_<_Tp> >(*this); }
+template<typename _Tp> inline Mat_<_Tp>::operator MatExpr_<Mat, Mat>() const
+{ return MatExpr_<Mat, Mat>(*this); }
 
 inline Mat::operator MatExpr_<Mat, Mat>() const
 { return MatExpr_<Mat, Mat>(*this); }
@@ -1282,12 +1283,12 @@ operator + (const Mat& a, const Mat& b)
 }
 
 template<typename _Tp> static inline
-MatExpr_<MatExpr_Op5_<Mat_<_Tp>, double, Mat_<_Tp>,
-double, double, Mat_<_Tp>, MatOp_AddEx_<Mat> >, Mat_<_Tp> >
+MatExpr_<MatExpr_Op5_<Mat, double, Mat,
+double, double, Mat, MatOp_AddEx_<Mat> >, Mat >
 operator + (const Mat_<_Tp>& a, const Mat_<_Tp>& b)
 {
-    typedef MatExpr_Op5_<Mat_<_Tp>, double, Mat_<_Tp>, double, double, Mat_<_Tp>, MatOp_AddEx_<Mat> > MatExpr_Temp;
-    return MatExpr_<MatExpr_Temp, Mat_<_Tp> >(MatExpr_Temp(a, 1, b, 1, 0));
+    typedef MatExpr_Op5_<Mat, double, Mat, double, double, Mat, MatOp_AddEx_<Mat> > MatExpr_Temp;
+    return MatExpr_<MatExpr_Temp, Mat >(MatExpr_Temp(a, 1, b, 1, 0));
 }
 
 // E1 + E2
@@ -1308,11 +1309,11 @@ operator - (const Mat& a, const Mat& b)
 }
 
 template<typename _Tp> static inline
-MatExpr_<MatExpr_Op2_<Mat_<_Tp>, Mat_<_Tp>, Mat_<_Tp>, MatOp_Sub_<Mat> >, Mat_<_Tp> >
+MatExpr_<MatExpr_Op2_<Mat, Mat, Mat, MatOp_Sub_<Mat> >, Mat >
 operator - (const Mat_<_Tp>& a, const Mat_<_Tp>& b)
 {
-    typedef MatExpr_Op2_<Mat_<_Tp>, Mat_<_Tp>, Mat_<_Tp>, MatOp_Sub_<Mat> > MatExpr_Temp;
-    return MatExpr_<MatExpr_Temp, Mat_<_Tp> >(MatExpr_Temp(a, b));
+    typedef MatExpr_Op2_<Mat, Mat, Mat, MatOp_Sub_<Mat> > MatExpr_Temp;
+    return MatExpr_<MatExpr_Temp, Mat >(MatExpr_Temp(a, b));
 }
 
 // E1 - E2
@@ -1362,11 +1363,11 @@ operator * (const Mat& a, double alpha)
 
 // A*alpha
 template<typename _Tp> static inline
-MatExpr_<MatExpr_Op2_<Mat_<_Tp>, double, Mat_<_Tp>, MatOp_Scale_<Mat> >, Mat_<_Tp> >
+MatExpr_<MatExpr_Op2_<Mat, double, Mat, MatOp_Scale_<Mat> >, Mat >
 operator * (const Mat_<_Tp>& a, double alpha)
 {
-    typedef MatExpr_Op2_<Mat_<_Tp>, double, Mat_<_Tp>, MatOp_Scale_<Mat> > MatExpr_Temp;
-    return MatExpr_<MatExpr_Temp, Mat_<_Tp> >(MatExpr_Temp(a, alpha));
+    typedef MatExpr_Op2_<Mat, double, Mat, MatOp_Scale_<Mat> > MatExpr_Temp;
+    return MatExpr_<MatExpr_Temp, Mat >(MatExpr_Temp(a, alpha));
 }
 
 // alpha*A
@@ -1377,7 +1378,7 @@ operator * (double alpha, const Mat& a)
 
 // alpha*A
 template<typename _Tp> static inline
-MatExpr_<MatExpr_Op2_<Mat_<_Tp>, double, Mat_<_Tp>, MatOp_Scale_<Mat> >, Mat_<_Tp> >
+MatExpr_<MatExpr_Op2_<Mat, double, Mat, MatOp_Scale_<Mat> >, Mat >
 operator * (double alpha, const Mat_<_Tp>& a)
 { return a*alpha; }
 
@@ -1389,7 +1390,7 @@ operator / (const Mat& a, double alpha)
 
 // A/alpha
 template<typename _Tp> static inline
-MatExpr_<MatExpr_Op2_<Mat_<_Tp>, double, Mat_<_Tp>, MatOp_Scale_<Mat> >, Mat_<_Tp> >
+MatExpr_<MatExpr_Op2_<Mat, double, Mat, MatOp_Scale_<Mat> >, Mat >
 operator / (const Mat_<_Tp>& a, double alpha)
 { return a*(1./alpha); }
 
@@ -1401,7 +1402,7 @@ operator - (const Mat& a)
 
 // -A
 template<typename _Tp> static inline
-MatExpr_<MatExpr_Op2_<Mat_<_Tp>, double, Mat_<_Tp>, MatOp_Scale_<Mat> >, Mat_<_Tp> >
+MatExpr_<MatExpr_Op2_<Mat, double, Mat, MatOp_Scale_<Mat> >, Mat >
 operator - (const Mat_<_Tp>& a)
 { return a*(-1); }
 
@@ -1467,22 +1468,22 @@ operator - (const MatExpr_<MatExpr_Op2_<A, double, M, MatOp_Scale_<Mat> >, M>& a
 
 // A + alpha
 template<typename _Tp> static inline
-MatExpr_<MatExpr_Op3_<Mat_<_Tp>, double, double, Mat_<_Tp>, MatOp_ScaleAddS_<Mat> >, Mat_<_Tp> >
+MatExpr_<MatExpr_Op3_<Mat, double, double, Mat, MatOp_ScaleAddS_<Mat> >, Mat >
 operator + (const Mat_<_Tp>& a, double alpha)
 {
-    typedef MatExpr_Op3_<Mat_<_Tp>, double, double, Mat_<_Tp>,
+    typedef MatExpr_Op3_<Mat, double, double, Mat,
         MatOp_ScaleAddS_<Mat> > MatExpr_Temp;
-    return MatExpr_<MatExpr_Temp, Mat_<_Tp> >(MatExpr_Temp(a, 1, alpha));
+    return MatExpr_<MatExpr_Temp, Mat >(MatExpr_Temp(a, 1, alpha));
 }
 
 // A + alpha
 template<typename _Tp> static inline
-MatExpr_<MatExpr_Op2_<Mat_<_Tp>, Scalar, Mat_<_Tp>, MatOp_AddS_<Mat> >, Mat_<_Tp> >
+MatExpr_<MatExpr_Op2_<Mat, Scalar, Mat, MatOp_AddS_<Mat> >, Mat >
 operator + (const Mat_<_Tp>& a, const Scalar& alpha)
 {
-    typedef MatExpr_Op2_<Mat_<_Tp>, Scalar, Mat_<_Tp>,
+    typedef MatExpr_Op2_<Mat, Scalar, Mat,
         MatOp_AddS_<Mat> > MatExpr_Temp;
-    return MatExpr_<MatExpr_Temp, Mat_<_Tp> >(MatExpr_Temp(a, alpha));
+    return MatExpr_<MatExpr_Temp, Mat >(MatExpr_Temp(a, alpha));
 }
 
 static inline
@@ -1496,13 +1497,13 @@ operator + (const Mat& a, const Scalar& alpha)
 
 // alpha + A
 template<typename _Tp> static inline
-MatExpr_<MatExpr_Op3_<Mat_<_Tp>, double, double, Mat_<_Tp>, MatOp_ScaleAddS_<Mat> >, Mat_<_Tp> >
+MatExpr_<MatExpr_Op3_<Mat, double, double, Mat, MatOp_ScaleAddS_<Mat> >, Mat >
 operator + (double alpha, const Mat_<_Tp>& a)
 { return a + alpha; }
 
 // alpha + A
 template<typename _Tp> static inline
-MatExpr_<MatExpr_Op2_<Mat_<_Tp>, Scalar, Mat_<_Tp>, MatOp_AddS_<Mat> >, Mat_<_Tp> >
+MatExpr_<MatExpr_Op2_<Mat, Scalar, Mat, MatOp_AddS_<Mat> >, Mat >
 operator + (const Scalar& alpha, const Mat_<_Tp>& a)
 { return a + alpha; }
 
@@ -1513,13 +1514,13 @@ operator + (const Scalar& alpha, const Mat& a)
 
 // A - alpha
 template<typename _Tp> static inline
-MatExpr_<MatExpr_Op3_<Mat_<_Tp>, double, double, Mat_<_Tp>, MatOp_ScaleAddS_<Mat> >, Mat_<_Tp> >
+MatExpr_<MatExpr_Op3_<Mat, double, double, Mat, MatOp_ScaleAddS_<Mat> >, Mat >
 operator - (const Mat_<_Tp>& a, double alpha)
 { return a + (-alpha); }
 
 // A - alpha
 template<typename _Tp> static inline
-MatExpr_<MatExpr_Op2_<Mat_<_Tp>, Scalar, Mat_<_Tp>, MatOp_AddS_<Mat> >, Mat_<_Tp> >
+MatExpr_<MatExpr_Op2_<Mat, Scalar, Mat, MatOp_AddS_<Mat> >, Mat >
 operator - (const Mat_<_Tp>& a, const Scalar& alpha)
 { return a + (-alpha); }
 
@@ -1530,12 +1531,12 @@ operator - (const Mat& a, const Scalar& alpha)
 
 // alpha - A
 template<typename _Tp> static inline
-MatExpr_<MatExpr_Op3_<Mat_<_Tp>, double, double, Mat_<_Tp>, MatOp_ScaleAddS_<Mat> >, Mat_<_Tp> >
+MatExpr_<MatExpr_Op3_<Mat, double, double, Mat, MatOp_ScaleAddS_<Mat> >, Mat >
 operator - (double alpha, const Mat_<_Tp>& a)
 {
-    typedef MatExpr_Op3_<Mat_<_Tp>, double, double, Mat_<_Tp>,
+    typedef MatExpr_Op3_<Mat, double, double, Mat,
         MatOp_ScaleAddS_<Mat> > MatExpr_Temp;
-    return MatExpr_<MatExpr_Temp, Mat_<_Tp> >(MatExpr_Temp(a, -1, alpha));
+    return MatExpr_<MatExpr_Temp, Mat >(MatExpr_Temp(a, -1, alpha));
 }
 
 // E + alpha
@@ -1942,11 +1943,11 @@ Mat::t() const
 }
 
 template<typename _Tp> inline
-MatExpr_<MatExpr_Op2_<Mat_<_Tp>, double, Mat_<_Tp>, MatOp_T_<Mat> >, Mat_<_Tp> >
+MatExpr_<MatExpr_Op2_<Mat, double, Mat, MatOp_T_<Mat> >, Mat >
 Mat_<_Tp>::t() const
 {
-    typedef MatExpr_Op2_<Mat_<_Tp>, double, Mat_<_Tp>, MatOp_T_<Mat> > MatExpr_Temp;
-    return MatExpr_<MatExpr_Temp, Mat_<_Tp> >(MatExpr_Temp(*this, 1));
+    typedef MatExpr_Op2_<Mat, double, Mat, MatOp_T_<Mat> > MatExpr_Temp;
+    return MatExpr_<MatExpr_Temp, Mat>(MatExpr_Temp(*this, 1));
 }
 
 // A*B
@@ -1959,13 +1960,13 @@ operator * ( const Mat& a, const Mat& b )
 }
 
 template<typename _Tp> static inline
-MatExpr_<MatExpr_Op4_<Mat_<_Tp>, Mat_<_Tp>, double, int, Mat_<_Tp>,
-MatOp_MatMul_<Mat> >, Mat_<_Tp> >
+MatExpr_<MatExpr_Op4_<Mat, Mat, double, int, Mat,
+MatOp_MatMul_<Mat> >, Mat >
 operator * ( const Mat_<_Tp>& a, const Mat_<_Tp>& b )
 {
-    typedef MatExpr_Op4_<Mat_<_Tp>, Mat_<_Tp>, double, int, Mat_<_Tp>,
+    typedef MatExpr_Op4_<Mat, Mat, double, int, Mat,
         MatOp_MatMul_<Mat> > MatExpr_Temp;
-    return MatExpr_<MatExpr_Temp, Mat_<_Tp> >(MatExpr_Temp(a, b, 1, 0));
+    return MatExpr_<MatExpr_Temp, Mat >(MatExpr_Temp(a, b, 1, 0));
 }
 
 template<typename A, typename B, typename M> static inline
@@ -2523,35 +2524,35 @@ operator ^ (const Mat& a, const Mat& b)
 }
 
 template<typename _Tp> static inline
-MatExpr_<MatExpr_Op3_<Mat_<_Tp>, Mat_<_Tp>, int, Mat_<_Tp>,
-            MatOp_Bin_<Mat> >, Mat_<_Tp> >
+MatExpr_<MatExpr_Op3_<Mat, Mat, int, Mat,
+            MatOp_Bin_<Mat> >, Mat >
 operator & (const Mat_<_Tp>& a, const Mat_<_Tp>& b)
 {
-    typedef MatExpr_Op3_<Mat_<_Tp>, Mat_<_Tp>, int, Mat_<_Tp>,
+    typedef MatExpr_Op3_<Mat, Mat, int, Mat,
         MatOp_Bin_<Mat> > MatExpr_Temp;
-    return MatExpr_<MatExpr_Temp, Mat_<_Tp> >(MatExpr_Temp(
+    return MatExpr_<MatExpr_Temp, Mat >(MatExpr_Temp(
         a, b, '&'));
 }
 
 template<typename _Tp> static inline
-MatExpr_<MatExpr_Op3_<Mat_<_Tp>, Mat_<_Tp>, int, Mat_<_Tp>,
-            MatOp_Bin_<Mat> >, Mat_<_Tp> >
+MatExpr_<MatExpr_Op3_<Mat, Mat, int, Mat,
+            MatOp_Bin_<Mat> >, Mat >
 operator | (const Mat_<_Tp>& a, const Mat_<_Tp>& b)
 {
-    typedef MatExpr_Op3_<Mat_<_Tp>, Mat_<_Tp>, int, Mat_<_Tp>,
+    typedef MatExpr_Op3_<Mat, Mat, int, Mat,
         MatOp_Bin_<Mat> > MatExpr_Temp;
-    return MatExpr_<MatExpr_Temp, Mat_<_Tp> >(MatExpr_Temp(
+    return MatExpr_<MatExpr_Temp, Mat >(MatExpr_Temp(
         a, b, '|'));
 }
 
 template<typename _Tp> static inline
-MatExpr_<MatExpr_Op3_<Mat_<_Tp>, Mat_<_Tp>, int, Mat_<_Tp>,
-            MatOp_Bin_<Mat> >, Mat_<_Tp> >
+MatExpr_<MatExpr_Op3_<Mat, Mat, int, Mat,
+            MatOp_Bin_<Mat> >, Mat >
 operator ^ (const Mat_<_Tp>& a, const Mat_<_Tp>& b)
 {
-    typedef MatExpr_Op3_<Mat_<_Tp>, Mat_<_Tp>, int, Mat_<_Tp>,
+    typedef MatExpr_Op3_<Mat, Mat, int, Mat,
         MatOp_Bin_<Mat> > MatExpr_Temp;
-    return MatExpr_<MatExpr_Temp, Mat_<_Tp> >(MatExpr_Temp(
+    return MatExpr_<MatExpr_Temp, Mat >(MatExpr_Temp(
         a, b, '^'));
 }
 
@@ -2692,50 +2693,50 @@ operator ~ (const Mat& a)
 }
 
 template<typename _Tp> static inline
-MatExpr_<MatExpr_Op3_<Mat_<_Tp>, Scalar, int, Mat_<_Tp>, MatOp_BinS_<Mat> >, Mat_<_Tp> >
+MatExpr_<MatExpr_Op3_<Mat, Scalar, int, Mat, MatOp_BinS_<Mat> >, Mat >
 operator & (const Mat_<_Tp>& a, const Scalar& s)
 {
-    typedef MatExpr_Op3_<Mat_<_Tp>, Scalar, int, Mat_<_Tp>, MatOp_BinS_<Mat> > MatExpr_Temp;
-    return MatExpr_<MatExpr_Temp, Mat_<_Tp> >(MatExpr_Temp(a, s, '&'));
+    typedef MatExpr_Op3_<Mat, Scalar, int, Mat, MatOp_BinS_<Mat> > MatExpr_Temp;
+    return MatExpr_<MatExpr_Temp, Mat >(MatExpr_Temp(a, s, '&'));
 }
 
 template<typename _Tp> static inline
-MatExpr_<MatExpr_Op3_<Mat_<_Tp>, Scalar, int, Mat_<_Tp>, MatOp_BinS_<Mat> >, Mat_<_Tp> >
+MatExpr_<MatExpr_Op3_<Mat, Scalar, int, Mat, MatOp_BinS_<Mat> >, Mat >
 operator & (const Scalar& s, const Mat_<_Tp>& a)
 { return a & s; }
 
 template<typename _Tp> static inline
-MatExpr_<MatExpr_Op3_<Mat_<_Tp>, Scalar, int, Mat_<_Tp>, MatOp_BinS_<Mat> >, Mat_<_Tp> >
+MatExpr_<MatExpr_Op3_<Mat, Scalar, int, Mat, MatOp_BinS_<Mat> >, Mat >
 operator | (const Mat_<_Tp>& a, const Scalar& s)
 {
-    typedef MatExpr_Op3_<Mat_<_Tp>, Scalar, int, Mat_<_Tp>, MatOp_BinS_<Mat> > MatExpr_Temp;
-    return MatExpr_<MatExpr_Temp, Mat_<_Tp> >(MatExpr_Temp(a, s, '|'));
+    typedef MatExpr_Op3_<Mat, Scalar, int, Mat, MatOp_BinS_<Mat> > MatExpr_Temp;
+    return MatExpr_<MatExpr_Temp, Mat >(MatExpr_Temp(a, s, '|'));
 }
 
 template<typename _Tp> static inline
-MatExpr_<MatExpr_Op3_<Mat_<_Tp>, Scalar, int, Mat_<_Tp>, MatOp_BinS_<Mat> >, Mat_<_Tp> >
+MatExpr_<MatExpr_Op3_<Mat, Scalar, int, Mat, MatOp_BinS_<Mat> >, Mat >
 operator | (const Scalar& s, const Mat_<_Tp>& a)
 { return a | s; }
 
 template<typename _Tp> static inline
-MatExpr_<MatExpr_Op3_<Mat_<_Tp>, Scalar, int, Mat_<_Tp>, MatOp_BinS_<Mat> >, Mat_<_Tp> >
+MatExpr_<MatExpr_Op3_<Mat, Scalar, int, Mat, MatOp_BinS_<Mat> >, Mat >
 operator ^ (const Mat_<_Tp>& a, const Scalar& s)
 {
-    typedef MatExpr_Op3_<Mat_<_Tp>, Scalar, int, Mat_<_Tp>, MatOp_BinS_<Mat> > MatExpr_Temp;
-    return MatExpr_<MatExpr_Temp, Mat_<_Tp> >(MatExpr_Temp(a, s, '^'));
+    typedef MatExpr_Op3_<Mat, Scalar, int, Mat, MatOp_BinS_<Mat> > MatExpr_Temp;
+    return MatExpr_<MatExpr_Temp, Mat >(MatExpr_Temp(a, s, '^'));
 }
 
 template<typename _Tp> static inline
-MatExpr_<MatExpr_Op3_<Mat_<_Tp>, Scalar, int, Mat_<_Tp>, MatOp_BinS_<Mat> >, Mat_<_Tp> >
+MatExpr_<MatExpr_Op3_<Mat, Scalar, int, Mat, MatOp_BinS_<Mat> >, Mat >
 operator ^ (const Scalar& s, const Mat_<_Tp>& a)
 { return a ^ s; }
 
 template<typename _Tp> static inline
-MatExpr_<MatExpr_Op3_<Mat_<_Tp>, Scalar, int, Mat_<_Tp>, MatOp_BinS_<Mat> >, Mat_<_Tp> >
+MatExpr_<MatExpr_Op3_<Mat, Scalar, int, Mat, MatOp_BinS_<Mat> >, Mat >
 operator ~ (const Mat_<_Tp>& a)
 {
-    typedef MatExpr_Op3_<Mat_<_Tp>, Scalar, int, Mat_<_Tp>, MatOp_BinS_<Mat> > MatExpr_Temp;
-    return MatExpr_<MatExpr_Temp, Mat_<_Tp> >(MatExpr_Temp(a, Scalar(), '~'));
+    typedef MatExpr_Op3_<Mat, Scalar, int, Mat, MatOp_BinS_<Mat> > MatExpr_Temp;
+    return MatExpr_<MatExpr_Temp, Mat >(MatExpr_Temp(a, Scalar(), '~'));
 }
 
 template<typename A, typename M> static inline
@@ -2944,37 +2945,37 @@ abs(const Mat& a)
 
 // max(A, B)
 template<typename _Tp> static inline
-MatExpr_<MatExpr_Op3_<Mat_<_Tp>, Mat_<_Tp>, int, Mat_<_Tp>,
-            MatOp_Bin_<Mat> >, Mat_<_Tp> >
+MatExpr_<MatExpr_Op3_<Mat, Mat, int, Mat,
+            MatOp_Bin_<Mat> >, Mat >
 max(const Mat_<_Tp>& a, const Mat_<_Tp>& b)
 {
-    typedef MatExpr_Op3_<Mat_<_Tp>, Mat_<_Tp>, int, Mat_<_Tp>,
+    typedef MatExpr_Op3_<Mat, Mat, int, Mat,
         MatOp_Bin_<Mat> > MatExpr_Temp;
-    return MatExpr_<MatExpr_Temp, Mat_<_Tp> >(MatExpr_Temp(
+    return MatExpr_<MatExpr_Temp, Mat >(MatExpr_Temp(
         a, b, 'M'));
 }
 
 // min(A, B)
 template<typename _Tp> static inline
-MatExpr_<MatExpr_Op3_<Mat_<_Tp>, Mat_<_Tp>, int, Mat_<_Tp>,
-            MatOp_Bin_<Mat> >, Mat_<_Tp> >
+MatExpr_<MatExpr_Op3_<Mat, Mat, int, Mat,
+            MatOp_Bin_<Mat> >, Mat >
 min(const Mat_<_Tp>& a, const Mat_<_Tp>& b)
 {
-    typedef MatExpr_Op3_<Mat_<_Tp>, Mat_<_Tp>, int, Mat_<_Tp>,
+    typedef MatExpr_Op3_<Mat, Mat, int, Mat,
         MatOp_Bin_<Mat> > MatExpr_Temp;
-    return MatExpr_<MatExpr_Temp, Mat_<_Tp> >(MatExpr_Temp(
+    return MatExpr_<MatExpr_Temp, Mat >(MatExpr_Temp(
         a, b, 'm'));
 }
 
 // abs(A)
 template<typename _Tp> static inline
-MatExpr_<MatExpr_Op3_<Mat_<_Tp>, Scalar, int, Mat_<_Tp>,
-            MatOp_BinS_<Mat> >, Mat_<_Tp> >
+MatExpr_<MatExpr_Op3_<Mat, Scalar, int, Mat,
+            MatOp_BinS_<Mat> >, Mat >
 abs(const Mat_<_Tp>& a, const Mat_<_Tp>& b)
 {
-    typedef MatExpr_Op3_<Mat_<_Tp>, Scalar, int, Mat_<_Tp>,
+    typedef MatExpr_Op3_<Mat, Scalar, int, Mat,
         MatOp_Bin_<Mat> > MatExpr_Temp;
-    return MatExpr_<MatExpr_Temp, Mat_<_Tp> >(MatExpr_Temp(
+    return MatExpr_<MatExpr_Temp, Mat >(MatExpr_Temp(
         a, Scalar(0), 'a'));
 }
 
@@ -3053,27 +3054,27 @@ Mat::mul(const MatExpr_<MatExpr_Op2_<Mat, double, Mat, MatOp_DivRS_<Mat> >, Mat>
 }
 
 template<typename _Tp> inline
-MatExpr_<MatExpr_Op4_<Mat_<_Tp>, Mat_<_Tp>, double, char, Mat_<_Tp>, MatOp_MulDiv_<Mat> >, Mat_<_Tp> >
+MatExpr_<MatExpr_Op4_<Mat, Mat, double, char, Mat, MatOp_MulDiv_<Mat> >, Mat >
 Mat_<_Tp>::mul(const Mat_<_Tp>& m, double scale) const
 {
-    typedef MatExpr_Op4_<Mat_<_Tp>, Mat_<_Tp>, double, char, Mat_<_Tp>, MatOp_MulDiv_<Mat> > MatExpr_Temp;
-    return MatExpr_<MatExpr_Temp, Mat_<_Tp> >(MatExpr_Temp(*this, m, scale, '*'));
+    typedef MatExpr_Op4_<Mat, Mat, double, char, Mat, MatOp_MulDiv_<Mat> > MatExpr_Temp;
+    return MatExpr_<MatExpr_Temp, Mat >(MatExpr_Temp(*this, m, scale, '*'));
 }
 
 template<typename _Tp> inline
-MatExpr_<MatExpr_Op4_<Mat_<_Tp>, Mat_<_Tp>, double, char, Mat_<_Tp>, MatOp_MulDiv_<Mat> >, Mat_<_Tp> >
-Mat_<_Tp>::mul(const MatExpr_<MatExpr_Op2_<Mat_<_Tp>, double, Mat_<_Tp>, MatOp_Scale_<Mat> >, Mat_<_Tp> >& m, double scale) const
+MatExpr_<MatExpr_Op4_<Mat, Mat, double, char, Mat, MatOp_MulDiv_<Mat> >, Mat >
+Mat_<_Tp>::mul(const MatExpr_<MatExpr_Op2_<Mat, double, Mat, MatOp_Scale_<Mat> >, Mat >& m, double scale) const
 {
-    typedef MatExpr_Op4_<Mat_<_Tp>, Mat_<_Tp>, double, char, Mat_<_Tp>, MatOp_MulDiv_<Mat> > MatExpr_Temp;
-    return MatExpr_<MatExpr_Temp, Mat_<_Tp> >(MatExpr_Temp(*this, m.e.a1, m.e.a2*scale, '*'));
+    typedef MatExpr_Op4_<Mat, Mat, double, char, Mat, MatOp_MulDiv_<Mat> > MatExpr_Temp;
+    return MatExpr_<MatExpr_Temp, Mat >(MatExpr_Temp(*this, m.e.a1, m.e.a2*scale, '*'));
 }
 
 template<typename _Tp> inline
-MatExpr_<MatExpr_Op4_<Mat_<_Tp>, Mat_<_Tp>, double, char, Mat_<_Tp>, MatOp_MulDiv_<Mat> >, Mat_<_Tp> >
-Mat_<_Tp>::mul(const MatExpr_<MatExpr_Op2_<Mat_<_Tp>, double, Mat_<_Tp>, MatOp_DivRS_<Mat> >, Mat_<_Tp> >& m, double scale) const
+MatExpr_<MatExpr_Op4_<Mat, Mat, double, char, Mat, MatOp_MulDiv_<Mat> >, Mat >
+Mat_<_Tp>::mul(const MatExpr_<MatExpr_Op2_<Mat, double, Mat, MatOp_DivRS_<Mat> >, Mat >& m, double scale) const
 {
-    typedef MatExpr_Op4_<Mat_<_Tp>, Mat_<_Tp>, double, char, Mat_<_Tp>, MatOp_MulDiv_<Mat> > MatExpr_Temp;
-    return MatExpr_<MatExpr_Temp, Mat_<_Tp> >(MatExpr_Temp(*this, m.e.a1, scale/m.e.a2, '/'));
+    typedef MatExpr_Op4_<Mat, Mat, double, char, Mat, MatOp_MulDiv_<Mat> > MatExpr_Temp;
+    return MatExpr_<MatExpr_Temp, Mat >(MatExpr_Temp(*this, m.e.a1, scale/m.e.a2, '/'));
 }
 
 template<typename A, typename B, typename M> static inline
@@ -3102,13 +3103,13 @@ operator / (const Mat& a, const Mat& b)
 }
 
 template<typename _Tp> static inline
-MatExpr_<MatExpr_Op4_<Mat_<_Tp>, Mat_<_Tp>, double,
-char, Mat_<_Tp>, MatOp_MulDiv_<Mat> >, Mat_<_Tp> >
-operator / (const Mat_<_Tp>& a, const Mat_<_Tp>& b)
+MatExpr_<MatExpr_Op4_<Mat, Mat, double,
+char, Mat, MatOp_MulDiv_<Mat> >, Mat >
+operator / (const Mat& a, const Mat& b)
 {
-    typedef MatExpr_Op4_<Mat_<_Tp>, Mat_<_Tp>, double,
-        char, Mat_<_Tp>, MatOp_MulDiv_<Mat> > MatExpr_Temp;
-    return MatExpr_<MatExpr_Temp, Mat_<_Tp> >(MatExpr_Temp(a, b, 1, '/'));
+    typedef MatExpr_Op4_<Mat, Mat, double,
+        char, Mat, MatOp_MulDiv_<Mat> > MatExpr_Temp;
+    return MatExpr_<MatExpr_Temp, Mat>(MatExpr_Temp(a, b, 1, '/'));
 }
 
 template<typename A, typename B, typename M> static inline
@@ -3178,12 +3179,12 @@ static inline Mat_<_Tp>& operator /= (const Mat_<_Tp>& a, double alpha)
 }
 
 template<typename _Tp> static inline
-MatExpr_<MatExpr_Op2_<Mat_<_Tp>, double, Mat_<_Tp>, MatOp_DivRS_<Mat> >, Mat_<_Tp> >
+MatExpr_<MatExpr_Op2_<Mat, double, Mat, MatOp_DivRS_<Mat> >, Mat >
 operator / (double alpha, const Mat_<_Tp>& a)
 {
-    typedef MatExpr_Op2_<Mat_<_Tp>, double, Mat_<_Tp>,
+    typedef MatExpr_Op2_<Mat, double, Mat,
         MatOp_DivRS_<Mat> > MatExpr_Temp;
-    return MatExpr_<MatExpr_Temp, Mat_<_Tp> >(MatExpr_Temp(a, alpha));
+    return MatExpr_<MatExpr_Temp, Mat >(MatExpr_Temp(a, alpha));
 }
 
 template<typename A, typename M> static inline
@@ -3235,11 +3236,11 @@ Mat::inv(int method) const
 }
 
 template<typename _Tp> inline
-MatExpr_<MatExpr_Op2_<Mat_<_Tp>, int, Mat_<_Tp>, MatOp_Inv_<Mat> >, Mat_<_Tp> >
+MatExpr_<MatExpr_Op2_<Mat, int, Mat, MatOp_Inv_<Mat> >, Mat >
 Mat_<_Tp>::inv(int method) const
 {
-    typedef MatExpr_Op2_<Mat_<_Tp>, int, Mat_<_Tp>, MatOp_Inv_<Mat> > MatExpr_Temp;
-    return MatExpr_<MatExpr_Temp, Mat_<_Tp> >(MatExpr_Temp(*this, method));
+    typedef MatExpr_Op2_<Mat, int, Mat, MatOp_Inv_<Mat> > MatExpr_Temp;
+    return MatExpr_<MatExpr_Temp, Mat >(MatExpr_Temp(*this, method));
 }
 
 template<typename A, typename M> static inline
