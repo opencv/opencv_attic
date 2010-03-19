@@ -1,9 +1,5 @@
 #!/bin/bash
 
-tput clear
-python latex.py ../online-opencv.tex
-exit
-
 #cd .. && make && cd -
 mkdir -p _build/html/python
 mkdir -p _build/html/cpp
