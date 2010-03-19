@@ -88,7 +88,7 @@ if __name__ == "__main__":
 
             cv.ShowImage("Kalman", img)
             
-            code = cv.WaitKey(100)
+            code = cv.WaitKey(100) % 0x100
             if code != -1:
                 break
             

@@ -172,7 +172,7 @@ if __name__ == '__main__':
         cv.ShowImage ('LkDemo', image)
 
         # handle events
-        c = cv.WaitKey (10)
+        c = cv.WaitKey(10) % 0x100
 
         if c == 27:
             # user has press the ESC key, so exit
