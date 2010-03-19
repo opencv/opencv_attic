@@ -50,7 +50,7 @@ if __name__ == "__main__":
         cv.ShowImage("Source", src)
         cv.ShowImage("Hough", color_dst)
 
-        k = cv.WaitKey(0)
+        k = cv.WaitKey(0) % 0x100
         if k == ord(' '):
             USE_STANDARD = not USE_STANDARD
         if k == 27:

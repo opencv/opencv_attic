@@ -53,7 +53,7 @@ if __name__ == "__main__":
 
         cv.ShowImage("clusters", img)
 
-        key = cv.WaitKey(0)
+        key = cv.WaitKey(0) % 0x100
         if key in [27, ord('q'), ord('Q')]:
             break
     

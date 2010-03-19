@@ -145,7 +145,7 @@ if __name__ == "__main__":
         on_trackbar(0)
         # wait for key.
         # Also the function cv.WaitKey takes care of event processing
-        c = cv.WaitKey(0)
+        c = cv.WaitKey(0) % 0x100
         # clear memory storage - reset free space position
         cv.ClearMemStorage(storage)
         if(c == '\x1b'):

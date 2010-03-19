@@ -53,7 +53,7 @@ if __name__=="__main__":
 
     sk = Sketcher("image", [img, inpaint_mask])
     while True:
-        c = cv.WaitKey(0)
+        c = cv.WaitKey(0) % 0x100
 
         if c == 27 or c == ord('q'):
             break

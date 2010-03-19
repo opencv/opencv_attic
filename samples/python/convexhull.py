@@ -58,7 +58,7 @@ if __name__ == '__main__':
         cv.ShowImage ('hull', image)
 
         # handle events, and wait a key pressed
-        k = cv.WaitKey (0)
+        k = cv.WaitKey (0) % 0x100
         if k == 27:
             # user has press the ESC key, so exit
             break

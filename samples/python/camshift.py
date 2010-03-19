@@ -104,7 +104,7 @@ class CamShiftDemo:
                 cv.ShowImage( "CamShiftDemo", backproject)
             cv.ShowImage( "Histogram", self.hue_histogram_as_image(hist))
 
-            c = cv.WaitKey(7)
+            c = cv.WaitKey(7) % 0x100
             if c == 27:
                 break
             elif c == ord("b"):

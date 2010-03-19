@@ -108,7 +108,7 @@ if __name__ == "__main__":
         else:
             cv.ShowImage( "image", gray_img );
 
-        c = cv.WaitKey(0);
+        c = cv.WaitKey(0) % 0x100
         if c == 27:
             print("Exiting ...");
             sys.exit(0)

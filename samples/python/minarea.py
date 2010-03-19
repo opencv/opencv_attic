@@ -54,7 +54,7 @@ if __name__ == "__main__":
             minarea_array(img, count)
 
         cv.ShowImage("rect & circle", img)
-        key = cv.WaitKey()
+        key = cv.WaitKey() % 0x100
         if key in [27, ord('q'), ord('Q')]:
             break
 
