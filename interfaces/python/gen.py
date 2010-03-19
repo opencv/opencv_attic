@@ -392,6 +392,7 @@ static PyObject *FROM_${cvtype}PTR(${cvtype} *r)
 
 static int convert_to_${cvtype}PTR(PyObject *o, ${cvtype}** dst, const char *name = "no_name")
 {
+  ${allownull}
   if (PyType_IsSubtype(o->ob_type, &${ourname}_Type)) {
     *dst = ((${ourname}_t*)o)->v;
     return 1;
@@ -432,17 +433,17 @@ getset_init_template = Template("""
 """)
 
 objects = [
-    ( 'IplConvKernel', {
+    ( 'IplConvKernel', ['allownull'], {
         "nCols" : 'i',
         "nRows" : 'i',
         "anchorX" : 'i',
         "anchorY" : 'i',
     }),
-    ( 'CvCapture', {}),
-    ( 'CvHaarClassifierCascade', {}),
-    ( 'CvPOSITObject', {}),
-    ( 'CvVideoWriter', {}),
-    ( 'CvStereoBMState', {
+    ( 'CvCapture', [], {}),
+    ( 'CvHaarClassifierCascade', [], {}),
+    ( 'CvPOSITObject', [], {}),
+    ( 'CvVideoWriter', [], {}),
+    ( 'CvStereoBMState', [], {
         "preFilterType" : 'i',
         "preFilterSize" : 'i',
         "preFilterCap" : 'i',
@@ -454,7 +455,7 @@ objects = [
         "speckleWindowSize" : 'i',
         "speckleRange" : 'i',
     }),
-    ( 'CvStereoGCState', {
+    ( 'CvStereoGCState', [], {
         "Ithreshold" : 'i',
         "interactionRadius" : 'i',
         "K" : 'f',
@@ -466,7 +467,7 @@ objects = [
         "numberOfDisparities" : 'i',
         "maxIters" : 'i',
     }),
-    ( 'CvKalman', {
+    ( 'CvKalman', [], {
         "MP" : 'i',
         "DP" : 'i',
         "CP" : 'i',
@@ -512,12 +513,19 @@ typenames = {
     'mr' : 'list of CvMat',
 }
 
-for (t, members) in objects:
+for (t, flags, members) in objects:
     map = {'cvtype' : t,
            'ourname' : t.replace('Cv', '')}
+    # gsf is all the generated code for the member accessors
     gsf = "".join([getset_func_template.substitute(map, member = m, checker = checkers[t], converter = converters[t], rconverter = rconverters[t], typename = typenames[t]) for (m, t) in members.items()])
+    # gsi is the generated code for the initializer for each accessor
     gsi = "".join([getset_init_template.substitute(map, member = m) for (m, t) in members.items()])
-    print >>gen_c[3], s.substitute(map, getset_funcs = gsf, getset_inits = gsi)
+    # s is the template that pulls everything together
+    if 'allownull' in flags:
+        nullcode = """if (o == Py_None) { *dst = (%s*)NULL; return 1; }""" % map['cvtype']
+    else:
+        nullcode = ""
+    print >>gen_c[3], s.substitute(map, getset_funcs = gsf, getset_inits = gsi, allownull = nullcode)
     print >>gen_c[4], "MKTYPE(%s);" % map['ourname']
 
 for f in gen_c:

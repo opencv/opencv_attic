@@ -88,6 +88,10 @@ class OpenCVTests(unittest.TestCase):
         cv.WaitKey()
         cv.DestroyAllWindows()
 
+    def hashimg(self, im):
+        """ Compute a hash for an image, useful for image comparisons """
+        return hashlib.md5(im.tostring()).digest()
+
 # Tests to run first; check the handful of basic operations that the later tests rely on
 
 class PreliminaryTests(OpenCVTests):
@@ -1621,6 +1625,28 @@ class AreaTests(OpenCVTests):
         im = cv.CreateImage((128, 128), cv.IPL_DEPTH_8U, 1)
         cv.Resize(cv.GetImage(self.get_sample("samples/c/lena.jpg", 0)), im)
         dst = cv.CloneImage(im)
+
+        # Check defaults by asserting that all these operations produce the same image
+        funs = [
+            lambda: cv.Dilate(im, dst),
+            lambda: cv.Dilate(im, dst, None),
+            lambda: cv.Dilate(im, dst, iterations = 1),
+            lambda: cv.Dilate(im, dst, element = None),
+            lambda: cv.Dilate(im, dst, iterations = 1, element = None),
+            lambda: cv.Dilate(im, dst, element = None, iterations = 1),
+        ]
+        src_h = self.hashimg(im)
+        hashes = set()
+        for f in funs:
+            f()
+            hashes.add(self.hashimg(dst))
+            self.assertNotEqual(src_h, self.hashimg(dst))
+        # Source image should be untouched
+        self.assertEqual(self.hashimg(im), src_h)
+        # All results should be same
+        self.assertEqual(len(hashes), 1)
+
+        self.snap(dst)
         shapes = [eval("cv.CV_SHAPE_%s" % s) for s in ['RECT', 'CROSS', 'ELLIPSE']]
         elements = [cv.CreateStructuringElementEx(sz, sz, sz / 2 + 1, sz / 2 + 1, shape) for sz in [3, 4, 7, 20] for shape in shapes]
         elements += [cv.CreateStructuringElementEx(7, 7, 3, 3, cv.CV_SHAPE_CUSTOM, [1] * 49)]
