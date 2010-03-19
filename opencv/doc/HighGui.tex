@@ -56,14 +56,13 @@ CV_EXTERN_C_FUNCPTR( void (*CvTrackbarCallback)(int pos) );
 \cvarg{count}{Maximal position of the slider. Minimal position is always 0.}
 \ifPy
 \cvarg{onChange}{
-Callable that OpenCV will call every time the slider changes position.
+OpenCV calls \texttt{onChange} every time the slider changes position.
 OpenCV will call it as \texttt{func(x)} where \texttt{x} is the new position of the slider.}
 \else
 \cvarg{onChange}{
 Pointer to the function to be called every time the slider changes position.
 This function should be prototyped as \texttt{void Foo(int);}  Can be NULL if callback is not required.}
 \fi
-}
 \end{description}
 
 The function \texttt{cvCreateTrackbar} creates a trackbar (a.k.a. slider or range control) with the specified name and range, assigns a variable to be syncronized with trackbar position and specifies a callback function to be called on trackbar position change. The created trackbar is displayed on the top of the given window.
@@ -220,19 +219,15 @@ CV_EXTERN_C_FUNCPTR( void (*CvMouseCallback )(int event,
 
 \begin{description}
 \cvarg{windowName}{Name of the window.}
-\ifC  % {
-\cvarg{onMouse}{Pointer to the function to be called every time a mouse event occurs in the specified window. This function should be prototyped as
-\begin{lstlisting}
-void Foo(int event, int x, int y, int flags, void* param);
-\end{lstlisting}
-where \texttt{event} is one of \texttt{CV\_EVENT\_*}, \texttt{x} and \texttt{y} are the coordinates of the mouse pointer in image coordinates (not window coordinates), \texttt{flags} is a combination of \texttt{CV\_EVENT\_FLAG}, and \texttt{param} is a user-defined parameter passed to the \texttt{cvSetMouseCallback} function call.}
-\else % }{
-\cvarg{onMouse}{Callable to be called every time a mouse event occurs in the specified window. This callable should have signature
-\begin{lstlisting}
-Foo(event,x,y,flags,param)-> None
-\end{lstlisting}
-where \texttt{event} is one of \texttt{CV\_EVENT\_*}, \texttt{x} and \texttt{y} are the coordinates of the mouse pointer in image coordinates (not window coordinates), \texttt{flags} is a combination of \texttt{CV\_EVENT\_FLAG}, and \texttt{param} is a user-defined parameter passed to the \texttt{cvSetMouseCallback} function call.}
-\fi   % }
+%\ifC  % {
+%\cvarg{onMouse}{Pointer to the function to be called every time a mouse event occurs in the specified window. This function should be prototyped as
+%\texttt{void Foo(int event, int x, int y, int flags, void* param);}
+%where \texttt{event} is one of \texttt{CV\_EVENT\_*}, \texttt{x} and \texttt{y} are the coordinates of the mouse pointer in image coordinates (not window coordinates), \texttt{flags} is a combination of \texttt{CV\_EVENT\_FLAG}, and \texttt{param} is a user-defined parameter passed to the \texttt{cvSetMouseCallback} function call.}
+%\else % }{
+%\cvarg{onMouse}{Callable to be called every time a mouse event occurs in the specified window. This callable should have signature
+%\texttt{Foo(event, x, y, flags, param)-> None}
+%where \texttt{event} is one of \texttt{CV\_EVENT\_*}, \texttt{x} and \texttt{y} are the coordinates of the mouse pointer in image coordinates (not window coordinates), \texttt{flags} is a combination of \texttt{CV\_EVENT\_FLAG}, and \texttt{param} is a user-defined parameter passed to the \texttt{cvSetMouseCallback} function call.}
+%\fi   % }
 
 \cvarg{param}{User-defined parameter to be passed to the callback function.}
 \end{description}

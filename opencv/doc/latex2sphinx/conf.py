@@ -194,4 +194,4 @@ latex_documents = [
 #latex_use_modindex = True
 
 pngmath_latex_preamble = '\usepackage{mymath}\usepackage{amsmath}\usepackage{bbm}\usepackage[usenames]{color}'
-highlight_language = 'c'
+highlight_language = 'python'
