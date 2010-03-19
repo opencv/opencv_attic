@@ -30,7 +30,7 @@ All the arrays must have the same data type and the same size (or ROI size).
 Calculates absolute difference between an array and a scalar.
 
 \cvdefC{void cvAbsDiffS(const CvArr* src, CvArr* dst, CvScalar value);}
-\cvdefPy{AbsDiffS(src1,value,dst)-> None}
+\cvdefPy{AbsDiffS(src,value,dst)-> None}
 \ifC
 \begin{lstlisting}
 #define cvAbs(src, dst) cvAbsDiffS(src, dst, cvScalarAll(0))
@@ -53,7 +53,7 @@ All the arrays must have the same data type and the same size (or ROI size).
 Computes the per-element sum of two arrays.
 
 \cvdefC{void cvAdd(const CvArr* src1, const CvArr* src2, CvArr* dst, const CvArr* mask=NULL);}
-\cvdefPy{Add(src1,src2,sdt,mask=NULL)-> None}
+\cvdefPy{Add(src1,src2,dst,mask=NULL)-> None}
 
 \begin{description}
 \cvarg{src1}{The first source array}
@@ -75,7 +75,7 @@ For types that have limited range this operation is saturating.
 Computes the sum of an array and a scalar.
 
 \cvdefC{void cvAddS(const CvArr* src, CvScalar value, CvArr* dst, const CvArr* mask=NULL);}
-\cvdefPy{AddS(src1,value,dst,mask=NULL)-> None}
+\cvdefPy{AddS(src,value,dst,mask=NULL)-> None}
 
 \begin{description}
 \cvarg{src}{The source array}
@@ -146,7 +146,7 @@ In the case of floating-point arrays their bit representations are used for the 
 Calculates per-element bit-wise conjunction of an array and a scalar.
 
 \cvdefC{void cvAndS(const CvArr* src, CvScalar value, CvArr* dst, const CvArr* mask=NULL);}
-\cvdefPy{AndS(src1,value,dst,mask=NULL)-> None}
+\cvdefPy{AndS(src,value,dst,mask=NULL)-> None}
 
 \begin{description}
 \cvarg{src}{The source array}
@@ -244,7 +244,9 @@ void cvCalcCovarMatrix(\par const CvArr** vects,\par int count,\par CvArr* covMa
 
 \begin{description}
 \cvarg{vects}{The input vectors, all of which must have the same type and the same size. The vectors do not have to be 1D, they can be 2D (e.g., images) and so forth}
+\ifC
 \cvarg{count}{The number of input vectors}
+\fi
 \cvarg{covMat}{The output covariance matrix that should be floating-point and square}
 \cvarg{avg}{The input or output (depending on the flags) array - the mean (average) vector of the input vectors}
 \cvarg{flags}{The operation flags, a combination of the following values
@@ -383,7 +385,7 @@ The function creates a copy of the input array and returns pointer to the copy.
 Performs per-element comparison of two arrays.
 
 \cvdefC{void cvCmp(const CvArr* src1, const CvArr* src2, CvArr* dst, int cmpOp);}
-\cvdefPy{Cmp(src1,src2,dst,cmOp)-> None}
+\cvdefPy{Cmp(src1,src2,dst,cmpOp)-> None}
 
 \begin{description}
 \cvarg{src1}{The first source array}
@@ -412,7 +414,7 @@ dst(I)=src1(I) op src2(I),
 Performs per-element comparison of an array and a scalar.
 
 \cvdefC{void cvCmpS(const CvArr* src, double value, CvArr* dst, int cmpOp);}
-\cvdefPy{CmpS(src1,value,dst,cmpOp)-> None}
+\cvdefPy{CmpS(src,value,dst,cmpOp)-> None}
 
 \begin{description}
 \cvarg{src}{The source array, must have a single channel}
@@ -508,7 +510,7 @@ The function supports only destination arrays of 8u (8-bit unsigned integers) ty
 Copies one array to another.
 
 \cvdefC{void cvCopy(const CvArr* src, CvArr* dst, const CvArr* mask=NULL);}
-\cvdefPy{Copy(src,dst,msk=NULL)-> None}
+\cvdefPy{Copy(src,dst,mask=NULL)-> None}
 
 \begin{description}
 \cvarg{src}{The source array}
@@ -610,7 +612,7 @@ but it does not use IPL functions by default (see the \texttt{CV\_TURN\_ON\_IPL\
 Creates a matrix header and allocates the matrix data. 
 
 \cvdefC{CvMat* cvCreateMat(\par int rows,\par int cols,\par int type);}
-\cvdefPy{CreateMat(row, cols, type) -> mat}
+\cvdefPy{CreateMat(rows, cols, type) -> mat}
 
 \begin{description}
 \cvarg{rows}{Number of rows in the matrix}
@@ -1954,7 +1956,7 @@ All the arrays must have a single channel, the same data type and the same size 
 Finds per-element maximum of array and scalar.
 
 \cvdefC{void cvMaxS(const CvArr* src, double value, CvArr* dst);}
-\cvdefPy{MaxS(src1,value,dst)-> None}
+\cvdefPy{MaxS(src,value,dst)-> None}
 
 \begin{description}
 \cvarg{src}{The first source array}
@@ -1984,7 +1986,10 @@ Composes a multi-channel array from several single-channel arrays or inserts a s
 \cvdefPy{Merge(src0,src1,src2,src3,dst)-> None}
 
 \begin{description}
-\cvarg{src0...src3}{Input channels}
+\cvarg{src0}{Input channel 0}
+\cvarg{src1}{Input channel 1}
+\cvarg{src2}{Input channel 2}
+\cvarg{src3}{Input channel 3}
 \cvarg{dst}{Destination array}
 \end{description}
 
@@ -2040,7 +2045,7 @@ will contain raw (linear) positions of the extremums.
 Finds per-element minimum of an array and a scalar.
 
 \cvdefC{void cvMinS(const CvArr* src, double value, CvArr* dst);}
-\cvdefPy{MinS(src1,value,dst)-> None}
+\cvdefPy{MinS(src,value,dst)-> None}
 
 \begin{description}
 \cvarg{src}{The first source array}
@@ -2171,7 +2176,7 @@ The function, together with \cvCPyCross{DFT}, may be used to calculate convoluti
 Calculates the product of an array and a transposed array.
 
 \cvdefC{void cvMulTransposed(const CvArr* src, CvArr* dst, int order, const CvArr* delta=NULL, double scale=1.0);}
-\cvdefPy{MulTransposed(src,dst,order,delta=NULL)-> None}
+\cvdefPy{MulTransposed(src,dst,order,delta=NULL,scale)-> None}
 
 \begin{description}
 \cvarg{src}{The source matrix}
@@ -2242,7 +2247,7 @@ Performs per-element bit-wise inversion of array elements.
 \cvdefPy{Not(src,dst)-> None}
 
 \begin{description}
-\cvarg{src1}{The source array}
+\cvarg{src}{The source array}
 \cvarg{dst}{The destination array}
 \end{description}
 
@@ -2894,7 +2899,7 @@ are not handled.
 Calculates the sum of a scaled array and another array.
 
 \cvdefC{void cvScaleAdd(const CvArr* src1, CvScalar scale, const CvArr* src2, CvArr* dst);}
-\cvdefPy{ScaleAdd(src1,sclae,src2,dst)-> None}
+\cvdefPy{ScaleAdd(src1,scale,src2,dst)-> None}
 
 \begin{description}
 \cvarg{src1}{The first source array}
@@ -2919,7 +2924,7 @@ All array parameters should have the same type and the same size.
 Sets every element of an array to a given value.
 
 \cvdefC{void cvSet(CvArr* arr, CvScalar value, const CvArr* mask=NULL);}
-\cvdefPy{Set(arr,value,msk=NULL)-> None}
+\cvdefPy{Set(arr,value,mask=NULL)-> None}
 
 \begin{description}
 \cvarg{arr}{The destination array}
@@ -3037,7 +3042,7 @@ Initializes a scaled identity matrix.
 \cvdefPy{SetIdentity(mat,value=1)-> None}
 
 \begin{description}
-\cvarg{arr}{The matrix to initialize (not necesserily square)}
+\cvarg{mat}{The matrix to initialize (not necesserily square)}
 \cvarg{value}{The value to assign to the diagonal elements}
 \end{description}
 
@@ -3253,7 +3258,10 @@ Divides multi-channel array into several single-channel arrays or extracts a sin
 
 \begin{description}
 \cvarg{src}{Source array}
-\cvarg{dst0...dst3}{Destination channels}
+\cvarg{dst0}{Destination channel 0}
+\cvarg{dst1}{Destination channel 1}
+\cvarg{dst2}{Destination channel 2}
+\cvarg{dst3}{Destination channel 3}
 \end{description}
 
 The function divides a multi-channel array into separate
@@ -3307,7 +3315,7 @@ For types that have limited range this operation is saturating.
 Computes the difference between a scalar and an array.
 
 \cvdefC{void cvSubRS(const CvArr* src, CvScalar value, CvArr* dst, const CvArr* mask=NULL);}
-\cvdefPy{SubRS(src1,value,dst,mask=NULL)-> None}
+\cvdefPy{SubRS(src,value,dst,mask=NULL)-> None}
 
 \begin{description}
 \cvarg{src}{The first source array}
@@ -3329,7 +3337,7 @@ For types that have limited range this operation is saturating.
 Computes the difference between an array and a scalar.
 
 \cvdefC{void cvSubS(const CvArr* src, CvScalar value, CvArr* dst, const CvArr* mask=NULL);}
-\cvdefPy{SubS(src1,value,dst,mask=NULL)-> None}
+\cvdefPy{SubS(src,value,dst,mask=NULL)-> None}
 
 \begin{description}
 \cvarg{src}{The source array}
@@ -3548,7 +3556,7 @@ In the case of floating-point arrays their bit representations are used for the 
 Performs per-element bit-wise "exclusive or" operation on an array and a scalar.
 
 \cvdefC{void cvXorS(const CvArr* src, CvScalar value, CvArr* dst, const CvArr* mask=NULL);}
-\cvdefPy{XorS(src1,value,dst,mask=NULL)-> None}
+\cvdefPy{XorS(src,value,dst,mask=NULL)-> None}
 
 \begin{description}
 \cvarg{src}{The source array}

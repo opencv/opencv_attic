@@ -60,15 +60,16 @@ Harris edge detector.
 \cvdefC{
 void cvCornerHarris(
 \par const CvArr* image,
-\par CvArr* harris\_responce,
+\par CvArr* harris\_dst,
 \par int blockSize,
 \par int aperture\_size=3,
 \par double k=0.04 );
-}\cvdefPy{CornerHarris(image,harris\_dst,blockSize,aperture\_size=3,k=0.04)-> None}
+}
+\cvdefPy{CornerHarris(image,harris\_dst,blockSize,aperture\_size=3,k=0.04)-> None}
 
 \begin{description}
 \cvarg{image}{Input image}
-\cvarg{harris\_responce}{Image to store the Harris detector responses. Should have the same size as \texttt{image}}
+\cvarg{harris\_dst}{Image to store the Harris detector responses. Should have the same size as \texttt{image}}
 \cvarg{blockSize}{Neighborhood size (see the discussion of \cvCPyCross{CornerEigenValsAndVecs})}
 \cvarg{aperture\_size}{Aperture parameter for the Sobel operator (see \cvCPyCross{Sobel}).}
 % format. In the case of floating-point input format this parameter is the number of the fixed float filter used for differencing
@@ -367,7 +368,8 @@ Finds lines in a binary image using a Hough transform.
 
 \cvdefC{
 CvSeq* cvHoughLines2( \par CvArr* image,\par void* line\_storage,\par int method,\par double rho,\par double theta,\par int threshold,\par double param1=0,\par double param2=0 );
-}\cvdefPy{HoughLines2(image,storage,method,rho,theta,threshold,param1=0,parma2=0)-> lines}
+}
+\cvdefPy{HoughLines2(image,line\_storage,method,rho,theta,threshold,param1=0,param2=0)-> lines}
 
 \begin{description}
 \cvarg{image}{The 8-bit, single-channel, binary source image. In the case of a probabilistic method, the image is modified by the function}
@@ -495,7 +497,8 @@ void cvPreCornerDetect(
 \par const CvArr* image,
 \par CvArr* corners,
 \par int apertureSize=3 );
-}\cvdefPy{PreCornerDetect(image,corners,aperture\_size=3)-> None}
+}
+\cvdefPy{PreCornerDetect(image,corners,apertureSize=3)-> None}
 \begin{description}
 \cvarg{image}{Input image}
 \cvarg{corners}{Image to store the corner candidates}

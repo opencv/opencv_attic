@@ -95,7 +95,7 @@ Calculates the homography matrix for an oblong planar object (e.g. arm).
 \cvdefC{
 void cvCalcImageHomography( \par float* line,\par CvPoint3D32f* center,\par float* intrinsic,\par float* homography );
 }
-\cvdefPy{CalcImageHomography(line,points)-> (intrinsic,homography)}
+\cvdefPy{CalcImageHomography(line,center)-> (intrinsic,homography)}
 
 \begin{description}
 \cvarg{line}{the main object axis direction (vector (dx,dy,dz))}
@@ -327,8 +327,12 @@ CvPOSITObject* cvCreatePOSITObject( \par CvPoint3D32f* points,\par int point\_co
 }\cvdefPy{CreatePOSITObject(points)-> POSITObject}
 
 \begin{description}
+\ifC
 \cvarg{points}{Pointer to the points of the 3D object model}
 \cvarg{point\_count}{Number of object points}
+\else
+\cvarg{points}{List of 3D points}
+\fi
 \end{description}
 
 The function allocates memory for the object structure and computes the object inverse matrix.
@@ -372,7 +376,7 @@ CvStereoGCState* cvCreateStereoGCState( int numberOfDisparities,
                                         int maxIters );
 
 }
-\cvdefPy{CreateStereoGCState(numberOfDispaities,maxIters)-> StereoGCState}
+\cvdefPy{CreateStereoGCState(numberOfDisparities,maxIters)-> StereoGCState}
 
 \begin{description}
 \cvarg{numberOfDisparities}{The number of disparities. The disparity search range will be $\texttt{state->minDisparity} \le disparity < \texttt{state->minDisparity} + \texttt{state->numberOfDisparities}$}
@@ -462,7 +466,7 @@ void decomposeProjectionMatrix( const Mat\& projMatrix, \par
                                 Mat\& rotMatrixX, Mat\& rotMatrixY,\par
                                 Mat\& rotMatrixZ, Vec3d\& eulerAngles );}
 \begin{description}
-\cvarg{P}{The 3x4 input projection matrix P}
+\cvarg{projMatrix}{The 3x4 input projection matrix P}
 \cvarg{cameraMatrix}{The output 3x3 camera matrix K}
 \cvarg{rotMatrix}{The output 3x3 external rotation matrix R}
 \cvarg{transVect}{The output 4x1 translation vector T}
@@ -649,7 +653,7 @@ Finds the perspective transformation between two planes.
 
 \cvdefC{void cvFindHomography( \par const CvMat* srcPoints,\par const CvMat* dstPoints,\par CvMat* H \par
 int method=0, \par double ransacReprojThreshold=0, \par CvMat* status=NULL);}
-\cvdefPy{FindHomography(srcPoints,dstPoints)-> H}
+\cvdefPy{FindHomography(srcPoints,dstPoints,H,method,ransacReprojThreshold=0.0)-> H}
 \cvdefCpp{Mat findHomography( const Mat\& srcPoints, const Mat\& dstPoints,\par
                     Mat\& status, int method=0,\par
                     double ransacReprojThreshold=0 );\newline
@@ -1078,11 +1082,11 @@ Note, that by setting \texttt{rvec=tvec=(0,0,0)}, or by setting \texttt{cameraMa
 \cvfunc{ReprojectImageTo3D}{reprojectImageTo3D}
 Reprojects disparity image to 3D space.
 
-\cvdefC{void cvReprojectImageTo3D( const CvArr* disparityImage,\par
+\cvdefC{void cvReprojectImageTo3D( const CvArr* disparity,\par
                                    CvArr* \_3dImage, const CvMat* Q,\par
                                    int handleMissingValues=0);}
 
-\cvdefPy{ReprojectImageTo3D(disparityImage, \_3dImage, Q, handleMissingValues=0) -> None}
+\cvdefPy{ReprojectImageTo3D(disparity, \_3dImage, Q, handleMissingValues=0) -> None}
 
 \cvdefCpp{void reprojectImageTo3D( const Mat\& disparity,\par
                          Mat\& \_3dImage, const Mat\& Q,\par
@@ -1275,7 +1279,7 @@ Calibrates stereo camera.
                       Mat\& cameraMatrix2, Mat\& distCoeffs2,\par
                       Size imageSize, Mat\& R, Mat\& T,\par
                       Mat\& E, Mat\& F,\par
-                      TermCriteria criteria = TermCriteria(TermCriteria::COUNT+\par
+                      TermCriteria term\_crit = TermCriteria(TermCriteria::COUNT+\par
                          TermCriteria::EPS, 30, 1e-6),\par
                       int flags=CALIB\_FIX\_INTRINSIC );}
 
@@ -1291,14 +1295,16 @@ Calibrates stereo camera.
     \cvarg{imagePoints1}{The vector of vectors of the object point projections on the calibration pattern views from the 1st camera, one vector per a view. The projections must be in the same order as the corresponding object points.}
     \cvarg{imagePoints2}{The vector of vectors of the object point projections on the calibration pattern views from the 2nd camera, one vector per a view. The projections must be in the same order as the corresponding object points.}
 \fi
-    \cvarg{cameraMatrix1, cameraMatrix2}{The input/output first and second camera matrices, respectively: $ \vecthreethree{f_x^{(j)}}{0}{c_x^{(j)}}{0}{f_y^{(j)}}{c_y^{(j)}}{0}{0}{1}$, $j = 0,\, 1$. If any of \texttt{CV\_CALIB\_USE\_INTRINSIC\_GUESS}, \newline \texttt{CV\_CALIB\_FIX\_ASPECT\_RATIO}, \texttt{CV\_CALIB\_FIX\_INTRINSIC} or \texttt{CV\_CALIB\_FIX\_FOCAL\_LENGTH} are specified, some or all of the matrices' components must be initialized; see the flags description}
-    \cvarg{distCoeffs1, distCoeffs2}{The input/output lens distortion coefficients for the first and the second cameras, 4x1, 5x1, 1x4 or 1x5 floating-point vectors $(k_1^{(j)}, k_2^{(j)}, p_1^{(j)}, p_2^{(j)}[, k_3^{(j)}])$, $j = 0,\, 1$. If any of \texttt{CV\_CALIB\_FIX\_K1}, \texttt{CV\_CALIB\_FIX\_K2} or \texttt{CV\_CALIB\_FIX\_K3} is specified, then the corresponding elements of the distortion coefficients must be initialized.}    
+    \cvarg{cameraMatrix1}{The input/output first camera matrix: $ \vecthreethree{f_x^{(j)}}{0}{c_x^{(j)}}{0}{f_y^{(j)}}{c_y^{(j)}}{0}{0}{1}$, $j = 0,\, 1$. If any of \texttt{CV\_CALIB\_USE\_INTRINSIC\_GUESS}, \newline \texttt{CV\_CALIB\_FIX\_ASPECT\_RATIO}, \texttt{CV\_CALIB\_FIX\_INTRINSIC} or \texttt{CV\_CALIB\_FIX\_FOCAL\_LENGTH} are specified, some or all of the matrices' components must be initialized; see the flags description}
+    \cvarg{cameraMatrix2}{The input/output second camera matrix, as cameraMatrix1.}
+    \cvarg{distCoeffs1}{The input/output lens distortion coefficients for the first camera, 4x1, 5x1, 1x4 or 1x5 floating-point vectors $(k_1^{(j)}, k_2^{(j)}, p_1^{(j)}, p_2^{(j)}[, k_3^{(j)}])$, $j = 0,\, 1$. If any of \texttt{CV\_CALIB\_FIX\_K1}, \texttt{CV\_CALIB\_FIX\_K2} or \texttt{CV\_CALIB\_FIX\_K3} is specified, then the corresponding elements of the distortion coefficients must be initialized.}    
+    \cvarg{distCoeffs2}{The input/output lens distortion coefficients for the second camera, as distCoeffs1.}
 \cvarg{imageSize}{Size of the image, used only to initialize intrinsic camera matrix.} 
 \cvarg{R}{The output rotation matrix between the 1st and the 2nd cameras' coordinate systems.}
 \cvarg{T}{The output translation vector between the cameras' coordinate systems.}
 \cvarg{E}{The \cvCPy{optional} output essential matrix.}
 \cvarg{F}{The \cvCPy{optional} output fundamental matrix.}
-\cvarg{criteria}{The termination criteria for the iterative optimiziation algorithm.}
+\cvarg{term\_crit}{The termination criteria for the iterative optimization algorithm.}
 \cvarg{flags}{Different flags, may be 0 or combination of the following values:
 \begin{description}
 \cvarg{CV\_CALIB\_FIX\_INTRINSIC}{If it is set, \texttt{cameraMatrix?}, as well as \texttt{distCoeffs?} are fixed, so that only \texttt{R, T, E} and \texttt{F} are estimated.}
