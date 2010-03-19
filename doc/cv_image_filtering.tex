@@ -16,7 +16,7 @@ void cvCopyMakeBorder(
 \par CvPoint offset,
 \par int bordertype,
 \par CvScalar value=cvScalarAll(0) );}
-\cvdefPy{CopyMakeBorder(src,dst,offset,bordrtype,value=cvScalarAll(0))-> None}
+\cvdefPy{CopyMakeBorder(src,dst,offset,bordrtype,value=(0,0,0,0))-> None}
 
 \begin{description}
 \cvarg{src}{The source image}
@@ -38,7 +38,7 @@ Creates a structuring element.
 
 \cvdefC{IplConvKernel* cvCreateStructuringElementEx(\par int cols,
  \par int rows, \par int anchorX, \par int anchorY, \par int shape, \par int* values=NULL );}
-\cvdefPy{CreateStructuringElementEx(cols,rows,anchorX,anchorY,shape,values={NULL,0})-> kernel}
+\cvdefPy{CreateStructuringElementEx(cols,rows,anchorX,anchorY,shape,values=None)-> kernel}
 
 \begin{description}
 \cvarg{cols}{Number of columns in the structuring element}

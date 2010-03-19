@@ -64,7 +64,7 @@ Draws contour outlines or interiors in an image.
 \cvdefC{
 void cvDrawContours( \par CvArr *img,\par CvSeq* contour,\par CvScalar external\_color,\par CvScalar hole\_color,\par int max\_level,\par int thickness=1,\par int lineType=8 );
 }
-\cvdefPy{DrawContours(img,contour,external\_color,hole\_color,max\_level,thickness=1,lineType=8,offset=(0,0)-> None}
+\cvdefPy{DrawContours(img,contour,external\_color,hole\_color,max\_level,thickness=1,lineType=8,offset=(0,0))-> None}
 
 \begin{description}
 \cvarg{img}{Image where the contours are to be drawn. As with any other drawing function, the contours are clipped with the ROI.}
@@ -229,7 +229,7 @@ Retrieves the width and height of a text string.
 
 \cvdefC{
 void cvGetTextSize( \par const char* textString,\par const CvFont* font,\par CvSize* textSize,\par int* baseline );}
-\cvdefPy{GetTextSize(textString,font)-> textSize,baseline}
+\cvdefPy{GetTextSize(textString,font)-> (textSize,baseline)}
 
 \begin{description}
 \cvarg{font}{Pointer to the font structure}
@@ -277,7 +277,7 @@ Initializes the line iterator.
 \cvdefC{
 int cvInitLineIterator( \par const CvArr* image,\par CvPoint pt1,\par CvPoint pt2,\par CvLineIterator* line\_iterator,\par int connectivity=8,\par int left\_to\_right=0 );
 }
-\cvdefPy{InitLineIterator(image, pt1, pt2, connectivity=8, left\_to\_right=0)}
+\cvdefPy{InitLineIterator(image, pt1, pt2, connectivity=8, left\_to\_right=0) -> None}
 
 \begin{description}
 \cvarg{image}{Image to sample the line from}

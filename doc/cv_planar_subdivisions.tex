@@ -93,16 +93,17 @@ typedef struct CvSubdiv2DPoint
 CvSubdiv2DPoint;
 \end{lstlisting}
 
-\begin{description}
-\cvarg{id}{This integer can be used to index auxillary data associated with each vertex of the planar subdivision }
-\end{description}
+\begin{itemize}
+\item[id] This integer can be used to index auxillary data associated with each vertex of the planar subdivision
+\end{itemize}
 
 \cvCPyFunc{CalcSubdivVoronoi2D}
 Calculates the coordinates of Voronoi diagram cells.
 
 \cvdefC{
 void cvCalcSubdivVoronoi2D( \par CvSubdiv2D* subdiv );
-}\cvdefPy{CalcSubdivVoronoi2D(subdiv)-> None}
+}
+\cvdefPy{CalcSubdivVoronoi2D(subdiv)-> None}
 
 \begin{description}
 \cvarg{subdiv}{Delaunay subdivision, in which all the points are already added}
@@ -172,7 +173,8 @@ Returns the edge destination.
 
 \cvdefC{
 CvSubdiv2DPoint* cvSubdiv2DEdgeDst( \par CvSubdiv2DEdge edge );
-}\cvdefPy{Subdiv2DEdgeDist(edge)-> point}
+}
+\cvdefPy{Subdiv2DEdgeDst(edge)-> point}
 
 \begin{description}
 \cvarg{edge}{Subdivision edge (not a quad-edge)}

@@ -82,7 +82,7 @@ class SphinxWriter:
             self.write(' ')
 
     def doplain(self, s):
-        if (len(s) > 1) and (s[0] == '$' and s[-1] == '$'):
+        if (len(s) > 1) and (s[0] == '$' and s[-1] == '$') and self.state != 'math':
             s = ":math:`%s`" % s[1:-1]
         elif self.state != 'math':
             s.replace('\\_', '_')
@@ -158,6 +158,9 @@ class SphinxWriter:
     def cmd_cvCPyCross(self, c):
         self.write(":ref:`%s`" % str(c.params[0]))
 
+    def cmd_cvfunc(self, c):
+        self.cmd_cvCPyFunc(c)
+
     def cmd_cvCPyFunc(self, c):
         self.indent = 0
         nm = self.render(c.params[0].str)
@@ -181,6 +184,22 @@ class SphinxWriter:
         print >>self
         self.state = None
         self.function_props['defpy'] = s
+
+        pp.ParserElement.setDefaultWhitespaceChars(" \n\t")
+        ident = pp.Word(pp.alphanums + "_.+-")
+        ident_or_tuple = ident | ('(' + ident + pp.ZeroOrMore(',' + ident) + ')')
+        initializer = ident_or_tuple
+        arg = ident + pp.Optional('=' + initializer)
+        decl = ident + '(' + pp.Optional(arg + pp.ZeroOrMore(',' + arg)) + ')' + pp.Literal("->") + ident_or_tuple + pp.StringEnd()
+
+        try:
+            l = decl.parseString(s)
+            if str(l[0]) != self.function_props['name']:
+                self.report_error(c, 'Decl "%s" does not match function name "%s"' % (str(l[0]), self.function_props['name']))
+        except pp.ParseException, pe:
+            self.report_error(c, str(pe))
+            print s
+            print pe
 
     def report_error(self, c, msg):
         print >>self.errors, "%s:%d: Error %s" % (c.filename, c.lineno, msg)
@@ -284,6 +303,7 @@ class SphinxWriter:
     def cmd_targetlang(self, c): pass
     def cmd_usepackage(self, c): pass
     def cmd_title(self, c): pass
+    def cmd_par(self, c): pass
 
     def cmd_href(self, c):
         self.write("`%s <%s>`_" % (str(c.params[1]), str(c.params[0])))

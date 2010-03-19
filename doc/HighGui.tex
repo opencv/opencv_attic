@@ -40,7 +40,7 @@ Creates a trackbar and attaches it to the specified window
 int cvCreateTrackbar( \par const char* trackbarName, \par const char* windowName,
                       \par int* value, \par int count, \par CvTrackbarCallback onChange );
 }
-\cvdefPy{CreateTrackbar(trackbarName, windowName, value, count, onChange)}
+\cvdefPy{CreateTrackbar(trackbarName, windowName, value, count, onChange) -> None}
 \begin{lstlisting}
 CV_EXTERN_C_FUNCPTR( void (*CvTrackbarCallback)(int pos) );
 \end{lstlisting}
@@ -288,7 +288,7 @@ Loads an image from a file.
 
 \cvdefC{
 IplImage* cvLoadImage( \par const char* filename, \par int iscolor=CV\_LOAD\_IMAGE\_COLOR );}
-\cvdefPy{LoadImage(filename, iscolor=CV\_LOAD\_IMAGE\_COLOR)}
+\cvdefPy{LoadImage(filename, iscolor=CV\_LOAD\_IMAGE\_COLOR)->None}
 
 \begin{lstlisting}
 #define CV_LOAD_IMAGE_COLOR       1
@@ -444,7 +444,7 @@ The function \texttt{cvRetrieveFrame} returns the pointer to the image grabbed w
 Sets video capturing properties.
 
 \cvdefC{int cvSetCaptureProperty( \par CvCapture* capture, \par int property\_id, \par double value );}
-\cvdefPy{SetCaptureProperty(capture, property\_id,double)}
+\cvdefPy{SetCaptureProperty(capture, property\_id,double)->None}
 
 \begin{description}
 \cvarg{capture}{video capturing structure.}

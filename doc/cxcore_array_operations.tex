@@ -207,7 +207,7 @@ If the array is \texttt{IplImage} and COI is set, the function processes the sel
 Calculates average (mean) of array elements.
 
 \cvdefC{void cvAvgSdv(const CvArr* arr, CvScalar* mean, CvScalar* stdDev, const CvArr* mask=NULL);}
-\cvdefPy{AvgSdv(arr,mask=NULL)-> mean, stdDev}
+\cvdefPy{AvgSdv(arr,mask=NULL)-> (mean, stdDev)}
 
 \begin{description}
 \cvarg{arr}{The array}
@@ -318,7 +318,7 @@ Calculates the cubic root
 \end{description}
 
 
-The function calculates the cubic root of the argument, and normally it is faster than \texttt{pow(value,1./3)}. In addition, negative arguments are handled properly. Special values ($ \pm \infty $, NaN) are not handled.
+The function calculates the cubic root of the argument, and normally it is faster than \texttt{pow(value,1./3)}. In addition, negative arguments are handled properly. Special values ($\pm \infty $, NaN) are not handled.
 
 \cvCPyFunc{ClearND}
 Clears a specific array element.
@@ -550,7 +550,7 @@ In the case of \texttt{IplImage} both ROI and COI are supported.
 Allocates array data
 
 \cvdefC{void cvCreateData(CvArr* arr);}
-\cvdefPy{CreateData(arr)}
+\cvdefPy{CreateData(arr) -> None}
 
 \begin{description}
 \cvarg{arr}{Array header}
@@ -643,7 +643,7 @@ The function allocates a new matrix header and returns a pointer to it. The matr
 Creates the header and allocates the data for a multi-dimensional dense array.
 
 \cvdefC{CvMatND* cvCreateMatND(\par int dims,\par const int* sizes,\par int type);}
-\cvdefPy{CreateMatND(dims, type)}
+\cvdefPy{CreateMatND(dims, type) -> None}
 
 \begin{description}
 \ifPy
@@ -666,7 +666,7 @@ cvCreateData(mat);
 Creates a new matrix header but does not allocate the matrix data.
 
 \cvdefC{CvMatND* cvCreateMatNDHeader(\par int dims,\par const int* sizes,\par int type);}
-\cvdefPy{CreateMatNDHeader(dims, type)}
+\cvdefPy{CreateMatNDHeader(dims, type) -> None}
 
 \begin{description}
 \ifPy
@@ -1190,6 +1190,7 @@ Return a specific array element.  The length of array indices must be the same a
 
 \fi % }
 
+\ifC % {
 \cvCPyFunc{GetCol(s)}
 Returns array column or column span.
 
@@ -1211,6 +1212,37 @@ The functions \texttt{GetCol} and \texttt{GetCols} return the header, correspond
 \begin{lstlisting}
 cvGetCol(arr, submat, col); // ~ cvGetCols(arr, submat, col, col + 1);
 \end{lstlisting}
+
+\else % }{
+
+\cvCPyFunc{GetCol}
+Returns array column.
+
+\cvdefPy{GetCol(arr,col)-> submat}
+
+\begin{description}
+\cvarg{arr}{Input array}
+\cvarg{col}{Zero-based index of the selected column}
+\cvarg{submat}{resulting single-column array}
+\end{description}
+
+The function \texttt{GetCol} returns a single column from the input array.
+
+\cvCPyFunc{GetCols}
+Returns array column span.
+
+\cvdefPy{GetCols(arr,startCol,endCol)-> submat}
+
+\begin{description}
+\cvarg{arr}{Input array}
+\cvarg{startCol}{Zero-based index of the starting column (inclusive) of the span}
+\cvarg{endCol}{Zero-based index of the ending column (exclusive) of the span}
+\cvarg{submat}{resulting multi-column array}
+\end{description}
+
+The function \texttt{GetCols} returns a column span from the input array.
+
+\fi % }
 
 \cvCPyFunc{GetDiag}
 Returns one of array diagonals.
@@ -1487,6 +1519,7 @@ In the case of a sparse array the functions return 0 if the requested node does 
 
 \fi
 
+\ifC %{
 \cvCPyFunc{GetRow(s)}
 Returns array row or row span.
 
@@ -1510,6 +1543,36 @@ The functions return the header, corresponding to a specified row/row span of th
 cvGetRow(arr, submat, row ) ~ cvGetRows(arr, submat, row, row + 1, 1);
 \end{lstlisting}
 
+\else % }{
+
+\cvCPyFunc{GetRow}
+Returns array row.
+
+\cvdefPy{GetRow(arr,row)-> submat}
+
+\begin{description}
+\cvarg{arr}{Input array}
+\cvarg{row}{Zero-based index of the selected row}
+\cvarg{submat}{resulting single-row array}
+\end{description}
+
+The function \texttt{GetRow} returns a single row from the input array.
+
+\cvCPyFunc{GetRows}
+Returns array row span.
+
+\cvdefPy{GetRows(arr,startRow,endRow)-> submat}
+
+\begin{description}
+\cvarg{arr}{Input array}
+\cvarg{startRow}{Zero-based index of the starting row (inclusive) of the span}
+\cvarg{endRow}{Zero-based index of the ending row (exclusive) of the span}
+\cvarg{submat}{resulting multi-row array}
+\end{description}
+
+The function \texttt{GetRows} returns a row span from the input array.
+
+\fi % }
 
 \cvCPyFunc{GetSize}
 Returns size of matrix or image ROI.
@@ -1720,7 +1783,7 @@ Calculates the inverse square root.
 \end{description}
 
 
-The function calculates the inverse square root of the argument, and normally it is faster than \texttt{1./sqrt(value)}. If the argument is zero or negative, the result is not determined. Special values ($ \pm \infty $ , NaN) are not handled.
+The function calculates the inverse square root of the argument, and normally it is faster than \texttt{1./sqrt(value)}. If the argument is zero or negative, the result is not determined. Special values ($\pm \infty $ , NaN) are not handled.
 
 \cvCPyFunc{Invert}
 Finds the inverse or pseudo-inverse of a matrix.
@@ -1759,7 +1822,7 @@ Determines if the argument is Infinity.
 \cvarg{value}{The input floating-point value}
 \end{description}
 
-The function returns 1 if the argument is $ \pm \infty $ (as defined by IEEE754 standard), 0 otherwise.
+The function returns 1 if the argument is $\pm \infty $ (as defined by IEEE754 standard), 0 otherwise.
 
 \cvCPyFunc{IsNaN}
 Determines if the argument is Not A Number.
@@ -1954,7 +2017,7 @@ Finds global minimum and maximum in array or subarray.
 
 \cvdefC{void cvMinMaxLoc(const CvArr* arr, double* minVal, double* maxVal,
                   CvPoint* minLoc=NULL, CvPoint* maxLoc=NULL, const CvArr* mask=NULL);}
-\cvdefPy{MinMaxLoc(arr,mask=NULL)-> minVal,maxVal,minLoc,maxLoc}
+\cvdefPy{MinMaxLoc(arr,mask=NULL)-> (minVal,maxVal,minLoc,maxLoc)}
 
 \begin{description}
 \cvarg{arr}{The source array, single-channel or multi-channel with COI set}
@@ -2085,7 +2148,7 @@ For types that have limited range this operation is saturating.
 Performs per-element multiplication of two Fourier spectrums.
 
 \cvdefC{void cvMulSpectrums(\par const CvArr* src1,\par const CvArr* src2,\par CvArr* dst,\par int flags);}
-\cvdefPy{MulSpectrums(src1,src2,dst,flags)-> None)}
+\cvdefPy{MulSpectrums(src1,src2,dst,flags)-> None}
 
 \begin{description}
 \cvarg{src1}{The first source array}
@@ -2136,7 +2199,7 @@ otherwise.
 Calculates absolute array norm, absolute difference norm, or relative difference norm.
 
 \cvdefC{double cvNorm(const CvArr* arr1, const CvArr* arr2=NULL, int normType=CV\_L2, const CvArr* mask=NULL);}
-\cvdefPy{Norm(arr1,arr2,normType+CV\_L2,mask=NULL)-> double}
+\cvdefPy{Norm(arr1,arr2,normType=CV\_L2,mask=NULL)-> double}
 
 \begin{description}
 \cvarg{arr1}{The first source image}
@@ -2751,11 +2814,8 @@ row = (CvMat*)cvReshapeND(mat, &row_header, 0, 1, 0);
 \fi
 
 \ifC
-\subsection{cvRound, cvFloor, cvCeil}\label{cvRound}
-\fi
-\ifPy
-\subsection{cv.Round, cv.Floor, cv.Ceil}\label{cv.Round}
-\fi
+\cvfunc{cvRound, cvFloor, cvCeil}\label{cvRound}
+
 Converts a floating-point number to an integer.
 
 \cvdefC{
@@ -2777,8 +2837,57 @@ larger than the argument. \texttt{Ceil} returns the minimum integer
 value that is not smaller than the argument. On some architectures the
 functions work much faster than the standard cast
 operations in C. If the absolute value of the argument is greater than
-$2^{31}$, the result is not determined. Special values ($ \pm \infty$ , NaN)
+$2^{31}$, the result is not determined. Special values ($\pm \infty$ , NaN)
 are not handled.
+
+\else
+
+\cvfunc{Round}
+
+Converts a floating-point number to the nearest integer value.
+
+\cvdefPy{Round(value) -> int}
+
+\begin{description}
+\cvarg{value}{The input floating-point value}
+\end{description}
+
+On some architectures this function is much faster than the standard cast
+operations. If the absolute value of the argument is greater than
+$2^{31}$, the result is not determined. Special values ($\pm \infty$ , NaN)
+are not handled.
+
+\cvfunc{Floor}
+
+Converts a floating-point number to the nearest integer value that is not larger than the argument.
+
+\cvdefPy{Floor(value) -> int}
+
+\begin{description}
+\cvarg{value}{The input floating-point value}
+\end{description}
+
+On some architectures this function is much faster than the standard cast
+operations. If the absolute value of the argument is greater than
+$2^{31}$, the result is not determined. Special values ($\pm \infty$ , NaN)
+are not handled.
+
+\cvfunc{Ceil}
+
+Converts a floating-point number to the nearest integer value that is not smaller than the argument.
+
+\cvdefPy{Ceil(value) -> int}
+
+\begin{description}
+\cvarg{value}{The input floating-point value}
+\end{description}
+
+On some architectures this function is much faster than the standard cast
+operations. If the absolute value of the argument is greater than
+$2^{31}$, the result is not determined. Special values ($\pm \infty$ , NaN)
+are not handled.
+
+\fi
 
 
 \cvCPyFunc{ScaleAdd}
@@ -2786,9 +2895,6 @@ Calculates the sum of a scaled array and another array.
 
 \cvdefC{void cvScaleAdd(const CvArr* src1, CvScalar scale, const CvArr* src2, CvArr* dst);}
 \cvdefPy{ScaleAdd(src1,sclae,src2,dst)-> None}
-\begin{lstlisting}
-#define cvMulAddS cvScaleAdd
-\end{lstlisting}
 
 \begin{description}
 \cvarg{src1}{The first source array}
@@ -2796,6 +2902,10 @@ Calculates the sum of a scaled array and another array.
 \cvarg{src2}{The second source array}
 \cvarg{dst}{The destination array}
 \end{description}
+
+\begin{lstlisting}
+#define cvMulAddS cvScaleAdd
+\end{lstlisting}
 
 The function calculates the sum of a scaled array and another array:
 
@@ -2861,7 +2971,7 @@ Set a specific array element.
 \cvarg{value}{The value to assign to the element}
 \end{description}
 
-Sets a specific array element.  Array must have dimension 3.
+Sets a specific array element.  Array must have dimension 1.
 
 \cvCPyFunc{Set2D}
 Set a specific array element.
@@ -2924,7 +3034,7 @@ The function assigns user data to the array header. Header should be initialized
 Initializes a scaled identity matrix.
 
 \cvdefC{void cvSetIdentity(CvArr* mat, CvScalar value=cvRealScalar(1));}
-\cvdefPy{SetIdentity(mat,value=cvRealScalar(1))-> None}
+\cvdefPy{SetIdentity(mat,value=1)-> None}
 
 \begin{description}
 \cvarg{arr}{The matrix to initialize (not necesserily square)}
@@ -2970,6 +3080,7 @@ If the original image ROI was \texttt{NULL} and the \texttt{rect} is not the who
 
 Most OpenCV functions support the use of ROI and treat the image rectangle as a separate image. For example, all of the pixel coordinates are counted from the top-left (or bottom-left) corner of the ROI, not the original image.
 
+\if % {
 \cvCPyFunc{SetReal?D}
 Change a specific array element.
 
@@ -2996,6 +3107,64 @@ safely for both single-channel and multiple-channel arrays, though they
 are a bit slower.
 
 In the case of a sparse array the functions create the node if it does not yet exist.
+
+\else % }{
+
+\cvCPyFunc{SetReal1D}
+Set a specific array element.
+
+\cvdefPy{ SetReal1D(arr, idx, value) -> None }
+
+\begin{description}
+\cvarg{arr}{Input array}
+\cvarg{idx}{Zero-based element index}
+\cvarg{value}{The value to assign to the element}
+\end{description}
+
+Sets a specific array element.  Array must have dimension 1.
+
+\cvCPyFunc{SetReal2D}
+Set a specific array element.
+
+\cvdefPy{ SetReal2D(arr, idx0, idx1, value) -> None }
+
+\begin{description}
+\cvarg{arr}{Input array}
+\cvarg{idx0}{Zero-based element row index}
+\cvarg{idx1}{Zero-based element column index}
+\cvarg{value}{The value to assign to the element}
+\end{description}
+
+Sets a specific array element.  Array must have dimension 2.
+
+\cvCPyFunc{SetReal3D}
+Set a specific array element.
+
+\cvdefPy{ SetReal3D(arr, idx0, idx1, idx2, value) -> None }
+
+\begin{description}
+\cvarg{arr}{Input array}
+\cvarg{idx0}{Zero-based element index}
+\cvarg{idx1}{Zero-based element index}
+\cvarg{idx2}{Zero-based element index}
+\cvarg{value}{The value to assign to the element}
+\end{description}
+
+Sets a specific array element.  Array must have dimension 3.
+
+\cvCPyFunc{SetRealND}
+Set a specific array element.
+
+\cvdefPy{ SetRealND(arr, indices, value) -> None }
+
+\begin{description}
+\cvarg{arr}{Input array}
+\cvarg{indices}{List of zero-based element indices}
+\cvarg{value}{The value to assign to the element}
+\end{description}
+
+Sets a specific array element.  The length of array indices must be the same as the dimension of the array.
+\fi % }
 
 \cvCPyFunc{SetZero}
 Clears the array.
@@ -3239,7 +3408,7 @@ the high-level counterparts (inv and solve).
 Performs singular value decomposition of a real floating-point matrix.
 
 \cvdefC{void cvSVD(\par CvArr* A, \par CvArr* W, \par CvArr* U=NULL, \par CvArr* V=NULL, \par int flags=0);}
-\cvdefPy{SVD(A,flags=0)-> W,U,V}
+\cvdefPy{SVD(A,flags=0)-> (W,U,V)}
 
 \begin{description}
 \cvarg{A}{Source $\texttt{M} \times \texttt{N}$ matrix}
@@ -3782,7 +3951,7 @@ bool checkRange(const MatND\& src, bool quiet=true, int* pos=0,\par
 \end{description}
 
 The functions \texttt{checkRange} check that every array element is
-neither NaN nor $ \pm \infty $. When \texttt{minVal < -DBL\_MAX} and \texttt{maxVal < DBL\_MAX}, then the functions also check that
+neither NaN nor $\pm \infty $. When \texttt{minVal < -DBL\_MAX} and \texttt{maxVal < DBL\_MAX}, then the functions also check that
 each value is between \texttt{minVal} and \texttt{maxVal}. in the case of multi-channel arrays each channel is processed independently.
 If some values are out of range, position of the first outlier is stored in \texttt{pos} (when $\texttt{pos}\ne0$), and then the functions either return false (when \texttt{quiet=true}) or throw an exception.
 

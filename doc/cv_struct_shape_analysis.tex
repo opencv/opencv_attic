@@ -25,8 +25,9 @@ Approximates polygonal curve(s) with the specified precision.
 
 \cvdefC{
 CvSeq* cvApproxPoly( \par const void* src\_seq,\par int header\_size,\par CvMemStorage* storage,\par int method,\par double parameter,\par int parameter2=0 );
-}\cvdefPy{
-ApproxPoly(src\_seq, storage, method, parameter=0, parameter2=0)
+}
+\cvdefPy{
+ApproxPoly(src\_seq, storage, method, parameter=0, parameter2=0) -> sequence
 }
 
 \begin{description}
@@ -213,7 +214,8 @@ Calculates the area of a whole contour or a contour section.
 
 \cvdefC{
 double cvContourArea( \par const CvArr* contour, \par CvSlice slice=CV\_WHOLE\_SEQ );
-}\cvdefPy{ContourAres(contour,slice=CV\_WHOLE\_SEQ)-> double}
+}
+\cvdefPy{ContourArea(contour,slice=CV\_WHOLE\_SEQ)-> double}
 
 \begin{description}
 \cvarg{contour}{Contour (sequence or array of vertices)}
@@ -375,7 +377,8 @@ Creates a hierarchical representation of a contour.
 
 \cvdefC{
 CvContourTree* cvCreateContourTree( \par const CvSeq* contour,\par CvMemStorage* storage,\par double threshold );
-}\cvdefPy{CreateCountourTree(contour,storage,threshold)-> contour\_tree}
+}
+\cvdefPy{CreateContourTree(contour,storage,threshold)-> contour\_tree}
 
 \begin{description}
 \cvarg{contour}{Input contour}
@@ -465,12 +468,13 @@ The function locates and retrieves the next contour in the image and returns a p
 
 \fi % }
 
-\cvCPyFunc{FitEllipse}
+\cvCPyFunc{FitEllipse2}
 Fits an ellipse around a set of 2D points.
 
 \cvdefC{
 CvBox2D cvFitEllipse2( \par const CvArr* points );
-}\cvdefPy{FitEllipse2(points)-> Box2D}
+}
+\cvdefPy{FitEllipse2(points)-> Box2D}
 
 \begin{description}
 \cvarg{points}{Sequence or array of points}
@@ -558,7 +562,7 @@ x_c=\frac{M_{10}}{M_{00}}, y_c=\frac{M_{01}}{M_{00}}
 Calculates the seven Hu invariants.
 
 \cvdefC{void cvGetHuMoments( const CvMoments* moments,CvHuMoments* hu );}
-\cvdefPy{cvGetHuMoments(moments) -> hu}
+\cvdefPy{GetHuMoments(moments) -> hu}
 
 \begin{description}
 \cvarg{moments}{The input moments, computed with \cvCPyCross{Moments}}
@@ -696,7 +700,7 @@ CvBox2D  cvMinAreaRect2( \par const CvArr* points,\par CvMemStorage* storage=NUL
 
 The function finds a circumscribed rectangle of the minimal area for a 2D point set by building a convex hull for the set and applying the rotating calipers technique to the hull.
 
-\cvfunc{Picture. Minimal-area bounding rectangle for contour}
+Picture. Minimal-area bounding rectangle for contour
 
 \includegraphics[width=0.5\textwidth]{pics/minareabox.png}
 
@@ -705,7 +709,8 @@ Finds the circumscribed circle of minimal area for a given 2D point set.
 
 \cvdefC{
 int cvMinEnclosingCircle( \par const CvArr* points,\par CvPoint2D32f* center,\par float* radius );
-}\cvdefPy{MinEnclosingCircle(points)-> int,center,radius}
+}
+\cvdefPy{MinEnclosingCircle(points)-> (int,center,radius)}
 
 \begin{description}
 \cvarg{points}{Sequence or array of 2D points}

@@ -304,7 +304,8 @@ Calculates the distance to the closest zero pixel for all non-zero pixels of the
 
 \cvdefC{
 void cvDistTransform( \par const CvArr* src,\par CvArr* dst,\par int distance\_type=CV\_DIST\_L2,\par int mask\_size=3,\par const float* mask=NULL,\par CvArr* labels=NULL );
-}\cvdefPy{DistTransform(src,dst,distance\_type=CV\_DIST\_L2,mask\_size=3,mask={NULL,0},labels=NULL)-> None}
+}
+\cvdefPy{DistTransform(src,dst,distance\_type=CV\_DIST\_L2,mask\_size=3,mask=None,labels=NULL)-> None}
 
 \begin{description}
 \cvarg{src}{8-bit, single-channel (binary) source image}
@@ -391,7 +392,8 @@ void cvFloodFill(\par CvArr* image,\par CvPoint seed\_point,\par CvScalar new\_v
                   CvScalar lo\_diff=cvScalarAll(0),\par CvScalar up\_diff=cvScalarAll(0),\par
                   CvConnectedComp* comp=NULL,\par int flags=4,\par CvArr* mask=NULL );
 
-}\cvdefPy{FloodFill(image,seed\_point,new\_val,lo\_diff=cvScalarAll(0),up\_diff=cvScalarAll(0),flags=4,mask=NULL)-> comp}
+}
+\cvdefPy{FloodFill(image,seed\_point,new\_val,lo\_diff=(0,0,0,0),up\_diff=(0,0,0,0),flags=4,mask=NULL)-> comp}
 
 \ifC
 \begin{lstlisting}
@@ -524,8 +526,7 @@ void cvPyrMeanShiftFiltering( \par const CvArr* src, \par CvArr* dst,
      \par double sp, \par double sr, \par int max\_level=1,
      \par CvTermCriteria termcrit=\par cvTermCriteria(CV\_TERMCRIT\_ITER+CV\_TERMCRIT\_EPS,5,1));
 
-}\cvdefPy{PyrMeanShiftFiltering(src,dst,sp,sr,max\_level=1,
-       termcrit=\par (CV\_TERMCRIT\_ITER+CV\_TERMCRIT\_EPS,5,1))-> None}
+}\cvdefPy{PyrMeanShiftFiltering(src,dst,sp,sr,max\_level=1,termcrit=(CV\_TERMCRIT\_ITER+CV\_TERMCRIT\_EPS,5,1))-> None}
 
 \begin{description}
 \cvarg{src}{The source 8-bit, 3-channel image.}

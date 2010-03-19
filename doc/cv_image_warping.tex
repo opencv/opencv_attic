@@ -293,7 +293,7 @@ void cvRemap(
 \par const CvArr* mapy,
 \par int flags=CV\_INTER\_LINEAR+CV\_WARP\_FILL\_OUTLIERS,
 \par CvScalar fillval=cvScalarAll(0) );}
-\cvdefPy{Remap(src,dst,mapx,mapy,flags=CV\_INNER\_LINEAR+CV\_WARP\_FILL\_OUTLIERS,fillval=cvScalarAll0))-> None}
+\cvdefPy{Remap(src,dst,mapx,mapy,flags=CV\_INNER\_LINEAR+CV\_WARP\_FILL\_OUTLIERS,fillval=(0,0,0,0))-> None}
 
 \begin{description}
 \cvarg{src}{Source image}
@@ -352,7 +352,7 @@ void cvWarpAffine(
 \par int flags=CV\_INTER\_LINEAR+CV\_WARP\_FILL\_OUTLIERS,
 \par CvScalar fillval=cvScalarAll(0) );
 }
-\cvdefPy{WarpAffine(src,dst,mapMatrix,flags=CV\_INTER\_LINEAR+CV\_WARP\_FILL\_OUTLIERS,fillval=cvScalarAll(0))-> None}
+\cvdefPy{WarpAffine(src,dst,mapMatrix,flags=CV\_INTER\_LINEAR+CV\_WARP\_FILL\_OUTLIERS,fillval=(0,0,0,0))-> None}
 
 \begin{description}
 \cvarg{src}{Source image}
@@ -413,9 +413,8 @@ void cvWarpPerspective(
 \par const CvMat* mapMatrix,
 \par int flags=CV\_INTER\_LINEAR+CV\_WARP\_FILL\_OUTLIERS,
 \par CvScalar fillval=cvScalarAll(0) );
-}\cvdefPy{WarpPerspective(src,dst,mapMatrix,flags=CV\_I
-NNER\_LINEAR+CV\_WARP\_FILL\_OUTLIERS,fillval=cvScalarAll(0
-))-> None}
+}
+\cvdefPy{WarpPerspective(src,dst,mapMatrix,flags=CV\_INNER\_LINEAR+CV\_WARP\_FILL\_OUTLIERS,fillval=(0,0,0,0))-> None}
 
 \begin{description}
 \cvarg{src}{Source image}
