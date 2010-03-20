@@ -1290,17 +1290,17 @@ public:
     Mat_ clone() const;
 
     // transposition, inversion, per-element multiplication
-    MatExpr_<MatExpr_Op2_<Mat_, double, Mat_, MatOp_T_<Mat> >, Mat_> t() const;
-    MatExpr_<MatExpr_Op2_<Mat_, int, Mat_, MatOp_Inv_<Mat> >, Mat_> inv(int method=DECOMP_LU) const;
+    MatExpr_<MatExpr_Op2_<Mat, double, Mat, MatOp_T_<Mat> >, Mat> t() const;
+    MatExpr_<MatExpr_Op2_<Mat, int, Mat, MatOp_Inv_<Mat> >, Mat> inv(int method=DECOMP_LU) const;
 
-    MatExpr_<MatExpr_Op4_<Mat_, Mat_, double, char, Mat_, MatOp_MulDiv_<Mat> >, Mat_>
+    MatExpr_<MatExpr_Op4_<Mat, Mat, double, char, Mat, MatOp_MulDiv_<Mat> >, Mat>
     mul(const Mat_& m, double scale=1) const;
-    MatExpr_<MatExpr_Op4_<Mat_, Mat_, double, char, Mat_, MatOp_MulDiv_<Mat> >, Mat_>
-    mul(const MatExpr_<MatExpr_Op2_<Mat_, double, Mat_,
-        MatOp_Scale_<Mat> >, Mat_>& m, double scale=1) const;
-    MatExpr_<MatExpr_Op4_<Mat_, Mat_, double, char, Mat_, MatOp_MulDiv_<Mat> >, Mat_>    
-    mul(const MatExpr_<MatExpr_Op2_<Mat_, double, Mat_,
-        MatOp_DivRS_<Mat> >, Mat_>& m, double scale=1) const;
+    MatExpr_<MatExpr_Op4_<Mat, Mat, double, char, Mat, MatOp_MulDiv_<Mat> >, Mat>
+    mul(const MatExpr_<MatExpr_Op2_<Mat, double, Mat,
+        MatOp_Scale_<Mat> >, Mat>& m, double scale=1) const;
+    MatExpr_<MatExpr_Op4_<Mat, Mat, double, char, Mat, MatOp_MulDiv_<Mat> >, Mat>    
+    mul(const MatExpr_<MatExpr_Op2_<Mat, double, Mat,
+        MatOp_DivRS_<Mat> >, Mat>& m, double scale=1) const;
 
     // overridden forms of Mat::elemSize() etc.
     size_t elemSize() const;
@@ -1336,7 +1336,7 @@ public:
     const _Tp& operator ()(Point pt) const;
 
     // to support matrix expressions
-    operator MatExpr_<Mat_, Mat_>() const;
+    operator MatExpr_<Mat, Mat>() const;
     
     // conversion to vector.
     operator vector<_Tp>() const;
