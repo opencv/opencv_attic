@@ -1564,12 +1564,13 @@ The function \texttt{GetRow} returns a single row from the input array.
 \cvCPyFunc{GetRows}
 Returns array row span.
 
-\cvdefPy{GetRows(arr,startRow,endRow)-> submat}
+\cvdefPy{GetRows(arr,startRow,endRow,deltaRow=1)-> submat}
 
 \begin{description}
 \cvarg{arr}{Input array}
 \cvarg{startRow}{Zero-based index of the starting row (inclusive) of the span}
 \cvarg{endRow}{Zero-based index of the ending row (exclusive) of the span}
+\cvarg{deltaRow}{Index step in the row span.}
 \cvarg{submat}{resulting multi-row array}
 \end{description}
 
@@ -3417,7 +3418,7 @@ the high-level counterparts (inv and solve).
 Performs singular value decomposition of a real floating-point matrix.
 
 \cvdefC{void cvSVD(\par CvArr* A, \par CvArr* W, \par CvArr* U=NULL, \par CvArr* V=NULL, \par int flags=0);}
-\cvdefPy{SVD(A,flags=0)-> (W,U,V)}
+\cvdefPy{SVD(A,W, U = None, V = None, flags=0)-> None}
 
 \begin{description}
 \cvarg{A}{Source $\texttt{M} \times \texttt{N}$ matrix}
