@@ -279,9 +279,9 @@ GetRow submat
 GetRows submat
   CvArr arr
   CvMat submat /J:arr,O,A
-  int start_row
-  int end_row
-  int delta_row 1
+  int startRow
+  int endRow
+  int deltaRow 1
 GetCol submat
   CvArr arr
   CvMat submat /J:arr,O,A
@@ -618,9 +618,9 @@ Solve
   int method CV_LU
 SVD
   CvArr A
-  CvArr W /O
-  CvArr U /O
-  CvArr V /O
+  CvArr W
+  CvArr U NULL
+  CvArr V NULL
   int flags 0
 SVBkSb
   CvArr W
@@ -1273,7 +1273,7 @@ FindHomography homography
   CvMat homography
   int method 0
   double ransacReprojThreshold 0.0
-  CvMat mask NULL
+  CvMat status NULL
 CreateStereoBMState CvStereoBMState*
   int preset CV_STEREO_BM_BASIC
   int numberOfDisparities 0
@@ -1358,7 +1358,7 @@ InitIntrinsicParams2D
   CvSize imageSize
   CvMat cameraMatrix
   double aspectRatio 1.
-StereoRectify
+StereoRectify roi1,roi2
   CvMat camera_matrix1
   CvMat camera_matrix2
   CvMat dist_coeffs1
@@ -1374,8 +1374,8 @@ StereoRectify
   int flags CV_CALIB_ZERO_DISPARITY
   double alpha -1
   CvSize newImageSize cvSize(0,0)
-  CvRect* roi1 NULL
-  CvRect* roi2 NULL
+  CvRect roi1 /O
+  CvRect roi2 /O
 StereoRectifyUncalibrated
   CvMat points1
   CvMat points2
