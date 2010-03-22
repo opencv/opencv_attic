@@ -381,7 +381,7 @@ cvCreateSeq( int seq_flags, int header_size, int elem_size, CvMemStorage * stora
         int elemtype = CV_MAT_TYPE(seq_flags);
         int typesize = CV_ELEM_SIZE(elemtype);
 
-        if( elemtype != CV_SEQ_ELTYPE_GENERIC &&
+        if( elemtype != CV_SEQ_ELTYPE_GENERIC && elemtype != CV_USRTYPE1 &&
             typesize != 0 && typesize != elem_size )
             CV_Error( CV_StsBadSize,
             "Specified element size doesn't match to the size of the specified element type "
