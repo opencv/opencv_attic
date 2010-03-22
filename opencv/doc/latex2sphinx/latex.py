@@ -185,7 +185,7 @@ class SphinxWriter:
         print >>self
         print >>self, ".. class:: " + nm + "\n"
         print >>self
-        self.tags.append("%s\t%s\t%d" % (nm, c.filename, c.lineno))
+        self.tags.append("%s\t%s\t%d" % (nm, os.path.join(os.getcwd(), c.filename), c.lineno))
 
     def cmd_cvfunc(self, c):
         self.cmd_cvCPyFunc(c)
@@ -200,7 +200,7 @@ class SphinxWriter:
         print >>self
         self.state = 'fpreamble'
         self.description = ""
-        self.tags.append("%s\t%s\t%d" % (nm, c.filename, c.lineno))
+        self.tags.append("%s\t%s\t%d" % (nm, os.path.join(os.getcwd(), c.filename), c.lineno))
 
         self.function_props = {'name' : nm}
 
@@ -252,9 +252,11 @@ class SphinxWriter:
                         doc_outs = [l[2]]
                     else:
                         doc_outs = l[2]
-                    print doc_outs, len(doc_outs)
                     if len(outs) != len(doc_outs):
                         self.report_error(c, "function %s output documented tuple %d, code %d" % (l[0], len(outs), len(doc_outs)))
+            else:
+                # self.report_error(c, "function %s documented but not found in code" % l[0])
+                pass
         except pp.ParseException, pe:
             self.report_error(c, str(pe))
             print s
@@ -276,6 +278,8 @@ class SphinxWriter:
             self.indent += 1
         elif s in ['itemize', 'enumerate']:
             self.indent += 1
+        elif s == 'tabular':
+            self.f = StringIO.StringIO()
         else:
             self.default_cmd(c)
 
@@ -301,6 +305,10 @@ class SphinxWriter:
                 self.function_props['done'] = True
         elif s in ['itemize', 'enumerate']:
             self.indent -= 1
+        elif s == 'tabular':
+            tabletxt = self.f.getvalue()
+            self.f = self.f_section
+            self.f.write(self.handle_table(tabletxt))
         elif s == 'lstlisting':
             print >>self
             self.indent -= 1
@@ -364,6 +372,8 @@ class SphinxWriter:
                     arg = adict.get(nm, None)
                     if arg:
                         type = arg.ty
+                    else:
+                        self.report_error(c, 'cannot find arg %s in code' % nm)
         elif self.ee() == ['description']:
             print >>self, '\n* **%s** ' % self.render(c.params[0].str),
         elif self.ee() == ['description', 'description']:
@@ -384,7 +394,9 @@ class SphinxWriter:
                 "int" : "int",
                 "float" : "float",
                 "char" : "str",
+                "cvarrseq" : ":class:`CvArr` or :class:`CvSeq`",
                 "CvPoint2D32fs" : "sequence of (float, float)",
+                "pts_npts_contours" : "list of lists of (x,y) pairs",
             }
             print >>self, "\n:type %s: %s" % (nm, translate.get(type, ':class:`%s`' % type))
 
@@ -404,7 +416,8 @@ class SphinxWriter:
     def cmd_usepackage(self, c): pass
     def cmd_title(self, c): pass
     def cmd_par(self, c): pass
-    def cmd_hline(self, c): pass
+    def cmd_hline(self, c):
+        print >>self, "\\hline"
 
     def cmd_href(self, c):
         self.write("`%s <%s>`_" % (str(c.params[1]), str(c.params[0])))
@@ -447,6 +460,35 @@ class SphinxWriter:
             else:
                 self.write('\n')
 
+    def handle_table(self, s):
+        oneline = s.replace('\n', ' ').strip()
+        rows = [r.strip() for r in oneline.split('\\hline')]
+        tab = []
+        for r in rows:
+            if r != "":
+                cols = [c.strip() for c in r.split('&')]
+                tab.append(cols)
+        widths = [max([len(r[i]) for r in tab]) for i in range(len(tab[0]))]
+
+        st = ""         # Sphinx table
+
+        if 0:
+            sep = "+" + "+".join(["-" * w for w in widths]) + "+"
+            st += sep + '\n'
+            for r in tab:
+                st += "|" + "|".join([c.center(w) for (c, w) in zip(r, widths)]) + "|" + '\n'
+                st += sep + '\n'
+
+        st = '.. table::\n\n'
+        sep = "  ".join(["=" * w for w in widths])
+        st += '    ' + sep + '\n'
+        for y,r in enumerate(tab):
+            st += '    ' + "  ".join([c.ljust(w) for (c, w) in zip(r, widths)]) + '\n'
+            if y == 0:
+                st += '    ' + sep + '\n'
+        st += '    ' + sep + '\n'
+        return st
+
     def ee(self):
         """ Return tags of the envstack.  envstack[0] is 'document', so skip it """
         return [n for (n,_) in self.envstack[1:]]
@@ -459,7 +501,7 @@ class SphinxWriter:
         print >>self.errors, "\n    ".join(sorted(self.unhandled_commands))
         print >>self.errors
 
-        open('TAGS', 'w').write("\n".join(sorted(self.tags)))
+        open('TAGS', 'w').write("\n".join(sorted(self.tags)) + "\n")
 
         print >>self.f_index, """
 
@@ -474,11 +516,6 @@ sr = SphinxWriter('index.rst')
 print >>sr, """
 OpenCV |version| Python Reference
 =================================
-
-Test code::
-
-    import foo
-    print a + 3
 
 The OpenCV Wiki is here: http://opencv.willowgarage.com/
 
