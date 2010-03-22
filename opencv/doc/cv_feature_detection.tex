@@ -343,8 +343,10 @@ void cvGoodFeaturesToTrack(
 \cvarg{tempImage}{Another temporary image, the same size and format as \texttt{eigImage}}
 \ifC
 \cvarg{corners}{Output parameter; detected corners}
-\fi
 \cvarg{cornerCount}{Output parameter; number of detected corners}
+\else
+\cvarg{cornerCount}{number of corners to detect}
+\fi
 \cvarg{qualityLevel}{Multiplier for the max/min eigenvalue; specifies the minimal accepted quality of image corners}
 \cvarg{minDistance}{Limit, specifying the minimum possible distance between the returned corners; Euclidian distance is used}
 \cvarg{mask}{Region of interest. The function selects points either in the specified region or in the whole image if the mask is NULL}

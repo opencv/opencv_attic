@@ -385,7 +385,7 @@ CvStereoGCState* cvCreateStereoGCState( int numberOfDisparities,
 
 The function creates the stereo correspondence structure and initializes it. It is possible to override any of the parameters at any time between the calls to \cvCPyCross{FindStereoCorrespondenceGC}.
 
-\cvCPyFunc{CvStereoBMState}
+\cvclass{CvStereoBMState}
 The structure for block matching stereo correspondence algorithm.
 
 \begin{lstlisting}
@@ -416,7 +416,7 @@ The block matching stereo correspondence algorithm, by Kurt Konolige, is very fa
 
 Note that the algorithm searches for the corresponding blocks in x direction only. It means that the supplied stereo pair should be rectified. Vertical stereo layout is not directly supported, but in such a case the images could be transposed by user.
 
-\cvCPyFunc{CvStereoGCState}
+\cvclass{CvStereoGCState}
 The structure for graph cuts-based stereo correspondence algorithm
 
 \begin{lstlisting}
@@ -869,10 +869,10 @@ Returns the new camera matrix based on the free scaling parameter
     \par CvMat* newCameraMatrix,
     \par CvSize newImageSize=cvSize(0,0),
     \par CvRect* validPixROI=0 );}
-\cvdefPy{GetOptimalNewCameraMatrix(cameraMatrix, distCoeffs, imageSize, alpha, newImgSize=(0,0), validPixROI=0) -> None}
+\cvdefPy{GetOptimalNewCameraMatrix(cameraMatrix, distCoeffs, imageSize, alpha, newImageSize=(0,0), validPixROI=0) -> None}
 \cvdefCpp{Mat getOptimalNewCameraMatrix(
     \par const Mat\& cameraMatrix, const Mat\& distCoeffs,
-    \par Size imageSize, double alpha, Size newImgSize=Size(),
+    \par Size imageSize, double alpha, Size newImageSize=Size(),
     \par Rect* validPixROI=0);}
     
 \begin{description}

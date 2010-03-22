@@ -7,7 +7,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \ifCPy
-\subsection{CvPoint}\label{CvPoint}
+\label{CvPoint}\cvclass{CvPoint}
 2D point with integer coordinates (usually zero-based).
 
 \begin{lstlisting}
@@ -33,7 +33,7 @@ inline CvPoint cvPointFrom32f( CvPoint2D32f point );
 \end{lstlisting}
 
 
-\subsection{CvPoint2D32f}\label{CvPoint2D32f}
+\label{CvPoint2D32f}\cvclass{CvPoint2D32f}
 2D point with floating-point coordinates
 
 \begin{lstlisting}
@@ -59,7 +59,7 @@ inline CvPoint2D32f cvPointTo32f( CvPoint point );
 \end{lstlisting}
 
 
-\subsection{CvPoint3D32f}\label{CvPoint3D32f}
+\label{CvPoint3D32f}\cvclass{CvPoint3D32f}
 3D point with floating-point coordinates
 
 \begin{lstlisting}
@@ -83,7 +83,7 @@ CvPoint3D32f;
 inline CvPoint3D32f cvPoint3D32f( double x, double y, double z );
 \end{lstlisting}
 
-\subsection{CvPoint2D64f}\label{CvPoint2D64f}
+\label{CvPoint2D64f}\cvclass{CvPoint2D64f}
 2D point with double precision floating-point coordinates
 
 \begin{lstlisting}
@@ -108,7 +108,7 @@ inline CvPoint2D64f cvPoint2D64f( double x, double y );
 inline CvPoint2D64f cvPointTo64f( CvPoint point );
 \end{lstlisting}
 
-\subsection{CvPoint3D64f}\label{CvPoint3D64f}
+\label{CvPoint3D64f}\cvclass{CvPoint3D64f}
 3D point with double precision floating-point coordinates
 
 \begin{lstlisting}
@@ -132,9 +132,10 @@ CvPoint3D64f;
 inline CvPoint3D64f cvPoint3D64f( double x, double y, double z );
 \end{lstlisting}
 
-\subsection{CvSize}\label{CvSize}
+\label{CvSize}\cvclass{CvSize}
 Pixel-accurate size of a rectangle.
 
+\ifC % {
 \begin{lstlisting}
 typedef struct CvSize
 {
@@ -153,10 +154,14 @@ CvSize;
 /* Constructor */
 inline CvSize cvSize( int width, int height );
 \end{lstlisting}
+\else % }{
+Size of a rectangle, represented as a tuple \texttt{(width, height)}, where width and height are integers.
+\fi % }
 
-\subsection{CvSize2D32f}\label{CvSize2D32f}
+\label{CvSize2D32f}\cvclass{CvSize2D32f}
 Sub-pixel accurate size of a rectangle.
 
+\ifC % {
 \begin{lstlisting}
 typedef struct CvSize2D32f
 {
@@ -175,8 +180,11 @@ CvSize2D32f;
 /* Constructor */
 inline CvSize2D32f cvSize2D32f( double width, double height );
 \end{lstlisting}
+\else % }{
+Size of a rectangle, represented as a tuple \texttt{(width, height)}, where width and height are floats.
+\fi % }
 
-\subsection{CvRect}\label{CvRect}
+\label{CvRect}\cvclass{CvRect}
 Offset (usually the top-left corner) and size of a rectangle.
 
 \begin{lstlisting}
@@ -202,9 +210,10 @@ CvRect;
 inline CvRect cvRect( int x, int y, int width, int height );
 \end{lstlisting}
 
-\subsection{CvScalar}\label{CvScalar}
+\label{CvScalar}\cvclass{CvScalar}
 A container for 1-,2-,3- or 4-tuples of doubles.
 
+\ifC % {
 \begin{lstlisting}
 typedef struct CvScalar
 {
@@ -229,10 +238,27 @@ initializes val[0] with val0, and all of val[1]...val[3] with zeros
 */
 inline CvScalar cvRealScalar( double val0 );
 \end{lstlisting}
+\else % }{
 
-\subsection{CvTermCriteria}\label{CvTermCriteria}
+CvScalar is always represented as a 4-tuple.
+
+\begin{lstlisting}
+>>> import cv
+>>> cv.Scalar(1, 2, 3, 4)
+(1.0, 2.0, 3.0, 4.0)
+>>> cv.ScalarAll(7)
+(7.0, 7.0, 7.0, 7.0)
+>>> cv.RealScalar(7)
+(7.0, 0.0, 0.0, 0.0)
+>>> cv.RGB(0.1, 0.2, 0.3)
+(0.29999999999999999, 0.20000000000000001, 0.10000000000000001, 0.0)
+\end{lstlisting}
+\fi % }
+
+\label{CvTermCriteria}\cvclass{CvTermCriteria}
 Termination criteria for iterative algorithms.
 
+\ifC % {
 \begin{lstlisting}
 #define CV_TERMCRIT_ITER    1
 #define CV_TERMCRIT_NUMBER  CV_TERMCRIT_ITER
@@ -264,8 +290,18 @@ CvTermCriteria cvCheckTermCriteria( CvTermCriteria criteria,
                                     double default_eps,
                                     int default_max_iters );
 \end{lstlisting}
+\else % }{
+Represented by a tuple \texttt{(type, max\_iter, epsilon)}.
 
-\subsection{CvMat}\label{CvMat}
+\begin{description}
+\cvarg{type}{\texttt{CV\_TERMCRIT\_ITER}, \texttt{CV\_TERMCRIT\_EPS} or \texttt{CV\_TERMCRIT\_ITER | CV\_TERMCRIT\_EPS}}
+\cvarg{max\_iter}{Maximum number of iterations}
+\cvarg{epsilon}{Required accuracy}
+\end{description}
+
+\fi % }
+
+\label{CvMat}\cvclass{CvMat}
 A multi-channel matrix.
 
 \begin{lstlisting}
@@ -317,7 +353,7 @@ typedef struct CvMat
 Matrices are stored row by row. All of the rows are aligned by 4 bytes.
 
 
-\subsection{CvMatND}\label{CvMatND}
+\label{CvMatND}\cvclass{CvMatND}
 Multi-dimensional dense multi-channel array.
 
 \begin{lstlisting}
@@ -355,7 +391,7 @@ typedef struct CvMatND
 \cvarg{dim}{For each dimension, the pair (number of elements, distance between elements in bytes)}
 \end{description}
 
-\subsection{CvSparseMat}\label{CvSparseMat}
+\label{CvSparseMat}\cvclass{CvSparseMat}
 Multi-dimensional sparse multi-channel array.
 
 \begin{lstlisting}
@@ -388,7 +424,7 @@ typedef struct CvSparseMat
 \cvarg{size}{Array of dimension sizes}
 \end{description}
 
-\subsection{IplImage}\label{IplImage}
+\label{IplImage}\cvclass{IplImage}
 IPL image header
 
 \begin{lstlisting}
@@ -458,7 +494,7 @@ The \cross{IplImage} structure was inherited from the Intel Image Processing Lib
 
 In addition to the above restrictions, OpenCV handles ROIs differently. OpenCV functions require that the image size or ROI size of all source and destination images match exactly. On the other hand, the Intel Image Processing Library processes the area of intersection between the source and destination images (or ROIs), allowing them to vary independently. 
 
-\subsection{CvArr}\label{CvArr}
+\label{CvArr}\cvclass{CvArr}
 Arbitrary array
 
 \begin{lstlisting}
@@ -1429,7 +1465,7 @@ for(; it != it_end; ++it)
 
 The matrix iterators are random-access iterators, so they can be passed to any STL algorithm, including \texttt{std::sort()}.
 
-\subsection{Matrix Expressions}\label{Matrix Expressions}
+\subsection{Matrix Expressions}
 
 This is a list of implemented matrix operations that can be combined in arbitrary complex expressions
 (here \emph{A}, \emph{B} stand for matrices (\texttt{Mat}), \emph{s} for a scalar (\texttt{Scalar}),
