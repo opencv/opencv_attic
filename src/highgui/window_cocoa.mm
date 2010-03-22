@@ -108,6 +108,10 @@ CV_IMPL int cvInitSystem( int argc, char** argv)
 	windows = [[NSMutableDictionary alloc] init];
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_6
+    
+#ifndef NSAppKitVersionNumber10_5
+#define NSAppKitVersionNumber10_5 949
+#endif
     if( floor(NSAppKitVersionNumber) > NSAppKitVersionNumber10_5 )
         [application setActivationPolicy:0/*NSApplicationActivationPolicyRegular*/];
 #endif
