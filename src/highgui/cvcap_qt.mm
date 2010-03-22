@@ -101,8 +101,8 @@ public:
 	virtual bool grabFrame(); 
 	virtual IplImage* retrieveFrame();
 	virtual IplImage* queryFrame(); 
-	virtual double getCaptureProperty(int property_id); 
-	virtual int setCaptureProperty(int property_id, double value); 
+	virtual double getProperty(int property_id); 
+	virtual bool setProperty(int property_id, double value); 
 	virtual int didStart(); 
 	
 	
@@ -144,8 +144,8 @@ public:
 	virtual bool grabFrame(); 
 	virtual IplImage* retrieveFrame();
 	virtual IplImage* queryFrame(); 
-	virtual double getCaptureProperty(int property_id); 
-	virtual int setCaptureProperty(int property_id, double value); 
+	virtual double getProperty(int property_id); 
+	virtual bool setProperty(int property_id, double value); 
 	virtual int didStart(); 
 	
 	
@@ -428,7 +428,7 @@ void CvCaptureCAM::setWidthHeight() {
 }
 
 
-double CvCaptureCAM::getCaptureProperty(int property_id){
+double CvCaptureCAM::getProperty(int property_id){
 	NSAutoreleasePool* localpool = [[NSAutoreleasePool alloc] init]; 
 	
 	NSArray* connections = [mCaptureDeviceInput	connections]; 
@@ -449,7 +449,7 @@ double CvCaptureCAM::getCaptureProperty(int property_id){
 	
 }
 
-int CvCaptureCAM::setCaptureProperty(int property_id, double value) {
+bool CvCaptureCAM::setProperty(int property_id, double value) {
 	switch (property_id) {
 		case CV_CAP_PROP_FRAME_WIDTH:
 			width = value;
@@ -459,7 +459,7 @@ int CvCaptureCAM::setCaptureProperty(int property_id, double value) {
 				settingWidth =0; 
 				settingHeight = 0; 
 			}
-			return 1;
+			return true;
 		case CV_CAP_PROP_FRAME_HEIGHT:
 			height = value;
 			settingHeight = 1; 
@@ -468,12 +468,12 @@ int CvCaptureCAM::setCaptureProperty(int property_id, double value) {
 				settingWidth =0; 
 				settingHeight = 0; 
 			}
-			return 1;
+			return true;
 		case DISABLE_AUTO_RESTART:
 			disableAutoRestart = value;
 			return 1;
 		default:
-			return 0;;
+			return false;
 	} 
 }
 
@@ -683,9 +683,9 @@ int CvCaptureFile::didStart() {
 
 bool CvCaptureFile::grabFrame() {
 	NSAutoreleasePool* localpool = [[NSAutoreleasePool alloc] init];
-	double t1 = getCaptureProperty(CV_CAP_PROP_POS_MSEC); 
+	double t1 = getProperty(CV_CAP_PROP_POS_MSEC); 
 	[mCaptureSession stepForward]; 
-	double t2 = getCaptureProperty(CV_CAP_PROP_POS_MSEC); 
+	double t2 = getProperty(CV_CAP_PROP_POS_MSEC); 
 	if (t2>t1 && !changedPos) {
 		currentFPS = 1000.0/(t2-t1); 
 	} else {
@@ -791,16 +791,16 @@ IplImage* CvCaptureFile::queryFrame() {
 double CvCaptureFile::getFPS() {
 	if (mCaptureSession == nil) return 0; 
 	NSAutoreleasePool* localpool = [[NSAutoreleasePool alloc] init];
-	double now = getCaptureProperty(CV_CAP_PROP_POS_MSEC); 
+	double now = getProperty(CV_CAP_PROP_POS_MSEC); 
 	double retval = 0; 
 	if (now == 0) {
 		[mCaptureSession stepForward]; 
-		double t2 =  getCaptureProperty(CV_CAP_PROP_POS_MSEC); 
+		double t2 =  getProperty(CV_CAP_PROP_POS_MSEC); 
 		[mCaptureSession stepBackward];
 		retval = 1000.0 / (t2-now); 
 	} else {
 		[mCaptureSession stepBackward]; 
-		double t2 = getCaptureProperty(CV_CAP_PROP_POS_MSEC); 
+		double t2 = getProperty(CV_CAP_PROP_POS_MSEC); 
 		[mCaptureSession stepForward]; 
 		retval = 1000.0 / (now-t2); 
 	}
@@ -808,7 +808,7 @@ double CvCaptureFile::getFPS() {
 	return retval; 
 }
 
-double CvCaptureFile::getCaptureProperty(int property_id){
+double CvCaptureFile::getProperty(int property_id){
 	if (mCaptureSession == nil) return 0;
 	
 	NSAutoreleasePool* localpool = [[NSAutoreleasePool alloc] init]; 
@@ -822,10 +822,10 @@ double CvCaptureFile::getCaptureProperty(int property_id){
 			retval = t.timeValue * 1000.0 / t.timeScale; 
 			break; 
 		case CV_CAP_PROP_POS_FRAMES:
-			retval = movieFPS * getCaptureProperty(CV_CAP_PROP_POS_MSEC) / 1000;
+			retval = movieFPS * getProperty(CV_CAP_PROP_POS_MSEC) / 1000;
 			break; 
 		case CV_CAP_PROP_POS_AVI_RATIO:
-			retval = (getCaptureProperty(CV_CAP_PROP_POS_MSEC)) / (movieDuration ); 
+			retval = (getProperty(CV_CAP_PROP_POS_MSEC)) / (movieDuration ); 
 			break; 
 		case CV_CAP_PROP_FRAME_WIDTH:
 			retval = movieWidth;
@@ -845,13 +845,13 @@ double CvCaptureFile::getCaptureProperty(int property_id){
 	return retval; 
 }
 
-int CvCaptureFile::setCaptureProperty(int property_id, double value) {
+bool CvCaptureFile::setProperty(int property_id, double value) {
 
-	if (mCaptureSession == nil) return 0;
+	if (mCaptureSession == nil) return false;
 	
 	NSAutoreleasePool* localpool = [[NSAutoreleasePool alloc] init]; 
 	
-	double retval = 0; 
+	bool retval = false; 
 	QTTime t; 
 	
 	double ms; 
@@ -862,17 +862,15 @@ int CvCaptureFile::setCaptureProperty(int property_id, double value) {
 			t.timeValue = value * t.timeScale / 1000; 
 			[mCaptureSession setCurrentTime:t]; 
 			changedPos = 1; 
-			retval = 1; 
+			retval = true; 
 			break; 
 		case CV_CAP_PROP_POS_FRAMES:
 			ms = (value*1000.0 -5)/ currentFPS; 
-			setCaptureProperty(CV_CAP_PROP_POS_MSEC, ms); 
-			retval = 1; 
+			retval = setProperty(CV_CAP_PROP_POS_MSEC, ms); 
 			break; 
 		case CV_CAP_PROP_POS_AVI_RATIO:
 			ms = value * movieDuration; 
-			setCaptureProperty(CV_CAP_PROP_POS_MSEC, ms); 
-			retval = 1; 
+			retval = setProperty(CV_CAP_PROP_POS_MSEC, ms); 
 			break; 
 		case CV_CAP_PROP_FRAME_WIDTH:
 			//retval = movieWidth;
@@ -885,7 +883,7 @@ int CvCaptureFile::setCaptureProperty(int property_id, double value) {
 			break; 
 		case CV_CAP_PROP_FOURCC:
 		default:
-			retval = 0; 
+			retval = false; 
 	}
 	
 	[localpool drain]; 
