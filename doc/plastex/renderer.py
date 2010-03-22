@@ -218,6 +218,9 @@ class reStructuredTextRenderer(BaseRenderer):
 
   def do_cvfunc(self, node):
     return self.do_xfunc(node)
+
+  def do_cvclass(self, node):
+    return self.do_xfunc(node)
   
   def get_func_prefix(self):
     return u""

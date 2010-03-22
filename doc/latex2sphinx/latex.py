@@ -7,6 +7,10 @@ import pyparsing as pp
 import StringIO
 from qfile import QOpen
 
+import pythonapi
+
+python_api = pythonapi.reader("../../interfaces/python/api")
+
 sources = ['../' + f for f in os.listdir('..') if f.endswith('.tex')]
 if distutils.dep_util.newer_group(["latexparser.py"] + sources, "pickled"):
     fulldoc = latexparser(sys.argv[1], 0)
@@ -71,6 +75,7 @@ class SphinxWriter:
         self.errors = open('errors', 'wt')
         self.unhandled_commands = set()
         self.freshline = True
+        self.function_props = {}
 
     def write(self, s):
         self.freshline = len(s) > 0 and (s[-1] == '\n')
@@ -125,12 +130,15 @@ class SphinxWriter:
         print >>self, title
         print >>self, '*' * len(title)
         print >>self
-        print >>self, '.. toctree::'
-        print >>self, '    :maxdepth: 2'
-        print >>self
+        self.chapter_intoc = False
 
     def cmd_section(self, c):
         filename = str(c.params[0]).lower().replace(' ', '_').replace('/','_')
+        if not self.chapter_intoc:
+            self.chapter_intoc = True
+            print >>self.f_chapter, '.. toctree::'
+            print >>self.f_chapter, '    :maxdepth: 2'
+            print >>self.f_chapter
         self.f_chapter.write("    %s\n" % filename)
         self.f_section = QOpen(filename + '.rst', 'wt')
         self.f = self.f_section
@@ -160,6 +168,25 @@ class SphinxWriter:
     def cmd_cvCPyCross(self, c):
         self.write(":ref:`%s`" % str(c.params[0]))
 
+    def cmd_cross(self, c):
+        self.write(":ref:`%s`" % str(c.params[0]))
+
+    def cmd_cvCross(self, c):
+        self.write(":ref:`%s`" % str(c.params[0]))
+
+    def cmd_cvclass(self, c):
+        self.indent = 0
+        self.state = None
+        nm = self.render(list(c.params[0].str))
+        print >>self, "\n.. index:: %s\n" % nm
+        print >>self, ".. _%s:\n" % nm
+        print >>self, nm
+        print >>self, '-' * len(nm)
+        print >>self
+        print >>self, ".. class:: " + nm + "\n"
+        print >>self
+        self.tags.append("%s\t%s\t%d" % (nm, c.filename, c.lineno))
+
     def cmd_cvfunc(self, c):
         self.cmd_cvCPyFunc(c)
 
@@ -179,10 +206,10 @@ class SphinxWriter:
 
     def cmd_cvdefPy(self, c):
         s = str(c.params[0]).replace('\\_', '_')
+        self.indent = 0
         print >>self, ".. function:: " + s + "\n"
         # print >>self, "=", repr(c.params[0].str)
-        self.indent = 0
-        print >>self, self.description
+        print >>self, '    ' + self.description
         print >>self
         self.state = None
         self.function_props['defpy'] = s
@@ -252,6 +279,8 @@ class SphinxWriter:
         self.envstack.pop()
         if s == 'description':
             self.indent -= 1
+            if self.indent == 0:
+                self.function_props['done'] = True
         elif s in ['itemize', 'enumerate']:
             self.indent -= 1
         elif s == 'lstlisting':
@@ -294,9 +323,11 @@ class SphinxWriter:
         return r
 
     def cmd_cvarg(self, c):
-        if self.ee() == ['description']:
+        is_func_arg = self.ee() == ['description'] and not 'done' in self.function_props
+        if is_func_arg:
             nm = self.render(c.params[0].str)
             print >>self, '\n:param %s: ' % nm,
+            type = None         # Try to figure out the argument type
             # For now, multiple args get a pass
             if 'signature' in self.function_props and (not ',' in nm):
                 sig = self.function_props['signature']
@@ -305,9 +336,18 @@ class SphinxWriter:
                     resnames = [sig[2]]
                 else:
                     resnames = list(sig[2])
-                    print resnames
                 if not nm in argnames + resnames:
                     self.report_error(c, "Argument %s is not mentioned in signature (%s) (%s)" % (nm, ", ".join(argnames), ", ".join(resnames)))
+
+                api = python_api.get(self.function_props['name'], None)
+                if api:
+                    (ins, outs) = api
+                    adict = dict([(a.nm, a) for a in ins])
+                    arg = adict.get(nm, None)
+                    if arg:
+                        type = arg.ty
+        elif self.ee() == ['description']:
+            print >>self, '\n* **%s** ' % self.render(c.params[0].str),
         elif self.ee() == ['description', 'description']:
             print >>self, '\n* **%s** ' % self.render(c.params[0].str),
         else:
@@ -316,6 +356,19 @@ class SphinxWriter:
         self.doL(c.params[1].str, False)
         self.indent -= 1
         print >>self
+        if is_func_arg and type:
+            type = type.replace('*', '')
+            translate = {
+                "ints" : "sequence of int",
+                "floats" : "sequence of int",
+                "IplImages" : "sequence of :class:`IplImage`",
+                "double" : "float",
+                "int" : "int",
+                "float" : "float",
+                "char" : "str",
+                "CvPoint2D32fs" : "sequence of (float, float)",
+            }
+            print >>self, "\n:type %s: %s" % (nm, translate.get(type, ':class:`%s`' % type))
 
     def cmd_genc(self, c): pass 
     def cmd_genpy(self, c): pass 
@@ -333,6 +386,7 @@ class SphinxWriter:
     def cmd_usepackage(self, c): pass
     def cmd_title(self, c): pass
     def cmd_par(self, c): pass
+    def cmd_hline(self, c): pass
 
     def cmd_href(self, c):
         self.write("`%s <%s>`_" % (str(c.params[1]), str(c.params[0])))
@@ -418,39 +472,3 @@ Contents:
 """
 sr.doL(doc)
 sr.close()
-sys.exit(0)
-
-structuring = ['chapter', 'section']
-for x in doc:
-    if isinstance(x, TexCmd):
-        if x.cmd in structuring:
-            level = structuring.index(x.cmd)
-            filename = str(x.params[0]).lower().replace(' ', '_').replace('/','_')
-            print >>dststack[level], "   %s" % filename
-            dststack[level + 1] = SphinxWriter(filename + ".rst", envstack)
-            title = str(x.params[0])
-            if level == 0:
-                print >>dststack[level + 1], '*' * len(title)
-                print >>dststack[level + 1], title
-                print >>dststack[level + 1], '*' * len(title)
-                print >>dststack[level + 1]
-                print >>dststack[level + 1], '.. toctree::'
-                print >>dststack[level + 1], '   :maxdepth: 2'
-                print >>dststack[level + 1]
-            if level == 1:
-                print >>dststack[level + 1], title
-                print >>dststack[level + 1], '=' * len(title)
-                print >>dststack[level + 1]
-        else:
-            if dststack[level + 1]:
-                dststack[level + 1].docmd(x)
-    else:
-        dststack[level + 1].doplain(x)
-
-print >>dststack[0], """
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`search`
-"""

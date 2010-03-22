@@ -22,7 +22,7 @@ import sys, os
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.pngmath']
+extensions = ['sphinx.ext.pngmath', 'sphinx.ext.intersphinx']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -195,3 +195,6 @@ latex_documents = [
 
 pngmath_latex_preamble = '\usepackage{mymath}\usepackage{amsmath}\usepackage{bbm}\usepackage[usenames]{color}'
 highlight_language = 'python'
+intersphinx_mapping = {
+    'http://docs.python.org/': None,
+}

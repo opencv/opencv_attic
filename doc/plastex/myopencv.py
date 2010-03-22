@@ -8,6 +8,10 @@ class includegraphics(Base.Command):
   def invoke(self, tex):
     Base.Command.invoke(self, tex)
 
+class cvclass(Sectioning.subsection):
+  def invoke(self, tex):
+    Sectioning.subsection.invoke(self, tex)
+
 class cvfunc(Sectioning.subsection):
   def invoke(self, tex):
     Sectioning.subsection.invoke(self, tex)

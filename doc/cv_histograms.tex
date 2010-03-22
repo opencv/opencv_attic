@@ -128,7 +128,7 @@ int main( int argc, char** argv )
         {
             for( s = 0; s < s_bins; s++ )
             {
-                float bin_val = cvQueryHistValue_2D( hist, h, s );
+                float bin_val = cvQueryHistValue\_2D( hist, h, s );
                 int intensity = cvRound(bin_val*255/max_value);
                 cvRectangle( hist_img, cvPoint( h*scale, s*scale ),
                              cvPoint( (h+1)*scale - 1, (s+1)*scale - 1),
@@ -393,6 +393,7 @@ void cvNormalizeHist( CvHistogram* hist, double factor );
 
 The function normalizes the histogram bins by scaling them, such that the sum of the bins becomes equal to \texttt{factor}.
 
+\ifC
 \cvCPyFunc{QueryHistValue*D}
 Queries the value of the histogram bin.
 
@@ -414,6 +415,56 @@ Queries the value of the histogram bin.
 \end{description}
 
 The macros return the value of the specified bin of the 1D, 2D, 3D or N-D histogram. In the case of a sparse histogram the function returns 0, if the bin is not present in the histogram no new bin is created.
+\else
+
+\cvfunc{QueryHistValue\_1D}
+Returns the value from a 1D histogram bin.
+
+\cvdefPy{QueryHistValue\_1D(hist, idx0) -> value}
+
+\begin{description}
+\cvarg{hist}{Histogram}
+\cvarg{idx0}{bin index 0}
+\cvarg{value}{value from bin}
+\end{description}
+
+\cvfunc{QueryHistValue\_2D}
+Returns the value from a 2D histogram bin.
+
+\cvdefPy{QueryHistValue\_2D(hist, idx0, idx1) -> value}
+
+\begin{description}
+\cvarg{hist}{Histogram}
+\cvarg{idx0}{bin index 0}
+\cvarg{idx1}{bin index 1}
+\cvarg{value}{value from bin}
+\end{description}
+
+\cvfunc{QueryHistValue\_3D}
+Returns the value from a 3D histogram bin.
+
+\cvdefPy{QueryHistValue\_3D(hist, idx0, idx1, idx2) -> value}
+
+\begin{description}
+\cvarg{hist}{Histogram}
+\cvarg{idx0}{bin index 0}
+\cvarg{idx1}{bin index 1}
+\cvarg{idx2}{bin index 2}
+\cvarg{value}{value from bin}
+\end{description}
+
+\cvfunc{QueryHistValue\_nD}
+Returns the value from a 1D histogram bin.
+
+\cvdefPy{QueryHistValue\_nD(hist, idx) -> value}
+
+\begin{description}
+\cvarg{hist}{Histogram}
+\cvarg{idx}{list of indices, of same length as the dimension of the histogram's bin.}
+\cvarg{value}{value from bin}
+\end{description}
+
+\fi
 
 \ifC
 \cvCPyFunc{ReleaseHist}

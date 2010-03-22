@@ -185,56 +185,56 @@ Sets the window size.
 
 The function \texttt{cvResizeWindow} changes the size of the window.
 
-\cvCPyFunc{SetMouseCallback} %XXX Weird URL Formatting
+\cvCPyFunc{SetMouseCallback}
 Assigns callback for mouse events.
 
 \cvdefC{void cvSetMouseCallback( const char* windowName, CvMouseCallback onMouse, void* param=NULL );}
 \cvdefPy{SetMouseCallback(windowName, onMouse, param) -> None}
 
-\begin{lstlisting}
-#define CV_EVENT_MOUSEMOVE      0
-#define CV_EVENT_LBUTTONDOWN    1
-#define CV_EVENT_RBUTTONDOWN    2
-#define CV_EVENT_MBUTTONDOWN    3
-#define CV_EVENT_LBUTTONUP      4
-#define CV_EVENT_RBUTTONUP      5
-#define CV_EVENT_MBUTTONUP      6
-#define CV_EVENT_LBUTTONDBLCLK  7
-#define CV_EVENT_RBUTTONDBLCLK  8
-#define CV_EVENT_MBUTTONDBLCLK  9
-
-#define CV_EVENT_FLAG_LBUTTON   1
-#define CV_EVENT_FLAG_RBUTTON   2
-#define CV_EVENT_FLAG_MBUTTON   4
-#define CV_EVENT_FLAG_CTRLKEY   8
-#define CV_EVENT_FLAG_SHIFTKEY  16
-#define CV_EVENT_FLAG_ALTKEY    32
-
-CV_EXTERN_C_FUNCPTR( void (*CvMouseCallback )(int event, 
-					      int x, 
-					      int y, 
-					      int flags, 
-				              void* param) );
-\end{lstlisting}
 
 \begin{description}
 \cvarg{windowName}{Name of the window.}
-%\ifC  % {
-%\cvarg{onMouse}{Pointer to the function to be called every time a mouse event occurs in the specified window. This function should be prototyped as
-%\texttt{void Foo(int event, int x, int y, int flags, void* param);}
-%where \texttt{event} is one of \texttt{CV\_EVENT\_*}, \texttt{x} and \texttt{y} are the coordinates of the mouse pointer in image coordinates (not window coordinates), \texttt{flags} is a combination of \texttt{CV\_EVENT\_FLAG}, and \texttt{param} is a user-defined parameter passed to the \texttt{cvSetMouseCallback} function call.}
-%\else % }{
-%\cvarg{onMouse}{Callable to be called every time a mouse event occurs in the specified window. This callable should have signature
-%\texttt{Foo(event, x, y, flags, param)-> None}
-%where \texttt{event} is one of \texttt{CV\_EVENT\_*}, \texttt{x} and \texttt{y} are the coordinates of the mouse pointer in image coordinates (not window coordinates), \texttt{flags} is a combination of \texttt{CV\_EVENT\_FLAG}, and \texttt{param} is a user-defined parameter passed to the \texttt{cvSetMouseCallback} function call.}
-%\fi   % }
+
+\ifC  % {
+\cvarg{onMouse}{Pointer to the function to be called every time a mouse event occurs in the specified window. This function should be prototyped as
+\texttt{void Foo(int event, int x, int y, int flags, void* param);}
+where \texttt{event} is one of \texttt{CV\_EVENT\_*}, \texttt{x} and \texttt{y} are the coordinates of the mouse pointer in image coordinates (not window coordinates), \texttt{flags} is a combination of \texttt{CV\_EVENT\_FLAG\_*}, and \texttt{param} is a user-defined parameter passed to the \texttt{cvSetMouseCallback} function call.}
+\else % }{
+\cvarg{onMouse}{Callable to be called every time a mouse event occurs in the specified window. This callable should have signature
+\texttt{ Foo(event, x, y, flags, param)-> None }
+where \texttt{event} is one of \texttt{CV\_EVENT\_*}, \texttt{x} and \texttt{y} are the coordinates of the mouse pointer in image coordinates (not window coordinates), \texttt{flags} is a combination of \texttt{CV\_EVENT\_FLAG\_*}, and \texttt{param} is a user-defined parameter passed to the \texttt{cvSetMouseCallback} function call.}
+\fi   % }
 
 \cvarg{param}{User-defined parameter to be passed to the callback function.}
 \end{description}
 
-The function \texttt{cvSetMouseCallback} sets the callback function for mouse events occuring within the specified window. To see how it works, look at 
+The function \texttt{cvSetMouseCallback} sets the callback function for mouse events occuring within the specified window. 
 
-\url{http://opencvlibrary.sourceforge.net/../../samples/c/ffilldemo.c|opencv/samples/c/ffilldemo.c} 
+The \texttt{event} parameter is one of:
+
+\begin{description}
+\cvarg{CV\_EVENT\_MOUSEMOVE}{Mouse movement}
+\cvarg{CV\_EVENT\_LBUTTONDOWN}{Left button down}
+\cvarg{CV\_EVENT\_RBUTTONDOWN}{Right button down}
+\cvarg{CV\_EVENT\_MBUTTONDOWN}{Middle button down}
+\cvarg{CV\_EVENT\_LBUTTONUP}{Left button up}
+\cvarg{CV\_EVENT\_RBUTTONUP}{Right button up}
+\cvarg{CV\_EVENT\_MBUTTONUP}{Middle button up}
+\cvarg{CV\_EVENT\_LBUTTONDBLCLK}{Left button double click}
+\cvarg{CV\_EVENT\_RBUTTONDBLCLK}{Right button double click}
+\cvarg{CV\_EVENT\_MBUTTONDBLCLK}{Middle button double click}
+\end{description}
+
+The \texttt{flags} parameter is a combination of :
+
+\begin{description}
+\cvarg{CV\_EVENT\_FLAG\_LBUTTON}{Left button pressed}
+\cvarg{CV\_EVENT\_FLAG\_RBUTTON}{Right button pressed}
+\cvarg{CV\_EVENT\_FLAG\_MBUTTON}{Middle button pressed}
+\cvarg{CV\_EVENT\_FLAG\_CTRLKEY}{Control key pressed}
+\cvarg{CV\_EVENT\_FLAG\_SHIFTKEY}{Shift key pressed}
+\cvarg{CV\_EVENT\_FLAG\_ALTKEY}{Alt key pressed}
+\end{description}
 
 \cvCPyFunc{SetTrackbarPos} 
 Sets the trackbar position.
@@ -328,7 +328,7 @@ Saves an image to a specified file.
 The function \texttt{cvSaveImage} saves the image to the specified file. The image format is chosen based on the \texttt{filename} extension, see \cross{LoadImage}. Only 8-bit single-channel or 3-channel (with 'BGR' channel order) images can be saved using this function. If the format, depth or channel order is different, use \texttt{cvCvtScale} and \texttt{cvCvtColor} to convert it before saving, or use universal \texttt{cvSave} to save the image to XML or YAML format.
 
 
-\cvfunc{CvCapture}\label{CvCapture}
+\cvclass{CvCapture}\label{CvCapture}
 Video capturing structure.
 
 \cvdefC{typedef struct CvCapture CvCapture;}

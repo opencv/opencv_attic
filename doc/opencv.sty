@@ -19,6 +19,12 @@ showtabs=false,                 % show tabs within strings adding particular und
 %escapeinside={\%*}{*)}          % if you want to add a comment within your code
 }
 
+\newcommand{\cvclass}[1]{
+\subsection{#1}
+%\addcontentsline{toc}{subsection}{#1} 
+\index{cv...!#1}
+}
+
 \newcommand{\cvfunc}[1]{
 \subsection{#1}
 %\addcontentsline{toc}{subsection}{#1} 
