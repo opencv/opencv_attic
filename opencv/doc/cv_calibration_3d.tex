@@ -653,7 +653,7 @@ Finds the perspective transformation between two planes.
 
 \cvdefC{void cvFindHomography( \par const CvMat* srcPoints,\par const CvMat* dstPoints,\par CvMat* H \par
 int method=0, \par double ransacReprojThreshold=0, \par CvMat* status=NULL);}
-\cvdefPy{FindHomography(srcPoints,dstPoints,H,method,ransacReprojThreshold=0.0)-> H}
+\cvdefPy{FindHomography(srcPoints,dstPoints,H,method,ransacReprojThreshold=0.0, status=None)-> H}
 \cvdefCpp{Mat findHomography( const Mat\& srcPoints, const Mat\& dstPoints,\par
                     Mat\& status, int method=0,\par
                     double ransacReprojThreshold=0 );\newline
@@ -869,7 +869,7 @@ Returns the new camera matrix based on the free scaling parameter
     \par CvMat* newCameraMatrix,
     \par CvSize newImageSize=cvSize(0,0),
     \par CvRect* validPixROI=0 );}
-\cvdefPy{GetOptimalNewCameraMatrix(cameraMatrix, distCoeffs, imageSize, alpha, newImageSize=(0,0), validPixROI=0) -> None}
+\cvdefPy{GetOptimalNewCameraMatrix(cameraMatrix, distCoeffs, imageSize, alpha, newCameraMatrix, newImageSize=(0,0), validPixROI=0) -> None}
 \cvdefCpp{Mat getOptimalNewCameraMatrix(
     \par const Mat\& cameraMatrix, const Mat\& distCoeffs,
     \par Size imageSize, double alpha, Size newImageSize=Size(),
@@ -880,7 +880,7 @@ Returns the new camera matrix based on the free scaling parameter
 \cvarg{distCoeffs}{The input 4x1, 1x4, 5x1 or 1x5 vector of distortion coefficients $(k_1, k_2, p_1, p_2[, k_3])$}.
 \cvarg{imageSize}{The original image size}
 \cvarg{alpha}{The free scaling parameter between 0 (when all the pixels in the undistorted image will be valid) and 1 (when all the source image pixels will be retained in the undistorted image); see \cvCross{StereoRectify}{stereoRectify}}
-\cvC{\cvarg{newCameraMatrix}{The output new camera matrix.}}
+\cvarg{newCameraMatrix}{The output new camera matrix.}
 \cvarg{newImageSize}{The image size after rectification. By default it will be set to \texttt{imageSize}.}
 \cvarg{validPixROI}{The optional output rectangle that will outline all-good-pixels region in the undistorted image. See \texttt{roi1, roi2} description in \cvCross{StereoRectify}{stereoRectify}}
 \end{description}
@@ -895,7 +895,7 @@ Finds the initial camera matrix from the 3D-2D point correspondences
                                      \par const CvMat* npoints, CvSize imageSize,
                                      \par CvMat* cameraMatrix,
                                      \par double aspectRatio=1.);}                                     
-\cvdefPy{InitCameraMatrix2D( objectPoints, imagePoints, npoints, imageSize, cameraMatrix, aspectRatio=1.) -> None}
+\cvdefPy{InitIntrinsicParams2D(objectPoints, imagePoints, npoints, imageSize, cameraMatrix, aspectRatio=1.) -> None}
 \cvdefCpp{Mat initCameraMatrix2D( const vector<vector<Point3f> >\& objectPoints,\par
                         const vector<vector<Point2f> >\& imagePoints,\par
                         Size imageSize, double aspectRatio=1.);}
@@ -1357,7 +1357,7 @@ Computes rectification transforms for each head of a calibrated stereo camera.
                       \par CvMat* Q=0, int flags=CV\_CALIB\_ZERO\_DISPARITY,
                       \par double alpha=-1, CvSize newImageSize=cvSize(0,0),
                       \par CvRect* roi1=0, CvRect* roi2=0);}
-\cvdefPy{StereoRectify( cameraMatrix1, cameraMatrix2, distCoeffs1, distCoeffs2, imageSize, R, T, R1, R2, P1, P2, Q=NULL, flags=CV\_CALIB\_ZERO\_DISPARITY, alpha=-1, newImageSize=(0,0))-> None}
+\cvdefPy{StereoRectify( cameraMatrix1, cameraMatrix2, distCoeffs1, distCoeffs2, imageSize, R, T, R1, R2, P1, P2, Q=NULL, flags=CV\_CALIB\_ZERO\_DISPARITY, alpha=-1, newImageSize=(0,0))-> (roi1, roi2)}
 
 \cvdefCpp{void stereoRectify( const Mat\& cameraMatrix1, const Mat\& distCoeffs1,\par
                     const Mat\& cameraMatrix2, const Mat\& distCoeffs2,\par

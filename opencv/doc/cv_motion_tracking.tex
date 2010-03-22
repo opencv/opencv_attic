@@ -198,14 +198,19 @@ Finds the object center, size, and orientation.
 
 \cvdefC{
 int cvCamShift( \par const CvArr* prob\_image,\par CvRect window,\par CvTermCriteria criteria,\par CvConnectedComp* comp,\par CvBox2D* box=NULL );
-}\cvdefPy{CamShift(prob\_image,window,criteria,box=NULL)-> comp}
+}
+\cvdefPy{CamShift(prob\_image,window,criteria)-> (int, comp, box)}
 
 \begin{description}
 \cvarg{prob\_image}{Back projection of object histogram (see \cvCPyCross{CalcBackProject})}
 \cvarg{window}{Initial search window}
 \cvarg{criteria}{Criteria applied to determine when the window search should be finished}
 \cvarg{comp}{Resultant structure that contains the converged search window coordinates (\texttt{comp->rect} field) and the sum of all of the pixels inside the window (\texttt{comp->area} field)}
+\ifC % {
 \cvarg{box}{Circumscribed box for the object. If not \texttt{NULL}, it contains object size and orientation}
+\else % }{
+\cvarg{box}{Circumscribed box for the object.}
+\fi % }
 \end{description}
 
 The function implements the CAMSHIFT object tracking algrorithm

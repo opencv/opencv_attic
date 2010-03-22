@@ -237,6 +237,24 @@ class SphinxWriter:
             if str(l[0]) != self.function_props['name']:
                 self.report_error(c, 'Decl "%s" does not match function name "%s"' % (str(l[0]), self.function_props['name']))
             self.function_props['signature'] = l
+            if l[0] in python_api:
+                (ins, outs) = python_api[l[0]]
+                ins = [a for a in ins if not 'O' in a.flags]
+                if outs != None:
+                    outs = outs.split(',')
+                if len(ins) != len(l[1]):
+                    self.report_error(c, "function %s documented arity %d, code arity %d" % (l[0], len(l[1]), len(ins)))
+                if outs == None:
+                    if l[2] != 'None':
+                        self.report_error(c, "function %s documented None, but code has %s" % (l[0], l[2]))
+                else:
+                    if isinstance(l[2], str):
+                        doc_outs = [l[2]]
+                    else:
+                        doc_outs = l[2]
+                    print doc_outs, len(doc_outs)
+                    if len(outs) != len(doc_outs):
+                        self.report_error(c, "function %s output documented tuple %d, code %d" % (l[0], len(outs), len(doc_outs)))
         except pp.ParseException, pe:
             self.report_error(c, str(pe))
             print s
