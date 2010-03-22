@@ -634,6 +634,8 @@ EigenVV
   CvArr evects
   CvArr evals
   double eps
+  int lowindex 0
+  int highindex 0
 CalcCovarMatrix
   cvarr_count vects /K
   CvArr cov_mat
