@@ -599,6 +599,7 @@ MulTransposed
   CvArr dst
   int order
   CvArr delta NULL
+  double scale 1.0
 Trace CvScalar
   CvArr mat
 Transpose
@@ -775,11 +776,11 @@ Sobel
   CvArr dst
   int xorder
   int yorder
-  int aperture_size 3
+  int apertureSize 3
 Laplace
   CvArr src
   CvArr dst
-  int aperture_size 3
+  int apertureSize 3
 Canny
   CvArr image
   CvArr edges
@@ -789,21 +790,21 @@ Canny
 PreCornerDetect
   CvArr image
   CvArr corners
-  int aperture_size 3
+  int apertureSize 3
 CornerEigenValsAndVecs
   CvArr image
   CvArr eigenvv
-  int block_size
+  int blockSize
   int aperture_size 3
 CornerMinEigenVal
   CvArr image
   CvArr eigenval
-  int block_size
+  int blockSize
   int aperture_size 3
 CornerHarris
   CvArr image
   CvArr harris_dst
-  int block_size
+  int blockSize
   int aperture_size 3
   double k 0.04
 FindCornerSubPix corners
@@ -814,14 +815,14 @@ FindCornerSubPix corners
   CvTermCriteria criteria
 GoodFeaturesToTrack corners
   CvArr image
-  CvArr eig_image
-  CvArr temp_image
+  CvArr eigImage
+  CvArr tempImage
   cvpoint2d32f_count corners
-  double quality_level
-  double min_distance
+  double qualityLevel
+  double minDistance
   CvArr mask NULL
-  int block_size 3
-  int use_harris 0
+  int blockSize 3
+  int useHarris 0
   double k 0.04
 ExtractSURF keypoints,descriptors
   CvArr image
@@ -843,7 +844,7 @@ GetRectSubPix
 GetQuadrangleSubPix
   CvArr src
   CvArr dst
-  CvMat map_matrix
+  CvMat mapMatrix
 Resize
   CvArr src
   CvArr dst
@@ -851,28 +852,28 @@ Resize
 WarpAffine
   CvArr src
   CvArr dst
-  CvMat map_matrix
+  CvMat mapMatrix
   int flags CV_INTER_LINEAR+CV_WARP_FILL_OUTLIERS
   CvScalar fillval cvScalarAll(0)
 GetAffineTransform
   CvPoint2D32f* src
   CvPoint2D32f* dst
-  CvMat map_matrix
+  CvMat mapMatrix
 GetRotationMatrix2D
   CvPoint2D32f center
   double angle
   double scale
-  CvMat map_matrix
+  CvMat mapMatrix
 WarpPerspective
   CvArr src
   CvArr dst
-  CvMat map_matrix
+  CvMat mapMatrix
   int flags CV_INTER_LINEAR+CV_WARP_FILL_OUTLIERS
   CvScalar fillval cvScalarAll(0)
 GetPerspectiveTransform
   CvPoint2D32f* src
   CvPoint2D32f* dst
-  CvMat map_matrix
+  CvMat mapMatrix
 Remap
   CvArr src
   CvArr dst
@@ -896,8 +897,8 @@ LogPolar
 CreateStructuringElementEx IplConvKernel*
   int cols
   int rows
-  int anchor_x
-  int anchor_y
+  int anchorX
+  int anchorY
   int shape
   ints values {NULL,0}
 Erode
@@ -942,7 +943,7 @@ Integral
   CvArr image
   CvArr sum
   CvArr sqsum NULL
-  CvArr tilted_sum NULL
+  CvArr tiltedSum NULL
 CvtColor
   CvArr src
   CvArr dst
@@ -951,15 +952,15 @@ Threshold
   CvArr src
   CvArr dst
   double threshold
-  double max_value
-  int threshold_type
+  double maxValue
+  int thresholdType
 AdaptiveThreshold
   CvArr src
   CvArr dst
-  double max_value
+  double maxValue
   int adaptive_method CV_ADAPTIVE_THRESH_MEAN_C /ch_adaptive_method
   int threshold_type CV_THRESH_BINARY /ch_threshold_type
-  int block_size 3
+  int blockSize 3
   double param1 5
 
 # Pyramids and the Applications
