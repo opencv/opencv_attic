@@ -1646,7 +1646,7 @@ class AreaTests(OpenCVTests):
         # All results should be same
         self.assertEqual(len(hashes), 1)
 
-        self.snap(dst)
+        # self.snap(dst)
         shapes = [eval("cv.CV_SHAPE_%s" % s) for s in ['RECT', 'CROSS', 'ELLIPSE']]
         elements = [cv.CreateStructuringElementEx(sz, sz, sz / 2 + 1, sz / 2 + 1, shape) for sz in [3, 4, 7, 20] for shape in shapes]
         elements += [cv.CreateStructuringElementEx(7, 7, 3, 3, cv.CV_SHAPE_CUSTOM, [1] * 49)]
@@ -1699,7 +1699,7 @@ class AreaTests(OpenCVTests):
         a = self.get_sample("samples/c/lena.jpg", 0)
         eig_image = cv.CreateImage(cv.GetSize(a), cv.IPL_DEPTH_32F, 1)
         temp_image = cv.CreateImage(cv.GetSize(a), cv.IPL_DEPTH_32F, 1)
-        pts = cv.GoodFeaturesToTrack(a, eig_image, temp_image, 100, 0.04, 2, use_harris=1)
+        pts = cv.GoodFeaturesToTrack(a, eig_image, temp_image, 100, 0.04, 2, useHarris=1)
         hull = cv.ConvexHull2(pts, cv.CreateMemStorage(), return_points = 1)
         cv.FitLine(hull, cv.CV_DIST_L2, 0, 0.01, 0.01)
 
