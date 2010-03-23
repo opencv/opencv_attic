@@ -33,7 +33,7 @@ bool CvCascadeImageReader::NegReader::create( const String _filename, Size _winS
         pos = _filename.rfind('/');
         dlmrt = '/';
     }
-    dirname = _filename.substr(0, pos) + dlmrt;
+    dirname = pos == String::npos ? "" : _filename.substr(0, pos) + dlmrt;
     while( !file.eof() )
     {
         std::getline(file, str);
@@ -132,10 +132,11 @@ bool CvCascadeImageReader::PosReader::create( const String _filename )
     if( !file )
         return false;
     short tmp = 0;  
-    fread( &count, sizeof( count ), 1, file );
-    fread( &vecSize, sizeof( vecSize ), 1, file );
-    fread( &tmp, sizeof( tmp ), 1, file );
-    fread( &tmp, sizeof( tmp ), 1, file );
+    if( fread( &count, sizeof( count ), 1, file ) != 1 ||
+        fread( &vecSize, sizeof( vecSize ), 1, file ) != 1 ||
+        fread( &tmp, sizeof( tmp ), 1, file ) != 1 ||
+        fread( &tmp, sizeof( tmp ), 1, file ) != 1 )
+        CV_Error_( CV_StsParseError, ("wrong file format for %s\n", _filename.c_str()) );
     base = sizeof( count ) + sizeof( vecSize ) + 2*sizeof( tmp );
     if( feof( file ) )
         return false;
