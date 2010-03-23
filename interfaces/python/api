@@ -70,7 +70,7 @@ CloneMatND CvMatND*
 
 Get1D CvScalar
   CvArr arr
-  int idx0
+  int idx
 Get2D CvScalar
   CvArr arr
   int idx0
@@ -82,7 +82,7 @@ Get3D CvScalar
   int idx2
 GetND CvScalar
   CvArr arr
-  ints idx
+  ints indices
 GetReal1D double
   CvArr arr
   int idx0
@@ -104,7 +104,7 @@ mGet double
   int col
 Set1D
   CvArr arr
-  int idx0
+  int idx
   CvScalar value
 Set2D
   CvArr arr
@@ -119,11 +119,11 @@ Set3D
   CvScalar value
 SetND
   CvArr arr
-  ints idx
+  ints indices
   CvScalar value
 SetReal1D
   CvArr arr
-  int idx0
+  int idx
   double value
 SetReal2D
   CvArr arr
@@ -138,7 +138,7 @@ SetReal3D
   double value
 SetRealND
   CvArr arr
-  ints idx
+  ints indices
   double value
 mSet
   CvMat mat
@@ -171,7 +171,7 @@ Line
   CvPoint pt2
   CvScalar color
   int thickness 1
-  int line_type 8
+  int lineType 8
   int shift 0
 Rectangle
   CvArr img
@@ -179,74 +179,74 @@ Rectangle
   CvPoint pt2
   CvScalar color
   int thickness 1
-  int line_type 8
+  int lineType 8
   int shift 0
 Circle
   CvArr img
-  CvPoint pt1
+  CvPoint center
   int radius
   CvScalar color
   int thickness 1
-  int line_type 8
+  int lineType 8
   int shift 0
 Ellipse
   CvArr img
-  CvPoint pt1
+  CvPoint center
   CvSize axes
   double angle
   double start_angle
   double end_angle
   CvScalar color
   int thickness 1
-  int line_type 8
+  int lineType 8
   int shift 0
 EllipseBox
   CvArr img
   CvBox2D box
   CvScalar color
   int thickness 1
-  int line_type 8
+  int lineType 8
   int shift 0
 FillPoly
   CvArr img
-  pts_npts_contours pts
+  pts_npts_contours polys
   CvScalar color
-  int line_type 8
+  int lineType 8
   int shift 0
 FillConvexPoly
   CvArr img
   CvPoints pn
   CvScalar color
-  int line_type 8
+  int lineType 8
   int shift 0
 PolyLine
   CvArr img
-  pts_npts_contours pts
+  pts_npts_contours polys
   int is_closed
   CvScalar color
   int thickness 1
-  int line_type 8
+  int lineType 8
   int shift 0
 
 #Text
 InitFont font
   CvFont font /O
-  int font_face
+  int fontFace
   double hscale
   double vscale
   double shear 0
   int thickness 1
-  int line_type 8
+  int lineType 8
 PutText
   CvArr img
   char* text
   CvPoint org
   CvFont* font
   CvScalar color
-GetTextSize text_size,baseline
-  char* text_string
+GetTextSize textSize,baseline
+  char* textString
   CvFont* font
-  CvSize text_size /O
+  CvSize textSize /O
   int baseline /O
 
 # Point Sets and Contours
@@ -257,13 +257,13 @@ DrawContours
   CvScalar hole_color
   int max_level
   int thickness 1
-  int line_type 8
+  int lineType 8
   CvPoint offset cvPoint(0,0)
 
 # RTTI and Generic Functions
 Save
   char* filename
-  generic struct_ptr
+  generic structPtr
   char* name NULL
   char* comment NULL
 Load generic
@@ -289,8 +289,8 @@ GetCol submat
 GetCols submat
   CvArr arr
   CvMat submat /J:arr,O,A
-  int start_col
-  int end_col
+  int startCol
+  int endCol
 GetDiag submat
   CvArr arr
   CvMat submat /J:arr,O,A
@@ -308,11 +308,11 @@ GetElemType int
 Copy
   CvArr src
   CvArr dst
-  CvArr msk NULL
+  CvArr mask NULL
 Set
   CvArr arr
   CvScalar value
-  CvArr msk NULL
+  CvArr mask NULL
 SetZero
   CvArr arr
 Zero
@@ -333,7 +333,7 @@ Repeat
 Flip
   CvArr src
   CvArr dst NULL
-  int flip_mode 0
+  int flipMode 0
 Split
   CvArr src
   CvArr dst0
@@ -355,7 +355,7 @@ Merge
 MixChannels
   cvarr_count src /K
   cvarr_count dst
-  intpair from_to 
+  intpair fromTo 
 RandShuffle
   CvArr mat
   CvRNG* rng
@@ -400,7 +400,7 @@ Add
   CvArr dst
   CvArr mask NULL
 AddS
-  CvArr src1
+  CvArr src
   CvScalar value
   CvArr dst
   CvArr mask NULL
@@ -417,12 +417,12 @@ Sub
   CvArr dst
   CvArr mask NULL
 SubS
-  CvArr src1
+  CvArr src
   CvScalar value
   CvArr dst
   CvArr mask NULL
 SubRS
-  CvArr src1
+  CvArr src
   CvScalar value
   CvArr dst
   CvArr mask NULL
@@ -442,7 +442,7 @@ And
   CvArr dst
   CvArr mask NULL
 AndS
-  CvArr src1
+  CvArr src
   CvScalar value
   CvArr dst
   CvArr mask NULL
@@ -452,7 +452,7 @@ Or
   CvArr dst
   CvArr mask NULL
 OrS
-  CvArr src1
+  CvArr src
   CvScalar value
   CvArr dst
   CvArr mask NULL
@@ -462,7 +462,7 @@ Xor
   CvArr dst
   CvArr mask NULL
 XorS
-  CvArr src1
+  CvArr src
   CvScalar value
   CvArr dst
   CvArr mask NULL
@@ -473,12 +473,12 @@ Cmp
   CvArr src1
   CvArr src2
   CvArr dst
-  int cmp_op
+  int cmpOp
 CmpS
   CvArr src
   double value
   CvArr dst
-  int cmp_op
+  int cmpOp
 InRange
   CvArr src
   CvArr lower
@@ -525,22 +525,22 @@ Sum CvScalar
 Avg CvScalar
   CvArr arr
   CvArr mask NULL
-AvgSdv mean,std_dev
+AvgSdv mean,stdDev
   CvArr arr
   CvScalar mean /O
-  CvScalar std_dev /O
+  CvScalar stdDev /O
   CvArr mask NULL
-MinMaxLoc min_val,max_val,min_loc,max_loc
+MinMaxLoc minVal,maxVal,minLoc,maxLoc
   CvArr arr
-  double min_val /O
-  double max_val /O
-  CvPoint min_loc /O
-  CvPoint max_loc /O
+  double minVal /O
+  double maxVal /O
+  CvPoint minLoc /O
+  CvPoint maxLoc /O
   CvArr mask NULL
 Norm double
   CvArr arr1
   CvArr arr2
-  int norm_type CV_L2
+  int normType CV_L2
   CvArr mask NULL
 Reduce
   CvArr src
@@ -638,7 +638,7 @@ EigenVV
   int highindex 0
 CalcCovarMatrix
   cvarr_count vects /K
-  CvArr cov_mat
+  CvArr covMat
   CvArr avg
   int flags
 Mahalonobis
@@ -687,13 +687,13 @@ CartToPolar
   CvArr y
   CvArr magnitude
   CvArr angle NULL
-  int angle_in_degrees 0
+  int angleInDegrees 0
 PolarToCart
   CvArr magnitude
   CvArr angle
   CvArr x
   CvArr y
-  int angle_in_degrees 0
+  int angleInDegrees 0
 Pow
   CvArr src
   CvArr dst
@@ -719,7 +719,7 @@ RNG CvRNG
 RandArr
   CvRNG* rng
   CvArr arr
-  int dist_type
+  int distType
   CvScalar param1
   CvScalar param2
 RandInt unsigned
@@ -732,7 +732,7 @@ DFT
   CvArr src
   CvArr dst
   int flags
-  int nonzero_rows 0
+  int nonzeroRows 0
 GetOptimalDFTSize int
   int size0
 MulSpectrums
@@ -768,7 +768,7 @@ CheckArr int
   double max_val 0
 KMeans2
   CvArr samples
-  int cluster_count
+  int nclusters
   CvArr labels
   CvTermCriteria termcrit 
 
@@ -961,7 +961,7 @@ AdaptiveThreshold
   CvArr dst
   double maxValue
   int adaptive_method CV_ADAPTIVE_THRESH_MEAN_C /ch_adaptive_method
-  int threshold_type CV_THRESH_BINARY /ch_threshold_type
+  int thresholdType CV_THRESH_BINARY /ch_threshold_type
   int blockSize 3
   double param1 5
 
@@ -1148,7 +1148,7 @@ ContourArea double
 ArcLength double
   cvarrseq curve
   CvSlice slice CV_WHOLE_SEQ
-  int is_closed -1
+  int isClosed -1
 CreateContourTree CvContourTree*
   CvSeq contour
   CvMemStorage storage
@@ -1168,9 +1168,9 @@ MaxRect CvRect
   CvRect* rect1
   CvRect* rect2
 # TODO PointSeqFromMat
-BoxPoints pt
+BoxPoints points
   CvBox2D box
-  CvPoint2D32f_4 pt /O,A
+  CvPoint2D32f_4 points /O,A
 FitEllipse2 CvBox2D
   CvArr points
 ConvexHull2 CvSeq*
@@ -1243,19 +1243,19 @@ ConvertPointsHomogeneous
   CvMat src
   CvMat dst
 ProjectPoints2
-  CvMat object_points
-  CvMat rotation_vector
-  CvMat translation_vector
-  CvMat intrinsic_matrix
-  CvMat distortion_coeffs
-  CvMat image_points
+  CvMat objectPoints
+  CvMat rvec
+  CvMat tvec
+  CvMat cameraMatrix
+  CvMat distCoeffs
+  CvMat imagePoints
   CvMat dpdrot NULL
   CvMat dpdt NULL
   CvMat dpdf NULL
   CvMat dpdc NULL
   CvMat dpddist NULL
 ReprojectImageTo3D
-  CvArr disparityImage
+  CvArr disparity
   CvArr _3dImage
   CvMat Q
   int handleMissingValues 0
@@ -1267,10 +1267,10 @@ RQDecomp3x3 eulerAngles
   CvMat Qy NULL
   CvMat Qz NULL
   CvPoint3D64f eulerAngles /O
-FindHomography homography
-  CvMat src_points
-  CvMat dst_points
-  CvMat homography
+FindHomography H
+  CvMat srcPoints
+  CvMat dstPoints
+  CvMat H
   int method 0
   double ransacReprojThreshold 0.0
   CvMat status NULL
@@ -1292,15 +1292,20 @@ FindStereoCorrespondenceGC
   CvArr dispRight
   CvStereoGCState* state
   int useDisparityGuess 0
+#CalcImageHomography 
+#  floats line
+#  CvPoint3D32f center
+#  floats intrinsic
+#  floats intrinsic
 CalibrateCamera2 
-  CvMat object_points
-  CvMat image_points
-  CvMat point_counts
-  CvSize image_size
-  CvMat intrinsic_matrix
-  CvMat distortion_coeffs
-  CvMat rotation_vectors
-  CvMat translation_vectors
+  CvMat objectPoints
+  CvMat imagePoints
+  CvMat pointCounts
+  CvSize imageSize
+  CvMat cameraMatrix
+  CvMat distCoeffs
+  CvMat rvecs
+  CvMat tvecs
   int flags 0
 CalibrationMatrixValues fovx,fovy,focalLength,principalPoint,pixelAspectRatio
   CvMat calibMatr
@@ -1313,12 +1318,12 @@ CalibrationMatrixValues fovx,fovy,focalLength,principalPoint,pixelAspectRatio
   CvPoint2D64f principalPoint /O
   double pixelAspectRatio /O
 FindExtrinsicCameraParams2
-  CvMat object_points
-  CvMat image_points
-  CvMat intrinsic_matrix
-  CvMat distortion_coeffs
-  CvMat rotation_vector
-  CvMat translation_vector
+  CvMat objectPoints
+  CvMat imagePoints
+  CvMat cameraMatrix
+  CvMat distCoeffs
+  CvMat rvec
+  CvMat tvec
 FindFundamentalMat int
   CvMat points1
   CvMat points2
@@ -1328,15 +1333,15 @@ FindFundamentalMat int
   double param2 0.99
   CvMat status NULL
 StereoCalibrate
-  CvMat object_points
-  CvMat image_points1
-  CvMat image_points2
-  CvMat point_counts
-  CvMat camera_matrix1
-  CvMat dist_coeffs1
-  CvMat camera_matrix2
-  CvMat dist_coeffs2
-  CvSize image_size
+  CvMat objectPoints
+  CvMat imagePoints1
+  CvMat imagePoints2
+  CvMat pointCounts
+  CvMat cameraMatrix1
+  CvMat distCoeffs1
+  CvMat cameraMatrix2
+  CvMat distCoeffs2
+  CvSize imageSize
   CvMat R
   CvMat T
   CvMat E NULL
@@ -1359,11 +1364,11 @@ InitIntrinsicParams2D
   CvMat cameraMatrix
   double aspectRatio 1.
 StereoRectify roi1,roi2
-  CvMat camera_matrix1
-  CvMat camera_matrix2
-  CvMat dist_coeffs1
-  CvMat dist_coeffs2
-  CvSize image_size
+  CvMat cameraMatrix1
+  CvMat cameraMatrix2
+  CvMat distCoeffs1
+  CvMat distCoeffs2
+  CvSize imageSize
   CvMat R
   CvMat T
   CvMat R1
@@ -1380,7 +1385,7 @@ StereoRectifyUncalibrated
   CvMat points1
   CvMat points2
   CvMat F
-  CvSize image_size
+  CvSize imageSize
   CvMat H1
   CvMat H2
   double threshold 5
@@ -1391,25 +1396,25 @@ Rodrigues2
 Undistort2
   CvArr src
   CvArr dst
-  CvMat intrinsic_matrix
-  CvMat distortion_coeffs
+  CvMat cameraMatrix
+  CvMat distCoeffs
 InitUndistortMap
-  CvMat camera_matrix
-  CvMat distortion_coeffs
-  CvArr mapx
-  CvArr mapy
+  CvMat cameraMatrix
+  CvMat distCoeffs
+  CvArr map1
+  CvArr map2
 InitUndistortRectifyMap
-  CvMat camera_matrix
-  CvMat dist_coeffs
+  CvMat cameraMatrix
+  CvMat distCoeffs
   CvMat R
-  CvMat new_camera_matrix
-  CvArr mapx
-  CvArr mapy
+  CvMat newCameraMatrix
+  CvArr map1
+  CvArr map2
 UndistortPoints
   CvMat src
   CvMat dst
-  CvMat camera_matrix
-  CvMat dist_coeffs
+  CvMat cameraMatrix
+  CvMat distCoeffs
   CvMat R NULL
   CvMat P NULL
 DecomposeProjectionMatrix eulerAngles
@@ -1423,18 +1428,18 @@ DecomposeProjectionMatrix eulerAngles
   CvPoint3D64f eulerAngles /O
 DrawChessboardCorners
   CvArr image
-  CvSize pattern_size
+  CvSize patternSize
   CvPoint2D32fs corners
-  int pattern_was_found
+  int patternWasFound
 
 CreatePOSITObject CvPOSITObject*
   CvPoint3D32fs points
-POSIT rotation_matrix,translation_vector
+POSIT rotationMatrix,translation_vector
   CvPOSITObject* posit_object
-  CvPoint2D32f* image_points
+  CvPoint2D32f* imagePoints
   double focal_length
   CvTermCriteria criteria
-  CvMatr32f_i rotation_matrix /O,A
+  CvMatr32f_i rotationMatrix /O,A
   CvVect32f_i translation_vector /O,A
 
 EstimateRigidTransform
@@ -1475,7 +1480,7 @@ CalcMotionGradient
   CvArr orientation  /ch_matF
   double delta1
   double delta2
-  int aperture_size 3 /ch_aperture
+  int apertureSize 3 /ch_aperture
 CalcGlobalOrientation double
   CvArr orientation
   CvArr mask
@@ -1526,22 +1531,22 @@ SnakeImage
 CalcOpticalFlowLK
   CvArr prev
   CvArr curr
-  CvSize win_size
+  CvSize winSize
   CvArr velx
   CvArr vely
 CalcOpticalFlowBM
   CvArr prev    /ch_image8
   CvArr curr    /ch_image8
-  CvSize block_size
-  CvSize shift_size
+  CvSize blockSize
+  CvSize shiftSize
   CvSize max_range
-  int use_previous
+  int usePrevious
   CvArr velx        /ch_vel
   CvArr vely        /ch_vel
 CalcOpticalFlowHS
   CvArr prev    /ch_image8
   CvArr curr    /ch_image8
-  int use_previous
+  int usePrevious
   CvArr velx        /ch_vel_64
   CvArr vely        /ch_vel_64
   double lambda
@@ -1577,11 +1582,11 @@ ShowImage
   char* name
   CvArr image
 GetTrackbarPos
-  char* trackbar_name
-  char* window_name
+  char* trackbarName
+  char* windowName
 SetTrackbarPos
-  char* trackbar_name
-  char* window_name
+  char* trackbarName
+  char* windowName
   int pos
 #WaitKey int
 #  int delay 0

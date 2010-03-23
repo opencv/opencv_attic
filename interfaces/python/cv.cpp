@@ -3515,6 +3515,8 @@ static PyObject *pycvCalcOpticalFlowPyrLK(PyObject *self, PyObject *args)
   return Py_BuildValue("NNN", FROM_cvpoint2d32f_count(r0), FROM_chars(r1), FROM_floats(r2));
 }
 
+// pt1,pt2 are input and output arguments here
+
 static PyObject *pycvClipLine(PyObject *self, PyObject *args, PyObject *kw)
 {
   CvSize img_size;
@@ -3736,8 +3738,8 @@ static int zero = 0;
 /* Custom Validators */
 
 #define CVPY_VALIDATE_DrawChessboardCorners() do { \
-  if ((pattern_size.width * pattern_size.height) != corners.count) \
-    return (PyObject*)failmsg("Size is %dx%d, but corner list is length %d", pattern_size.width, pattern_size.height, corners.count); \
+  if ((patternSize.width * patternSize.height) != corners.count) \
+    return (PyObject*)failmsg("Size is %dx%d, but corner list is length %d", patternSize.width, patternSize.height, corners.count); \
   } while (0)
 
 #define cvGetRotationMatrix2D cv2DRotationMatrix
@@ -3757,37 +3759,38 @@ static PyMethodDef methods[] = {
   {"fromarray", pycvfromarray, METH_VARARGS, "fromarray(array) -> cvmatnd"},
 #endif
 
-  {"CreateHist", pycvCreateHist, METH_VARARGS, "CreateHist(dims, type, ranges, uniform = 1) -> hist"},
-  {"CreateImage", pycvCreateImage, METH_VARARGS, "CreateImage(size, depth, channels) -> image"},
-  {"CreateImageHeader", pycvCreateImageHeader, METH_VARARGS, "CreateImageHeader(size, depth, channels) -> image"},
-  {"CreateMat", pycvCreateMat, METH_VARARGS, "CreateMat(row, cols, type) -> mat"},
-  {"CreateMatHeader", pycvCreateMatHeader, METH_VARARGS, "CreateMatHeader(rows, cols, type) -> mat"},
-  {"CreateMatND", pycvCreateMatND, METH_VARARGS, "CreateMatND(dims, type) -> matnd"},
-  {"CreateMatNDHeader", pycvCreateMatNDHeader, METH_VARARGS, "CreateMatNDHeader(dims, type) -> matnd"},
-  {"CreateMemStorage", pycvCreateMemStorage, METH_VARARGS, "CreateMemStorage(block_size) -> memstorage"},
-  {"FindContours", (PyCFunction)pycvFindContours, METH_KEYWORDS, "FindContours(image, storage, mode=CV_RETR_LIST, method=CV_CHAIN_APPROX_SIMPLE, offset=(0, 0)) -> cvseq"},
   {"ApproxPoly", (PyCFunction)pycvApproxPoly, METH_KEYWORDS, "ApproxPoly(src_seq, storage, method, parameter=0, parameter2=0) -> None"},
-  {"CreateData", pycvCreateData, METH_VARARGS, "CreateData(arr) -> None"},
-  {"GetDims", pycvGetDims, METH_VARARGS, "GetDims(arr) -> dims"},
-  {"GetImage", pycvGetImage, METH_VARARGS, "GetImage(cvmat) -> image"},
-  {"GetMat", (PyCFunction)pycvGetMat, METH_KEYWORDS, "GetMat(image, allowND=0) -> cvmat"},
-  {"Reshape", pycvReshape, METH_VARARGS, "Reshape(arr, new_cn, new_rows=0) -> cvmat"},
-  {"ReshapeMatND", pycvReshapeMatND, METH_VARARGS, "Reshape(arr, new_cn, new_dims) -> matnd"},
-  {"InitLineIterator", pycvInitLineIterator, METH_VARARGS, "InitLineIterator(image, pt1, pt2, connectivity=8, left_to_right=0) -> None"},
-  {"LoadImage", (PyCFunction)pycvLoadImage, METH_KEYWORDS, "LoadImage(filename, iscolor=CV_LOAD_IMAGE_COLOR)"},
-  {"LoadImageM", (PyCFunction)pycvLoadImageM, METH_KEYWORDS, "LoadImageM(filename, iscolor=CV_LOAD_IMAGE_COLOR)"},
-  {"SetData", pycvSetData, METH_VARARGS, "SetData(arr, data, step)"},
-  {"SetMouseCallback", (PyCFunction)pycvSetMouseCallback, METH_KEYWORDS, "SetMouseCallback(window_name, on_mouse, param) -> None"},
-  {"CreateTrackbar", (PyCFunction)pycvCreateTrackbar, METH_KEYWORDS, "CreateTrackbar(trackbar_name, window_name, value, count, on_change) -> None"},
   {"CalcEMD2", (PyCFunction)pycvCalcEMD2, METH_KEYWORDS, "CalcEMD2(signature1, signature2, distance_type, distance_func = None, cost_matrix=None, flow=None, lower_bound=None, userdata = None) -> float"},
-  {"FindChessboardCorners", (PyCFunction)pycvFindChessboardCorners, METH_KEYWORDS, "FindChessboardCorners(image, pattern_size, flags=CV_CALIB_CB_ADAPTIVE_THRESH) -> success,corners"},
-  {"FitLine", (PyCFunction)pycvFitLine, METH_KEYWORDS, "FitLine(points, dist_type, param, reps, aeps) -> line"},
-  {"Subdiv2DLocate", pycvSubdiv2DLocate, METH_VARARGS, "Subdiv2DLocate(subdiv, pt) -> (loc, where)"},
   {"CalcOpticalFlowPyrLK", pycvCalcOpticalFlowPyrLK, METH_VARARGS, "CalcOpticalFlowPyrLK(prev, curr, prev_pyr, curr_pyr, prev_features, CvSize win_size, int level, criteria, flags, guesses = None) -> (curr_features, status, track_error)"},
   {"ClipLine", (PyCFunction)pycvClipLine, METH_KEYWORDS, "ClipLine(img, pt1, pt2) -> (clipped_pt1, clipped_pt2)"},
+  {"CreateData", pycvCreateData, METH_VARARGS, "CreateData(arr) -> None"},
+  {"CreateHist", pycvCreateHist, METH_VARARGS, "CreateHist(dims, type, ranges, uniform = 1) -> hist"},
+  {"CreateImageHeader", pycvCreateImageHeader, METH_VARARGS, "CreateImageHeader(size, depth, channels) -> image"},
+  {"CreateImage", pycvCreateImage, METH_VARARGS, "CreateImage(size, depth, channels) -> image"},
+  {"CreateMatHeader", pycvCreateMatHeader, METH_VARARGS, "CreateMatHeader(rows, cols, type) -> mat"},
+  {"CreateMatNDHeader", pycvCreateMatNDHeader, METH_VARARGS, "CreateMatNDHeader(dims, type) -> matnd"},
+  {"CreateMatND", pycvCreateMatND, METH_VARARGS, "CreateMatND(dims, type) -> matnd"},
+  {"CreateMat", pycvCreateMat, METH_VARARGS, "CreateMat(row, cols, type) -> mat"},
+  {"CreateMemStorage", pycvCreateMemStorage, METH_VARARGS, "CreateMemStorage(block_size) -> memstorage"},
+  {"CreateTrackbar", (PyCFunction)pycvCreateTrackbar, METH_KEYWORDS, "CreateTrackbar(trackbar_name, window_name, value, count, on_change) -> None"},
+  {"FindChessboardCorners", (PyCFunction)pycvFindChessboardCorners, METH_KEYWORDS, "FindChessboardCorners(image, pattern_size, flags=CV_CALIB_CB_ADAPTIVE_THRESH) -> success,corners"},
+  {"FindContours", (PyCFunction)pycvFindContours, METH_KEYWORDS, "FindContours(image, storage, mode=CV_RETR_LIST, method=CV_CHAIN_APPROX_SIMPLE, offset=(0, 0)) -> cvseq"},
+  {"FitLine", (PyCFunction)pycvFitLine, METH_KEYWORDS, "FitLine(points, dist_type, param, reps, aeps) -> line"},
+  {"GetDims", pycvGetDims, METH_VARARGS, "GetDims(arr) -> dims"},
   {"GetHuMoments", (PyCFunction)pycvGetHuMoments, METH_KEYWORDS, "GetHuMoments(cvmoments) -> (h1, h2, h3, h4, h5, h5, h7)"},
+  {"GetImage", pycvGetImage, METH_VARARGS, "GetImage(cvmat) -> image"},
+  {"GetMat", (PyCFunction)pycvGetMat, METH_KEYWORDS, "GetMat(image, allowND=0) -> cvmat"},
   {"GetMinMaxHistValue", (PyCFunction)pycvGetMinMaxHistValue, METH_KEYWORDS, "GetMinMaxHistValue(hist) -> min_val,max_val,min_loc,max_loc"},
+  {"InitLineIterator", pycvInitLineIterator, METH_VARARGS, "InitLineIterator(image, pt1, pt2, connectivity=8, left_to_right=0) -> None"},
+  {"LoadImageM", (PyCFunction)pycvLoadImageM, METH_KEYWORDS, "LoadImageM(filename, iscolor=CV_LOAD_IMAGE_COLOR)"},
+  {"LoadImage", (PyCFunction)pycvLoadImage, METH_KEYWORDS, "LoadImage(filename, iscolor=CV_LOAD_IMAGE_COLOR)"},
+  {"ReshapeMatND", pycvReshapeMatND, METH_VARARGS, "Reshape(arr, new_cn, new_dims) -> matnd"},
+  {"Reshape", pycvReshape, METH_VARARGS, "Reshape(arr, new_cn, new_rows=0) -> cvmat"},
+  {"SetData", pycvSetData, METH_VARARGS, "SetData(arr, data, step)"},
+  {"SetMouseCallback", (PyCFunction)pycvSetMouseCallback, METH_KEYWORDS, "SetMouseCallback(window_name, on_mouse, param) -> None"},
+  {"Subdiv2DLocate", pycvSubdiv2DLocate, METH_VARARGS, "Subdiv2DLocate(subdiv, pt) -> (loc, where)"},
   {"WaitKey", (PyCFunction)pycvWaitKey, METH_KEYWORDS, "WaitKey(delay=0) -> int"},
+
   //{"CalcOpticalFlowFarneback", (PyCFunction)pycvCalcOpticalFlowFarneback, METH_KEYWORDS, "CalcOpticalFlowFarneback(prev, next, flow, pyr_scale=0.5, levels=3, win_size=15, iterations=3, poly_n=7, poly_sigma=1.5, flags=0) -> None"},
   //{"_HOGComputeDescriptors", (PyCFunction)pycvHOGComputeDescriptors, METH_KEYWORDS, "_HOGComputeDescriptors(image, win_stride=block_stride, locations=None, padding=(0,0), win_size=(64,128), block_size=(16,16), block_stride=(8,8), cell_size=(8,8), nbins=9, gammaCorrection=true) -> list_of_descriptors"},
   //{"_HOGDetect", (PyCFunction)pycvHOGDetect, METH_KEYWORDS, "_HOGDetect(image, svm_classifier, win_stride=block_stride, locations=None, padding=(0,0), win_size=(64,128), block_size=(16,16), block_stride=(8,8), cell_size=(8,8), nbins=9, gammaCorrection=true) -> list_of_points"},

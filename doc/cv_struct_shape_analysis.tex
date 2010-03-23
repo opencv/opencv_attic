@@ -52,7 +52,8 @@ Calculates the contour perimeter or the curve length.
 
 \cvdefC{
 double cvArcLength( \par const void* curve,\par CvSlice slice=CV\_WHOLE\_SEQ,\par int isClosed=-1 );
-}\cvdefPy{ArcLength(curve,slice=CV\_WHOLE\_SEQ,isClosed=-1)-> double}
+}
+\cvdefPy{ArcLength(curve,slice=CV\_WHOLE\_SEQ,isClosed=-1)-> double}
 
 \begin{description}
 \cvarg{curve}{Sequence or array of the curve points}
@@ -253,18 +254,18 @@ The function restores the contour from its binary tree representation. The param
 Finds the convex hull of a point set.
 
 \cvdefC{
-CvSeq* cvConvexHull2( \par const CvArr* input,\par void* hull\_storage=NULL,\par int orientation=CV\_CLOCKWISE,\par int return\_points=0 );
+CvSeq* cvConvexHull2( \par const CvArr* input,\par void* storage=NULL,\par int orientation=CV\_CLOCKWISE,\par int return\_points=0 );
 }
-\cvdefPy{ConvexHull2(points,hull\_storage,orientation=CV\_CLOCKWISE,return\_points=0)-> convex\_hull}
+\cvdefPy{ConvexHull2(points,storage,orientation=CV\_CLOCKWISE,return\_points=0)-> convex\_hull}
 
 \begin{description}
 \cvarg{points}{Sequence or array of 2D points with 32-bit integer or floating-point coordinates}
-\cvarg{hull\_storage}{The destination array (CvMat*) or memory storage (CvMemStorage*) that will store the convex hull. If it is an array, it should be 1d and have the same number of elements as the input array/sequence. On output the header is modified as to truncate the array down to the hull size.  If \texttt{hull\_storage} is NULL then the convex hull will be stored in the same storage as the input sequence}
+\cvarg{storage}{The destination array (CvMat*) or memory storage (CvMemStorage*) that will store the convex hull. If it is an array, it should be 1d and have the same number of elements as the input array/sequence. On output the header is modified as to truncate the array down to the hull size.  If \texttt{storage} is NULL then the convex hull will be stored in the same storage as the input sequence}
 \cvarg{orientation}{Desired orientation of convex hull: \texttt{CV\_CLOCKWISE} or \texttt{CV\_COUNTER\_CLOCKWISE}}
-\cvarg{return\_points}{If non-zero, the points themselves will be stored in the hull instead of indices if \texttt{hull\_storage} is an array, or pointers if \texttt{hull\_storage} is memory storage}
+\cvarg{return\_points}{If non-zero, the points themselves will be stored in the hull instead of indices if \texttt{storage} is an array, or pointers if \texttt{storage} is memory storage}
 \end{description}
 
-The function finds the convex hull of a 2D point set using Sklansky's algorithm. If \texttt{hull\_storage} is memory storage, the function creates a sequence containing the hull points or pointers to them, depending on \texttt{return\_points} value and returns the sequence on output.  If \texttt{hull\_storage} is a CvMat, the function returns NULL.
+The function finds the convex hull of a 2D point set using Sklansky's algorithm. If \texttt{storage} is memory storage, the function creates a sequence containing the hull points or pointers to them, depending on \texttt{return\_points} value and returns the sequence on output.  If \texttt{storage} is a CvMat, the function returns NULL.
 
 % ===== Example. Building convex hull for a sequence or array of points =====
 \begin{lstlisting}
@@ -416,7 +417,8 @@ Finds the contours in a binary image.
 int cvFindContours(\par CvArr* image,\par CvMemStorage* storage,\par CvSeq** first\_contour,\par
                     int header\_size=sizeof(CvContour),\par int mode=CV\_RETR\_LIST,\par
                     int method=CV\_CHAIN\_APPROX\_SIMPLE,\par CvPoint offset=cvPoint(0,0) );
-}\cvdefPy{FindContours(image, storage, mode=CV\_RETR\_LIST, method=CV\_CHAIN\_APPROX\_SIMPLE, offset=(0,0)) -> cvseq}
+}
+\cvdefPy{FindContours(image, storage, mode=CV\_RETR\_LIST, method=CV\_CHAIN\_APPROX\_SIMPLE, offset=(0,0)) -> cvseq}
 
 \begin{description}
 \cvarg{image}{The source, an 8-bit single channel image. Non-zero pixels are treated as 1's, zero pixels remain 0's - the image is treated as \texttt{binary}. To get such a binary image from grayscale, one may use \cvCPyCross{Threshold}, \cvCPyCross{AdaptiveThreshold} or \cvCPyCross{Canny}. The function modifies the source image's content}
@@ -497,7 +499,8 @@ Fits a line to a 2D or 3D point set.
 
 \cvdefC{
 void  cvFitLine( \par const CvArr* points,\par int dist\_type,\par double param,\par double reps,\par double aeps,\par float* line );
-}\cvdefPy{FitLine(points, dist\_type, param, reps, aeps) -> line}
+}
+\cvdefPy{FitLine(points, dist\_type, param, reps, aeps) -> line}
 
 \begin{description}
 \cvarg{points}{Sequence or array of 2D or 3D points with 32-bit integer or floating-point coordinates}

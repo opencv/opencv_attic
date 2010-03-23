@@ -512,8 +512,8 @@ Finds the positions of the internal corners of the chessboard.
                                  CV\_CALIB\_CB\_NORMALIZE\_IMAGE );}
 \begin{description}
 \cvarg{image}{Source chessboard view; it must be an 8-bit grayscale or color image}
-\cvarg{patternSize}{The number of inner corners per chessboard row and column}
-( patternSize = cvSize(points\_per\_row,points\_per\_colum) = cvSize(columns,rows) )
+\cvarg{patternSize}{The number of inner corners per chessboard row and column
+( patternSize = cvSize(points\_per\_row,points\_per\_colum) = cvSize(columns,rows) )}
 \cvarg{corners}{The output array of corners detected}
 \cvC{\cvarg{cornerCount}{The output corner counter. If it is not NULL, it stores the number of corners found}}
 \cvarg{flags}{Various operation flags, can be 0 or a combination of the following values:
@@ -885,7 +885,7 @@ Returns the new camera matrix based on the free scaling parameter
 \cvarg{validPixROI}{The optional output rectangle that will outline all-good-pixels region in the undistorted image. See \texttt{roi1, roi2} description in \cvCross{StereoRectify}{stereoRectify}}
 \end{description}
 
-The function computes \cvCpp{and returns} the optimal new camera matrix based on the free scaling parameter. By varying  this parameter the user may retrieve only sensible pixels \texttt{alpha=0}, keep all the original image pixels if there is valuable information in the corners \texttt{alpha=1}, or get something in between. When \texttt{alpha>0}, the undistortion result will likely have some black pixels corresponding to "virtual" pixels outside of the captured distorted image. The original camera matrix, distortion coefficients, the computed new camera matrix and the \text{newImageSize} should be passed to \cvCross{InitUndistortRectifyMap}{initUndistortRectifyMap} to produce the maps for \cvCross{Remap}{remap}.
+The function computes \cvCpp{and returns} the optimal new camera matrix based on the free scaling parameter. By varying  this parameter the user may retrieve only sensible pixels \texttt{alpha=0}, keep all the original image pixels if there is valuable information in the corners \texttt{alpha=1}, or get something in between. When \texttt{alpha>0}, the undistortion result will likely have some black pixels corresponding to "virtual" pixels outside of the captured distorted image. The original camera matrix, distortion coefficients, the computed new camera matrix and the \texttt{newImageSize} should be passed to \cvCross{InitUndistortRectifyMap}{initUndistortRectifyMap} to produce the maps for \cvCross{Remap}{remap}.
 
 \cvfunc{InitIntrinsicParams2D}{initCameraMatrix2D}
 Finds the initial camera matrix from the 3D-2D point correspondences
@@ -1151,7 +1151,7 @@ The function releases memory previously allocated by the function \cvCPyCross{Cr
 
 \fi
 
-\ifCPy
+\ifC
 
 \cvCPyFunc{ReleaseStereoBMState}
 Releases block matching stereo correspondence structure.
@@ -1296,8 +1296,8 @@ Calibrates stereo camera.
     \cvarg{imagePoints2}{The vector of vectors of the object point projections on the calibration pattern views from the 2nd camera, one vector per a view. The projections must be in the same order as the corresponding object points.}
 \fi
     \cvarg{cameraMatrix1}{The input/output first camera matrix: $ \vecthreethree{f_x^{(j)}}{0}{c_x^{(j)}}{0}{f_y^{(j)}}{c_y^{(j)}}{0}{0}{1}$, $j = 0,\, 1$. If any of \texttt{CV\_CALIB\_USE\_INTRINSIC\_GUESS}, \newline \texttt{CV\_CALIB\_FIX\_ASPECT\_RATIO}, \texttt{CV\_CALIB\_FIX\_INTRINSIC} or \texttt{CV\_CALIB\_FIX\_FOCAL\_LENGTH} are specified, some or all of the matrices' components must be initialized; see the flags description}
-    \cvarg{cameraMatrix2}{The input/output second camera matrix, as cameraMatrix1.}
     \cvarg{distCoeffs1}{The input/output lens distortion coefficients for the first camera, 4x1, 5x1, 1x4 or 1x5 floating-point vectors $(k_1^{(j)}, k_2^{(j)}, p_1^{(j)}, p_2^{(j)}[, k_3^{(j)}])$, $j = 0,\, 1$. If any of \texttt{CV\_CALIB\_FIX\_K1}, \texttt{CV\_CALIB\_FIX\_K2} or \texttt{CV\_CALIB\_FIX\_K3} is specified, then the corresponding elements of the distortion coefficients must be initialized.}    
+    \cvarg{cameraMatrix2}{The input/output second camera matrix, as cameraMatrix1.}
     \cvarg{distCoeffs2}{The input/output lens distortion coefficients for the second camera, as distCoeffs1.}
 \cvarg{imageSize}{Size of the image, used only to initialize intrinsic camera matrix.} 
 \cvarg{R}{The output rotation matrix between the 1st and the 2nd cameras' coordinate systems.}

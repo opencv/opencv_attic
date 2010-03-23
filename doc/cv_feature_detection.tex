@@ -369,19 +369,19 @@ Note that the if the function is called with different values \texttt{A} and \te
 Finds lines in a binary image using a Hough transform.
 
 \cvdefC{
-CvSeq* cvHoughLines2( \par CvArr* image,\par void* line\_storage,\par int method,\par double rho,\par double theta,\par int threshold,\par double param1=0,\par double param2=0 );
+CvSeq* cvHoughLines2( \par CvArr* image,\par void* storage,\par int method,\par double rho,\par double theta,\par int threshold,\par double param1=0,\par double param2=0 );
 }
-\cvdefPy{HoughLines2(image,line\_storage,method,rho,theta,threshold,param1=0,param2=0)-> lines}
+\cvdefPy{HoughLines2(image,storage,method,rho,theta,threshold,param1=0,param2=0)-> lines}
 
 \begin{description}
 \cvarg{image}{The 8-bit, single-channel, binary source image. In the case of a probabilistic method, the image is modified by the function}
-\cvarg{line\_storage}{The storage for the lines that are detected. It can
+\cvarg{storage}{The storage for the lines that are detected. It can
 be a memory storage (in this case a sequence of lines is created in
 the storage and returned by the function) or single row/single column
 matrix (CvMat*) of a particular type (see below) to which the lines'
 parameters are written. The matrix header is modified by the function
 so its \texttt{cols} or \texttt{rows} will contain the number of lines
-detected. If \texttt{line\_storage} is a matrix and the actual number
+detected. If \texttt{storage} is a matrix and the actual number
 of lines exceeds the matrix size, the maximum possible number of lines
 is returned (in the case of standard hough transform the lines are sorted
 by the accumulator value)}
