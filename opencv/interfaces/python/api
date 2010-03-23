@@ -815,11 +815,11 @@ FindCornerSubPix corners
   CvSize win
   CvSize zero_zone
   CvTermCriteria criteria
-GoodFeaturesToTrack corners
+GoodFeaturesToTrack cornerCount
   CvArr image
   CvArr eigImage
   CvArr tempImage
-  cvpoint2d32f_count corners
+  cvpoint2d32f_count cornerCount
   double qualityLevel
   double minDistance
   CvArr mask NULL
