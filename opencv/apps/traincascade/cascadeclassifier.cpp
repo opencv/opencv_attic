@@ -143,7 +143,11 @@ bool CvCascadeClassifier::train( const String _cascadeDirName,
     numNeg = _numNeg;
     numStages = _numStages;
     if ( !imgReader.create( _posFilename, _negFilename, _cascadeParams.winSize ) )
+    {
+        cout << "Image reader can not be created from -vec " << _posFilename
+                << " and -bg " << _negFilename << "." << endl;
         return false;
+    }
     if ( !load( dirName ) )
     {
         cascadeParams = _cascadeParams;
@@ -185,7 +189,7 @@ bool CvCascadeClassifier::train( const String _cascadeDirName,
 
         if ( !updateTrainingSet( tempLeafFARate ) ) 
         {
-            cout << "Train dataset for temp stage can not be filled."
+            cout << "Train dataset for temp stage can not be filled. "
                 "Branch training terminated." << endl;
             break;
         }
@@ -211,18 +215,26 @@ bool CvCascadeClassifier::train( const String _cascadeDirName,
             filename = dirName + CC_PARAMS_FILENAME;
             FileStorage fs( filename, FileStorage::WRITE);
             if ( !fs.isOpened() )
+            {
+                cout << "Parameters can not be written, because file " << filename
+                        << " can not be opened." << endl;
                 return false;
+            }
             fs << FileStorage::getDefaultObjectName(filename) << "{";
             writeParams( fs );
             fs << "}";
         }
-        // save temp stage
+        // save current stage
         char buf[10];
         sprintf(buf, "%s%d", "stage", i );
         filename = dirName + buf + ".xml";
         FileStorage fs( filename, FileStorage::WRITE );
         if ( !fs.isOpened() )
+        {
+            cout << "Current stage can not be written, because file " << filename
+                    << " can not be opened." << endl;
             return false;
+        }
         fs << FileStorage::getDefaultObjectName(filename) << "{";
         tempStage->write( fs, Mat() );
         fs << "}";
