@@ -3,4 +3,8 @@
 tput clear
 python latex.py ../online-opencv.tex || exit
 
-TEXINPUTS=$PWD: sphinx-build -w sphinx.errors -b html -D 'highlight_language=python' -D 'html_title=OpenCV 2.0 Python Reference' -d _build/doctrees . _build/html/python
+for D in c
+do
+  cp conf.py $D
+  TEXINPUTS=$PWD: sphinx-build -w sphinx.errors -b html -d _build/doctrees $D _build/html/$D
+done
