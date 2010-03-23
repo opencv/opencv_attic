@@ -185,23 +185,6 @@ returned pointer may be NULL if the edge is from dual subdivision and
 the virtual point coordinates are not calculated yet. The virtual points
 can be calculated using the function \cvCPyCross{CalcSubdivVoronoi2D}.
 
-\cvCPyFunc{Subdiv2DEdgeOrg}
-Returns the edge origin.
-
-\cvdefC{
-CvSubdiv2DPoint* cvSubdiv2DEdgeOrg( \par CvSubdiv2DEdge edge );
-}\cvdefPy{Subdiv2DEdgeOrg(edge)-> point}
-
-\begin{description}
-\cvarg{edge}{Subdivision edge (not a quad-edge)}
-\end{description}
-
-The function returns the edge
-origin. The returned pointer may be NULL if the edge is from dual
-subdivision and the virtual point coordinates are not calculated
-yet. The virtual points can be calculated using the function
-\cvCPyCross{CalcSubdivVoronoi2D}.
-
 \cvCPyFunc{Subdiv2DGetEdge}
 Returns one of the edges related to the given edge.
 
@@ -236,7 +219,8 @@ Returns the location of a point within a Delaunay triangulation.
 
 \cvdefC{
 CvSubdiv2DPointLocation  cvSubdiv2DLocate( \par CvSubdiv2D* subdiv,\par CvPoint2D32f pt,\par CvSubdiv2DEdge* edge,\par CvSubdiv2DPoint** vertex=NULL );
-}\cvdefPy{Subdiv2DLocate(subdiv, pt) -> (loc, where)}
+}
+\cvdefPy{Subdiv2DLocate(subdiv, pt) -> (loc, where)}
 
 \begin{description}
 \cvarg{subdiv}{Delaunay or another subdivision}

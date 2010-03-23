@@ -423,7 +423,7 @@ where
 
 \begin{tabular}{l p{4 in}}
 $z_k$ & given measurement (\texttt{mesurement} parameter)\\
-$K_k$ & Kalman "gain" matrix.
+$K_k$ & Kalman "gain" matrix.\\
 \end{tabular}
 
 The function stores the adjusted state at \texttt{kalman->state\_post} and returns it on output.
@@ -577,6 +577,7 @@ P'_k=A \cdot P_{k-1}+A^T + Q
 where
 
 \begin{tabular}{l p{5 in}}
+\hline
 $x'_k$ & is predicted state \texttt{kalman->state\_pre},\\
 $x_{k-1}$ & is corrected state on the previous step \texttt{kalman->state\_post}
                 (should be initialized somehow in the beginning, zero vector by default),\\
@@ -681,7 +682,7 @@ becomes a running average of frame sequence:
 
 \[ \texttt{acc}(x,y) \leftarrow (1-\alpha) \cdot \texttt{acc}(x,y) + \alpha \cdot \texttt{image}(x,y) \quad \text{if} \quad \texttt{mask}(x,y) \ne 0 \]
 
-where $\alpha$ (\texttt{alpha}) regulates the update speed (how fast the accumulator forgets about previous frames).
+where $\alpha$ regulates the update speed (how fast the accumulator forgets about previous frames).
 
 
 \cvCPyFunc{SegmentMotion}
