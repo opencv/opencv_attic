@@ -11,60 +11,13 @@ import pythonapi
 
 python_api = pythonapi.reader("../../interfaces/python/api")
 
-sources = ['../' + f for f in os.listdir('..') if f.endswith('.tex')]
-if distutils.dep_util.newer_group(["latexparser.py"] + sources, "pickled"):
-    fulldoc = latexparser(sys.argv[1], 0)
-    pickle.dump(fulldoc, open("pickled", 'wb'))
-    raw = open('fulldoc', 'w')
-    for x in fulldoc:
-        print >>raw, repr(x)
-    raw.close()
-else:
-    fulldoc = pickle.load(open("pickled", "rb"))
-
-# Filter on target language
-def preprocess_conditionals(fd, conditionals):
-    r = []
-    ifstack = []
-    for x in fd:
-        if isinstance(x, TexCmd):
-            ll = x.cmd.rstrip()
-            loc = (x.filename, x.lineno)
-            if ll.startswith("if"):
-                # print " " * len(ifstack), '{', loc
-                ifstack.append((conditionals.get(ll[2:], False), loc))
-            elif ll.startswith("else"):
-                ifstack[-1] = (not ifstack[-1][0], ifstack[-1][1])
-            elif ll.startswith("fi"):
-                ifstack.pop()
-                # print " " * len(ifstack), '}', loc
-            elif not False in [p for (p,_) in ifstack]:
-                r.append(x)
-        else:
-            if not False in [p for (p,_) in ifstack]:
-                r.append(x)
-    if ifstack != []:
-        print "unterminated if", ifstack
-        sys.exit(0)
-    return r
-
-language = 'py'
-doc = preprocess_conditionals(fulldoc, {
-                                      'C' : language=='c',
-                                      'Python' : language=='py',
-                                      'Py' : language=='py',
-                                      'CPy' : (language=='py' or language == 'c'),
-                                      'Cpp' : language=='cpp',
-                                      'plastex' : True})
-
-raw = open('raw', 'w')
-for x in doc:
-    print >>raw, repr(x)
-raw.close()
 
 class SphinxWriter:
-    def __init__(self, filename):
-        self.f_index = QOpen(filename, 'wt')
+    def __init__(self, filename, language):
+        assert language in ['py', 'c', 'cpp']
+        self.language = language
+
+        self.f_index = QOpen(os.path.join(self.language, filename), 'wt')
         self.f = self.f_index
         self.f_chapter = None
         self.f_section = None
@@ -76,6 +29,7 @@ class SphinxWriter:
         self.unhandled_commands = set()
         self.freshline = True
         self.function_props = {}
+        self.covered = set()        # covered functions, used for error report
 
     def write(self, s):
         self.freshline = len(s) > 0 and (s[-1] == '\n')
@@ -121,7 +75,7 @@ class SphinxWriter:
     def cmd_chapter(self, c):
         filename = str(c.params[0]).lower().replace(' ', '_').replace('/','_')
         self.f_index.write("    %s\n" % filename)
-        self.f_chapter = QOpen(filename + '.rst', 'wt')
+        self.f_chapter = QOpen(os.path.join(self.language, filename + '.rst'), 'wt')
         self.f_section = None
         self.f = self.f_chapter
         self.indent = 0
@@ -140,14 +94,14 @@ class SphinxWriter:
             print >>self.f_chapter, '    :maxdepth: 2'
             print >>self.f_chapter
         self.f_chapter.write("    %s\n" % filename)
-        self.f_section = QOpen(filename + '.rst', 'wt')
+        self.f_section = QOpen(os.path.join(self.language, filename + '.rst'), 'wt')
         self.f = self.f_section
         self.indent = 0
         title = str(c.params[0])
         print >>self, title
         print >>self, '=' * len(title)
         print >>self
-        print >>self, '.. highlight:: python'
+        print >>self, '.. highlight:: %s' % {'c': 'c', 'cpp': 'cpp', 'py': 'python'}[self.language]
         print >>self
 
     def cmd_subsection(self, c):
@@ -157,7 +111,7 @@ class SphinxWriter:
         self.function_props = {}
 
     def cmd_includegraphics(self, c):
-        filename = '../' + str(c.params[0])
+        filename = os.path.join('..', '..', str(c.params[0]))
         if not os.path.isfile(filename):
             print >>self.errors, "WARNING: missing image file", filename
         print >>self, "\n\n.. image:: %s\n\n" % filename
@@ -203,8 +157,29 @@ class SphinxWriter:
         self.tags.append("%s\t%s\t%d" % (nm, os.path.join(os.getcwd(), c.filename), c.lineno))
 
         self.function_props = {'name' : nm}
+        self.covered.add(nm)
+
+    def cmd_cvdefC(self, c):
+        if self.language != 'c':
+            return
+        s = str(c.params[0]).replace('\\_', '_')
+        s = s.replace('\\par', '')
+        s = s.replace(';', '')
+        self.indent = 0
+        print >>self, ".. cfunction:: " + s + "\n"
+        # print >>self, "=", repr(c.params[0].str)
+        print >>self, '    ' + self.description
+        print >>self
+        self.state = None
+        self.function_props['defpy'] = s
+
+    def cmd_cvdefCpp(self, c):
+        if self.language != 'cpp':
+            return
 
     def cmd_cvdefPy(self, c):
+        if self.language != 'py':
+            return
         s = str(c.params[0]).replace('\\_', '_')
         self.indent = 0
         print >>self, ".. function:: " + s + "\n"
@@ -320,20 +295,24 @@ class SphinxWriter:
     def cmd_label(self, c):
         pass
 
-    def cmd_cvdefC(self, c):
-        pass
-    def cmd_cvdefCpp(self, c):
-        pass
+    def cmd_lstinputlisting(self, c):
+        s = str(c.params[0])
+        print >>self.f, ".. include:: %s" % os.path.join('..', s)
+        print >>self.f, "    :literal:"
+        print >>self.f
 
     # Conditionals
-    def cmd_cvCpp(self, c):
-        pass
     def cmd_cvC(self, c):
-        pass
-    def cmd_cvCPy(self, c):
-        self.doL(c.params[0].str, False)
+        self.do_conditional(['c'], c)
+    def cmd_cvCpp(self, c):
+        self.do_conditional(['cpp'], c)
     def cmd_cvPy(self, c):
-        self.doL(c.params[0].str, False)
+        self.do_conditional(['py'], c)
+    def cmd_cvCPy(self, c):
+        self.do_conditional(['c', 'py'], c)
+    def do_conditional(self, langs, c):
+        if self.language in langs:
+            self.doL(c.params[0].str, False)
 
     def render(self, L):
         """ return L rendered as a string """
@@ -500,6 +479,9 @@ class SphinxWriter:
         print >>self.errors, "unrecognized commands:"
         print >>self.errors, "\n    ".join(sorted(self.unhandled_commands))
         print >>self.errors
+        print >>self.errors, "The following functions are undocumented"
+        for f in sorted(set(python_api) - self.covered):
+            print >>self.errors, '    ', f
 
         open('TAGS', 'w').write("\n".join(sorted(self.tags)) + "\n")
 
@@ -512,9 +494,60 @@ Indices and tables
 * :ref:`search`
 """
 
-sr = SphinxWriter('index.rst')
-print >>sr, """
-OpenCV |version| Python Reference
+if 1:
+    sources = ['../' + f for f in os.listdir('..') if f.endswith('.tex')]
+    if distutils.dep_util.newer_group(["latexparser.py"] + sources, "pickled"):
+        fulldoc = latexparser(sys.argv[1], 0)
+        pickle.dump(fulldoc, open("pickled", 'wb'))
+        raw = open('fulldoc', 'w')
+        for x in fulldoc:
+            print >>raw, repr(x)
+        raw.close()
+    else:
+        fulldoc = pickle.load(open("pickled", "rb"))
+
+    # Filter on target language
+    def preprocess_conditionals(fd, conditionals):
+        r = []
+        ifstack = []
+        for x in fd:
+            if isinstance(x, TexCmd):
+                ll = x.cmd.rstrip()
+                loc = (x.filename, x.lineno)
+                if ll.startswith("if"):
+                    # print " " * len(ifstack), '{', loc
+                    ifstack.append((conditionals.get(ll[2:], False), loc))
+                elif ll.startswith("else"):
+                    ifstack[-1] = (not ifstack[-1][0], ifstack[-1][1])
+                elif ll.startswith("fi"):
+                    ifstack.pop()
+                    # print " " * len(ifstack), '}', loc
+                elif not False in [p for (p,_) in ifstack]:
+                    r.append(x)
+            else:
+                if not False in [p for (p,_) in ifstack]:
+                    r.append(x)
+        if ifstack != []:
+            print "unterminated if", ifstack
+            sys.exit(0)
+        return r
+
+    language = 'c'
+    doc = preprocess_conditionals(fulldoc, {
+                                          'C' : language=='c',
+                                          'Python' : language=='py',
+                                          'Py' : language=='py',
+                                          'CPy' : (language=='py' or language == 'c'),
+                                          'Cpp' : language=='cpp',
+                                          'plastex' : True})
+
+    raw = open('raw', 'w')
+    for x in doc:
+        print >>raw, repr(x)
+    raw.close()
+    sr = SphinxWriter('index.rst', language)
+    print >>sr, """
+OpenCV |version| %s Reference
 =================================
 
 The OpenCV Wiki is here: http://opencv.willowgarage.com/
@@ -524,6 +557,6 @@ Contents:
 .. toctree::
     :maxdepth: 2
 
-"""
-sr.doL(doc)
-sr.close()
+""" % {'c': 'C', 'cpp': 'C++', 'py': 'Python'}[language]
+    sr.doL(doc)
+    sr.close()
