@@ -41,9 +41,6 @@ int cvCreateTrackbar( \par const char* trackbarName, \par const char* windowName
                       \par int* value, \par int count, \par CvTrackbarCallback onChange );
 }
 \cvdefPy{CreateTrackbar(trackbarName, windowName, value, count, onChange) -> None}
-\begin{lstlisting}
-CV_EXTERN_C_FUNCPTR( void (*CvTrackbarCallback)(int pos) );
-\end{lstlisting}
 
 \begin{description}
 \cvarg{trackbarName}{Name of the created trackbar.}
@@ -66,6 +63,11 @@ This function should be prototyped as \texttt{void Foo(int);}  Can be NULL if ca
 \end{description}
 
 The function \texttt{cvCreateTrackbar} creates a trackbar (a.k.a. slider or range control) with the specified name and range, assigns a variable to be syncronized with trackbar position and specifies a callback function to be called on trackbar position change. The created trackbar is displayed on the top of the given window.
+\ifC
+\begin{lstlisting}
+CV_EXTERN_C_FUNCPTR( void (*CvTrackbarCallback)(int pos) );
+\end{lstlisting}
+\fi
 
 \cvCPyFunc{DestroyAllWindows} 
 Destroys all of the HighGUI windows.
