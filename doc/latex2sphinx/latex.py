@@ -46,6 +46,8 @@ class SphinxWriter:
             s = ":math:`%s`" % s[1:-1].strip()
         elif self.state != 'math':
             s.replace('\\_', '_')
+        if len(s) > 0 and s[-1] == '\n':
+            s = s[:-1]
         if self.state == 'fpreamble':
             self.description += s
         else:
@@ -192,9 +194,12 @@ class SphinxWriter:
             return
         s = str(c.params[0]).replace('\\_', '_')
         s = s.replace('\\par', '')
+        s = s.replace('\n', ' ')
         s = s.replace(';', '')
         self.indent = 0
-        print >>self, ".. cfunction:: " + s + "\n"
+        for proto in s.split('\\newline'):
+            if proto.strip() != "":
+                print >>self, "\n\n.. cfunction:: " + proto.strip() + "\n"
         # print >>self, "=", repr(c.params[0].str)
         print >>self, '    ' + self.description
         self.description = ""
