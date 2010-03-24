@@ -8,11 +8,12 @@
  */
 
 #include <cv.h>
+#include <cvaux.h>
 #include <highgui.h>
 
-using namespace cv;
+#include <string>
 
-#include "one_way_descriptor_base.h"
+using namespace cv;
 
 IplImage* DrawCorrespondences(IplImage* img1, const vector<KeyPoint>& features1, 
                               IplImage* img2, const vector<KeyPoint>& features2, const vector<int>& desc_idx);
@@ -29,34 +30,35 @@ int main(int argc, char** argv)
     
     if(argc != 3 && argc != 4)
     {
-        printf("Format: \n./one_way_sample [image1] [image2]\n");
-        printf("For example: ./one_way_sample scene_l.bmp scene_r.bmp\n");
+        printf("Format: \n./one_way_sample [path_to_samples] [image1] [image2]\n");
+        printf("For example: ./one_way_sample ../../../opencv/samples/c scene_l.bmp scene_r.bmp\n");
         return 0;
     }
     
+    std::string path_name = argv[1];
+    std::string img1_name = path_name + "/" + std::string(argv[2]);
+    std::string img2_name = path_name + "/" + std::string(argv[3]);
+
     CvFileStorage* fs = cvOpenFileStorage("pca_hr.yml", NULL, CV_STORAGE_READ);
     if(fs == NULL)
     {
-        const char* img1_path = argv[1];
         printf("PCA data is not found, starting training...\n");
-        generatePCADescriptors(".", pca_low_filename, pca_high_filename, pca_desc_filename, patch_size);
-        return 0;
+        generatePCADescriptors(path_name.c_str(), pca_low_filename, pca_high_filename, pca_desc_filename, patch_size);
     }
     else
     {
         cvReleaseFileStorage(&fs);
     }
     
-    const char* img1_name = argv[1];
-    const char* img2_name = argv[2];
     
     printf("Reading the images...\n");
-    IplImage* img1 = cvLoadImage(img1_name, CV_LOAD_IMAGE_GRAYSCALE);
-    IplImage* img2 = cvLoadImage(img2_name, CV_LOAD_IMAGE_GRAYSCALE);
+    IplImage* img1 = cvLoadImage(img1_name.c_str(), CV_LOAD_IMAGE_GRAYSCALE);
+    IplImage* img2 = cvLoadImage(img2_name.c_str(), CV_LOAD_IMAGE_GRAYSCALE);
 
     // extract keypoints from the first image
     vector<KeyPoint> keypoints1;
     SURF surf_extractor(5.0e3);
+//    printf("Extracting keypoints\n");
     surf_extractor(img1, Mat(), keypoints1);
     printf("Extracted %d keypoints...\n", (int)keypoints1.size());
 
@@ -180,11 +182,15 @@ void loadPCAFeatures(const char* path, vector<IplImage*>& patches, CvSize patch_
     {
         char buf[1024];
         sprintf(buf, "%s/one_way_train_%04d.jpg", path, i);
+        printf("Reading image %s...", buf);
         IplImage* img = cvLoadImage(buf, CV_LOAD_IMAGE_GRAYSCALE);
+        printf("done\n");
         
         vector<KeyPoint> features;
         SURF surf_extractor(1.0f);
+        printf("Extracting SURF features...");
         surf_extractor(img, Mat(), features);
+        printf("done\n");
         
         for(int j = 0; j < (int)features.size(); j++)
         {
@@ -233,12 +239,12 @@ void generatePCADescriptors(const char* img_path, const char* pca_low_filename, 
     generatePCAFeatures(img_path, pca_low_filename, cvSize(patch_size.width/2, patch_size.height/2), 
         &avg_lr, &eigenvectors_lr);
     
-    printf("Calculating PCA descriptors (you can grab a coffee, this will take a while)...\n");
     const int pose_count = 500;
     OneWayDescriptorBase descriptors(patch_size, pose_count);
     descriptors.SetPCAHigh(avg_hr, eigenvectors_hr);
     descriptors.SetPCALow(avg_lr, eigenvectors_lr);
     
+    printf("Calculating %d PCA descriptors (you can grab a coffee, this will take a while)...\n", descriptors.GetPCADimHigh());
     descriptors.InitializePoseTransforms();
     descriptors.CreatePCADescriptors();
     descriptors.SavePCADescriptors(pca_desc_filename);
