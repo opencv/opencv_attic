@@ -620,7 +620,7 @@ The function \texttt{waitKey} waits for key event infinitely (when $\texttt{dela
 \section{Reading and Writing Images and Video}
 
 \cvCppFunc{imdecode}
-
+Reads an image from a buffer in memory.
 \cvdefCpp{Mat imdecode( const Mat\& buf, \par int flags );}
 \begin{description}
 \cvarg{buf}{The input array of vector of bytes}
@@ -633,7 +633,7 @@ If the buffer is too short or contains invalid data, the empty matrix will be re
 See \cross{imread} for the list of supported formats and the flags description. 
 
 \cvCppFunc{imencode}
-
+Encode an image into a memory buffer.
 \cvdefCpp{bool imencode( const string\& ext,\par
                const Mat\& img,\par
                vector<uchar>\& buf,\par
@@ -701,7 +701,7 @@ Saves an image to a specified file.
 The function \texttt{imwrite} saves the image to the specified file. The image format is chosen based on the \texttt{filename} extension, see \cross{imread} for the list of extensions. Only 8-bit (or 16-bit in the case of PNG, JPEG 2000 and TIFF) single-channel or 3-channel (with 'BGR' channel order) images can be saved using this function. If the format, depth or channel order is different, use \cross{Mat::convertTo}, and \cross{cvtColor} to convert it before saving, or use the universal XML I/O functions to save the image to XML or YAML format.
 
 
-\cvCppFunc{VideoCapture}
+\cvclass{VideoCapture}
 Class for video capturing from video files or cameras
 
 \begin{lstlisting}
@@ -783,7 +783,7 @@ int main(int, char**)
 \end{lstlisting}
 
 
-\cvCppFunc{VideoWriter}
+\cvclass{VideoWriter}
 Video writer class
 
 \begin{lstlisting}

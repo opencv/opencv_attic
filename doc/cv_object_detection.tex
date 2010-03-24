@@ -128,7 +128,7 @@ is a separate application called \texttt{haartraining} that can
 train a cascade of boosted classifiers from a set of samples. See
 \texttt{opencv/apps/haartraining} for details.
 
-\cvfunc{CvHaarFeature, CvHaarClassifier, CvHaarStageClassifier, CvHaarClassifierCascade}
+\cvclass{CvHaarFeature, CvHaarClassifier, CvHaarStageClassifier, CvHaarClassifierCascade}
 \label{CvHaarFeature}
 \label{CvHaarClassifier}
 \label{CvHaarStageClassifier}
@@ -415,7 +415,7 @@ a positive value if the analyzed rectangle passed all the classifier stages
 
 \ifCpp
 
-\cvCppFunc{FeatureEvaluator}
+\cvclass{FeatureEvaluator}
 Base class for computing feature values in cascade classifiers
 
 \begin{lstlisting}
@@ -450,7 +450,7 @@ public:
 };
 \end{lstlisting}
 
-\cvCppFunc{CascadeClassifier}
+\cvclass{CascadeClassifier}
 The cascade classifier class for object detection
 
 \begin{lstlisting}

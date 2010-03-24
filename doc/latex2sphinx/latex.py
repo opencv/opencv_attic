@@ -24,12 +24,13 @@ class SphinxWriter:
         self.indent = 0
         self.state = None
         self.envstack = []
-        self.tags = []
+        self.tags = {}
         self.errors = open('errors', 'wt')
         self.unhandled_commands = set()
         self.freshline = True
         self.function_props = {}
         self.covered = set()        # covered functions, used for error report
+        self.description = ""
 
     def write(self, s):
         self.freshline = len(s) > 0 and (s[-1] == '\n')
@@ -90,6 +91,7 @@ class SphinxWriter:
         filename = str(c.params[0]).lower().replace(' ', '_').replace('/','_')
         if not self.chapter_intoc:
             self.chapter_intoc = True
+            print >>self.f_chapter
             print >>self.f_chapter, '.. toctree::'
             print >>self.f_chapter, '    :maxdepth: 2'
             print >>self.f_chapter
@@ -105,6 +107,7 @@ class SphinxWriter:
         print >>self
 
     def cmd_subsection(self, c):
+        print >>self
         print >>self, str(c.params[0])
         print >>self, '-' * len(str(c.params[0]))
         print >>self
@@ -112,8 +115,6 @@ class SphinxWriter:
 
     def cmd_includegraphics(self, c):
         filename = os.path.join('..', '..', str(c.params[0]))
-        if not os.path.isfile(filename):
-            print >>self.errors, "WARNING: missing image file", filename
         print >>self, "\n\n.. image:: %s\n\n" % filename
 
     def cmd_cvCppCross(self, c):
@@ -137,9 +138,17 @@ class SphinxWriter:
         print >>self, nm
         print >>self, '-' * len(nm)
         print >>self
-        print >>self, ".. class:: " + nm + "\n"
+        if self.language == 'py':
+            print >>self, ".. class:: " + nm + "\n"
+        else:
+            print >>self, ".. ctype:: " + nm + "\n"
         print >>self
-        self.tags.append("%s\t%s\t%d" % (nm, os.path.join(os.getcwd(), c.filename), c.lineno))
+        self.addtag(nm, c)
+
+    def addtag(self, nm, c):
+        if nm == "":
+            self.report_error(c, "empty name")
+        self.tags[nm] = "%s\t%s\t%d" % (nm, os.path.join(os.getcwd(), c.filename), c.lineno)
 
     def cmd_cvfunc(self, c):
         self.cmd_cvCPyFunc(c)
@@ -153,8 +162,27 @@ class SphinxWriter:
         print >>self, '-' * len(nm)
         print >>self
         self.state = 'fpreamble'
+        if self.description != "":
+            self.report_error(c, "overflow - preceding cvfunc (starting %s) not terminated?" % repr(self.description[:30]))
         self.description = ""
-        self.tags.append("%s\t%s\t%d" % (nm, os.path.join(os.getcwd(), c.filename), c.lineno))
+        self.addtag(nm, c)
+
+        self.function_props = {'name' : nm}
+        self.covered.add(nm)
+
+    def cmd_cvCppFunc(self, c):
+        self.indent = 0
+        nm = self.render(c.params[0].str)
+        print >>self, "\n.. index:: %s\n" % nm
+        print >>self, ".. _%s:\n" % nm
+        print >>self, nm
+        print >>self, '-' * len(nm)
+        print >>self
+        self.state = 'fpreamble'
+        if self.description != "":
+            self.report_error(c, "overflow - preceding cvfunc (starting %s) not terminated?" % repr(self.description[:30]))
+        self.description = ""
+        self.addtag(nm, c)
 
         self.function_props = {'name' : nm}
         self.covered.add(nm)
@@ -169,6 +197,7 @@ class SphinxWriter:
         print >>self, ".. cfunction:: " + s + "\n"
         # print >>self, "=", repr(c.params[0].str)
         print >>self, '    ' + self.description
+        self.description = ""
         print >>self
         self.state = None
         self.function_props['defpy'] = s
@@ -176,6 +205,22 @@ class SphinxWriter:
     def cmd_cvdefCpp(self, c):
         if self.language != 'cpp':
             return
+        s = str(c.params[0]).replace('\\_', '_')
+        s = s.replace('\\par', '')
+        s = s.replace(';', '')
+        self.indent = 0
+        for proto in s.split('\\newline'):
+            if proto.strip() != "":
+                print >>self, "\n\n.. cfunction:: " + proto.strip() + "\n"
+        # print >>self, "=", repr(c.params[0].str)
+        if self.description != "":
+            print >>self, '    ' + self.description
+        else:
+            self.report_error(c, 'empty description')
+        self.description = ""
+        print >>self
+        self.state = None
+        self.function_props['defpy'] = s
 
     def cmd_cvdefPy(self, c):
         if self.language != 'py':
@@ -186,6 +231,7 @@ class SphinxWriter:
         # print >>self, "=", repr(c.params[0].str)
         print >>self, '    ' + self.description
         print >>self
+        self.description = ""
         self.state = None
         self.function_props['defpy'] = s
 
@@ -238,14 +284,17 @@ class SphinxWriter:
             print pe
 
     def report_error(self, c, msg):
-        print >>self.errors, "%s:%d: Error %s" % (c.filename, c.lineno, msg)
+        print >>self.errors, "%s:%d: [%s] Error %s" % (c.filename, c.lineno, self.language, msg)
 
     def cmd_begin(self, c):
+        if len(c.params) == 0:
+            self.report_error(c, "Malformed begin")
+            return
         self.write('\n')
         s = str(c.params[0])
         self.envstack.append((s, (c.filename, c.lineno)))
         if s == 'description':
-            if 'name' in self.function_props and not 'defpy' in self.function_props:
+            if self.language == 'py' and 'name' in self.function_props and not 'defpy' in self.function_props:
                 self.report_error(c, "No cvdefPy for function %s" % self.function_props['name'])
             self.indent += 1
         elif s == 'lstlisting':
@@ -259,20 +308,31 @@ class SphinxWriter:
             self.default_cmd(c)
 
     def cmd_item(self, c):
+        if len(self.ee()) == 0:
+            self.report_error(c, "item without environment")
+            return
         self.indent -= 1
         markup = {'itemize' : '*', 'enumerate' : '#.', 'description' : '*'}[self.ee()[-1]]
         if len(c.args) > 0:
-            markup += " " + str(c.args[0])
+            markup += " " + self.render([c.args[0].str])
+        if len(c.params) > 0:
+            markup += " " + self.render(c.params[0].str)
         self.write("\n\n" + markup)
         self.indent += 1
 
     def cmd_end(self, c):
+        if len(c.params) != 1:
+            self.report_error(c, "Malformed end")
+            return
+        if len(self.envstack) == 0:
+            self.report_error(c, "end with no env")
+            return
         self.write('\n')
         s = str(c.params[0])
         if self.envstack == []:
             print "Cannot pop at", (c.filename, c.lineno)
         if self.envstack[-1][0] != s:
-            report_error(c, "end{%s} does not match current stack %s" % (s, repr(self.envstack)))
+            self.report_error(c, "end{%s} does not match current stack %s" % (s, repr(self.envstack)))
         self.envstack.pop()
         if s == 'description':
             self.indent -= 1
@@ -289,6 +349,8 @@ class SphinxWriter:
             self.indent -= 1
             print >>self
             print >>self, ".."      # otherwise a following :param: gets treated as more listing
+        elif s == 'document':
+            pass
         else:
             self.default_cmd(c)
         
@@ -328,13 +390,16 @@ class SphinxWriter:
         return r
 
     def cmd_cvarg(self, c):
+        if len(c.params) != 2:
+            self.report_error(c, "Malformed cvarg")
+            return
         is_func_arg = self.ee() == ['description'] and not 'done' in self.function_props
         if is_func_arg:
             nm = self.render(c.params[0].str)
             print >>self, '\n:param %s: ' % nm,
             type = None         # Try to figure out the argument type
             # For now, multiple args get a pass
-            if 'signature' in self.function_props and (not ',' in nm):
+            if (self.language == 'py') and ('signature' in self.function_props) and (not ',' in nm):
                 sig = self.function_props['signature']
                 argnames = [a[0] for a in sig[1]]
                 if isinstance(sig[2], str):
@@ -399,7 +464,10 @@ class SphinxWriter:
         print >>self, "\\hline"
 
     def cmd_href(self, c):
-        self.write("`%s <%s>`_" % (str(c.params[1]), str(c.params[0])))
+        if len(c.params) == 2:
+            self.write("`%s <%s>`_" % (str(c.params[1]), str(c.params[0])))
+        else:
+            self.report_error(c, "href should have two params")
 
     def cmd_url(self, c):
         self.write(str(c.params[0]))
@@ -472,6 +540,9 @@ class SphinxWriter:
         """ Return tags of the envstack.  envstack[0] is 'document', so skip it """
         return [n for (n,_) in self.envstack[1:]]
 
+    def get_tags(self):
+        return self.tags
+
     def close(self):
 
         if self.envstack != []:
@@ -482,8 +553,6 @@ class SphinxWriter:
         print >>self.errors, "The following functions are undocumented"
         for f in sorted(set(python_api) - self.covered):
             print >>self.errors, '    ', f
-
-        open('TAGS', 'w').write("\n".join(sorted(self.tags)) + "\n")
 
         print >>self.f_index, """
 
@@ -532,21 +601,22 @@ if 1:
             sys.exit(0)
         return r
 
-    language = 'c'
-    doc = preprocess_conditionals(fulldoc, {
-                                          'C' : language=='c',
-                                          'Python' : language=='py',
-                                          'Py' : language=='py',
-                                          'CPy' : (language=='py' or language == 'c'),
-                                          'Cpp' : language=='cpp',
-                                          'plastex' : True})
+    tags = {}
+    for language in ['c', 'cpp', 'py']:
+        doc = preprocess_conditionals(fulldoc, {
+                                              'C' : language=='c',
+                                              'Python' : language=='py',
+                                              'Py' : language=='py',
+                                              'CPy' : (language=='py' or language == 'c'),
+                                              'Cpp' : language=='cpp',
+                                              'plastex' : True})
 
-    raw = open('raw', 'w')
-    for x in doc:
-        print >>raw, repr(x)
-    raw.close()
-    sr = SphinxWriter('index.rst', language)
-    print >>sr, """
+        raw = open('raw.%s' % language, 'w')
+        for x in doc:
+            print >>raw, repr(x)
+        raw.close()
+        sr = SphinxWriter('index.rst', language)
+        print >>sr, """
 OpenCV |version| %s Reference
 =================================
 
@@ -558,5 +628,8 @@ Contents:
     :maxdepth: 2
 
 """ % {'c': 'C', 'cpp': 'C++', 'py': 'Python'}[language]
-    sr.doL(doc)
-    sr.close()
+        sr.doL(doc)
+        sr.close()
+        tags.update(sr.get_tags())
+    open('TAGS', 'w').write("\n".join(sorted(tags.values())) + "\n")
+

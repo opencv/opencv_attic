@@ -603,7 +603,7 @@ The calculated fundamental matrix may be passed further to
 corresponding to the specified points. It can also be passed to \cvCross{StereoRectifyUncalibrated}{stereoRectifyUncalibrated} to compute the rectification transformation.
 
 \ifC
-\cvfunc{Example. Estimation of fundamental matrix using RANSAC algorithm}
+% Example. Estimation of fundamental matrix using RANSAC algorithm
 \begin{lstlisting}
 int point_count = 100;
 CvMat* points1;
@@ -1226,7 +1226,7 @@ used in the global 3D geometry optimization procedures like \cvCross{CalibrateCa
 
 \ifCpp
 
-\cvCppFunc{StereoBM}
+\cvclass{StereoBM}
 The class for computing stereo correspondence using block matching algorithm.
 
 \begin{lstlisting}

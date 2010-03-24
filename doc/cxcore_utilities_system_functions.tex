@@ -5,10 +5,24 @@
 
 \ifPy
 Errors in argument type cause a \texttt{TypeError} exception.
-OpenCV errors cause a cv.error exception.
+OpenCV errors cause an cv.error exception.  For example:
+
+\begin{lstlisting}
+>>> import cv
+>>> cv.LoadImage(4)
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+TypeError: argument 1 must be string, not int
+>>> cv.CreateMat(-1, -1, cv.CV_8UC1)
+OpenCV Error: Incorrect size of input array (Non-positive width or height) in cvCreateMatHeader, file /u/jamesb/opencv/trunk/opencv/src/cxcore/cxarray.cpp, line 113
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+cv.error: Non-positive width or height
+\end{lstlisting}
+
 \fi
 
-\ifC
+\ifC % {
 Error handling in OpenCV is similar to IPL (Image Processing
 Library). In the case of an error, functions do not return the error
 code. Instead, they raise an error using \texttt{CV\_ERROR}
@@ -345,10 +359,13 @@ The function deallocates a memory buffer allocated by
 the double pointer is used. If the \texttt{*buffer} is already NULL, the function
 does nothing.
 
+\fi % }
+
 \cvCPyFunc{GetTickCount}
 Returns the number of ticks.
 
 \cvdefC{int64 cvGetTickCount( void );}
+\cvdefPy{GetTickCount() -> long}
 
 The function returns number of the ticks starting from some platform-dependent event (number of CPU ticks from the startup, number of milliseconds from 1970th year, etc.). The function is useful for accurate measurement of a function/user-code execution time. To convert the number of ticks to time units, use \cvCPyCross{GetTickFrequency}.
 
@@ -356,8 +373,11 @@ The function returns number of the ticks starting from some platform-dependent e
 Returns the number of ticks per microsecond.
 
 \cvdefC{double cvGetTickFrequency( void );}
+\cvdefPy{GetTickFrequency() -> long}
 
 The function returns the number of ticks per microsecond. Thus, the quotient of \cvCPyCross{GetTickCount} and \cvCPyCross{GetTickFrequency} will give the number of microseconds starting from the platform-dependent event.
+
+\ifC % {
 
 \cvCPyFunc{RegisterModule}
 Registers another module.
@@ -569,6 +589,10 @@ The generic function \texttt{deallocate} deallocates the buffer allocated with \
 \cvfunc{CV\_Assert}\label{CV Assert}
 Checks a condition at runtime.
 
+\cvdefC{CV\_Assert(expr)}
+\cvdefCpp{CV\_Assert(expr)}
+\cvdefPy{CV\_Assert(expr)}
+
 \begin{lstlisting}
 #define CV_Assert( expr ) ...
 #define CV_DbgAssert(expr) ...
@@ -605,7 +629,7 @@ CV_Error_(CV_StsOutOfRange,
 \end{lstlisting}
 
 
-\cvCppFunc{Exception}
+\cvclass{Exception}
 The exception class passed to error
 
 \begin{lstlisting}

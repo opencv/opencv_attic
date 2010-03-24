@@ -43,7 +43,7 @@ around the clusters. On output, $\texttt{labels}_i$ contains a cluster index for
 samples stored in the i-th row of the \texttt{samples} matrix.
 
 \ifC
-\cvfunc{Example: Clustering random samples of multi-gaussian distribution with k-means}
+% Example: Clustering random samples of multi-gaussian distribution with k-means
 \begin{lstlisting}
 #include "cxcore.h"
 #include "highgui.h"
@@ -150,7 +150,7 @@ The function \texttt{cvSeqPartition} implements a quadratic algorithm for
 splitting a set into one or more equivalancy classes. The function
 returns the number of equivalency classes.
 
-\cvfunc{Example: Partitioning a 2d point set}
+% Example: Partitioning a 2d point set
 \begin{lstlisting}
 
 #include "cxcore.h"
@@ -235,7 +235,7 @@ int main( int argc, char** argv )
 \ifCpp
 
 \cvCppFunc{kmeans}
-
+Finds the centers of clusters and groups the input samples around the clusters.
 \cvdefCpp{double kmeans( const Mat\& samples, int clusterCount, Mat\& labels,\par
                TermCriteria termcrit, int attempts,\par
                int flags, Mat* centers );}
@@ -295,7 +295,7 @@ This section documents OpenCV's interface to the FLANN\footnote{http://people.cs
 contains a collection of algorithms optimized for fast nearest neighbor search in large datasets and for high dimensional features. More 
 information about FLANN can be found in \cite{muja_flann_2009}.
 
-\cvCppFunc{flann::Index}
+\cvclass{flann::Index}
 The FLANN nearest neighbor index class.
 
 \begin{lstlisting}
@@ -450,7 +450,7 @@ optimum parameters.}
 \cvarg{filename}{ The filename in which the index was saved. }
 \end{description}
 }
-\end {description}
+\end{description}
 }
 \end{description}
 

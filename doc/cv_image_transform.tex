@@ -663,8 +663,8 @@ Applies an adaptive threshold to an array.
 \cvarg{dst}{Destination image; will have the same size and the same type as \texttt{src}}
 \cvarg{maxValue}{The non-zero value assigned to the pixels for which the condition is satisfied. See the discussion}
 \cvarg{adaptiveMethod}{Adaptive thresholding algorithm to use,
-   \cvarg{ADAPTIVE\_THRESH\_MEAN\_C} or \cvarg{ADAPTIVE\_THRESH\_GAUSSIAN\_C} (see the discussion)}
-\cvarg{thresholdType}{Thresholding type; must be one of \cvarg{THRESH\_BINARY} or \cvarg{THRESH\_BINARY\_INV}}
+   \texttt{ADAPTIVE\_THRESH\_MEAN\_C} or \texttt{ADAPTIVE\_THRESH\_GAUSSIAN\_C} (see the discussion)}
+\cvarg{thresholdType}{Thresholding type; must be one of \texttt{THRESH\_BINARY} or \texttt{THRESH\_BINARY\_INV}}
 \cvarg{blockSize}{The size of a pixel neighborhood that is used to calculate a threshold value for the pixel: 3, 5, 7, and so on}
 \cvarg{C}{The constant subtracted from the mean or weighted mean (see the discussion); normally, it's positive, but may be zero or negative as well}
 \end{description}
@@ -910,12 +910,10 @@ The above formulas for converting RGB to/from various color spaces have been tak
 
  \item Bayer $\rightarrow$ RGB (\texttt{CV\_BayerBG2BGR, CV\_BayerGB2BGR, CV\_BayerRG2BGR, CV\_BayerGR2BGR, CV\_BayerBG2RGB, CV\_BayerGB2RGB, CV\_BayerRG2RGB, CV\_BayerGR2RGB}) The Bayer pattern is widely used in CCD and CMOS cameras. It allows one to get color pictures from a single plane where R,G and B pixels (sensors of a particular component) are interleaved like this:
 
+\[
 \newcommand{\Rcell}{\color{red}R}
 \newcommand{\Gcell}{\color{green}G}
 \newcommand{\Bcell}{\color{blue}B}
-
-
-\[
 \definecolor{BackGray}{rgb}{0.8,0.8,0.8}
 \begin{array}{ c c c c c }
 \Rcell&\Gcell&\Rcell&\Gcell&\Rcell\\

@@ -239,7 +239,7 @@ The function locates the input point within the subdivision. There are 5 cases:
  \item The point falls onto the edge. The function returns \texttt{CV\_PTLOC\_ON\_EDGE} and \texttt{*edge} will contain this edge.
  \item The point coincides with one of the subdivision vertices. The function returns \texttt{CV\_PTLOC\_VERTEX} and \texttt{*vertex} will contain a pointer to the vertex.
  \item The point is outside the subdivsion reference rectangle. The function returns \texttt{CV\_PTLOC\_OUTSIDE\_RECT} and no pointers are filled.
- \item One of input arguments is invalid. A runtime error is raised or, if silent or "parent" error processing mode is selected, \\texttt{CV\_PTLOC\_ERROR} is returnd.
+ \item One of input arguments is invalid. A runtime error is raised or, if silent or "parent" error processing mode is selected, \texttt{CV\_PTLOC\_ERROR} is returnd.
 \end{itemize}
 \fi
 
