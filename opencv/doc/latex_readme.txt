@@ -4,17 +4,16 @@ the html files on disk that populate the online OpenCV documenation
 wiki.
 
 -------------------------------------------------------------------------
-In Ubuntu or Debian you need to install the following packages:
+In Ubuntu or Debian, required to build the opencv.pdf manual:
 
-sudo apt-get install texlive
-sudo apt-get install texlive-latex-extra
-sudo apt-get install latex-xcolor
-sudo apt-get install texlive-fonts-extra 
+  sudo apt-get install     texlive texlive-latex-extra latex-xcolor texlive-fonts-extra
  
-## Above will make the opencv.pdf manual. Below is only if you wish to make HTML documentation:
-sudo apt-get install python-setuptools             ## See [1] below for another install method
-sudo easy_install -U Sphinx                        ## This is NOT the speech recognition program. 
-sudo easy_install plasTeX            
+To build the HTML documentation, these are also required:
+
+  sudo apt-get install python-setuptools             ## See [1] below for another install method
+  sudo easy_install -U Sphinx                        ## This is NOT the speech recognition program. 
+  sudo apt-get install     dvipng
+  sudo easy_install plasTeX            
 
 -------------------------------------------------------------------------
 In other Linux distros you will also need to install LiveTeX and,
@@ -48,5 +47,3 @@ First:
   wget -q http://peak.telecommunity.com/dist/ez_setup.py
 Then
   sudo python ez_setup.py
-
-sudo apt-get install texlive texlive-latex-extra latex-xcolor texlive-fonts-extra 
