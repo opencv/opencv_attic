@@ -2,10 +2,10 @@
 
 \ifCPy
 
-\ifC
-\cvfunc{CvHistogram}\label{CvHistogram}
+\cvclass{CvHistogram}\label{CvHistogram}
 Multi-dimensional histogram.
 
+\ifC
 \begin{lstlisting}
 typedef struct CvHistogram
 {
@@ -17,6 +17,10 @@ typedef struct CvHistogram
 }
 CvHistogram;
 \end{lstlisting}
+\fi
+
+\ifPy
+A CvHistogram is a multi-dimensional histogram, created by function \cross{CreateHist}.  It has an attribute \texttt{bins} a \cross{CvMatND} containing the histogram counts.
 \fi
 
 \cvCPyFunc{CalcBackProject}
@@ -311,6 +315,18 @@ bin ranges, they assume thy are equally spaced in 0 to 255 bins.
 \cvCPyFunc{GetHistValue*D}
 Returns a pointer to the histogram bin.
 
+\cvdefC{float cvGetHistValue_1D(hist, idx0) \newline
+float cvGetHistValue_2D(hist, idx0, idx1) \newline
+float cvGetHistValue_3D(hist, idx0, idx1, idx2) \newline
+float cvGetHistValue_nD(hist, idx) \newline
+}
+
+\begin{description}
+\cvarg{hist}{Histogram}
+\cvarg{idx0, idx1, idx2, idx3}{Indices of the bin}
+\cvarg{idx}{Array of indices}
+\end{description}
+
 \begin{lstlisting}
 #define cvGetHistValue_1D( hist, idx0 ) 
     ((float*)(cvPtr1D( (hist)->bins, (idx0), 0 ))
@@ -321,12 +337,6 @@ Returns a pointer to the histogram bin.
 #define cvGetHistValue_nD( hist, idx ) 
     ((float*)(cvPtrND( (hist)->bins, (idx), 0 )))
 \end{lstlisting}
-
-\begin{description}
-\cvarg{hist}{Histogram}
-\cvarg{idx0, idx1, idx2, idx3}{Indices of the bin}
-\cvarg{idx}{Array of indices}
-\end{description}
 
 The macros \texttt{GetHistValue} return a pointer to the specified bin of the 1D, 2D, 3D or N-D histogram. In the case of a sparse histogram the function creates a new bin and sets it to 0, unless it exists already.
 \fi % }
