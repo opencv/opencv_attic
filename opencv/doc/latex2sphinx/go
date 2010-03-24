@@ -1,5 +1,6 @@
 #!/bin/bash
 
+mkdir -p c cpp py
 tput clear
 python latex.py ../online-opencv.tex || exit
 

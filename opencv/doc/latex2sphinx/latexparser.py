@@ -44,8 +44,8 @@ ParserElement.setDefaultWhitespaceChars("\n\t")
 backslash = chr(92)
 
 texcmd = Forward()
-filler = CharsNotIn(backslash + '\n' + '$')
-filler2 = CharsNotIn(backslash + '\n' + '$' + '{}')
+filler = CharsNotIn(backslash + '$')
+filler2 = CharsNotIn(backslash + '$' + '{}')
 
 arg = '[' + CharsNotIn("]") + ']'
 arg.setParseAction(argfun)
@@ -68,8 +68,12 @@ texcmd.setParseAction(texcmdfun)
 document = ZeroOrMore(dollarmath | texcmd | filler) + StringEnd().suppress()
 
 if 0:
-    s = "\\frac{\\sum_{I, \\, \\texttt{mask}(I) \\ne 0} \\texttt{arr}(I)_c}{N}"
+    s = """Starting from OpenCV 2.0 the new modern C++ interface has been introduced.
+It is crisp (less typing is needed to code the same thing), type-safe 
+and, in general, more convenient to use. Here is a short example of what it looks like:"""
     print s
+    print filler.parseString(s)
+    sys.exit(-1)
     for t in document.parseString(s):
         if isinstance(t, TexCmd):
             print '====> cmd=[%s]' % t.cmd, t
