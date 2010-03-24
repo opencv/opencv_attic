@@ -386,16 +386,7 @@ In this mode the processing time is still O(N), where N is the number of
 pixels. Thus, the function provides a very fast way to compute approximate
 Voronoi diagram for the binary image.
 
-\cvCPyFunc{FloodFill}
-Fills a connected component with the given color.
-
-\cvdefC{
-void cvFloodFill(\par CvArr* image,\par CvPoint seed\_point,\par CvScalar new\_val,\par
-                  CvScalar lo\_diff=cvScalarAll(0),\par CvScalar up\_diff=cvScalarAll(0),\par
-                  CvConnectedComp* comp=NULL,\par int flags=4,\par CvArr* mask=NULL );
-
-}
-\cvdefPy{FloodFill(image,seed\_point,new\_val,lo\_diff=(0,0,0,0),up\_diff=(0,0,0,0),flags=4,mask=NULL)-> comp}
+\cvclass{CvConnectedComp}
 
 \ifC
 \begin{lstlisting}
@@ -408,10 +399,26 @@ typedef struct CvConnectedComp
                       (the contour might have child contours corresponding to the holes) */
 } CvConnectedComp;
 
-#define CV_FLOODFILL_FIXED_RANGE (1 << 16)
-#define CV_FLOODFILL_MASK_ONLY   (1 << 17)
 \end{lstlisting}
 \fi
+
+\ifPy
+Connected component, represented as a tuple (area, value, rect), where
+area is the area of the component as a float, value is the average color
+as a \cross{CvScalar}, and rect is the ROI of the component, as a \cross{CvRect}.
+\fi
+
+\cvCPyFunc{FloodFill}
+Fills a connected component with the given color.
+
+\cvdefC{
+void cvFloodFill(\par CvArr* image,\par CvPoint seed\_point,\par CvScalar new\_val,\par
+                  CvScalar lo\_diff=cvScalarAll(0),\par CvScalar up\_diff=cvScalarAll(0),\par
+                  CvConnectedComp* comp=NULL,\par int flags=4,\par CvArr* mask=NULL );
+
+}
+\cvdefPy{FloodFill(image,seed\_point,new\_val,lo\_diff=(0,0,0,0),up\_diff=(0,0,0,0),flags=4,mask=NULL)-> comp}
+
 
 \begin{description}
 \cvarg{image}{Input 1- or 3-channel, 8-bit or floating-point image. It is modified by the function unless the \texttt{CV\_FLOODFILL\_MASK\_ONLY} flag is set (see below)}
@@ -419,7 +426,11 @@ typedef struct CvConnectedComp
 \cvarg{new\_val}{New value of the repainted domain pixels}
 \cvarg{lo\_diff}{Maximal lower brightness/color difference between the currently observed pixel and one of its neighbors belonging to the component, or a seed pixel being added to the component. In the case of 8-bit color images it is a packed value}
 \cvarg{up\_diff}{Maximal upper brightness/color difference between the currently observed pixel and one of its neighbors belonging to the component, or a seed pixel being added to the component. In the case of 8-bit color images it is a packed value}
+\ifC % {
 \cvarg{comp}{Pointer to the structure that the function fills with the information about the repainted domain}
+\else % }{
+\cvarg{comp}{Returned connected component for the repainted domain}
+\fi % }
 \cvarg{flags}{The operation flags. Lower bits contain connectivity value, 4 (by default) or 8, used within the function. Connectivity determines which neighbors of a pixel are considered. Upper bits can be 0 or a combination of the following flags:
 \begin{description}
   \cvarg{CV\_FLOODFILL\_FIXED\_RANGE}{if set, the difference between the current pixel and seed pixel is considered, otherwise the difference between neighbor pixels is considered (the range is floating)}
