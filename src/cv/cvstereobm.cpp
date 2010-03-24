@@ -868,9 +868,10 @@ static void findStereoCorrespondenceBM( const Mat& left0, const Mat& right0, Mat
     
 #ifdef HAVE_TBB    
     const double SAD_overhead_coeff = 10.0;
-    double N0 = 100000 / (useShorts ? 1 : 4);  // approx tbb's min number instructions reasonable for one thread    
+    double N0 = 8000000 / (useShorts ? 1 : 4);  // approx tbb's min number instructions reasonable for one thread    
     double maxStripeSize = min(max(N0 / (width * ndisp), (wsz-1) * SAD_overhead_coeff), (double)height);
     int nstripes = cvCeil(height / maxStripeSize);
+    printf("nstripes=%d\n", nstripes);
 #else
     const int nstripes = 1;
 #endif

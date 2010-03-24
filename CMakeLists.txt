@@ -247,9 +247,9 @@ if(CMAKE_COMPILER_IS_GNUCXX)
         set(USE_FAST_MATH ON CACHE BOOL "Enable -ffast-math for GCC")
         set(ENABLE_SSE ON CACHE BOOL "Enable SSE for GCC")
         set(ENABLE_SSE2 ON CACHE BOOL "Enable SSE2 for GCC")
-        set(ENABLE_SSE3 ON CACHE BOOL "Enable SSE3 for GCC")
-        set(ENABLE_SSSE3 ON CACHE BOOL "Enable SSSE3 for GCC")
-        #set(ENABLE_SSE4_1 ON CACHE BOOL "Enable SSE4.1 for GCC")
+        set(ENABLE_SSE3 OFF CACHE BOOL "Enable SSE3 for GCC")
+        set(ENABLE_SSSE3 OFF CACHE BOOL "Enable SSSE3 for GCC")
+        #set(ENABLE_SSE4_1 OFF CACHE BOOL "Enable SSE4.1 for GCC")
     endif()
 endif()
 
@@ -495,34 +495,19 @@ endif()
 
 if (WITH_TBB)
     if (WIN32 OR APPLE)
-        include(OpenCVFindTBB.cmake)
-        if (TBB_FOUND)
-            set(HAVE_TBB 1)
-
-            if(NOT "${TBB_INCLUDE_DIRS}" STREQUAL "")
-                include_directories("${TBB_INCLUDE_DIRS}")
-            endif()
-
-            link_directories("${TBB_LIBRARY_DIRS}")
-            if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
-                set(OPENCV_LINKER_LIBS ${OPENCV_LINKER_LIBS} ${TBB_DEBUG_LIBRARIES})
+        find_path(TBB_INCLUDE_DIRS "tbb/tbb.h"
+                    PATHS "/usr/include" "/usr/local/include"
+                    DOC "The path to TBB headers")
+        
+        if (TBB_INCLUDE_DIRS)
+            if (WIN32)
+                set(TBB_LIB "${TBB_INCLUDE_DIRS}/../lib/tbb.lib" CACHE PATH "Full name of TBB library")
             else()
-                set(OPENCV_LINKER_LIBS ${OPENCV_LINKER_LIBS} ${TBB_LIBRARIES})
+                set(TBB_LIB "${TBB_INCLUDE_DIRS}/../lib/libtbb.dylib" CACHE PATH "Full name of TBB library")
             endif()
-        endif()
-    else()
-        PKG_CHECK_MODULES(TBB tbb)
-        message(STATUS "TBB detected: ${TBBLIB_FOUND}")
-
-        if (TBB_FOUND)
             set(HAVE_TBB 1)
-
-            if(NOT "${TBB_INCLUDE_DIRS}" STREQUAL "")
-                include_directories("${TBB_INCLUDE_DIRS}")
-            endif()
-
-            link_directories("${TBB_LIBRARY_DIRS}")
-            set(OPENCV_LINKER_LIBS ${OPENCV_LINKER_LIBS} ${TBB_LIBRARIES})
+            include_directories("${TBB_INCLUDE_DIRS}")
+            set(OPENCV_LINKER_LIBS ${OPENCV_LINKER_LIBS} ${TBB_LIB})
         endif()
     endif()
 endif()
@@ -640,9 +625,6 @@ include_directories("."
 # Should be set to true for development
 set(OPENCV_WARNINGS_ARE_ERRORS OFF CACHE BOOL "Treat warnings as errors")
 
-# Whole program optimization?
-set(OPENCV_WHOLE_PROGRAM_OPTIMIZATION OFF CACHE BOOL "Flags for whole program optimization.")
-
 set(EXTRA_C_FLAGS "")
 set(EXTRA_C_FLAGS_RELEASE "")
 set(EXTRA_C_FLAGS_DEBUG "")
@@ -661,13 +643,6 @@ if(MSVC)
     #endif()
 
     set(EXTRA_EXE_LINKER_FLAGS_RELEASE "${EXTRA_EXE_LINKER_FLAGS_RELEASE} /debug")
-
-    # Whole program optimization
-    if(OPENCV_WHOLE_PROGRAM_OPTIMIZATION AND MSVC_VERSION GREATER 1300)
-        set(EXTRA_C_FLAGS_RELEASE "${EXTRA_C_FLAGS_RELEASE} /GL")
-        set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /LTCG")
-        set(CMAKE_MODULE_LINKER_FLAGS_RELEASE "${CMAKE_MODULE_LINKER_FLAGS_RELEASE} /LTCG")
-    endif()
 
     if(ENABLE_OPENMP)
         set(EXTRA_C_FLAGS_RELEASE "${EXTRA_C_FLAGS_RELEASE} /openmp")
@@ -704,11 +679,6 @@ if(CMAKE_COMPILER_IS_GNUCXX)
 
     if(OPENCV_WARNINGS_ARE_ERRORS)
         set(EXTRA_C_FLAGS "${EXTRA_C_FLAGS} -Werror")
-    endif()
-
-    # Whole program optimization
-    if(OPENCV_WHOLE_PROGRAM_OPTIMIZATION)
-        set(EXTRA_C_FLAGS_RELEASE "${EXTRA_C_FLAGS_RELEASE} -fwhole-program --combine")
     endif()
 
     # Other optimizations

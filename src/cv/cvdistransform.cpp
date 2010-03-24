@@ -440,18 +440,127 @@ icvGetDistanceTransformMask( int maskType, float *metrics )
     return CV_OK;
 }
 
+namespace cv
+{
+
+struct DTColumnInvoker
+{
+    DTColumnInvoker( const CvMat* _src, CvMat* _dst, const int* _sat_tab, const float* _sqr_tab)
+    {
+        src = _src;
+        dst = _dst;
+        sat_tab = _sat_tab + src->rows*2 + 1;
+        sqr_tab = _sqr_tab;
+    }
+    
+    void operator()( const BlockedRange& range ) const
+    {
+        int i, i1 = range.begin(), i2 = range.end();
+        int m = src->rows;
+        size_t sstep = src->step, dstep = dst->step/sizeof(float);
+        AutoBuffer<int> _d(m);
+        int* d = _d;
+        
+        for( i = i1; i < i2; i++ )
+        {
+            const uchar* sptr = src->data.ptr + i + (m-1)*sstep;
+            float* dptr = dst->data.fl + i;
+            int j, dist = m-1;
+            
+            for( j = m-1; j >= 0; j--, sptr -= sstep )
+            {
+                dist = (dist + 1) & (sptr[0] == 0 ? 0 : -1);
+                d[j] = dist;
+            }
+            
+            dist = m-1;
+            for( j = 0; j < m; j++, dptr += dstep )
+            {
+                dist = dist + 1 - sat_tab[dist - d[j]];
+                d[j] = dist;
+                dptr[0] = sqr_tab[dist];
+            }
+        }
+    }
+    
+    const CvMat* src;
+    CvMat* dst;
+    const int* sat_tab;
+    const float* sqr_tab;
+};
+    
+    
+struct DTRowInvoker
+{
+    DTRowInvoker( CvMat* _dst, const float* _sqr_tab, const float* _inv_tab )
+    {
+        dst = _dst;
+        sqr_tab = _sqr_tab;
+        inv_tab = _inv_tab;
+    }
+    
+    void operator()( const BlockedRange& range ) const
+    {
+        const float inf = 1e6f;
+        int i, i1 = range.begin(), i2 = range.end();
+        int n = dst->cols;
+        AutoBuffer<uchar> _buf((n+2)*2*sizeof(float) + (n+2)*sizeof(int));
+        float* f = (float*)(uchar*)_buf;
+        float* z = f + n;
+        int* v = alignPtr((int*)(z + n + 1), sizeof(int));
+       
+        for( i = i1; i < i2; i++ )
+        {
+            float* d = (float*)(dst->data.ptr + i*dst->step);
+            int p, q, k;
+            
+            v[0] = 0;
+            z[0] = -inf;
+            z[1] = inf;
+            f[0] = d[0];
+            
+            for( q = 1, k = 0; q < n; q++ )
+            {
+                float fq = d[q];
+                f[q] = fq;
+                
+                for(;;k--)
+                {
+                    p = v[k];
+                    float s = (fq + sqr_tab[q] - d[p] - sqr_tab[p])*inv_tab[q - p];
+                    if( s > z[k] )
+                    {
+                        k++;
+                        v[k] = q;
+                        z[k] = s;
+                        z[k+1] = inf;
+                        break;
+                    }
+                }
+            }
+            
+            for( q = 0, k = 0; q < n; q++ )
+            {
+                while( z[k+1] < q )
+                    k++;
+                p = v[k];
+                d[q] = std::sqrt(sqr_tab[std::abs(q - p)] + f[p]);
+            }
+        }
+    }
+    
+    CvMat* dst;
+    const float* sqr_tab;
+    const float* inv_tab;
+};
+
+}
 
 static void
 icvTrueDistTrans( const CvMat* src, CvMat* dst )
 {
-    cv::Ptr<CvMat> buffer = 0;
-
-    int i, m, n;
-    int sstep, dstep;
     const float inf = 1e6f;
-    int thread_count = cvGetNumThreads();
-    int pass1_sz, pass2_sz;
-
+    
     if( !CV_ARE_SIZES_EQ( src, dst ))
         CV_Error( CV_StsUnmatchedSizes, "" );
 
@@ -460,24 +569,13 @@ icvTrueDistTrans( const CvMat* src, CvMat* dst )
         CV_Error( CV_StsUnsupportedFormat,
         "The input image must have 8uC1 type and the output one must have 32fC1 type" );
 
-    m = src->rows;
-    n = src->cols;
+    int i, m = src->rows, n = src->cols;
 
-    // (see stage 1 below):
-    // sqr_tab: 2*m, sat_tab: 3*m + 1, d: m*thread_count,
-    pass1_sz = src->rows*(5 + thread_count) + 1;
-    // (see stage 2):
-    // sqr_tab & inv_tab: n each; f & v: n*thread_count each; z: (n+1)*thread_count
-    pass2_sz = src->cols*(2 + thread_count*3) + thread_count;
-    buffer = cvCreateMat( 1, MAX(pass1_sz, pass2_sz), CV_32FC1 );
-
-    sstep = src->step;
-    dstep = dst->step / sizeof(float);
-
+    cv::AutoBuffer<uchar> _buf(std::max(m*2*sizeof(float) + (m*3+1)*sizeof(int), n*2*sizeof(float)));
     // stage 1: compute 1d distance transform of each column
-    float* sqr_tab = buffer->data.fl;
-    int* sat_tab = (int*)(sqr_tab + m*2);
-    const int shift = m*2;
+    float* sqr_tab = (float*)(uchar*)_buf;
+    int* sat_tab = cv::alignPtr((int*)(sqr_tab + m*2), sizeof(int));
+    int shift = m*2;
 
     for( i = 0; i < m; i++ )
         sqr_tab[i] = (float)(i*i);
@@ -488,35 +586,11 @@ icvTrueDistTrans( const CvMat* src, CvMat* dst )
     for( ; i <= m*3; i++ )
         sat_tab[i] = i - shift;
 
-#ifdef _OPENMP
-    #pragma omp parallel for num_threads(thread_count)
-#endif
-    for( i = 0; i < n; i++ )
-    {
-        const uchar* sptr = src->data.ptr + i + (m-1)*sstep;
-        float* dptr = dst->data.fl + i;
-        int* d = (int*)(sat_tab + m*3+1+m*cvGetThreadNum());
-        int j, dist = m-1;
-
-        for( j = m-1; j >= 0; j--, sptr -= sstep )
-        {
-            dist = (dist + 1) & (sptr[0] == 0 ? 0 : -1);
-            d[j] = dist;
-        }
-
-        dist = m-1;
-        for( j = 0; j < m; j++, dptr += dstep )
-        {
-            dist = dist + 1 - sat_tab[dist + 1 - d[j] + shift];
-            d[j] = dist;
-            dptr[0] = sqr_tab[dist];
-        }
-    }
+    cv::parallel_for(cv::BlockedRange(0, n), cv::DTColumnInvoker(src, dst, sat_tab, sqr_tab)); 
 
     // stage 2: compute modified distance transform for each row
-    float* inv_tab = buffer->data.fl;
-    sqr_tab = inv_tab + n;
-
+    float* inv_tab = sqr_tab + n;
+    
     inv_tab[0] = sqr_tab[0] = 0.f;
     for( i = 1; i < n; i++ )
     {
@@ -524,52 +598,7 @@ icvTrueDistTrans( const CvMat* src, CvMat* dst )
         sqr_tab[i] = (float)(i*i);
     }
 
-#ifdef _OPENMP
-    #pragma omp parallel for num_threads(thread_count) schedule(dynamic)
-#endif
-    for( i = 0; i < m; i++ )
-    {
-        float* d = (float*)(dst->data.ptr + i*dst->step);
-        float* f = sqr_tab + n + (n*3+1)*cvGetThreadNum();
-        float* z = f + n;
-        int* v = (int*)(z + n + 1);
-        int p, q, k;
-
-        v[0] = 0;
-        z[0] = -inf;
-        z[1] = inf;
-        f[0] = d[0];
-
-        for( q = 1, k = 0; q < n; q++ )
-        {
-            float fq = d[q];
-            f[q] = fq;
-
-            for(;;k--)
-            {
-                p = v[k];
-                float s = (fq + sqr_tab[q] - d[p] - sqr_tab[p])*inv_tab[q - p];
-                if( s > z[k] )
-                {
-                    k++;
-                    v[k] = q;
-                    z[k] = s;
-                    z[k+1] = inf;
-                    break;
-                }
-            }
-        }
-
-        for( q = 0, k = 0; q < n; q++ )
-        {
-            while( z[k+1] < q )
-                k++;
-            p = v[k];
-            d[q] = sqr_tab[abs(q - p)] + f[p];
-        }
-    }
-
-    cvPow( dst, dst, 0.5 );
+    cv::parallel_for(cv::BlockedRange(0, m), cv::DTRowInvoker(dst, sqr_tab, inv_tab));
 }
 
 

@@ -42,10 +42,6 @@
 #include "_cv.h"
 #include <cstdio>
 
-#ifdef _OPENMP
-#include "omp.h"
-#endif
-
 namespace cv
 {
 
@@ -66,16 +62,27 @@ public:
     double eps;
 };    
     
-void groupRectangles(vector<Rect>& rectList, int groupThreshold, double eps)
+
+static void groupRectangles(vector<Rect>& rectList, int groupThreshold, double eps, vector<int>* weights)
 {
     if( groupThreshold <= 0 || rectList.empty() )
+    {
+        if( weights )
+        {
+            size_t i, sz = rectList.size();
+            weights->resize(sz);
+            for( i = 0; i < sz; i++ )
+                (*weights)[i] = 1;
+        }
         return;
+    }
     
     vector<int> labels;
     int nclasses = partition(rectList, labels, SimilarRects(eps));
+    
     vector<Rect> rrects(nclasses);
     vector<int> rweights(nclasses, 0);
-    int i, nlabels = (int)labels.size();
+    int i, j, nlabels = (int)labels.size();
     for( i = 0; i < nlabels; i++ )
     {
         int cls = labels[i];
@@ -85,19 +92,68 @@ void groupRectangles(vector<Rect>& rectList, int groupThreshold, double eps)
         rrects[cls].height += rectList[i].height;
         rweights[cls]++;
     }
-    rectList.clear();
+    
     for( i = 0; i < nclasses; i++ )
     {
         Rect r = rrects[i];
-        if( rweights[i] <= groupThreshold )
-            continue;
         float s = 1.f/rweights[i];
-        rectList.push_back(Rect(saturate_cast<int>(r.x*s),
-                                saturate_cast<int>(r.y*s),
-                                saturate_cast<int>(r.width*s),
-                                saturate_cast<int>(r.height*s)));
+        rrects[i] = Rect(saturate_cast<int>(r.x*s),
+             saturate_cast<int>(r.y*s),
+             saturate_cast<int>(r.width*s),
+             saturate_cast<int>(r.height*s));
+    }
+    
+    rectList.clear();
+    if( weights )
+        weights->clear();
+    
+    for( i = 0; i < nclasses; i++ )
+    {
+        Rect r1 = rrects[i];
+        int n1 = rweights[i];
+        if( n1 <= groupThreshold )
+            continue;
+        // filter out small face rectangles inside large rectangles
+        for( j = 0; j < nclasses; j++ )
+        {
+            int n2 = rweights[j];
+            
+            if( j == i || n2 <= groupThreshold )
+                continue;
+            Rect r2 = rrects[j];
+            
+            int dx = saturate_cast<int>( r2.width * eps );
+            int dy = saturate_cast<int>( r2.height * eps );
+            
+            if( i != j &&
+                r1.x >= r2.x - dx &&
+                r1.y >= r2.y - dy &&
+                r1.x + r1.width <= r2.x + r2.width + dx &&
+                r1.y + r1.height <= r2.y + r2.height + dy &&
+                (n2 > std::max(3, n1) || n1 < 3) )
+                break;
+        }
+        
+        if( j == nclasses )
+        {
+            rectList.push_back(r1);
+            if( weights )
+                weights->push_back(n1);
+        }
     }
 }
+
+
+void groupRectangles(vector<Rect>& rectList, int groupThreshold, double eps)
+{
+    groupRectangles(rectList, groupThreshold, eps, 0);
+}
+    
+void groupRectangles(vector<Rect>& rectList, vector<int>& weights, int groupThreshold, double eps)
+{
+    groupRectangles(rectList, groupThreshold, eps, &weights);
+}
+
     
 #define CC_CASCADE_PARAMS "cascadeParams"
 #define CC_STAGE_TYPE     "stageType"
@@ -750,6 +806,44 @@ bool CascadeClassifier::setImage( Ptr<FeatureEvaluator> &_feval, const Mat& imag
     return empty() ? false : _feval->setImage(image, origWinSize );
 }
     
+ 
+struct CascadeClassifierInvoker
+{
+    CascadeClassifierInvoker( CascadeClassifier& _cc, Size _sz1, int _stripSize, int _yStep, double _factor, ConcurrentRectVector& _vec )
+    {
+        cc = &_cc;
+        sz1 = _sz1;
+        stripSize = _stripSize;
+        yStep = _yStep;
+        factor = _factor;
+        vec = &_vec;
+    }
+    
+    void operator()(const BlockedRange& range) const
+    {
+        Ptr<FeatureEvaluator> feval = cc->feval->clone();
+        int y1 = range.begin()*stripSize, y2 = min(range.end()*stripSize, sz1.height);
+        Size winSize(cvRound(cc->origWinSize.width*factor), cvRound(cc->origWinSize.height*factor));
+            
+        for( int y = y1; y < y2; y += yStep )
+            for( int x = 0; x < sz1.width; x += yStep )
+            {
+                int r = cc->runAt(feval, Point(x, y));
+                if( r > 0 )
+                    vec->push_back(Rect(cvRound(x*factor), cvRound(y*factor),
+                                        winSize.width, winSize.height));
+                if( r == 0 )
+                    x += yStep;
+            }
+    }
+    
+    CascadeClassifier* cc;
+    Size sz1;
+    int stripSize, yStep;
+    double factor;
+    ConcurrentRectVector* vec;
+};
+    
     
 struct getRect { Rect operator ()(const CvAvgComp& e) const { return e.rect; } };
 
@@ -757,6 +851,8 @@ void CascadeClassifier::detectMultiScale( const Mat& image, vector<Rect>& object
                                           double scaleFactor, int minNeighbors,
                                           int flags, Size minSize )
 {
+    const double GROUP_EPS = 0.2;
+    
     CV_Assert( scaleFactor > 1 && image.depth() == CV_8U );
     
     if( empty() )
@@ -786,16 +882,7 @@ void CascadeClassifier::detectMultiScale( const Mat& image, vector<Rect>& object
         img = temp;
     }
     
-    int maxNumThreads = 1;
-#ifdef _OPENMP
-	maxNumThreads = omp_get_num_procs();
-#endif
-
-    vector<vector<Rect> > rects( maxNumThreads );
-    vector<Rect>* rectsPtr = &rects[0];
-    vector<Ptr<FeatureEvaluator> > fevals( maxNumThreads );
-    fevals[0] = feval;
-    Ptr<FeatureEvaluator>* fevalsPtr = &fevals[0];
+    ConcurrentRectVector allCandidates;
 
     for( double factor = 1; ; factor *= scaleFactor )
     {
@@ -810,54 +897,27 @@ void CascadeClassifier::detectMultiScale( const Mat& image, vector<Rect>& object
             continue;
         
         int yStep = factor > 2. ? 1 : 2;
-        if( maxNumThreads > 1 )
-        {
-            stripCount = max(min(sz1.height/yStep, maxNumThreads*3), 1);
-            stripSize = (sz1.height + stripCount - 1)/stripCount;
-            stripSize = (stripSize/yStep)*yStep;
-        }
-        else
-        {
-            stripCount = 1;
-            stripSize = sz1.height;
-        }
+    #ifdef HAVE_TBB
+        const int PTS_PER_THREAD = 100;
+        stripCount = max(((sz1.height*sz1.width)/(yStep*yStep) + PTS_PER_THREAD/2)/PTS_PER_THREAD, 1);
+        stripSize = (sz1.height + stripCount - 1)/stripCount;
+        stripSize = (stripSize/yStep)*yStep;
+    #else
+        stripCount = 1;
+        stripSize = sz1.height;
+    #endif
 
         Mat img1( sz, CV_8U, imgbuf.data );
         resize( img, img1, sz, 0, 0, CV_INTER_LINEAR );
         if( !feval->setImage( img1, origWinSize ) )
             break;
-        for( int i = 1; i < maxNumThreads; i++ )
-            fevalsPtr[i] = feval->clone();
-        
-#ifdef _OPENMP
-#pragma omp parallel for num_threads(maxNumThreads) schedule(dynamic)
-#endif
-        for( int i = 0; i < stripCount; i++ )
-        {
-			int threadIdx = 0;
-#ifdef _OPENMP
-			threadIdx = omp_get_thread_num();
-#endif
-            int y1 = i*stripSize, y2 = (i+1)*stripSize;
-            if( i == stripCount - 1 || y2 > sz1.height )
-                y2 = sz1.height;
-            Size ssz(sz1.width, y2 - y1);
-
-            for( int y = y1; y < y2; y += yStep )
-                for( int x = 0; x < ssz.width; x += yStep )
-                {
-                    int r = runAt(fevalsPtr[threadIdx], Point(x,y));
-                    if( r > 0 )
-                        rectsPtr[threadIdx].push_back(Rect(cvRound(x*factor), cvRound(y*factor),
-                                               winSize.width, winSize.height));
-                    else if( r == 0 )
-                        x += yStep;
-                }
-        }
+ 
+        parallel_for(BlockedRange(0, stripCount), CascadeClassifierInvoker(*this, sz1, stripSize, yStep, factor, allCandidates));
     }
-    for( vector< vector<Rect> >::const_iterator it = rects.begin(); it != rects.end(); it++ )
-        objects.insert( objects.end(), it->begin(), it->end() );
-    groupRectangles( objects, minNeighbors, 0.2 );
+    
+    objects.resize(allCandidates.size());
+    std::copy(allCandidates.begin(), allCandidates.end(), objects.begin());
+    groupRectangles( objects, minNeighbors, GROUP_EPS );
 }    
 
     

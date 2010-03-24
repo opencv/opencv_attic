@@ -184,6 +184,8 @@ CvPyramid;
         {
             tbb::parallel_do(first, last, body);
         }
+        
+        typedef tbb::concurrent_vector<Rect> ConcurrentRectVector;
     }
 #else
     namespace cv
@@ -213,6 +215,8 @@ CvPyramid;
             for( ; first != last; ++first )
                 body(*first);
         }
+        
+        typedef std::vector<Rect> ConcurrentRectVector;
     }
 #endif
 
