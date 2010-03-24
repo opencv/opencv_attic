@@ -426,7 +426,7 @@ cvSetImagesForHaarClassifierCascade( CvHaarClassifierCascade* _cascade,
     CvHidHaarClassifierCascade* cascade;
     int coi0 = 0, coi1 = 0;
     int i;
-    CvRect equ_rect;
+    CvRect equRect;
     double weight_scale;
 
     if( !CV_IS_HAAR_CLASSIFIER(_cascade) )
@@ -478,30 +478,26 @@ cvSetImagesForHaarClassifierCascade( CvHaarClassifierCascade* _cascade,
     cascade->sum = *sum;
     cascade->sqsum = *sqsum;
 
-    equ_rect.x = equ_rect.y = cvRound(scale);
-    equ_rect.width = cvRound((_cascade->orig_window_size.width-2)*scale);
-    equ_rect.height = cvRound((_cascade->orig_window_size.height-2)*scale);
-    weight_scale = 1./(equ_rect.width*equ_rect.height);
+    equRect.x = equRect.y = cvRound(scale);
+    equRect.width = cvRound((_cascade->orig_window_size.width-2)*scale);
+    equRect.height = cvRound((_cascade->orig_window_size.height-2)*scale);
+    weight_scale = 1./(equRect.width*equRect.height);
     cascade->inv_window_area = weight_scale;
 
-    cascade->p0 = sum_elem_ptr(*sum, equ_rect.y, equ_rect.x);
-    cascade->p1 = sum_elem_ptr(*sum, equ_rect.y, equ_rect.x + equ_rect.width );
-    cascade->p2 = sum_elem_ptr(*sum, equ_rect.y + equ_rect.height, equ_rect.x );
-    cascade->p3 = sum_elem_ptr(*sum, equ_rect.y + equ_rect.height,
-                                     equ_rect.x + equ_rect.width );
+    cascade->p0 = sum_elem_ptr(*sum, equRect.y, equRect.x);
+    cascade->p1 = sum_elem_ptr(*sum, equRect.y, equRect.x + equRect.width );
+    cascade->p2 = sum_elem_ptr(*sum, equRect.y + equRect.height, equRect.x );
+    cascade->p3 = sum_elem_ptr(*sum, equRect.y + equRect.height,
+                                     equRect.x + equRect.width );
 
-    cascade->pq0 = sqsum_elem_ptr(*sqsum, equ_rect.y, equ_rect.x);
-    cascade->pq1 = sqsum_elem_ptr(*sqsum, equ_rect.y, equ_rect.x + equ_rect.width );
-    cascade->pq2 = sqsum_elem_ptr(*sqsum, equ_rect.y + equ_rect.height, equ_rect.x );
-    cascade->pq3 = sqsum_elem_ptr(*sqsum, equ_rect.y + equ_rect.height,
-                                          equ_rect.x + equ_rect.width );
+    cascade->pq0 = sqsum_elem_ptr(*sqsum, equRect.y, equRect.x);
+    cascade->pq1 = sqsum_elem_ptr(*sqsum, equRect.y, equRect.x + equRect.width );
+    cascade->pq2 = sqsum_elem_ptr(*sqsum, equRect.y + equRect.height, equRect.x );
+    cascade->pq3 = sqsum_elem_ptr(*sqsum, equRect.y + equRect.height,
+                                          equRect.x + equRect.width );
 
     /* init pointers in haar features according to real window size and
        given image pointers */
-#ifdef _OPENMP
-    int max_threads = cvGetNumThreads();
-    #pragma omp parallel for num_threads(max_threads) schedule(dynamic)
-#endif // _OPENMP
     for( i = 0; i < _cascade->count; i++ )
     {
         int j, k, l;
@@ -517,13 +513,12 @@ cvSetImagesForHaarClassifierCascade( CvHaarClassifierCascade* _cascade,
                     &cascade->stage_classifier[i].classifier[j].node[l].feature;
                 double sum0 = 0, area0 = 0;
                 CvRect r[3];
-#if CV_ADJUST_FEATURES
+
                 int base_w = -1, base_h = -1;
                 int new_base_w = 0, new_base_h = 0;
                 int kx, ky;
                 int flagx = 0, flagy = 0;
                 int x0 = 0, y0 = 0;
-#endif
                 int nr;
 
                 /* align blocks */
@@ -531,18 +526,15 @@ cvSetImagesForHaarClassifierCascade( CvHaarClassifierCascade* _cascade,
                 {
                     if( !hidfeature->rect[k].p0 )
                         break;
-#if CV_ADJUST_FEATURES
                     r[k] = feature->rect[k].r;
                     base_w = (int)CV_IMIN( (unsigned)base_w, (unsigned)(r[k].width-1) );
                     base_w = (int)CV_IMIN( (unsigned)base_w, (unsigned)(r[k].x - r[0].x-1) );
                     base_h = (int)CV_IMIN( (unsigned)base_h, (unsigned)(r[k].height-1) );
                     base_h = (int)CV_IMIN( (unsigned)base_h, (unsigned)(r[k].y - r[0].y-1) );
-#endif
                 }
 
                 nr = k;
 
-#if CV_ADJUST_FEATURES
                 base_w += 1;
                 base_h += 1;
                 kx = r[0].width / base_w;
@@ -561,34 +553,29 @@ cvSetImagesForHaarClassifierCascade( CvHaarClassifierCascade* _cascade,
                     new_base_h = cvRound( r[0].height * scale ) / ky;
                     y0 = cvRound( r[0].y * scale );
                 }
-#endif
 
                 for( k = 0; k < nr; k++ )
                 {
                     CvRect tr;
                     double correction_ratio;
 
-#if CV_ADJUST_FEATURES
                     if( flagx )
                     {
                         tr.x = (r[k].x - r[0].x) * new_base_w / base_w + x0;
                         tr.width = r[k].width * new_base_w / base_w;
                     }
                     else
-#endif
                     {
                         tr.x = cvRound( r[k].x * scale );
                         tr.width = cvRound( r[k].width * scale );
                     }
 
-#if CV_ADJUST_FEATURES
                     if( flagy )
                     {
                         tr.y = (r[k].y - r[0].y) * new_base_h / base_h + y0;
                         tr.height = r[k].height * new_base_h / base_h;
                     }
                     else
-#endif
                     {
                         tr.y = cvRound( r[k].y * scale );
                         tr.height = cvRound( r[k].height * scale );
@@ -600,7 +587,7 @@ cvSetImagesForHaarClassifierCascade( CvHaarClassifierCascade* _cascade,
                     const float orig_feature_size =  (float)(feature->rect[k].r.width)*feature->rect[k].r.height;
                     const float orig_norm_size = (float)(_cascade->orig_window_size.width)*(_cascade->orig_window_size.height);
                     const float feature_size = float(tr.width*tr.height);
-                    //const float normSize    = float(equ_rect.width*equ_rect.height);
+                    //const float normSize    = float(equRect.width*equRect.height);
                     float target_ratio = orig_feature_size / orig_norm_size;
                     //float isRatio = featureSize / normSize;
                     //correctionRatio = targetRatio / isRatio / normSize;
@@ -827,46 +814,193 @@ cvRunHaarClassifierCascade( const CvHaarClassifierCascade* _cascade,
 }
 
 
-static int is_equal( const void* _r1, const void* _r2, void* )
+namespace cv
 {
-    const CvRect* r1 = (const CvRect*)_r1;
-    const CvRect* r2 = (const CvRect*)_r2;
-    int distance = cvRound(r1->width*0.2);
 
-    return r2->x <= r1->x + distance &&
-           r2->x >= r1->x - distance &&
-           r2->y <= r1->y + distance &&
-           r2->y >= r1->y - distance &&
-           r2->width <= cvRound( r1->width * 1.2 ) &&
-           cvRound( r2->width * 1.2 ) >= r1->width;
+struct HaarDetectObjects_ScaleImage_Invoker
+{
+    HaarDetectObjects_ScaleImage_Invoker( const CvHaarClassifierCascade* _cascade,
+                                          int _stripSize, double _factor,
+                                          const Mat& _sum1, const Mat& _sqsum1, Mat& _norm1,
+                                          Mat& _mask1, Rect _equRect, ConcurrentRectVector& _vec )
+    {
+        cascade = _cascade;
+        stripSize = _stripSize;
+        factor = _factor;
+        sum1 = _sum1;
+        sqsum1 = _sqsum1;
+        norm1 = _norm1;
+        mask1 = _mask1;
+        equRect = _equRect;
+        vec = &_vec;
+    }
+    
+    void operator()( const BlockedRange& range ) const
+    {
+        Size winSize0 = cascade->orig_window_size;
+        Size winSize(cvRound(winSize0.width*factor), cvRound(winSize0.height*factor));
+        int y1 = range.begin()*stripSize, y2 = min(range.end()*stripSize, sum1.rows - 1 - winSize0.height);
+        Size ssz(sum1.cols - 1 - winSize0.width, y2 - y1);
+        int x, y, ystep = factor > 2 ? 1 : 2;
+        
+    #ifdef HAVE_IPP
+        if( cascade->hid_cascade->ipp_stages )
+        {
+            ippiRectStdDev_32f_C1R(sum1.ptr<float>(y1), sum1.step,
+                                   sqsum1.ptr<double>(y1), sqsum1.step,
+                                   norm1.ptr<float>(y1), norm1.step,
+                                   ippiSize(ssz.width, ssz.height), equRect );
+            
+            int positive = (ssz.width/ystep)*((ssz.height + ystep-1)/ystep);
+            
+            if( ystep == 1 )
+                mask1 = Scalar::all(1);
+            else
+                for( y = y1; y < y2; y++ )
+                {
+                    uchar* mask1row = mask1.ptr(y);
+                    memset( mask1row, 0, ssz.width );
+                    
+                    if( y % ystep == 0 )
+                        for( x = 0; x < ssz.width; x += ystep )
+                            mask1row[x] = (uchar)1;
+                }
+            
+            for( int j = 0; j < cascade->count; j++ )
+            {
+                if( ippiApplyHaarClassifier_32f_C1R(
+                            sum1.ptr<float>(y1), sum1.step,
+                            norm1.ptr<float>(y1), norm1.step,
+                            mask1.ptr<uchar>(y1), mask1.step,
+                            ippiSize(ssz.width, ssz.height), &positive,
+                            cascade->hid_cascade->stage_classifier[j].threshold,
+                            (IppiHaarClassifier_32f*)cascade->hid_cascade->ipp_stages[j]) < 0 )
+                    positive = 0;
+                if( positive <= 0 )
+                    break;
+            }
+            
+            if( positive > 0 )
+                for( y = y1; y < y2; y += ystep )
+                {
+                    uchar* mask1row = mask1.row(y);
+                    for( x = 0; x < ssz.width; x += ystep )
+                        if( mask1row[x] != 0 )
+                        {
+                            vec->push_back(Rect(cvRound(x*factor), cvRound(y*factor),
+                                                winSize.width, winSize.height));
+                            if( --positive == 0 )
+                                break;
+                        }
+                    if( positive == 0 )
+                        break;
+                }
+        }
+        else
+#endif
+            for( y = y1; y < y2; y += ystep )
+                for( x = 0; x < ssz.width; x += ystep )
+                {
+                    if( cvRunHaarClassifierCascade( cascade, cvPoint(x,y), 0 ) > 0 )
+                        vec->push_back(Rect(cvRound(x*factor), cvRound(y*factor),
+                                            winSize.width, winSize.height)); 
+                }
+    }
+    
+    const CvHaarClassifierCascade* cascade;
+    int stripSize;
+    double factor;
+    Mat sum1, sqsum1, norm1, mask1;
+    Rect equRect;
+    ConcurrentRectVector* vec;
+};
+    
+
+struct HaarDetectObjects_ScaleCascade_Invoker
+{
+    HaarDetectObjects_ScaleCascade_Invoker( const CvHaarClassifierCascade* _cascade,
+                                            Size _winsize, const Range& _xrange, double _ystep,
+                                            size_t _sumstep, const int** _p, const int** _pq,
+                                            ConcurrentRectVector& _vec )
+    {
+        cascade = _cascade;
+        winsize = _winsize;
+        xrange = _xrange;
+        ystep = _ystep;
+        sumstep = _sumstep;
+        p = _p; pq = _pq;
+        vec = &_vec;
+    }
+    
+    void operator()( const BlockedRange& range ) const
+    {
+        int iy, startY = range.begin(), endY = range.end();
+        const int *p0 = p[0], *p1 = p[1], *p2 = p[2], *p3 = p[3];
+        const int *pq0 = pq[0], *pq1 = pq[1], *pq2 = pq[2], *pq3 = pq[3];
+        bool doCannyPruning = p0 != 0;
+        int sstep = sumstep/sizeof(p0[0]);
+        
+        for( iy = startY; iy < endY; iy++ )
+        {
+            int ix, y = cvRound(iy*ystep), ixstep = 1;
+            for( ix = xrange.start; ix < xrange.end; ix += ixstep )
+            {
+                int x = cvRound(ix*ystep); // it should really be ystep, not ixstep
+                
+                if( doCannyPruning )
+                {
+                    int offset = y*sstep + x;
+                    int s = p0[offset] - p1[offset] - p2[offset] + p3[offset];
+                    int sq = pq0[offset] - pq1[offset] - pq2[offset] + pq3[offset];
+                    if( s < 100 || sq < 20 )
+                    {
+                        ixstep = 2;
+                        continue;
+                    }
+                }
+                
+                int result = cvRunHaarClassifierCascade( cascade, cvPoint(x, y), 0 );
+                if( result > 0 )
+                    vec->push_back(Rect(x, y, winsize.width, winsize.height));
+                ixstep = result != 0 ? 1 : 2;
+            }
+        }
+    }
+    
+    const CvHaarClassifierCascade* cascade;
+    double ystep;
+    size_t sumstep;
+    Size winsize;
+    Range xrange;
+    const int** p;
+    const int** pq;
+    ConcurrentRectVector* vec;
+};
+    
+    
 }
-
-
-#define VERY_ROUGH_SEARCH 0
+    
 
 CV_IMPL CvSeq*
 cvHaarDetectObjects( const CvArr* _img,
                      CvHaarClassifierCascade* cascade,
-                     CvMemStorage* storage, double scale_factor,
-                     int min_neighbors, int flags, CvSize min_size )
+                     CvMemStorage* storage, double scaleFactor,
+                     int minNeighbors, int flags, CvSize minSize )
 {
-    int split_stage = 2;
-
+    const double GROUP_EPS = 0.2;
     CvMat stub, *img = (CvMat*)_img;
-    cv::Ptr<CvMat> temp, sum, tilted, sqsum, norm_img, sumcanny, img_small;
+    cv::Ptr<CvMat> temp, sum, tilted, sqsum, normImg, sumcanny, imgSmall;
     CvSeq* result_seq = 0;
     cv::Ptr<CvMemStorage> temp_storage;
-    cv::AutoBuffer<CvAvgComp> comps;
-    CvSeq* seq_thread[CV_MAX_THREADS] = {0};
-    int i, max_threads = 0;
 
-    CvSeq *seq = 0, *seq2 = 0, *idx_seq = 0, *big_seq = 0;
-    CvAvgComp result_comp = {{0,0,0,0},0};
+    cv::ConcurrentRectVector allCandidates;
+    std::vector<cv::Rect> rectList;
+    std::vector<int> rweights;
     double factor;
-    int npass = 2, coi;
-    bool do_canny_pruning = (flags & CV_HAAR_DO_CANNY_PRUNING) != 0;
-    bool find_biggest_object = (flags & CV_HAAR_FIND_BIGGEST_OBJECT) != 0;
-    bool rough_search = (flags & CV_HAAR_DO_ROUGH_SEARCH) != 0;
+    int coi;
+    bool doCannyPruning = (flags & CV_HAAR_DO_CANNY_PRUNING) != 0;
+    bool findBiggestObject = (flags & CV_HAAR_FIND_BIGGEST_OBJECT) != 0;
+    bool roughSearch = (flags & CV_HAAR_DO_ROUGH_SEARCH) != 0;
 
     if( !CV_IS_HAAR_CLASSIFIER(cascade) )
         CV_Error( !cascade ? CV_StsNullPtr : CV_StsBadArg, "Invalid classifier cascade" );
@@ -881,16 +1015,15 @@ cvHaarDetectObjects( const CvArr* _img,
     if( CV_MAT_DEPTH(img->type) != CV_8U )
         CV_Error( CV_StsUnsupportedFormat, "Only 8-bit images are supported" );
     
-    if( scale_factor <= 1 )
+    if( scaleFactor <= 1 )
         CV_Error( CV_StsOutOfRange, "scale factor must be > 1" );
 
-    if( find_biggest_object )
+    if( findBiggestObject )
         flags &= ~CV_HAAR_SCALE_IMAGE;
 
     temp = cvCreateMat( img->rows, img->cols, CV_8UC1 );
     sum = cvCreateMat( img->rows + 1, img->cols + 1, CV_32SC1 );
     sqsum = cvCreateMat( img->rows + 1, img->cols + 1, CV_64FC1 );
-    temp_storage = cvCreateChildMemStorage( storage );
 
     if( !cascade->hid_cascade )
         icvCreateHidHaarClassifierCascade(cascade);
@@ -898,21 +1031,7 @@ cvHaarDetectObjects( const CvArr* _img,
     if( cascade->hid_cascade->has_tilted_features )
         tilted = cvCreateMat( img->rows + 1, img->cols + 1, CV_32SC1 );
 
-    seq = cvCreateSeq( 0, sizeof(CvSeq), sizeof(CvRect), temp_storage );
-    seq2 = cvCreateSeq( 0, sizeof(CvSeq), sizeof(CvAvgComp), temp_storage );
     result_seq = cvCreateSeq( 0, sizeof(CvSeq), sizeof(CvAvgComp), storage );
-
-    max_threads = cvGetNumThreads();
-    if( max_threads > 1 )
-        for( i = 0; i < max_threads; i++ )
-        {
-            CvMemStorage* temp_storage_thread;
-            temp_storage_thread = cvCreateMemStorage(0);
-            seq_thread[i] = cvCreateSeq( 0, sizeof(CvSeq),
-                sizeof(CvRect), temp_storage_thread );
-        }
-    else
-        seq_thread[0] = seq;
 
     if( CV_MAT_CN(img->type) > 1 )
     {
@@ -920,42 +1039,40 @@ cvHaarDetectObjects( const CvArr* _img,
         img = temp;
     }
 
-    if( flags & CV_HAAR_FIND_BIGGEST_OBJECT )
+    if( findBiggestObject )
         flags &= ~(CV_HAAR_SCALE_IMAGE|CV_HAAR_DO_CANNY_PRUNING);
 
     if( flags & CV_HAAR_SCALE_IMAGE )
     {
-        CvSize win_size0 = cascade->orig_window_size;
+        CvSize winSize0 = cascade->orig_window_size;
 #ifdef HAVE_IPP
         int use_ipp = cascade->hid_cascade->ipp_stages != 0;
 
         if( use_ipp )
-            norm_img = cvCreateMat( img->rows, img->cols, CV_32FC1 );
+            normImg = cvCreateMat( img->rows, img->cols, CV_32FC1 );
 #endif
-        img_small = cvCreateMat( img->rows + 1, img->cols + 1, CV_8UC1 );
+        imgSmall = cvCreateMat( img->rows + 1, img->cols + 1, CV_8UC1 );
 
-        for( factor = 1; ; factor *= scale_factor )
+        for( factor = 1; ; factor *= scaleFactor )
         {
-            int strip_count, strip_size;
-            int ystep = factor > 2. ? 1 : 2;
-            CvSize win_size = { cvRound(win_size0.width*factor),
-                                cvRound(win_size0.height*factor) };
+            CvSize winSize = { cvRound(winSize0.width*factor),
+                                cvRound(winSize0.height*factor) };
             CvSize sz = { cvRound( img->cols/factor ), cvRound( img->rows/factor ) };
-            CvSize sz1 = { sz.width - win_size0.width, sz.height - win_size0.height };
-#ifdef HAVE_IPP
-            IppiRect equ_rect = { icv_object_win_border, icv_object_win_border,
-                win_size0.width - icv_object_win_border*2,
-                win_size0.height - icv_object_win_border*2 };
-#endif
+            CvSize sz1 = { sz.width - winSize0.width, sz.height - winSize0.height };
+
+            CvRect equRect = { icv_object_win_border, icv_object_win_border,
+                winSize0.width - icv_object_win_border*2,
+                winSize0.height - icv_object_win_border*2 };
+
             CvMat img1, sum1, sqsum1, norm1, tilted1, mask1;
             CvMat* _tilted = 0;
 
             if( sz1.width <= 0 || sz1.height <= 0 )
                 break;
-            if( win_size.width < min_size.width || win_size.height < min_size.height )
+            if( winSize.width < minSize.width || winSize.height < minSize.height )
                 continue;
 
-            img1 = cvMat( sz.height, sz.width, CV_8UC1, img_small->data.ptr );
+            img1 = cvMat( sz.height, sz.width, CV_8UC1, imgSmall->data.ptr );
             sum1 = cvMat( sz.height+1, sz.width+1, CV_32SC1, sum->data.ptr );
             sqsum1 = cvMat( sz.height+1, sz.width+1, CV_64FC1, sqsum->data.ptr );
             if( tilted )
@@ -963,181 +1080,82 @@ cvHaarDetectObjects( const CvArr* _img,
                 tilted1 = cvMat( sz.height+1, sz.width+1, CV_32SC1, tilted->data.ptr );
                 _tilted = &tilted1;
             }
-            norm1 = cvMat( sz1.height, sz1.width, CV_32FC1, norm_img ? norm_img->data.ptr : 0 );
+            norm1 = cvMat( sz1.height, sz1.width, CV_32FC1, normImg ? normImg->data.ptr : 0 );
             mask1 = cvMat( sz1.height, sz1.width, CV_8UC1, temp->data.ptr );
 
             cvResize( img, &img1, CV_INTER_LINEAR );
             cvIntegral( &img1, &sum1, &sqsum1, _tilted );
 
-            if( max_threads > 1 )
-            {
-                strip_count = MAX(MIN(sz1.height/ystep, max_threads*3), 1);
-                strip_size = (sz1.height + strip_count - 1)/strip_count;
-                strip_size = (strip_size / ystep)*ystep;
-            }
-            else
-            {
-                strip_count = 1;
-                strip_size = sz1.height;
-            }
-
+            int ystep = factor > 2 ? 1 : 2;
+        #ifdef HAVE_TBB
+            const int LOCS_PER_THREAD = 1000;
+            int stripCount = ((sz1.width/ystep)*(sz1.height + ystep-1)/ystep + LOCS_PER_THREAD/2)/LOCS_PER_THREAD;
+            stripCount = std::min(std::max(stripCount, 1), 100);
+        #else
+            const int stripCount = 1;
+        #endif
+            
 #ifdef HAVE_IPP
             if( use_ipp )
             {
-                for( i = 0; i <= sz.height; i++ )
-                {
-                    const int* isum = (int*)(sum1.data.ptr + sum1.step*i);
-                    float* fsum = (float*)isum;
-                    const int FLT_DELTA = -(1 << 24);
-                    int j;
-                    for( j = 0; j <= sz.width; j++ )
-                        fsum[j] = (float)(isum[j] + FLT_DELTA);
-                }
+                cv::Mat fsum(sum1.rows, sum1.cols, CV_32F, sum1.data.ptr, sum1.step);
+                cv::Mat(sum1).convertTo(fsum, CV_32F, 1, -(1<<24));
             }
             else
 #endif
-                cvSetImagesForHaarClassifierCascade( cascade, &sum1, &sqsum1, _tilted, 1. );
-
-        #ifdef _OPENMP
-            #pragma omp parallel for num_threads(max_threads) schedule(dynamic)
-        #endif
-            for( i = 0; i < strip_count; i++ )
-            {
-                int thread_id = cvGetThreadNum();
-                int positive = 0;
-                int y1 = i*strip_size, y2 = (i+1)*strip_size/* - ystep + 1*/;
-                CvSize ssz;
-                int x, y;
-                if( i == strip_count - 1 || y2 > sz1.height )
-                    y2 = sz1.height;
-                ssz = cvSize(sz1.width, y2 - y1);
-
-#ifdef HAVE_IPP
-                if( use_ipp )
-                {
-                    ippiRectStdDev_32f_C1R(
-                        (float*)(sum1.data.ptr + y1*sum1.step), sum1.step,
-                        (double*)(sqsum1.data.ptr + y1*sqsum1.step), sqsum1.step,
-                        (float*)(norm1.data.ptr + y1*norm1.step), norm1.step,
-                        ippiSize(ssz.width, ssz.height), equ_rect );
-
-                    positive = (ssz.width/ystep)*((ssz.height + ystep-1)/ystep);
-                    memset( mask1.data.ptr + y1*mask1.step, ystep == 1, mask1.height*mask1.step);
-                    
-                    if( ystep > 1 )
-                    {
-                        for( y = y1, positive = 0; y < y2; y += ystep )
-                            for( x = 0; x < ssz.width; x += ystep )
-                                mask1.data.ptr[mask1.step*y + x] = (uchar)1;
-                    }
-
-                    for( int j = 0; j < cascade->count; j++ )
-                    {
-                        if( ippiApplyHaarClassifier_32f_C1R(
-                            (float*)(sum1.data.ptr + y1*sum1.step), sum1.step,
-                            (float*)(norm1.data.ptr + y1*norm1.step), norm1.step,
-                            mask1.data.ptr + y1*mask1.step, mask1.step,
-                            ippiSize(ssz.width, ssz.height), &positive,
-                            cascade->hid_cascade->stage_classifier[j].threshold,
-                            (IppiHaarClassifier_32f*)cascade->hid_cascade->ipp_stages[j]) < 0 )
-                        {
-                            positive = 0;
-                            break;
-                        }
-                        if( positive <= 0 )
-                            break;
-                    }
-                }
-                else
-#endif
-                {
-                    for( y = y1, positive = 0; y < y2; y += ystep )
-                        for( x = 0; x < ssz.width; x += ystep )
-                        {
-                            mask1.data.ptr[mask1.step*y + x] =
-                                cvRunHaarClassifierCascade( cascade, cvPoint(x,y), 0 ) > 0;
-                            positive += mask1.data.ptr[mask1.step*y + x];
-                        }
-                }
-
-                if( positive > 0 )
-                {
-                    for( y = y1; y < y2; y += ystep )
-                        for( x = 0; x < ssz.width; x += ystep )
-                            if( mask1.data.ptr[mask1.step*y + x] != 0 )
-                            {
-                                CvRect obj_rect = { cvRound(x*factor), cvRound(y*factor),
-                                                    win_size.width, win_size.height };
-                                cvSeqPush( seq_thread[thread_id], &obj_rect );
-                            }
-                }
-            }
-
-            // gather the results
-            if( max_threads > 1 )
-                for( i = 0; i < max_threads; i++ )
-                {
-                    CvSeq* s = seq_thread[i];
-                    int j, total = s->total;
-                    CvSeqBlock* b = s->first;
-                    for( j = 0; j < total; j += b->count, b = b->next )
-                        cvSeqPushMulti( seq, b->data, b->count );
-                }
+                cvSetImagesForHaarClassifierCascade( cascade, &sum1, &sqsum1, _tilted, 1. );            
+            
+            cv::Mat _norm1(&norm1), _mask1(&mask1);
+            cv::parallel_for(cv::BlockedRange(0, stripCount),
+                         cv::HaarDetectObjects_ScaleImage_Invoker(cascade,
+                                (((sz1.height + stripCount - 1)/stripCount + ystep-1)/ystep)*ystep,
+                                factor, cv::Mat(&sum1), cv::Mat(&sqsum1), _norm1, _mask1,
+                                cv::Rect(equRect), allCandidates));
         }
     }
     else
     {
         int n_factors = 0;
-        CvRect scan_roi_rect = {0,0,0,0};
-        bool is_found = false, scan_roi = false;
+        cv::Rect scanROI;
 
         cvIntegral( img, sum, sqsum, tilted );
 
-        if( do_canny_pruning )
+        if( doCannyPruning )
         {
             sumcanny = cvCreateMat( img->rows + 1, img->cols + 1, CV_32SC1 );
             cvCanny( img, temp, 0, 50, 3 );
             cvIntegral( temp, sumcanny );
         }
 
-        if( (unsigned)split_stage >= (unsigned)cascade->count ||
-            cascade->hid_cascade->is_tree )
-        {
-            split_stage = cascade->count;
-            npass = 1;
-        }
-
         for( n_factors = 0, factor = 1;
              factor*cascade->orig_window_size.width < img->cols - 10 &&
              factor*cascade->orig_window_size.height < img->rows - 10;
-             n_factors++, factor *= scale_factor )
+             n_factors++, factor *= scaleFactor )
             ;
 
-        if( find_biggest_object )
+        if( findBiggestObject )
         {
-            scale_factor = 1./scale_factor;
-            factor *= scale_factor;
-            big_seq = cvCreateSeq( 0, sizeof(CvSeq), sizeof(CvRect), temp_storage );
+            scaleFactor = 1./scaleFactor;
+            factor *= scaleFactor;
         }
         else
             factor = 1;
 
-        for( ; n_factors-- > 0 && !is_found; factor *= scale_factor )
+        for( ; n_factors-- > 0; factor *= scaleFactor )
         {
-            const double ystep = MAX( 2, factor );
-            CvSize win_size = { cvRound( cascade->orig_window_size.width * factor ),
+            const double ystep = std::max( 2., factor );
+            CvSize winSize = { cvRound( cascade->orig_window_size.width * factor ),
                                 cvRound( cascade->orig_window_size.height * factor )};
-            CvRect equ_rect = { 0, 0, 0, 0 };
-            int *p0 = 0, *p1 = 0, *p2 = 0, *p3 = 0;
-            int *pq0 = 0, *pq1 = 0, *pq2 = 0, *pq3 = 0;
-            int pass, stage_offset = 0;
-            int start_x = 0, start_y = 0;
-            int end_x = cvRound((img->cols - win_size.width) / ystep);
-            int end_y = cvRound((img->rows - win_size.height) / ystep);
+            CvRect equRect = { 0, 0, 0, 0 };
+            int *p[4] = {0,0,0,0};
+            int *pq[4] = {0,0,0,0};
+            int startX = 0, startY = 0;
+            int endX = cvRound((img->cols - winSize.width) / ystep);
+            int endY = cvRound((img->rows - winSize.height) / ystep);
 
-            if( win_size.width < min_size.width || win_size.height < min_size.height )
+            if( winSize.width < minSize.width || winSize.height < minSize.height )
             {
-                if( find_biggest_object )
+                if( findBiggestObject )
                     break;
                 continue;
             }
@@ -1145,376 +1163,111 @@ cvHaarDetectObjects( const CvArr* _img,
             cvSetImagesForHaarClassifierCascade( cascade, sum, sqsum, tilted, factor );
             cvZero( temp );
 
-            if( do_canny_pruning )
+            if( doCannyPruning )
             {
-                equ_rect.x = cvRound(win_size.width*0.15);
-                equ_rect.y = cvRound(win_size.height*0.15);
-                equ_rect.width = cvRound(win_size.width*0.7);
-                equ_rect.height = cvRound(win_size.height*0.7);
+                equRect.x = cvRound(winSize.width*0.15);
+                equRect.y = cvRound(winSize.height*0.15);
+                equRect.width = cvRound(winSize.width*0.7);
+                equRect.height = cvRound(winSize.height*0.7);
 
-                p0 = (int*)(sumcanny->data.ptr + equ_rect.y*sumcanny->step) + equ_rect.x;
-                p1 = (int*)(sumcanny->data.ptr + equ_rect.y*sumcanny->step)
-                            + equ_rect.x + equ_rect.width;
-                p2 = (int*)(sumcanny->data.ptr + (equ_rect.y + equ_rect.height)*sumcanny->step) + equ_rect.x;
-                p3 = (int*)(sumcanny->data.ptr + (equ_rect.y + equ_rect.height)*sumcanny->step)
-                            + equ_rect.x + equ_rect.width;
+                p[0] = (int*)(sumcanny->data.ptr + equRect.y*sumcanny->step) + equRect.x;
+                p[1] = (int*)(sumcanny->data.ptr + equRect.y*sumcanny->step)
+                            + equRect.x + equRect.width;
+                p[2] = (int*)(sumcanny->data.ptr + (equRect.y + equRect.height)*sumcanny->step) + equRect.x;
+                p[3] = (int*)(sumcanny->data.ptr + (equRect.y + equRect.height)*sumcanny->step)
+                            + equRect.x + equRect.width;
 
-                pq0 = (int*)(sum->data.ptr + equ_rect.y*sum->step) + equ_rect.x;
-                pq1 = (int*)(sum->data.ptr + equ_rect.y*sum->step)
-                            + equ_rect.x + equ_rect.width;
-                pq2 = (int*)(sum->data.ptr + (equ_rect.y + equ_rect.height)*sum->step) + equ_rect.x;
-                pq3 = (int*)(sum->data.ptr + (equ_rect.y + equ_rect.height)*sum->step)
-                            + equ_rect.x + equ_rect.width;
+                pq[0] = (int*)(sum->data.ptr + equRect.y*sum->step) + equRect.x;
+                pq[1] = (int*)(sum->data.ptr + equRect.y*sum->step)
+                            + equRect.x + equRect.width;
+                pq[2] = (int*)(sum->data.ptr + (equRect.y + equRect.height)*sum->step) + equRect.x;
+                pq[3] = (int*)(sum->data.ptr + (equRect.y + equRect.height)*sum->step)
+                            + equRect.x + equRect.width;
             }
 
-            if( scan_roi )
+            if( scanROI.area() > 0 )
             {
                 //adjust start_height and stop_height
-                start_y = cvRound(scan_roi_rect.y / ystep);
-                end_y = cvRound((scan_roi_rect.y + scan_roi_rect.height - win_size.height) / ystep);
+                startY = cvRound(scanROI.y / ystep);
+                endY = cvRound((scanROI.y + scanROI.height - winSize.height) / ystep);
 
-                start_x = cvRound(scan_roi_rect.x / ystep);
-                end_x = cvRound((scan_roi_rect.x + scan_roi_rect.width - win_size.width) / ystep);
+                startX = cvRound(scanROI.x / ystep);
+                endX = cvRound((scanROI.x + scanROI.width - winSize.width) / ystep);
             }
 
-            cascade->hid_cascade->count = split_stage;
+            cv::parallel_for(cv::BlockedRange(startY, endY),
+                cv::HaarDetectObjects_ScaleCascade_Invoker(cascade, winSize, cv::Range(startX, endX),
+                                                           ystep, sum->step, (const int**)p,
+                                                           (const int**)pq, allCandidates ));
 
-            for( pass = 0; pass < npass; pass++ )
+            if( findBiggestObject && !allCandidates.empty() && scanROI.area() == 0 )
             {
-            #ifdef _OPENMP
-                #pragma omp parallel for num_threads(max_threads) schedule(dynamic)
-            #endif
-                for( int _iy = start_y; _iy < end_y; _iy++ )
-                {
-                    int thread_id = cvGetThreadNum();
-                    int iy = cvRound(_iy*ystep);
-                    int _ix, _xstep = 1;
-                    uchar* mask_row = temp->data.ptr + temp->step * iy;
-
-                    for( _ix = start_x; _ix < end_x; _ix += _xstep )
-                    {
-                        int ix = cvRound(_ix*ystep); // it really should be ystep
-
-                        if( pass == 0 )
-                        {
-                            int result;
-                            _xstep = 2;
-
-                            if( do_canny_pruning )
-                            {
-                                int offset;
-                                int s, sq;
-
-                                offset = iy*(sum->step/sizeof(p0[0])) + ix;
-                                s = p0[offset] - p1[offset] - p2[offset] + p3[offset];
-                                sq = pq0[offset] - pq1[offset] - pq2[offset] + pq3[offset];
-                                if( s < 100 || sq < 20 )
-                                    continue;
-                            }
-
-                            result = cvRunHaarClassifierCascade( cascade, cvPoint(ix,iy), 0 );
-                            if( result > 0 )
-                            {
-                                if( pass < npass - 1 )
-                                    mask_row[ix] = 1;
-                                else
-                                {
-                                    CvRect rect = cvRect(ix,iy,win_size.width,win_size.height);
-                                    cvSeqPush( seq_thread[thread_id], &rect );
-                                }
-                            }
-                            if( result < 0 )
-                                _xstep = 1;
-                        }
-                        else if( mask_row[ix] )
-                        {
-                            int result = cvRunHaarClassifierCascade( cascade, cvPoint(ix,iy),
-                                                                     stage_offset );
-                            if( result > 0 )
-                            {
-                                if( pass == npass - 1 )
-                                {
-                                    CvRect rect = cvRect(ix,iy,win_size.width,win_size.height);
-                                    cvSeqPush( seq_thread[thread_id], &rect );
-                                }
-                            }
-                            else
-                                mask_row[ix] = 0;
-                        }
-                    }
-                }
-                stage_offset = cascade->hid_cascade->count;
-                cascade->hid_cascade->count = cascade->count;
-            }
-
-            // gather the results
-            if( max_threads > 1 )
-	            for( i = 0; i < max_threads; i++ )
-	            {
-		            CvSeq* s = seq_thread[i];
-                    int j, total = s->total;
-                    CvSeqBlock* b = s->first;
-                    for( j = 0; j < total; j += b->count, b = b->next )
-                        cvSeqPushMulti( seq, b->data, b->count );
-	            }
-
-            if( find_biggest_object )
-            {
-                CvSeq* bseq = min_neighbors > 0 ? big_seq : seq;
+                rectList.resize(allCandidates.size());
+                std::copy(allCandidates.begin(), allCandidates.end(), rectList.begin());
                 
-                if( min_neighbors > 0 && !scan_roi )
+                groupRectangles(rectList, std::max(minNeighbors, 1), GROUP_EPS);
+                
+                if( !rectList.empty() )
                 {
-                    // group retrieved rectangles in order to filter out noise
-                    int ncomp = cvSeqPartition( seq, 0, &idx_seq, is_equal, 0 );
-                    comps.allocate( (ncomp+1)*sizeof(comps[0]));
-                    memset( comps, 0, (ncomp+1)*sizeof(comps[0]));
-
-                #if VERY_ROUGH_SEARCH
-                    if( rough_search )
+                    size_t i, sz = rectList.size();
+                    cv::Rect maxRect;
+                    
+                    for( i = 0; i < sz; i++ )
                     {
-                        for( i = 0; i < seq->total; i++ )
-                        {
-                            CvRect r1 = *(CvRect*)cvGetSeqElem( seq, i );
-                            int idx = *(int*)cvGetSeqElem( idx_seq, i );
-                            assert( (unsigned)idx < (unsigned)ncomp );
-
-                            comps[idx].neighbors++;
-                            comps[idx].rect.x += r1.x;
-                            comps[idx].rect.y += r1.y;
-                            comps[idx].rect.width += r1.width;
-                            comps[idx].rect.height += r1.height;
-                        }
-
-                        // calculate average bounding box
-                        for( i = 0; i < ncomp; i++ )
-                        {
-                            int n = comps[i].neighbors;
-                            if( n >= min_neighbors )
-                            {
-                                CvAvgComp comp;
-                                comp.rect.x = (comps[i].rect.x*2 + n)/(2*n);
-                                comp.rect.y = (comps[i].rect.y*2 + n)/(2*n);
-                                comp.rect.width = (comps[i].rect.width*2 + n)/(2*n);
-                                comp.rect.height = (comps[i].rect.height*2 + n)/(2*n);
-                                comp.neighbors = n;
-                                cvSeqPush( bseq, &comp );
-                            }
-                        }
+                        if( rectList[i].area() > maxRect.area() )
+                            maxRect = rectList[i];
                     }
-                    else
-                #endif
-                    {
-                        for( i = 0 ; i <= ncomp; i++ )
-                            comps[i].rect.x = comps[i].rect.y = INT_MAX;
-
-                        // count number of neighbors
-                        for( i = 0; i < seq->total; i++ )
-                        {
-                            CvRect r1 = *(CvRect*)cvGetSeqElem( seq, i );
-                            int idx = *(int*)cvGetSeqElem( idx_seq, i );
-                            assert( (unsigned)idx < (unsigned)ncomp );
-
-                            comps[idx].neighbors++;
-
-                            // rect.width and rect.height will store coordinate of right-bottom corner
-                            comps[idx].rect.x = MIN(comps[idx].rect.x, r1.x);
-                            comps[idx].rect.y = MIN(comps[idx].rect.y, r1.y);
-                            comps[idx].rect.width = MAX(comps[idx].rect.width, r1.x+r1.width-1);
-                            comps[idx].rect.height = MAX(comps[idx].rect.height, r1.y+r1.height-1);
-                        }
-
-                        // calculate enclosing box
-                        for( i = 0; i < ncomp; i++ )
-                        {
-                            int n = comps[i].neighbors;
-                            if( n >= min_neighbors )
-                            {
-                                CvAvgComp comp;
-                                int t;
-                                double min_scale = rough_search ? 0.6 : 0.4;
-                                comp.rect.x = comps[i].rect.x;
-                                comp.rect.y = comps[i].rect.y;
-                                comp.rect.width = comps[i].rect.width - comps[i].rect.x + 1;
-                                comp.rect.height = comps[i].rect.height - comps[i].rect.y + 1;
-
-                                // update min_size
-                                t = cvRound( comp.rect.width*min_scale );
-                                min_size.width = MAX( min_size.width, t );
-
-                                t = cvRound( comp.rect.height*min_scale );
-                                min_size.height = MAX( min_size.height, t );
-
-                                //expand the box by 20% because we could miss some neighbours
-                                //see 'is_equal' function
-                            #if 1
-                                int offset = cvRound(comp.rect.width * 0.2);
-                                int right = MIN( img->cols-1, comp.rect.x+comp.rect.width-1 + offset );
-                                int bottom = MIN( img->rows-1, comp.rect.y+comp.rect.height-1 + offset);
-                                comp.rect.x = MAX( comp.rect.x - offset, 0 );
-                                comp.rect.y = MAX( comp.rect.y - offset, 0 );
-                                comp.rect.width = right - comp.rect.x + 1;
-                                comp.rect.height = bottom - comp.rect.y + 1;
-                            #endif
-
-                                comp.neighbors = n;
-                                cvSeqPush( bseq, &comp );
-                            }
-                        }
-                    }
-
-                    cvFree( &comps );
-                }
-
-                // extract the biggest rect
-                if( bseq->total > 0 )
-                {
-                    int max_area = 0;
-                    for( i = 0; i < bseq->total; i++ )
-                    {
-                        CvAvgComp* comp = (CvAvgComp*)cvGetSeqElem( bseq, i );
-                        int area = comp->rect.width * comp->rect.height;
-                        if( max_area < area )
-                        {
-                            max_area = area;
-                            result_comp.rect = comp->rect;
-                            result_comp.neighbors = bseq == seq ? 1 : comp->neighbors;
-                        }
-                    }
-
-                    //Prepare information for further scanning inside the biggest rectangle
-
-                #if VERY_ROUGH_SEARCH
-                    // change scan ranges to roi in case of required
-                    if( !rough_search && !scan_roi )
-                    {
-                        scan_roi = true;
-                        scan_roi_rect = result_comp.rect;
-                        cvClearSeq(bseq);
-                    }
-                    else if( rough_search )
-                        is_found = true;
-                #else
-                    if( !scan_roi )
-                    {
-                        scan_roi = true;
-                        scan_roi_rect = result_comp.rect;
-                        cvClearSeq(bseq);
-                    }
-                #endif
+                    
+                    allCandidates.push_back(maxRect);
+                    
+                    scanROI = maxRect;
+                    int dx = cvRound(maxRect.width*GROUP_EPS);
+                    int dy = cvRound(maxRect.height*GROUP_EPS);
+                    scanROI.x = std::max(scanROI.x - dx, 0);
+                    scanROI.y = std::max(scanROI.y - dy, 0);
+                    scanROI.width = std::min(scanROI.width + dx*2, img->cols-1-scanROI.x);
+                    scanROI.height = std::min(scanROI.height + dy*2, img->rows-1-scanROI.y);
+                
+                    double minScale = roughSearch ? 0.6 : 0.4;
+                    minSize.width = cvRound(maxRect.width*minScale);
+                    minSize.height = cvRound(maxRect.height*minScale);
                 }
             }
         }
     }
 
-    if( min_neighbors == 0 && !find_biggest_object )
+    rectList.resize(allCandidates.size());
+    if(!allCandidates.empty())
+        std::copy(allCandidates.begin(), allCandidates.end(), rectList.begin());
+    
+    if( minNeighbors != 0 || findBiggestObject )
+        groupRectangles(rectList, rweights, std::max(minNeighbors, 1), GROUP_EPS);
+        
+    if( findBiggestObject && rectList.size() )
     {
-        for( i = 0; i < seq->total; i++ )
+        CvAvgComp result_comp = {{0,0,0,0},0};
+        
+        for( size_t i = 0; i < rectList.size(); i++ )
         {
-            CvRect* rect = (CvRect*)cvGetSeqElem( seq, i );
-            CvAvgComp comp;
-            comp.rect = *rect;
-            comp.neighbors = 1;
-            cvSeqPush( result_seq, &comp );
-        }
-    }
-
-    if( min_neighbors != 0
-#if VERY_ROUGH_SEARCH        
-        && (!find_biggest_object || !rough_search)
-#endif        
-        )
-    {
-        // group retrieved rectangles in order to filter out noise
-        int ncomp = cvSeqPartition( seq, 0, &idx_seq, is_equal, 0 );
-        comps.allocate(ncomp+1);
-        memset( &comps[0], 0, (ncomp+1)*sizeof(comps[0]));
-
-        // count number of neighbors
-        for( i = 0; i < seq->total; i++ )
-        {
-            CvRect r1 = *(CvRect*)cvGetSeqElem( seq, i );
-            int idx = *(int*)cvGetSeqElem( idx_seq, i );
-            assert( (unsigned)idx < (unsigned)ncomp );
-
-            comps[idx].neighbors++;
-
-            comps[idx].rect.x += r1.x;
-            comps[idx].rect.y += r1.y;
-            comps[idx].rect.width += r1.width;
-            comps[idx].rect.height += r1.height;
-        }
-
-        // calculate average bounding box
-        for( i = 0; i < ncomp; i++ )
-        {
-            int n = comps[i].neighbors;
-            if( n >= min_neighbors )
+            cv::Rect r = rectList[i];
+            if( r.area() > cv::Rect(result_comp.rect).area() )
             {
-                CvAvgComp comp;
-                comp.rect.x = (comps[i].rect.x*2 + n)/(2*n);
-                comp.rect.y = (comps[i].rect.y*2 + n)/(2*n);
-                comp.rect.width = (comps[i].rect.width*2 + n)/(2*n);
-                comp.rect.height = (comps[i].rect.height*2 + n)/(2*n);
-                comp.neighbors = comps[i].neighbors;
-
-                cvSeqPush( seq2, &comp );
+                result_comp.rect = r;
+                result_comp.neighbors = rweights[i];
             }
         }
-
-        if( !find_biggest_object )
-        {
-            // filter out small face rectangles inside large face rectangles
-            for( i = 0; i < seq2->total; i++ )
-            {
-                CvAvgComp r1 = *(CvAvgComp*)cvGetSeqElem( seq2, i );
-                int j, flag = 1;
-
-                for( j = 0; j < seq2->total; j++ )
-                {
-                    CvAvgComp r2 = *(CvAvgComp*)cvGetSeqElem( seq2, j );
-                    int distance = cvRound( r2.rect.width * 0.2 );
-
-                    if( i != j &&
-                        r1.rect.x >= r2.rect.x - distance &&
-                        r1.rect.y >= r2.rect.y - distance &&
-                        r1.rect.x + r1.rect.width <= r2.rect.x + r2.rect.width + distance &&
-                        r1.rect.y + r1.rect.height <= r2.rect.y + r2.rect.height + distance &&
-                        (r2.neighbors > MAX( 3, r1.neighbors ) || r1.neighbors < 3) )
-                    {
-                        flag = 0;
-                        break;
-                    }
-                }
-
-                if( flag )
-                    cvSeqPush( result_seq, &r1 );
-            }
-        }
-        else
-        {
-            int max_area = 0;
-            for( i = 0; i < seq2->total; i++ )
-            {
-                CvAvgComp* comp = (CvAvgComp*)cvGetSeqElem( seq2, i );
-                int area = comp->rect.width * comp->rect.height;
-                if( max_area < area )
-                {
-                    max_area = area;
-                    result_comp = *comp;
-                }                
-            }
-        }
-    }
-
-    if( find_biggest_object && result_comp.rect.width > 0 )
         cvSeqPush( result_seq, &result_comp );
-
-    if( max_threads > 1 )
-	    for( i = 0; i < max_threads; i++ )
-	    {
-		    if( seq_thread[i] )
-                cvReleaseMemStorage( &seq_thread[i]->storage );
-	    }
+    }
+    else
+    {
+        for( size_t i = 0; i < rectList.size(); i++ )
+        {
+            CvAvgComp c;
+            c.rect = rectList[i];
+            c.neighbors = rweights[i];
+            cvSeqPush( result_seq, &c );
+        }
+    }
 
     return result_seq;
 }

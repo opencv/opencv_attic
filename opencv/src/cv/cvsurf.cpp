@@ -383,43 +383,302 @@ static CvSeq* icvFastHessianDetector( const CvMat* sum, const CvMat* mask_sum,
 }
 
 
+namespace cv
+{
+
+struct SURFInvoker
+{
+    enum { ORI_RADIUS = 6, ORI_WIN = 60, PATCH_SZ = 20 };
+    
+    static const int ORI_SEARCH_INC;
+    static const float ORI_SIGMA;
+    static const float DESC_SIGMA;
+    
+    SURFInvoker( const CvSURFParams* _params,
+                 CvSeq* _keypoints, CvSeq* _descriptors,
+                 const CvMat* _img, const CvMat* _sum, 
+                 const CvPoint* _apt, const float* _aptw,
+                 int _nangle0, const float* _DW )
+    {
+        params = _params;
+        keypoints = _keypoints;
+        descriptors = _descriptors;
+        img = _img;
+        sum = _sum;
+        apt = _apt;
+        aptw = _aptw;
+        nangle0 = _nangle0;
+        DW = _DW;
+    }
+    
+    void operator()(const BlockedRange& range) const
+    {
+        /* X and Y gradient wavelet data */
+        const int NX=2, NY=2;
+        int dx_s[NX][5] = {{0, 0, 2, 4, -1}, {2, 0, 4, 4, 1}};
+        int dy_s[NY][5] = {{0, 0, 4, 2, 1}, {0, 2, 4, 4, -1}};
+        
+        const int descriptor_size = params->extended ? 128 : 64;
+        
+        const int max_ori_samples = (2*ORI_RADIUS+1)*(2*ORI_RADIUS+1);
+        float X[max_ori_samples], Y[max_ori_samples], angle[max_ori_samples];
+        uchar PATCH[PATCH_SZ+1][PATCH_SZ+1];
+        float DX[PATCH_SZ][PATCH_SZ], DY[PATCH_SZ][PATCH_SZ];
+        
+        CvMat _X = cvMat(1, max_ori_samples, CV_32F, X);
+        CvMat _Y = cvMat(1, max_ori_samples, CV_32F, Y);
+        CvMat _angle = cvMat(1, max_ori_samples, CV_32F, angle);
+        CvMat _patch = cvMat(PATCH_SZ+1, PATCH_SZ+1, CV_8U, PATCH);
+        
+        int k, k1 = range.begin(), k2 = range.end();
+        int maxSize = 0;
+        
+        for( k = k1; k < k2; k++ )
+            maxSize = std::max(maxSize, ((CvSURFPoint*)cvGetSeqElem( keypoints, k ))->size);
+        
+        maxSize = cvCeil((PATCH_SZ+1)*maxSize*1.2f/9.0f);
+        Ptr<CvMat> winbuf = cvCreateMat( 1, maxSize*maxSize, CV_8U );
+        
+        for( k = k1; k < k2; k++ )
+        {
+            const int* sum_ptr = sum->data.i;
+            int sum_cols = sum->cols;
+            int i, j, kk, x, y, nangle;
+            
+            float* vec;
+            CvSurfHF dx_t[NX], dy_t[NY];
+            
+            CvSURFPoint* kp = (CvSURFPoint*)cvGetSeqElem( keypoints, k );
+            int size = kp->size;
+            CvPoint2D32f center = kp->pt;
+            
+            /* The sampling intervals and wavelet sized for selecting an orientation
+             and building the keypoint descriptor are defined relative to 's' */
+            float s = (float)size*1.2f/9.0f;
+            
+            /* To find the dominant orientation, the gradients in x and y are
+             sampled in a circle of radius 6s using wavelets of size 4s.
+             We ensure the gradient wavelet size is even to ensure the 
+             wavelet pattern is balanced and symmetric around its center */
+            int grad_wav_size = 2*cvRound( 2*s );
+            if ( sum->rows < grad_wav_size || sum->cols < grad_wav_size )
+            {
+                /* when grad_wav_size is too big,
+                 * the sampling of gradient will be meaningless
+                 * mark keypoint for deletion. */
+                kp->size = -1;
+                continue;
+            }
+            icvResizeHaarPattern( dx_s, dx_t, NX, 4, grad_wav_size, sum->cols );
+            icvResizeHaarPattern( dy_s, dy_t, NY, 4, grad_wav_size, sum->cols );
+            for( kk = 0, nangle = 0; kk < nangle0; kk++ )
+            {
+                const int* ptr;
+                float vx, vy;
+                x = cvRound( center.x + apt[kk].x*s - (float)(grad_wav_size-1)/2 );
+                y = cvRound( center.y + apt[kk].y*s - (float)(grad_wav_size-1)/2 );
+                if( (unsigned)y >= (unsigned)(sum->rows - grad_wav_size) ||
+                   (unsigned)x >= (unsigned)(sum->cols - grad_wav_size) )
+                    continue;
+                ptr = sum_ptr + x + y*sum_cols;
+                vx = icvCalcHaarPattern( ptr, dx_t, 2 );
+                vy = icvCalcHaarPattern( ptr, dy_t, 2 );
+                X[nangle] = vx*aptw[kk]; Y[nangle] = vy*aptw[kk];
+                nangle++;
+            }
+            if ( nangle == 0 )
+            {
+                /* No gradient could be sampled because the keypoint is too
+                 * near too one or more of the sides of the image. As we
+                 * therefore cannot find a dominant direction, we skip this
+                 * keypoint and mark it for later deletion from the sequence. */
+                kp->size = -1;
+                continue;
+            }
+            _X.cols = _Y.cols = _angle.cols = nangle;
+            cvCartToPolar( &_X, &_Y, 0, &_angle, 1 );
+            
+            float bestx = 0, besty = 0, descriptor_mod = 0;
+            for( i = 0; i < 360; i += ORI_SEARCH_INC )
+            {
+                float sumx = 0, sumy = 0, temp_mod;
+                for( j = 0; j < nangle; j++ )
+                {
+                    int d = std::abs(cvRound(angle[j]) - i);
+                    if( d < ORI_WIN/2 || d > 360-ORI_WIN/2 )
+                    {
+                        sumx += X[j];
+                        sumy += Y[j];
+                    }
+                }
+                temp_mod = sumx*sumx + sumy*sumy;
+                if( temp_mod > descriptor_mod )
+                {
+                    descriptor_mod = temp_mod;
+                    bestx = sumx;
+                    besty = sumy;
+                }
+            }
+            
+            float descriptor_dir = cvFastArctan( besty, bestx );
+            kp->dir = descriptor_dir;
+            
+            if( !descriptors )
+                continue;
+            
+            descriptor_dir *= (float)(CV_PI/180);
+            
+            /* Extract a window of pixels around the keypoint of size 20s */
+            int win_size = (int)((PATCH_SZ+1)*s);
+            CV_Assert( winbuf->cols >= win_size*win_size );
+            
+            CvMat win = cvMat(win_size, win_size, CV_8U, winbuf->data.ptr);
+            float sin_dir = sin(descriptor_dir);
+            float cos_dir = cos(descriptor_dir) ;
+            
+            /* Subpixel interpolation version (slower). Subpixel not required since
+             the pixels will all get averaged when we scale down to 20 pixels */
+            /*  
+             float w[] = { cos_dir, sin_dir, center.x,
+             -sin_dir, cos_dir , center.y };
+             CvMat W = cvMat(2, 3, CV_32F, w);
+             cvGetQuadrangleSubPix( img, &win, &W );
+             */
+            
+            /* Nearest neighbour version (faster) */
+            float win_offset = -(float)(win_size-1)/2;
+            float start_x = center.x + win_offset*cos_dir + win_offset*sin_dir;
+            float start_y = center.y - win_offset*sin_dir + win_offset*cos_dir;
+            uchar* WIN = win.data.ptr;
+            for( i = 0; i < win_size; i++, start_x += sin_dir, start_y += cos_dir )
+            {
+                float pixel_x = start_x;
+                float pixel_y = start_y;
+                for( j = 0; j < win_size; j++, pixel_x += cos_dir, pixel_y -= sin_dir )
+                {
+                    int x = std::min(std::max(cvRound(pixel_x), 0), img->cols-1);
+                    int y = std::min(std::max(cvRound(pixel_y), 0), img->rows-1);
+                    WIN[i*win_size + j] = img->data.ptr[y*img->step + x];
+                }
+            }
+            
+            /* Scale the window to size PATCH_SZ so each pixel's size is s. This
+             makes calculating the gradients with wavelets of size 2s easy */
+            cvResize( &win, &_patch, CV_INTER_AREA );
+            
+            /* Calculate gradients in x and y with wavelets of size 2s */
+            for( i = 0; i < PATCH_SZ; i++ )
+                for( j = 0; j < PATCH_SZ; j++ )
+                {
+                    float dw = DW[i*PATCH_SZ + j];
+                    float vx = (PATCH[i][j+1] - PATCH[i][j] + PATCH[i+1][j+1] - PATCH[i+1][j])*dw;
+                    float vy = (PATCH[i+1][j] - PATCH[i][j] + PATCH[i+1][j+1] - PATCH[i][j+1])*dw;
+                    DX[i][j] = vx;
+                    DY[i][j] = vy;
+                }
+            
+            /* Construct the descriptor */
+            vec = (float*)cvGetSeqElem( descriptors, k );
+            for( kk = 0; kk < (int)(descriptors->elem_size/sizeof(vec[0])); kk++ )
+                vec[kk] = 0;
+            double square_mag = 0;       
+            if( params->extended )
+            {
+                /* 128-bin descriptor */
+                for( i = 0; i < 4; i++ )
+                    for( j = 0; j < 4; j++ )
+                    {
+                        for( y = i*5; y < i*5+5; y++ )
+                        {
+                            for( x = j*5; x < j*5+5; x++ )
+                            {
+                                float tx = DX[y][x], ty = DY[y][x];
+                                if( ty >= 0 )
+                                {
+                                    vec[0] += tx;
+                                    vec[1] += (float)fabs(tx);
+                                } else {
+                                    vec[2] += tx;
+                                    vec[3] += (float)fabs(tx);
+                                }
+                                if ( tx >= 0 )
+                                {
+                                    vec[4] += ty;
+                                    vec[5] += (float)fabs(ty);
+                                } else {
+                                    vec[6] += ty;
+                                    vec[7] += (float)fabs(ty);
+                                }
+                            }
+                        }
+                        for( kk = 0; kk < 8; kk++ )
+                            square_mag += vec[kk]*vec[kk];
+                        vec += 8;
+                    }
+            }
+            else
+            {
+                /* 64-bin descriptor */
+                for( i = 0; i < 4; i++ )
+                    for( j = 0; j < 4; j++ )
+                    {
+                        for( y = i*5; y < i*5+5; y++ )
+                        {
+                            for( x = j*5; x < j*5+5; x++ )
+                            {
+                                float tx = DX[y][x], ty = DY[y][x];
+                                vec[0] += tx; vec[1] += ty;
+                                vec[2] += (float)fabs(tx); vec[3] += (float)fabs(ty);
+                            }
+                        }
+                        for( kk = 0; kk < 4; kk++ )
+                            square_mag += vec[kk]*vec[kk];
+                        vec+=4;
+                    }
+            }
+            
+            /* unit vector is essential for contrast invariance */
+            vec = (float*)cvGetSeqElem( descriptors, k );
+            double scale = 1./(sqrt(square_mag) + DBL_EPSILON);
+            for( kk = 0; kk < descriptor_size; kk++ )
+                vec[kk] = (float)(vec[kk]*scale);
+        }
+    }
+   
+    const CvSURFParams* params;
+    const CvMat* img;
+    const CvMat* sum;
+    CvSeq* keypoints;
+    CvSeq* descriptors;
+    const CvPoint* apt;
+    const float* aptw;
+    int nangle0;
+    const float* DW;
+};
+     
+const int SURFInvoker::ORI_SEARCH_INC = 5;  
+const float SURFInvoker::ORI_SIGMA = 2.5f;
+const float SURFInvoker::DESC_SIGMA = 3.3f;
+    
+}
+
+
 CV_IMPL void
 cvExtractSURF( const CvArr* _img, const CvArr* _mask,
                CvSeq** _keypoints, CvSeq** _descriptors,
                CvMemStorage* storage, CvSURFParams params,
 			   int useProvidedKeyPts)
 {
-    CvMat *sum = 0, *mask1 = 0, *mask_sum = 0, **win_bufs = 0;
+    const int ORI_RADIUS = cv::SURFInvoker::ORI_RADIUS;
+    const int ORI_SIGMA = cv::SURFInvoker::ORI_SIGMA;
+    const float DESC_SIGMA = cv::SURFInvoker::DESC_SIGMA;
+    
+    CvMat *sum = 0, *mask1 = 0, *mask_sum = 0;
 
     if( _keypoints && !useProvidedKeyPts ) // If useProvidedKeyPts!=0 we'll use current contents of "*_keypoints"
         *_keypoints = 0;
     if( _descriptors )
         *_descriptors = 0;
-
-    /* Radius of the circle in which to sample gradients to assign an 
-       orientation */
-    const int ORI_RADIUS = 6; 
-
-    /* The size of the sliding window (in degrees) used to assign an 
-       orientation */
-    const int ORI_WIN = 60;   
-
-    /* Increment used for the orientation sliding window (in degrees) */
-    const int ORI_SEARCH_INC = 5;  
-
-    /* Standard deviation of the Gaussian used to weight the gradient samples
-       used to assign an orientation */ 
-    const float ORI_SIGMA = 2.5f;
-
-    /* Standard deviation of the Gaussian used to weight the gradient samples
-       used to build a keypoint descriptor */
-    const float DESC_SIGMA = 3.3f;
-
-
-    /* X and Y gradient wavelet data */
-    const int NX=2, NY=2;
-    int dx_s[NX][5] = {{0, 0, 2, 4, -1}, {2, 0, 4, 4, 1}};
-    int dy_s[NY][5] = {{0, 0, 4, 2, 1}, {0, 2, 4, 4, -1}};
 
     CvSeq *keypoints, *descriptors = 0;
     CvMat imghdr, *img = cvGetMat(_img, &imghdr);
@@ -432,9 +691,8 @@ cvExtractSURF( const CvArr* _img, const CvArr* _mask,
     float DW[PATCH_SZ][PATCH_SZ];
     CvMat _DW = cvMat(PATCH_SZ, PATCH_SZ, CV_32F, DW);
     CvPoint apt[max_ori_samples];
-    float apt_w[max_ori_samples];
-    int i, j, k, nangle0 = 0, N;
-    int nthreads = cvGetNumThreads();
+    float aptw[max_ori_samples];
+    int i, j, nangle0 = 0, N;
 
     CV_Assert(img != 0);
     CV_Assert(CV_MAT_TYPE(img->type) == CV_8UC1);
@@ -444,7 +702,7 @@ cvExtractSURF( const CvArr* _img, const CvArr* _mask,
     CV_Assert(params.nOctaves > 0);
     CV_Assert(params.nOctaveLayers > 0);
 
-    sum = cvCreateMat( img->height+1, img->width+1, CV_32SC1 );
+    sum = cvCreateMat( img->rows+1, img->cols+1, CV_32SC1 );
     cvIntegral( img, sum );
 	
 	// Compute keypoints only if we are not asked for evaluating the descriptors are some given locations:
@@ -484,13 +742,12 @@ cvExtractSURF( const CvArr* _img, const CvArr* _mask,
             if( i*i + j*j <= ORI_RADIUS*ORI_RADIUS )
             {
                 apt[nangle0] = cvPoint(j,i);
-                apt_w[nangle0++] = G[i+ORI_RADIUS]*G[j+ORI_RADIUS];
+                aptw[nangle0++] = G[i+ORI_RADIUS]*G[j+ORI_RADIUS];
             }
         }
     }
 
     /* Gaussian used to weight descriptor samples */
-    {
     double c2 = 1./(DESC_SIGMA*DESC_SIGMA*2);
     double gs = 0;
     for( i = 0; i < PATCH_SZ; i++ )
@@ -504,234 +761,12 @@ cvExtractSURF( const CvArr* _img, const CvArr* _mask,
         }
     }
     cvScale( &_DW, &_DW, 1./gs );
-    }
 
-    win_bufs = (CvMat**)cvAlloc(nthreads*sizeof(win_bufs[0]));
-    for( i = 0; i < nthreads; i++ )
-        win_bufs[i] = 0;
-
-#ifdef _OPENMP
-#pragma omp parallel for num_threads(nthreads) schedule(dynamic)
-#endif
-    for( k = 0; k < N; k++ )
-    {
-        const int* sum_ptr = sum->data.i;
-        int sum_cols = sum->cols;
-        int i, j, kk, x, y, nangle;
-        float X[max_ori_samples], Y[max_ori_samples], angle[max_ori_samples];
-        uchar PATCH[PATCH_SZ+1][PATCH_SZ+1];
-        float DX[PATCH_SZ][PATCH_SZ], DY[PATCH_SZ][PATCH_SZ];
-        CvMat _X = cvMat(1, max_ori_samples, CV_32F, X);
-        CvMat _Y = cvMat(1, max_ori_samples, CV_32F, Y);
-        CvMat _angle = cvMat(1, max_ori_samples, CV_32F, angle);
-        CvMat _patch = cvMat(PATCH_SZ+1, PATCH_SZ+1, CV_8U, PATCH);
-        float* vec;
-        CvSurfHF dx_t[NX], dy_t[NY];
-        int thread_idx = cvGetThreadNum();
-        
-        CvSURFPoint* kp = (CvSURFPoint*)cvGetSeqElem( keypoints, k );
-        int size = kp->size;
-        CvPoint2D32f center = kp->pt;
-
-        /* The sampling intervals and wavelet sized for selecting an orientation
-           and building the keypoint descriptor are defined relative to 's' */
-        float s = (float)size*1.2f/9.0f;
-
-        /* To find the dominant orientation, the gradients in x and y are
-           sampled in a circle of radius 6s using wavelets of size 4s.
-           We ensure the gradient wavelet size is even to ensure the 
-           wavelet pattern is balanced and symmetric around its center */
-        int grad_wav_size = 2*cvRound( 2*s );
-        if ( sum->rows < grad_wav_size || sum->cols < grad_wav_size )
-        {
-            /* when grad_wav_size is too big,
-	     * the sampling of gradient will be meaningless
-	     * mark keypoint for deletion. */
-            kp->size = -1;
-            continue;
-        }
-        icvResizeHaarPattern( dx_s, dx_t, NX, 4, grad_wav_size, sum->cols );
-        icvResizeHaarPattern( dy_s, dy_t, NY, 4, grad_wav_size, sum->cols );
-        for( kk = 0, nangle = 0; kk < nangle0; kk++ )
-        {
-            const int* ptr;
-            float vx, vy;
-            x = cvRound( center.x + apt[kk].x*s - (float)(grad_wav_size-1)/2 );
-            y = cvRound( center.y + apt[kk].y*s - (float)(grad_wav_size-1)/2 );
-            if( (unsigned)y >= (unsigned)(sum->rows - grad_wav_size) ||
-                (unsigned)x >= (unsigned)(sum->cols - grad_wav_size) )
-                continue;
-            ptr = sum_ptr + x + y*sum_cols;
-            vx = icvCalcHaarPattern( ptr, dx_t, 2 );
-            vy = icvCalcHaarPattern( ptr, dy_t, 2 );
-            X[nangle] = vx*apt_w[kk]; Y[nangle] = vy*apt_w[kk];
-            nangle++;
-        }
-        if ( nangle == 0 )
-        {
-            /* No gradient could be sampled because the keypoint is too
-	     * near too one or more of the sides of the image. As we
-	     * therefore cannot find a dominant direction, we skip this
-	     * keypoint and mark it for later deletion from the sequence. */
-            kp->size = -1;
-            continue;
-        }
-        _X.cols = _Y.cols = _angle.cols = nangle;
-        cvCartToPolar( &_X, &_Y, 0, &_angle, 1 );
-
-        float bestx = 0, besty = 0, descriptor_mod = 0;
-        for( i = 0; i < 360; i += ORI_SEARCH_INC )
-        {
-            float sumx = 0, sumy = 0, temp_mod;
-            for( j = 0; j < nangle; j++ )
-            {
-                int d = abs(cvRound(angle[j]) - i);
-                if( d < ORI_WIN/2 || d > 360-ORI_WIN/2 )
-                {
-                    sumx += X[j];
-                    sumy += Y[j];
-                }
-            }
-            temp_mod = sumx*sumx + sumy*sumy;
-            if( temp_mod > descriptor_mod )
-            {
-                descriptor_mod = temp_mod;
-                bestx = sumx;
-                besty = sumy;
-            }
-        }
-        
-        float descriptor_dir = cvFastArctan( besty, bestx );
-        kp->dir = descriptor_dir;
-
-        if( !_descriptors )
-            continue;
-
-        descriptor_dir *= (float)(CV_PI/180);
-        
-        /* Extract a window of pixels around the keypoint of size 20s */
-        int win_size = (int)((PATCH_SZ+1)*s);
-        if( win_bufs[thread_idx] == 0 || win_bufs[thread_idx]->cols < win_size*win_size )
-        {
-            cvReleaseMat( &win_bufs[thread_idx] );
-            win_bufs[thread_idx] = cvCreateMat( 1, win_size*win_size, CV_8U );
-        }
-        
-        CvMat win = cvMat(win_size, win_size, CV_8U, win_bufs[thread_idx]->data.ptr);
-        float sin_dir = sin(descriptor_dir);
-        float cos_dir = cos(descriptor_dir) ;
-
-        /* Subpixel interpolation version (slower). Subpixel not required since
-           the pixels will all get averaged when we scale down to 20 pixels */
-        /*  
-        float w[] = { cos_dir, sin_dir, center.x,
-                      -sin_dir, cos_dir , center.y };
-        CvMat W = cvMat(2, 3, CV_32F, w);
-        cvGetQuadrangleSubPix( img, &win, &W );
-        */
-
-        /* Nearest neighbour version (faster) */
-        float win_offset = -(float)(win_size-1)/2;
-        float start_x = center.x + win_offset*cos_dir + win_offset*sin_dir;
-        float start_y = center.y - win_offset*sin_dir + win_offset*cos_dir;
-        uchar* WIN = win.data.ptr;
-        for( i=0; i<win_size; i++, start_x+=sin_dir, start_y+=cos_dir )
-        {
-            float pixel_x = start_x;
-            float pixel_y = start_y;
-            for( j=0; j<win_size; j++, pixel_x+=cos_dir, pixel_y-=sin_dir )
-            {
-                int x = cvRound( pixel_x );
-                int y = cvRound( pixel_y );
-                x = MAX( x, 0 );
-                y = MAX( y, 0 );
-                x = MIN( x, img->cols-1 );
-                y = MIN( y, img->rows-1 );
-                WIN[i*win_size + j] = img->data.ptr[y*img->step+x];
-             }
-        }
-
-        /* Scale the window to size PATCH_SZ so each pixel's size is s. This
-           makes calculating the gradients with wavelets of size 2s easy */
-        cvResize( &win, &_patch, CV_INTER_AREA );
-
-        /* Calculate gradients in x and y with wavelets of size 2s */
-        for( i = 0; i < PATCH_SZ; i++ )
-            for( j = 0; j < PATCH_SZ; j++ )
-            {
-                float dw = DW[i][j];
-                float vx = (PATCH[i][j+1] - PATCH[i][j] + PATCH[i+1][j+1] - PATCH[i+1][j])*dw;
-                float vy = (PATCH[i+1][j] - PATCH[i][j] + PATCH[i+1][j+1] - PATCH[i][j+1])*dw;
-                DX[i][j] = vx;
-                DY[i][j] = vy;
-            }
-
-        /* Construct the descriptor */
-        vec = (float*)cvGetSeqElem( descriptors, k );
-        for( kk = 0; kk < (int)(descriptors->elem_size/sizeof(vec[0])); kk++ )
-            vec[kk] = 0;
-        double square_mag = 0;       
-        if( params.extended )
-        {
-            /* 128-bin descriptor */
-            for( i = 0; i < 4; i++ )
-                for( j = 0; j < 4; j++ )
-                {
-                    for( y = i*5; y < i*5+5; y++ )
-                    {
-                        for( x = j*5; x < j*5+5; x++ )
-                        {
-                            float tx = DX[y][x], ty = DY[y][x];
-                            if( ty >= 0 )
-                            {
-                                vec[0] += tx;
-                                vec[1] += (float)fabs(tx);
-                            } else {
-                                vec[2] += tx;
-                                vec[3] += (float)fabs(tx);
-                            }
-                            if ( tx >= 0 )
-                            {
-                                vec[4] += ty;
-                                vec[5] += (float)fabs(ty);
-                            } else {
-                                vec[6] += ty;
-                                vec[7] += (float)fabs(ty);
-                            }
-                        }
-                    }
-                    for( kk = 0; kk < 8; kk++ )
-                        square_mag += vec[kk]*vec[kk];
-                    vec += 8;
-                }
-        }
-        else
-        {
-            /* 64-bin descriptor */
-            for( i = 0; i < 4; i++ )
-                for( j = 0; j < 4; j++ )
-                {
-                    for( y = i*5; y < i*5+5; y++ )
-                    {
-                        for( x = j*5; x < j*5+5; x++ )
-                        {
-                            float tx = DX[y][x], ty = DY[y][x];
-                            vec[0] += tx; vec[1] += ty;
-                            vec[2] += (float)fabs(tx); vec[3] += (float)fabs(ty);
-                        }
-                    }
-                    for( kk = 0; kk < 4; kk++ )
-                        square_mag += vec[kk]*vec[kk];
-                    vec+=4;
-                }
-        }
-
-        /* unit vector is essential for contrast invariance */
-        vec = (float*)cvGetSeqElem( descriptors, k );
-        double scale = 1./(sqrt(square_mag) + DBL_EPSILON);
-        for( kk = 0; kk < descriptor_size; kk++ )
-            vec[kk] = (float)(vec[kk]*scale);
-    }
+    cv::parallel_for(cv::BlockedRange(0, N),
+                     cv::SURFInvoker(&params, keypoints, descriptors, img, sum,
+                                     apt, aptw, nangle0, &DW[0][0]));
+    //cv::SURFInvoker(&params, keypoints, descriptors, img, sum,
+    //                apt, aptw, nangle0, &DW[0][0])(cv::BlockedRange(0, N));
     
     /* remove keypoints that were marked for deletion */
     for ( i = 0; i < N; i++ )
@@ -747,9 +782,6 @@ cvExtractSURF( const CvArr* _img, const CvArr* _mask,
         }
     }
 
-    for( i = 0; i < nthreads; i++ )
-        cvReleaseMat( &win_bufs[i] );
-
     if( _keypoints && !useProvidedKeyPts )
         *_keypoints = keypoints;
     if( _descriptors )
@@ -758,7 +790,6 @@ cvExtractSURF( const CvArr* _img, const CvArr* _mask,
     cvReleaseMat( &sum );
     if (mask1) cvReleaseMat( &mask1 );
     if (mask_sum) cvReleaseMat( &mask_sum );
-    cvFree( &win_bufs );
 }
 
 

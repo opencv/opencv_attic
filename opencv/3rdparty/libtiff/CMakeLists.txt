@@ -11,6 +11,8 @@ include_directories(
 	"${CMAKE_CURRENT_SOURCE_DIR}/../include"
 	)
 
+add_definitions(-DHAVE_STRING_H=1)
+
 # The .cpp files:
 
 set(lib_srcs

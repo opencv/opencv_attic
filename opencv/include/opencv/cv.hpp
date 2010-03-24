@@ -621,6 +621,7 @@ public:
 ///////////////////////////// Object Detection ////////////////////////////
 
 CV_EXPORTS void groupRectangles(vector<Rect>& rectList, int groupThreshold, double eps=0.2);
+CV_EXPORTS void groupRectangles(vector<Rect>& rectList, vector<int>& weights, int groupThreshold, double eps=0.2);
         
 class CV_EXPORTS FeatureEvaluator
 {

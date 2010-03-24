@@ -92,11 +92,12 @@ static bool wasInitialized = false;
 
 static void icvCocoaCleanup(void)
 {
-    if( application )
+    /*if( application )
     {
         [application terminate:nil];
+        application = 0;
         [pool release];
-    }
+    }*/
 }
 
 CV_IMPL int cvInitSystem( int argc, char** argv) 
