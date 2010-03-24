@@ -77,6 +77,7 @@ CvAdaptiveSkinDetector::CvAdaptiveSkinDetector(int samplingDivider, int morphing
 	imgGrayFrame = NULL;
 	imgLastGrayFrame = NULL;
 	imgSaturationFrame = NULL;
+	imgHSVFrame = NULL;
 };
 
 CvAdaptiveSkinDetector::~CvAdaptiveSkinDetector()
@@ -89,6 +90,7 @@ CvAdaptiveSkinDetector::~CvAdaptiveSkinDetector()
 	cvReleaseImage(&imgShrinked);
 	cvReleaseImage(&imgGrayFrame);
 	cvReleaseImage(&imgLastGrayFrame);
+	cvReleaseImage(&imgHSVFrame);
 };
 
 void CvAdaptiveSkinDetector::process(IplImage *inputBGRImage, IplImage *outputHueMask)
