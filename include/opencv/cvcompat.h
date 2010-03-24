@@ -47,8 +47,8 @@
    including cv.h.
 */
 
-#ifndef _CVCOMPAT_H_
-#define _CVCOMPAT_H_
+#ifndef __OPENCV_COMPATIBILITY_H__
+#define __OPENCV_COMPATIBILITY_H__
 
 #include <string.h>
 
@@ -1077,4 +1077,4 @@ typedef struct _CvPixelPosition32f
                                                                                     \
     (pos).currline + (pos).x*(cs) )
 
-#endif/*_CVCOMPAT_H_*/
+#endif

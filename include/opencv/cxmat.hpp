@@ -40,8 +40,8 @@
 //
 //M*/
 
-#ifndef _OPENCV_CORE_MAT_OPERATIONS_H_
-#define _OPENCV_CORE_MAT_OPERATIONS_H_
+#ifndef __OPENCV_MATRIX_OPERATIONS_H__
+#define __OPENCV_MATRIX_OPERATIONS_H__
 
 #ifndef SKIP_INCLUDES
 #include <limits.h>

@@ -40,8 +40,8 @@
 //
 //M*/
 
-#ifndef _CV_HPP_
-#define _CV_HPP_
+#ifndef __OPENCV_CV_HPP__
+#define __OPENCV_CV_HPP__
 
 #ifdef __cplusplus
 
@@ -1082,6 +1082,6 @@ struct CvLSHOperations
 
 #endif /* __cplusplus */
 
-#endif /* _CV_HPP_ */
+#endif
 
 /* End of file. */

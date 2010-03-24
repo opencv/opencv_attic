@@ -39,8 +39,8 @@
 //
 //M*/
 
-#ifndef _HIGH_GUI_
-#define _HIGH_GUI_
+#ifndef __OPENCV_HIGHGUI_H__
+#define __OPENCV_HIGHGUI_H__
 
 #ifndef SKIP_INCLUDES
 
@@ -544,4 +544,4 @@ typedef CvvImage CImage;
 
 #include "highgui.hpp"
 
-#endif /* _HIGH_GUI_ */
+#endif

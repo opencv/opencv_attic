@@ -44,17 +44,8 @@
 #define _CXCORE_INTERNAL_H_
 
 #if defined _MSC_VER && _MSC_VER >= 1200
-    /* disable warnings related to inline functions */
+    // disable warnings related to inline functions
     #pragma warning( disable: 4251 4711 4710 4514 )
-#endif
-
-typedef unsigned long ulong;
-
-#ifdef __BORLANDC__
-#ifndef WIN32
-    #define     WIN32
-#endif
-    #define     CV_DLL
 #endif
 
 #include "cxcore.h"
@@ -69,49 +60,7 @@ typedef unsigned long ulong;
 #include <stdlib.h>
 #include <string.h>
 
-#if defined WIN32 || defined _WIN32
-#  ifndef WIN32
-#    define WIN32
-#  endif
-#  ifndef _WIN32
-#    define _WIN32
-#  endif
-#endif
-
-#if defined WIN32 || defined WINCE
-#ifndef _WIN32_WINNT         // This is needed for the declaration of TryEnterCriticalSection in winbase.h with Visual Studio 2005 (and older?)
-#define _WIN32_WINNT 0x0400  // http://msdn.microsoft.com/en-us/library/ms686857(VS.85).aspx
-#endif
-#include <windows.h>
-#undef small
-#undef min
-#undef max
-#else
-#include <pthread.h>
-#include <sys/mman.h>
-#endif
-
-#ifdef HAVE_CONFIG_H
-#include <cvconfig.h>
-#endif
-
-#ifdef HAVE_IPP
-#include "ipp.h"
-#endif
-
-#if defined __SSE2__ || _MSC_VER >= 1300
-    #include "emmintrin.h"
-    #define CV_SSE 1
-    #define CV_SSE2 1
-    #if defined __SSE3__ || _MSC_VER >= 1400
-        #include "pmmintrin.h"
-        #define CV_SSE3 1
-    #endif
-#else
-    #define CV_SSE 0
-    #define CV_SSE2 0
-    #define CV_SSE3 0
-#endif
+#include <cvinternal.h>
 
 #define CV_MEMCPY_CHAR( dst, src, len )                 \
 {                                                       \

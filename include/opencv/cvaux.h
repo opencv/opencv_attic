@@ -39,8 +39,8 @@
 //
 //M*/
 
-#ifndef __CVAUX__H__
-#define __CVAUX__H__
+#ifndef __OPENCV_AUX_H__
+#define __OPENCV_AUX_H__
 
 #include "cv.h"
 

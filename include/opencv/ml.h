@@ -38,8 +38,8 @@
 //
 //M*/
 
-#ifndef __ML_H__
-#define __ML_H__
+#ifndef __OPENCV_ML_H__
+#define __OPENCV_ML_H__
 
 // disable deprecation warning which appears in VisualStudio 8.0
 #if _MSC_VER >= 1400
@@ -1944,5 +1944,5 @@ typedef CvANN_MLP NeuralNet_MLP;
     
 }
 
-#endif /*__ML_H__*/
+#endif
 /* End of file. */

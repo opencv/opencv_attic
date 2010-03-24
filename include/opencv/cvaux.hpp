@@ -39,8 +39,8 @@
 //
 //M*/
 
-#ifndef __CVAUX_HPP__
-#define __CVAUX_HPP__
+#ifndef __OPENCV_AUX_HPP__
+#define __OPENCV_AUX_HPP__
 
 #ifdef __cplusplus
 

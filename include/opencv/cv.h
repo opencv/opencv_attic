@@ -40,8 +40,8 @@
 //
 //M*/
 
-#ifndef _CV_H_
-#define _CV_H_
+#ifndef __OPENCV_CV_H__
+#define __OPENCV_CV_H__
 
 #ifdef __IPL_H__
 #define HAVE_IPL
@@ -1624,4 +1624,4 @@ CVAPI(void)  cvReprojectImageTo3D( const CvArr* disparityImage,
 #include "cvcompat.h"
 #endif
 
-#endif /*_CV_H_*/
+#endif

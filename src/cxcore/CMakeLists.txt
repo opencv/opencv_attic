@@ -12,7 +12,7 @@ include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../../3rdparty/include"
                     "${CMAKE_CURRENT_SOURCE_DIR}/../../include/opencv"
                     "${CMAKE_CURRENT_BINARY_DIR}")
 
-set(lib_hdr_names cxcore.h cxcore.hpp cxerror.h cxmat.hpp cxmisc.h cxoperations.hpp cxtypes.h cvver.h cvwimage.h cxflann.h)
+set(lib_hdr_names cxcore.h cxcore.hpp cxerror.h cxmat.hpp cxmisc.h cxoperations.hpp cxtypes.h cvver.h cvwimage.h cxflann.h cvinternal.h)
 set(lib_hdrs)
 foreach(h ${lib_hdr_names})
     list(APPEND lib_hdrs "${CMAKE_CURRENT_SOURCE_DIR}/../../include/opencv/${h}")
