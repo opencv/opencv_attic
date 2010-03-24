@@ -40,8 +40,8 @@
 //
 //M*/
 
-#ifndef _HIGHGUI_HPP_
-#define _HIGHGUI_HPP_
+#ifndef __OPENCV_HIGHGUI_HPP__
+#define __OPENCV_HIGHGUI_HPP__
 
 #ifdef __cplusplus
 
@@ -131,4 +131,4 @@ protected:
 
 #endif
 
-#endif /* _HIGHGUI_HPP_ */
+#endif

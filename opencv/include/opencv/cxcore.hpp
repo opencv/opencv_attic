@@ -40,8 +40,8 @@
 //
 //M*/
 
-#ifndef _CXCORE_HPP_
-#define _CXCORE_HPP_
+#ifndef __OPENCV_CORE_HPP__
+#define __OPENCV_CORE_HPP__
 
 #include "cxmisc.h"
 

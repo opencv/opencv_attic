@@ -40,8 +40,8 @@
 //
 //M*/
 
-#ifndef _OPENCV_CORE_OPERATIONS_H_
-#define _OPENCV_CORE_OPERATIONS_H_
+#ifndef __OPENCV_CORE_OPERATIONS_H__
+#define __OPENCV_CORE_OPERATIONS_H__
 
 #ifndef SKIP_INCLUDES
   #include <string.h>
@@ -2612,4 +2612,4 @@ template<typename _Tp> inline bool operator != (const SeqIterator<_Tp>& a,
 }
 
 #endif // __cplusplus
-#endif // _OPENCV_CORE_OPERATIONS_H_
+#endif

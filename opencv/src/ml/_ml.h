@@ -56,17 +56,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
-
-#ifndef FALSE
-#define FALSE 0
-#endif
-#ifndef TRUE
-#define TRUE 1
-#endif
-
-#define __BEGIN__ __CV_BEGIN__
-#define __END__  __CV_END__
-#define EXIT __CV_EXIT__
+#include "cvinternal.h"
 
 #define ML_IMPL CV_IMPL
 

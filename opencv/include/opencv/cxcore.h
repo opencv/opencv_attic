@@ -41,8 +41,8 @@
 //M*/
 
 
-#ifndef _CXCORE_H_
-#define _CXCORE_H_
+#ifndef __OPENCV_CORE_H__
+#define __OPENCV_CORE_H__
 
 #ifdef __IPL_H__
 #define HAVE_IPL
@@ -1827,4 +1827,4 @@ struct CV_EXPORTS CvType
 #include "cxcore.hpp"
 #endif // SKIP_INCLUDES
 
-#endif /*_CXCORE_H_*/
+#endif

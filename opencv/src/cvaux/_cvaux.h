@@ -48,24 +48,7 @@
 #include "cvaux.h"
 #include "cxmisc.h"
 #include "_cvmatrix.h"
-
-#if defined __SSE2__ || _MSC_VER >= 1300
-#include "emmintrin.h"
-#define CV_SSE 1
-#define CV_SSE2 1
-#if defined __SSE3__ || _MSC_VER >= 1400
-#include "pmmintrin.h"
-#define CV_SSE3 1
-#endif
-#else
-#define CV_SSE 0
-#define CV_SSE2 0
-#define CV_SSE3 0
-#endif
-
-#define __BEGIN__ __CV_BEGIN__
-#define __END__  __CV_END__
-#define EXIT __CV_EXIT__
+#include "cvinternal.h"
 
 typedef unsigned short ushort;
 
@@ -80,12 +63,5 @@ CV_INLINE bool operator != (CvSize size1, CvSize size2 )
 {
     return size1.width != size2.width || size1.height != size2.height;
 }
-
-#ifndef FALSE
-#define FALSE 0
-#endif
-#ifndef TRUE
-#define TRUE 1
-#endif
 
 #endif /* __CVAUX_H__ */

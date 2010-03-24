@@ -40,8 +40,8 @@
 //
 //M*/
 
-#ifndef _CXCORE_TYPES_H_
-#define _CXCORE_TYPES_H_
+#ifndef __OPENCV_CORE_TYPES_H__
+#define __OPENCV_CORE_TYPES_H__
 
 #if !defined _CRT_SECURE_NO_DEPRECATE && _MSC_VER > 1300
 #define _CRT_SECURE_NO_DEPRECATE /* to avoid multiple Visual Studio 2005 warnings */

@@ -39,8 +39,8 @@
 //
 //M*/
 
-#ifndef _CVTYPES_H_
-#define _CVTYPES_H_
+#ifndef __OPENCV_CVTYPES_H__
+#define __OPENCV_CVTYPES_H__
 
 #ifndef SKIP_INCLUDES
   #include <assert.h>

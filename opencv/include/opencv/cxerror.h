@@ -39,8 +39,8 @@
 //
 //M*/
 
-#ifndef _CXCORE_ERROR_H_
-#define _CXCORE_ERROR_H_
+#ifndef __OPENCV_ERROR_H__
+#define __OPENCV_ERROR_H__
 
 /************Below is declaration of error handling stuff in PLSuite manner**/
 

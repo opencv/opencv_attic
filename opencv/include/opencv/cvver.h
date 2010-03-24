@@ -44,8 +44,8 @@
   Usefull to test in user programs
 */
 
-#ifndef _CVVERSION_H_
-#define _CVVERSION_H_
+#ifndef __OPENCV_VERSION_H__
+#define __OPENCV_VERSION_H__
 
 #define CV_MAJOR_VERSION    2
 #define CV_MINOR_VERSION    1
@@ -55,4 +55,4 @@
 #define CVAUX_STR(__A)      CVAUX_STR_EXP(__A)
 #define CV_VERSION          CVAUX_STR(CV_MAJOR_VERSION) "." CVAUX_STR(CV_MINOR_VERSION) "." CVAUX_STR(CV_SUBMINOR_VERSION)
 
-#endif /*_CVVERSION_H_*/
+#endif

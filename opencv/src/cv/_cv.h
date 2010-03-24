@@ -40,11 +40,11 @@
 //
 //M*/
 
-#ifndef _CV_INTERNAL_H_
-#define _CV_INTERNAL_H_
+#ifndef _OPENCV_CV_INTERNAL_H_
+#define _OPENCV_CV_INTERNAL_H_
 
 #if defined _MSC_VER && _MSC_VER >= 1200
-    /* disable warnings related to inline functions */
+    // disable warnings related to inline functions
     #pragma warning( disable: 4251 4711 4710 4514 )
 #endif
 
@@ -58,49 +58,7 @@
 #include <limits.h>
 #include <float.h>
 
-#ifdef HAVE_CONFIG_H
-    #include <cvconfig.h>
-#endif
-
-#ifdef __BORLANDC__
-#ifndef WIN32
-    #define     WIN32
-#endif
-#ifndef _WIN32
-    #define     _WIN32
-#endif
-    #define     CV_DLL
-    #undef      _CV_ALWAYS_PROFILE_
-    #define     _CV_ALWAYS_NO_PROFILE_
-#endif
-
-#define __BEGIN__ __CV_BEGIN__
-#define __END__ __CV_END__
-#define EXIT __CV_EXIT__
-
-#ifdef HAVE_IPP
-#include "ipp.h"
-
-CV_INLINE IppiSize ippiSize(int width, int height)
-{
-    IppiSize size = { width, height };
-    return size;
-}
-#endif
-
-#if defined __SSE2__ || _MSC_VER >= 1300
-#include "emmintrin.h"
-#define CV_SSE 1
-#define CV_SSE2 1
-#if defined __SSE3__ || _MSC_VER >= 1400
-#include "pmmintrin.h"
-#define CV_SSE3 1
-#endif
-#else
-#define CV_SSE 0
-#define CV_SSE2 0
-#define CV_SSE3 0
-#endif
+#include "cvinternal.h"
 
 /* helper tables */
 extern const uchar icvSaturate8u_cv[];
@@ -150,74 +108,7 @@ typedef struct CvPyramid
 }
 CvPyramid;
 
-#ifndef IPPI_CALL
-#define IPPI_CALL(func) CV_Assert((func) >= 0)
-#endif
-
 #include "_cvgeom.h"
 #include "_cvimgproc.h"
 
-#ifdef HAVE_TBB
-    #include "tbb/tbb_stddef.h"
-    #if TBB_VERSION_MAJOR*100 + TBB_VERSION_MINOR >= 202
-        #include "tbb/tbb.h"
-        #undef min
-        #undef max
-    #else
-        #undef HAVE_TBB
-    #endif
-#endif
-
-#ifdef HAVE_TBB
-    namespace cv
-    {
-        typedef tbb::blocked_range<int> BlockedRange;
-        
-        template<typename Body>
-        void parallel_for( const BlockedRange& range, const Body& body )
-        {
-            tbb::parallel_for(range, body);
-        }
-        
-        template<typename Iterator, typename Body>
-        void parallel_do( Iterator first, Iterator last, const Body& body )
-        {
-            tbb::parallel_do(first, last, body);
-        }
-        
-        typedef tbb::concurrent_vector<Rect> ConcurrentRectVector;
-    }
-#else
-    namespace cv
-    {
-        class BlockedRange
-        {
-        public:
-            BlockedRange() : _begin(0), _end(0), _grainsize(0) {}
-            BlockedRange(int b, int e, int g=1) : _begin(b), _end(e), _grainsize(g) {}
-            int begin() const { return _begin; }
-            int end() const { return _end; }
-            int grainsize() const { return _grainsize; }
-            
-        protected:
-            int _begin, _end, _grainsize;
-        };
-
-        template<typename Body>
-        void parallel_for( const BlockedRange& range, const Body& body )
-        {
-            body(range);
-        }
-        
-        template<typename Iterator, typename Body>
-        void parallel_do( Iterator first, Iterator last, const Body& body )
-        {
-            for( ; first != last; ++first )
-                body(*first);
-        }
-        
-        typedef std::vector<Rect> ConcurrentRectVector;
-    }
-#endif
-
-#endif /*_CV_INTERNAL_H_*/
+#endif /*__OPENCV_CV_INTERNAL_H_*/

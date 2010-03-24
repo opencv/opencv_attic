@@ -39,8 +39,8 @@
 //
 //M*/
 
-#ifndef _CVSTREAMS_H_
-#define _CVSTREAMS_H_
+#ifndef __OPENCV_CVSTREAMS_H__
+#define __OPENCV_CVSTREAMS_H__
 
 #ifdef WIN32
 #include <streams.h>  /* !!! IF YOU'VE GOT AN ERROR HERE, PLEASE READ BELOW !!! */
@@ -89,5 +89,5 @@ and DirectX SDK (2006 April or later).
 
 #endif
 
-#endif /*_CVSTREAMS_H_*/
+#endif
 
