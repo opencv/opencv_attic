@@ -3,7 +3,7 @@
 \ifCPy
 
 \ifC
-\cvfunc{CvFileStorage}\label{CvFileStorage}
+\cvclass{CvFileStorage}\label{CvFileStorage}
 File Storage.
 
 \begin{lstlisting}
@@ -59,7 +59,7 @@ the particular format is determined by the extension of the opened
 file, .xml for XML files and .yml or .yaml for YAML.
 
 
-\cvfunc{CvFileNode}\label{CvFileNode}
+\cvclass{CvFileNode}\label{CvFileNode}
 File Storage Node.
 
 \begin{lstlisting}
@@ -176,7 +176,7 @@ object can be decoded (coverted to native representation) by
 request - when a user calls the \cross{Read} or \cross{ReadByName} functions.
 
 
-\cvfunc{CvAttrList}\label{CvAttrList}
+\cvclass{CvAttrList}\label{CvAttrList}
 List of attributes.
 
 \begin{lstlisting}
@@ -197,7 +197,7 @@ const char* cvAttrValue( const CvAttrList* attr, const char* attr\_name );
 In the current implementation, attributes are used to pass extra parameters when writing user objects (see \cross{Write}). XML attributes inside tags are not supported, aside from the object type specification (\texttt{type\_id} attribute).
 
 
-\cvfunc{CvTypeInfo}\label{CvTypeInfo}
+\cvclass{CvTypeInfo}\label{CvTypeInfo}
 Type information.
 
 \begin{lstlisting}
@@ -362,7 +362,7 @@ points:
 \end{lstlisting}
 
 Then, it is possible to get hashed "x" and "y" pointers to speed up decoding of the points.
-\cvfunc{Example: Reading an array of structures from file storage}
+% Example: Reading an array of structures from file storage
 
 \begin{lstlisting}
 
@@ -980,7 +980,7 @@ The function writes a text string to file storage.
 
 \ifCpp
 
-\cvCppFunc{FileStorage}
+\cvclass{FileStorage}
 The XML/YAML file storage class
 
 \begin{lstlisting}
@@ -1039,7 +1039,7 @@ public:
 \end{lstlisting}
 
 
-\cvCppFunc{FileNode}
+\cvclass{FileNode}
 The XML/YAML file node class
 
 \begin{lstlisting}
@@ -1084,7 +1084,7 @@ public:
 };
 \end{lstlisting}
 
-\cvCppFunc{FileNodeIterator}
+\cvclass{FileNodeIterator}
 The XML/YAML file node iterator class
 
 \begin{lstlisting}

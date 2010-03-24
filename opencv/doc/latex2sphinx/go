@@ -3,8 +3,9 @@
 tput clear
 python latex.py ../online-opencv.tex || exit
 
-for D in c
+for D in c cpp py
 do
+  mkdir -p $D
   cp conf.py $D
-  TEXINPUTS=$PWD: sphinx-build -w sphinx.errors -b html -d _build/doctrees $D _build/html/$D
+  TEXINPUTS=$PWD: sphinx-build -w $D/sphinx.errors -D "lang=$D" -b html -d _build/doctrees/$D $D _build/html/$D
 done

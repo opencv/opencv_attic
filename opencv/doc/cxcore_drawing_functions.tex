@@ -304,7 +304,7 @@ calculated one by one using a 4-connected or 8-connected Bresenham
 algorithm.
 
 \ifC
-\cvfunc{Example: Using line iterator to calculate the sum of pixel values along the color line}
+% Example: Using line iterator to calculate the sum of pixel values along the color line
 
 \begin{lstlisting}
 
@@ -444,6 +444,12 @@ Constructs a color value.
 \cvdefC{\#define CV\_RGB( r, g, b )  cvScalar( (b), (g), (r) )}
 \cvdefPy{CV\_RGB(red,grn,blu)->CvScalar}
 
+\begin{description}
+\cvarg{red}{Red component}
+\cvarg{grn}{Green component}
+\cvarg{blu}{Blue component}
+\end{description}
+
 \fi
 
 \ifCpp
@@ -454,7 +460,7 @@ Draws a circle
 \cvdefCpp{
 void circle(Mat\& img, Point center, int radius,\par
             const Scalar\& color, int thickness=1,\par
-            int lineType=8, int shift=0);\newline
+            int lineType=8, int shift=0);
 }
 \begin{description}
 \cvarg{img}{Image where the circle is drawn}
@@ -666,7 +672,7 @@ the line color, the user may use the macro
 \texttt{CV\_RGB(r, g, b)}.
 
 
-\cvCppFunc{LineIterator}
+\cvclass{LineIterator}
 Class for iterating pixels on a raster line
 
 \begin{lstlisting}
@@ -760,10 +766,10 @@ Draws a text string
 \cvarg{img}{The image}
 \cvarg{text}{The text string to be drawn}
 \cvarg{org}{The bottom-left corner of the text string in the image}
-\cvarg{fontFace}{The font type, one of \cvarg{FONT\_HERSHEY\_SIMPLEX}, \cvarg{FONT\_HERSHEY\_PLAIN},
- \cvarg{FONT\_HERSHEY\_DUPLEX}, \cvarg{FONT\_HERSHEY\_COMPLEX}, \cvarg{FONT\_HERSHEY\_TRIPLEX},
- \cvarg{FONT\_HERSHEY\_COMPLEX\_SMALL}, \cvarg{FONT\_HERSHEY\_SCRIPT\_SIMPLEX} or \cvarg{FONT\_HERSHEY\_SCRIPT\_COMPLEX},
-   where each of the font id's can be combined with \cvarg{FONT\_HERSHEY\_ITALIC} to get the slanted letters.}
+\cvarg{fontFace}{The font type, one of \texttt{FONT\_HERSHEY\_SIMPLEX}, \texttt{FONT\_HERSHEY\_PLAIN},
+ \texttt{FONT\_HERSHEY\_DUPLEX}, \texttt{FONT\_HERSHEY\_COMPLEX}, \texttt{FONT\_HERSHEY\_TRIPLEX},
+ \texttt{FONT\_HERSHEY\_COMPLEX\_SMALL}, \texttt{FONT\_HERSHEY\_SCRIPT\_SIMPLEX} or \texttt{FONT\_HERSHEY\_SCRIPT\_COMPLEX},
+   where each of the font id's can be combined with \texttt{FONT\_HERSHEY\_ITALIC} to get the slanted letters.}
 \cvarg{fontScale}{The font scale factor that is multiplied by the font-specific base size}
 \cvarg{thickness}{Thickness of the lines used to draw the text}
 \cvarg{lineType}{The line type; see \texttt{line} for details}

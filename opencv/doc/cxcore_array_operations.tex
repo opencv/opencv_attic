@@ -443,17 +443,40 @@ where \texttt{op} is $=,\; >,\; \ge,\; <,\; \le\; or\; \ne$.
 
 \texttt{dst(I)} is set to 0xff (all \texttt{1}-bits) if the specific relation between the elements is true and 0 otherwise. All the arrays must have the same size (or ROI size).
 
+\ifPy % {
+\cvCPyFunc{Convert}
+Converts one array to another.
+
+\cvdefPy{Convert(src,dst)-> None}
+
+\begin{description}
+\cvarg{src}{Source array}
+\cvarg{dst}{Destination array}
+\end{description}
+
+
+The type of conversion is done with rounding and saturation, that is if the
+result of scaling + conversion can not be represented exactly by a value
+of the destination array element type, it is set to the nearest representable
+value on the real axis.
+
+All the channels of multi-channel arrays are processed independently.
+
+\fi % }
+
 \cvCPyFunc{ConvertScale}
 Converts one array to another with optional linear transformation.
 
 \cvdefC{void cvConvertScale(const CvArr* src, CvArr* dst, double scale=1, double shift=0);}
 \cvdefPy{ConvertScale(src,dst,scale=1.0,shift=0.0)-> None}
 
+\ifC
 \begin{lstlisting}
 #define cvCvtScale cvConvertScale
 #define cvScale  cvConvertScale
 #define cvConvert(src, dst )  cvConvertScale((src), (dst), 1, 0 )
 \end{lstlisting}
+\fi
 
 \begin{description}
 \cvarg{src}{Source array}
@@ -481,6 +504,7 @@ optimized case and it has the appropriate \cvCPyCross{Convert} name. If
 source and destination array types have equal types, this is also a
 special case that can be used to scale and shift a matrix or an image
 and that is caled \cvCPyCross{Scale}.
+
 
 \cvCPyFunc{ConvertScaleAbs}
 Converts input array elements to another 8-bit unsigned integer with optional linear transformation.
@@ -3765,7 +3789,7 @@ In the case of multi-channel arrays each channel is processed independently.
 See also: \cvCppCross{add}, \cvCppCross{subtract}, \cvCppCross{scaleAdd}, \cvCppCross{convertScale},
 \cross{Matrix Expressions}, \hyperref[cppfunc.saturatecast]{saturate\_cast}.
 
-\subsection{cv::bitwise\_and}\label{cppfunc.bitwise.and}
+\cvfunc{cv::bitwise\_and}\label{cppfunc.bitwise.and}
 Calculates per-element bit-wise conjunction of two arrays and an array and a scalar.
 
 \cvdefCpp{void bitwise\_and(const Mat\& src1, const Mat\& src2,\par Mat\& dst, const Mat\& mask=Mat());\newline
@@ -3794,7 +3818,7 @@ In the case of floating-point arrays their machine-specific bit representations 
 
 See also: \hyperref[cppfunc.bitwise.and]{bitwise\_and}, \hyperref[cppfunc.bitwise.not]{bitwise\_not}, \hyperref[cppfunc.bitwise.xor]{bitwise\_xor}
 
-\subsection{cv::bitwise\_not}\label{cppfunc.bitwise.not}
+\cvfunc{cv::bitwise\_not}\label{cppfunc.bitwise.not}
 Inverts every bit of array
 
 \cvdefCpp{void bitwise\_not(const Mat\& src, Mat\& dst);\newline
@@ -3815,7 +3839,7 @@ In the case of floating-point source array its machine-specific bit representati
 See also: \hyperref[cppfunc.bitwise.and]{bitwise\_and}, \hyperref[cppfunc.bitwise.or]{bitwise\_or}, \hyperref[cppfunc.bitwise.xor]{bitwise\_xor}
 
 
-\subsection{cv::bitwise\_or}\label{cppfunc.bitwise.or}
+\cvfunc{cv::bitwise\_or}\label{cppfunc.bitwise.or}
 Calculates per-element bit-wise disjunction of two arrays and an array and a scalar.
 
 \cvdefCpp{void bitwise\_or(const Mat\& src1, const Mat\& src2,\par Mat\& dst, const Mat\& mask=Mat());\newline
@@ -3844,7 +3868,7 @@ In the case of floating-point arrays their machine-specific bit representations 
 
 See also: \hyperref[cppfunc.bitwise.and]{bitwise\_and}, \hyperref[cppfunc.bitwise.not]{bitwise\_not}, \hyperref[cppfunc.bitwise.or]{bitwise\_or}
 
-\subsection{cv::bitwise\_xor}\label{cppfunc.bitwise.xor}
+\cvfunc{cv::bitwise\_xor}\label{cppfunc.bitwise.xor}
 Calculates per-element bit-wise "exclusive or" operation on two arrays and an array and a scalar.
 
 \cvdefCpp{void bitwise\_xor(const Mat\& src1, const Mat\& src2,\par Mat\& dst, const Mat\& mask=Mat());\newline
@@ -4060,7 +4084,7 @@ Counts non-zero array elements.
 \cvdefCpp{int countNonZero( const Mat\& mtx );\newline
 int countNonZero( const MatND\& mtx );}
 \begin{description}
-\cvarg{mtx}Single-channel array
+\cvarg{mtx}{Single-channel array}
 \end{description}
 
 The function \texttt{cvCountNonZero} returns the number of non-zero elements in mtx:
@@ -4074,7 +4098,7 @@ Computes cube root of the argument
 
 \cvdefCpp{float cubeRoot(float val);}
 \begin{description}
-\cvarg{val}The function argument
+\cvarg{val}{The function argument}
 \end{description}
 
 The function \texttt{cubeRoot} computes $\sqrt[3]{\texttt{val}}$.
@@ -4133,7 +4157,7 @@ Performs a forward or inverse discrete cosine transform of 1D or 2D array
 \begin{description}
 \cvarg{src}{The source floating-point array}
 \cvarg{dst}{The destination array; will have the same size and same type as \texttt{src}}
-\cvarg{flags}\cvarg{flags}{Transformation flags, a combination of the following values
+\cvarg{flags}{Transformation flags, a combination of the following values
 \begin{description}
 \cvarg{DCT\_INVERSE}{do an inverse 1D or 2D transform instead of the default forward transform.}
 \cvarg{DCT\_ROWS}{do a forward or inverse transform of every individual row of the input matrix. This flag allows user to transform multiple vectors simultaneously and can be used to decrease the overhead (which is sometimes several times larger than the processing itself), to do 3D and higher-dimensional transforms and so forth.}
@@ -5106,7 +5130,7 @@ in the case of sparse matrices, only the non-zero values are analyzed and transf
 See also: \cvCppCross{norm}, \cvCppCross{Mat::convertScale}, \cvCppCross{MatND::convertScale}, \cvCppCross{SparseMat::convertScale}
 
 
-\cvCppFunc{PCA}
+\cvclass{PCA}
 Class for Principal Component Analysis
 
 \begin{lstlisting}
@@ -5374,7 +5398,7 @@ The second variant of the function is more convenient to use with \cross{Matrix 
 See also: \cvCppCross{reduce}, \cross{Matrix Expressions}
 
 \ifplastex
-\subsection{saturate\_cast}\label{cppfunc.saturatecast}
+\cvfunc{saturate\_cast}\label{cppfunc.saturatecast}
 \else
 \subsection{cv::saturate\_cast}\label{cppfunc.saturatecast}
 \fi
@@ -5656,7 +5680,7 @@ dst -= src2; // equivalent to subtract(dst, src2, dst);
 See also: \cvCppCross{add}, \cvCppCross{addWeighted}, \cvCppCross{scaleAdd}, \cvCppCross{convertScale},
 \cross{Matrix Expressions}, \hyperref[cppfunc.saturatecast]{saturate\_cast}.
 
-\cvCppFunc{SVD}
+\cvclass{SVD}
 Class for computing Singular Value Decomposition
 
 \begin{lstlisting}

@@ -274,7 +274,7 @@ void cvConDensInitSampleSet( CvConDensation* condens, \par CvMat* lower\_bound, 
 The function fills the samples arrays in the structure \cvCPyCross{CvConDensation} with values within the specified ranges.
 \fi
 
-\cvfunc{CvKalman}\label{CvKalman}
+\cvclass{CvKalman}\label{CvKalman}
 Kalman filter state.
 
 \begin{lstlisting}
@@ -396,10 +396,6 @@ const CvMat* cvKalmanCorrect( CvKalman* kalman, const CvMat* measurement );
 KalmanCorrect(kalman, measurement) -> cvmat
 }
 
-\begin{lstlisting}
-#define cvKalmanUpdateByMeasurement cvKalmanCorrect
-\end{lstlisting}
-
 \begin{description}
 \ifC
 \cvarg{kalman}{Pointer to the structure to be updated}
@@ -408,6 +404,10 @@ KalmanCorrect(kalman, measurement) -> cvmat
 \fi
 \cvarg{measurement}{CvMat containing the measurement vector}
 \end{description}
+
+\begin{lstlisting}
+#define cvKalmanUpdateByMeasurement cvKalmanCorrect
+\end{lstlisting}
 
 The function adjusts the stochastic model state on the basis of the given measurement of the model state:
 
@@ -422,8 +422,9 @@ P_k=(I-K_k \cdot H) \cdot P'_k
 where
 
 \begin{tabular}{l p{4 in}}
-$z_k$ & given measurement (\texttt{mesurement} parameter)\\
-$K_k$ & Kalman "gain" matrix.\\
+\hline
+$z_k$ & given measurement (\texttt{mesurement} parameter)\\ \hline
+$K_k$ & Kalman "gain" matrix.\\ \hline
 \end{tabular}
 
 The function stores the adjusted state at \texttt{kalman->state\_post} and returns it on output.
@@ -578,11 +579,11 @@ where
 
 \begin{tabular}{l p{5 in}}
 \hline
-$x'_k$ & is predicted state \texttt{kalman->state\_pre},\\
+$x'_k$ & is predicted state \texttt{kalman->state\_pre},\\ \hline
 $x_{k-1}$ & is corrected state on the previous step \texttt{kalman->state\_post}
-                (should be initialized somehow in the beginning, zero vector by default),\\
-$u_k$ & is external control (\texttt{control} parameter),\\
-$P'_k$ & is priori error covariance matrix \texttt{kalman->error\_cov\_pre}\\
+                (should be initialized somehow in the beginning, zero vector by default),\\ \hline
+$u_k$ & is external control (\texttt{control} parameter),\\ \hline
+$P'_k$ & is priori error covariance matrix \texttt{kalman->error\_cov\_pre}\\ \hline
 $P_{k-1}$ & is posteriori error covariance matrix on the previous step \texttt{kalman->error\_cov\_post}
                 (should be initialized somehow in the beginning, identity matrix by default),
 \end{tabular}
@@ -1034,7 +1035,7 @@ Finds the object on a back projection image.
 The function implements iterative object search algorithm. It takes the object back projection on input and the initial position. The mass center in \texttt{window} of the back projection image is computed and the search window center shifts to the mass center. The procedure is repeated until the specified number of iterations \texttt{criteria.maxCount} is done or until the window center shifts by less than \texttt{criteria.epsilon}. The algorithm is used inside \cvCppCross{CamShift} and, unlike \cvCppCross{CamShift}, the search window size or orientation do not change during the search. You can simply pass the output of \cvCppCross{calcBackProject} to this function, but better results can be obtained if you pre-filter the back projection and remove the noise (e.g. by retrieving connected components with \cvCppCross{findContours}, throwing away contours with small area (\cvCppCross{contourArea}) and rendering the  remaining contours with \cvCppCross{drawContours})
 
 
-\cvCppFunc{KalmanFilter}
+\cvclass{KalmanFilter}
 Kalman filter class
 
 \begin{lstlisting}

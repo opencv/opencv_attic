@@ -342,7 +342,7 @@ destination must be single-channel images of equal size or equal ROI size.
 
 \ifCpp
 
-\cvCppFunc{BaseColumnFilter}
+\cvclass{BaseColumnFilter}
 Base class for filters with single-column kernels
 
 \begin{lstlisting}
@@ -379,7 +379,7 @@ See also: \cvCppCross{BaseRowFilter}, \cvCppCross{BaseFilter}, \cvCppCross{Filte
     \cvCppCross{getColumnSumFilter}, \cvCppCross{getLinearColumnFilter}, \cvCppCross{getMorphologyColumnFilter}
 
 
-\cvCppFunc{BaseFilter}
+\cvclass{BaseFilter}
 Base class for 2D image filters
 
 \begin{lstlisting}
@@ -424,7 +424,7 @@ where $F$ is the filtering function. The class only defines the interface and is
 See also: \cvCppCross{BaseColumnFilter}, \cvCppCross{BaseRowFilter}, \cvCppCross{FilterEngine},
     \cvCppCross{getLinearFilter}, \cvCppCross{getMorphologyFilter}
 
-\cvCppFunc{BaseRowFilter}
+\cvclass{BaseRowFilter}
 Base class for filters with single-row kernels
 
 \begin{lstlisting}
@@ -453,7 +453,7 @@ where $F$ is the filtering function. The class only defines the interface and is
 See also: \cvCppCross{BaseColumnFilter}, \cvCppCross{Filter}, \cvCppCross{FilterEngine},
  \cvCppCross{getLinearRowFilter}, \cvCppCross{getMorphologyRowFilter}, \cvCppCross{getRowSumFilter}
 
-\cvCppFunc{FilterEngine}
+\cvclass{FilterEngine}
 Generic image filtering class
 
 \begin{lstlisting}
@@ -1142,9 +1142,7 @@ Returns the structuring element of the specified size and shape for morphologica
 
         \item \texttt{MORPH\_CROSS} - cross-shaped structuring element:
             \[
-            E_{ij} = \fork
-            {1}{if i=\texttt{anchor.y} or j=\texttt{anchor.x}}
-            {0}{otherwise}
+            E_{ij} = \fork{1}{if i=\texttt{anchor.y} or j=\texttt{anchor.x}}{0}{otherwise}
             \]
         
     \end{itemize}}

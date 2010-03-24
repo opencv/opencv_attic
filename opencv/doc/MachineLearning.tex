@@ -6,7 +6,7 @@ Most of the classification and regression algorithms are implemented as C++ clas
 
 \section{Statistical Models}
 
-\cvfunc{CvStatModel}
+\cvclass{CvStatModel}
 Base class for the statistical models in ML.
 
 \begin{lstlisting}
@@ -182,7 +182,7 @@ This is a simple classification model assuming that feature vectors from each cl
 \textbf{[Fukunaga90] K. Fukunaga. Introduction to Statistical Pattern Recognition. second ed., New York: Academic Press, 1990.}
 
 
-\cvfunc{CvNormalBayesClassifier}
+\cvclass{CvNormalBayesClassifier}
 
 Bayes classifier for normally distributed data.
 
@@ -240,7 +240,7 @@ The method \texttt{predict} estimates the most probable classes for the input ve
 The algorithm caches all of the training samples, and predicts the response for a new sample by analyzing a certain number (\textbf{K}) of the nearest neighbors of the sample (using voting, calculating weighted sum etc.) The method is sometimes referred to as "learning by example", because for prediction it looks for the feature vector with a known response that is closest to the given vector.
 
 
-\cvfunc{CvKNearest}
+\cvclass{CvKNearest}
 K Nearest Neighbors model.
 
 \begin{lstlisting}
@@ -315,7 +315,7 @@ For each input vector the neighbors are sorted by their distances to the vector.
 
 If only a single input vector is passed, all output matrices are optional and the predicted value is returned by the method.
 
-\cvfunc{Example. Classification of 2D samples from a Gaussian mixture with the k-nearest classifier}
+% Example. Classification of 2D samples from a Gaussian mixture with the k-nearest classifier
 
 \begin{lstlisting}
 #include "ml.h"
@@ -412,7 +412,7 @@ There are a lot of good references on SVM. Here are only a few ones to start wit
 \item \textbf{LIBSVM - A Library for Support Vector Machines. By Chih-Chung Chang and Chih-Jen Lin} (\url{http://www.csie.ntu.edu.tw/~cjlin/libsvm/})
 \end{itemize}
 
-\cvfunc{CvSVM}
+\cvclass{CvSVM}
 Support Vector Machines.
 
 \begin{lstlisting}
@@ -470,7 +470,7 @@ protected:
 \end{lstlisting}
 
 
-\cvfunc{CvSVMParams}
+\cvclass{CvSVMParams}
 SVM training parameters.
 
 \begin{lstlisting}
@@ -681,7 +681,7 @@ Importance of each variable is computed over all the splits on this variable in 
 \textbf{[Breiman84] Breiman, L., Friedman, J. Olshen, R. and Stone, C. (1984), "Classification and Regression Trees", Wadsworth.}
 
 
-\cvfunc{CvDTreeSplit}
+\cvclass{CvDTreeSplit}
 Decision tree node split.
 
 \begin{lstlisting}
@@ -719,7 +719,7 @@ struct CvDTreeSplit
 %\end{description}
 
 
-\cvfunc{CvDTreeNode}
+\cvclass{CvDTreeNode}
 Decision tree node.
 
 \begin{lstlisting}
@@ -754,7 +754,7 @@ struct CvDTreeNode
 Other numerous fields of \texttt{CvDTreeNode} are used internally at the training stage.
 
 
-\cvfunc{CvDTreeParams}
+\cvclass{CvDTreeParams}
 Decision tree training parameters.
 
 \begin{lstlisting}
@@ -807,7 +807,7 @@ struct CvDTreeParams
 The structure contains all the decision tree training parameters. There is a default constructor that initializes all the parameters with the default values tuned for standalone classification tree. Any of the parameters can be overridden then, or the structure may be fully initialized using the advanced variant of the constructor.
 
 
-\cvfunc{CvDTreeTrainData}
+\cvclass{CvDTreeTrainData}
 Decision tree training data and shared data for tree ensembles.
 
 \begin{lstlisting}
@@ -920,7 +920,7 @@ There are 2 ways of using this structure. In simple cases (e.g. a standalone tre
 \end{itemize}
 
 
-\cvfunc{CvDTree}
+\cvclass{CvDTree}
 Decision tree.
 
 \begin{lstlisting}
@@ -1082,7 +1082,7 @@ In order to reduce computation time for boosted models without substantially los
 \textbf{[FHT98] Friedman, J. H., Hastie, T. and Tibshirani, R. Additive Logistic Regression: a Statistical View of Boosting. Technical Report, Dept. of Statistics, Stanford University, 1998.}
 
 
-\cvfunc{CvBoostParams}
+\cvclass{CvBoostParams}
 Boosting training parameters.
 
 \begin{lstlisting}
@@ -1123,7 +1123,7 @@ struct CvBoostParams : public CvDTreeParams
 The structure is derived from \cross{CvDTreeParams}, but not all of the decision tree parameters are supported. In particular, cross-validation is not supported.
 
 
-\cvfunc{CvBoostTree}
+\cvclass{CvBoostTree}
 Weak tree classifier.
 
 \begin{lstlisting}
@@ -1152,7 +1152,7 @@ The weak classifier, a component of the boosted tree classifier \cross{CvBoost},
 Note, that in the case of LogitBoost and Gentle AdaBoost each weak predictor is a regression tree, rather than a classification tree. Even in the case of Discrete AdaBoost and Real AdaBoost the \texttt{CvBoostTree::predict} return value (\texttt{CvDTreeNode::value}) is not the output class label; a negative value "votes" for class \#0, a positive - for class \#1. And the votes are weighted. The weight of each individual tree may be increased or decreased using the method \texttt{CvBoostTree::scale}.
 
 
-\cvfunc{CvBoost}
+\cvclass{CvBoost}
 Boosted tree classifier.
 
 \begin{lstlisting}
@@ -1289,7 +1289,7 @@ In random trees there is no need for any accuracy estimation procedures, such as
 \item And other articles from the web site \url{http://www.stat.berkeley.edu/users/breiman/RandomForests/cc_home.htm}.
 \end{itemize}
 
-\cvfunc{CvRTParams}
+\cvclass{CvRTParams}
 Training Parameters of Random Trees.
 
 \begin{lstlisting}
@@ -1325,7 +1325,7 @@ struct CvRTParams : public CvDTreeParams
 The set of training parameters for the forest is the superset of the training parameters for a single tree. However, Random trees do not need all the functionality/features of decision trees, most noticeably, the trees are not pruned, so the cross-validation parameters are not used.
 
 
-\cvfunc{CvRTrees}
+\cvclass{CvRTrees}
 Random Trees.
 
 \begin{lstlisting}
@@ -1598,7 +1598,7 @@ already a good enough approximation).
 \end{itemize}
 
 
-\cvfunc{CvEMParams}
+\cvclass{CvEMParams}
 Parameters of the EM algorithm.
 
 \begin{lstlisting}
@@ -1660,7 +1660,7 @@ struct CvEMParams
 The structure has 2 constructors, the default one represents a rough rule-of-thumb, with another one it is possible to override a variety of parameters, from a single number of mixtures (the only essential problem-dependent parameter), to the initial values for the mixture parameters.
 
 
-\cvfunc{CvEM}
+\cvclass{CvEM}
 EM model.
 
 \begin{lstlisting}
@@ -1741,7 +1741,7 @@ int main( int argc, char** argv )
 {
     const int N = 4;
     const int N1 = (int)sqrt((double)N);
-    const CvScalar colors[] = \cvdefCpp{0,0,255}},{{0,255,0}},
+    const CvScalar colors[] = {{0,0,255}},{{0,255,0}},
 				    {{0,255,255}},{{255,255,0}
 				    ;
     int i, j;
@@ -1912,7 +1912,7 @@ References:
 \item M. Riedmiller and H. Braun, "A Direct Adaptive Method for Faster Backpropagation Learning: The RPROP Algorithm", Proc. ICNN, San Francisco (1993).
 \end{itemize}
 
-\cvfunc{CvANN\_MLP\_TrainParams}
+\cvclass{CvANN\_MLP\_TrainParams}
 Parameters of the MLP training algorithm.
 
 \begin{lstlisting}
@@ -1951,7 +1951,7 @@ struct CvANN_MLP_TrainParams
 The structure has default constructor that initializes parameters for \texttt{RPROP} algorithm. There is also more advanced constructor to customize the parameters and/or choose backpropagation algorithm. Finally, the individual parameters can be adjusted after the structure is created.
 
 
-\cvfunc{CvANN\_MLP}
+\cvclass{CvANN\_MLP}
 MLP model.
 
 \begin{lstlisting}
