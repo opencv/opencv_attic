@@ -2881,8 +2881,9 @@ cvCalcCovarMatrix( const CvArr** vecarr, int count,
     if( avgarr )
         mean = mean0 = cv::cvarrToMat(avgarr);
 
-    if( count == 1 || (flags & CV_COVAR_COLS) != 0 || (flags & CV_COVAR_ROWS) != 0 )
+    if( (flags & CV_COVAR_COLS) != 0 || (flags & CV_COVAR_ROWS) != 0 )
     {
+
         cv::Mat data = cv::cvarrToMat(vecarr[0]);
         cv::calcCovarMatrix( data, cov, mean, flags, cov.type() );
     }
