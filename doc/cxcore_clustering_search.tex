@@ -427,12 +427,12 @@ if the subsequent searches in the index can be performed very fast. In
 other applications it's required that the index be build as fast as
 possible even if that leads to slightly longer search times.}
 
-\cvarg{memory\_weight} {Is used to specify the tradeoff between
+\cvarg{memory\_weight}{Is used to specify the tradeoff between
 time (index build time and search time) and memory used by the index. A
 value less than 1 gives more importance to the time spent and a value
 greater than 1 gives more importance to the memory usage.}
 
-\cvarg{sample\_fraction} {Is a number between 0 and 1 indicating what fraction
+\cvarg{sample\_fraction}{Is a number between 0 and 1 indicating what fraction
 of the dataset to use in the automatic parameter configuration algorithm. Running the 
 algorithm on the full dataset gives the most accurate results, but for
 very large datasets can take longer than desired. In such case using just a fraction of the
