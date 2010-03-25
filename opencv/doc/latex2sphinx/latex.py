@@ -522,9 +522,13 @@ class SphinxWriter:
             self.write(repr(c))
 
     def unrecognized_cmd(self, c):
+        # if writing the index or chapter heading, anything goes
         if not self.f in [self.f_index, self.f_chapter]:
             self.write(c.cmd)
-            self.unhandled_commands.add(c.cmd)
+            if (not 'lstlisting' in self.ee()) and (not c.cmd in "#{}%&*\\_"):
+                if not c.cmd in self.unhandled_commands:
+                    self.report_error(c, 'unhandled command %s' % c.cmd)
+                    self.unhandled_commands.add(c.cmd)
 
     def doL(self, L, newlines = True):
         for x in L:
@@ -584,12 +588,14 @@ class SphinxWriter:
 
         if self.envstack != []:
             print >>self.errors, "Error envstack not empty at end of doc: " + repr(self.envstack)
-        print >>self.errors, "unrecognized commands:"
-        print >>self.errors, "\n    ".join(sorted(self.unhandled_commands))
+        print >>self.errors, "Unrecognized commands:"
+        for c in sorted(self.unhandled_commands):
+            print >>self.errors, "\n    " + c
         print >>self.errors
-        print >>self.errors, "The following functions are undocumented"
-        for f in sorted(set(python_api) - self.covered):
-            print >>self.errors, '    ', f
+        if self.language == 'py':
+            print >>self.errors, "The following functions are undocumented"
+            for f in sorted(set(python_api) - self.covered):
+                print >>self.errors, '    ', f
 
         print >>self.f_index, "    bibliography"
         print >>self.f_index, """
