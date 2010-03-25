@@ -42,7 +42,7 @@ class SphinxWriter:
         self.state = None
         self.envstack = []
         self.tags = {}
-        self.errors = open('errors', 'wt')
+        self.errors = open('errors.%s' % language, 'wt')
         self.unhandled_commands = set()
         self.freshline = True
         self.function_props = {}
@@ -69,8 +69,6 @@ class SphinxWriter:
             self.description += s
         else:
             self.write(s)
-        if 'lstlisting' in self.ee():
-            self.listing += s
 
     def docmd(self, c):
         if self.state == 'math':
@@ -317,10 +315,11 @@ class SphinxWriter:
                 self.report_error(c, "No cvdefPy for function %s" % self.function_props['name'])
             self.indent += 1
         elif s == 'lstlisting':
-            print >>self, "\n::\n"
-            self.indent += 1
-            print >>self
-            self.listing = ""
+            # Set indent to zero while collecting code; so later write will not double-indent
+            self.saved_f = self.f
+            self.saved_indent = self.indent
+            self.f = StringIO.StringIO()
+            self.indent = 0
         elif s in ['itemize', 'enumerate']:
             self.indent += 1
         elif s == 'tabular':
@@ -366,12 +365,22 @@ class SphinxWriter:
             self.f = self.f_section
             self.f.write(self.handle_table(tabletxt))
         elif s == 'lstlisting':
+            listing = self.f.getvalue()
+
+            self.f = self.saved_f
+            self.indent = self.saved_indent
             print >>self
+            if (self.language == 'py') and ('>>>' in listing):
+                print >>self, "\n.. doctest::\n"
+            else:
+                print >>self, "\n::\n"
+            self.indent += 1
+            print >>self
+            self.write(listing)
             self.indent -= 1
             print >>self
+            print >>self
             print >>self, ".."      # otherwise a following :param: gets treated as more listing
-            if '\\_' in self.listing:
-                self.report_error(c, "backslash _ in listing")
         elif s == 'document':
             pass
         else:
@@ -416,7 +425,8 @@ class SphinxWriter:
         if len(c.params) != 2:
             self.report_error(c, "Malformed cvarg")
             return
-        is_func_arg = self.ee() == ['description'] and not 'done' in self.function_props
+        is_func_arg = (self.ee() == ['description']) and (not 'done' in self.function_props)
+        e = self.ee()
         if is_func_arg:
             nm = self.render(c.params[0].str)
             print >>self, '\n:param %s: ' % nm,
@@ -441,12 +451,10 @@ class SphinxWriter:
                         type = arg.ty
                     else:
                         self.report_error(c, 'cannot find arg %s in code' % nm)
-        elif self.ee() == ['description']:
-            print >>self, '\n* **%s** ' % self.render(c.params[0].str),
-        elif self.ee() == ['description', 'description']:
+        elif len(e) > 0 and e[-1] == 'description':
             print >>self, '\n* **%s** ' % self.render(c.params[0].str),
         else:
-            print 'strange env', self.envstack
+            self.report_error(c, "unexpected env (%s) for cvarg" % ",".join(e))
         self.indent += 1
         self.doL(c.params[1].str, False)
         self.indent -= 1
@@ -604,7 +612,7 @@ def parseBib(filename, language):
         sl('}'))
     r = (pp.ZeroOrMore(entry) | pp.Suppress('#' + pp.ZeroOrMore(pp.CharsNotIn('\n'))) + pp.StringEnd()).parseFile(filename)
 
-    bibliography = open(os.path.join(language, "bibliography.rst"), 'wt')
+    bibliography = QOpen(os.path.join(language, "bibliography.rst"), 'wt')
     print >>bibliography, "Bibliography"
     print >>bibliography, "============"
     print >>bibliography
@@ -613,9 +621,10 @@ def parseBib(filename, language):
         (etype, tag, attrs) = str(e[0][1:]), str(e[1]), dict([(str(a), str(b)) for (a,b) in e[2]])
         
         representations = {
-            'article' :         '$author, "$title". $journal $volume $number, $pages ($year)',
+            'article' :         '$author, "$title". $journal $volume $number, pp $pages ($year)',
             'inproceedings' :   '$author "$title", $booktitle, $year',
             'misc' :            '$author "$title", $year',
+            'techreport' :      '$author "$title", $edition, $edition ($year)',
         }
         if etype in representations:
             if 0:
@@ -625,18 +634,15 @@ def parseBib(filename, language):
 
             print >>bibliography, ".. [%s] %s" % (tag, Template(representations[etype]).safe_substitute(attrs))
             print >>bibliography
+    bibliography.close()
 
 if 1:
-    sources = ['../' + f for f in os.listdir('..') if f.endswith('.tex')]
-    if distutils.dep_util.newer_group(["latexparser.py"] + sources, "pickled"):
-        fulldoc = latexparser(sys.argv[1], 0)
-        pickle.dump(fulldoc, open("pickled", 'wb'))
-        raw = open('raw.full', 'w')
-        for x in fulldoc:
-            print >>raw, repr(x)
-        raw.close()
-    else:
-        fulldoc = pickle.load(open("pickled", "rb"))
+    fulldoc = latexparser(sys.argv[1])
+
+    raw = open('raw.full', 'w')
+    for x in fulldoc:
+        print >>raw, repr(x)
+    raw.close()
 
     # Filter on target language
     def preprocess_conditionals(fd, conditionals):
