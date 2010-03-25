@@ -1,4 +1,4 @@
-from pyparsing import Word, CharsNotIn, Optional, OneOrMore, ZeroOrMore, Group, Forward, ParseException, Literal, Suppress, replaceWith, StringEnd, lineno, QuotedString, White, NotAny, ParserElement
+from pyparsing import Word, CharsNotIn, Optional, OneOrMore, ZeroOrMore, Group, Forward, ParseException, Literal, Suppress, replaceWith, StringEnd, lineno, QuotedString, White, NotAny, ParserElement, MatchFirst
 import sys
 
 class Argument:
@@ -53,7 +53,9 @@ arg.setParseAction(argfun)
 dollarmath = QuotedString('$',  multiline=True, unquoteResults=False)
 param = Suppress(Literal('{')) + ZeroOrMoreAsList(dollarmath | filler2 | QuotedString('{', endQuoteChar='}', unquoteResults=False) | texcmd) + Suppress(Literal('}'))
 param.setParseAction(paramfun)
-texcmd << (Literal("\\[") | Literal("\\]") | Literal("\\{") | Literal("\\}") | Literal("\\\\") | Word("\\", "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")) + ZeroOrMoreAsList(arg) + ZeroOrMoreAsList(param)
+def bs(c): return Literal("\\" + c)
+singles = bs("[") | bs("]") | bs("{") | bs("}") | bs("\\") | bs("&") | bs("_") | bs(",") | bs("#") | bs("\n") | bs(";") | bs("|") | bs("%") | bs("*")
+texcmd << (singles | Word("\\", "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", min = 2)) + ZeroOrMoreAsList(arg) + ZeroOrMoreAsList(param)
 def texcmdfun(s, loc, toks):
     if str(toks[0])[1:] == 'input':
         filename = "../" + toks[2].asList()[0].str[0] + ".tex"
@@ -68,16 +70,13 @@ texcmd.setParseAction(texcmdfun)
 document = ZeroOrMore(dollarmath | texcmd | filler) + StringEnd().suppress()
 
 if 0:
-    s = """Starting from OpenCV 2.0 the new modern C++ interface has been introduced.
-It is crisp (less typing is needed to code the same thing), type-safe 
-and, in general, more convenient to use. Here is a short example of what it looks like:"""
+    s = "This is \\\\ test"
     print s
-    print filler.parseString(s)
-    sys.exit(-1)
     for t in document.parseString(s):
         if isinstance(t, TexCmd):
             print '====> cmd=[%s]' % t.cmd, t
-        print '====>', t
+        else:
+            print '====>', t
     sys.exit(-1)
 
 def latexparser(filename, startline):

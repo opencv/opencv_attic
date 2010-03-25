@@ -1527,12 +1527,12 @@ for(y = 0; y < size.height; y++, data += step )
 \cvCPyFunc{GetReal?D}
 Return a specific element of single-channel array.
 
-\begin{lstlisting}
-double cvGetReal1D(const CvArr* arr, int idx0);
-double cvGetReal2D(const CvArr* arr, int idx0, int idx1);
-double cvGetReal3D(const CvArr* arr, int idx0, int idx1, int idx2);
+\cvdefC{
+double cvGetReal1D(const CvArr* arr, int idx0); \newline
+double cvGetReal2D(const CvArr* arr, int idx0, int idx1); \newline
+double cvGetReal3D(const CvArr* arr, int idx0, int idx1, int idx2); \newline
 double cvGetRealND(const CvArr* arr, int* idx);
-\end{lstlisting}
+}
 
 \begin{description}
 \cvarg{arr}{Input array. Must have a single channel.}
@@ -2420,12 +2420,12 @@ For some values of \texttt{power}, such as integer values, 0.5, and -0.5, specia
 \cvCPyFunc{Ptr?D}
 Return pointer to a particular array element.
 
-\begin{lstlisting}
-uchar* cvPtr1D(const CvArr* arr, int idx0, int* type=NULL);
-uchar* cvPtr2D(const CvArr* arr, int idx0, int idx1, int* type=NULL);
-uchar* cvPtr3D(const CvArr* arr, int idx0, int idx1, int idx2, int* type=NULL);
+\cvdefC{
+uchar* cvPtr1D(const CvArr* arr, int idx0, int* type=NULL); \newline
+uchar* cvPtr2D(const CvArr* arr, int idx0, int idx1, int* type=NULL); \newline
+uchar* cvPtr3D(const CvArr* arr, int idx0, int idx1, int idx2, int* type=NULL); \newline
 uchar* cvPtrND(const CvArr* arr, int* idx, int* type=NULL, int createNode=1, unsigned* precalcHashval=NULL);
-\end{lstlisting}
+}
 
 \begin{description}
 \cvarg{arr}{Input array}

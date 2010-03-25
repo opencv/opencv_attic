@@ -87,7 +87,8 @@ drawn.}
 The function draws contour outlines in the image if $\texttt{thickness} \ge 0$ or fills the area bounded by the contours if $ \texttt{thickness}<0$.
 
 \ifC
-\subsection{Example: Connected component detection via contour functions}
+Example: Connected component detection via contour functions
+
 \begin{lstlisting}
 #include "cv.h"
 #include "highgui.h"
@@ -108,7 +109,7 @@ int main( int argc, char** argv )
         cvShowImage( "Source", src );
 
         cvFindContours( src, storage, &contour, sizeof(CvContour), 
-			CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE );
+           CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE );
         cvZero( dst );
 
         for( ; contour != 0; contour = contour->h_next )

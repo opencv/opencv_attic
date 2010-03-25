@@ -121,7 +121,7 @@ void cvCalcOpticalFlowHS( \par const CvArr* prev,\par const CvArr* curr,\par int
 \end{description}
 
 The function computes the flow for every pixel of the first input image using the Horn and Schunck algorithm
-\cvCPyCross{Horn81}.
+\cite{Horn81}.
 
 \cvCPyFunc{CalcOpticalFlowLK}
 Calculates the optical flow for two images.
@@ -139,7 +139,7 @@ void cvCalcOpticalFlowLK( \par const CvArr* prev,\par const CvArr* curr,\par CvS
 \end{description}
 
 The function computes the flow for every pixel of the first input image using the Lucas and Kanade algorithm
-\cvCPyCross{Lucas81}.
+\cite{Lucas81}.
 
 \cvCPyFunc{CalcOpticalFlowPyrLK}
 Calculates the optical flow for a sparse feature set using the iterative Lucas-Kanade method with pyramids.
@@ -164,7 +164,7 @@ CalcOpticalFlowPyrLK(  prev, curr, prevPyr, currPyr, prevFeatures, winSize, leve
 \cvarg{winSize}{Size of the search window of each pyramid level}
 \cvarg{level}{Maximal pyramid level number. If \texttt{0} , pyramids are not used (single level), if \texttt{1} , two levels are used, etc}
 \cvarg{status}{Array. Every element of the array is set to \texttt{1} if the flow for the corresponding feature has been found, \texttt{0} otherwise}
-\cvarg{track\_error}{Array of double numbers containing the difference between patches around the original and moved points. Optional parameter; can be \texttt{NULL }}
+\cvarg{track\_error}{Array of double numbers containing the difference between patches around the original and moved points. Optional parameter; can be \texttt{NULL}}
 \cvarg{criteria}{Specifies when the iteration process of finding the flow for each point on each pyramid level should be stopped}
 \cvarg{flags}{Miscellaneous flags:
 \begin{description}
@@ -176,7 +176,7 @@ CalcOpticalFlowPyrLK(  prev, curr, prevPyr, currPyr, prevFeatures, winSize, leve
 \end{description}
 
 The function implements the sparse iterative version of the Lucas-Kanade optical flow in pyramids
-\cvCPyCross{Bouguet00}
+\cite{Bouguet00}
 . It calculates the coordinates of the feature points on the current video
 frame given their coordinates on the previous frame. The function finds
 the coordinates with sub-pixel accuracy.
@@ -214,10 +214,10 @@ int cvCamShift( \par const CvArr* prob\_image,\par CvRect window,\par CvTermCrit
 \end{description}
 
 The function implements the CAMSHIFT object tracking algrorithm
-\cvCPyCross{Bradski98}.
+\cite{Bradski98}.
 First, it finds an object center using \cvCPyCross{MeanShift} and, after that, calculates the object size and orientation. The function returns number of iterations made within \cvCPyCross{MeanShift}.
 
-The \cvCPyCross{CvCamShiftTracker} class declared in cv.hpp implements the color object tracker that uses the function.
+The \texttt{CamShiftTracker} class declared in cv.hpp implements the color object tracker that uses the function.
 
 \ifC % {
 \subsection{CvConDensation}
@@ -271,7 +271,7 @@ void cvConDensInitSampleSet( CvConDensation* condens, \par CvMat* lower\_bound, 
 \cvarg{upper\_bound}{Vector of the upper boundary for each dimension}
 \end{description}
 
-The function fills the samples arrays in the structure \cvCPyCross{CvConDensation} with values within the specified ranges.
+The function fills the samples arrays in the structure \texttt{condens} with values within the specified ranges.
 \fi
 
 \cvclass{CvKalman}\label{CvKalman}
@@ -641,7 +641,7 @@ void cvReleaseConDensation( CvConDensation** condens );
 \cvarg{condens}{Pointer to the pointer to the structure to be released}
 \end{description}
 
-The function releases the structure \cvCPyCross{CvConDensation}) and frees all memory previously allocated for the structure.
+The function releases the structure \texttt{condens}) and frees all memory previously allocated for the structure.
 
 \fi % }
 
@@ -1016,7 +1016,7 @@ Finds the object center, size, and orientation
 \end{description}
 
 The function implements the CAMSHIFT object tracking algrorithm
-\cvCppCross{Bradski98}.
+\cite{Bradski98}.
 First, it finds an object center using \cvCppCross{meanShift} and then adjust the window size and finds the optimal rotation. The function returns the rotated rectangle structure that includes the object position, size and the orientation. The next position of the search window can be obtained with \texttt{RotatedRect::boundingRect()}.
 
 See the OpenCV sample \texttt{camshiftdemo.c} that tracks colored objects.

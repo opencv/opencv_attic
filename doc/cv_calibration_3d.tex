@@ -346,12 +346,6 @@ Once the work with a given object is finished, the function \cvCPyCross{ReleaseP
 \cvCPyFunc{CreateStereoBMState}
 Creates block matching stereo correspondence structure.
 
-\begin{lstlisting}
-#define CV_STEREO_BM_BASIC 0
-#define CV_STEREO_BM_FISH_EYE 1
-#define CV_STEREO_BM_NARROW 2
-\end{lstlisting}
-
 \cvdefC{
 
 CvStereoBMState* cvCreateStereoBMState( int preset=CV\_STEREO\_BM\_BASIC,
@@ -365,7 +359,15 @@ CvStereoBMState* cvCreateStereoBMState( int preset=CV\_STEREO\_BM\_BASIC,
 \cvarg{numberOfDisparities}{The number of disparities. If the parameter is 0, it is taken from the preset, otherwise the supplied value overrides the one from preset.}
 \end{description}
 
-The function creates the stereo correspondence structure and initializes it. It is possible to override any of the parameters at any time between the calls to \cvCPyCross{FindStereoCorrespondenceBM}.
+\begin{lstlisting}
+#define CV_STEREO_BM_BASIC 0
+#define CV_STEREO_BM_FISH_EYE 1
+#define CV_STEREO_BM_NARROW 2
+\end{lstlisting}
+
+The function creates the stereo correspondence structure and initializes
+it. It is possible to override any of the parameters at any time between
+the calls to \cvCPyCross{FindStereoCorrespondenceBM}.
 
 \cvCPyFunc{CreateStereoGCState}
 Creates the state of graph cut-based stereo correspondence algorithm.
@@ -380,7 +382,7 @@ CvStereoGCState* cvCreateStereoGCState( int numberOfDisparities,
 
 \begin{description}
 \cvarg{numberOfDisparities}{The number of disparities. The disparity search range will be $\texttt{state->minDisparity} \le disparity < \texttt{state->minDisparity} + \texttt{state->numberOfDisparities}$}
-\cvarg{maxIters}{Maximum number of iterations. On each iteration all possible (or reasonable) alpha-expansions are tried. The algorithm may terminate earlier if it could not find an alpha-expansion that decreases the overall cost function value. See \href{\#Kolmogorov03}{[Kolmogorov03]}  for details. }
+\cvarg{maxIters}{Maximum number of iterations. On each iteration all possible (or reasonable) alpha-expansions are tried. The algorithm may terminate earlier if it could not find an alpha-expansion that decreases the overall cost function value. See \cite{Kolmogorov03}  for details. }
 \end{description}
 
 The function creates the stereo correspondence structure and initializes it. It is possible to override any of the parameters at any time between the calls to \cvCPyCross{FindStereoCorrespondenceGC}.
@@ -444,7 +446,7 @@ typedef struct CvStereoGCState
 CvStereoGCState;
 \end{lstlisting}
 
-The graph cuts stereo correspondence algorithm, described in \href{\#Kolmogrov03}{[Kolmogorov03]} (as \textbf{KZ1}), is non-realtime stereo correpsondence algorithm that usually gives very accurate depth map with well-defined object boundaries. The algorithm represents stereo problem as a sequence of binary optimization problems, each of those is solved using maximum graph flow algorithm. The state structure above should not be allocated and initialized manually; instead, use \cvCPyCross{cvCreateStereoGCState} and then override necessary parameters if needed.
+The graph cuts stereo correspondence algorithm, described in \cite{Kolmogorov03} (as \textbf{KZ1}), is non-realtime stereo correpsondence algorithm that usually gives very accurate depth map with well-defined object boundaries. The algorithm represents stereo problem as a sequence of binary optimization problems, each of those is solved using maximum graph flow algorithm. The state structure above should not be allocated and initialized manually; instead, use \cvCPyCross{CreateStereoGCState} and then override necessary parameters if needed.
 
 \fi
 
@@ -1539,4 +1541,3 @@ v' = y*fy' + cy',
 where undistort() is approximate iterative algorithm that estimates the normalized original point coordinates out of the normalized distorted point coordinates ("normalized" means that the coordinates do not depend on the camera matrix).
 
 The function can be used both for a stereo camera head or for monocular camera (when R is \cvC{NULL}\cvPy{None}\cvCpp{empty}).
-

@@ -130,10 +130,6 @@ void main( int argc, char** argv )
 \cvCPyFunc{SeqPartition}
 Splits a sequence into equivalency classes.
 
-\begin{lstlisting}
-typedef int (CV_CDECL* CvCmpFunc)(const void* a, const void* b, void* userdata);
-\end{lstlisting}
-
 \cvdefC{
 int cvSeqPartition( \par const CvSeq* seq,\par CvMemStorage* storage,\par CvSeq** labels,\par CvCmpFunc is\_equal,\par void* userdata );
 }
@@ -145,6 +141,10 @@ int cvSeqPartition( \par const CvSeq* seq,\par CvMemStorage* storage,\par CvSeq*
 \cvarg{is\_equal}{The relation function that should return non-zero if the two particular sequence elements are from the same class, and zero otherwise. The partitioning algorithm uses transitive closure of the relation function as an equivalency critria}
 \cvarg{userdata}{Pointer that is transparently passed to the \texttt{is\_equal} function}
 \end{description}
+
+\begin{lstlisting}
+typedef int (CV_CDECL* CvCmpFunc)(const void* a, const void* b, void* userdata);
+\end{lstlisting}
 
 The function \texttt{cvSeqPartition} implements a quadratic algorithm for
 splitting a set into one or more equivalancy classes. The function
