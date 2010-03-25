@@ -1,5 +1,9 @@
-from pyparsing import Word, CharsNotIn, Optional, OneOrMore, ZeroOrMore, Group, Forward, ParseException, Literal, Suppress, replaceWith, StringEnd, lineno, QuotedString, White, NotAny, ParserElement, MatchFirst
 import sys
+import hashlib
+import cPickle as pickle
+import os
+
+from pyparsing import Word, CharsNotIn, Optional, OneOrMore, ZeroOrMore, Group, Forward, ParseException, Literal, Suppress, replaceWith, StringEnd, lineno, QuotedString, White, NotAny, ParserElement, MatchFirst
 
 class Argument:
     def __init__(self, s, loc, toks):
@@ -57,12 +61,7 @@ def bs(c): return Literal("\\" + c)
 singles = bs("[") | bs("]") | bs("{") | bs("}") | bs("\\") | bs("&") | bs("_") | bs(",") | bs("#") | bs("\n") | bs(";") | bs("|") | bs("%") | bs("*")
 texcmd << (singles | Word("\\", "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", min = 2)) + ZeroOrMoreAsList(arg) + ZeroOrMoreAsList(param)
 def texcmdfun(s, loc, toks):
-    if str(toks[0])[1:] == 'input':
-        filename = "../" + toks[2].asList()[0].str[0] + ".tex"
-        print 'Now parsing', filename, loc
-        return latexparser(filename, lineno(loc, s))
-    else:
-        return TexCmd(s, loc, toks)
+    return TexCmd(s, loc, toks)
 texcmd.setParseAction(texcmdfun)
 
 #legal = "".join([chr(x) for x in set(range(32, 127)) - set(backslash)])
@@ -79,30 +78,45 @@ if 0:
             print '====>', t
     sys.exit(-1)
 
-def latexparser(filename, startline):
+selfstr = open( __file__).read()        # Own source as a string.  Used as part of hash.
+hashbase = hashlib.md5(selfstr)
+
+def tokenize(filename):
     f = open(filename, "rt")
 
-    lines = list(f)
     def uncomment(s):
         if '%' in s and not '\\%' in s:
             return s[:s.index('%')] + '\n'
         else:
             return s
 
-    lines = [uncomment(l) for l in lines]
-    print len(lines), "lines"
-
-    docstr = "".join(lines)
-    # document.setFailAction(None)
+    docstr = "".join([uncomment(l) for l in f])
+    hash = hashbase.copy()
+    hash.update(docstr)
+    cache_filename = os.path.join("parse-cache", hash.hexdigest())
     try:
-        r = document.parseString(docstr)
-        for x in r:
-            if isinstance(x, TexCmd) and not x.filename:
-                x.filename = filename
-        return r
-    except ParseException, pe:
-        print 'Fatal problem at %s line %d col %d' % (filename, pe.lineno, pe.col)
-        print pe.line
-        sys.exit(1)
+        return pickle.load(open(cache_filename))
+    except IOError:
+        print "parsing"
+        try:
+            r = document.parseString(docstr)
+            for x in r:
+                if isinstance(x, TexCmd) and not x.filename:
+                    x.filename = filename
+            pickle.dump(r, open(cache_filename, 'w'))
+            return r
+        except ParseException, pe:
+            print 'Fatal problem at %s line %d col %d' % (filename, pe.lineno, pe.col)
+            print pe.line
+            sys.exit(1)
 
-
+def latexparser(filename):
+    tokens = tokenize(filename)
+    def expand(t):
+        if isinstance(t, TexCmd) and t.cmd == "input":
+            filename = "../" + str(t.params[0].str[0]) + ".tex"
+            print filename
+            return latexparser(filename)
+        else:
+            return [t]
+    return sum([expand(t) for t in tokens], [])

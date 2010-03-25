@@ -4,6 +4,13 @@ mkdir -p c cpp py
 tput clear
 python latex.py ../online-opencv.tex || exit
 
+export PYTHONPATH=$HOME/local/lib/python2.5/site-packages:$PYTHONPATH
+for D in py
+do
+  TEXINPUTS=$PWD: sphinx-build -w $D/sphinx.errors -D "lang=$D" -b doctest -d _build/doctrees/$D $D _build/doctest/$D
+done
+exit
+
 for D in c cpp py
 do
   mkdir -p $D
