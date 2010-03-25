@@ -785,13 +785,57 @@ void HOGDescriptor::detect(const Mat& img,
     }
 }
 
-
-struct HOGThreadData
+    
+struct HOGInvoker
 {
-    vector<Rect> rectangles;
-    vector<Point> locations;
-    Mat smallerImgBuf;
+    HOGInvoker( const HOGDescriptor* _hog, const Mat& _img,
+                double _hitThreshold, Size _winStride, Size _padding,
+                const double* _levelScale, ConcurrentRectVector* _vec ) 
+    {
+        hog = _hog;
+        img = _img;
+        hitThreshold = _hitThreshold;
+        winStride = _winStride;
+        padding = _padding;
+        levelScale = _levelScale;
+        vec = _vec;
+    }
+    
+    void operator()( const BlockedRange& range ) const
+    {
+        int i, i1 = range.begin(), i2 = range.end();
+        double minScale = i1 > 0 ? levelScale[i1] : i2 > 1 ? levelScale[i1+1] : std::max(img.cols, img.rows);
+        Size maxSz(cvCeil(img.cols/minScale), cvCeil(img.rows/minScale));
+        Mat smallerImgBuf(maxSz, img.type());
+        vector<Point> locations;
+        
+        for( i = i1; i < i2; i++ )
+        {
+            double scale = levelScale[i];
+            Size sz(cvRound(img.cols/scale), cvRound(img.rows/scale));
+            Mat smallerImg(sz, img.type(), smallerImgBuf.data);
+            if( sz == img.size() )
+                smallerImg = Mat(sz, img.type(), img.data, img.step);
+            else
+                resize(img, smallerImg, sz);
+            hog->detect(smallerImg, locations, hitThreshold, winStride, padding);
+            Size scaledWinSize = Size(cvRound(hog->winSize.width*scale), cvRound(hog->winSize.height*scale));
+            for( size_t j = 0; j < locations.size(); j++ )
+                vec->push_back(Rect(cvRound(locations[j].x*scale),
+                                    cvRound(locations[j].y*scale),
+                                    scaledWinSize.width, scaledWinSize.height));
+        }
+    }
+    
+    const HOGDescriptor* hog;
+    Mat img;
+    double hitThreshold;
+    Size winStride;
+    Size padding;
+    const double* levelScale;
+    ConcurrentRectVector* vec;
 };
+
 
 void HOGDescriptor::detectMultiScale(
     const Mat& img, vector<Rect>& foundLocations,
@@ -799,59 +843,26 @@ void HOGDescriptor::detectMultiScale(
     double scale0, int groupThreshold) const
 {
     double scale = 1.;
-    foundLocations.clear();
-    int i, levels = 0;
     const int maxLevels = 64;
 
-    int t, nthreads = getNumThreads();
-    vector<HOGThreadData> threadData(nthreads);
-
-    for( t = 0; t < nthreads; t++ )
-        threadData[t].smallerImgBuf.create(img.size(), img.type());
-
-    vector<double> levelScale(maxLevels);
-    for( levels = 0; levels < maxLevels; levels++ )
+    vector<double> levelScale;
+    for( int levels = 0; levels < maxLevels; levels++ )
     {
-        levelScale[levels] = scale;
+        levelScale.push_back(scale);
         if( cvRound(img.cols/scale) < winSize.width ||
             cvRound(img.rows/scale) < winSize.height ||
             scale0 <= 1 )
             break;
         scale *= scale0;
     }
-    levels = std::max(levels, 1);
-    levelScale.resize(levels);
 
-    {
-#ifdef _OPENMP
-    #pragma omp parallel for num_threads(nthreads) schedule(dynamic)
-#endif // _OPENMP
-    for( i = 0; i < levels; i++ )
-    {
-        HOGThreadData& tdata = threadData[getThreadNum()];
-        double scale = levelScale[i];
-        Size sz(cvRound(img.cols/scale), cvRound(img.rows/scale));
-        Mat smallerImg(sz, img.type(), tdata.smallerImgBuf.data);
-        if( sz == img.size() )
-            smallerImg = Mat(sz, img.type(), img.data, img.step);
-        else
-            resize(img, smallerImg, sz);
-        detect(smallerImg, tdata.locations, hitThreshold, winStride, padding);
-        Size scaledWinSize = Size(cvRound(winSize.width*scale), cvRound(winSize.height*scale));
-        for( size_t j = 0; j < tdata.locations.size(); j++ )
-            tdata.rectangles.push_back(Rect(
-                cvRound(tdata.locations[j].x*scale),
-                cvRound(tdata.locations[j].y*scale),
-                scaledWinSize.width, scaledWinSize.height));
-    }
-    }
-
-    for( t = 0; t < nthreads; t++ )
-    {
-        HOGThreadData& tdata = threadData[t];
-        std::copy(tdata.rectangles.begin(), tdata.rectangles.end(),
-            std::back_inserter(foundLocations));
-    }
+    ConcurrentRectVector allCandidates;
+    
+    parallel_for(BlockedRange(0, (int)levelScale.size()),
+                 HOGInvoker(this, img, hitThreshold, winStride, padding, &levelScale[0], &allCandidates));
+    
+    foundLocations.resize(allCandidates.size());
+    std::copy(allCandidates.begin(), allCandidates.end(), foundLocations.begin());
 
     groupRectangles(foundLocations, groupThreshold, 0.2);
 }
