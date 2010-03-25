@@ -92,12 +92,12 @@ static bool wasInitialized = false;
 
 static void icvCocoaCleanup(void)
 {
-    /*if( application )
+    if( application )
     {
         [application terminate:nil];
         application = 0;
         [pool release];
-    }*/
+    }
 }
 
 CV_IMPL int cvInitSystem( int argc, char** argv) 
@@ -154,23 +154,30 @@ CV_IMPL void cvDestroyAllWindows( void )
 CV_IMPL void cvShowImage( const char* name, const CvArr* arr)
 {
 	CVWindow *window = cvGetWindow(name);
-	if(window) {
+    if(!window)
+    {
+        cvNamedWindow(name, CV_WINDOW_AUTOSIZE);
+        window = cvGetWindow(name);
+    }
+    
+	if(window)
+    {
         bool empty = [[window contentView] image] == nil;
         NSRect rect = [window frame];
         NSRect vrectOld = [[window contentView] frame];
         
 		[[window contentView] setImageData:(CvArr *)arr];
-		if([window autosize] || empty) {
+		if([window autosize] || empty)
+        {
 			NSRect vrectNew = vrectOld;
             vrectNew.size = [[[window contentView] image] size];
             rect.size.width += vrectNew.size.width - vrectOld.size.width;
             rect.size.height += vrectNew.size.height - vrectOld.size.height;
 			[window setFrame:rect display:YES];
-		} else {
-			[window display];
 		}
+        else
+			[window display];
 	}
-	
 }
 
 CV_IMPL void cvResizeWindow( const char* name, int width, int height)
@@ -339,7 +346,14 @@ CV_IMPL int cvNamedWindow( const char* name, int flags )
     if( !wasInitialized )
         cvInitSystem(0, 0);
     
-	CVWindow *window = [[CVWindow alloc] initWithContentRect:NSMakeRect(0,0,200,200)
+	CVWindow *window = cvGetWindow(name);
+    if( window )
+    {
+        [window setAutosize:(flags == CV_WINDOW_AUTOSIZE)];
+        return 0;
+    }
+    
+    window = [[CVWindow alloc] initWithContentRect:NSMakeRect(0,0,200,200)
         styleMask:NSTitledWindowMask|NSClosableWindowMask|NSMiniaturizableWindowMask|
         (!(flags & CV_WND_PROP_AUTOSIZE) ? NSResizableWindowMask : 0)
         backing:NSBackingStoreBuffered  
