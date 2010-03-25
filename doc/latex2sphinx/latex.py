@@ -6,6 +6,23 @@ import cPickle as pickle
 import pyparsing as pp
 import StringIO
 from qfile import QOpen
+from string import Template
+
+# useful things for pyparsing
+def returnList(x):
+    def listify(s, loc, toks):
+        return [toks]
+    x.setParseAction(listify)
+    return x
+def returnTuple(x):
+    def listify(s, loc, toks):
+        return [tuple(toks)]
+    x.setParseAction(listify)
+    return x
+def CommaList(word):
+    return returnList(pp.Optional(word + pp.ZeroOrMore(pp.Suppress(',') + word)))
+def sl(s):
+    return pp.Suppress(pp.Literal(s))
 
 import pythonapi
 
@@ -106,7 +123,7 @@ class SphinxWriter:
         self.f_section = QOpen(os.path.join(self.language, filename + '.rst'), 'wt')
         self.f = self.f_section
         self.indent = 0
-        title = str(c.params[0])
+        title = self.render(c.params[0].str)
         print >>self, title
         print >>self, '=' * len(title)
         print >>self
@@ -247,15 +264,6 @@ class SphinxWriter:
         self.function_props['defpy'] = s
 
         pp.ParserElement.setDefaultWhitespaceChars(" \n\t")
-        def returnList(x):
-            def listify(s, loc, toks):
-                return [toks]
-            x.setParseAction(listify)
-            return x
-        def CommaList(word):
-            return returnList(pp.Optional(word + pp.ZeroOrMore(pp.Suppress(',') + word)))
-        def sl(s):
-            return pp.Suppress(pp.Literal(s))
 
         ident = pp.Word(pp.alphanums + "_.+-")
         ident_or_tuple = ident | (sl('(') + CommaList(ident) + sl(')'))
@@ -575,6 +583,7 @@ class SphinxWriter:
         for f in sorted(set(python_api) - self.covered):
             print >>self.errors, '    ', f
 
+        print >>self.f_index, "    bibliography"
         print >>self.f_index, """
 
 Indices and tables
@@ -583,6 +592,39 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`search`
 """
+
+# Quick and dirty bibtex parser
+
+def parseBib(filename, language):
+    pp.ParserElement.setDefaultWhitespaceChars(" \n\t")
+    entry = returnList(pp.Word('@', pp.alphanums) + sl('{') +
+        pp.Word(pp.alphanums + "_") + sl(',') +
+        CommaList(returnTuple(pp.Word(pp.alphanums) + sl('=') + pp.QuotedString('{', endQuoteChar = '}'))) +
+        pp.Suppress(pp.Optional(',')) +
+        sl('}'))
+    r = (pp.ZeroOrMore(entry) | pp.Suppress('#' + pp.ZeroOrMore(pp.CharsNotIn('\n'))) + pp.StringEnd()).parseFile(filename)
+
+    bibliography = open(os.path.join(language, "bibliography.rst"), 'wt')
+    print >>bibliography, "Bibliography"
+    print >>bibliography, "============"
+    print >>bibliography
+
+    for _,e in sorted([(str(x[1]), x) for x in r]):
+        (etype, tag, attrs) = str(e[0][1:]), str(e[1]), dict([(str(a), str(b)) for (a,b) in e[2]])
+        
+        representations = {
+            'article' :         '$author, "$title". $journal $volume $number, $pages ($year)',
+            'inproceedings' :   '$author "$title", $booktitle, $year',
+            'misc' :            '$author "$title", $year',
+        }
+        if etype in representations:
+            if 0:
+                print >>bibliography, tag
+                print >>bibliography, "^" * len(tag)
+                print >>bibliography
+
+            print >>bibliography, ".. [%s] %s" % (tag, Template(representations[etype]).safe_substitute(attrs))
+            print >>bibliography
 
 if 1:
     sources = ['../' + f for f in os.listdir('..') if f.endswith('.tex')]
@@ -651,6 +693,7 @@ Contents:
 """ % {'c': 'C', 'cpp': 'C++', 'py': 'Python'}[language]
         sr.doL(doc)
         sr.close()
+        parseBib('../opencv.bib', language)
         tags.update(sr.get_tags())
     open('TAGS', 'w').write("\n".join(sorted(tags.values())) + "\n")
 
