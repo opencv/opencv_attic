@@ -177,10 +177,7 @@ bool CvModelEstimator2::runRANSAC( const CvMat* m1, const CvMat* m2, CvMat* mode
     if( maxGoodCount > 0 )
     {
         if( mask != mask0 )
-        {
-            std::swap(tmask, mask);
-            cvCopy( tmask, mask );
-        }
+            cvCopy( mask, mask0 );
         result = true;
     }
 
