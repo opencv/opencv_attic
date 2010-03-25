@@ -36,7 +36,13 @@ void cvCalcBackProject( \par IplImage** image,\par CvArr* back\_project,\par con
 \cvarg{hist}{Histogram}
 \end{description}
 
-The function calculates the back project of the histogram. For each tuple of pixels at the same position of all input single-channel images the function puts the value of the histogram bin, corresponding to the tuple in the destination image. In terms of statistics, the value of each output image pixel is the probability of the observed tuple given the distribution (histogram). For example, to find a red object in the picture, one may do the following:
+The function calculates the back project of the histogram. For each
+tuple of pixels at the same position of all input single-channel images
+the function puts the value of the histogram bin, corresponding to the
+tuple in the destination image. In terms of statistics, the value of
+each output image pixel is the probability of the observed tuple given
+the distribution (histogram). For example, to find a red object in the
+picture, one may do the following:
 
 \begin{enumerate}
  \item Calculate a hue histogram for the red object assuming the image contains only this object. The histogram is likely to have a strong maximum, corresponding to red color.

@@ -413,3 +413,179 @@ The modern error handling mechanism in OpenCV uses exceptions, as opposite to th
 OpenCV uses OpenMP to run some time-consuming operations in parallel. Threading can be explicitly controlled by \cross{setNumThreads} function. Also, functions and "const" methods of the classes are generally re-enterable, that is, they can be called from different threads asynchronously.
 
 \fi
+
+\ifPy
+\chapter{Introduction}
+
+Starting with release 2.0, OpenCV has a new Python interface. This replaces the previous 
+\href{http://opencv.willowgarage.com/wiki/SwigPythonInterface}{SWIG-based Python interface}.
+
+Some highlights of the new bindings:
+
+\begin{itemize}
+\item{single import of all of OpenCV using \texttt{import cv}}
+\item{OpenCV functions no longer have the "cv" prefix}
+\item{simple types like CvRect and CvScalar use Python tuples}
+\item{sharing of Image storage, so image transport between OpenCV and other systems (e.g. numpy and ROS) is very efficient}
+\item{complete documentation for the Python functions}
+\end{itemize}
+
+This.
+
+\section{Cookbook}
+
+Here is a collection of code fragments demonstrating some features
+of the OpenCV Python bindings.
+
+\subsection{Convert an image}
+
+\begin{lstlisting}
+>>> import cv
+>>> im = cv.LoadImageM("building.jpg")
+>>> print type(im)
+<type 'cv.cvmat'>
+>>> cv.SaveImage("foo.png", im)
+\end{lstlisting}
+
+\subsection{Resize an image}
+
+To resize an image in OpenCV, create a destination image of the appropriate size, then call \cross{Resize}.
+
+\begin{lstlisting}
+>>> import cv
+>>> original = cv.LoadImageM("building.jpg")
+>>> thumbnail = cv.CreateMat(original.rows / 10, original.cols / 10, cv.CV_8UC3)
+>>> cv.Resize(original, thumbnail)
+\end{lstlisting}
+
+\subsection{Compute the Laplacian}
+
+\begin{lstlisting}
+>>> import cv
+>>> im = cv.LoadImageM("building.jpg", 1)
+>>> dst = cv.CreateImage(cv.GetSize(im), cv.IPL_DEPTH_16S, 3);
+>>> laplace = cv.Laplace(im, dst)
+>>> cv.SaveImage("foo-laplace.png", dst)
+\end{lstlisting}
+
+
+\subsection{Using GoodFeaturesToTrack}
+
+To find the 10 strongest corner features in an image, use \cross{GoodFeaturesToTrack} like this:
+
+\begin{lstlisting}
+>>> import cv
+>>> img = cv.LoadImageM("building.jpg", cv.CV_LOAD_IMAGE_GRAYSCALE)
+>>> eig_image = cv.CreateMat(img.rows, img.cols, cv.CV_32FC1)
+>>> temp_image = cv.CreateMat(img.rows, img.cols, cv.CV_32FC1)
+>>> for (x,y) in cv.GoodFeaturesToTrack(img, eig_image, temp_image, 10, 0.04, 1.0, useHarris = True):
+...    print "good feature at", x,y
+good feature at 198.0 514.0
+good feature at 791.0 260.0
+good feature at 370.0 467.0
+good feature at 374.0 469.0
+good feature at 490.0 520.0
+good feature at 262.0 278.0
+good feature at 781.0 134.0
+good feature at 3.0 247.0
+good feature at 667.0 321.0
+good feature at 764.0 304.0
+\end{lstlisting}
+
+
+\subsection{Using GetSubRect}
+
+GetSubRect returns a rectangular part of another image.  It does this without copying any data.
+
+\begin{lstlisting}
+>>> import cv
+>>> img = cv.LoadImageM("building.jpg")
+>>> sub = cv.GetSubRect(img, (60, 70, 32, 32))  # sub is 32x32 patch within img
+>>> cv.SetZero(sub)                             # clear sub to zero, which also clears 32x32 pixels in img
+\end{lstlisting}
+
+\subsection{Using CreateMat, and accessing an element}
+
+\begin{lstlisting}
+>>> import cv
+>>> mat = cv.CreateMat(5, 5, cv.CV_32FC1)
+>>> cv.Set(mat, 1.0)
+>>> mat[3,1] += 0.375
+>>> print mat[3,1]
+1.375
+>>> print [mat[3,i] for i in range(5)]
+[1.0, 1.375, 1.0, 1.0, 1.0]
+\end{lstlisting}
+
+\subsection{ROS image message to OpenCV}
+
+See this tutorial: \href{http://www.ros.org/wiki/cv\_bridge/Tutorials/UsingCvBridgeToConvertBetweenROSImagesAndOpenCVImages}{Using CvBridge to convert between ROS images And OpenCV images}.
+
+\subsection{PIL Image to OpenCV}
+
+(For details on PIL see the \href{http://www.pythonware.com/library/pil/handbook/image.htm}{PIL handbook}.)
+
+\begin{lstlisting}
+>>> import Image, cv
+>>> pi = Image.open('building.jpg')       # PIL image
+>>> cv_im = cv.CreateImageHeader(pi.size, cv.IPL_DEPTH_8U, 3)
+>>> cv.SetData(cv_im, pi.tostring())
+>>> print pi.size, cv.GetSize(cv_im)
+(868, 600) (868, 600)
+>>> print pi.tostring() == cv_im.tostring()
+True
+\end{lstlisting}
+
+\subsection{OpenCV to PIL Image}
+
+\begin{lstlisting}
+>>> import Image, cv
+>>> cv_im = cv.CreateImage((320,200), cv.IPL_DEPTH_8U, 1)
+>>> pi = Image.fromstring("L", cv.GetSize(cv_im), cv_im.tostring())
+>>> print pi.size
+(320, 200)
+\end{lstlisting}
+
+\subsection{NumPy and OpenCV}
+
+Using the \href{http://docs.scipy.org/doc/numpy/reference/arrays.interface.html}{array interface}, to use an OpenCV CvMat in NumPy:
+
+\begin{lstlisting}
+>>> import cv, numpy
+>>> mat = cv.CreateMat(3, 5, cv.CV_32FC1)
+>>> cv.Set(mat, 7)
+>>> a = numpy.asarray(mat)
+>>> print a
+[[ 7.  7.  7.  7.  7.]
+ [ 7.  7.  7.  7.  7.]
+ [ 7.  7.  7.  7.  7.]]
+\end{lstlisting}
+
+and to use a NumPy array in OpenCV:
+
+\begin{lstlisting}
+>>> import cv, numpy
+>>> a = numpy.ones((480, 640))
+>>> mat = cv.fromarray(a)
+>>> print mat.rows
+480
+>>> print mat.cols
+640
+\end{lstlisting}
+
+also, most OpenCV functions can work on NumPy arrays directly, for example:
+
+\begin{lstlisting}
+>>> picture = numpy.ones((640, 480))
+>>> cv.Smooth(picture, picture, cv.CV_GAUSSIAN, 15, 15)
+\end{lstlisting}
+
+Given a 2D array, 
+the \cross{fromarray} function (or the implicit version shown above)
+returns a single-channel \cross{CvMat} of the same size.
+For a 3D array of size $j \times k \times l$, it returns a 
+\cross{CvMat} sized $j \times k$ with $l$ channels.
+
+Alternatively, use \cross{fromarray} with the \texttt{allowND} option to always return a \cross{cvMatND}.
+
+\fi

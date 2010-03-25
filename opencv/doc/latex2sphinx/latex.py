@@ -425,8 +425,8 @@ class SphinxWriter:
         if len(c.params) != 2:
             self.report_error(c, "Malformed cvarg")
             return
-        is_func_arg = (self.ee() == ['description']) and (not 'done' in self.function_props)
         e = self.ee()
+        is_func_arg = (e == ['description']) and (not 'done' in self.function_props)
         if is_func_arg:
             nm = self.render(c.params[0].str)
             print >>self, '\n:param %s: ' % nm,
@@ -498,7 +498,7 @@ class SphinxWriter:
 
     def cmd_href(self, c):
         if len(c.params) == 2:
-            self.write("`%s <%s>`_" % (str(c.params[1]), str(c.params[0])))
+            self.write("`%s <%s>`_" % (str(c.params[1]), self.render(c.params[0].str)))
         else:
             self.report_error(c, "href should have two params")
 
@@ -671,7 +671,7 @@ if 1:
         return r
 
     tags = {}
-    for language in ['c', 'cpp', 'py']:
+    for language in sys.argv[2:]:
         doc = preprocess_conditionals(fulldoc, {
                                               'C' : language=='c',
                                               'Python' : language=='py',
