@@ -52,7 +52,7 @@ v = f_y*y' + c_y
 \]
 
 Real lenses usually have some distortion, mostly
-radial distorion and slight tangential distortion. So, the above model
+radial distortion and slight tangential distortion. So, the above model
 is extended as:
 
 \[
@@ -83,7 +83,7 @@ The functions below use the above model to
 \begin{itemize}
  \item Project 3D points to the image plane given intrinsic and extrinsic parameters
  \item Compute extrinsic parameters given intrinsic parameters, a few 3D points and their projections.
- \item Estimate intrinsic and extrinsic camera parameters from several views of a known calibration pattern (i.e. every view is described by several 3D-2D point correspodences).
+ \item Estimate intrinsic and extrinsic camera parameters from several views of a known calibration pattern (i.e. every view is described by several 3D-2D point correspondences).
  \item Estimate the relative position and orientation of the stereo camera "heads" and compute the \emph{rectification} transformation that makes the camera optical axes parallel.
 \end{itemize}
 
@@ -129,7 +129,7 @@ Finds the camera intrinsic and extrinsic parameters from several views of a cali
 \cvarg{pointCounts}{Integer 1xM or Mx1 vector (where M is the number of calibration pattern views) containing the number of points in each particular view. The sum of vector elements must match the size of \texttt{objectPoints} and \texttt{imagePoints} (=N).}
 \fi
 \ifCpp
-\cvarg{objectPoints}{The vector of vectors of points on the calibration pattern in its coordinate system, one vector per view. If the the same calibration pattern is shown in each view and it's fully visible then all the vectors will be the same, although it is possible to use partially occluded patterns, or even different patterns in different views - then the vectors will be different. The points are 3D, but since they are in the pattern coordinate system, then if the rig is planar, it may have sense to put the model to the XY coordinate plane, so that Z-coordinate of each input object point is 0}
+\cvarg{objectPoints}{The vector of vectors of points on the calibration pattern in its coordinate system, one vector per view. If the same calibration pattern is shown in each view and it's fully visible then all the vectors will be the same, although it is possible to use partially occluded patterns, or even different patterns in different views - then the vectors will be different. The points are 3D, but since they are in the pattern coordinate system, then if the rig is planar, it may have sense to put the model to the XY coordinate plane, so that Z-coordinate of each input object point is 0}
 \cvarg{imagePoints}{The vector of vectors of the object point projections on the calibration pattern views, one vector per a view. The projections must be in the same order as the corresponding object points.}
 \fi
 \cvarg{imageSize}{Size of the image, used only to initialize the intrinsic camera matrix}
@@ -164,7 +164,7 @@ is provided.
 The algorithm does the following:
 \begin{enumerate}
     \item First, it computes the initial intrinsic parameters (the option only available for planar calibration patterns) or reads them from the input parameters. The distortion coefficients are all set to zeros initially (unless some of \texttt{CV\_CALIB\_FIX\_K?} are specified).
-    \item The the initial camera pose is estimated as if the intrinsic parameters have been already known. This is done using \cvCross{FindExtrinsicCameraParams2}{solvePnP}
+    \item The initial camera pose is estimated as if the intrinsic parameters have been already known. This is done using \cvCross{FindExtrinsicCameraParams2}{solvePnP}
     \item After that the global Levenberg-Marquardt optimization algorithm is run to minimize the reprojection error, i.e. the total sum of squared distances between the observed feature points \texttt{imagePoints} and the projected (using the current estimates for camera parameters and the poses) object points \texttt{objectPoints}; see \cvCross{ProjectPoints2}{projectPoints}.
 \end{enumerate}
 
@@ -177,7 +177,7 @@ Note: if you're using a non-square (=non-NxN) grid and
 \cvCppCross{findChessboardCorners} for calibration, and \texttt{calibrateCamera} returns
 bad values (i.e. zero distortion coefficients, an image center very far from
 $(w/2-0.5,h/2-0.5)$, and / or large differences between $f_x$ and $f_y$ (ratios of
-10:1 or more)), then you've probaby used \texttt{patternSize=cvSize(rows,cols)},
+10:1 or more)), then you've probably used \texttt{patternSize=cvSize(rows,cols)},
 but should use \texttt{patternSize=cvSize(cols,rows)} in \cvCross{FindChessboardCorners}{findChessboardCorners}.
 
 See also: \cvCross{FindChessboardCorners}{findChessboardCorners}, \cvCross{FindExtrinsicCameraParams2}{solvePnP}, \cvCppCross{initCameraMatrix2D}, \cvCross{StereoCalibrate}{stereoCalibrate}, \cvCross{Undistort2}{undistort}
@@ -204,7 +204,7 @@ Computes some useful camera characteristics from the camera matrix
 \cvarg{fovx}{The output field of view in degrees along the horizontal sensor axis}
 \cvarg{fovy}{The output field of view in degrees along the vertical sensor axis}
 \cvarg{focalLength}{The focal length of the lens in mm}
-\cvarg{prinicialPoint}{The principal point in pixels}
+\cvarg{principalPoint}{The principal point in pixels}
 \cvarg{aspectRatio}{$f_y/f_x$}
 \end{description}
 
@@ -414,7 +414,7 @@ typedef struct CvStereoBMState
 CvStereoBMState;
 \end{lstlisting}
 
-The block matching stereo correspondence algorithm, by Kurt Konolige, is very fast one-pass stereo matching algorithm that uses sliding sums of absolute differences between pixels in the left image and the pixels in the right image, shifted by some varying amount of pixels (from \texttt{minDisparity} to \texttt{minDisparity+numberOfDisparities}). On a pair of images WxH the algorithm computes disparity in \texttt{O(W*H*numberOfDisparities)} time. In order to improve quality and reability of the disparity map, the algorithm includes pre-filtering and post-filtering procedures.
+The block matching stereo correspondence algorithm, by Kurt Konolige, is very fast one-pass stereo matching algorithm that uses sliding sums of absolute differences between pixels in the left image and the pixels in the right image, shifted by some varying amount of pixels (from \texttt{minDisparity} to \texttt{minDisparity+numberOfDisparities}). On a pair of images WxH the algorithm computes disparity in \texttt{O(W*H*numberOfDisparities)} time. In order to improve quality and readability of the disparity map, the algorithm includes pre-filtering and post-filtering procedures.
 
 Note that the algorithm searches for the corresponding blocks in x direction only. It means that the supplied stereo pair should be rectified. Vertical stereo layout is not directly supported, but in such a case the images could be transposed by user.
 
@@ -446,7 +446,7 @@ typedef struct CvStereoGCState
 CvStereoGCState;
 \end{lstlisting}
 
-The graph cuts stereo correspondence algorithm, described in \cite{Kolmogorov03} (as \textbf{KZ1}), is non-realtime stereo correpsondence algorithm that usually gives very accurate depth map with well-defined object boundaries. The algorithm represents stereo problem as a sequence of binary optimization problems, each of those is solved using maximum graph flow algorithm. The state structure above should not be allocated and initialized manually; instead, use \cvCPyCross{CreateStereoGCState} and then override necessary parameters if needed.
+The graph cuts stereo correspondence algorithm, described in \cite{Kolmogorov03} (as \textbf{KZ1}), is non-realtime stereo correspondence algorithm that usually gives very accurate depth map with well-defined object boundaries. The algorithm represents stereo problem as a sequence of binary optimization problems, each of those is solved using maximum graph flow algorithm. The state structure above should not be allocated and initialized manually; instead, use \cvCPyCross{CreateStereoGCState} and then override necessary parameters if needed.
 
 \fi
 
@@ -1098,7 +1098,7 @@ Reprojects disparity image to 3D space.
 \cvarg{\_3dImage}{The output 3-channel floating-point image of the same size as \texttt{disparity}.
  Each element of \texttt{\_3dImage(x,y)} will contain the 3D coordinates of the point \texttt{(x,y)}, computed from the disparity map.}
 \cvarg{Q}{The $4 \times 4$ perspective transformation matrix that can be obtained with \cvCross{StereoRectify}{stereoRectify}}
-\cvarg{handleMissingValues}{If true, when the pixels with the minimal disparity (that corresponds to the ouliers; see \cvCross{FindStereoCorrespondenceBM}{StereoBM}) will be transformed to 3D points with some very large Z value (currently set to 10000)}
+\cvarg{handleMissingValues}{If true, when the pixels with the minimal disparity (that corresponds to the outliers; see \cvCross{FindStereoCorrespondenceBM}{StereoBM}) will be transformed to 3D points with some very large Z value (currently set to 10000)}
 \end{description}
  
 The function transforms 1-channel disparity map to 3-channel image representing a 3D surface. That is, for each pixel \texttt{(x,y)} and the corresponding disparity \texttt{d=disparity(x,y)} it computes: 
@@ -1293,7 +1293,7 @@ Calibrates stereo camera.
     \cvarg{pointCounts}{Integer 1xM or Mx1 vector (where M is the number of calibration pattern views) containing the number of points in each particular view. The sum of vector elements must match the size of \texttt{objectPoints} and \texttt{imagePoints*} (=N).}
 \fi
 \ifCpp
-    \cvarg{objectPoints}{The vector of vectors of points on the calibration pattern in its coordinate system, one vector per view. If the the same calibration pattern is shown in each view and it's fully visible then all the vectors will be the same, although it is possible to use partially occluded patterns, or even different patterns in different views - then the vectors will be different. The points are 3D, but since they are in the pattern coordinate system, then if the rig is planar, it may have sense to put the model to the XY coordinate plane, so that Z-coordinate of each input object point is 0}
+    \cvarg{objectPoints}{The vector of vectors of points on the calibration pattern in its coordinate system, one vector per view. If the same calibration pattern is shown in each view and it's fully visible then all the vectors will be the same, although it is possible to use partially occluded patterns, or even different patterns in different views - then the vectors will be different. The points are 3D, but since they are in the pattern coordinate system, then if the rig is planar, it may have sense to put the model to the XY coordinate plane, so that Z-coordinate of each input object point is 0}
     \cvarg{imagePoints1}{The vector of vectors of the object point projections on the calibration pattern views from the 1st camera, one vector per a view. The projections must be in the same order as the corresponding object points.}
     \cvarg{imagePoints2}{The vector of vectors of the object point projections on the calibration pattern views from the 2nd camera, one vector per a view. The projections must be in the same order as the corresponding object points.}
 \fi
@@ -1319,7 +1319,7 @@ Calibrates stereo camera.
 \end{description}}
 \end{description}
 
-The function estimates transformation between the 2 cameras making a stereo pair. If we have a stereo camera, where the relative position and orientatation of the 2 cameras is fixed, and if we computed poses of an object relative to the fist camera and to the second camera, (R1, T1) and (R2, T2), respectively (that can be done with \cvCross{FindExtrinsicCameraParams2}{solvePnP}), obviously, those poses will relate to each other, i.e. given ($R_1$, $T_1$) it should be possible to compute ($R_2$, $T_2$) - we only need to know the position and orientation of the 2nd camera relative to the 1st camera. That's what the described function does. It computes ($R$, $T$) such that:
+The function estimates transformation between the 2 cameras making a stereo pair. If we have a stereo camera, where the relative position and orientation of the 2 cameras is fixed, and if we computed poses of an object relative to the fist camera and to the second camera, (R1, T1) and (R2, T2), respectively (that can be done with \cvCross{FindExtrinsicCameraParams2}{solvePnP}), obviously, those poses will relate to each other, i.e. given ($R_1$, $T_1$) it should be possible to compute ($R_2$, $T_2$) - we only need to know the position and orientation of the 2nd camera relative to the 1st camera. That's what the described function does. It computes ($R$, $T$) such that:
 
 \[
 R_2=R*R_1
