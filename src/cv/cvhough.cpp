@@ -1090,6 +1090,7 @@ void HoughLines( const Mat& image, vector<Vec2f>& lines,
                     CV_HOUGH_STANDARD : CV_HOUGH_MULTI_SCALE,
                     rho, theta, threshold, srn, stn );
     Seq<Vec2f>(seq).copyTo(lines);
+	cvReleaseMemStorage(&storage);
 }
 
 void HoughLinesP( Mat& image, vector<Vec4i>& lines,
@@ -1101,6 +1102,7 @@ void HoughLinesP( Mat& image, vector<Vec4i>& lines,
     CvSeq* seq = cvHoughLines2( &_image, storage, CV_HOUGH_PROBABILISTIC,
                     rho, theta, threshold, minLineLength, maxGap );
     Seq<Vec4i>(seq).copyTo(lines);
+	cvReleaseMemStorage(&storage);
 }
 
 void HoughCircles( const Mat& image, vector<Vec3f>& circles,
@@ -1113,6 +1115,7 @@ void HoughCircles( const Mat& image, vector<Vec3f>& circles,
     CvSeq* seq = cvHoughCircles( &_image, storage, method,
                     dp, min_dist, param1, param2, minRadius, maxRadius );
     Seq<Vec3f>(seq).copyTo(circles);
+	cvReleaseMemStorage(&storage);
 }
 
 }
