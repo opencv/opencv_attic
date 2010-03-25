@@ -256,10 +256,6 @@ returns a NULL pointer.
 \cvCPyFunc{RedirectError}
 Sets a new error handler.
 
-\begin{lstlisting}
-typedef int (CV_CDECL *CvErrorCallback)( int status, const char* func_name,
-                    const char* err_msg, const char* file_name, int line );
-\end{lstlisting}
 
 \cvdefC{CvErrorCallback cvRedirectError( \par CvErrorCallback error\_handler,\par void* userdata=NULL,\par void** prevUserdata=NULL );}
 
@@ -268,6 +264,11 @@ typedef int (CV_CDECL *CvErrorCallback)( int status, const char* func_name,
 \cvarg{userdata}{Arbitrary pointer that is transparently passed to the error handler}
 \cvarg{prevUserdata}{Pointer to the previously assigned user data pointer}
 \end{description}
+
+\begin{lstlisting}
+typedef int (CV_CDECL *CvErrorCallback)( int status, const char* func_name,
+                    const char* err_msg, const char* file_name, int line );
+\end{lstlisting}
 
 The function sets a new error handler that
 can be one of the standard handlers or a custom handler
@@ -284,19 +285,19 @@ check the current error mode with \cvCPyCross{GetErrMode} to make a decision.
 
 Provide standard error handling.
 
-\begin{lstlisting}
-int cvNulDevReport( int status, const char* func_name,
-                    const char* err_msg, const char* file_name,
-                    int line, void* userdata );
+\cvdefC{
+int cvNulDevReport( int status, const char* func\_name,
+                    const char* err\_msg, const char* file\_name,
+                    int line, void* userdata ); \newline
 
-int cvStdErrReport( int status, const char* func_name,
-                    const char* err_msg, const char* file_name,
-                    int line, void* userdata );
+int cvStdErrReport( int status, const char* func\_name,
+                    const char* err\_msg, const char* file\_name,
+                    int line, void* userdata ); \newline
 
-int cvGuiBoxReport( int status, const char* func_name,
-                    const char* err_msg, const char* file_name,
+int cvGuiBoxReport( int status, const char* func\_name,
+                    const char* err\_msg, const char* file\_name,
                     int line, void* userdata );
-\end{lstlisting}
+}
 
 \begin{description}
 \cvarg{status}{The error status}

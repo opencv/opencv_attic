@@ -52,6 +52,8 @@ class SphinxWriter:
             self.description += s
         else:
             self.write(s)
+        if 'lstlisting' in self.ee():
+            self.listing += s
 
     def docmd(self, c):
         if self.state == 'math':
@@ -62,12 +64,15 @@ class SphinxWriter:
                 self.state = None
                 self.write('\n\n')
         else:
-            if c.cmd == '[':
-                meth = self.cmd_gomath
+            if c.cmd == '\n':
+                self.write('\\\n')
             else:
-                cname = "cmd_" + c.cmd
-                meth = getattr(self, cname, self.unrecognized_cmd)
-            meth(c)
+                if c.cmd == '[':
+                    meth = self.cmd_gomath
+                else:
+                    cname = "cmd_" + c.cmd
+                    meth = getattr(self, cname, self.unrecognized_cmd)
+                meth(c)
 
     def cmd_gomath(self, c):
         self.state = 'math'
@@ -212,6 +217,7 @@ class SphinxWriter:
             return
         s = str(c.params[0]).replace('\\_', '_')
         s = s.replace('\\par', '')
+        s = s.replace('\n', ' ')
         s = s.replace(';', '')
         self.indent = 0
         for proto in s.split('\\newline'):
@@ -305,6 +311,8 @@ class SphinxWriter:
         elif s == 'lstlisting':
             print >>self, "\n::\n"
             self.indent += 1
+            print >>self
+            self.listing = ""
         elif s in ['itemize', 'enumerate']:
             self.indent += 1
         elif s == 'tabular':
@@ -354,6 +362,8 @@ class SphinxWriter:
             self.indent -= 1
             print >>self
             print >>self, ".."      # otherwise a following :param: gets treated as more listing
+            if '\\_' in self.listing:
+                self.report_error(c, "backslash _ in listing")
         elif s == 'document':
             pass
         else:
@@ -452,7 +462,6 @@ class SphinxWriter:
     def cmd_genc(self, c): pass 
     def cmd_genpy(self, c): pass 
     def cmd_author(self, c): pass 
-    def cmd_cite(self, c): pass
     def cmd_date(self, c): pass
     def cmd_def(self, c): pass
     def cmd_documentclass(self, c): pass
@@ -467,6 +476,9 @@ class SphinxWriter:
     def cmd_par(self, c): pass
     def cmd_hline(self, c):
         print >>self, "\\hline"
+
+    def cmd_cite(self, c):
+        self.write("[%s]_" % str(c.params[0]))
 
     def cmd_href(self, c):
         if len(c.params) == 2:
@@ -494,12 +506,13 @@ class SphinxWriter:
             self.write(repr(c))
 
     def unrecognized_cmd(self, c):
-        if self.f == self.f_section:
-            self.write(repr(c))
-        self.unhandled_commands.add(c.cmd)
+        if not self.f in [self.f_index, self.f_chapter]:
+            self.write(c.cmd)
+            self.unhandled_commands.add(c.cmd)
 
     def doL(self, L, newlines = True):
         for x in L:
+            pos0 = self.f.tell()
             if isinstance(x, TexCmd):
                 self.docmd(x)
             else:
@@ -507,10 +520,13 @@ class SphinxWriter:
                     self.doplain(x)
                 else:
                     self.doplain(x.lstrip())
-            if self.state in ['math'] or not newlines:
-                self.appendspace()
-            else:
-                self.write('\n')
+            pos1 = self.f.tell()
+            if pos0 != pos1:
+                if self.state in ['math'] or not newlines:
+                    self.appendspace()
+                else:
+                    if not 'lstlisting' in self.ee():
+                        self.write('\n')
 
     def handle_table(self, s):
         oneline = s.replace('\n', ' ').strip()
@@ -573,7 +589,7 @@ if 1:
     if distutils.dep_util.newer_group(["latexparser.py"] + sources, "pickled"):
         fulldoc = latexparser(sys.argv[1], 0)
         pickle.dump(fulldoc, open("pickled", 'wb'))
-        raw = open('fulldoc', 'w')
+        raw = open('raw.full', 'w')
         for x in fulldoc:
             print >>raw, repr(x)
         raw.close()

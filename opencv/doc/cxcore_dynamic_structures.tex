@@ -4,7 +4,7 @@
 
 \ifC
 
-\cvfunc{CvMemStorage}\label{CvMemStorage}
+\cvclass{CvMemStorage}\label{CvMemStorage}
 Growing memory storage.
 
 \begin{lstlisting}
@@ -47,7 +47,7 @@ indicating top of the stack. The stack top may be saved via
 \cvCPyCross{SaveMemStoragePos}, restored via \cvCPyCross{RestoreMemStoragePos},
 or reset via \cvCPyCross{ClearStorage}.
 
-\cvfunc{CvMemBlock}\label{CvMemBlock}
+\cvclass{CvMemBlock}\label{CvMemBlock}
 Memory storage block.
 
 \begin{lstlisting}
@@ -64,7 +64,7 @@ the $i_{th}$ byte of the memory block can be retrieved with the expression
 \texttt{((char*)(mem\_block\_ptr+1))[i]}. However, there is normally no need
 to access the storage structure fields directly.
 
-\cvfunc{CvMemStoragePos}\label{CvMemStoragePos}
+\cvclass{CvMemStoragePos}\label{CvMemStoragePos}
 Memory storage position.
 
 \begin{lstlisting}
@@ -1210,7 +1210,11 @@ void* cvNextTreeNode( CvTreeNodeIterator* tree\_iterator );
 \end{description}
 
 
-The function returns the currently observed node and then updates the iterator - moving it toward the next node. In other words, the function behavior is similar to the *p++ expression on a typical C pointer or C++ collection iterator. The function returns NULL if there are no more nodes.
+The function returns the currently observed node and then updates the
+iterator - moving it toward the next node. In other words, the function
+behavior is similar to the \texttt{*p++} expression on a typical C
+pointer or C++ collection iterator. The function returns NULL if there
+are no more nodes.
 
 
 \cvCPyFunc{PrevTreeNode}
@@ -1228,7 +1232,11 @@ void* cvPrevTreeNode( CvTreeNodeIterator* tree\_iterator );
 \end{description}
 
 
-The function returns the currently observed node and then updates the iterator - moving it toward the previous node. In other words, the function behavior is similar to the *p-- expression on a typicl C pointer or C++ collection iterator. The function returns NULL if there are no more nodes.
+The function returns the currently observed node and then updates
+the iterator - moving it toward the previous node. In other words,
+the function behavior is similar to the \texttt{*p--} expression on a
+typical C pointer or C++ collection iterator. The function returns NULL
+if there are no more nodes.
 
 
 \cvCPyFunc{ReleaseGraphScanner}
@@ -1498,13 +1506,10 @@ The function removes a slice from the sequence.
 \cvCPyFunc{SeqSearch}
 Searches for an element in a sequence.
 
-\begin{lstlisting}
-/* a < b ? -1 : a > b ? 1 : 0 */
-typedef int (CV_CDECL* CvCmpFunc)(const void* a, const void* b, void* userdata);
-
+\cvdefC{
 char* cvSeqSearch( CvSeq* seq, const void* elem, CvCmpFunc func,
-                   int is_sorted, int* elem_idx, void* userdata=NULL );
-\end{lstlisting}
+                   int is\_sorted, int* elem\_idx, void* userdata=NULL );
+}
 
 \begin{description}
 \cvarg{seq}{The sequence}
@@ -1514,6 +1519,11 @@ char* cvSeqSearch( CvSeq* seq, const void* elem, CvCmpFunc func,
 \cvarg{elem\_idx}{Output parameter; index of the found element}
 \cvarg{userdata}{The user parameter passed to the compasion function; helps to avoid global variables in some cases}
 \end{description}
+
+\begin{lstlisting}
+/* a < b ? -1 : a > b ? 1 : 0 */
+typedef int (CV_CDECL* CvCmpFunc)(const void* a, const void* b, void* userdata);
+\end{lstlisting}
 
 The function searches for the element in the sequence. If
 the sequence is sorted, a binary O(log(N)) search is used; otherwise, a
