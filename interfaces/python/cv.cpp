@@ -2713,13 +2713,14 @@ static PyObject *pycvCreateMatND(PyObject *self, PyObject *args)
 }
 
 #if PYTHON_USE_NUMPY
-static PyObject *pycvfromarray(PyObject *self, PyObject *args)
+static PyObject *pycvfromarray(PyObject *self, PyObject *args, PyObject *kw)
 {
+  const char *keywords[] = { "arr", "allowND", NULL };
   PyObject *o;
   int allowND = 0;
-  if (!PyArg_ParseTuple(args, "O|i", &o, &allowND)) {
+
+  if (!PyArg_ParseTupleAndKeywords(args, kw, "O|i", (char**)keywords, &o, &allowND))
     return NULL;
-  }
   return fromarray(o, allowND);
 }
 
@@ -3003,9 +3004,9 @@ static int cvarr_SetItem(PyObject *o, PyObject *key, PyObject *v)
 static PyObject *pycvSetData(PyObject *self, PyObject *args)
 {
   PyObject *o, *s;
-  int step = -1;
+  int step = CV_AUTO_STEP;
 
-  if (!PyArg_ParseTuple(args, "OOi", &o, &s, &step))
+  if (!PyArg_ParseTuple(args, "OO|i", &o, &s, &step))
     return NULL;
   if (is_iplimage(o)) {
     iplimage_t *ipl = (iplimage_t*)o;
@@ -3756,7 +3757,7 @@ static int zero = 0;
 static PyMethodDef methods[] = {
 
 #if PYTHON_USE_NUMPY
-  {"fromarray", pycvfromarray, METH_VARARGS, "fromarray(array) -> cvmatnd"},
+  {"fromarray", (PyCFunction)pycvfromarray, METH_KEYWORDS, "fromarray(array) -> cvmatnd"},
 #endif
 
   {"ApproxPoly", (PyCFunction)pycvApproxPoly, METH_KEYWORDS, "ApproxPoly(src_seq, storage, method, parameter=0, parameter2=0) -> None"},
