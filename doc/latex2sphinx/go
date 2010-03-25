@@ -1,18 +1,20 @@
 #!/bin/bash
 
-mkdir -p c cpp py
-tput clear
-python latex.py ../online-opencv.tex || exit
+LANGUAGES="c cpp py"
 
-export PYTHONPATH=$HOME/local/lib/python2.5/site-packages:$PYTHONPATH
+mkdir -p $LANGUAGES
+tput clear
+python latex.py ../online-opencv.tex $LANGUAGES || exit
+
 for D in py
 do
+  export PYTHONPATH=$HOME/local/lib/python2.5/site-packages:$PYTHONPATH
   TEXINPUTS=$PWD: sphinx-build -w $D/sphinx.errors -D "lang=$D" -b doctest -d _build/doctrees/$D $D _build/doctest/$D
 done
-exit
 
-for D in c cpp py
+for D in $LANGUAGES
 do
+  echo $D
   mkdir -p $D
   cp conf.py $D
   TEXINPUTS=$PWD: sphinx-build -w $D/sphinx.errors -D "lang=$D" -b html -d _build/doctrees/$D $D _build/html/$D

@@ -512,16 +512,16 @@ Converts input array elements to another 8-bit unsigned integer with optional li
 \cvdefC{void cvConvertScaleAbs(const CvArr* src, CvArr* dst, double scale=1, double shift=0);}
 \cvdefPy{ConvertScaleAbs(src,dst,scale=1.0,shift=0.0)-> None}
 
-\begin{lstlisting}
-#define cvCvtScaleAbs cvConvertScaleAbs
-\end{lstlisting}
-
 \begin{description}
 \cvarg{src}{Source array}
 \cvarg{dst}{Destination array (should have 8u depth)}
 \cvarg{scale}{ScaleAbs factor}
 \cvarg{shift}{Value added to the scaled source array elements}
 \end{description}
+
+\begin{lstlisting}
+#define cvCvtScaleAbs cvConvertScaleAbs
+\end{lstlisting}
 
 
 The function is similar to \cvCPyCross{ConvertScale}, but it stores absolute values of the conversion results:
@@ -759,12 +759,6 @@ Performs a forward or inverse Discrete Cosine transform of a 1D or 2D floating-p
 \cvdefC{void cvDCT(const CvArr* src, CvArr* dst, int flags);}
 \cvdefPy{DCT(src,dst,flags)-> None}
 
-\begin{lstlisting}
-#define CV_DXT_FORWARD  0
-#define CV_DXT_INVERSE  1
-#define CV_DXT_ROWS     4
-\end{lstlisting}
-
 \begin{description}
 \cvarg{src}{Source array, real 1D or 2D array}
 \cvarg{dst}{Destination array of the same size and same type as the source}
@@ -801,15 +795,6 @@ Performs a forward or inverse Discrete Fourier transform of a 1D or 2D floating-
 \cvdefC{void cvDFT(const CvArr* src, CvArr* dst, int flags, int nonzeroRows=0);}
 \cvdefPy{DFT(src,dst,flags,nonzeroRows=0)-> None}
 
-\begin{lstlisting}
-#define CV_DXT_FORWARD  0
-#define CV_DXT_INVERSE  1
-#define CV_DXT_SCALE    2
-#define CV_DXT_ROWS     4
-#define CV_DXT_INV_SCALE (CV_DXT_SCALE|CV_DXT_INVERSE)
-#define CV_DXT_INVERSE_SCALE CV_DXT_INV_SCALE
-\end{lstlisting}
-
 \begin{description}
 \cvarg{src}{Source array, real or complex}
 \cvarg{dst}{Destination array of the same size and same type as the source}
@@ -819,6 +804,7 @@ Performs a forward or inverse Discrete Fourier transform of a 1D or 2D floating-
 \cvarg{CV\_DXT\_INVERSE}{do an inverse 1D or 2D transform. The result is not scaled. \texttt{CV\_DXT\_FORWARD} and \texttt{CV\_DXT\_INVERSE} are mutually exclusive, of course.}
 \cvarg{CV\_DXT\_SCALE}{scale the result: divide it by the number of array elements. Usually, it is combined with \texttt{CV\_DXT\_INVERSE}, and one may use a shortcut \texttt{CV\_DXT\_INV\_SCALE}.}
 \cvarg{CV\_DXT\_ROWS}{do a forward or inverse transform of every individual row of the input matrix. This flag allows the user to transform multiple vectors simultaneously and can be used to decrease the overhead (which is sometimes several times larger than the processing itself), to do 3D and higher-dimensional transforms and so forth.}
+\cvarg{CV\_DXT\_INVERSE\_SCALE}{same as \texttt{CV\_DXT\_INVERSE + CV\_DXT\_SCALE}}
 \end{description}}
 \cvarg{nonzeroRows}{Number of nonzero rows in the source array
 (in the case of a forward 2d transform), or a number of rows of interest in
@@ -1079,10 +1065,6 @@ Flip a 2D array around vertical, horizontal or both axes.
 \cvdefC{void  cvFlip(const CvArr* src, CvArr* dst=NULL, int flipMode=0);}
 \cvdefPy{Flip(src,dst=NULL,flipMode=0)-> None}
 
-\begin{lstlisting}
-#define cvMirror cvFlip
-\end{lstlisting}
-
 \begin{description}
 \cvarg{src}{Source array}
 \cvarg{dst}{Destination array.
@@ -1090,6 +1072,10 @@ If $\texttt{dst} = \texttt{NULL}$ the flipping is done in place.}
 \cvarg{flipMode}{Specifies how to flip the array:
 0 means flipping around the x-axis, positive (e.g., 1) means flipping around y-axis, and negative (e.g., -1) means flipping around both axes. See also the discussion below for the formulas:}
 \end{description}
+
+\begin{lstlisting}
+#define cvMirror cvFlip
+\end{lstlisting}
 
 The function flips the array in one of three different ways (row and column indices are 0-based):
 
@@ -1107,6 +1093,47 @@ The example scenarios of function use are:
   \item simultaneous horizontal and vertical flipping of the image with subsequent shift and absolute difference calculation to check for a central symmetry (flipMode $<$ 0)
   \item reversing the order of 1d point arrays (flipMode > 0)
 \end{itemize}
+
+\ifPy
+
+\cvfunc{fromarray}
+
+Create a CvMat from an object that supports the array interface.
+
+\cvdefPy{fromarray(object, allowND = False) -> CvMat}
+
+\begin{description}
+\cvarg{object}{Any object that supports the array interface}
+\cvarg{allowND}{If true, will return a CvMatND}
+\end{description}
+
+If the object supports the
+\href{http://docs.scipy.org/doc/numpy/reference/arrays.interface.html}{array interface},
+return a \cross{CvMat} (\texttt{allowND = False}) or \cross{CvMatND} (\texttt{allowND = True}).
+
+If \texttt{allowND = False}, then the object's array must be either 2D or 3D.  If it is 2D, then the returned CvMat has a single channel.  If it is 3D, then the returned CvMat will have N channels, where N is the last dimension of the array. In this case, N cannot be greater than OpenCV's channel limit, \texttt{CV\_CN\_MAX}.
+
+If \texttt{allowND = True}, then \texttt{fromarray} returns a single-channel \cross{CvMatND} with the same shape as the original array.
+
+For example, NumPy arrays support the array interface, so can be converted to OpenCV objects:
+
+\begin{lstlisting}
+>>> import cv, numpy
+>>> a = numpy.ones((480, 640))
+>>> mat = cv.fromarray(a)
+>>> print cv.GetDims(mat), cv.CV_MAT_CN(cv.GetElemType(mat))
+(480, 640) 1
+>>> a = numpy.ones((480, 640, 3))
+>>> mat = cv.fromarray(a)
+>>> print cv.GetDims(mat), cv.CV_MAT_CN(cv.GetElemType(mat))
+(480, 640) 3
+>>> a = numpy.ones((480, 640, 3))
+>>> mat = cv.fromarray(a, allowND = True)
+>>> print cv.GetDims(mat), cv.CV_MAT_CN(cv.GetElemType(mat))
+(480, 640, 3) 1
+\end{lstlisting}
+
+\fi
 
 \cvCPyFunc{GEMM}
 Performs generalized matrix multiplication.
@@ -1821,9 +1848,6 @@ Finds the inverse or pseudo-inverse of a matrix.
 
 \cvdefC{double cvInvert(const CvArr* src, CvArr* dst, int method=CV\_LU);}
 \cvdefPy{Invert(src,dst,method=CV\_LU)-> double}
-\begin{lstlisting}
-#define cvInv cvInvert
-\end{lstlisting}
 
 \begin{description}
 \cvarg{src}{The source matrix}
@@ -1835,6 +1859,10 @@ Finds the inverse or pseudo-inverse of a matrix.
  \cvarg{CV\_SVD\_SYM}{SVD method for a symmetric positively-defined matrix}
 \end{description}}
 \end{description}
+
+\begin{lstlisting}
+#define cvInv cvInvert
+\end{lstlisting}
 
 The function inverts matrix \texttt{src1} and stores the result in \texttt{src2}.
 
@@ -2974,12 +3002,12 @@ If array \texttt{arr} is of \texttt{IplImage} type, then is ROI used, but COI mu
 \cvCPyFunc{Set?D}
 Change the particular array element.
 
-\begin{lstlisting}
-void cvSet1D(CvArr* arr, int idx0, CvScalar value);
-void cvSet2D(CvArr* arr, int idx0, int idx1, CvScalar value);
-void cvSet3D(CvArr* arr, int idx0, int idx1, int idx2, CvScalar value);
+\cvdefC{
+void cvSet1D(CvArr* arr, int idx0, CvScalar value); \newline
+void cvSet2D(CvArr* arr, int idx0, int idx1, CvScalar value); \newline
+void cvSet3D(CvArr* arr, int idx0, int idx1, int idx2, CvScalar value); \newline
 void cvSetND(CvArr* arr, int* idx, CvScalar value);
-\end{lstlisting}
+}
 
 \begin{description}
 \cvarg{arr}{Input array}
@@ -3114,16 +3142,16 @@ If the original image ROI was \texttt{NULL} and the \texttt{rect} is not the who
 
 Most OpenCV functions support the use of ROI and treat the image rectangle as a separate image. For example, all of the pixel coordinates are counted from the top-left (or bottom-left) corner of the ROI, not the original image.
 
-\if % {
+\ifC % {
 \cvCPyFunc{SetReal?D}
 Change a specific array element.
 
-\begin{lstlisting}
-void cvSetReal1D(CvArr* arr, int idx0, double value);
-void cvSetReal2D(CvArr* arr, int idx0, int idx1, double value);
-void cvSetReal3D(CvArr* arr, int idx0, int idx1, int idx2, double value);
+\cvdefC{
+void cvSetReal1D(CvArr* arr, int idx0, double value); \newline
+void cvSetReal2D(CvArr* arr, int idx0, int idx1, double value); \newline
+void cvSetReal3D(CvArr* arr, int idx0, int idx1, int idx2, double value); \newline
 void cvSetRealND(CvArr* arr, int* idx, double value);
-\end{lstlisting}
+}
 
 \begin{description}
 \cvarg{arr}{Input array}
@@ -3281,10 +3309,6 @@ Divides multi-channel array into several single-channel arrays or extracts a sin
               CvArr* dst2, CvArr* dst3);}
 \cvdefPy{Split(src,dst0,dst1,dst2,dst3)-> None}
 
-\begin{lstlisting}
-#define cvCvtPixToPlane cvSplit
-\end{lstlisting}
-
 \begin{description}
 \cvarg{src}{Source array}
 \cvarg{dst0}{Destination channel 0}
@@ -3292,6 +3316,10 @@ Divides multi-channel array into several single-channel arrays or extracts a sin
 \cvarg{dst2}{Destination channel 2}
 \cvarg{dst3}{Destination channel 3}
 \end{description}
+
+\begin{lstlisting}
+#define cvCvtPixToPlane cvSplit
+\end{lstlisting}
 
 The function divides a multi-channel array into separate
 single-channel arrays. Two modes are available for the operation. If the
@@ -3543,14 +3571,14 @@ Transposes a matrix.
 \cvdefC{void cvTranspose(const CvArr* src, CvArr* dst);}
 \cvdefPy{Transpose(src,dst)-> None}
 
-\begin{lstlisting}
-#define cvT cvTranspose
-\end{lstlisting}
-
 \begin{description}
 \cvarg{src}{The source matrix}
 \cvarg{dst}{The destination matrix}
 \end{description}
+
+\begin{lstlisting}
+#define cvT cvTranspose
+\end{lstlisting}
 
 The function transposes matrix \texttt{src1}:
 

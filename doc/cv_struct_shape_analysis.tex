@@ -509,8 +509,7 @@ void  cvFitLine( \par const CvArr* points,\par int dist\_type,\par double param,
 \cvarg{reps}{Sufficient accuracy for the radius (distance between the coordinate origin and the line).  0.01 is a good default value.}
 \cvarg{aeps}{Sufficient accuracy for the angle.  0.01 is a good default value.}
 \cvarg{line}{The output line parameters. In the case of a 2d fitting,
-it is \cvC{an array} \cvPy{a tuple} of 4 floats \texttt{(vx, vy,
-x0, y0)} where \texttt{(vx, vy)} is a normalized vector collinear to the
+it is \cvC{an array} \cvPy{a tuple} of 4 floats \texttt{(vx, vy, x0, y0)} where \texttt{(vx, vy)} is a normalized vector collinear to the
 line and \texttt{(x0, y0)} is some point on the line. in the case of a
 3D fitting it is \cvC{an array} \cvPy{a tuple} of 6 floats \texttt{(vx, vy, vz, x0, y0, z0)}
 where \texttt{(vx, vy, vz)} is a normalized vector collinear to the line

@@ -5,7 +5,9 @@
 
 \ifPy
 Errors in argument type cause a \texttt{TypeError} exception.
-OpenCV errors cause an cv.error exception.  For example:
+OpenCV errors cause an \texttt{cv.error} exception.
+
+For example a function argument that is the wrong type produces a \texttt{TypeError}:
 
 \begin{lstlisting}
 >>> import cv
@@ -13,11 +15,15 @@ OpenCV errors cause an cv.error exception.  For example:
 Traceback (most recent call last):
   File "<stdin>", line 1, in <module>
 TypeError: argument 1 must be string, not int
+\end{lstlisting}
+
+A function with the 
+
+\begin{lstlisting}
 >>> cv.CreateMat(-1, -1, cv.CV_8UC1)
-OpenCV Error: Incorrect size of input array (Non-positive width or height) in cvCreateMatHeader, file /u/jamesb/opencv/trunk/opencv/src/cxcore/cxarray.cpp, line 113
 Traceback (most recent call last):
   File "<stdin>", line 1, in <module>
-cv.error: Non-positive width or height
+error: Non-positive width or height
 \end{lstlisting}
 
 \fi
