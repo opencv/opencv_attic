@@ -753,7 +753,8 @@ class AreaTests(OpenCVTests):
                 a1 = numpy.array([1] * reduce(operator.__mul__, numpydims)).reshape(*numpydims)
                 return cv.fromarray(a1)
             def row_col_chan(m):
-                (col, row) = cv.GetSize(m)
+                col = m.cols
+                row = m.rows
                 chan = cv.CV_MAT_CN(cv.GetElemType(m))
                 return (row, col, chan)
 
@@ -804,7 +805,7 @@ class AreaTests(OpenCVTests):
             # multi-dimensional NumPy array
             na = numpy.ones([7,9,2,1,8])
             cm = cv.fromarray(na, True)
-            print cv.GetDims(cm)
+            self.assertEqual(cv.GetDims(cm), (7,9,2,1,8))
 
             # Using an array object for a CvArr parameter
             ones = numpy.ones((640, 480))
