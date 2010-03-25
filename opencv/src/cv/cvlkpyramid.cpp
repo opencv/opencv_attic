@@ -391,7 +391,7 @@ icvInitPyramidalAlgorithm( const CvMat* imgA, const CvMat* imgB,
         CV_Error( CV_StsNullPtr, "Some of the precomputed pyramids are missing" );
 
     if( level < 0 )
-        CV_Error( CV_StsOutOfRange, "The number of pyramid layers is negative" );
+        CV_Error( CV_StsOutOfRange, "The number of pyramid levels is negative" );
 
     switch( criteria->type )
     {
@@ -542,6 +542,242 @@ icvCalcIxIy_32f( const float* src, int src_step, float* dstX, float* dstY, int d
 }
 
 
+namespace cv
+{
+
+struct LKTrackerInvoker
+{
+    LKTrackerInvoker( const CvMat* _imgI, const CvMat* _imgJ,
+                      const CvPoint2D32f* _featuresA,
+                      CvPoint2D32f* _featuresB,
+                      char* _status, float* _error,
+                      CvTermCriteria _criteria,
+                      CvSize _winSize, int _level, int _flags )
+    {
+        imgI = _imgI;
+        imgJ = _imgJ;
+        featuresA = _featuresA;
+        featuresB = _featuresB;
+        status = _status;
+        error = _error;
+        criteria = _criteria;
+        winSize = _winSize;
+        level = _level;
+        flags = _flags;
+    }
+    
+    void operator()(const BlockedRange& range) const
+    {
+        static const float smoothKernel[] = { 0.09375, 0.3125, 0.09375 };  // 3/32, 10/32, 3/32
+        
+        int i, i1 = range.begin(), i2 = range.end();
+        
+        CvSize patchSize = cvSize( winSize.width * 2 + 1, winSize.height * 2 + 1 );
+        int patchLen = patchSize.width * patchSize.height;
+        int srcPatchLen = (patchSize.width + 2)*(patchSize.height + 2);
+        
+        AutoBuffer<float> buf(patchLen*3 + srcPatchLen);
+        float* patchI = buf;
+        float* patchJ = patchI + srcPatchLen;
+        float* Ix = patchJ + patchLen;
+        float* Iy = Ix + patchLen;
+        float scaleL = 1.f/(1 << level);
+        CvSize levelSize = cvGetMatSize(imgI);
+        
+        // find flow for each given point
+        for( i = i1; i < i2; i++ )
+        {
+            CvPoint2D32f v;
+            CvPoint minI, maxI, minJ, maxJ;
+            CvSize isz, jsz;
+            int pt_status;
+            CvPoint2D32f u;
+            CvPoint prev_minJ = { -1, -1 }, prev_maxJ = { -1, -1 };
+            double Gxx = 0, Gxy = 0, Gyy = 0, D = 0, minEig = 0;
+            float prev_mx = 0, prev_my = 0;
+            int j, x, y;
+            
+            v.x = featuresB[i].x*2;
+            v.y = featuresB[i].y*2;
+            
+            pt_status = status[i];
+            if( !pt_status )
+                continue;
+            
+            minI = maxI = minJ = maxJ = cvPoint(0, 0);
+            
+            u.x = featuresA[i].x * scaleL;
+            u.y = featuresA[i].y * scaleL;
+            
+            intersect( u, winSize, levelSize, &minI, &maxI );
+            isz = jsz = cvSize(maxI.x - minI.x + 2, maxI.y - minI.y + 2);
+            u.x += (minI.x - (patchSize.width - maxI.x + 1))*0.5f;
+            u.y += (minI.y - (patchSize.height - maxI.y + 1))*0.5f;
+            
+            if( isz.width < 3 || isz.height < 3 ||
+                icvGetRectSubPix_8u32f_C1R( imgI->data.ptr, imgI->step, levelSize,
+                                            patchI, isz.width*sizeof(patchI[0]), isz, u ) < 0 )
+            {
+                // point is outside the first image. take the next
+                status[i] = 0;
+                continue;
+            }
+            
+            icvCalcIxIy_32f( patchI, isz.width*sizeof(patchI[0]), Ix, Iy,
+                             (isz.width-2)*sizeof(patchI[0]), isz, smoothKernel, patchJ );
+            
+            for( j = 0; j < criteria.max_iter; j++ )
+            {
+                double bx = 0, by = 0;
+                float mx, my;
+                CvPoint2D32f _v;
+                
+                intersect( v, winSize, levelSize, &minJ, &maxJ );
+                
+                minJ.x = MAX( minJ.x, minI.x );
+                minJ.y = MAX( minJ.y, minI.y );
+                
+                maxJ.x = MIN( maxJ.x, maxI.x );
+                maxJ.y = MIN( maxJ.y, maxI.y );
+                
+                jsz = cvSize(maxJ.x - minJ.x, maxJ.y - minJ.y);
+                
+                _v.x = v.x + (minJ.x - (patchSize.width - maxJ.x + 1))*0.5f;
+                _v.y = v.y + (minJ.y - (patchSize.height - maxJ.y + 1))*0.5f;
+                
+                if( jsz.width < 1 || jsz.height < 1 ||
+                    icvGetRectSubPix_8u32f_C1R( imgJ->data.ptr, imgJ->step, levelSize, patchJ,
+                                                jsz.width*sizeof(patchJ[0]), jsz, _v ) < 0 )
+                {
+                    // point is outside of the second image. take the next
+                    pt_status = 0;
+                    break;
+                }
+                
+                if( maxJ.x == prev_maxJ.x && maxJ.y == prev_maxJ.y &&
+                    minJ.x == prev_minJ.x && minJ.y == prev_minJ.y )
+                {
+                    for( y = 0; y < jsz.height; y++ )
+                    {
+                        const float* pi = patchI +
+                        (y + minJ.y - minI.y + 1)*isz.width + minJ.x - minI.x + 1;
+                        const float* pj = patchJ + y*jsz.width;
+                        const float* ix = Ix +
+                        (y + minJ.y - minI.y)*(isz.width-2) + minJ.x - minI.x;
+                        const float* iy = Iy + (ix - Ix);
+                        
+                        for( x = 0; x < jsz.width; x++ )
+                        {
+                            double t0 = pi[x] - pj[x];
+                            bx += t0 * ix[x];
+                            by += t0 * iy[x];
+                        }
+                    }
+                }
+                else
+                {
+                    Gxx = Gyy = Gxy = 0;
+                    for( y = 0; y < jsz.height; y++ )
+                    {
+                        const float* pi = patchI +
+                        (y + minJ.y - minI.y + 1)*isz.width + minJ.x - minI.x + 1;
+                        const float* pj = patchJ + y*jsz.width;
+                        const float* ix = Ix +
+                        (y + minJ.y - minI.y)*(isz.width-2) + minJ.x - minI.x;
+                        const float* iy = Iy + (ix - Ix);
+                        
+                        for( x = 0; x < jsz.width; x++ )
+                        {
+                            double t = pi[x] - pj[x];
+                            bx += (double) (t * ix[x]);
+                            by += (double) (t * iy[x]);
+                            Gxx += ix[x] * ix[x];
+                            Gxy += ix[x] * iy[x];
+                            Gyy += iy[x] * iy[x];
+                        }
+                    }
+                    
+                    D = Gxx * Gyy - Gxy * Gxy;
+                    if( D < DBL_EPSILON )
+                    {
+                        pt_status = 0;
+                        break;
+                    }
+                    
+                    // Adi Shavit - 2008.05
+                    if( flags & CV_LKFLOW_GET_MIN_EIGENVALS )
+                        minEig = (Gyy + Gxx - sqrt((Gxx-Gyy)*(Gxx-Gyy) + 4.*Gxy*Gxy))/(2*jsz.height*jsz.width);
+                        
+                    D = 1. / D;
+                        
+                    prev_minJ = minJ;
+                    prev_maxJ = maxJ;
+                }
+                
+                mx = (float) ((Gyy * bx - Gxy * by) * D);
+                my = (float) ((Gxx * by - Gxy * bx) * D);
+                
+                v.x += mx;
+                v.y += my;
+                
+                if( mx * mx + my * my < criteria.epsilon )
+                    break;
+                
+                if( j > 0 && fabs(mx + prev_mx) < 0.01 && fabs(my + prev_my) < 0.01 )
+                {
+                    v.x -= mx*0.5f;
+                    v.y -= my*0.5f;
+                    break;
+                }
+                prev_mx = mx;
+                prev_my = my;
+            }
+            
+            featuresB[i] = v;
+            status[i] = (char)pt_status;
+            if( level == 0 && error && pt_status )
+            {
+                // calc error
+                double err = 0;
+                if( flags & CV_LKFLOW_GET_MIN_EIGENVALS )
+                    err = minEig;
+                else
+                {
+                    for( y = 0; y < jsz.height; y++ )
+                    {
+                        const float* pi = patchI +
+                        (y + minJ.y - minI.y + 1)*isz.width + minJ.x - minI.x + 1;
+                        const float* pj = patchJ + y*jsz.width;
+                        
+                        for( x = 0; x < jsz.width; x++ )
+                        {
+                            double t = pi[x] - pj[x];
+                            err += t * t;
+                        }
+                    }
+                    err = sqrt(err);
+                }
+                error[i] = (float)err;
+            }
+        } // end of point processing loop (i)
+    }
+    
+    const CvMat* imgI;
+    const CvMat* imgJ;
+    const CvPoint2D32f* featuresA;
+    CvPoint2D32f* featuresB;
+    char* status;
+    float* error;
+    CvTermCriteria criteria;
+    CvSize winSize;
+    int level;
+    int flags;
+};
+    
+    
+}
+
+
 CV_IMPL void
 cvCalcOpticalFlowPyrLK( const void* arrA, const void* arrB,
                         void* pyrarrA, void* pyrarrB,
@@ -562,26 +798,14 @@ cvCalcOpticalFlowPyrLK( const void* arrA, const void* arrB,
     CvMat pstubA, *pyrA = (CvMat*)pyrarrA;
     CvMat pstubB, *pyrB = (CvMat*)pyrarrB;
     CvSize imgSize;
-    static const float smoothKernel[] = { 0.09375, 0.3125, 0.09375 };  /* 3/32, 10/32, 3/32 */
     
-    int bufferBytes = 0;
     uchar **imgI = 0;
     uchar **imgJ = 0;
     int *step = 0;
     double *scale = 0;
     CvSize* size = 0;
 
-    int threadCount = cvGetNumThreads();
-    float* _patchI[CV_MAX_THREADS];
-    float* _patchJ[CV_MAX_THREADS];
-    float* _Ix[CV_MAX_THREADS];
-    float* _Iy[CV_MAX_THREADS];
-
     int i, l;
-
-    CvSize patchSize = cvSize( winSize.width * 2 + 1, winSize.height * 2 + 1 );
-    int patchLen = patchSize.width * patchSize.height;
-    int srcPatchLen = (patchSize.width + 2)*(patchSize.height + 2);
 
     imgA = cvGetMat( imgA, &stubA );
     imgB = cvGetMat( imgB, &stubB );
@@ -638,9 +862,6 @@ cvCalcOpticalFlowPyrLK( const void* arrA, const void* arrB,
     if( winSize.width <= 1 || winSize.height <= 1 )
         CV_Error( CV_StsBadSize, "Invalid search window size" );
 
-    for( i = 0; i < threadCount; i++ )
-        _patchI[i] = _patchJ[i] = _Ix[i] = _Iy[i] = 0;
-
     icvInitPyramidalAlgorithm( imgA, imgB, pyrA, pyrB,
         level, &criteria, MAX_ITERS, flags,
         &imgI, &imgJ, &step, &size, &scale, &pyrBuffer );
@@ -651,228 +872,31 @@ cvCalcOpticalFlowPyrLK( const void* arrA, const void* arrB,
         status = _status;
     }
 
-    /* buffer_size = <size for patches> + <size for pyramids> */
-    bufferBytes = (srcPatchLen + patchLen * 3) * sizeof( _patchI[0][0] ) * threadCount;
-    buffer.allocate(bufferBytes);
-
-    for( i = 0; i < threadCount; i++ )
-    {
-        _patchI[i] = i == 0 ? (float*)(uchar*)buffer : _Iy[i-1] + patchLen;
-        _patchJ[i] = _patchI[i] + srcPatchLen;
-        _Ix[i] = _patchJ[i] + patchLen;
-        _Iy[i] = _Ix[i] + patchLen;
-    }
-
     memset( status, 1, count );
     if( error )
         memset( error, 0, count*sizeof(error[0]) );
 
     if( !(flags & CV_LKFLOW_INITIAL_GUESSES) )
         memcpy( featuresB, featuresA, count*sizeof(featuresA[0]));
+    
+    for( i = 0; i < count; i++ )
+    {
+        featuresB[i].x = (float)(featuresB[i].x * scale[level] * 0.5);
+        featuresB[i].y = (float)(featuresB[i].y * scale[level] * 0.5);
+    }
 
     /* do processing from top pyramid level (smallest image)
        to the bottom (original image) */
     for( l = level; l >= 0; l-- )
     {
-        CvSize levelSize = size[l];
-        int levelStep = step[l];
-
-        {
-#ifdef _OPENMP
-        #pragma omp parallel for num_threads(threadCount) schedule(dynamic) 
-#endif // _OPENMP
-        /* find flow for each given point */
-        for( i = 0; i < count; i++ )
-        {
-            CvPoint2D32f v;
-            CvPoint minI, maxI, minJ, maxJ;
-            CvSize isz, jsz;
-            int pt_status;
-            CvPoint2D32f u;
-            CvPoint prev_minJ = { -1, -1 }, prev_maxJ = { -1, -1 };
-            double Gxx = 0, Gxy = 0, Gyy = 0, D = 0, minEig = 0;
-            float prev_mx = 0, prev_my = 0;
-            int j, x, y;
-            int threadIdx = cvGetThreadNum();
-            float* patchI = _patchI[threadIdx];
-            float* patchJ = _patchJ[threadIdx];
-            float* Ix = _Ix[threadIdx];
-            float* Iy = _Iy[threadIdx];
-
-            v.x = featuresB[i].x;
-            v.y = featuresB[i].y;
-            if( l < level )
-            {
-                v.x += v.x;
-                v.y += v.y;
-            }
-            else
-            {
-                v.x = (float)(v.x * scale[l]);
-                v.y = (float)(v.y * scale[l]);
-            }
-
-            pt_status = status[i];
-            if( !pt_status )
-                continue;
-
-            minI = maxI = minJ = maxJ = cvPoint( 0, 0 );
-
-            u.x = (float) (featuresA[i].x * scale[l]);
-            u.y = (float) (featuresA[i].y * scale[l]);
-
-            intersect( u, winSize, levelSize, &minI, &maxI );
-            isz = jsz = cvSize(maxI.x - minI.x + 2, maxI.y - minI.y + 2);
-            u.x += (minI.x - (patchSize.width - maxI.x + 1))*0.5f;
-            u.y += (minI.y - (patchSize.height - maxI.y + 1))*0.5f;
-
-            if( isz.width < 3 || isz.height < 3 ||
-                icvGetRectSubPix_8u32f_C1R( imgI[l], levelStep, levelSize,
-                    patchI, isz.width*sizeof(patchI[0]), isz, u ) < 0 )
-            {
-                /* point is outside the image. take the next */
-                status[i] = 0;
-                continue;
-            }
-
-            icvCalcIxIy_32f( patchI, isz.width*sizeof(patchI[0]), Ix, Iy,
-                (isz.width-2)*sizeof(patchI[0]), isz, smoothKernel, patchJ );
-
-            for( j = 0; j < criteria.max_iter; j++ )
-            {
-                double bx = 0, by = 0;
-                float mx, my;
-                CvPoint2D32f _v;
-
-                intersect( v, winSize, levelSize, &minJ, &maxJ );
-
-                minJ.x = MAX( minJ.x, minI.x );
-                minJ.y = MAX( minJ.y, minI.y );
-
-                maxJ.x = MIN( maxJ.x, maxI.x );
-                maxJ.y = MIN( maxJ.y, maxI.y );
-
-                jsz = cvSize(maxJ.x - minJ.x, maxJ.y - minJ.y);
-
-                _v.x = v.x + (minJ.x - (patchSize.width - maxJ.x + 1))*0.5f;
-                _v.y = v.y + (minJ.y - (patchSize.height - maxJ.y + 1))*0.5f;
-
-                if( jsz.width < 1 || jsz.height < 1 ||
-                    icvGetRectSubPix_8u32f_C1R( imgJ[l], levelStep, levelSize, patchJ,
-                                                jsz.width*sizeof(patchJ[0]), jsz, _v ) < 0 )
-                {
-                    /* point is outside image. take the next */
-                    pt_status = 0;
-                    break;
-                }
-
-                if( maxJ.x == prev_maxJ.x && maxJ.y == prev_maxJ.y &&
-                    minJ.x == prev_minJ.x && minJ.y == prev_minJ.y )
-                {
-                    for( y = 0; y < jsz.height; y++ )
-                    {
-                        const float* pi = patchI +
-                            (y + minJ.y - minI.y + 1)*isz.width + minJ.x - minI.x + 1;
-                        const float* pj = patchJ + y*jsz.width;
-                        const float* ix = Ix +
-                            (y + minJ.y - minI.y)*(isz.width-2) + minJ.x - minI.x;
-                        const float* iy = Iy + (ix - Ix);
-
-                        for( x = 0; x < jsz.width; x++ )
-                        {
-                            double t0 = pi[x] - pj[x];
-                            bx += t0 * ix[x];
-                            by += t0 * iy[x];
-                        }
-                    }
-                }
-                else
-                {
-                    Gxx = Gyy = Gxy = 0;
-                    for( y = 0; y < jsz.height; y++ )
-                    {
-                        const float* pi = patchI +
-                            (y + minJ.y - minI.y + 1)*isz.width + minJ.x - minI.x + 1;
-                        const float* pj = patchJ + y*jsz.width;
-                        const float* ix = Ix +
-                            (y + minJ.y - minI.y)*(isz.width-2) + minJ.x - minI.x;
-                        const float* iy = Iy + (ix - Ix);
-
-                        for( x = 0; x < jsz.width; x++ )
-                        {
-                            double t = pi[x] - pj[x];
-                            bx += (double) (t * ix[x]);
-                            by += (double) (t * iy[x]);
-                            Gxx += ix[x] * ix[x];
-                            Gxy += ix[x] * iy[x];
-                            Gyy += iy[x] * iy[x];
-                        }
-                    }
-
-                    D = Gxx * Gyy - Gxy * Gxy;
-                    if( D < DBL_EPSILON )
-                    {
-                        pt_status = 0;
-                        break;
-                    }
-
-                    // Adi Shavit - 2008.05
-                    if( flags & CV_LKFLOW_GET_MIN_EIGENVALS )
-                        minEig = (Gyy + Gxx - sqrt((Gxx-Gyy)*(Gxx-Gyy) + 4.*Gxy*Gxy))/(2*jsz.height*jsz.width);
-
-                    D = 1. / D;
-
-                    prev_minJ = minJ;
-                    prev_maxJ = maxJ;
-                }
-
-                mx = (float) ((Gyy * bx - Gxy * by) * D);
-                my = (float) ((Gxx * by - Gxy * bx) * D);
-
-                v.x += mx;
-                v.y += my;
-
-                if( mx * mx + my * my < criteria.epsilon )
-                    break;
-
-                if( j > 0 && fabs(mx + prev_mx) < 0.01 && fabs(my + prev_my) < 0.01 )
-                {
-                    v.x -= mx*0.5f;
-                    v.y -= my*0.5f;
-                    break;
-                }
-                prev_mx = mx;
-                prev_my = my;
-            }
-
-            featuresB[i] = v;
-            status[i] = (char)pt_status;
-            if( l == 0 && error && pt_status )
-            {
-                /* calc error */
-                double err = 0;
-                if( flags & CV_LKFLOW_GET_MIN_EIGENVALS )
-                    err = minEig;
-                else
-                {
-                    for( y = 0; y < jsz.height; y++ )
-                    {
-                        const float* pi = patchI +
-                            (y + minJ.y - minI.y + 1)*isz.width + minJ.x - minI.x + 1;
-                        const float* pj = patchJ + y*jsz.width;
-
-                        for( x = 0; x < jsz.width; x++ )
-                        {
-                            double t = pi[x] - pj[x];
-                            err += t * t;
-                        }
-                    }
-                    err = sqrt(err);
-                }
-                error[i] = (float)err;
-            }
-        } // end of point processing loop (i)
-        }
+        CvMat imgI_l, imgJ_l;        
+        cvInitMatHeader(&imgI_l, size[l].height, size[l].width, imgA->type, imgI[l], step[l]);
+        cvInitMatHeader(&imgJ_l, size[l].height, size[l].width, imgB->type, imgJ[l], step[l]);
+        
+        cv::parallel_for(cv::BlockedRange(0, count),
+                         cv::LKTrackerInvoker(&imgI_l, &imgJ_l, featuresA,
+                                              featuresB, status, error,
+                                              criteria, winSize, l, flags));
     } // end of pyramid levels loop (l)
 }
 

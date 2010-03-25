@@ -36,6 +36,7 @@ int main(int argc, char** argv)
 
     HOGDescriptor hog;
     hog.setSVMDetector(HOGDescriptor::getDefaultPeopleDetector());
+    namedWindow("people detector", 1);
 
     for(;;)
     {

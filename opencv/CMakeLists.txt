@@ -203,12 +203,12 @@ if(UNIX)
     include(CheckIncludeFile)
 endif()
 
-if(MSVC)
-	set(DEFAULT_ENABLE_OPENMP ON)
-else()
-	set(DEFAULT_ENABLE_OPENMP OFF)
-endif()
-set(ENABLE_OPENMP ${DEFAULT_ENABLE_OPENMP} CACHE BOOL "")
+#if(MSVC)
+#	set(DEFAULT_ENABLE_OPENMP ON)
+#else()
+#	set(DEFAULT_ENABLE_OPENMP OFF)
+#endif()
+#set(ENABLE_OPENMP ${DEFAULT_ENABLE_OPENMP} CACHE BOOL "")
 
 if(CMAKE_COMPILER_IS_GNUCXX)
     set(ENABLE_PROFILING OFF CACHE BOOL "Enable profiling in the GCC compiler (Add flags: -g -pg)")
@@ -658,9 +658,9 @@ if(MSVC)
 
     set(EXTRA_EXE_LINKER_FLAGS_RELEASE "${EXTRA_EXE_LINKER_FLAGS_RELEASE} /debug")
 
-    if(ENABLE_OPENMP)
-        set(EXTRA_C_FLAGS_RELEASE "${EXTRA_C_FLAGS_RELEASE} /openmp")
-    endif()
+    #if(ENABLE_OPENMP)
+    #    set(EXTRA_C_FLAGS_RELEASE "${EXTRA_C_FLAGS_RELEASE} /openmp")
+    #endif()
 
     # Remove unreferenced functions: function level linking
     set(EXTRA_C_FLAGS "${EXTRA_C_FLAGS} /Gy")
@@ -754,10 +754,10 @@ if(CMAKE_COMPILER_IS_GNUCXX)
     endif()
 
     # Parallel mode
-    if(ENABLE_OPENMP)
-        set(EXTRA_C_FLAGS "${EXTRA_C_FLAGS} -D_GLIBCXX_PARALLEL -fopenmp")
-        set(OPENCV_LINKER_LIBS ${OPENCV_LINKER_LIBS} gomp)
-    endif()
+    #if(ENABLE_OPENMP)
+    #    set(EXTRA_C_FLAGS "${EXTRA_C_FLAGS} -D_GLIBCXX_PARALLEL -fopenmp")
+    #    set(OPENCV_LINKER_LIBS ${OPENCV_LINKER_LIBS} gomp)
+    #endif()
 
     set(EXTRA_C_FLAGS_RELEASE "${EXTRA_C_FLAGS_RELEASE} -DNDEBUG")
     set(EXTRA_C_FLAGS_DEBUG "${EXTRA_C_FLAGS_DEBUG} -O0 -DDEBUG -D_DEBUG")
