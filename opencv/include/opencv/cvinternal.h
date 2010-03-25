@@ -143,16 +143,24 @@ CV_INLINE IppiSize ippiSize(int width, int height)
     {
         typedef tbb::blocked_range<int> BlockedRange;
         
-        template<typename Body>
+        template<typename Body> static inline
         void parallel_for( const BlockedRange& range, const Body& body )
         {
             tbb::parallel_for(range, body);
         }
         
-        template<typename Iterator, typename Body>
+        template<typename Iterator, typename Body> static inline
         void parallel_do( Iterator first, Iterator last, const Body& body )
         {
             tbb::parallel_do(first, last, body);
+        }
+        
+        typedef tbb::split split;
+        
+        template<typename Body> static inline
+        void parallel_reduce( const BlockedRange& range, const Body& body )
+        {
+            tbb::parallel_reduce(range, body);
         }
         
         typedef tbb::concurrent_vector<Rect> ConcurrentRectVector;
@@ -173,17 +181,25 @@ CV_INLINE IppiSize ippiSize(int width, int height)
             int _begin, _end, _grainsize;
         };
 
-        template<typename Body>
+        template<typename Body> static inline
         void parallel_for( const BlockedRange& range, const Body& body )
         {
             body(range);
         }
         
-        template<typename Iterator, typename Body>
+        template<typename Iterator, typename Body> static inline
         void parallel_do( Iterator first, Iterator last, const Body& body )
         {
             for( ; first != last; ++first )
                 body(*first);
+        }
+        
+        class split {};
+        
+        template<typename Body> static inline
+        void parallel_reduce( const BlockedRange& range, const Body& body )
+        {
+            body(range);
         }
         
         typedef std::vector<Rect> ConcurrentRectVector;
