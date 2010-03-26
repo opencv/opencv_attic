@@ -104,6 +104,20 @@ void cvCornerMinEigenVal(
 
 The function is similar to \cvCPyCross{CornerEigenValsAndVecs} but it calculates and stores only the minimal eigen value of derivative covariation matrix for every pixel, i.e. $min(\lambda_1, \lambda_2)$ in terms of the previous function.
 
+\ifPy
+\cvclass{CvSURFPoint}
+A SURF keypoint, represented as a tuple \texttt{((x, y), laplacian, size, dir, hessian)}.
+
+\begin{description}
+\cvarg{x}{x-coordinate of the feature within the image}
+\cvarg{y}{y-coordinate of the feature within the image}
+\cvarg{laplacian}{-1, 0 or +1. sign of the laplacian at the point.  Can be used to speedup feature comparison since features with laplacians of different signs can not match}
+\cvarg{size}{size of the feature}
+\cvarg{dir}{orientation of the feature: 0..360 degrees}
+\cvarg{hessian}{value of the hessian (can be used to approximately estimate the feature strengths; see also params.hessianThreshold)}
+\end{description}
+\fi
+
 \cvCPyFunc{ExtractSURF}
 Extracts Speeded Up Robust Features from an image.
 
@@ -115,6 +129,7 @@ void cvExtractSURF( \par const CvArr* image,\par const CvArr* mask,\par CvSeq** 
 \begin{description}
 \cvarg{image}{The input 8-bit grayscale image}
 \cvarg{mask}{The optional input 8-bit mask. The features are only found in the areas that contain more than 50\% of non-zero mask pixels}
+\ifC
 \cvarg{keypoints}{The output parameter; double pointer to the sequence of keypoints. The sequence of CvSURFPoint structures is as follows:}
 \begin{lstlisting}
  typedef struct CvSURFPoint
@@ -133,7 +148,12 @@ void cvExtractSURF( \par const CvArr* image,\par const CvArr* mask,\par CvSeq** 
  CvSURFPoint;
 \end{lstlisting}
 \cvarg{descriptors}{The optional output parameter; double pointer to the sequence of descriptors. Depending on the params.extended value, each element of the sequence will be either a 64-element or a 128-element floating-point (\texttt{CV\_32F}) vector. If the parameter is NULL, the descriptors are not computed}
+\else
+\cvarg{keypoints}{sequence of keypoints.}
+\cvarg{descriptors}{sequence of descriptors.  Each SURF descriptor is a list of floats, of length 64 or 128.}
+\fi
 \cvarg{storage}{Memory storage where keypoints and descriptors will be stored}
+\ifC
 \cvarg{params}{Various algorithm parameters put to the structure CvSURFParams:}
 \begin{lstlisting}
  typedef struct CvSURFParams
@@ -157,15 +177,45 @@ void cvExtractSURF( \par const CvArr* image,\par const CvArr* mask,\par CvSeq** 
  CvSURFParams cvSURFParams(double hessianThreshold, int extended=0); 
           // returns default parameters
 \end{lstlisting}
+\else
+\cvarg{params}{Various algorithm parameters in a tuple \texttt{(extended, hessianThreshold, nOctaves, nOctaveLayers)}:
+\begin{description}
+\cvarg{extended}{0 means basic descriptors (64 elements each), 1 means extended descriptors (128 elements each)}
+\cvarg{hessianThreshold}{only features with hessian larger than that are extracted.  good default value is ~300-500 (can depend on the average local contrast and sharpness of the image).  user can further filter out some features based on their hessian values and other characteristics.}
+\cvarg{nOctaves}{the number of octaves to be used for extraction.  With each next octave the feature size is doubled (3 by default)}
+\cvarg{nOctaveLayers}{The number of layers within each octave (4 by default)}
+\end{description}}
+\fi
 \end{description}
 
 The function cvExtractSURF finds robust features in the image, as
-described in
-Bay06
-. For each feature it returns its location, size,
+described in \cite{Bay06}. For each feature it returns its location, size,
 orientation and optionally the descriptor, basic or extended. The function
-can be used for object tracking and localization, image stitching etc. See the
+can be used for object tracking and localization, image stitching etc.
+
+\ifC
+See the
 \texttt{find\_obj.cpp} demo in OpenCV samples directory.
+\else
+To extract strong SURF features from an image
+
+\begin{lstlisting}
+>>> import cv
+>>> im = cv.LoadImageM("building.jpg", cv.CV_LOAD_IMAGE_GRAYSCALE)
+>>> (keypoints, descriptors) = cv.ExtractSURF(im, None, cv.CreateMemStorage(), (0, 30000, 3, 1))
+>>> print len(keypoints), len(descriptors)
+6 6
+>>> for ((x, y), laplacian, size, dir, hessian) in keypoints:
+...     print "x=\%d y=\%d laplacian=\%d size=\%d dir=\%f hessian=\%f" \% (x, y, laplacian, size, dir, hessian)
+x=30 y=27 laplacian=-1 size=31 dir=69.778503 hessian=36979.789062
+x=296 y=197 laplacian=1 size=33 dir=111.081039 hessian=31514.349609
+x=296 y=266 laplacian=1 size=32 dir=107.092300 hessian=31477.908203
+x=254 y=284 laplacian=1 size=31 dir=279.137360 hessian=34169.800781
+x=498 y=525 laplacian=-1 size=33 dir=278.006592 hessian=31002.759766
+x=777 y=281 laplacian=1 size=70 dir=167.940964 hessian=35538.363281
+\end{lstlisting}
+
+\fi
 
 \cvCPyFunc{FindCornerSubPix}
 Refines the corner locations.
@@ -226,11 +276,13 @@ Retrieves keypoints using the StarDetector algorithm.
 
 \cvdefC{
 CvSeq* cvGetStarKeypoints( \par const CvArr* image,\par CvMemStorage* storage,\par CvStarDetectorParams params=cvStarDetectorParams() );
-}\cvdefPy{GetStarKeypoints(image,storage,params)-> keypoints}
+}
+\cvdefPy{GetStarKeypoints(image,storage,params)-> keypoints}
 
 \begin{description}
 \cvarg{image}{The input 8-bit grayscale image}
 \cvarg{storage}{Memory storage where the keypoints will be stored}
+\ifC
 \cvarg{params}{Various algorithm parameters given to the structure CvStarDetectorParams:}
 \begin{lstlisting}
  typedef struct CvStarDetectorParams
@@ -249,6 +301,17 @@ CvSeq* cvGetStarKeypoints( \par const CvArr* image,\par CvMemStorage* storage,\p
  }
  CvStarDetectorParams;
 \end{lstlisting}
+\else
+\cvarg{params}{Various algorithm parameters in a tuple \texttt{(maxSize, responseThreshold, lineThresholdProjected, lineThresholdBinarized, suppressNonmaxSize)}:
+\begin{description}
+\cvarg{maxSize}{maximal size of the features detected. The following values of the parameter are supported: 4, 6, 8, 11, 12, 16, 22, 23, 32, 45, 46, 64, 90, 128}
+\cvarg{responseThreshold}{threshold for the approximatd laplacian, used to eliminate weak features}
+\cvarg{lineThresholdProjected}{another threshold for laplacian to eliminate edges}
+\cvarg{lineThresholdBinarized}{another threshold for the feature scale to eliminate edges}
+\cvarg{suppressNonmaxSize}{linear size of a pixel neighborhood for non-maxima suppression}
+\end{description}
+}
+\fi
 \end{description}
 
 The function GetStarKeypoints extracts keypoints that are local
@@ -264,6 +327,7 @@ Agrawal08
 of a square, hexagon or octagon it uses an 8-end star shape, hence the name,
 consisting of overlapping upright and tilted squares.
 
+\ifC
 Each computed feature is represented by the following structure:
 
 \begin{lstlisting}
@@ -277,6 +341,14 @@ CvStarKeypoint;
 
 inline CvStarKeypoint cvStarKeypoint(CvPoint pt, int size, float response);
 \end{lstlisting}
+\else
+Each keypoint is represented by a tuple \texttt{((x, y), size, response)}:
+\begin{description}
+\cvarg{x, y}{Screen coordinates of the keypoint}
+\cvarg{size}{feature size, up to \texttt{maxSize}}
+\cvarg{response}{approximated laplacian value for the keypoint}
+\end{description}
+\fi
 
 \ifC
 Below is the small usage sample:
@@ -517,6 +589,7 @@ where $D_?$ denotes one of the first image derivatives and $D_{??}$ denotes a se
 
 The corners can be found as local maximums of the function below:
 
+\ifC
 \begin{lstlisting}
 // assume that the image is floating-point
 IplImage* corners = cvCloneImage(image);
@@ -529,6 +602,10 @@ cvCmpS( corners, 0, corner_mask, CV_CMP_GE );
 cvReleaseImage( &corners );
 cvReleaseImage( &dilated_corners );
 \end{lstlisting}
+
+\else
+\lstinputlisting{python_fragments/precornerdetect.py}
+\fi
 
 \ifC
 \cvCPyFunc{SampleLine}

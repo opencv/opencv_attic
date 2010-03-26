@@ -22,8 +22,8 @@ int blockSize=3,\par double param1=5 );
 \cvarg{adaptive\_method}{Adaptive thresholding algorithm to use: \texttt{CV\_ADAPTIVE\_THRESH\_MEAN\_C} or \texttt{CV\_ADAPTIVE\_THRESH\_GAUSSIAN\_C} (see the discussion)}
 \cvarg{thresholdType}{Thresholding type; must be one of
 \begin{description}
-  \cvarg{CV\_THRESH\_BINARY}{xxx}
-  \cvarg{CV\_THRESH\_BINARY\_INV}{xxx}
+\cvarg{CV\_THRESH\_BINARY}{xxx}
+\cvarg{CV\_THRESH\_BINARY\_INV}{xxx}
 \end{description}}
 \cvarg{blockSize}{The size of a pixel neighborhood that is used to calculate a threshold value for the pixel: 3, 5, 7, and so on}
 \cvarg{param1}{The method-dependent parameter. For the methods \texttt{CV\_ADAPTIVE\_THRESH\_MEAN\_C} and \texttt{CV\_ADAPTIVE\_THRESH\_GAUSSIAN\_C} it is a constant subtracted from the mean or weighted mean (see the discussion), though it may be negative}
@@ -70,9 +70,9 @@ layout).
 The conventional range for R,G,B channel values is:
 
 \begin{itemize}
- \item 0 to 255 for 8-bit images
- \item 0 to 65535 for 16-bit images and
- \item 0 to 1 for floating-point images.
+\item 0 to 255 for 8-bit images
+\item 0 to 65535 for 16-bit images and
+\item 0 to 1 for floating-point images.
 \end{itemize}
 
 Of course, in the case of linear transformations the range can be
@@ -82,83 +82,83 @@ transformations, the input image should be scaled.
 The function can do the following transformations:
 
 \begin{itemize}
- \item Transformations within RGB space like adding/removing the alpha channel, reversing the channel order, conversion to/from 16-bit RGB color (R5:G6:B5 or R5:G5:B5), as well as conversion to/from grayscale using:
- \[
- \text{RGB[A] to Gray:} Y \leftarrow 0.299 \cdot R + 0.587 \cdot G + 0.114 \cdot B
- \]
- and
- \[
- \text{Gray to RGB[A]:} R \leftarrow Y, G \leftarrow Y, B \leftarrow Y, A \leftarrow 0
- \]
+\item Transformations within RGB space like adding/removing the alpha channel, reversing the channel order, conversion to/from 16-bit RGB color (R5:G6:B5 or R5:G5:B5), as well as conversion to/from grayscale using:
+\[
+\text{RGB[A] to Gray:} Y \leftarrow 0.299 \cdot R + 0.587 \cdot G + 0.114 \cdot B
+\]
+and
+\[
+\text{Gray to RGB[A]:} R \leftarrow Y, G \leftarrow Y, B \leftarrow Y, A \leftarrow 0
+\]
 
 The conversion from a RGB image to gray is done with:
 \begin{lstlisting}
 cvCvtColor(src ,bwsrc, CV_RGB2GRAY)
 \end{lstlisting}
 
- \item RGB $\leftrightarrow$ CIE XYZ.Rec 709 with D65 white point (\texttt{CV\_BGR2XYZ, CV\_RGB2XYZ, CV\_XYZ2BGR, CV\_XYZ2RGB}):
- \[
- \begin{bmatrix}
- X \\
- Y \\
- Z
- \end{bmatrix}
- \leftarrow
- \begin{bmatrix}
+\item RGB $\leftrightarrow$ CIE XYZ.Rec 709 with D65 white point (\texttt{CV\_BGR2XYZ, CV\_RGB2XYZ, CV\_XYZ2BGR, CV\_XYZ2RGB}):
+\[
+\begin{bmatrix}
+X \\
+Y \\
+Z
+\end{bmatrix}
+\leftarrow
+\begin{bmatrix}
 0.412453 & 0.357580 & 0.180423\\
 0.212671 & 0.715160 & 0.072169\\
 0.019334 & 0.119193 & 0.950227
- \end{bmatrix}
- \cdot
- \begin{bmatrix}
- R \\
- G \\
- B
- \end{bmatrix}
- \]
- \[
- \begin{bmatrix}
- R \\
- G \\
- B
- \end{bmatrix}
- \leftarrow
- \begin{bmatrix}
+\end{bmatrix}
+\cdot
+\begin{bmatrix}
+R \\
+G \\
+B
+\end{bmatrix}
+\]
+\[
+\begin{bmatrix}
+R \\
+G \\
+B
+\end{bmatrix}
+\leftarrow
+\begin{bmatrix}
 3.240479 & -1.53715 & -0.498535\\
 -0.969256 &  1.875991 & 0.041556\\
 0.055648 & -0.204043 & 1.057311
- \end{bmatrix}
- \cdot
- \begin{bmatrix}
- X \\
- Y \\
- Z
- \end{bmatrix}
- \]
+\end{bmatrix}
+\cdot
+\begin{bmatrix}
+X \\
+Y \\
+Z
+\end{bmatrix}
+\]
 $X$, $Y$ and $Z$ cover the whole value range (in the case of floating-point images $Z$ may exceed 1).
 
- \item RGB $\leftrightarrow$ YCrCb JPEG (a.k.a. YCC) (\texttt{CV\_BGR2YCrCb, CV\_RGB2YCrCb, CV\_YCrCb2BGR, CV\_YCrCb2RGB})
- \[ Y \leftarrow 0.299 \cdot R + 0.587 \cdot G + 0.114 \cdot B \]
- \[  Cr \leftarrow (R-Y) \cdot 0.713 + delta \]
- \[  Cb \leftarrow (B-Y) \cdot 0.564 + delta \]
- \[  R \leftarrow Y + 1.403 \cdot (Cr - delta) \]
- \[  G \leftarrow Y - 0.344 \cdot (Cr - delta) - 0.714 \cdot (Cb - delta) \]
- \[  B \leftarrow Y + 1.773 \cdot (Cb - delta) \]
+\item RGB $\leftrightarrow$ YCrCb JPEG (a.k.a. YCC) (\texttt{CV\_BGR2YCrCb, CV\_RGB2YCrCb, CV\_YCrCb2BGR, CV\_YCrCb2RGB})
+\[ Y \leftarrow 0.299 \cdot R + 0.587 \cdot G + 0.114 \cdot B \]
+\[  Cr \leftarrow (R-Y) \cdot 0.713 + delta \]
+\[  Cb \leftarrow (B-Y) \cdot 0.564 + delta \]
+\[  R \leftarrow Y + 1.403 \cdot (Cr - delta) \]
+\[  G \leftarrow Y - 0.344 \cdot (Cr - delta) - 0.714 \cdot (Cb - delta) \]
+\[  B \leftarrow Y + 1.773 \cdot (Cb - delta) \]
 where
- \[
-  delta = \left\{
-  \begin{array}{l l}
-  128 & \mbox{for 8-bit images}\\
-  32768 & \mbox{for 16-bit images}\\
-  0.5 & \mbox{for floating-point images}
-  \end{array} \right.
- \]
+\[
+delta = \left\{
+\begin{array}{l l}
+128 & \mbox{for 8-bit images}\\
+32768 & \mbox{for 16-bit images}\\
+0.5 & \mbox{for floating-point images}
+\end{array} \right.
+\]
 Y, Cr and Cb cover the whole value range.
 
- \item RGB $\leftrightarrow$ HSV (\texttt{CV\_BGR2HSV, CV\_RGB2HSV, CV\_HSV2BGR, CV\_HSV2RGB})
-  in the case of 8-bit and 16-bit images
-  R, G and B are converted to floating-point format and scaled to fit the 0 to 1 range
-  \[ V \leftarrow max(R,G,B) \]
+\item RGB $\leftrightarrow$ HSV (\texttt{CV\_BGR2HSV, CV\_RGB2HSV, CV\_HSV2BGR, CV\_HSV2RGB})
+in the case of 8-bit and 16-bit images
+R, G and B are converted to floating-point format and scaled to fit the 0 to 1 range
+\[ V \leftarrow max(R,G,B) \]
 
 \[ S \leftarrow \fork{\frac{V-min(R,G,B)}{V}}{if $V \neq 0$}{0}{otherwise} \]
 \[ H \leftarrow \forkthree
@@ -179,20 +179,20 @@ The values are then converted to the destination data type:
 H, S, V are left as is
 \end{description}
 
- \item RGB $\leftrightarrow$ HLS (\texttt{CV\_BGR2HLS, CV\_RGB2HLS, CV\_HLS2BGR, CV\_HLS2RGB}).
-  in the case of 8-bit and 16-bit images
-  R, G and B are converted to floating-point format and scaled to fit the 0 to 1 range.
-  \[ V_{max} \leftarrow {max}(R,G,B) \]
-  \[ V_{min} \leftarrow {min}(R,G,B) \]
-  \[ L \leftarrow \frac{V_{max} - V_{min}}{2} \]
-  \[ S \leftarrow \fork
-    {\frac{V_{max} - V_{min}}{V_{max} + V_{min}}}{if $L < 0.5$}
-    {\frac{V_{max} - V_{min}}{2 - (V_{max} + V_{min})}}{if $L \ge 0.5$} \]
-  \[ H \leftarrow \forkthree
-  {{60(G - B)}/{S}}{if $V_{max}=R$}
-  {{120+60(B - R)}/{S}}{if $V_{max}=G$}
-  {{240+60(R - G)}/{S}}{if $V_{max}=B$} \]
-  if $H<0$ then $H \leftarrow H+360$
+\item RGB $\leftrightarrow$ HLS (\texttt{CV\_BGR2HLS, CV\_RGB2HLS, CV\_HLS2BGR, CV\_HLS2RGB}).
+in the case of 8-bit and 16-bit images
+R, G and B are converted to floating-point format and scaled to fit the 0 to 1 range.
+\[ V_{max} \leftarrow {max}(R,G,B) \]
+\[ V_{min} \leftarrow {min}(R,G,B) \]
+\[ L \leftarrow \frac{V_{max} - V_{min}}{2} \]
+\[ S \leftarrow \fork
+{\frac{V_{max} - V_{min}}{V_{max} + V_{min}}}{if $L < 0.5$}
+{\frac{V_{max} - V_{min}}{2 - (V_{max} + V_{min})}}{if $L \ge 0.5$} \]
+\[ H \leftarrow \forkthree
+{{60(G - B)}/{S}}{if $V_{max}=R$}
+{{120+60(B - R)}/{S}}{if $V_{max}=G$}
+{{240+60(R - G)}/{S}}{if $V_{max}=B$} \]
+if $H<0$ then $H \leftarrow H+360$
 On output $0 \leq V \leq 1$, $0 \leq S \leq 1$, $0 \leq H \leq 360$.
 
 The values are then converted to the destination data type:
@@ -205,9 +205,9 @@ The values are then converted to the destination data type:
 H, S, V are left as is
 \end{description}
 
- \item RGB $\leftrightarrow$ CIE L*a*b* (\texttt{CV\_BGR2Lab, CV\_RGB2Lab, CV\_Lab2BGR, CV\_Lab2RGB})
-  in the case of 8-bit and 16-bit images
-  R, G and B are converted to floating-point format and scaled to fit the 0 to 1 range
+\item RGB $\leftrightarrow$ CIE L*a*b* (\texttt{CV\_BGR2Lab, CV\_RGB2Lab, CV\_Lab2BGR, CV\_Lab2RGB})
+in the case of 8-bit and 16-bit images
+R, G and B are converted to floating-point format and scaled to fit the 0 to 1 range
 \[ \vecthree{X}{Y}{Z} \leftarrow \vecthreethree
 {0.412453}{0.357580}{0.180423}
 {0.212671}{0.715160}{0.072169}
@@ -238,10 +238,10 @@ The values are then converted to the destination data type:
 L, a, b are left as is
 \end{description}
 
- \item RGB $\leftrightarrow$ CIE L*u*v* (\texttt{CV\_BGR2Luv, CV\_RGB2Luv, CV\_Luv2BGR, CV\_Luv2RGB})
-  in the case of 8-bit and 16-bit images
-  R, G and B are converted to floating-point format and scaled to fit 0 to 1 range
-  \[ \vecthree{X}{Y}{Z} \leftarrow \vecthreethree
+\item RGB $\leftrightarrow$ CIE L*u*v* (\texttt{CV\_BGR2Luv, CV\_RGB2Luv, CV\_Luv2BGR, CV\_Luv2RGB})
+in the case of 8-bit and 16-bit images
+R, G and B are converted to floating-point format and scaled to fit 0 to 1 range
+\[ \vecthree{X}{Y}{Z} \leftarrow \vecthreethree
 {0.412453}{0.357580}{0.180423}
 {0.212671}{0.715160}{0.072169}
 {0.019334}{0.119193}{0.950227}
@@ -266,9 +266,9 @@ The values are then converted to the destination data type:
 
 The above formulas for converting RGB to/from various color spaces have been taken from multiple sources on Web, primarily from
 the Ford98
- at the Charles Poynton site.
+at the Charles Poynton site.
 
- \item Bayer $\rightarrow$ RGB (\texttt{CV\_BayerBG2BGR, CV\_BayerGB2BGR, CV\_BayerRG2BGR, CV\_BayerGR2BGR, CV\_BayerBG2RGB, CV\_BayerGB2RGB, CV\_BayerRG2RGB, CV\_BayerGR2RGB}) The Bayer pattern is widely used in CCD and CMOS cameras. It allows one to get color pictures from a single plane where R,G and B pixels (sensors of a particular component) are interleaved like this:
+\item Bayer $\rightarrow$ RGB (\texttt{CV\_BayerBG2BGR, CV\_BayerGB2BGR, CV\_BayerRG2BGR, CV\_BayerGR2BGR, CV\_BayerBG2RGB, CV\_BayerGB2RGB, CV\_BayerRG2RGB, CV\_BayerGR2RGB}) The Bayer pattern is widely used in CCD and CMOS cameras. It allows one to get color pictures from a single plane where R,G and B pixels (sensors of a particular component) are interleaved like this:
 
 
 

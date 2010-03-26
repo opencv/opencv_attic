@@ -288,7 +288,7 @@ The function \texttt{cvWaitKey} waits for key event infinitely ($ \texttt{delay}
 \section{Reading and Writing Images and Video}
 
 \cvCPyFunc{LoadImage}
-Loads an image from a file.
+Loads an image from a file as an IplImage.
 
 \cvdefC{
 IplImage* cvLoadImage( \par const char* filename, \par int iscolor=CV\_LOAD\_IMAGE\_COLOR );}
@@ -306,6 +306,37 @@ IplImage* cvLoadImage( \par const char* filename, \par int iscolor=CV\_LOAD\_IMA
 \end{description}
 
 The function \texttt{cvLoadImage} loads an image from the specified file and returns the pointer to the loaded image. Currently the following file formats are supported:
+\begin{itemize}
+\item Windows bitmaps - BMP, DIB
+\item JPEG files - JPEG, JPG, JPE
+\item Portable Network Graphics - PNG
+\item Portable image format - PBM, PGM, PPM
+\item Sun rasters - SR, RAS
+\item TIFF files - TIFF, TIF
+\end{itemize}
+
+Note that in the current implementation the alpha channel, if any, is stripped from the output image, e.g. 4-channel RGBA image will be loaded as RGB.
+
+\cvCPyFunc{LoadImageM}
+Loads an image from a file as a CvMat.
+
+\cvdefC{
+CvMat* cvLoadImageM( \par const char* filename, \par int iscolor=CV\_LOAD\_IMAGE\_COLOR );}
+\cvdefPy{LoadImageM(filename, iscolor=CV\_LOAD\_IMAGE\_COLOR)->None}
+
+\begin{description}
+\cvarg{filename}{Name of file to be loaded.}
+\cvarg{iscolor}{Specific color type of the loaded image:
+\begin{description}
+\cvarg{CV\_LOAD\_IMAGE\_COLOR}{the loaded image is forced to be a 3-channel color image}
+\cvarg{CV\_LOAD\_IMAGE\_GRAYSCALE}{the loaded image is forced to be grayscale}
+\cvarg{CV\_LOAD\_IMAGE\_UNCHANGED}{the loaded image will be loaded as is.}
+\end{description}
+}
+\end{description}
+
+The function \texttt{cvLoadImageM} loads an image from the specified file and returns the pointer to the loaded image.
+urrently the following file formats are supported:
 \begin{itemize}
 \item Windows bitmaps - BMP, DIB
 \item JPEG files - JPEG, JPG, JPE
