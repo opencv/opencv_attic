@@ -345,10 +345,10 @@ cvRQDecomp3x3( const CvMat *matrixM, CvMat *matrixR, CvMat *matrixQ,
                CvMat *matrixQx, CvMat *matrixQy, CvMat *matrixQz,
                CvPoint3D64f *eulerAngles)
 {
-    double _M[3][3], _R[3][3], _Q[3][3];
-    CvMat M = cvMat(3, 3, CV_64F, _M);
-    CvMat R = cvMat(3, 3, CV_64F, _R);
-    CvMat Q = cvMat(3, 3, CV_64F, _Q);
+    double matM[3][3], matR[3][3], matQ[3][3];
+    CvMat M = cvMat(3, 3, CV_64F, matM);
+    CvMat R = cvMat(3, 3, CV_64F, matR);
+    CvMat Q = cvMat(3, 3, CV_64F, matQ);
     double z, c, s;
 
     /* Validate parameters. */
@@ -364,8 +364,8 @@ cvRQDecomp3x3( const CvMat *matrixM, CvMat *matrixR, CvMat *matrixQ,
     Qx = ( 0  c  s ), c = m33/sqrt(m32^2 + m33^2), s = m32/sqrt(m32^2 + m33^2)
          ( 0 -s  c )
     */
-    s = _M[2][1];
-    c = _M[2][2];
+    s = matM[2][1];
+    c = matM[2][2];
     z = 1./sqrt(c * c + s * s + DBL_EPSILON);
     c *= z;
     s *= z;
@@ -374,8 +374,8 @@ cvRQDecomp3x3( const CvMat *matrixM, CvMat *matrixR, CvMat *matrixQ,
     CvMat Qx = cvMat(3, 3, CV_64F, _Qx);
 
     cvMatMul(&M, &Qx, &R);
-    assert(fabs(_R[2][1]) < FLT_EPSILON);
-    _R[2][1] = 0;
+    assert(fabs(matR[2][1]) < FLT_EPSILON);
+    matR[2][1] = 0;
 
     /* Find Givens rotation for y axis. */
     /*
@@ -383,8 +383,8 @@ cvRQDecomp3x3( const CvMat *matrixM, CvMat *matrixR, CvMat *matrixQ,
     Qy = ( 0  1  0 ), c = m33/sqrt(m31^2 + m33^2), s = m31/sqrt(m31^2 + m33^2)
          (-s  0  c )
     */
-    s = _R[2][0];
-    c = _R[2][2];
+    s = matR[2][0];
+    c = matR[2][2];
     z = 1./sqrt(c * c + s * s + DBL_EPSILON);
     c *= z;
     s *= z;
@@ -393,8 +393,8 @@ cvRQDecomp3x3( const CvMat *matrixM, CvMat *matrixR, CvMat *matrixQ,
     CvMat Qy = cvMat(3, 3, CV_64F, _Qy);
     cvMatMul(&R, &Qy, &M);
 
-    assert(fabs(_M[2][0]) < FLT_EPSILON);
-    _M[2][0] = 0;
+    assert(fabs(matM[2][0]) < FLT_EPSILON);
+    matM[2][0] = 0;
 
     /* Find Givens rotation for z axis. */
     /*
@@ -403,8 +403,8 @@ cvRQDecomp3x3( const CvMat *matrixM, CvMat *matrixR, CvMat *matrixQ,
          ( 0  0  1 )
     */
 
-    s = _M[1][0];
-    c = _M[1][1];
+    s = matM[1][0];
+    c = matM[1][1];
     z = 1./sqrt(c * c + s * s + DBL_EPSILON);
     c *= z;
     s *= z;
@@ -413,23 +413,23 @@ cvRQDecomp3x3( const CvMat *matrixM, CvMat *matrixR, CvMat *matrixQ,
     CvMat Qz = cvMat(3, 3, CV_64F, _Qz);
 
     cvMatMul(&M, &Qz, &R);
-    assert(fabs(_R[1][0]) < FLT_EPSILON);
-    _R[1][0] = 0;
+    assert(fabs(matR[1][0]) < FLT_EPSILON);
+    matR[1][0] = 0;
 
     // Solve the decomposition ambiguity.
     // Diagonal entries of R, except the last one, shall be positive.
     // Further rotate R by 180 degree if necessary
-    if( _R[0][0] < 0 )
+    if( matR[0][0] < 0 )
     {
-        if( _R[1][1] < 0 )
+        if( matR[1][1] < 0 )
         {
             // rotate around z for 180 degree, i.e. a rotation matrix of
             // [-1,  0,  0],
             // [ 0, -1,  0],
             // [ 0,  0,  1]
-            _R[0][0] *= -1;
-            _R[0][1] *= -1;
-            _R[1][1] *= -1;
+            matR[0][0] *= -1;
+            matR[0][1] *= -1;
+            matR[1][1] *= -1;
 
             _Qz[0][0] *= -1;
             _Qz[0][1] *= -1;
@@ -442,10 +442,10 @@ cvRQDecomp3x3( const CvMat *matrixM, CvMat *matrixR, CvMat *matrixQ,
             // [-1,  0,  0],
             // [ 0,  1,  0],
             // [ 0,  0, -1]
-            _R[0][0] *= -1;
-            _R[0][2] *= -1;
-            _R[1][2] *= -1;
-            _R[2][2] *= -1;
+            matR[0][0] *= -1;
+            matR[0][2] *= -1;
+            matR[1][2] *= -1;
+            matR[2][2] *= -1;
 
             cvTranspose( &Qz, &Qz );
 
@@ -455,7 +455,7 @@ cvRQDecomp3x3( const CvMat *matrixM, CvMat *matrixR, CvMat *matrixQ,
             _Qy[2][2] *= -1;
         }
     }
-    else if( _R[1][1] < 0 )
+    else if( matR[1][1] < 0 )
     {
         // ??? for some reason, we never get here ???
 
@@ -463,11 +463,11 @@ cvRQDecomp3x3( const CvMat *matrixM, CvMat *matrixR, CvMat *matrixQ,
         // [ 1,  0,  0],
         // [ 0, -1,  0],
         // [ 0,  0, -1]
-        _R[0][1] *= -1;
-        _R[0][2] *= -1;
-        _R[1][1] *= -1;
-        _R[1][2] *= -1;
-        _R[2][2] *= -1;
+        matR[0][1] *= -1;
+        matR[0][2] *= -1;
+        matR[1][1] *= -1;
+        matR[1][2] *= -1;
+        matR[2][2] *= -1;
 
         cvTranspose( &Qz, &Qz );
         cvTranspose( &Qy, &Qy );
@@ -563,8 +563,8 @@ void RQDecomp3x3( const Mat& M, Mat& R, Mat& Q )
     R.create(3, 3, M.type());
     Q.create(3, 3, M.type());
 
-    CvMat _M = M, _R = R, _Q = Q;
-    cvRQDecomp3x3(&_M, &_R, &_Q, 0, 0, 0, 0);
+    CvMat matM = M, matR = R, matQ = Q;
+    cvRQDecomp3x3(&matM, &matR, &matQ, 0, 0, 0, 0);
 }
 
 Vec3d RQDecomp3x3( const Mat& M, Mat& R, Mat& Q,
@@ -574,8 +574,8 @@ Vec3d RQDecomp3x3( const Mat& M, Mat& R, Mat& Q,
     Q.create(3, 3, M.type());
     Vec3d eulerAngles;
 
-    CvMat _M = M, _R = R, _Q = Q, _Qx = Qx, _Qy = Qy, _Qz = Qz;
-    cvRQDecomp3x3(&_M, &_R, &_Q, &_Qx, &_Qy, &_Qz, (CvPoint3D64f*)&eulerAngles[0]);
+    CvMat matM = M, matR = R, matQ = Q, _Qx = Qx, _Qy = Qy, _Qz = Qz;
+    cvRQDecomp3x3(&matM, &matR, &matQ, &_Qx, &_Qy, &_Qz, (CvPoint3D64f*)&eulerAngles[0]);
     return eulerAngles;
 }
 

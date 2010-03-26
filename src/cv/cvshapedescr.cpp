@@ -769,7 +769,7 @@ icvFitEllipse_F( CvSeq* points, CvBox2D* box )
     CvSeqReader reader;
     int is_float = CV_SEQ_ELTYPE(points) == CV_32FC2;
 
-    CvMat _S = cvMat(6,6,CV_64F,S), _C = cvMat(6,6,CV_64F,C), _T = cvMat(6,6,CV_64F,T);
+    CvMat matS = cvMat(6,6,CV_64F,S), matC = cvMat(6,6,CV_64F,C), matT = cvMat(6,6,CV_64F,T);
     CvMat _EIGVECS = cvMat(6,6,CV_64F,eigenvectors), _EIGVALS = cvMat(6,1,CV_64F,eigenvalues);
 
     /* create matrix D of  input points */
@@ -823,8 +823,8 @@ icvFitEllipse_F( CvSeq* points, CvBox2D* box )
     }
 
     // S = D^t*D
-    cvMulTransposed( D, &_S, 1 );
-    cvSVD( &_S, &_EIGVALS, &_EIGVECS, 0, CV_SVD_MODIFY_A + CV_SVD_U_T );
+    cvMulTransposed( D, &matS, 1 );
+    cvSVD( &matS, &_EIGVALS, &_EIGVECS, 0, CV_SVD_MODIFY_A + CV_SVD_U_T );
 
     for( i = 0; i < 6; i++ )
     {
@@ -835,20 +835,20 @@ icvFitEllipse_F( CvSeq* points, CvBox2D* box )
     }
 
     // C = Q^-1 = transp(INVEIGV) * INVEIGV
-    cvMulTransposed( &_EIGVECS, &_C, 1 );
+    cvMulTransposed( &_EIGVECS, &matC, 1 );
     
-    cvZero( &_S );
+    cvZero( &matS );
     S[2] = 2.;
     S[7] = -1.;
     S[12] = 2.;
 
     // S = Q^-1*S*Q^-1
-    cvMatMul( &_C, &_S, &_T );
-    cvMatMul( &_T, &_C, &_S );
+    cvMatMul( &matC, &matS, &matT );
+    cvMatMul( &matT, &matC, &matS );
 
     // and find its eigenvalues and vectors too
-    //cvSVD( &_S, &_EIGVALS, &_EIGVECS, 0, CV_SVD_MODIFY_A + CV_SVD_U_T );
-    cvEigenVV( &_S, &_EIGVECS, &_EIGVALS, 0 );
+    //cvSVD( &matS, &_EIGVALS, &_EIGVECS, 0, CV_SVD_MODIFY_A + CV_SVD_U_T );
+    cvEigenVV( &matS, &_EIGVECS, &_EIGVALS, 0 );
 
     for( i = 0; i < 3; i++ )
         if( eigenvalues[i] > 0 )
@@ -864,9 +864,9 @@ icvFitEllipse_F( CvSeq* points, CvBox2D* box )
 
     // now find truthful eigenvector
     _EIGVECS = cvMat( 6, 1, CV_64F, eigenvectors + 6*i );
-    _T = cvMat( 6, 1, CV_64F, T );
+    matT = cvMat( 6, 1, CV_64F, T );
     // Q^-1*eigenvecs[0]
-    cvMatMul( &_C, &_EIGVECS, &_T );
+    cvMatMul( &matC, &_EIGVECS, &matT );
     
     // extract vector components
     a = T[0]; b = T[1]; c = T[2]; d = T[3]; e = T[4]; f = T[5];
@@ -930,10 +930,10 @@ icvFitEllipse_F( CvSeq* points, CvBox2D* box )
     S[1] = S[2] = b * 0.5;
     S[3] = c;
 
-    _S = cvMat( 2, 2, CV_64F, S );
+    matS = cvMat( 2, 2, CV_64F, S );
     _EIGVECS = cvMat( 2, 2, CV_64F, eigenvectors );
     _EIGVALS = cvMat( 1, 2, CV_64F, eigenvalues );
-    cvSVD( &_S, &_EIGVALS, &_EIGVECS, 0, CV_SVD_MODIFY_A + CV_SVD_U_T );
+    cvSVD( &matS, &_EIGVALS, &_EIGVECS, 0, CV_SVD_MODIFY_A + CV_SVD_U_T );
 
     // exteract axis length from eigenvectors
     box->size.width = (float)(2./sqrt(eigenvalues[0]));

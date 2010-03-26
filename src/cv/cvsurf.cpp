@@ -176,7 +176,7 @@ icvInterpolateKeypoint( float N9[3][9], int dx, int dy, int ds, CvSURFPoint *poi
 {
     int solve_ok;
     float A[9], x[3], b[3];
-    CvMat _A = cvMat(3, 3, CV_32F, A);
+    CvMat matA = cvMat(3, 3, CV_32F, A);
     CvMat _x = cvMat(3, 1, CV_32F, x);                
     CvMat _b = cvMat(3, 1, CV_32F, b);
 
@@ -194,7 +194,7 @@ icvInterpolateKeypoint( float N9[3][9], int dx, int dy, int ds, CvSURFPoint *poi
     A[7] = A[5];                                    /* 2nd deriv s, y */
     A[8] = N9[0][4]-2*N9[1][4]+N9[2][4];            /* 2nd deriv s, s */
 
-    solve_ok = cvSolve( &_A, &_b, &_x );
+    solve_ok = cvSolve( &matA, &_b, &_x );
     if( solve_ok )
     {
         point->pt.x += x[0]*dx;
@@ -425,8 +425,8 @@ struct SURFInvoker
         uchar PATCH[PATCH_SZ+1][PATCH_SZ+1];
         float DX[PATCH_SZ][PATCH_SZ], DY[PATCH_SZ][PATCH_SZ];
         
-        CvMat _X = cvMat(1, max_ori_samples, CV_32F, X);
-        CvMat _Y = cvMat(1, max_ori_samples, CV_32F, Y);
+        CvMat matX = cvMat(1, max_ori_samples, CV_32F, X);
+        CvMat matY = cvMat(1, max_ori_samples, CV_32F, Y);
         CvMat _angle = cvMat(1, max_ori_samples, CV_32F, angle);
         CvMat _patch = cvMat(PATCH_SZ+1, PATCH_SZ+1, CV_8U, PATCH);
         
@@ -495,8 +495,8 @@ struct SURFInvoker
                 kp->size = -1;
                 continue;
             }
-            _X.cols = _Y.cols = _angle.cols = nangle;
-            cvCartToPolar( &_X, &_Y, 0, &_angle, 1 );
+            matX.cols = matY.cols = _angle.cols = nangle;
+            cvCartToPolar( &matX, &matY, 0, &_angle, 1 );
             
             float bestx = 0, besty = 0, descriptor_mod = 0;
             for( i = 0; i < 360; i += ORI_SEARCH_INC )
@@ -732,8 +732,8 @@ cvExtractSURF( const CvArr* _img, const CvArr* _mask,
     }
 
     /* Coordinates and weights of samples used to calculate orientation */
-    cv::Mat _G = cv::getGaussianKernel( 2*ORI_RADIUS+1, ORI_SIGMA, CV_32F );
-    const float* G = (const float*)_G.data;
+    cv::Mat matG = cv::getGaussianKernel( 2*ORI_RADIUS+1, ORI_SIGMA, CV_32F );
+    const float* G = (const float*)matG.data;
     
     for( i = -ORI_RADIUS; i <= ORI_RADIUS; i++ )
     {

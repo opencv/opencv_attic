@@ -47,7 +47,7 @@ int cvTsRodrigues( const CvMat* src, CvMat* dst, CvMat* jacobian )
     int i;
     float Jf[27];
     double J[27];
-    CvMat _Jf, _J = cvMat( 3, 9, CV_64F, J );
+    CvMat _Jf, matJ = cvMat( 3, 9, CV_64F, J );
 
     depth = CV_MAT_DEPTH(src->type);
 
@@ -100,13 +100,13 @@ int cvTsRodrigues( const CvMat* src, CvMat* dst, CvMat* jacobian )
             };
             double R[9];
             CvMat _omegav = cvMat(3, 3, CV_64F, omegav);
-            CvMat _A = cvMat(3, 3, CV_64F, A);
-            CvMat _R = cvMat(3, 3, CV_64F, R);
+            CvMat matA = cvMat(3, 3, CV_64F, A);
+            CvMat matR = cvMat(3, 3, CV_64F, R);
 
-            cvSetIdentity( &_R, cvRealScalar(alpha) );
-            cvScaleAdd( &_omegav, cvRealScalar(beta), &_R, &_R );
-            cvScaleAdd( &_A, cvRealScalar(gamma), &_R, &_R );
-            cvConvert( &_R, dst );
+            cvSetIdentity( &matR, cvRealScalar(alpha) );
+            cvScaleAdd( &_omegav, cvRealScalar(beta), &matR, &matR );
+            cvScaleAdd( &matA, cvRealScalar(gamma), &matR, &matR );
+            cvConvert( &matR, dst );
 
             if( jacobian )
             {
@@ -173,8 +173,8 @@ int cvTsRodrigues( const CvMat* src, CvMat* dst, CvMat* jacobian )
                 cvTranspose( &_omegav, &_dRdm1_part );
 
                 cvGetCol( &_dRdm1, &_dRdm1_part, 2 );
-                cvReshape( &_A, &_A, 1, 1 );
-                cvTranspose( &_A, &_dRdm1_part );
+                cvReshape( &matA, &matA, 1, 1 );
+                cvTranspose( &matA, &_dRdm1_part );
 
                 cvGetSubRect( &_dRdm1, &_dRdm1_part, cvRect(3,0,9,9) );
                 cvSetIdentity( &_dRdm1_part, cvScalarAll(beta) );
@@ -182,14 +182,14 @@ int cvTsRodrigues( const CvMat* src, CvMat* dst, CvMat* jacobian )
                 cvGetSubRect( &_dRdm1, &_dRdm1_part, cvRect(12,0,9,9) );
                 cvSetIdentity( &_dRdm1_part, cvScalarAll(gamma) );
 
-                _J = cvMat( 9, 3, CV_64FC1, J );
+                matJ = cvMat( 9, 3, CV_64FC1, J );
 
                 cvMatMul( &_dRdm1, &_dm1dm2, &_t0 );
                 cvMatMul( &_t0, &_dm2dm3, &_t1 );
-                cvMatMul( &_t1, &_dm3din, &_J );
+                cvMatMul( &_t1, &_dm3din, &matJ );
 
                 _t0 = cvMat( 3, 9, CV_64FC1, t0 );
-                cvTranspose( &_J, &_t0 );
+                cvTranspose( &matJ, &_t0 );
 
                 for( i = 0; i < 3; i++ )
                 {
@@ -197,7 +197,7 @@ int cvTsRodrigues( const CvMat* src, CvMat* dst, CvMat* jacobian )
                     cvTranspose( &_t1, &_t1 );
                 }
 
-                cvTranspose( &_t0, &_J );
+                cvTranspose( &_t0, &matJ );
             }
         }
     }
@@ -205,26 +205,26 @@ int cvTsRodrigues( const CvMat* src, CvMat* dst, CvMat* jacobian )
     {
         double R[9], A[9], I[9], r[3], W[3], U[9], V[9];
         double tr, alpha, beta, theta;
-        CvMat _R = cvMat( 3, 3, CV_64F, R );
-        CvMat _A = cvMat( 3, 3, CV_64F, A );
-        CvMat _I = cvMat( 3, 3, CV_64F, I );
+        CvMat matR = cvMat( 3, 3, CV_64F, R );
+        CvMat matA = cvMat( 3, 3, CV_64F, A );
+        CvMat matI = cvMat( 3, 3, CV_64F, I );
         CvMat _r = cvMat( dst->rows, dst->cols, CV_MAKETYPE(CV_64F, CV_MAT_CN(dst->type)), r );
-        CvMat _W = cvMat( 1, 3, CV_64F, W );
-        CvMat _U = cvMat( 3, 3, CV_64F, U );
-        CvMat _V = cvMat( 3, 3, CV_64F, V );
+        CvMat matW = cvMat( 1, 3, CV_64F, W );
+        CvMat matU = cvMat( 3, 3, CV_64F, U );
+        CvMat matV = cvMat( 3, 3, CV_64F, V );
 
-        cvConvert( src, &_R );
-        cvSVD( &_R, &_W, &_U, &_V, CV_SVD_MODIFY_A + CV_SVD_U_T + CV_SVD_V_T );
-        cvGEMM( &_U, &_V, 1, 0, 0, &_R, CV_GEMM_A_T );
+        cvConvert( src, &matR );
+        cvSVD( &matR, &matW, &matU, &matV, CV_SVD_MODIFY_A + CV_SVD_U_T + CV_SVD_V_T );
+        cvGEMM( &matU, &matV, 1, 0, 0, &matR, CV_GEMM_A_T );
 
-        cvMulTransposed( &_R, &_A, 0 );
-        cvSetIdentity( &_I );
+        cvMulTransposed( &matR, &matA, 0 );
+        cvSetIdentity( &matI );
 
-        if( cvNorm( &_A, &_I, CV_C ) > 1e-3 ||
-            fabs( cvDet(&_R) - 1 ) > 1e-3 )
+        if( cvNorm( &matA, &matI, CV_C ) > 1e-3 ||
+            fabs( cvDet(&matR) - 1 ) > 1e-3 )
             return 0;
 
-        tr = (cvTrace(&_R).val[0] - 1.)*0.5;
+        tr = (cvTrace(&matR).val[0] - 1.)*0.5;
         tr = tr > 1. ? 1. : tr < -1. ? -1. : tr;
         theta = acos(tr);
         alpha = cos(theta);
@@ -282,7 +282,7 @@ int cvTsRodrigues( const CvMat* src, CvMat* dst, CvMat* jacobian )
                 CvMat _t0 = cvMat( 3, 5, CV_64FC1, t0 );
 
                 cvMatMul( &_domegadvar2, &_dvar2dvar, &_t0 );
-                cvMatMul( &_t0, &_dvardR, &_J );
+                cvMatMul( &_t0, &_dvardR, &matJ );
             }
         }
         else if( tr > 0 )
@@ -325,19 +325,19 @@ int cvTsRodrigues( const CvMat* src, CvMat* dst, CvMat* jacobian )
     {
         if( depth == CV_32F )
         {
-            if( jacobian->rows == _J.rows )
-                cvConvert( &_J, jacobian );
+            if( jacobian->rows == matJ.rows )
+                cvConvert( &matJ, jacobian );
             else
             {
-                _Jf = cvMat( _J.rows, _J.cols, CV_32FC1, Jf );
-                cvConvert( &_J, &_Jf );
+                _Jf = cvMat( matJ.rows, matJ.cols, CV_32FC1, Jf );
+                cvConvert( &matJ, &_Jf );
                 cvTranspose( &_Jf, jacobian );
             }
         }
-        else if( jacobian->rows == _J.rows )
-            cvCopy( &_J, jacobian );
+        else if( jacobian->rows == matJ.rows )
+            cvCopy( &matJ, jacobian );
         else
-            cvTranspose( &_J, jacobian );
+            cvTranspose( &matJ, jacobian );
     }
 
     return 1;

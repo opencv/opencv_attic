@@ -168,7 +168,7 @@ protected:
 	void run_func();
 	void cvTsDistortPoints(const CvMat* _src, CvMat* _dst, const CvMat* _cameraMatrix,
 		const CvMat* _distCoeffs,
-		const CvMat* _R, const CvMat* _P);
+		const CvMat* matR, const CvMat* matP);
 
 private:
 	bool useCPlus;
@@ -501,18 +501,18 @@ void CV_UndistortPointsTest::run_func()
 
 void CV_UndistortPointsTest::cvTsDistortPoints(const CvMat* _src, CvMat* _dst, const CvMat* _cameraMatrix,
 											   const CvMat* _distCoeffs,
-											   const CvMat* _R, const CvMat* _P)
+											   const CvMat* matR, const CvMat* matP)
 {
 	double a[9];
 
 	CvMat* __P;
-	if ((!_P)||(_P->cols == 3))
+	if ((!matP)||(matP->cols == 3))
 		__P = cvCreateMat(3,3,CV_64F);
 	else
 		__P = cvCreateMat(3,4,CV_64F);
-	if (_P)
+	if (matP)
 	{
-		cvTsConvert(_P,__P);
+		cvTsConvert(matP,__P);
 	}
 	else
 	{
@@ -522,9 +522,9 @@ void CV_UndistortPointsTest::cvTsDistortPoints(const CvMat* _src, CvMat* _dst, c
 		__P->data.db[8] = 1;
 	}
 	CvMat* __R = cvCreateMat(3,3,CV_64F);;
-	if (_R)
+	if (matR)
 	{
-		cvCopy(_R,__R);
+		cvCopy(matR,__R);
 	}
 	else
 	{

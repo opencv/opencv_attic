@@ -86,8 +86,8 @@ int CvHomographyEstimator::runKernel( const CvMat* m1, const CvMat* m2, CvMat* H
 
     double LtL[9][9], W[9][9], V[9][9];
     CvMat _LtL = cvMat( 9, 9, CV_64F, LtL );
-    CvMat _W = cvMat( 9, 9, CV_64F, W );
-    CvMat _V = cvMat( 9, 9, CV_64F, V );
+    CvMat matW = cvMat( 9, 9, CV_64F, W );
+    CvMat matV = cvMat( 9, 9, CV_64F, V );
     CvMat _H0 = cvMat( 3, 3, CV_64F, V[8] );
     CvMat _Htemp = cvMat( 3, 3, CV_64F, V[7] );
     CvPoint2D64f cM={0,0}, cm={0,0}, sM={0,0}, sm={0,0};
@@ -134,8 +134,8 @@ int CvHomographyEstimator::runKernel( const CvMat* m1, const CvMat* m2, CvMat* H
     }
     cvCompleteSymm( &_LtL );
 
-    //cvSVD( &_LtL, &_W, 0, &_V, CV_SVD_MODIFY_A + CV_SVD_V_T );
-    cvEigenVV( &_LtL, &_V, &_W );
+    //cvSVD( &_LtL, &matW, 0, &matV, CV_SVD_MODIFY_A + CV_SVD_V_T );
+    cvEigenVV( &_LtL, &matV, &matW );
     cvMatMul( &_invHnorm, &_H0, &_Htemp );
     cvMatMul( &_Htemp, &_Hnorm2, &_H0 );
     cvConvertScale( &_H0, H, 1./_H0.data.db[8] );
@@ -224,7 +224,7 @@ cvFindHomography( const CvMat* objectPoints, const CvMat* imagePoints,
     Ptr<CvMat> m, M, tempMask;
 
     double H[9];
-    CvMat _H = cvMat( 3, 3, CV_64FC1, H );
+    CvMat matH = cvMat( 3, 3, CV_64FC1, H );
     int count;
 
     CV_Assert( CV_IS_MAT(imagePoints) && CV_IS_MAT(objectPoints) );
@@ -254,22 +254,22 @@ cvFindHomography( const CvMat* objectPoints, const CvMat* imagePoints,
     if( count == 4 )
         method = 0;
     if( method == CV_LMEDS )
-        result = estimator.runLMeDS( M, m, &_H, tempMask, confidence, maxIters );
+        result = estimator.runLMeDS( M, m, &matH, tempMask, confidence, maxIters );
     else if( method == CV_RANSAC )
-        result = estimator.runRANSAC( M, m, &_H, tempMask, ransacReprojThreshold, confidence, maxIters);
+        result = estimator.runRANSAC( M, m, &matH, tempMask, ransacReprojThreshold, confidence, maxIters);
     else
-        result = estimator.runKernel( M, m, &_H ) > 0;
+        result = estimator.runKernel( M, m, &matH ) > 0;
 
     if( result && count > 4 )
     {
         icvCompressPoints( (CvPoint2D64f*)M->data.ptr, tempMask->data.ptr, 1, count );
         count = icvCompressPoints( (CvPoint2D64f*)m->data.ptr, tempMask->data.ptr, 1, count );
         M->cols = m->cols = count;
-        estimator.refine( M, m, &_H, 10 );
+        estimator.refine( M, m, &matH, 10 );
     }
 
     if( result )
-        cvConvert( &_H, __H );
+        cvConvert( &matH, __H );
 
     return (int)result;
 }
@@ -1049,13 +1049,13 @@ static Mat _findHomography( const Mat& points1, const Mat& points2,
     
     Mat H(3, 3, CV_64F);
     CvMat _pt1 = Mat(points1), _pt2 = Mat(points2);
-    CvMat _H = H, _mask, *pmask = 0;
+    CvMat matH = H, _mask, *pmask = 0;
     if( mask )
     {
         mask->resize(points1.cols*points1.rows*points1.channels()/2);
         pmask = &(_mask = cvMat(1, (int)mask->size(), CV_8U, (void*)&(*mask)[0]));
     }
-    bool ok = cvFindHomography( &_pt1, &_pt2, &_H, method, ransacReprojThreshold, pmask ) > 0;
+    bool ok = cvFindHomography( &_pt1, &_pt2, &matH, method, ransacReprojThreshold, pmask ) > 0;
     if( !ok )
         H = Scalar(0);
     return H;
@@ -1074,13 +1074,13 @@ static Mat _findFundamentalMat( const Mat& points1, const Mat& points2,
     
     Mat F(3, 3, CV_64F);
     CvMat _pt1 = Mat(points1), _pt2 = Mat(points2);
-    CvMat _F = F, _mask, *pmask = 0;
+    CvMat matF = F, _mask, *pmask = 0;
     if( mask )
     {
         mask->resize(points1.cols*points1.rows*points1.channels()/2);
         pmask = &(_mask = cvMat(1, (int)mask->size(), CV_8U, (void*)&(*mask)[0]));
     }
-    int n = cvFindFundamentalMat( &_pt1, &_pt2, &_F, method, param1, param2, pmask );
+    int n = cvFindFundamentalMat( &_pt1, &_pt2, &matF, method, param1, param2, pmask );
     if( n <= 0 )
         F = Scalar(0);
     return F;
@@ -1124,8 +1124,8 @@ void cv::computeCorrespondEpilines( const Mat& points, int whichImage,
                points.cols*points.channels() == 2));
     
     lines.resize(points.cols*points.rows*points.channels()/2);
-    CvMat _points = points, _lines = Mat(lines), _F = F;
-    cvComputeCorrespondEpilines(&_points, whichImage, &_F, &_lines);
+    CvMat _points = points, _lines = Mat(lines), matF = F;
+    cvComputeCorrespondEpilines(&_points, whichImage, &matF, &_lines);
 }
 
 void cv::convertPointsHomogeneous( const Mat& src, vector<Point3f>& dst )

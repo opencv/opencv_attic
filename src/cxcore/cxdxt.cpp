@@ -55,21 +55,6 @@ namespace cv
 
 #define CV_MAX_LOCAL_DFT_SIZE  (1 << 15)
 
-static const uchar log2tab[] = { 0, 0, 1, 0, 2, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0 };
-static int log2( int n )
-{
-    int m = 0;
-    int f = (n >= (1 << 16))*16;
-    n >>= f;
-    m += f;
-    f = (n >= (1 << 8))*8;
-    n >>= f;
-    m += f;
-    f = (n >= (1 << 4))*4;
-    n >>= f;
-    return m + f + log2tab[n];
-}
-
 static unsigned char bitrevTab[] =
 {
   0x00,0x80,0x40,0xc0,0x20,0xa0,0x60,0xe0,0x10,0x90,0x50,0xd0,0x30,0xb0,0x70,0xf0,
@@ -230,8 +215,8 @@ DFTInit( int n0, int nf, int* factors, int* itab, int elem_size, void* _wave, in
         if( (n & 1) == 0 )
         {
             int a = radix[1], na2 = n*a>>1, na4 = na2 >> 1;
-            m = log2(n);
-        
+            for( m = 0; (unsigned)(1 << m) < (unsigned)n; m++ )
+                ;
             if( n <= 2  )
             {
                 itab[0] = 0;
@@ -2138,7 +2123,9 @@ DCTInit( int n, int elem_size, void* _wave, int inv )
 
     if( (n & (n - 1)) == 0 )
     {
-        int m = log2(n);
+        int m;
+        for( m = 0; (unsigned)(1 << m) < (unsigned)n; m++ )
+            ;
         scale = (!inv ? 2 : 1)*DctScale[m];
         w1.re = DFTTab[m+2][0];
         w1.im = -DFTTab[m+2][1];

@@ -7,7 +7,6 @@
 #include <vector>
 using namespace std;
 
-#define M_PI CV_PI 
 // Number of training points (set to -1 to use all points)
 const int n_points = 30;
 

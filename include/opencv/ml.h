@@ -349,7 +349,7 @@ struct CV_EXPORTS CvSVMParams
     CvSVMParams();
     CvSVMParams( int _svm_type, int _kernel_type,
                  double _degree, double _gamma, double _coef0,
-                 double _C, double _nu, double _p,
+                 double Cvalue, double _nu, double _p,
                  CvMat* _class_weights, CvTermCriteria _term_crit );
 
     int         svm_type;

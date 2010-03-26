@@ -738,12 +738,12 @@ template<typename Real> static inline Real hypot(Real a, Real b)
 }
 
     
-template<typename Real> bool jacobi(const Mat& _S0, Mat& _e, Mat& _E, bool computeEvects, Real eps)
+template<typename Real> bool jacobi(const Mat& _S0, Mat& _e, Mat& matE, bool computeEvects, Real eps)
 {
     int n = _S0.cols, i, j, k, m;
     
     if( computeEvects )
-        _E = Mat::eye(n, n, _S0.type());
+        matE = Mat::eye(n, n, _S0.type());
     
     int iters, maxIters = n*n*30;
     
@@ -754,15 +754,15 @@ template<typename Real> bool jacobi(const Mat& _S0, Mat& _e, Mat& _E, bool compu
     int* indR = (int*)(maxSC + n);
     int* indC = indR + n;
     
-    Mat _S(_S0.size(), _S0.type(), S);
-    _S0.copyTo(_S);
+    Mat matS(_S0.size(), _S0.type(), S);
+    _S0.copyTo(matS);
     
     Real mv;
-    Real* E = (Real*)_E.data;
+    Real* E = (Real*)matE.data;
     Real* e = (Real*)_e.data;
-    int Sstep = _S.step/sizeof(Real);
+    int Sstep = matS.step/sizeof(Real);
     int estep = _e.rows == 1 ? 1 : _e.step/sizeof(Real);
-    int Estep = _E.step/sizeof(Real);
+    int Estep = matE.step/sizeof(Real);
     
     for( k = 0; k < n; k++ )
     {
