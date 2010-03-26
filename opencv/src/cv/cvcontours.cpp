@@ -1472,7 +1472,7 @@ cvFindContours( void*  img,  CvMemStorage*  storage,
 namespace cv
 {
 static void
-_findContours( const Mat& image, vector<vector<Point> >& contours,
+_findContours( Mat& image, vector<vector<Point> >& contours,
                vector<Vec4i>* hierarchy, int mode, int method, Point offset )
 {
     MemStorage storage(cvCreateMemStorage());
@@ -1514,13 +1514,13 @@ _findContours( const Mat& image, vector<vector<Point> >& contours,
 }
 }
 
-void cv::findContours( const Mat& image, vector<vector<Point> >& contours,
+void cv::findContours( Mat& image, vector<vector<Point> >& contours,
                    vector<Vec4i>& hierarchy, int mode, int method, Point offset )
 {
     _findContours(image, contours, &hierarchy, mode, method, offset);
 }
 
-void cv::findContours( const Mat& image, vector<vector<Point> >& contours,
+void cv::findContours( Mat& image, vector<vector<Point> >& contours,
                    int mode, int method, Point offset)
 {
     _findContours(image, contours, 0, mode, method, offset);
