@@ -51,23 +51,29 @@ int main(int argc, char** argv)
     vector<KeyPoint> objKeypoints, imgKeypoints;
 	PatchGenerator gen(0,256,5,true,0.8,1.2,-CV_PI/2,CV_PI/2,-CV_PI/2,CV_PI/2);
     
-    FileStorage fs("outlet_model.xml", FileStorage::READ);
+    string model_filename = format("%s_model.xml.gz", object_filename);
+    printf("Trying to load %s ...\n", model_filename.c_str());
+    FileStorage fs(model_filename, FileStorage::READ);
     if( fs.isOpened() )
     {
         detector.read(fs.getFirstTopLevelNode());
-        FileStorage fs2("outlet_model_copy.xml", FileStorage::WRITE);
-        detector.write(fs2, "outlet-detector");
+        printf("Successfully loaded %s.\n", model_filename.c_str());
     }
     else
     {
+        printf("The file not found and can not be read. Let's train the model.\n");
+        printf("Step 1. Finding the robust keypoints ...\n");
         ldetector.setVerbose(true);
         ldetector.getMostStable2D(object, objKeypoints, 100, gen);
+        printf("Done.\nStep 2. Training ferns-based planar object detector ...\n");
         detector.setVerbose(true);
     
         detector.train(objpyr, objKeypoints, patchSize.width, 100, 11, 10000, ldetector, gen);
-        if( fs.open("outlet_model.xml", FileStorage::WRITE) )
-            detector.write(fs, "outlet-detector");
+        printf("Done.\nStep 3. Saving the model to %s ...\n", model_filename.c_str());
+        if( fs.open(model_filename, FileStorage::WRITE) )
+            detector.write(fs, "ferns_model");
     }
+    printf("Now find the keypoints in the image, try recognize them and compute the homography matrix\n");
     fs.release();
         
     vector<Point2f> dst_corners;
@@ -77,7 +83,6 @@ int main(int argc, char** argv)
     cvtColor(object, part, CV_GRAY2BGR);
     part = Mat(correspond, Rect(0, object.rows, image.cols, image.rows));
     cvtColor(image, part, CV_GRAY2BGR);
-
  
     vector<int> pairs;
     Mat H;
