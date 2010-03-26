@@ -163,6 +163,7 @@ dst(I)=src(I)&value if mask(I)!=0
 
 Prior to the actual operation, the scalar is converted to the same type as that of the array(s). In the case of floating-point arrays their bit representations are used for the operation. All the arrays must have the same type, except the mask, and the same size.
 
+\ifC
 The following sample demonstrates how to calculate the absolute value of floating-point array elements by clearing the most-significant bit:
 
 \begin{lstlisting}
@@ -179,7 +180,7 @@ The code should print:
 \begin{lstlisting}
 1.0 2.0 3.0 4.0 5.0 6.0 7.0 8.0 9.0
 \end{lstlisting}
-
+\fi
 
 \cvCPyFunc{Avg}
 Calculates average (mean) of array elements.
@@ -519,9 +520,27 @@ Converts input array elements to another 8-bit unsigned integer with optional li
 \cvarg{shift}{Value added to the scaled source array elements}
 \end{description}
 
-\begin{lstlisting}
-#define cvCvtScaleAbs cvConvertScaleAbs
-\end{lstlisting}
+The function is similar to \cvCPyCross{ConvertScale}, but it stores absolute values of the conversion results:
+
+\[
+\texttt{dst}(I) = |\texttt{scale} \texttt{src}(I) + (\texttt{shift}_0,\texttt{shift}_1,...)|
+\]
+
+The function supports only destination arrays of 8u (8-bit unsigned integers) type; for other types the function can be emulated by a combination of \cvCPyCross{ConvertScale} and \cvCPyCross{Abs} functions.
+
+\cvCPyFunc{CvtScaleAbs}
+Converts input array elements to another 8-bit unsigned integer with optional linear transformation.
+
+\cvdefC{void cvCvtScaleAbs(const CvArr* src, CvArr* dst, double scale=1, double shift=0);}
+\cvdefPy{CvtScaleAbs(src,dst,scale=1.0,shift=0.0)-> None}
+
+\begin{description}
+\cvarg{src}{Source array}
+\cvarg{dst}{Destination array (should have 8u depth)}
+\cvarg{scale}{ScaleAbs factor}
+\cvarg{shift}{Value added to the scaled source array elements}
+\end{description}
+
 
 
 The function is similar to \cvCPyCross{ConvertScale}, but it stores absolute values of the conversion results:
@@ -603,12 +622,13 @@ Creates an image header and allocates the image data.
 \cvarg{channels}{Number of channels per pixel. See \cross{IplImage} for details. This function only creates images with interleaved channels.}
 \end{description}
 
+\ifC
 This call is a shortened form of
 \begin{lstlisting}
 header = cvCreateImageHeader(size, depth, channels);
 cvCreateData(header);
 \end{lstlisting}
-
+\fi
 
 \cvCPyFunc{CreateImageHeader}
 Creates an image header but does not allocate the image data.
@@ -622,6 +642,7 @@ Creates an image header but does not allocate the image data.
 \cvarg{channels}{Number of channels (see \cvCPyCross{CreateImage})}
 \end{description}
 
+\ifC
 This call is an analogue of
 \begin{lstlisting}
 hdr=iplCreateImageHeader(channels, 0, depth,
@@ -633,6 +654,7 @@ hdr=iplCreateImageHeader(channels, 0, depth,
                       0,0,0,0);
 \end{lstlisting}
 but it does not use IPL functions by default (see the \texttt{CV\_TURN\_ON\_IPL\_COMPATIBILITY} macro).
+\fi
 
 \cvCPyFunc{CreateMat}\label{cvCreateMat}
 Creates a matrix header and allocates the matrix data. 
@@ -646,12 +668,14 @@ Creates a matrix header and allocates the matrix data.
 \cvarg{type}{The type of the matrix elements in the form \texttt{CV\_<bit depth><S|U|F>C<number of channels>}, where S=signed, U=unsigned, F=float. For example, CV\_8UC1 means the elements are 8-bit unsigned and the there is 1 channel, and CV\_32SC2 means the elements are 32-bit signed and there are 2 channels.}
 \end{description}
 
+\ifC
 This is the concise form for:
 
 \begin{lstlisting}
 CvMat* mat = cvCreateMatHeader(rows, cols, type);
 cvCreateData(mat);
 \end{lstlisting}
+\fi
 
 \cvCPyFunc{CreateMatHeader}
 Creates a matrix header but does not allocate the matrix data.
@@ -685,10 +709,12 @@ Creates the header and allocates the data for a multi-dimensional dense array.
 
 This is a short form for:
 
+\ifC
 \begin{lstlisting}
 CvMatND* mat = cvCreateMatNDHeader(dims, sizes, type);
 cvCreateData(mat);
 \end{lstlisting}
+\fi
 
 \cvCPyFunc{CreateMatNDHeader}
 Creates a new matrix header but does not allocate the matrix data.
@@ -752,6 +778,10 @@ or:
 \texttt{dst}_3 = \texttt{src1}_1 \texttt{src2}_2 - \texttt{src1}_2 \texttt{src2}_1
 \end{array}
 \]
+
+\subsection{CvtPixToPlane}
+
+Synonym for \cross{Split}.
 
 \cvCPyFunc{DCT}
 Performs a forward or inverse Discrete Cosine transform of a 1D or 2D floating-point array.
@@ -852,6 +882,7 @@ In the case of 1D real transform the result looks like the first row of the abov
 
 Here is the example of how to compute 2D convolution using DFT.
 
+\ifC
 \begin{lstlisting}
 CvMat* A = cvCreateMat(M1, N1, CVg32F);
 CvMat* B = cvCreateMat(M2, N2, A->type);
@@ -900,6 +931,7 @@ cvGetSubRect(dftgA, &tmp, cvRect(0,0,conv->cols,conv->rows));
 
 cvCopy(&tmp, conv);
 \end{lstlisting}
+\fi
 
 \ifC
 
@@ -1073,10 +1105,6 @@ If $\texttt{dst} = \texttt{NULL}$ the flipping is done in place.}
 0 means flipping around the x-axis, positive (e.g., 1) means flipping around y-axis, and negative (e.g., -1) means flipping around both axes. See also the discussion below for the formulas:}
 \end{description}
 
-\begin{lstlisting}
-#define cvMirror cvFlip
-\end{lstlisting}
-
 The function flips the array in one of three different ways (row and column indices are 0-based):
 
 \[
@@ -1115,7 +1143,7 @@ If \texttt{allowND = False}, then the object's array must be either 2D or 3D.  I
 
 If \texttt{allowND = True}, then \texttt{fromarray} returns a single-channel \cross{CvMatND} with the same shape as the original array.
 
-For example, NumPy arrays support the array interface, so can be converted to OpenCV objects:
+For example, \href{http://numpy.scipy.org/}{NumPy} arrays support the array interface, so can be converted to OpenCV objects:
 
 \begin{lstlisting}
 >>> import cv, numpy
@@ -1843,6 +1871,10 @@ Calculates the inverse square root.
 
 The function calculates the inverse square root of the argument, and normally it is faster than \texttt{1./sqrt(value)}. If the argument is zero or negative, the result is not determined. Special values ($\pm \infty $ , NaN) are not handled.
 
+\subsection{Inv}
+
+Synonym for \cross{Invert}
+
 \cvCPyFunc{Invert}
 Finds the inverse or pseudo-inverse of a matrix.
 
@@ -1859,10 +1891,6 @@ Finds the inverse or pseudo-inverse of a matrix.
  \cvarg{CV\_SVD\_SYM}{SVD method for a symmetric positively-defined matrix}
 \end{description}}
 \end{description}
-
-\begin{lstlisting}
-#define cvInv cvInvert
-\end{lstlisting}
 
 The function inverts matrix \texttt{src1} and stores the result in \texttt{src2}.
 
@@ -2119,6 +2147,9 @@ The function calculates minimum of an array and a scalar:
 All the arrays must have a single channel, the same data type and the same size (or ROI size).
 
 
+\subsection{Mirror}
+Synonym for \cross{Flip}.
+
 \cvCPyFunc{MixChannels}
 Copies several channels from input arrays to certain channels of output arrays
 
@@ -2182,6 +2213,10 @@ BGR (i.e. with R and B swapped) and separate alpha channel image:
     cvMixChannels(&bgra, 1, out, 2, from_to, 4);
 \end{lstlisting}
 \fi
+
+\subsection{MulAddS}
+
+Synonym for \cross{ScaleAdd}.
 
 \cvCPyFunc{Mul}
 Calculates the per-element product of two arrays.
@@ -2433,14 +2468,26 @@ The function raises every element of the input array to \texttt{p}:
 
 That is, for a non-integer power exponent the absolute values of input array elements are used. However, it is possible to get true values for negative values using some extra operations, as the following example, computing the cube root of array elements, shows:
 
+\ifC
 \begin{lstlisting}
 CvSize size = cvGetSize(src);
-CvMat* mask = cvCreateMat(size.height, size.width, CVg8UC1);
-cvCmpS(src, 0, mask, CVgCMPgLT); /* find negative elements */
+CvMat* mask = cvCreateMat(size.height, size.width, CV_8UC1);
+cvCmpS(src, 0, mask, CV_CMP_LT); /* find negative elements */
 cvPow(src, dst, 1./3);
 cvSubRS(dst, cvScalarAll(0), dst, mask); /* negate the results of negative inputs */
 cvReleaseMat(&mask);
 \end{lstlisting}
+\else
+\begin{lstlisting}
+>>> import cv
+>>> src = cv.CreateMat(1, 10, cv.CV_32FC1)
+>>> mask = cv.CreateMat(src.rows, src.cols, cv.CV_8UC1)
+>>> dst = cv.CreateMat(src.rows, src.cols, cv.CV_32FC1)
+>>> cv.CmpS(src, 0, mask, cv.CV_CMP_LT)         # find negative elements
+>>> cv.Pow(src, dst, 1. / 3)
+>>> cv.SubRS(dst, cv.ScalarAll(0), dst, mask)   # negate the results of negative inputs
+\end{lstlisting}
+\fi
 
 For some values of \texttt{power}, such as integer values, 0.5, and -0.5, specialized faster algorithms are used.
 
@@ -2778,12 +2825,21 @@ Resets the image ROI to include the entire image and releases the ROI structure.
 \cvarg{image}{A pointer to the image header}
 \end{description}
 
-This produces a similar result to the following, but in addition it releases the ROI structure.
+This produces a similar result to the following
+\ifC
+, but in addition it releases the ROI structure.
 
 \begin{lstlisting}
 cvSetImageROI(image, cvRect(0, 0, image->width, image->height ));
 cvSetImageCOI(image, 0);
 \end{lstlisting}
+\else
+
+\begin{lstlisting}
+cv.SetImageROI(image, (0, 0, image.width, image.height))
+cv.SetImageCOI(image, 0)
+\end{lstlisting}
+\fi
 
 
 \cvCPyFunc{Reshape}
@@ -2964,10 +3020,6 @@ Calculates the sum of a scaled array and another array.
 \cvarg{src2}{The second source array}
 \cvarg{dst}{The destination array}
 \end{description}
-
-\begin{lstlisting}
-#define cvMulAddS cvScaleAdd
-\end{lstlisting}
 
 The function calculates the sum of a scaled array and another array:
 
@@ -3317,10 +3369,6 @@ Divides multi-channel array into several single-channel arrays or extracts a sin
 \cvarg{dst3}{Destination channel 3}
 \end{description}
 
-\begin{lstlisting}
-#define cvCvtPixToPlane cvSplit
-\end{lstlisting}
-
 The function divides a multi-channel array into separate
 single-channel arrays. Two modes are available for the operation. If the
 source array has N channels then if the first N destination channels
@@ -3576,10 +3624,6 @@ Transposes a matrix.
 \cvarg{dst}{The destination matrix}
 \end{description}
 
-\begin{lstlisting}
-#define cvT cvTranspose
-\end{lstlisting}
-
 The function transposes matrix \texttt{src1}:
 
 \[ \texttt{dst}(i,j) = \texttt{src}(j,i) \]
@@ -3631,6 +3675,7 @@ dst(I)=src(I)^value if mask(I)!=0
 
 Prior to the actual operation, the scalar is converted to the same type as that of the array(s). In the case of floating-point arrays their bit representations are used for the operation. All the arrays must have the same type, except the mask, and the same size
 
+\ifC
 The following sample demonstrates how to conjugate complex vector by switching the most-significant bit of imaging part:
 
 \begin{lstlisting}
@@ -3640,9 +3685,10 @@ CvMat A = cvMat(4, 1, CV\_32FC2, &a);
 int i, negMask = 0x80000000;
 cvXorS(&A, cvScalar(0, *(float*)&negMask, 0, 0 ), &A, 0);
 for(i = 0; i < 4; i++ )
-    printf("(%.1f, %.1f) ", a[i*2], a[i*2+1]);
+    printf("(\%.1f, \%.1f) ", a[i*2], a[i*2+1]);
 
 \end{lstlisting}
+\fi
 
 The code should print:
 

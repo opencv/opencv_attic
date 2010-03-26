@@ -30,9 +30,12 @@ python_api = pythonapi.reader("../../interfaces/python/api")
 
 
 class SphinxWriter:
-    def __init__(self, filename, language):
+    def __init__(self, filename, language, abspath):
         assert language in ['py', 'c', 'cpp']
         self.language = language
+
+        self.abspath = abspath
+        os.path.abspath(os.path.dirname(filename))
 
         self.f_index = QOpen(os.path.join(self.language, filename), 'wt')
         self.f = self.f_index
@@ -166,6 +169,7 @@ class SphinxWriter:
             print >>self, ".. ctype:: " + nm + "\n"
         print >>self
         self.addtag(nm, c)
+        self.state = 'class'
 
     def addtag(self, nm, c):
         if nm == "":
@@ -370,6 +374,11 @@ class SphinxWriter:
             self.f = self.saved_f
             self.indent = self.saved_indent
             print >>self
+            if self.language == 'py':
+                ckeys = ['#define', 'void', '#include', ';\n']
+                found = [repr(k) for k in ckeys if k in listing]
+                if len(found) > 0:
+                    self.report_error(c, 'listing is probably C, found %s' % ",".join(found))
             if (self.language == 'py') and ('>>>' in listing):
                 print >>self, "\n.. doctest::\n"
             else:
@@ -391,7 +400,7 @@ class SphinxWriter:
 
     def cmd_lstinputlisting(self, c):
         s = str(c.params[0])
-        print >>self.f, ".. include:: %s" % os.path.join('..', s)
+        print >>self.f, ".. include:: %s" % os.path.normpath(os.path.join(self.abspath, s))
         print >>self.f, "    :literal:"
         print >>self.f
 
@@ -426,6 +435,18 @@ class SphinxWriter:
             self.report_error(c, "Malformed cvarg")
             return
         e = self.ee()
+        if self.state == 'class':
+            nm = self.render(c.params[0].str)
+            if '->' in nm:
+                print >>self, "\n\n.. method:: %s\n\n" % nm
+            else:
+                print >>self, "\n\n.. attribute:: %s\n\n" % nm
+            self.indent += 1
+            print >>self
+            self.doL(c.params[1].str, False)
+            self.indent -= 1
+            print >>self
+            return
         is_func_arg = (e == ['description']) and (not 'done' in self.function_props)
         if is_func_arg:
             nm = self.render(c.params[0].str)
@@ -472,6 +493,9 @@ class SphinxWriter:
                 "cvarrseq" : ":class:`CvArr` or :class:`CvSeq`",
                 "CvPoint2D32fs" : "sequence of (float, float)",
                 "pts_npts_contours" : "list of lists of (x,y) pairs",
+                "CvSeqOfCvSURFPoint" : ":class:`CvSeq` of :class:`CvSURFPoint`",
+                "CvSeqOfCvSURFDescriptor" : ":class:`CvSeq` of list of float",
+                "cvpoint2d32f_count" : "int",
             }
             print >>self, "\n:type %s: %s" % (nm, translate.get(type, ':class:`%s`' % type))
 
@@ -645,6 +669,8 @@ def parseBib(filename, language):
 if 1:
     fulldoc = latexparser(sys.argv[1])
 
+    abspath = os.path.abspath(os.path.dirname(sys.argv[1]))
+
     raw = open('raw.full', 'w')
     for x in fulldoc:
         print >>raw, repr(x)
@@ -690,7 +716,7 @@ if 1:
         for x in doc:
             print >>raw, repr(x)
         raw.close()
-        sr = SphinxWriter('index.rst', language)
+        sr = SphinxWriter('index.rst', language, abspath)
         print >>sr, """
 OpenCV |version| %s Reference
 =================================

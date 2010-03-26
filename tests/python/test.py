@@ -1905,6 +1905,20 @@ class AreaTests(OpenCVTests):
             print "  ", cv.Subdiv2DEdgeOrg(cv.Subdiv2DRotateEdge(e, 1)), cv.Subdiv2DEdgeDst(cv.Subdiv2DRotateEdge(e, 1))
         print "nearest", cv.FindNearestPoint2D(subdiv, (1.0, 1.0))
 
+class DocumentFragmentTests(OpenCVTests):
+    """ Test the fragments of code that are included in the documentation """
+    def setUp(self):
+        OpenCVTests.setUp(self)
+        sys.path.append("../doc/python_fragments")
+
+    def test_precornerdetect(self):
+        from precornerdetect import precornerdetect
+        im = self.get_sample("samples/c/right01.jpg", 0)
+        imf = cv.CreateMat(im.rows, im.cols, cv.CV_32FC1)
+        cv.ConvertScale(im, imf)
+        r = precornerdetect(imf)
+        self.snap(r)
+
 class NewTests(OpenCVTests):
 
     pass
@@ -1920,7 +1934,7 @@ if __name__ == '__main__':
         if o == '-r':
             shuffle = 1
 
-    cases = [PreliminaryTests, FunctionTests, AreaTests]
+    cases = [PreliminaryTests, FunctionTests, AreaTests, DocumentFragmentTests]
     everything = [(tc, t) for tc in cases for t in unittest.TestLoader().getTestCaseNames(tc) ]
     if len(args) == 0:
         # cases = [NewTests]

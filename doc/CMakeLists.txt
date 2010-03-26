@@ -94,6 +94,19 @@ foreach(p ${pics})
            COPYONLY)
 endforeach()
 
+set(PYTHON_OUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/python_fragments")
+message(STATUS "Copying python_fragments to the build directory")
+make_directory(${PYTHON_OUT_DIR})
+
+file(GLOB python_fragments RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}/python_fragments" python_fragments/*.py)
+
+foreach(p ${python_fragments})
+    configure_file(
+           "python_fragments/${p}"
+           "${PYTHON_OUT_DIR}/${p}"
+           COPYONLY)
+endforeach()
+
 #add_custom_target(MakePicsLink
 #   COMMAND ln -sf ${CMAKE_CURRENT_SOURCE_DIR}/pics ${CMAKE_CURRENT_BINARY_DIR}/pics
 #   )

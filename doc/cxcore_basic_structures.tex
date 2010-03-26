@@ -10,6 +10,7 @@
 \label{CvPoint}\cvclass{CvPoint}
 2D point with integer coordinates (usually zero-based).
 
+\ifC % {
 \begin{lstlisting}
 typedef struct CvPoint
 {
@@ -31,11 +32,14 @@ inline CvPoint cvPoint( int x, int y );
 /* Conversion from CvPoint2D32f */
 inline CvPoint cvPointFrom32f( CvPoint2D32f point );
 \end{lstlisting}
-
+\else % }{
+2D point, represented as a tuple \texttt{(x, y)}, where x and y are integers.
+\fi % }
 
 \label{CvPoint2D32f}\cvclass{CvPoint2D32f}
 2D point with floating-point coordinates
 
+\ifC % {
 \begin{lstlisting}
 typedef struct CvPoint2D32f
 {
@@ -57,11 +61,15 @@ inline CvPoint2D32f cvPoint2D32f( double x, double y );
 /* Conversion from CvPoint */
 inline CvPoint2D32f cvPointTo32f( CvPoint point );
 \end{lstlisting}
+\else % }{
+2D point, represented as a tuple \texttt{(x, y)}, where x and y are floats.
+\fi % }
 
 
 \label{CvPoint3D32f}\cvclass{CvPoint3D32f}
 3D point with floating-point coordinates
 
+\ifC % {
 \begin{lstlisting}
 typedef struct CvPoint3D32f
 {
@@ -82,10 +90,14 @@ CvPoint3D32f;
 /* Constructor */
 inline CvPoint3D32f cvPoint3D32f( double x, double y, double z );
 \end{lstlisting}
+\else % }{
+3D point, represented as a tuple \texttt{(x, y, z)}, where x, y and z are floats.
+\fi % }
 
 \label{CvPoint2D64f}\cvclass{CvPoint2D64f}
 2D point with double precision floating-point coordinates
 
+\ifC % {
 \begin{lstlisting}
 typedef struct CvPoint2D64f
 {
@@ -107,10 +119,14 @@ inline CvPoint2D64f cvPoint2D64f( double x, double y );
 /* Conversion from CvPoint */
 inline CvPoint2D64f cvPointTo64f( CvPoint point );
 \end{lstlisting}
+\else % }{
+2D point, represented as a tuple \texttt{(x, y)}, where x and y are floats.
+\fi % }
 
 \label{CvPoint3D64f}\cvclass{CvPoint3D64f}
 3D point with double precision floating-point coordinates
 
+\ifC % {
 \begin{lstlisting}
 typedef struct CvPoint3D64f
 {
@@ -131,6 +147,9 @@ CvPoint3D64f;
 /* Constructor */
 inline CvPoint3D64f cvPoint3D64f( double x, double y, double z );
 \end{lstlisting}
+\else % }{
+3D point, represented as a tuple \texttt{(x, y, z)}, where x, y and z are floats.
+\fi % }
 
 \label{CvSize}\cvclass{CvSize}
 Pixel-accurate size of a rectangle.
@@ -187,6 +206,7 @@ Size of a rectangle, represented as a tuple \texttt{(width, height)}, where widt
 \label{CvRect}\cvclass{CvRect}
 Offset (usually the top-left corner) and size of a rectangle.
 
+\ifC % {
 \begin{lstlisting}
 typedef struct CvRect
 {
@@ -209,6 +229,9 @@ CvRect;
 /* Constructor */
 inline CvRect cvRect( int x, int y, int width, int height );
 \end{lstlisting}
+\else % }{
+Rectangle, represented as a tuple \texttt{(x, y, width, height)}, where all are integers.
+\fi % }
 
 \label{CvScalar}\cvclass{CvScalar}
 A container for 1-,2-,3- or 4-tuples of doubles.
@@ -302,6 +325,8 @@ Represented by a tuple \texttt{(type, max\_iter, epsilon)}.
 \fi % }
 
 \label{CvMat}\cvclass{CvMat}
+
+\ifC % {
 A multi-channel matrix.
 
 \begin{lstlisting}
@@ -351,11 +376,29 @@ typedef struct CvMat
 \end{description}
 
 Matrices are stored row by row. All of the rows are aligned by 4 bytes.
+\else % }{
+A multi-channel 2D matrix.  Created by
+\cross{CreateMat},
+\cross{LoadImageM},
+\cross{CreateMatHeader},
+\cross{fromarray}.
+
+\begin{description}
+\cvarg{type}{A CvMat signature containing the type of elements and flags, int}
+\cvarg{step}{Full row length in bytes, int}
+\cvarg{rows}{Number of rows, int}
+\cvarg{cols}{Number of columns, int}
+\cvarg{tostring() -> str}{Returns the contents of the CvMat as a single string.}
+\end{description}
+
+
+\fi % }
 
 
 \label{CvMatND}\cvclass{CvMatND}
 Multi-dimensional dense multi-channel array.
 
+\ifC
 \begin{lstlisting}
 typedef struct CvMatND
 {
@@ -390,7 +433,16 @@ typedef struct CvMatND
 \cvarg{data}{Pointers to the actual matrix data}
 \cvarg{dim}{For each dimension, the pair (number of elements, distance between elements in bytes)}
 \end{description}
+\fi
 
+\ifPy
+\begin{description}
+\cvarg{type}{A CvMatND signature combining the type of elements and flags, int}
+\cvarg{tostring() -> str}{Returns the contents of the CvMatND as a single string.}
+\end{description}
+\fi
+
+\ifC
 \label{CvSparseMat}\cvclass{CvSparseMat}
 Multi-dimensional sparse multi-channel array.
 
@@ -424,7 +476,10 @@ typedef struct CvSparseMat
 \cvarg{size}{Array of dimension sizes}
 \end{description}
 
+\fi
+
 \label{IplImage}\cvclass{IplImage}
+\ifC
 IPL image header
 
 \begin{lstlisting}
@@ -493,15 +548,53 @@ IplImage;
 The \cross{IplImage} structure was inherited from the Intel Image Processing Library, in which the format is native. OpenCV only supports a subset of possible \cross{IplImage} formats, as outlined in the parameter list above.
 
 In addition to the above restrictions, OpenCV handles ROIs differently. OpenCV functions require that the image size or ROI size of all source and destination images match exactly. On the other hand, the Intel Image Processing Library processes the area of intersection between the source and destination images (or ROIs), allowing them to vary independently. 
+\fi
+
+\ifPy
+
+The \cross{IplImage} object was inherited from the Intel Image Processing
+Library, in which the format is native. OpenCV only supports a subset
+of possible \cross{IplImage} formats.
+
+\begin{description}
+\cvarg{nChannels}{Number of channels, int.}
+\cvarg{width}{Image width in pixels}
+\cvarg{height}{Image height in pixels}
+\cvarg{depth}{Pixel depth in bits. The supported depths are:
+\begin{description}
+\cvarg{IPL\_DEPTH\_8U}{Unsigned 8-bit integer}
+\cvarg{IPL\_DEPTH\_8S}{Signed 8-bit integer}
+\cvarg{IPL\_DEPTH\_16U}{Unsigned 16-bit integer}
+\cvarg{IPL\_DEPTH\_16S}{Signed 16-bit integer}
+\cvarg{IPL\_DEPTH\_32S}{Signed 32-bit integer}
+\cvarg{IPL\_DEPTH\_32F}{Single-precision floating point}
+\cvarg{IPL\_DEPTH\_64F}{Double-precision floating point}
+\end{description}}
+\cvarg{origin}{0 - top-left origin, 1 - bottom-left origin (Windows bitmap style)}
+\cvarg{tostring() -> str}{Returns the contents of the CvMatND as a single string.}
+\end{description}
+\fi
 
 \label{CvArr}\cvclass{CvArr}
 Arbitrary array
 
+\ifC
 \begin{lstlisting}
 typedef void CvArr;
 \end{lstlisting}
 
 The metatype \texttt{CvArr} is used \textit{only} as a function parameter to specify that the function accepts arrays of multiple types, such as IplImage*, CvMat* or even CvSeq* sometimes. The particular array type is determined at runtime by analyzing the first 4 bytes of the header.
+\fi
+
+\ifPy
+\texttt{CvArr} is used \textit{only} as a function parameter to specify that the parameter can be:
+\begin{itemize}
+\item{an \cross{IplImage}}
+\item{a \cross{CvMat}}
+\item{any other type that exports the \href{http://docs.scipy.org/doc/numpy/reference/arrays.interface.html}{array interface}}
+\end{itemize}
+\fi
+
 \fi
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -463,7 +463,7 @@ To resize an image in OpenCV, create a destination image of the appropriate size
 \begin{lstlisting}
 >>> import cv
 >>> im = cv.LoadImageM("building.jpg", 1)
->>> dst = cv.CreateImage(cv.GetSize(im), cv.IPL_DEPTH_16S, 3);
+>>> dst = cv.CreateImage(cv.GetSize(im), cv.IPL_DEPTH_16S, 3)
 >>> laplace = cv.Laplace(im, dst)
 >>> cv.SaveImage("foo-laplace.png", dst)
 \end{lstlisting}
