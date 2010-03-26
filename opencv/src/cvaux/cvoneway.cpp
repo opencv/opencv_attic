@@ -8,6 +8,9 @@
  */
 
 #include <highgui.h>
+#include <cxcore.h>
+#include <cv.h>
+#include <cvaux.h>
 
 namespace cv{
     
