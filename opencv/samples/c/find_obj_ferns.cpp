@@ -22,16 +22,10 @@ int main(int argc, char** argv)
     Mat image;
     
     double imgscale = 1;
-#if 1
+
     Mat _image = imread( scene_filename, CV_LOAD_IMAGE_GRAYSCALE );
     resize(_image, image, Size(), 1./imgscale, 1./imgscale, INTER_CUBIC);
-#else
-    image.create(cvRound(object.rows*2), cvRound(object.cols*2), CV_8U);
-    Mat M = getRotationMatrix2D(Point2f(object.cols*0.5f, object.rows*0.5f), -30, imgscale);
-    ((double*)M.data)[2] += (image.cols - object.cols)*0.5f;
-    ((double*)M.data)[5] += (image.rows - object.rows)*0.5f;
-    warpAffine(object, image, M, image.size(), INTER_LINEAR, BORDER_TRANSPARENT);
-#endif
+
 
     if( !object.data || !image.data )
     {
@@ -55,7 +49,6 @@ int main(int argc, char** argv)
     buildPyramid(image, imgpyr, ldetector.nOctaves-1);
     
     vector<KeyPoint> objKeypoints, imgKeypoints;
-   // PatchGenerator gen(0,256,15,true,0.6,1.5,-CV_PI,CV_PI,-CV_PI,CV_PI);
 	PatchGenerator gen(0,256,5,true,0.8,1.2,-CV_PI/2,CV_PI/2,-CV_PI/2,CV_PI/2);
     
     FileStorage fs("outlet_model.xml", FileStorage::READ);
@@ -85,13 +78,12 @@ int main(int argc, char** argv)
     part = Mat(correspond, Rect(0, object.rows, image.cols, image.rows));
     cvtColor(image, part, CV_GRAY2BGR);
 
-#if 1    
+ 
     vector<int> pairs;
     Mat H;
     
     double t = (double)getTickCount();
     objKeypoints = detector.getModelPoints();
-//	ldetector(imgpyr, imgKeypoints, 3000);
     ldetector(imgpyr, imgKeypoints, 300);
     
     std::cout << "Object keypoints: " << objKeypoints.size() << "\n";
@@ -117,7 +109,6 @@ int main(int argc, char** argv)
              imgKeypoints[pairs[i+1]].pt + Point2f(0,object.rows),
              Scalar(0,255,0) );
     }
-#endif
     
     imshow( "Object Correspondence", correspond );
     Mat objectColor;

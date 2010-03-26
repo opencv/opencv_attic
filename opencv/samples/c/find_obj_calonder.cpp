@@ -77,7 +77,6 @@ float CalcAffineReprojectionError(const vector<CvPoint>& p1, const vector<CvPoin
     float error = 0;
     for(int i = 0; i < (int)p2.size(); i++)
     {
-        //float l = length(p2[i] - mapped_p1[i]);
         error += ((p2[i].x - mapped_p1[i].x)*(p2[i].x - mapped_p1[i].x)+(p2[i].y - mapped_p1[i].y)*(p2[i].y - mapped_p1[i].y));
     }
     
@@ -89,6 +88,7 @@ float CalcAffineReprojectionError(const vector<CvPoint>& p1, const vector<CvPoin
 
 int main( int argc, char** argv )
 {
+
 	IplImage* test_image;
 	IplImage* train_image;
 	if (argc < 3)
