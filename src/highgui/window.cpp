@@ -181,17 +181,6 @@ CV_IMPL int cvNamedWindow( const char*, int )
     return -1;
 }    
 
-CV_IMPL void cvSetWindowProperty(const char* name, int prop_id, double prop_value)//YV
-{
-	CV_NO_GUI_ERROR("cvSetWindowProperty");
-}
-
-CV_IMPL double cvGetWindowProperty(const char* name, int prop_id)//YV
-{
-	CV_NO_GUI_ERROR("cvGetWindowProperty");
-    return -1;
-}
-
 CV_IMPL void cvDestroyWindow( const char* )
 {
     CV_NO_GUI_ERROR( "cvDestroyWindow" );
