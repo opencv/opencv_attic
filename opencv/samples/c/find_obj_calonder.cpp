@@ -8,10 +8,10 @@
 using namespace std;
 
 // Number of training points (set to -1 to use all points)
-const int n_points = 30;
+const int n_points = -1;
 
 //Draw the border of projection of train image calculed by averaging detected correspondences
-const bool draw_border = false;
+const bool draw_border = true;
 
 void cvmSet6(CvMat* m, int row, int col, float val1, float val2, float val3, float val4, float val5, float val6)
 {
