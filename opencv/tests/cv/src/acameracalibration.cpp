@@ -1504,9 +1504,9 @@ void CV_StereoCalibrationTest::run( int )
 		undistortPoints( _imgpt1, _imgpt1, _M1, _D1, Mat(), _M1 );
 		undistortPoints( _imgpt2, _imgpt2, _M2, _D2, Mat(), _M2 );
 
-		Mat _F, _H1, _H2;
-		_F = findFundamentalMat( _imgpt1, _imgpt2 );
-		rectifyUncalibrated( _imgpt1, _imgpt2, _F, imgsize, _H1, _H2 );
+		Mat matF, _H1, _H2;
+		matF = findFundamentalMat( _imgpt1, _imgpt2 );
+		rectifyUncalibrated( _imgpt1, _imgpt2, matF, imgsize, _H1, _H2 );
 
 		Mat rectifPoints1, rectifPoints2;
 		perspectiveTransform( _imgpt1, rectifPoints1, _H1 );
@@ -1617,11 +1617,11 @@ double CV_StereoCalibrationTest_C::calibrateStereoCamera( const vector<vector<Po
 	CvMat _objPt = objPt, _imgPt = imgPt, _imgPt2 = imgPt2, _npoints = npoints;
 	CvMat _cameraMatrix1 = cameraMatrix1, _distCoeffs1 = distCoeffs1;
 	CvMat _cameraMatrix2 = cameraMatrix2, _distCoeffs2 = distCoeffs2;
-	CvMat _R = R, _T = T, _E = E, _F = F;
+	CvMat matR = R, matT = T, matE = E, matF = F;
 
 	return cvStereoCalibrate(&_objPt, &_imgPt, &_imgPt2, &_npoints, &_cameraMatrix1,
 		&_distCoeffs1, &_cameraMatrix2, &_distCoeffs2, imageSize,
-		&_R, &_T, &_E, &_F, criteria, flags );
+		&matR, &matT, &matE, &matF, criteria, flags );
 }
 
 void CV_StereoCalibrationTest_C::rectify( const Mat& cameraMatrix1, const Mat& distCoeffs1,
@@ -1639,9 +1639,9 @@ void CV_StereoCalibrationTest_C::rectify( const Mat& cameraMatrix1, const Mat& d
 	Q.create(4, 4, rtype);
 	CvMat _cameraMatrix1 = cameraMatrix1, _distCoeffs1 = distCoeffs1;
 	CvMat _cameraMatrix2 = cameraMatrix2, _distCoeffs2 = distCoeffs2;
-	CvMat _R = R, _T = T, _R1 = R1, _R2 = R2, _P1 = P1, _P2 = P2, _Q = Q;
+	CvMat matR = R, matT = T, _R1 = R1, _R2 = R2, _P1 = P1, _P2 = P2, matQ = Q;
 	cvStereoRectify( &_cameraMatrix1, &_cameraMatrix2, &_distCoeffs1, &_distCoeffs2,
-		imageSize, &_R, &_T, &_R1, &_R2, &_P1, &_P2, &_Q, flags,
+		imageSize, &matR, &matT, &_R1, &_R2, &_P1, &_P2, &matQ, flags,
 		alpha, newImageSize, (CvRect*)validPixROI1, (CvRect*)validPixROI2);
 }
 
@@ -1650,9 +1650,9 @@ bool CV_StereoCalibrationTest_C::rectifyUncalibrated( const Mat& points1,
 {
 	H1.create(3, 3, CV_64F);
 	H2.create(3, 3, CV_64F);
-	CvMat _pt1 = points1, _pt2 = points2, _F, *pF=0, _H1 = H1, _H2 = H2;
+	CvMat _pt1 = points1, _pt2 = points2, matF, *pF=0, _H1 = H1, _H2 = H2;
 	if( F.size() == Size(3, 3) )
-		pF = &(_F = F);
+		pF = &(matF = F);
 	return cvStereoRectifyUncalibrated(&_pt1, &_pt2, pF, imgSize, &_H1, &_H2, threshold) > 0;
 }
 

@@ -57,8 +57,8 @@ private:
 
 	//C
 	CvMat* _camera_mat;
-	CvMat* _R;
-	CvMat* _P;
+	CvMat* matR;
+	CvMat* matP;
 	CvMat* _distortion_coeffs;
 	CvMat* _src_points;
 	CvMat* _dst_points;
@@ -88,7 +88,7 @@ void CV_UndistortPointsBadArgTest::run_func()
 	}
 	else
 	{
-		cvUndistortPoints(_src_points,_dst_points,_camera_mat,_distortion_coeffs,_R,_P);
+		cvUndistortPoints(_src_points,_dst_points,_camera_mat,_distortion_coeffs,matR,matP);
 	}
 }
 
@@ -116,8 +116,8 @@ void CV_UndistortPointsBadArgTest::run(int)
 
 	_camera_mat = &_camera_mat_orig;
 	_distortion_coeffs = &_distortion_coeffs_orig;
-	_P = &_P_orig;
-	_R = &_R_orig;
+	matP = &_P_orig;
+	matR = &_R_orig;
 	_src_points = &_src_points_orig; 
 	_dst_points = &_dst_points_orig; 
 
@@ -207,38 +207,38 @@ void CV_UndistortPointsBadArgTest::run(int)
 	cvReleaseMat(&temp);
 //----------
 	temp = (CvMat*)temp_img;
-	_R = temp;
+	matR = temp;
 	errcount += run_test_case( CV_StsAssert, "R data is not CvMat*" ); 
-	_R = &_R_orig; 
+	matR = &_R_orig; 
 
 	temp = cvCreateMat(4,3,CV_64F);
-	_R = temp;
+	matR = temp;
 	errcount += run_test_case( CV_StsAssert, "Invalid R data matrix size" ); 
-	_R = &_R_orig; 
+	matR = &_R_orig; 
 	cvReleaseMat(&temp);
 
 	temp = cvCreateMat(3,2,CV_64F);
-	_R = temp;
+	matR = temp;
 	errcount += run_test_case( CV_StsAssert, "Invalid R data matrix size" ); 
-	_R = &_R_orig; 
+	matR = &_R_orig; 
 	cvReleaseMat(&temp);
 
 //-----------
 	temp = (CvMat*)temp_img;
-	_P = temp;
+	matP = temp;
 	errcount += run_test_case( CV_StsAssert, "P data is not CvMat*" ); 
-	_P = &_P_orig; 
+	matP = &_P_orig; 
 
 	temp = cvCreateMat(4,3,CV_64F);
-	_P = temp;
+	matP = temp;
 	errcount += run_test_case( CV_StsAssert, "Invalid P data matrix size" ); 
-	_P = &_P_orig; 
+	matP = &_P_orig; 
 	cvReleaseMat(&temp);
 
 	temp = cvCreateMat(3,2,CV_64F);
-	_P = temp;
+	matP = temp;
 	errcount += run_test_case( CV_StsAssert, "Invalid P data matrix size" ); 
-	_P = &_P_orig; 
+	matP = &_P_orig; 
 	cvReleaseMat(&temp);
 //------------
 	//C++ tests
@@ -291,7 +291,7 @@ private:
 
 	//C
 	CvMat* _camera_mat;
-	CvMat* _R;
+	CvMat* matR;
 	CvMat* _new_camera_mat;
 	CvMat* _distortion_coeffs;
 	CvMat* _mapx;
@@ -323,7 +323,7 @@ void CV_InitUndistortRectifyMapBadArgTest::run_func()
 	}
 	else
 	{
-		cvInitUndistortRectifyMap(_camera_mat,_distortion_coeffs,_R,_new_camera_mat,_mapx,_mapy);
+		cvInitUndistortRectifyMap(_camera_mat,_distortion_coeffs,matR,_new_camera_mat,_mapx,_mapy);
 	}
 }
 
@@ -351,7 +351,7 @@ void CV_InitUndistortRectifyMapBadArgTest::run(int)
 	_camera_mat = &_camera_mat_orig;
 	_distortion_coeffs = &_distortion_coeffs_orig;
 	_new_camera_mat = &_new_camera_mat_orig;
-	_R = &_R_orig;
+	matR = &_R_orig;
 	_mapx = &_mapx_orig; 
 	_mapy = &_mapy_orig; 
 	mat_type = mat_type_orig;

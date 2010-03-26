@@ -169,7 +169,7 @@ void CV_ArrayOpTest::run( int /* start_from */)
     {
     int sz3[] = {5, 10, 15};
     MatND A(3, sz3, CV_32F), B(3, sz3, CV_16SC4);
-    CvMatND _A = A, _B = B;
+    CvMatND matA = A, matB = B;
     RNG rng;
     rng.fill(A, CV_RAND_UNI, Scalar::all(-10), Scalar::all(10));
     rng.fill(B, CV_RAND_UNI, Scalar::all(-10), Scalar::all(10));
@@ -177,21 +177,21 @@ void CV_ArrayOpTest::run( int /* start_from */)
     int idx0[] = {3,4,5}, idx1[] = {0, 9, 7};
     float val0 = 130;
     Scalar val1(-1000, 30, 3, 8);
-    cvSetRealND(&_A, idx0, val0);
-    cvSetReal3D(&_A, idx1[0], idx1[1], idx1[2], -val0);
-    cvSetND(&_B, idx0, val1);
-    cvSet3D(&_B, idx1[0], idx1[1], idx1[2], -val1);
-    Ptr<CvMatND> _C = cvCloneMatND(&_B);
+    cvSetRealND(&matA, idx0, val0);
+    cvSetReal3D(&matA, idx1[0], idx1[1], idx1[2], -val0);
+    cvSetND(&matB, idx0, val1);
+    cvSet3D(&matB, idx1[0], idx1[1], idx1[2], -val1);
+    Ptr<CvMatND> matC = cvCloneMatND(&matB);
     
     if( A.at<float>(idx0[0], idx0[1], idx0[2]) != val0 ||
         A.at<float>(idx1[0], idx1[1], idx1[2]) != -val0 ||
-        cvGetReal3D(&_A, idx0[0], idx0[1], idx0[2]) != val0 ||
-        cvGetRealND(&_A, idx1) != -val0 ||
+        cvGetReal3D(&matA, idx0[0], idx0[1], idx0[2]) != val0 ||
+        cvGetRealND(&matA, idx1) != -val0 ||
         
         Scalar(B.at<Vec4s>(idx0[0], idx0[1], idx0[2])) != val1 ||
         Scalar(B.at<Vec4s>(idx1[0], idx1[1], idx1[2])) != -val1 ||
-        Scalar(cvGet3D(_C, idx0[0], idx0[1], idx0[2])) != val1 ||
-        Scalar(cvGetND(_C, idx1)) != -val1 )
+        Scalar(cvGet3D(matC, idx0[0], idx0[1], idx0[2])) != val1 ||
+        Scalar(cvGetND(matC, idx1)) != -val1 )
     {
         ts->printf(CvTS::LOG, "one of cvSetReal3D, cvSetRealND, cvSet3D, cvSetND "
                               "or the corresponding *Get* functions is not correct\n");

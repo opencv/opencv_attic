@@ -75,12 +75,12 @@ StereoCalib(const char* imageList, int useUncalibrated)
     CvMat _M2 = cvMat(3, 3, CV_64F, M2 );
     CvMat _D1 = cvMat(1, 5, CV_64F, D1 );
     CvMat _D2 = cvMat(1, 5, CV_64F, D2 );
-    CvMat _R = cvMat(3, 3, CV_64F, R );
-    CvMat _T = cvMat(3, 1, CV_64F, T );
-    CvMat _E = cvMat(3, 3, CV_64F, E );
-    CvMat _F = cvMat(3, 3, CV_64F, F );
+    CvMat matR = cvMat(3, 3, CV_64F, R );
+    CvMat matT = cvMat(3, 1, CV_64F, T );
+    CvMat matE = cvMat(3, 3, CV_64F, E );
+    CvMat matF = cvMat(3, 3, CV_64F, F );
     
-    CvMat _Q = cvMat(4, 4, CV_64FC1, Q);
+    CvMat matQ = cvMat(4, 4, CV_64FC1, Q);
 
     char buf[1024];
     
@@ -227,7 +227,7 @@ StereoCalib(const char* imageList, int useUncalibrated)
     cvStereoCalibrate( &_objectPoints, &_imagePoints1,
         &_imagePoints2, &_npoints,
         &_M1, &_D1, &_M2, &_D2,
-        imageSize, &_R, &_T, &_E, &_F,
+        imageSize, &matR, &matT, &matE, &matF,
         cvTermCriteria(CV_TERMCRIT_ITER+
         CV_TERMCRIT_EPS, 100, 1e-5),
         CV_CALIB_FIX_ASPECT_RATIO +
@@ -255,8 +255,8 @@ StereoCalib(const char* imageList, int useUncalibrated)
         &_M1, &_D1, 0, &_M1 );
     cvUndistortPoints( &_imagePoints2, &_imagePoints2,
         &_M2, &_D2, 0, &_M2 );
-    cvComputeCorrespondEpilines( &_imagePoints1, 1, &_F, &_L1 );
-    cvComputeCorrespondEpilines( &_imagePoints2, 2, &_F, &_L2 );
+    cvComputeCorrespondEpilines( &_imagePoints1, 1, &matF, &_L1 );
+    cvComputeCorrespondEpilines( &_imagePoints2, 2, &matF, &_L2 );
     double avgErr = 0;
     for( i = 0; i < N; i++ )
     {
@@ -303,19 +303,19 @@ StereoCalib(const char* imageList, int useUncalibrated)
             CvMat _P2 = cvMat(3, 4, CV_64F, P2);
 
             cvStereoRectify( &_M1, &_M2, &_D1, &_D2, imageSize,
-                &_R, &_T,
-                &_R1, &_R2, &_P1, &_P2, &_Q,
+                &matR, &matT,
+                &_R1, &_R2, &_P1, &_P2, &matQ,
                 CV_CALIB_ZERO_DISPARITY,
                 1, imageSize, &roi1, &roi2);
             
             CvFileStorage* file = cvOpenFileStorage("extrinsics.yml", NULL, CV_STORAGE_WRITE);
-            cvWrite(file, "R", &_R);
-            cvWrite(file, "T", &_T);    
+            cvWrite(file, "R", &matR);
+            cvWrite(file, "T", &matT);    
             cvWrite(file, "R1", &_R1);
             cvWrite(file, "R2", &_R2);
             cvWrite(file, "P1", &_P1);    
             cvWrite(file, "P2", &_P2);    
-            cvWrite(file, "Q", &_Q);
+            cvWrite(file, "Q", &matQ);
             cvReleaseFileStorage(&file);
                         
             isVerticalStereo = fabs(P2[1][3]) > fabs(P2[0][3]);
@@ -340,9 +340,9 @@ StereoCalib(const char* imageList, int useUncalibrated)
     //Just to show you could have independently used F
             if( useUncalibrated == 2 )
                 cvFindFundamentalMat( &_imagePoints1,
-                &_imagePoints2, &_F);
+                &_imagePoints2, &matF);
             cvStereoRectifyUncalibrated( &_imagePoints1,
-                &_imagePoints2, &_F,
+                &_imagePoints2, &matF,
                 imageSize,
                 &_H1, &_H2, 3);
             cvInvert(&_M1, &_iM);

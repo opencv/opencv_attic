@@ -186,10 +186,10 @@ void PatchGenerator::operator ()(const Mat& image, const Mat& T,
     }
 }
 
-void PatchGenerator::warpWholeImage(const Mat& image, Mat& _T, Mat& buf,
+void PatchGenerator::warpWholeImage(const Mat& image, Mat& matT, Mat& buf,
                                     Mat& warped, int border, RNG& rng) const
 {
-    Mat_<double> T = _T;
+    Mat_<double> T = matT;
     Rect roi(INT_MAX, INT_MAX, INT_MIN, INT_MIN);
     
     for( int k = 0; k < 4; k++ )
@@ -221,8 +221,8 @@ void PatchGenerator::warpWholeImage(const Mat& image, Mat& _T, Mat& buf,
     T(1,2) += dy;
     (*this)(image, T, warped, warped.size(), rng);
     
-    if( T.data != _T.data )
-        T.convertTo(_T, _T.type());        
+    if( T.data != matT.data )
+        T.convertTo(matT, matT.type());        
 }
 
 
@@ -304,8 +304,8 @@ void LDetector::getMostStable2D(const Mat& image, vector<KeyPoint>& keypoints,
     patchGenerator.backgroundMin = patchGenerator.backgroundMax = 128;
     
     Mat warpbuf, warped;
-    Mat _M(2, 3, CV_64F), _iM(2, 3, CV_64F);
-    double *M = (double*)_M.data, *iM = (double*)_iM.data;
+    Mat matM(2, 3, CV_64F), _iM(2, 3, CV_64F);
+    double *M = (double*)matM.data, *iM = (double*)_iM.data;
     RNG& rng = theRNG();
     int i, k;
     vector<KeyPoint> tempKeypoints;
@@ -327,7 +327,7 @@ void LDetector::getMostStable2D(const Mat& image, vector<KeyPoint>& keypoints,
             putchar('.');
         
         if( i > 0 )
-            patchGenerator.generateRandomTransform(Point2f(), Point2f(), _M, rng);
+            patchGenerator.generateRandomTransform(Point2f(), Point2f(), matM, rng);
         else
         {
             // identity transformation
@@ -335,9 +335,9 @@ void LDetector::getMostStable2D(const Mat& image, vector<KeyPoint>& keypoints,
             M[1] = M[3] = M[2] = M[5] = 0;
         }
         
-        patchGenerator.warpWholeImage(image, _M, warpbuf, warped, cvCeil(baseFeatureSize*0.5+radius), rng);
+        patchGenerator.warpWholeImage(image, matM, warpbuf, warped, cvCeil(baseFeatureSize*0.5+radius), rng);
         (*this)(warped, tempKeypoints, maxPoints*3);
-        invertAffineTransform(_M, _iM);
+        invertAffineTransform(matM, _iM);
         
         int j, sz0 = (int)tempKeypoints.size(), sz1;
         for( j = 0; j < sz0; j++ )
@@ -882,17 +882,17 @@ void FernClassifier::trainFromSingleView(const Mat& image,
     vector<Mat> pyrbuf(maxOctave+1), pyr(maxOctave+1);
     Point2f center0((image.cols-1)*0.5f, (image.rows-1)*0.5f),
     center1((canvas.cols - 1)*0.5f, (canvas.rows - 1)*0.5f);
-    Mat _M(2, 3, CV_64F);
-    double *M = (double*)_M.data;
+    Mat matM(2, 3, CV_64F);
+    double *M = (double*)matM.data;
     RNG& rng = theRNG();
     
     Mat patch(patchSize, CV_8U);
     
     for( i = 0; i < _nviews; i++ )
     {
-        patchGenerator.generateRandomTransform(center0, center1, _M, rng);
+        patchGenerator.generateRandomTransform(center0, center1, matM, rng);
         
-        CV_Assert(_M.type() == CV_64F);
+        CV_Assert(matM.type() == CV_64F);
         Rect roi(INT_MAX, INT_MAX, INT_MIN, INT_MIN);
         
         for( k = 0; k < 4; k++ )
@@ -918,7 +918,7 @@ void FernClassifier::trainFromSingleView(const Mat& image,
         
         Size size = canvas_roi.size();
         rng.fill(canvas_roi, RNG::UNIFORM, Scalar::all(0), Scalar::all(256));
-        warpAffine( image, canvas_roi, _M, size, INTER_LINEAR, BORDER_TRANSPARENT);
+        warpAffine( image, canvas_roi, matM, size, INTER_LINEAR, BORDER_TRANSPARENT);
         
         pyr[0] = canvas_roi;                
         for( j = 1; j <= maxOctave; j++ )
@@ -1286,7 +1286,7 @@ bool PlanarObjectDetector::operator()(const Mat& image, Mat& H, vector<Point2f>&
 }
 
 bool PlanarObjectDetector::operator()(const vector<Mat>& pyr, const vector<KeyPoint>& keypoints,
-                                      Mat& _H, vector<Point2f>& corners, vector<int>* pairs) const
+                                      Mat& matH, vector<Point2f>& corners, vector<int>* pairs) const
 {
     int i, j, m = (int)modelPoints.size(), n = (int)keypoints.size();
     vector<int> bestMatches(m, -1);
@@ -1322,10 +1322,10 @@ bool PlanarObjectDetector::operator()(const vector<Mat>& pyr, const vector<KeyPo
         return false;
     
     vector<uchar> mask;
-    _H = findHomography(Mat(fromPt), Mat(toPt), mask, RANSAC, 10);
-    if( _H.data )
+    matH = findHomography(Mat(fromPt), Mat(toPt), mask, RANSAC, 10);
+    if( matH.data )
     {
-        const Mat_<double>& H = _H;
+        const Mat_<double>& H = matH;
         corners.resize(4);
         for( i = 0; i < 4; i++ )
         {
@@ -1347,7 +1347,7 @@ bool PlanarObjectDetector::operator()(const vector<Mat>& pyr, const vector<KeyPo
             }
     }
     
-    return _H.data != 0;
+    return matH.data != 0;
 }
 
 

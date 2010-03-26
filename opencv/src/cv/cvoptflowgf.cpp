@@ -194,7 +194,7 @@ FarnebackPolyExpPyr( const Mat& src0, Vector<Mat>& pyr, int maxlevel, int n, dou
 
 
 static void
-FarnebackUpdateMatrices( const Mat& _R0, const Mat& _R1, const Mat& _flow, Mat& _M, int _y0, int _y1 )
+FarnebackUpdateMatrices( const Mat& _R0, const Mat& _R1, const Mat& _flow, Mat& matM, int _y0, int _y1 )
 {
     const int BORDER = 5;
     static const float border[BORDER] = {0.14f, 0.14f, 0.4472f, 0.4472f, 0.4472f};
@@ -203,13 +203,13 @@ FarnebackUpdateMatrices( const Mat& _R0, const Mat& _R1, const Mat& _flow, Mat& 
     const float* R1 = (float*)_R1.data;
     size_t step1 = _R1.step/sizeof(R1[0]);
     
-    _M.create(height, width, CV_32FC(5));
+    matM.create(height, width, CV_32FC(5));
 
     for( y = _y0; y < _y1; y++ )
     {
         const float* flow = (float*)(_flow.data + y*_flow.step);
         const float* R0 = (float*)(_R0.data + y*_R0.step);
-        float* M = (float*)(_M.data + y*_M.step);
+        float* M = (float*)(matM.data + y*matM.step);
         
         for( x = 0; x < width; x++ )
         {
@@ -292,7 +292,7 @@ FarnebackUpdateMatrices( const Mat& _R0, const Mat& _R1, const Mat& _flow, Mat& 
 
 static void
 FarnebackUpdateFlow_Blur( const Mat& _R0, const Mat& _R1,
-                          Mat& _flow, Mat& _M, int block_size,
+                          Mat& _flow, Mat& matM, int block_size,
                           bool update_matrices )
 {
     int x, y, width = _flow.cols, height = _flow.rows;
@@ -305,13 +305,13 @@ FarnebackUpdateFlow_Blur( const Mat& _R0, const Mat& _R1,
     double* vsum = _vsum + (m+1)*5;
 
     // init vsum
-    const float* srow0 = (const float*)_M.data;
+    const float* srow0 = (const float*)matM.data;
     for( x = 0; x < width*5; x++ )
         vsum[x] = srow0[x]*(m+2);
 
     for( y = 1; y < m; y++ )
     {
-        srow0 = (float*)(_M.data + _M.step*std::min(y,height-1));
+        srow0 = (float*)(matM.data + matM.step*std::min(y,height-1));
         for( x = 0; x < width*5; x++ )
             vsum[x] += srow0[x];
     }
@@ -322,8 +322,8 @@ FarnebackUpdateFlow_Blur( const Mat& _R0, const Mat& _R1,
         double g11, g12, g22, h1, h2;
         float* flow = (float*)(_flow.data + _flow.step*y);
 
-        srow0 = (const float*)(_M.data + _M.step*std::max(y-m-1,0));
-        const float* srow1 = (const float*)(_M.data + _M.step*std::min(y+m,height-1));
+        srow0 = (const float*)(matM.data + matM.step*std::max(y-m-1,0));
+        const float* srow1 = (const float*)(matM.data + matM.step*std::min(y+m,height-1));
         
         // vertical blur
         for( x = 0; x < width*5; x++ )
@@ -376,7 +376,7 @@ FarnebackUpdateFlow_Blur( const Mat& _R0, const Mat& _R1,
         y1 = y == height - 1 ? height : y - block_size;
         if( update_matrices && (y1 == height || y1 >= y0 + min_update_stripe) )
         {
-            FarnebackUpdateMatrices( _R0, _R1, _flow, _M, y0, y1 );
+            FarnebackUpdateMatrices( _R0, _R1, _flow, matM, y0, y1 );
             y0 = y1;
         }
     }
@@ -385,7 +385,7 @@ FarnebackUpdateFlow_Blur( const Mat& _R0, const Mat& _R1,
 
 static void
 FarnebackUpdateFlow_GaussianBlur( const Mat& _R0, const Mat& _R1,
-                                  Mat& _flow, Mat& _M, int block_size,
+                                  Mat& _flow, Mat& matM, int block_size,
                                   bool update_matrices )
 {
     int x, y, i, width = _flow.cols, height = _flow.rows;
@@ -432,8 +432,8 @@ FarnebackUpdateFlow_GaussianBlur( const Mat& _R0, const Mat& _R1,
         // vertical blur
         for( i = 0; i <= m; i++ )
         {
-            srow[m-i] = (const float*)(_M.data + _M.step*std::max(y-i,0));
-            srow[m+i] = (const float*)(_M.data + _M.step*std::min(y+i,height-1));
+            srow[m-i] = (const float*)(matM.data + matM.step*std::max(y-i,0));
+            srow[m+i] = (const float*)(matM.data + matM.step*std::min(y+i,height-1));
         }
 
         x = 0;
@@ -555,7 +555,7 @@ FarnebackUpdateFlow_GaussianBlur( const Mat& _R0, const Mat& _R1,
         y1 = y == height - 1 ? height : y - block_size;
         if( update_matrices && (y1 == height || y1 >= y0 + min_update_stripe) )
         {
-            FarnebackUpdateMatrices( _R0, _R1, _flow, _M, y0, y1 );
+            FarnebackUpdateMatrices( _R0, _R1, _flow, matM, y0, y1 );
             y0 = y1;
         }
     }

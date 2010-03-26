@@ -440,7 +440,7 @@ calcHist_8u( vector<uchar*>& _ptrs, const vector<int>& _deltas,
     if( dims == 1 )
     {
         int d0 = deltas[0], step0 = deltas[1];
-        int _H[256] = {0};
+        int matH[256] = {0};
         const uchar* p0 = (const uchar*)ptrs[0];
         
         for( ; imsize.height--; p0 += step0, mask += mstep )
@@ -452,9 +452,9 @@ calcHist_8u( vector<uchar*>& _ptrs, const vector<int>& _deltas,
                     for( x = 0; x <= imsize.width - 4; x += 4 )
                     {
                         int t0 = p0[x], t1 = p0[x+1];
-                        _H[t0]++; _H[t1]++;
+                        matH[t0]++; matH[t1]++;
                         t0 = p0[x+2]; t1 = p0[x+3];
-                        _H[t0]++; _H[t1]++;
+                        matH[t0]++; matH[t1]++;
                     }
                     p0 += x;
                 }
@@ -462,27 +462,27 @@ calcHist_8u( vector<uchar*>& _ptrs, const vector<int>& _deltas,
                     for( x = 0; x <= imsize.width - 4; x += 4 )
                     {
                         int t0 = p0[0], t1 = p0[d0];
-                        _H[t0]++; _H[t1]++;
+                        matH[t0]++; matH[t1]++;
                         p0 += d0*2;
                         t0 = p0[0]; t1 = p0[d0];
-                        _H[t0]++; _H[t1]++;
+                        matH[t0]++; matH[t1]++;
                         p0 += d0*2;
                     }
                 
                 for( ; x < imsize.width; x++, p0 += d0 )
-                    _H[*p0]++;
+                    matH[*p0]++;
             }
             else
                 for( x = 0; x < imsize.width; x++, p0 += d0 )
                     if( mask[x] )
-                        _H[*p0]++;
+                        matH[*p0]++;
         }
         
         for( i = 0; i < 256; i++ )
         {
             size_t hidx = tab[i];
             if( hidx < OUT_OF_RANGE )
-                *(int*)(H + hidx) += _H[i];
+                *(int*)(H + hidx) += matH[i];
         }
     }
     else if( dims == 2 )
@@ -988,14 +988,14 @@ calcBackProj_8u( vector<uchar*>& _ptrs, const vector<int>& _deltas,
     if( dims == 1 )
     {
         int d0 = deltas[0], step0 = deltas[1];
-        uchar _H[256] = {0};
+        uchar matH[256] = {0};
         const uchar* p0 = (const uchar*)ptrs[0];
         
         for( i = 0; i < 256; i++ )
         {
             size_t hidx = tab[i];
             if( hidx < OUT_OF_RANGE )
-                _H[i] = saturate_cast<uchar>(*(float*)(H + hidx)*scale);
+                matH[i] = saturate_cast<uchar>(*(float*)(H + hidx)*scale);
         }
         
         for( ; imsize.height--; p0 += step0, bproj += bpstep )
@@ -1004,9 +1004,9 @@ calcBackProj_8u( vector<uchar*>& _ptrs, const vector<int>& _deltas,
             {
                 for( x = 0; x <= imsize.width - 4; x += 4 )
                 {
-                    uchar t0 = _H[p0[x]], t1 = _H[p0[x+1]];
+                    uchar t0 = matH[p0[x]], t1 = matH[p0[x+1]];
                     bproj[x] = t0; bproj[x+1] = t1;
-                    t0 = _H[p0[x+2]]; t1 = _H[p0[x+3]];
+                    t0 = matH[p0[x+2]]; t1 = matH[p0[x+3]];
                     bproj[x+2] = t0; bproj[x+3] = t1;
                 }
                 p0 += x;
@@ -1014,16 +1014,16 @@ calcBackProj_8u( vector<uchar*>& _ptrs, const vector<int>& _deltas,
             else   
                 for( x = 0; x <= imsize.width - 4; x += 4 )
                 {
-                    uchar t0 = _H[p0[0]], t1 = _H[p0[d0]];
+                    uchar t0 = matH[p0[0]], t1 = matH[p0[d0]];
                     bproj[x] = t0; bproj[x+1] = t1;
                     p0 += d0*2;
-                    t0 = _H[p0[0]]; t1 = _H[p0[d0]];
+                    t0 = matH[p0[0]]; t1 = matH[p0[d0]];
                     bproj[x+2] = t0; bproj[x+3] = t1;
                     p0 += d0*2;
                 }
             
             for( ; x < imsize.width; x++, p0 += d0 )
-                bproj[x] = _H[*p0];
+                bproj[x] = matH[*p0];
         }
     }
     else if( dims == 2 )

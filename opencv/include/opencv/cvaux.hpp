@@ -909,7 +909,7 @@ public:
     void operator()(const Mat& image, Point2f pt, Mat& patch, Size patchSize, RNG& rng) const;
     void operator()(const Mat& image, const Mat& transform, Mat& patch,
                     Size patchSize, RNG& rng) const;
-    void warpWholeImage(const Mat& image, Mat& _T, Mat& buf,
+    void warpWholeImage(const Mat& image, Mat& matT, Mat& buf,
                         Mat& warped, int border, RNG& rng) const;
     void generateRandomTransform(Point2f srcCenter, Point2f dstCenter,
                                  Mat& transform, RNG& rng, bool inverse=false) const;

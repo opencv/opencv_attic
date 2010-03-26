@@ -1378,7 +1378,7 @@ icvGetRTMatrix( const CvPoint2D32f* a, const CvPoint2D32f* b,
 
 
 CV_IMPL int
-cvEstimateRigidTransform( const CvArr* _A, const CvArr* _B, CvMat* _M, int full_affine )
+cvEstimateRigidTransform( const CvArr* matA, const CvArr* matB, CvMat* matM, int full_affine )
 {
     const int COUNT = 15;
     const int WIDTH = 160, HEIGHT = 120;
@@ -1392,8 +1392,8 @@ cvEstimateRigidTransform( const CvArr* _A, const CvArr* _B, CvMat* _M, int full_
     cv::AutoBuffer<char> status;
     cv::Ptr<CvMat> gray;
 
-    CvMat stubA, *A = cvGetMat( _A, &stubA );
-    CvMat stubB, *B = cvGetMat( _B, &stubB );
+    CvMat stubA, *A = cvGetMat( matA, &stubA );
+    CvMat stubB, *B = cvGetMat( matB, &stubB );
     CvSize sz0, sz1;
     int cn, equal_sizes;
     int i, j, k, k1;
@@ -1405,8 +1405,8 @@ cvEstimateRigidTransform( const CvArr* _A, const CvArr* _B, CvMat* _M, int full_
     int good_count = 0;
     CvRect brect;
 
-    if( !CV_IS_MAT(_M) )
-        CV_Error( _M ? CV_StsBadArg : CV_StsNullPtr, "Output parameter M is not a valid matrix" );
+    if( !CV_IS_MAT(matM) )
+        CV_Error( matM ? CV_StsBadArg : CV_StsNullPtr, "Output parameter M is not a valid matrix" );
 
     if( !CV_ARE_SIZES_EQ( A, B ) )
         CV_Error( CV_StsUnmatchedSizes, "Both input images must have the same size" );
@@ -1601,7 +1601,7 @@ cvEstimateRigidTransform( const CvArr* _A, const CvArr* _B, CvMat* _M, int full_
     icvGetRTMatrix( pA, pB, good_count, &M, full_affine );
     m[2] /= scale;
     m[5] /= scale;
-    cvConvert( &M, _M );
+    cvConvert( &M, matM );
     
     return 1;
 }
@@ -1614,8 +1614,8 @@ Mat estimateRigidTransform( const Mat& A,
                             bool fullAffine )
 {
     Mat M(2, 3, CV_64F);
-    CvMat _A = A, _B = B, _M = M;
-    cvEstimateRigidTransform(&_A, &_B, &_M, fullAffine);
+    CvMat matA = A, matB = B, matM = M;
+    cvEstimateRigidTransform(&matA, &matB, &matM, fullAffine);
     return M;
 }
 }

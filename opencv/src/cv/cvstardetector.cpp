@@ -42,19 +42,19 @@
 #include "_cv.h"
 
 static void
-icvComputeIntegralImages( const CvMat* _I, CvMat* _S, CvMat* _T, CvMat* _FT )
+icvComputeIntegralImages( const CvMat* matI, CvMat* matS, CvMat* matT, CvMat* _FT )
 {
-    int x, y, rows = _I->rows, cols = _I->cols;
-    const uchar* I = _I->data.ptr;
-    int *S = _S->data.i, *T = _T->data.i, *FT = _FT->data.i;
-    int istep = _I->step, step = _S->step/sizeof(S[0]);
+    int x, y, rows = matI->rows, cols = matI->cols;
+    const uchar* I = matI->data.ptr;
+    int *S = matS->data.i, *T = matT->data.i, *FT = _FT->data.i;
+    int istep = matI->step, step = matS->step/sizeof(S[0]);
     
-    assert( CV_MAT_TYPE(_I->type) == CV_8UC1 &&
-        CV_MAT_TYPE(_S->type) == CV_32SC1 &&
-        CV_ARE_TYPES_EQ(_S, _T) && CV_ARE_TYPES_EQ(_S, _FT) &&
-        CV_ARE_SIZES_EQ(_S, _T) && CV_ARE_SIZES_EQ(_S, _FT) &&
-        _S->step == _T->step && _S->step == _FT->step &&
-        _I->rows+1 == _S->rows && _I->cols+1 == _S->cols );
+    assert( CV_MAT_TYPE(matI->type) == CV_8UC1 &&
+        CV_MAT_TYPE(matS->type) == CV_32SC1 &&
+        CV_ARE_TYPES_EQ(matS, matT) && CV_ARE_TYPES_EQ(matS, _FT) &&
+        CV_ARE_SIZES_EQ(matS, matT) && CV_ARE_SIZES_EQ(matS, _FT) &&
+        matS->step == matT->step && matS->step == _FT->step &&
+        matI->rows+1 == matS->rows && matI->cols+1 == matS->cols );
 
     for( x = 0; x <= cols; x++ )
         S[x] = T[x] = FT[x] = 0;

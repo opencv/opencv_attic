@@ -235,8 +235,8 @@ private:
   lsh_table(const lsh_table& x);
   lsh_table& operator= (const lsh_table& rhs);
 public:
-  lsh_table(CvLSHOperations* _ops, int _d, int _L, int _k, double _r, CvRNG& rng)
-    : ops(_ops), d(_d), L(_L), k(_k), r(_r) {
+  lsh_table(CvLSHOperations* _ops, int _d, int Lval, int _k, double _r, CvRNG& rng)
+    : ops(_ops), d(_d), L(Lval), k(_k), r(_r) {
     g.resize(L);
     for (int j = 0; j < L; ++j)
       g[j] = new H(d, k, r, rng);

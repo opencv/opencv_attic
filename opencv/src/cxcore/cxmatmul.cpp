@@ -670,8 +670,8 @@ static void GEMMStore_64fc( const Complexd* c_data, size_t c_step,
 }
 
 
-void gemm( const Mat& _A, const Mat& _B, double alpha,
-           const Mat& _C, double beta, Mat& D, int flags )
+void gemm( const Mat& matA, const Mat& matB, double alpha,
+           const Mat& matC, double beta, Mat& D, int flags )
 {
     const int block_lin_size = 128;
     const int block_size = block_lin_size * block_lin_size;
@@ -679,8 +679,8 @@ void gemm( const Mat& _A, const Mat& _B, double alpha,
     static double zero[] = {0,0,0,0};
     static float zerof[] = {0,0,0,0};
 
-    Mat A = _A, B = _B;
-    const Mat* C = _C.data && beta != 0 ? &_C : 0;
+    Mat A = matA, B = matB;
+    const Mat* C = matC.data && beta != 0 ? &matC : 0;
     Size a_size = A.size(), d_size;
     int i, len = 0, type = A.type();
 
@@ -987,7 +987,7 @@ void gemm( const Mat& _A, const Mat& _B, double alpha,
     GEMMSingleMulFunc singleMulFunc;
     GEMMBlockMulFunc blockMulFunc;
     GEMMStoreFunc storeFunc;
-    Mat *_D = &D, tmat;
+    Mat *matD = &D, tmat;
     const uchar* Cdata = C ? C->data : 0;
     size_t Cstep = C ? C->step : 0;
     AutoBuffer<uchar> buf;
@@ -1022,7 +1022,7 @@ void gemm( const Mat& _A, const Mat& _B, double alpha,
     {
         buf.allocate(d_size.width*d_size.height*CV_ELEM_SIZE(type));
         tmat = Mat(d_size.height, d_size.width, type, (uchar*)buf );
-        _D = &tmat;
+        matD = &tmat;
     }
 
     if( (d_size.width == 1 || len == 1) && !(flags & GEMM_2_T) && B.isContinuous() )
@@ -1099,7 +1099,7 @@ void gemm( const Mat& _A, const Mat& _B, double alpha,
         d_size.height <= block_lin_size && len <= block_lin_size) )
     {
         singleMulFunc( A.data, A.step, B.data, b_step, Cdata, Cstep,
-                       _D->data, _D->step, a_size, d_size, alpha, beta, flags );
+                       matD->data, matD->step, a_size, d_size, alpha, beta, flags );
     }
     else
     {
@@ -1172,9 +1172,9 @@ void gemm( const Mat& _A, const Mat& _B, double alpha,
 
             for( j = 0; j < d_size.width; j += dj )
             {
-                uchar* _d = _D->data + i*_D->step + j*elem_size;
+                uchar* _d = matD->data + i*matD->step + j*elem_size;
                 const uchar* _c = Cdata + i*c_step0 + j*c_step1;
-                size_t _d_step = _D->step;
+                size_t _d_step = matD->step;
                 dj = dn0;
 
                 if( j + dj >= d_size.width || 8*(j + dj) + dj > 8*d_size.width )
@@ -1236,14 +1236,14 @@ void gemm( const Mat& _A, const Mat& _B, double alpha,
 
                 if( dk0 < len )
                     storeFunc( _c, Cstep, _d, _d_step,
-                               _D->data + i*_D->step + j*elem_size,
-                               _D->step, Size(dj,di), alpha, beta, flags );
+                               matD->data + i*matD->step + j*elem_size,
+                               matD->step, Size(dj,di), alpha, beta, flags );
             }
         }
     }
 
-    if( _D != &D )
-        _D->copyTo(D);
+    if( matD != &D )
+        matD->copyTo(D);
     }
 }
 

@@ -735,7 +735,7 @@ void fjac(int /*i*/, int /*j*/, CvMat *point_params, CvMat* cam_params, CvMat* A
     intr_data[2] = cam_params->data.db[8];
     intr_data[5] = cam_params->data.db[9];
 
-    CvMat _A = cvMat(3,3, CV_64F, intr_data ); 
+    CvMat matA = cvMat(3,3, CV_64F, intr_data ); 
 
     CvMat _dpdr, _dpdt, _dpdf, _dpdc, _dpdk;
     
@@ -751,7 +751,7 @@ void fjac(int /*i*/, int /*j*/, CvMat *point_params, CvMat* cam_params, CvMat* A
         cvGetRows( cam_params, &_k, 10, cam_params->height );
         cvGetCols( A, &_dpdk, 10, A->width );
     }
-    cvProjectPoints2( &_Mi, &_ri, &_ti, &_A, have_dk ? &_k : NULL, _mp, &_dpdr, &_dpdt,
+    cvProjectPoints2( &_Mi, &_ri, &_ti, &matA, have_dk ? &_k : NULL, _mp, &_dpdr, &_dpdt,
         &_dpdf, &_dpdc, have_dk ? &_dpdk : NULL, 0);   
 
     cvReleaseMat( &_mp );                                 
@@ -802,8 +802,8 @@ void fjac(int /*i*/, int /*j*/, CvMat *point_params, CvMat* cam_params, CvMat* A
 
     //get rotation matrix
     double R[9], t[3], fx = intr_data[0], fy = intr_data[4];
-    CvMat _R = cvMat( 3, 3, CV_64F, R );
-    cvRodrigues2(&_ri, &_R);
+    CvMat matR = cvMat( 3, 3, CV_64F, R );
+    cvRodrigues2(&_ri, &matR);
 
     double X,Y,Z;
     X = point_params->data.db[0];
@@ -833,7 +833,7 @@ void fjac(int /*i*/, int /*j*/, CvMat *point_params, CvMat* cam_params, CvMat* A
     CvMat coeffmat = cvMat( 2, 3, CV_64F, coeff );
 
     CvMat* dstrike_dbig = cvCreateMat(2,3,CV_64F);
-    cvMatMul(&coeffmat, &_R, dstrike_dbig);
+    cvMatMul(&coeffmat, &matR, dstrike_dbig);
     cvScale(dstrike_dbig, dstrike_dbig, 1/(z*z) );      
     
     if( have_dk )
@@ -945,7 +945,7 @@ void func(int /*i*/, int /*j*/, CvMat *point_params, CvMat* cam_params, CvMat* e
     intr_data[2] = cam_params->data.db[8];
     intr_data[5] = cam_params->data.db[9];
 
-    CvMat _A = cvMat(3,3, CV_64F, intr_data ); 
+    CvMat matA = cvMat(3,3, CV_64F, intr_data ); 
 
     //int cn = CV_MAT_CN(_Mi.type);
 
@@ -955,7 +955,7 @@ void func(int /*i*/, int /*j*/, CvMat *point_params, CvMat* cam_params, CvMat* e
     {
         cvGetRows( cam_params, &_k, 10, cam_params->height );        
     }  
-    cvProjectPoints2( &_Mi, &_ri, &_ti, &_A, have_dk ? &_k : NULL, _mp, NULL, NULL,
+    cvProjectPoints2( &_Mi, &_ri, &_ti, &matA, have_dk ? &_k : NULL, _mp, NULL, NULL,
                                                               NULL, NULL, NULL, 0);   
     cvTranspose( _mp, estim );
     cvReleaseMat( &_mp );
@@ -963,8 +963,8 @@ void func(int /*i*/, int /*j*/, CvMat *point_params, CvMat* cam_params, CvMat* e
 
 void fjac_new(int i, int j, Mat& point_params, Mat& cam_params, Mat& A, Mat& B, void* data)
 {
-    CvMat _point_params = point_params, _cam_params = cam_params, _A = A, _B = B;
-    fjac(i,j, &_point_params, &_cam_params, &_A, &_B, data);
+    CvMat _point_params = point_params, _cam_params = cam_params, matA = A, matB = B;
+    fjac(i,j, &_point_params, &_cam_params, &matA, &matB, data);
 };
 
 void func_new(int i, int j, Mat& point_params, Mat& cam_params, Mat& estim, void* data) 

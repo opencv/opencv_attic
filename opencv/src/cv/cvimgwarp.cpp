@@ -2714,13 +2714,13 @@ void warpAffine( const Mat& src, Mat& dst, const Mat& M0, Size dsize,
     const int BLOCK_SZ = 64;
     short XY[BLOCK_SZ*BLOCK_SZ*2], A[BLOCK_SZ*BLOCK_SZ];
     double M[6];
-    Mat _M(2, 3, CV_64F, M);
+    Mat matM(2, 3, CV_64F, M);
     int interpolation = flags & INTER_MAX;
     if( interpolation == INTER_AREA )
         interpolation = INTER_LINEAR;
 
     CV_Assert( (M0.type() == CV_32F || M0.type() == CV_64F) && M0.rows == 2 && M0.cols == 3 );
-    M0.convertTo(_M, _M.type());
+    M0.convertTo(matM, matM.type());
 
     if( !(flags & WARP_INVERSE_MAP) )
     {
@@ -2761,7 +2761,7 @@ void warpAffine( const Mat& src, Mat& dst, const Mat& M0, Size dsize,
             int bw = std::min( bw0, width - x);
             int bh = std::min( bh0, height - y);
 
-            Mat _XY(bh, bw, CV_16SC2, XY), _A;
+            Mat _XY(bh, bw, CV_16SC2, XY), matA;
             Mat dpart(dst, Rect(x, y, bw, bh));
 
             for( y1 = 0; y1 < bh; y1++ )
@@ -2832,8 +2832,8 @@ void warpAffine( const Mat& src, Mat& dst, const Mat& M0, Size dsize,
                 remap( src, dpart, _XY, Mat(), interpolation, borderType, borderValue );
             else
             {
-                Mat _A(bh, bw, CV_16U, A);
-                remap( src, dpart, _XY, _A, interpolation, borderType, borderValue );
+                Mat matA(bh, bw, CV_16U, A);
+                remap( src, dpart, _XY, matA, interpolation, borderType, borderValue );
             }
         }
     }
@@ -2849,16 +2849,16 @@ void warpPerspective( const Mat& src, Mat& dst, const Mat& M0, Size dsize,
     const int BLOCK_SZ = 32;
     short XY[BLOCK_SZ*BLOCK_SZ*2], A[BLOCK_SZ*BLOCK_SZ];
     double M[9];
-    Mat _M(3, 3, CV_64F, M);
+    Mat matM(3, 3, CV_64F, M);
     int interpolation = flags & INTER_MAX;
     if( interpolation == INTER_AREA )
         interpolation = INTER_LINEAR;
 
     CV_Assert( (M0.type() == CV_32F || M0.type() == CV_64F) && M0.rows == 3 && M0.cols == 3 );
-    M0.convertTo(_M, _M.type());
+    M0.convertTo(matM, matM.type());
 
     if( !(flags & WARP_INVERSE_MAP) )
-         invert(_M, _M);
+         invert(matM, matM);
 
     int x, y, x1, y1, width = dst.cols, height = dst.rows;
 
@@ -2873,7 +2873,7 @@ void warpPerspective( const Mat& src, Mat& dst, const Mat& M0, Size dsize,
             int bw = std::min( bw0, width - x);
             int bh = std::min( bh0, height - y);
 
-            Mat _XY(bh, bw, CV_16SC2, XY), _A;
+            Mat _XY(bh, bw, CV_16SC2, XY), matA;
             Mat dpart(dst, Rect(x, y, bw, bh));
 
             for( y1 = 0; y1 < bh; y1++ )
@@ -2914,8 +2914,8 @@ void warpPerspective( const Mat& src, Mat& dst, const Mat& M0, Size dsize,
                 remap( src, dpart, _XY, Mat(), interpolation, borderType, borderValue );
             else
             {
-                Mat _A(bh, bw, CV_16U, A);
-                remap( src, dpart, _XY, _A, interpolation, borderType, borderValue );
+                Mat matA(bh, bw, CV_16U, A);
+                remap( src, dpart, _XY, matA, interpolation, borderType, borderValue );
             }
         }
     }
@@ -3033,15 +3033,15 @@ Mat getAffineTransform( const Point2f src[], const Point2f dst[] )
     return M;
 }
     
-void invertAffineTransform(const Mat& _M, Mat& _iM)
+void invertAffineTransform(const Mat& matM, Mat& _iM)
 {
-    CV_Assert(_M.rows == 2 && _M.cols == 3);
-    _iM.create(2, 3, _M.type());
-    if( _M.type() == CV_32F )
+    CV_Assert(matM.rows == 2 && matM.cols == 3);
+    _iM.create(2, 3, matM.type());
+    if( matM.type() == CV_32F )
     {
-        const float* M = (const float*)_M.data;
+        const float* M = (const float*)matM.data;
         float* iM = (float*)_iM.data;
-        int step = _M.step/sizeof(M[0]), istep = _iM.step/sizeof(iM[0]);
+        int step = matM.step/sizeof(M[0]), istep = _iM.step/sizeof(iM[0]);
         
         double D = M[0]*M[step+1] - M[1]*M[step];
         D = D != 0 ? 1./D : 0;
@@ -3052,11 +3052,11 @@ void invertAffineTransform(const Mat& _M, Mat& _iM)
         iM[0] = (float)A11; iM[1] = (float)A12; iM[2] = (float)b1;
         iM[istep] = (float)A21; iM[istep+1] = (float)A22; iM[istep+2] = (float)b2;
     }
-    else if( _M.type() == CV_64F )
+    else if( matM.type() == CV_64F )
     {
-        const double* M = (const double*)_M.data;
+        const double* M = (const double*)matM.data;
         double* iM = (double*)_iM.data;
-        int step = _M.step/sizeof(M[0]), istep = _iM.step/sizeof(iM[0]);
+        int step = matM.step/sizeof(M[0]), istep = _iM.step/sizeof(iM[0]);
         
         double D = M[0]*M[step+1] - M[1]*M[step];
         D = D != 0 ? 1./D : 0;

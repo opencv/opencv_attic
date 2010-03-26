@@ -719,16 +719,16 @@ static void computeDisparitySGBM( const Mat& img1, const Mat& img2,
                             _minL0 = _mm_min_epi16(_minL0, _mm_srli_si128(_minL0, 4));
                             _minL0 = _mm_min_epi16(_minL0, _mm_srli_si128(_minL0, 2));
                             
-                            __m128i _S = _mm_min_epi16(_minS, _mm_srli_si128(_minS, 8));
-                            _S = _mm_min_epi16(_S, _mm_srli_si128(_S, 4));
-                            _S = _mm_min_epi16(_S, _mm_srli_si128(_S, 2));
+                            __m128i qS = _mm_min_epi16(_minS, _mm_srli_si128(_minS, 8));
+                            qS = _mm_min_epi16(qS, _mm_srli_si128(qS, 4));
+                            qS = _mm_min_epi16(qS, _mm_srli_si128(qS, 2));
                             
                             minLr[0][xm] = (CostType)_mm_cvtsi128_si32(_minL0);
-                            minS = (CostType)_mm_cvtsi128_si32(_S);
+                            minS = (CostType)_mm_cvtsi128_si32(qS);
                             
-                            _S = _mm_shuffle_epi32(_mm_unpacklo_epi16(_S, _S), 0);
-                            _S = _mm_cmpeq_epi16(_minS, _S);
-                            int idx = _mm_movemask_epi8(_mm_packs_epi16(_S, _S)) & 255;
+                            qS = _mm_shuffle_epi32(_mm_unpacklo_epi16(qS, qS), 0);
+                            qS = _mm_cmpeq_epi16(_minS, qS);
+                            int idx = _mm_movemask_epi8(_mm_packs_epi16(qS, qS)) & 255;
                             
                             bestDisp = bestDispBuf[LSBTab[idx]];
                         }
