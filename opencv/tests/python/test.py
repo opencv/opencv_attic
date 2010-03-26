@@ -750,7 +750,7 @@ class AreaTests(OpenCVTests):
 
             def convert(numpydims):
                 """ Create a numpy array with specified dims, return the OpenCV CvMat """
-                a1 = numpy.array([1] * reduce(operator.__mul__, numpydims)).reshape(*numpydims)
+                a1 = numpy.array([1] * reduce(operator.__mul__, numpydims)).reshape(*numpydims).astype(numpy.float32)
                 return cv.fromarray(a1)
             def row_col_chan(m):
                 col = m.cols
