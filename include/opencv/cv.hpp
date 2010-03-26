@@ -512,11 +512,11 @@ enum { CHAIN_APPROX_NONE=CV_CHAIN_APPROX_NONE,
        CHAIN_APPROX_TC89_L1=CV_CHAIN_APPROX_TC89_L1,
        CHAIN_APPROX_TC89_KCOS=CV_CHAIN_APPROX_TC89_KCOS };
 
-CV_EXPORTS void findContours( const Mat& image, vector<vector<Point> >& contours,
+CV_EXPORTS void findContours( Mat& image, vector<vector<Point> >& contours,
                               vector<Vec4i>& hierarchy, int mode,
                               int method, Point offset=Point());
 
-CV_EXPORTS void findContours( const Mat& image, vector<vector<Point> >& contours,
+CV_EXPORTS void findContours( Mat& image, vector<vector<Point> >& contours,
                               int mode, int method, Point offset=Point());
 
 CV_EXPORTS void drawContours( Mat& image, const vector<vector<Point> >& contours,
