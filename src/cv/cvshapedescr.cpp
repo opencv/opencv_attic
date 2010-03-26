@@ -713,7 +713,7 @@ static CvStatus icvContourSecArea( CvSeq * contour, CvSlice slice, double *area 
 
 /* external contour area function */
 CV_IMPL double
-cvContourArea( const void *array, CvSlice slice )
+cvContourArea( const void *array, CvSlice slice, int oriented )
 {
     double area = 0;
 
@@ -744,7 +744,7 @@ cvContourArea( const void *array, CvSlice slice )
         IPPI_CALL( icvContourSecArea( contour, slice, &area ));
     }
 
-    return area;
+    return oriented ? area : fabs(area);
 }
 
 

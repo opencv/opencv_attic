@@ -729,7 +729,8 @@ CVAPI(CvRect)  cvBoundingRect( CvArr* points, int update CV_DEFAULT(0) );
 
 /* Calculates area of a contour or contour segment */
 CVAPI(double)  cvContourArea( const CvArr* contour,
-                              CvSlice slice CV_DEFAULT(CV_WHOLE_SEQ));
+                              CvSlice slice CV_DEFAULT(CV_WHOLE_SEQ),
+                              int oriented CV_DEFAULT(0));
 
 /* Finds minimum area rotated rectangle bounding a set of points */
 CVAPI(CvBox2D)  cvMinAreaRect2( const CvArr* points,

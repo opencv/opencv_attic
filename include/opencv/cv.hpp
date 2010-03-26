@@ -534,7 +534,7 @@ CV_EXPORTS void approxPolyDP( const Mat& curve,
     
 CV_EXPORTS double arcLength( const Mat& curve, bool closed );
 CV_EXPORTS Rect boundingRect( const Mat& points );
-CV_EXPORTS double contourArea( const Mat& contour );    
+CV_EXPORTS double contourArea( const Mat& contour, bool oriented=false );    
 CV_EXPORTS RotatedRect minAreaRect( const Mat& points );
 CV_EXPORTS void minEnclosingCircle( const Mat& points,
                                     Point2f& center, float& radius );    

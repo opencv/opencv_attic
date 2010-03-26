@@ -1670,14 +1670,14 @@ cv::Rect cv::boundingRect( const Mat& points )
 }
 
 
-double cv::contourArea( const Mat& contour )
+double cv::contourArea( const Mat& contour, bool oriented )
 {
     CV_Assert(contour.isContinuous() &&
               (contour.depth() == CV_32S || contour.depth() == CV_32F) &&
               ((contour.rows == 1 && contour.channels() == 2) ||
                contour.cols*contour.channels() == 2));
     CvMat _contour = contour;
-    return cvContourArea(&_contour);
+    return cvContourArea(&_contour, CV_WHOLE_SEQ, oriented);
 }
 
 

@@ -105,7 +105,7 @@ CvSeq* findSquares4( IplImage* img, CvMemStorage* storage )
                 // area may be positive or negative - in accordance with the
                 // contour orientation
                 if( result->total == 4 &&
-                    fabs(cvContourArea(result,CV_WHOLE_SEQ)) > 1000 &&
+                    cvContourArea(result,CV_WHOLE_SEQ,0) > 1000 &&
                     cvCheckContourConvexity(result) )
                 {
                     s = 0;
