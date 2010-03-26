@@ -276,6 +276,7 @@ endif()
 
 if(APPLE)
 	set(WITH_CARBON OFF CACHE BOOL "Use Carbon for UI instead of Cocoa")
+	set(WITH_QUICKTIME OFF CACHE BOOL "Use QuickTime for Video I/O insted of QTKit")
 endif()
 
 set(WITH_TBB OFF CACHE BOOL "Include TBB support")
@@ -1097,6 +1098,15 @@ else()
 message(STATUS "    V4L/V4L2:                  ${HAVE_CAMV4L}/${HAVE_CAMV4L2}")
 endif()
 message(STATUS "    Xine:                      ${HAVE_XINE}")
+endif()
+
+if(APPLE)
+message(STATUS "")
+if(WITH_QUICKTIME)
+message(STATUS "  Video I/O:                   QuickTime")
+else()
+message(STATUS "  Video I/O:                   QTKit")
+endif()
 endif()
 
 message(STATUS "")
