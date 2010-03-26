@@ -56,7 +56,6 @@ struct CvLSH {};
 %extend CvFileStorage  { ~CvFileStorage  () { CvFileStorage  * dummy = self; cvReleaseFileStorage        (& dummy); } }
 %extend IplConvKernel  { ~IplConvKernel  () { IplConvKernel  * dummy = self; cvReleaseStructuringElement (& dummy); } }
 %extend CvKalman       { ~CvKalman       () { CvKalman       * dummy = self; cvReleaseKalman             (& dummy); } }
-%extend CvConDensation { ~CvConDensation () { CvConDensation * dummy = self; cvReleaseConDensation       (& dummy); } }
 %extend CvHistogram    { ~CvHistogram    () { CvHistogram    * dummy = self; cvReleaseHist               (& dummy); } }
 %extend CvHaarClassifierCascade { ~CvHaarClassifierCascade () { CvHaarClassifierCascade * dummy = self; cvReleaseHaarClassifierCascade  (& dummy); } }
 %extend CvPOSITObject  { ~CvPOSITObject  () { CvPOSITObject  * dummy = self; cvReleasePOSITObject        (& dummy); } }

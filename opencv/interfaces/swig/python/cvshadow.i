@@ -122,7 +122,6 @@ def cvHoughLines2( *args ):
 %myrelease(cv, cvReleaseImage, CvMat);  // IplImage is CvMat in Python
 %myrelease(cv, cvReleaseMat, CvMat);
 %myrelease(cv, cvReleaseStructuringElement, IplConvKernel);
-%myrelease(cv, cvReleaseConDensation, CvConDensation);
 %myrelease(cv, cvReleaseKalman, CvKalman);
 %myrelease(cv, cvReleaseHist, CvHistogram);
 %myrelease(cv, cvReleaseHaarClassifierCascade, CvHaarClassifierCascade);
