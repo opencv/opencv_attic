@@ -122,7 +122,6 @@ void function##_Shadow(PyObject * obj){
 %myrelease(cvReleaseImage);
 %myrelease(cvReleaseMat);
 %myrelease(cvReleaseStructuringElement);
-%myrelease(cvReleaseConDensation);
 %myrelease(cvReleaseKalman);
 %myrelease(cvReleaseHist);
 %myrelease(cvReleaseHaarClassifierCascade);
