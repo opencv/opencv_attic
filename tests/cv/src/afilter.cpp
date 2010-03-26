@@ -668,7 +668,7 @@ void CV_DerivBaseTest::get_test_array_types_and_sizes( int test_case_idx,
 double CV_DerivBaseTest::get_success_error_level( int /*test_case_idx*/, int /*i*/, int /*j*/ )
 {
     int depth = CV_MAT_DEPTH(test_mat[INPUT][0].type);
-    return depth <= CV_8S ? 1 : 5e-4;
+    return depth <= CV_8S ? 2 : 5e-4;
 }
 
 
