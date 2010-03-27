@@ -1929,7 +1929,7 @@ class DocumentFragmentTests(OpenCVTests):
 
         disparity_left_visual = cv.CreateMat(l.rows, l.cols, cv.CV_8U)
         cv.ConvertScale(disparity_left, disparity_left_visual, -16)
-        self.snap(disparity_left_visual)
+        # self.snap(disparity_left_visual)
 
 class NewTests(OpenCVTests):
 
