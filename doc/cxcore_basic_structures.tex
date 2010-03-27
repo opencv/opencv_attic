@@ -322,6 +322,11 @@ Represented by a tuple \texttt{(type, max\_iter, epsilon)}.
 \cvarg{epsilon}{Required accuracy}
 \end{description}
 
+\begin{lstlisting}
+(cv.CV_TERMCRIT_ITER, 10, 0)                         # terminate after 10 iterations
+(cv.CV_TERMCRIT_EPS, 0, 0.01)                        # terminate when epsilon reaches 0.01
+(cv.CV_TERMCRIT_ITER | cv.CV_TERMCRIT_EPS, 10, 0.01) # terminate as soon as either condition is met
+\end{lstlisting}
 \fi % }
 
 \label{CvMat}\cvclass{CvMat}
