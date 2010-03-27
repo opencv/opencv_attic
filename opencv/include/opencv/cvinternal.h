@@ -158,7 +158,7 @@ CV_INLINE IppiSize ippiSize(int width, int height)
         typedef tbb::split Split;
         
         template<typename Body> static inline
-        void parallel_reduce( const BlockedRange& range, const Body& body )
+        void parallel_reduce( const BlockedRange& range, Body& body )
         {
             tbb::parallel_reduce(range, body);
         }
@@ -197,7 +197,7 @@ CV_INLINE IppiSize ippiSize(int width, int height)
         class Split {};
         
         template<typename Body> static inline
-        void parallel_reduce( const BlockedRange& range, const Body& body )
+        void parallel_reduce( const BlockedRange& range, Body& body )
         {
             body(range);
         }
