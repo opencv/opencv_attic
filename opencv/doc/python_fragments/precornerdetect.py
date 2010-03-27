@@ -11,4 +11,4 @@ def precornerdetect(image):
     corner_mask = cv.CreateMat(image.rows, image.cols, cv.CV_8UC1)
     cv.Sub(corners, dilated_corners, corners)
     cv.CmpS(corners, 0, corner_mask, cv.CV_CMP_GE)
-    return corner_mask
+    return (corners, corner_mask)

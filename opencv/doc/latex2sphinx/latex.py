@@ -133,10 +133,12 @@ class SphinxWriter:
 
     def cmd_subsection(self, c):
         print >>self
-        print >>self, str(c.params[0])
-        print >>self, '-' * len(str(c.params[0]))
+        nm = str(c.params[0])
+        print >>self, nm
+        print >>self, '-' * len(nm)
         print >>self
         self.function_props = {}
+        self.covered.add(nm)
 
     def cmd_includegraphics(self, c):
         filename = os.path.join('..', '..', str(c.params[0]))

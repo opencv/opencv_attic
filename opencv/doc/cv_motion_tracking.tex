@@ -277,6 +277,7 @@ The function fills the samples arrays in the structure \texttt{condens} with val
 \cvclass{CvKalman}\label{CvKalman}
 Kalman filter state.
 
+\ifC
 \begin{lstlisting}
 typedef struct CvKalman
 {
@@ -323,6 +324,23 @@ typedef struct CvKalman
 }
 CvKalman;
 \end{lstlisting}
+\else
+\begin{description}
+\cvarg{MP}{number of measurement vector dimensions}
+\cvarg{DP}{number of state vector dimensions}
+\cvarg{CP}{number of control vector dimensions}
+\cvarg{state\_pre}{predicted state (x'(k)): x(k)=A*x(k-1)+B*u(k)}
+\cvarg{state\_post}{corrected state (x(k)): x(k)=x'(k)+K(k)*(z(k)-H*x'(k))}
+\cvarg{transition\_matrix}{state transition matrix (A)}
+\cvarg{control\_matrix}{control matrix (B) (it is not used if there is no control)}
+\cvarg{measurement\_matrix}{measurement matrix (H)}
+\cvarg{process\_noise\_cov}{process noise covariance matrix (Q)}
+\cvarg{measurement\_noise\_cov}{measurement noise covariance matrix (R)}
+\cvarg{error\_cov\_pre}{priori error estimate covariance matrix (P'(k)):  P'(k)=A*P(k-1)*At + Q}
+\cvarg{gain}{Kalman gain matrix (K(k)): K(k)=P'(k)*Ht*inv(H*P'(k)*Ht+R)}
+\cvarg{error\_cov\_post}{posteriori error estimate covariance matrix (P(k)): P(k)=(I-K(k)*H)*P'(k)}
+\end{description}
+\fi
 
 The structure \texttt{CvKalman} is used to keep the Kalman filter
 state. It is created by the \cvCPyCross{CreateKalman} function, updated
@@ -404,10 +422,6 @@ KalmanCorrect(kalman, measurement) -> cvmat
 \fi
 \cvarg{measurement}{CvMat containing the measurement vector}
 \end{description}
-
-\begin{lstlisting}
-#define cvKalmanUpdateByMeasurement cvKalmanCorrect
-\end{lstlisting}
 
 The function adjusts the stochastic model state on the basis of the given measurement of the model state:
 
@@ -553,9 +567,6 @@ const CvMat* cvKalmanPredict( \par CvKalman* kalman, \par const CvMat* control=N
 \cvdefPy{
 KalmanPredict(kalman, control=None) -> cvmat
 }
-\begin{lstlisting}
-#define cvKalmanUpdateByTime cvKalmanPredict
-\end{lstlisting}
 
 \begin{description}
 \ifC
@@ -589,6 +600,14 @@ $P_{k-1}$ & is posteriori error covariance matrix on the previous step \texttt{k
 \end{tabular}
 
 The function returns the estimated state.
+
+\subsection{KalmanUpdateByMeasurement}
+
+Synonym for \cross{KalmanCorrect}
+
+\subsection{KalmanUpdateByTime}
+
+Synonym for \cross{KalmanPredict}
 
 \cvCPyFunc{MeanShift}
 Finds the object center on back projection.
