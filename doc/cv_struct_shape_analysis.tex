@@ -104,7 +104,10 @@ void cvBoxPoints( \par CvBox2D box,\par CvPoint2D32f pt[4] );
 \cvarg{points}{Array of vertices}
 \end{description}
 
-The function calculates the vertices of the input 2d box. Here is the function code:
+The function calculates the vertices of the input 2d box.
+
+\ifC
+Here is the function code:
 
 \begin{lstlisting}
 void cvBoxPoints( CvBox2D box, CvPoint2D32f pt[4] )
@@ -122,6 +125,7 @@ void cvBoxPoints( CvBox2D box, CvPoint2D32f pt[4] )
     pt[3].y = 2*box.center.y - pt[1].y;
 }
 \end{lstlisting}
+\fi
 
 \cvCPyFunc{CalcPGH}
 Calculates a pair-wise geometrical histogram for a contour.
@@ -161,16 +165,24 @@ float cvCalcEMD2( \par const CvArr* signature1,\par const CvArr* signature2,\par
 \cvarg{signature1}{First signature, a $\texttt{size1}\times \texttt{dims}+1$ floating-point matrix. Each row stores the point weight followed by the point coordinates. The matrix is allowed to have a single column (weights only) if the user-defined cost matrix is used}
 \cvarg{signature2}{Second signature of the same format as \texttt{signature1}, though the number of rows may be different. The total weights may be different, in this case an extra "dummy" point is added to either \texttt{signature1} or \texttt{signature2}}
 \cvarg{distance\_type}{Metrics used; \texttt{CV\_DIST\_L1, CV\_DIST\_L2}, and \texttt{CV\_DIST\_C} stand for one of the standard metrics; \texttt{CV\_DIST\_USER} means that a user-defined function \texttt{distance\_func} or pre-calculated \texttt{cost\_matrix} is used}
-\cvarg{distance\_func}{The user-defined distance function. It takes coordinates of two points and returns the distance between the points}
+\ifC
+\cvarg{distance\_func}{The user-supplied distance function. It takes coordinates of two points and returns the distance between the points
+\texttt{
+typedef float (*CvDistanceFunction)(const float* f1, const float* f2, void* userdata);
+}
+}
+\else
+\cvarg{distance\_func}{The user-supplied distance function. It takes coordinates of two points \texttt{pt0} and \texttt{pt1}, and returns the distance between the points, with sigature
+\texttt{
+func(pt0, pt1, userdata) -> float
+}
+}
+\fi
 \cvarg{cost\_matrix}{The user-defined $\texttt{size1}\times \texttt{size2}$ cost matrix. At least one of \texttt{cost\_matrix} and \texttt{distance\_func} must be NULL. Also, if a cost matrix is used, lower boundary (see below) can not be calculated, because it needs a metric function}
 \cvarg{flow}{The resultant $\texttt{size1} \times \texttt{size2}$ flow matrix: $\texttt{flow}_{i,j}$ is a flow from $i$ th point of \texttt{signature1} to $j$ th point of \texttt{signature2}}
 \cvarg{lower\_bound}{Optional input/output parameter: lower boundary of distance between the two signatures that is a distance between mass centers. The lower boundary may not be calculated if the user-defined cost matrix is used, the total weights of point configurations are not equal, or if the signatures consist of weights only (i.e. the signature matrices have a single column). The user \textbf{must} initialize \texttt{*lower\_bound}. If the calculated distance between mass centers is greater or equal to \texttt{*lower\_bound} (it means that the signatures are far enough) the function does not calculate EMD. In any case \texttt{*lower\_bound} is set to the calculated distance between mass centers on return. Thus, if user wants to calculate both distance between mass centers and EMD, \texttt{*lower\_bound} should be set to 0}
 \cvarg{userdata}{Pointer to optional data that is passed into the user-defined distance function}
 \end{description}
-
-\begin{lstlisting}
-typedef float (*CvDistanceFunction)(const float* f1, const float* f2, void* userdata);
-\end{lstlisting}
 
 The function computes the earth mover distance and/or
 a lower boundary of the distance between the two weighted point
@@ -198,6 +210,7 @@ The function tests whether the input contour is convex or not. The contour must 
 
 \cvclass{CvConvexityDefect}\label{CvConvexityDefect}
 
+\ifC
 Structure describing a single contour convexity defect.
 
 \begin{lstlisting}
@@ -209,6 +222,18 @@ typedef struct CvConvexityDefect
     float depth; /* distance between the farthest point and the convex hull */
 } CvConvexityDefect;
 \end{lstlisting}
+\else
+
+A single contour convexity defect, represented by a tuple \texttt{(start, end, depthpoint, depth)}.
+
+\begin{description}
+\cvarg{start}{(x, y) point of the contour where the defect begins}
+\cvarg{end}{(x, y) point of the contour where the defect ends}
+\cvarg{depthpoint}{(x, y) point farthest from the convex hull point within the defect}
+\cvarg{depth}{distance between the farthest point and the convex hull}
+\end{description}
+
+\fi
 
 % ===== Picture. Convexity defects of hand contour. =====
 \includegraphics[width=0.5\textwidth]{pics/defects.png}
@@ -267,7 +292,10 @@ CvSeq* cvConvexHull2( \par const CvArr* input,\par void* storage=NULL,\par int o
 
 The function finds the convex hull of a 2D point set using Sklansky's algorithm. If \texttt{storage} is memory storage, the function creates a sequence containing the hull points or pointers to them, depending on \texttt{return\_points} value and returns the sequence on output.  If \texttt{storage} is a CvMat, the function returns NULL.
 
-% ===== Example. Building convex hull for a sequence or array of points =====
+\ifC
+
+Example. Building convex hull for a sequence or array of points
+
 \begin{lstlisting}
 #include "cv.h"
 #include "highgui.h"
@@ -361,6 +389,7 @@ void main( int argc, char** argv )
     }
 }
 \end{lstlisting}
+\fi
 
 \cvCPyFunc{ConvexityDefects}
 Finds the convexity defects of a contour.

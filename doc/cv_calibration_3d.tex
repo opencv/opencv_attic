@@ -355,15 +355,15 @@ CvStereoBMState* cvCreateStereoBMState( int preset=CV\_STEREO\_BM\_BASIC,
 \cvdefPy{CreateStereoBMState(preset=CV\_STEREO\_BM\_BASIC,numberOfDisparities=0)-> StereoBMState}
 
 \begin{description}
-\cvarg{preset}{ID of one of the pre-defined parameter sets. Any of the parameters can be overridden after creating the structure.}
+\cvarg{preset}{ID of one of the pre-defined parameter sets. Any of the parameters can be overridden after creating the structure.  Values are
+\begin{description}
+\cvarg{CV_STEREO_BM_BASIC}{Parameters suitable for general cameras}
+\cvarg{CV_STEREO_BM_FISH_EYE}{Parameters suitable for wide-angle cameras}
+\cvarg{CV_STEREO_BM_NARROW}{Parameters suitable for narrow-angle cameras}
+\end{description}
+}
 \cvarg{numberOfDisparities}{The number of disparities. If the parameter is 0, it is taken from the preset, otherwise the supplied value overrides the one from preset.}
 \end{description}
-
-\begin{lstlisting}
-#define CV_STEREO_BM_BASIC 0
-#define CV_STEREO_BM_FISH_EYE 1
-#define CV_STEREO_BM_NARROW 2
-\end{lstlisting}
 
 The function creates the stereo correspondence structure and initializes
 it. It is possible to override any of the parameters at any time between
@@ -390,6 +390,7 @@ The function creates the stereo correspondence structure and initializes it. It 
 \cvclass{CvStereoBMState}
 The structure for block matching stereo correspondence algorithm.
 
+\ifC
 \begin{lstlisting}
 typedef struct CvStereoBMState
 {
@@ -413,6 +414,20 @@ typedef struct CvStereoBMState
 }
 CvStereoBMState;
 \end{lstlisting}
+\else
+\begin{description}
+\cvarg{preFilterType}{0 for now, int}
+\cvarg{preFilterSize}{~5x5..21x21, int}
+\cvarg{preFilterCap}{up to ~31, int}
+\cvarg{SADWindowSize}{Could be 5x5..21x21, int}
+\cvarg{minDisparity}{minimum disparity (=0), int}
+\cvarg{numberOfDisparities}{maximum disparity - minimum disparity, int}
+\cvarg{textureThreshold}{areas with no texture are ignored, int}
+\cvarg{uniquenessRatio}{filter out pixels if there are other close matches with different disparity, float}
+\cvarg{speckleWindowSize}{the maximum area of speckles to remove (set to 0 to disable speckle filtering), int}
+\cvarg{speckleRange}{acceptable range of disparity variation in each connected component, int}
+\end{description}
+\fi
 
 The block matching stereo correspondence algorithm, by Kurt Konolige, is very fast one-pass stereo matching algorithm that uses sliding sums of absolute differences between pixels in the left image and the pixels in the right image, shifted by some varying amount of pixels (from \texttt{minDisparity} to \texttt{minDisparity+numberOfDisparities}). On a pair of images WxH the algorithm computes disparity in \texttt{O(W*H*numberOfDisparities)} time. In order to improve quality and readability of the disparity map, the algorithm includes pre-filtering and post-filtering procedures.
 
@@ -421,6 +436,7 @@ Note that the algorithm searches for the corresponding blocks in x direction onl
 \cvclass{CvStereoGCState}
 The structure for graph cuts-based stereo correspondence algorithm
 
+\ifC
 \begin{lstlisting}
 typedef struct CvStereoGCState
 {
@@ -445,6 +461,17 @@ typedef struct CvStereoGCState
 }
 CvStereoGCState;
 \end{lstlisting}
+\else
+\begin{description}
+\cvarg{Ithreshold}{threshold for piece-wise linear data cost function (5 by default)}
+\cvarg{interactionRadius}{radius for smoothness cost function (1 by default; means Potts model)}
+\cvarg{K, lambda, lambda1, lambda2}{parameters for the cost function (usually computed adaptively from the input data)}
+\cvarg{occlusionCost}{10000 by default}
+\cvarg{minDisparity}{0 by default; see \cross{CvStereoBMState}}
+\cvarg{numberOfDisparities}{defined by user; see \cross{CvStereoBMState}}
+\cvarg{maxIters}{number of iterations; defined by user.}
+\end{description}
+\fi
 
 The graph cuts stereo correspondence algorithm, described in \cite{Kolmogorov03} (as \textbf{KZ1}), is non-realtime stereo correspondence algorithm that usually gives very accurate depth map with well-defined object boundaries. The algorithm represents stereo problem as a sequence of binary optimization problems, each of those is solved using maximum graph flow algorithm. The state structure above should not be allocated and initialized manually; instead, use \cvCPyCross{CreateStereoGCState} and then override necessary parameters if needed.
 
@@ -805,8 +832,9 @@ that is, the range for the left disparity image will be inversed,
 and the pixels for which no good match has been found, will be marked
 as occlusions.
 
-Here is how the function can be called:
+Here is how the function can be used:
 
+\ifC
 \begin{lstlisting}
 // image_left and image_right are the input 8-bit single-channel images
 // from the left and the right cameras, respectively
@@ -820,13 +848,15 @@ cvReleaseStereoGCState( &state );
 // now process the computed disparity images as you want ...
 \end{lstlisting}
 
-and this is the output left disparity image computed from the well-known Tsukuba stereo pair and multiplied by -16 (because the values in the left disparity images are usually negative): 
-
-\begin{lstlisting}
 CvMat* disparity_left_visual = cvCreateMat( size.height, size.width, CV_8U );
 cvConvertScale( disparity_left, disparity_left_visual, -16 );
 cvSave( "disparity.pgm", disparity_left_visual );
 \end{lstlisting}
+\else
+\lstinputlisting{python_fragments/findstereocorrespondence.py}
+\fi
+
+and this is the output left disparity image computed from the well-known Tsukuba stereo pair and multiplied by -16 (because the values in the left disparity images are usually negative): 
 
 \includegraphics{pics/disparity.png}
 

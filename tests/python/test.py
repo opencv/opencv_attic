@@ -1916,8 +1916,20 @@ class DocumentFragmentTests(OpenCVTests):
         im = self.get_sample("samples/c/right01.jpg", 0)
         imf = cv.CreateMat(im.rows, im.cols, cv.CV_32FC1)
         cv.ConvertScale(im, imf)
-        r = precornerdetect(imf)
-        self.snap(r)
+        (r0,r1) = precornerdetect(imf)
+        for r in (r0, r1):
+            self.assertEqual(im.cols, r.cols)
+            self.assertEqual(im.rows, r.rows)
+
+    def test_findstereocorrespondence(self):
+        from findstereocorrespondence import findstereocorrespondence
+        (l,r) = [self.get_sample("doc/pics/tsukuba_%s.png" % c, cv.CV_LOAD_IMAGE_GRAYSCALE) for c in "lr"]
+
+        (disparity_left, disparity_right) = findstereocorrespondence(l, r)
+
+        disparity_left_visual = cv.CreateMat(l.rows, l.cols, cv.CV_8U)
+        cv.ConvertScale(disparity_left, disparity_left_visual, -16)
+        self.snap(disparity_left_visual)
 
 class NewTests(OpenCVTests):
 
@@ -1925,16 +1937,21 @@ class NewTests(OpenCVTests):
 
 if __name__ == '__main__':
     random.seed(0)
-    optlist, args = getopt.getopt(sys.argv[1:], 'l:r')
+    optlist, args = getopt.getopt(sys.argv[1:], 'l:rd')
     loops = 1
     shuffle = 0
+    doc_frags = False
     for o,a in optlist:
         if o == '-l':
             loops = int(a)
         if o == '-r':
             shuffle = 1
+        if o == '-d':
+            doc_frags = True
 
-    cases = [PreliminaryTests, FunctionTests, AreaTests, DocumentFragmentTests]
+    cases = [PreliminaryTests, FunctionTests, AreaTests]
+    if doc_frags:
+        cases += [DocumentFragmentTests]
     everything = [(tc, t) for tc in cases for t in unittest.TestLoader().getTestCaseNames(tc) ]
     if len(args) == 0:
         # cases = [NewTests]
