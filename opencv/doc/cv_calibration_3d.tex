@@ -357,9 +357,9 @@ CvStereoBMState* cvCreateStereoBMState( int preset=CV\_STEREO\_BM\_BASIC,
 \begin{description}
 \cvarg{preset}{ID of one of the pre-defined parameter sets. Any of the parameters can be overridden after creating the structure.  Values are
 \begin{description}
-\cvarg{CV_STEREO_BM_BASIC}{Parameters suitable for general cameras}
-\cvarg{CV_STEREO_BM_FISH_EYE}{Parameters suitable for wide-angle cameras}
-\cvarg{CV_STEREO_BM_NARROW}{Parameters suitable for narrow-angle cameras}
+\cvarg{CV\_STEREO\_BM\_BASIC}{Parameters suitable for general cameras}
+\cvarg{CV\_STEREO\_BM\_FISH\_EYE}{Parameters suitable for wide-angle cameras}
+\cvarg{CV\_STEREO\_BM\_NARROW}{Parameters suitable for narrow-angle cameras}
 \end{description}
 }
 \cvarg{numberOfDisparities}{The number of disparities. If the parameter is 0, it is taken from the preset, otherwise the supplied value overrides the one from preset.}
@@ -848,17 +848,29 @@ cvReleaseStereoGCState( &state );
 // now process the computed disparity images as you want ...
 \end{lstlisting}
 
+and this is the output left disparity image computed from the well-known
+Tsukuba stereo pair and multiplied by -16 (because the values in the
+left disparity images are usually negative):
+
+\begin{lstlisting}
 CvMat* disparity_left_visual = cvCreateMat( size.height, size.width, CV_8U );
 cvConvertScale( disparity_left, disparity_left_visual, -16 );
 cvSave( "disparity.pgm", disparity_left_visual );
 \end{lstlisting}
-\else
-\lstinputlisting{python_fragments/findstereocorrespondence.py}
-\fi
-
-and this is the output left disparity image computed from the well-known Tsukuba stereo pair and multiplied by -16 (because the values in the left disparity images are usually negative): 
 
 \includegraphics{pics/disparity.png}
+
+\else
+
+\lstinputlisting{python_fragments/findstereocorrespondence.py}
+
+and this is the output left disparity image computed from the well-known
+Tsukuba stereo pair and multiplied by -16 (because the values in the
+left disparity images are usually negative):
+
+\includegraphics{pics/disparity.png}
+
+\fi
 
 \fi
 
