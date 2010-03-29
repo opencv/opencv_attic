@@ -3688,13 +3688,13 @@ for(i = 0; i < 4; i++ )
     printf("(\%.1f, \%.1f) ", a[i*2], a[i*2+1]);
 
 \end{lstlisting}
-\fi
 
 The code should print:
 
 \begin{lstlisting}
 (1.0,0.0) (0.0,-1.0) (-1.0,0.0) (0.0,1.0)
 \end{lstlisting}
+\fi
 
 \cvCPyFunc{mGet}
 Returns the particular element of single-channel floating-point matrix.
@@ -3863,7 +3863,7 @@ In the case of multi-channel arrays each channel is processed independently.
 See also: \cvCppCross{add}, \cvCppCross{subtract}, \cvCppCross{scaleAdd}, \cvCppCross{convertScale},
 \cross{Matrix Expressions}, \hyperref[cppfunc.saturatecast]{saturate\_cast}.
 
-\cvfunc{cv::bitwise\_and}\label{cppfunc.bitwise.and}
+\cvfunc{bitwise\_and}\label{cppfunc.bitwise.and}
 Calculates per-element bit-wise conjunction of two arrays and an array and a scalar.
 
 \cvdefCpp{void bitwise\_and(const Mat\& src1, const Mat\& src2,\par Mat\& dst, const Mat\& mask=Mat());\newline
@@ -3892,7 +3892,7 @@ In the case of floating-point arrays their machine-specific bit representations 
 
 See also: \hyperref[cppfunc.bitwise.and]{bitwise\_and}, \hyperref[cppfunc.bitwise.not]{bitwise\_not}, \hyperref[cppfunc.bitwise.xor]{bitwise\_xor}
 
-\cvfunc{cv::bitwise\_not}\label{cppfunc.bitwise.not}
+\cvfunc{bitwise\_not}\label{cppfunc.bitwise.not}
 Inverts every bit of array
 
 \cvdefCpp{void bitwise\_not(const Mat\& src, Mat\& dst);\newline
@@ -3913,7 +3913,7 @@ In the case of floating-point source array its machine-specific bit representati
 See also: \hyperref[cppfunc.bitwise.and]{bitwise\_and}, \hyperref[cppfunc.bitwise.or]{bitwise\_or}, \hyperref[cppfunc.bitwise.xor]{bitwise\_xor}
 
 
-\cvfunc{cv::bitwise\_or}\label{cppfunc.bitwise.or}
+\cvfunc{bitwise\_or}\label{cppfunc.bitwise.or}
 Calculates per-element bit-wise disjunction of two arrays and an array and a scalar.
 
 \cvdefCpp{void bitwise\_or(const Mat\& src1, const Mat\& src2,\par Mat\& dst, const Mat\& mask=Mat());\newline
@@ -3942,7 +3942,7 @@ In the case of floating-point arrays their machine-specific bit representations 
 
 See also: \hyperref[cppfunc.bitwise.and]{bitwise\_and}, \hyperref[cppfunc.bitwise.not]{bitwise\_not}, \hyperref[cppfunc.bitwise.or]{bitwise\_or}
 
-\cvfunc{cv::bitwise\_xor}\label{cppfunc.bitwise.xor}
+\cvfunc{bitwise\_xor}\label{cppfunc.bitwise.xor}
 Calculates per-element bit-wise "exclusive or" operation on two arrays and an array and a scalar.
 
 \cvdefCpp{void bitwise\_xor(const Mat\& src1, const Mat\& src2,\par Mat\& dst, const Mat\& mask=Mat());\newline
@@ -5474,7 +5474,7 @@ See also: \cvCppCross{reduce}, \cross{Matrix Expressions}
 \ifplastex
 \cvfunc{saturate\_cast}\label{cppfunc.saturatecast}
 \else
-\subsection{cv::saturate\_cast}\label{cppfunc.saturatecast}
+\subsection{saturate\_cast}\label{cppfunc.saturatecast}
 \fi
 Template function for accurate conversion from one primitive type to another
 
