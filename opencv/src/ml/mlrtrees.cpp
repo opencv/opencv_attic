@@ -40,10 +40,6 @@
 
 #include "_ml.h"
 
-#ifdef _OPENMP
-#include "omp.h"
-#endif
-
 CvForestTree::CvForestTree()
 {
     forest = NULL;
@@ -86,12 +82,57 @@ CvForestTree::train( CvDTreeTrainData*, const CvMat* )
 }
 
 
+
+namespace cv
+{
+
+ForestTreeBestSplitFinder::ForestTreeBestSplitFinder( CvForestTree* _tree, CvDTreeNode* _node ) :
+    DTreeBestSplitFinder(_tree, _node) {}
+
+ForestTreeBestSplitFinder::ForestTreeBestSplitFinder( const ForestTreeBestSplitFinder& finder, Split spl ) :
+    DTreeBestSplitFinder( finder, spl ) {}
+
+void ForestTreeBestSplitFinder::operator()(const BlockedRange& range)
+{
+    int vi, vi1 = range.begin(), vi2 = range.end();
+    int n = node->sample_count;
+    CvDTreeTrainData* data = tree->get_data();
+    AutoBuffer<uchar> inn_buf(2*n*(sizeof(int) + sizeof(float)));
+
+    CvForestTree* ftree = (CvForestTree*)tree;
+    const CvMat* active_var_mask = ftree->forest->get_active_var_mask();
+
+    for( vi = vi1; vi < vi2; vi++ )
+    {
+        CvDTreeSplit *res;
+        int ci = data->var_type->data.i[vi];
+        if( node->num_valid[vi] <= 1
+            || (active_var_mask && !active_var_mask->data.ptr[vi]) )
+            continue;
+
+        if( data->is_classifier )
+        {
+            if( ci >= 0 )
+                res = ftree->find_split_cat_class( node, vi, bestSplit->quality, split, (uchar*)inn_buf );
+            else
+                res = ftree->find_split_ord_class( node, vi, bestSplit->quality, split, (uchar*)inn_buf );
+        }
+        else
+        {
+            if( ci >= 0 )
+                res = ftree->find_split_cat_reg( node, vi, bestSplit->quality, split, (uchar*)inn_buf );
+            else
+                res = ftree->find_split_ord_reg( node, vi, bestSplit->quality, split, (uchar*)inn_buf );
+        }
+
+        if( res && bestSplit->quality < split->quality )
+                memcpy( (CvDTreeSplit*)bestSplit, (CvDTreeSplit*)split, splitSize );
+    }
+}
+}
+
 CvDTreeSplit* CvForestTree::find_best_split( CvDTreeNode* node )
 {
-    int vi;
-
-    CvDTreeSplit *best_split = 0;
-
     CvMat* active_var_mask = 0;
     if( forest )
     {
@@ -103,7 +144,7 @@ CvDTreeSplit* CvForestTree::find_best_split( CvDTreeNode* node )
 
         CV_Assert( var_count == data->var_count );
 
-        for( vi = 0; vi < var_count; vi++ )
+        for( int vi = 0; vi < var_count; vi++ )
         {
             uchar temp;
             int i1 = cvRandInt(rng) % var_count;
@@ -112,82 +153,16 @@ CvDTreeSplit* CvForestTree::find_best_split( CvDTreeNode* node )
                 active_var_mask->data.ptr[i2], temp );
         }
     }
-    int maxNumThreads = 1;
-#ifdef _OPENMP
-    maxNumThreads = omp_get_num_procs();
-#endif
-    std::vector<CvDTreeSplit*> splits(maxNumThreads);
-    std::vector<CvDTreeSplit*> bestSplits(maxNumThreads);
-    std::vector<int> canSplit(maxNumThreads);
-    CvDTreeSplit **splitsPtr = &splits[0], ** bestSplitsPtr = &bestSplits[0];
-    int* canSplitPtr = &canSplit[0];
-    for (int i = 0; i < maxNumThreads; i++)
-    {
-        splits[i] = data->new_split_cat( 0, -1.0f );
-        bestSplits[i] = data->new_split_cat( 0, -1.0f );
-        canSplitPtr[i] = 0;
-    }
 
-#ifdef _OPENMP
-#pragma omp parallel for num_threads(maxNumThreads) schedule(dynamic)
-#endif
-    for( vi = 0; vi < data->var_count; vi++ )
-    {
-        CvDTreeSplit *res, *t;
-        int threadIdx = 0;
-#ifdef _OPENMP
-			threadIdx = omp_get_thread_num();
-#endif
-        int ci = data->var_type->data.i[vi];
-        if( node->num_valid[vi] <= 1
-            || (active_var_mask && !active_var_mask->data.ptr[vi]) )
-            continue;
+    cv::ForestTreeBestSplitFinder finder( this, node );
 
-        if( data->is_classifier )
-        {
-            if( ci >= 0 )
-                res = find_split_cat_class( node, vi, bestSplitsPtr[threadIdx]->quality, splitsPtr[threadIdx] );
-            else
-                res = find_split_ord_class( node, vi, bestSplitsPtr[threadIdx]->quality, splitsPtr[threadIdx] );
-        }
-        else
-        {
-            if( ci >= 0 )
-                res = find_split_cat_reg( node, vi, bestSplitsPtr[threadIdx]->quality, splitsPtr[threadIdx] );
-            else
-                res = find_split_ord_reg( node, vi, bestSplitsPtr[threadIdx]->quality, splitsPtr[threadIdx] );
-        }
+    cv::parallel_reduce(cv::BlockedRange(0, data->var_count), finder);
 
-        if( res )
-        {
-            canSplitPtr[threadIdx] = 1;
-            if( bestSplits[threadIdx]->quality < splits[threadIdx]->quality )
-                CV_SWAP( bestSplits[threadIdx], splits[threadIdx], t );
-        }
-    }
-    int ti = 0;
-    for( ; ti < maxNumThreads; ti++ )
-    {
-        if( canSplitPtr[ti] )
-        {
-            best_split = bestSplitsPtr[ti];
-            break;
-        }
-    }
-    for( ; ti < maxNumThreads; ti++ )
-    {
-        if( best_split->quality < bestSplitsPtr[ti]->quality )
-            best_split = bestSplitsPtr[ti];
-    }
-    for(int i = 0; i < maxNumThreads; i++)
-    {
-        cvSetRemoveByPtr( data->split_heap, splits[i] );
-        if( bestSplits[i] != best_split )
-            cvSetRemoveByPtr( data->split_heap, bestSplits[i] );
-    }
-    return best_split;
+    CvDTreeSplit *bestSplit = data->new_split_cat( 0, -1.0f );
+    memcpy( bestSplit, finder.bestSplit, finder.splitSize );
+
+    return bestSplit;
 }
-
 
 void CvForestTree::read( CvFileStorage* fs, CvFileNode* fnode, CvRTrees* _forest, CvDTreeTrainData* _data )
 {
