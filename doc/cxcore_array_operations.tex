@@ -1465,15 +1465,15 @@ If there is no ROI set, \texttt{cvRect(0,0,image->width,image->height)} is retur
 Returns matrix header for arbitrary array.
 
 \cvdefC{CvMat* cvGetMat(const CvArr* arr, CvMat* header, int* coi=NULL, int allowND=0);}
-\cvdefPy{GetMat(arr) -> cvmat }
+\cvdefPy{GetMat(arr, allowND=0) -> cvmat }
 
 \begin{description}
 \cvarg{arr}{Input array}
 \ifC
 \cvarg{header}{Pointer to \cross{CvMat} structure used as a temporary buffer}
 \cvarg{coi}{Optional output parameter for storing COI}
-\cvarg{allowND}{If non-zero, the function accepts multi-dimensional dense arrays (CvMatND*) and returns 2D (if CvMatND has two dimensions) or 1D matrix (when CvMatND has 1 dimension or more than 2 dimensions). The array must be continuous.}
 \fi
+\cvarg{allowND}{If non-zero, the function accepts multi-dimensional dense arrays (CvMatND*) and returns 2D (if CvMatND has two dimensions) or 1D matrix (when CvMatND has 1 dimension or more than 2 dimensions). The array must be continuous.}
 \end{description}
 
 The function returns a matrix header for the input array that can be a matrix - 
