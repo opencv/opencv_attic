@@ -1678,7 +1678,6 @@ CalcOpticalFlowPyrLK currFeatures,status,track_error /doconly
   CvArr prevPyr
   CvArr currPyr
   CvPoint2D32f* prevFeatures
-  int count
   CvSize winSize
   int level
   CvTermCriteria criteria
@@ -1687,7 +1686,7 @@ CalcOpticalFlowPyrLK currFeatures,status,track_error /doconly
   CvPoint2D32f currFeatures /O
   char status /O
   float track_error /O
-ClipLine /doconly
+ClipLine point1,point2 /doconly
   CvSize imgSize
   CvPoint pt1
   CvPoint pt2
@@ -1721,17 +1720,17 @@ CreateMatND /doconly
   ints dims
   int type
 CreateMemStorage /doconly
-  int block_size
+  int blockSize
 CreateTrackbar /doconly
-  char* trackbar_name
-  char* window_name
+  char* trackbarName
+  char* windowName
   int value
   int count
-  PyCallableObject* on_change
-FindChessboardCorners /doconly
+  PyCallableObject* onChange
+FindChessboardCorners corners /doconly
   CvArr image
-  CvSize pattern_size
-  CvPoint2D32fs corners
+  CvSize patternSize
+  CvPoint2D32fs corners /O
   int flags CV_CALIB_CB_ADAPTIVE_THRESH
 FindContours /doconly
   CvArr image
@@ -1739,24 +1738,29 @@ FindContours /doconly
   int mode CV_RETR_LIST
   int method CV_CHAIN_APPROX_SIMPLE
   CvPoint offset (0,0)
-FitLine /doconly
+FitLine line /doconly
   CvArr points
   int dist_type
   double param
   double reps
   double aeps
+  PyObject* line /O
 GetDims /doconly
   CvArr arr
-  ints dims
-GetHuMoments /doconly
+GetHuMoments hu /doconly
   CvMoments moments
+  PyObject* hu /O
 GetImage /doconly
   CvMat arr
 GetMat /doconly
   IplImage arr
   int allowND 0
-GetMinMaxHistValue /doconly
+GetMinMaxHistValue min_value,max_value,min_idx,max_idx /doconly
   CvHistogram hist
+  CvScalar min_value /O
+  CvScalar max_value /O
+  ints min_idx /O
+  ints max_idx /O
 InitLineIterator /doconly
   CvArr image
   CvPoint pt1
@@ -1771,22 +1775,24 @@ LoadImage /doconly
   int iscolor CV_LOAD_IMAGE_COLOR
 ReshapeMatND /doconly
   CvMat arr
-  int new_cn
-  int new_dims
+  int newCn
+  int newDims
 Reshape /doconly
   CvArr arr
-  int new_cn
-  int new_dims
+  int newCn
+  int newRows
 SetData /doconly
   CvArr arr
   PyObject* data
   int step
 SetMouseCallback /doconly
-  char* window_name
-  PyCallableObject* on_mouse
+  char* windowName
+  PyCallableObject* onMouse
   PyObject* param None
-Subdiv2DLocate /doconly
+Subdiv2DLocate loc,where /doconly
   CvSubdiv2D* subdiv
   CvPoint2D32f pt
+  int loc /O
+  edgeorpoint where /O
 WaitKey /doconly
   int delay 0
