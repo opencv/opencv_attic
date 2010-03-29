@@ -90,6 +90,7 @@ struct cvlineiterator_t {
 
 typedef IplImage ROIplImage;
 typedef const CvMat ROCvMat;
+typedef PyObject PyCallableObject;
 
 struct cvmoments_t {
   PyObject_HEAD
@@ -1293,7 +1294,7 @@ static void cvset_specials(void)
 
 static PyTypeObject cvsubdiv2d_Type = {
   PyObject_HEAD_INIT(&PyType_Type)
-  0,                                      /*size*/
+  0,                                          /*size*/
   MODULESTR".cvsubdiv2d",                     /*name*/
   sizeof(cvsubdiv2d_t),                       /*basicsize*/
 };
@@ -1353,6 +1354,18 @@ static void cvsubdiv2dpoint_specials(void)
 
 /************************************************************************/
 /* convert_to_X: used after PyArg_ParseTuple in the generated code  */
+
+static int convert_to_PyObjectPTR(PyObject *o, PyObject **dst, const char *name = "no_name")
+{
+  *dst = o;
+  return 1;
+}
+
+static int convert_to_PyCallableObjectPTR(PyObject *o, PyObject **dst, const char *name = "no_name")
+{
+  *dst = o;
+  return 1;
+}
 
 static int convert_to_char(PyObject *o, char *dst, const char *name = "no_name")
 {
@@ -2798,14 +2811,15 @@ static PyObject *fromarray(PyObject *o, int allowND)
 }
 #endif
 
-static PyObject *pycvCreateHist(PyObject *self, PyObject *args)
+static PyObject *pycvCreateHist(PyObject *self, PyObject *args, PyObject *kw)
 {
+  const char *keywords[] = { "dims", "type", "ranges", "uniform", NULL };
   PyObject *dims;
   int type;
   float **ranges = NULL;
   int uniform = 1;
 
-  if (!PyArg_ParseTuple(args, "Oi|O&i", &dims, &type, convert_to_floatPTRPTR, (void*)&ranges, &uniform)) {
+  if (!PyArg_ParseTupleAndKeywords(args, kw, "Oi|O&i", (char**)keywords, &dims, &type, convert_to_floatPTRPTR, (void*)&ranges, &uniform)) {
     return NULL;
   }
   cvhistogram_t *h = PyObject_NEW(cvhistogram_t, &cvhistogram_Type);
@@ -2824,15 +2838,16 @@ static PyObject *pycvCreateHist(PyObject *self, PyObject *args)
   return (PyObject*)h;
 }
 
-static PyObject *pycvInitLineIterator(PyObject *self, PyObject *args)
+static PyObject *pycvInitLineIterator(PyObject *self, PyObject *args, PyObject *kw)
 {
+  const char *keywords[] = { "image", "pt1", "pt2", "connectivity", "left_to_right", NULL };
   CvArr *image;
   CvPoint pt1;
   CvPoint pt2;
   int connectivity = 8;
   int left_to_right = 0;
 
-  if (!PyArg_ParseTuple(args, "O&O&O&|ii",
+  if (!PyArg_ParseTupleAndKeywords(args, kw, "O&O&O&|ii", (char**)keywords,
                         convert_to_CvArr, &image,
                         convert_to_CvPoint, &pt1,
                         convert_to_CvPoint, &pt2,
@@ -3297,16 +3312,15 @@ void OnChange(int pos, void *param)
   PyGILState_Release(gstate);
 }
 
-static PyObject *pycvCreateTrackbar(PyObject *self, PyObject *args, PyObject *kw)
+static PyObject *pycvCreateTrackbar(PyObject *self, PyObject *args)
 {
-  const char *keywords[] = { "trackbar_name", "window_name", "value", "count", "on_change", NULL };
   PyObject *on_change;
   char* trackbar_name;
   char* window_name;
   int *value = new int;
   int count;
 
-  if (!PyArg_ParseTupleAndKeywords(args, kw, "ssiiO", (char**)keywords, &trackbar_name, &window_name, value, &count, &on_change))
+  if (!PyArg_ParseTuple(args, "ssiiO", &trackbar_name, &window_name, value, &count, &on_change))
     return NULL;
   if (!PyCallable_Check(on_change)) {
     PyErr_SetString(PyExc_TypeError, "on_change must be callable");
@@ -3452,7 +3466,7 @@ static PyObject *pycvSubdiv2DLocate(PyObject *self, PyObject *args)
   default:
     return (PyObject*)failmsg("Unexpected loc from cvSubdiv2DLocate");
   }
-  return Py_BuildValue("iO", (int)loc, r);;
+  return Py_BuildValue("iO", (int)loc, r);
 }
 
 static PyObject *pycvCalcOpticalFlowPyrLK(PyObject *self, PyObject *args)
@@ -3523,7 +3537,7 @@ static PyObject *pycvCalcOpticalFlowPyrLK(PyObject *self, PyObject *args)
 
 // pt1,pt2 are input and output arguments here
 
-static PyObject *pycvClipLine(PyObject *self, PyObject *args, PyObject *kw)
+static PyObject *pycvClipLine(PyObject *self, PyObject *args)
 {
   CvSize img_size;
   PyObject *pyobj_img_size = NULL;
@@ -3644,7 +3658,7 @@ static PyObject *shareData(PyObject *donor, CvArr *pdonor, CvMat *precipient)
   return recipient;
 }
 
-static PyObject *pycvGetHuMoments(PyObject *self, PyObject *args, PyObject *kw)
+static PyObject *pycvGetHuMoments(PyObject *self, PyObject *args)
 {
   CvMoments* moments;
   PyObject *pyobj_moments = NULL;
@@ -3657,7 +3671,7 @@ static PyObject *pycvGetHuMoments(PyObject *self, PyObject *args, PyObject *kw)
   return Py_BuildValue("ddddddd", r.hu1, r.hu2, r.hu3, r.hu4, r.hu5, r.hu6, r.hu7);
 }
 
-static PyObject *pycvFitLine(PyObject *self, PyObject *args, PyObject *kw)
+static PyObject *pycvFitLine(PyObject *self, PyObject *args)
 {
   cvarrseq points;
   PyObject *pyobj_points = NULL;
@@ -3685,7 +3699,7 @@ static PyObject *pycvFitLine(PyObject *self, PyObject *args, PyObject *kw)
     return Py_BuildValue("dddddd", r[0], r[1], r[2], r[3], r[4], r[5]);
 }
 
-static PyObject *pycvGetMinMaxHistValue(PyObject *self, PyObject *args, PyObject *kw)
+static PyObject *pycvGetMinMaxHistValue(PyObject *self, PyObject *args)
 {
   CvHistogram* hist;
   PyObject *pyobj_hist = NULL;
@@ -3764,38 +3778,6 @@ static PyMethodDef methods[] = {
 #if PYTHON_USE_NUMPY
   {"fromarray", (PyCFunction)pycvfromarray, METH_KEYWORDS, "fromarray(array) -> cvmatnd"},
 #endif
-
-  {"ApproxPoly", (PyCFunction)pycvApproxPoly, METH_KEYWORDS, "ApproxPoly(src_seq, storage, method, parameter=0, parameter2=0) -> None"},
-  {"CalcEMD2", (PyCFunction)pycvCalcEMD2, METH_KEYWORDS, "CalcEMD2(signature1, signature2, distance_type, distance_func = None, cost_matrix=None, flow=None, lower_bound=None, userdata = None) -> float"},
-  {"CalcOpticalFlowPyrLK", pycvCalcOpticalFlowPyrLK, METH_VARARGS, "CalcOpticalFlowPyrLK(prev, curr, prev_pyr, curr_pyr, prev_features, CvSize win_size, int level, criteria, flags, guesses = None) -> (curr_features, status, track_error)"},
-  {"ClipLine", (PyCFunction)pycvClipLine, METH_KEYWORDS, "ClipLine(img, pt1, pt2) -> (clipped_pt1, clipped_pt2)"},
-  {"CreateData", pycvCreateData, METH_VARARGS, "CreateData(arr) -> None"},
-  {"CreateHist", pycvCreateHist, METH_VARARGS, "CreateHist(dims, type, ranges, uniform = 1) -> hist"},
-  {"CreateImageHeader", pycvCreateImageHeader, METH_VARARGS, "CreateImageHeader(size, depth, channels) -> image"},
-  {"CreateImage", pycvCreateImage, METH_VARARGS, "CreateImage(size, depth, channels) -> image"},
-  {"CreateMatHeader", pycvCreateMatHeader, METH_VARARGS, "CreateMatHeader(rows, cols, type) -> mat"},
-  {"CreateMatNDHeader", pycvCreateMatNDHeader, METH_VARARGS, "CreateMatNDHeader(dims, type) -> matnd"},
-  {"CreateMatND", pycvCreateMatND, METH_VARARGS, "CreateMatND(dims, type) -> matnd"},
-  {"CreateMat", pycvCreateMat, METH_VARARGS, "CreateMat(row, cols, type) -> mat"},
-  {"CreateMemStorage", pycvCreateMemStorage, METH_VARARGS, "CreateMemStorage(block_size) -> memstorage"},
-  {"CreateTrackbar", (PyCFunction)pycvCreateTrackbar, METH_KEYWORDS, "CreateTrackbar(trackbar_name, window_name, value, count, on_change) -> None"},
-  {"FindChessboardCorners", (PyCFunction)pycvFindChessboardCorners, METH_KEYWORDS, "FindChessboardCorners(image, pattern_size, flags=CV_CALIB_CB_ADAPTIVE_THRESH) -> success,corners"},
-  {"FindContours", (PyCFunction)pycvFindContours, METH_KEYWORDS, "FindContours(image, storage, mode=CV_RETR_LIST, method=CV_CHAIN_APPROX_SIMPLE, offset=(0, 0)) -> cvseq"},
-  {"FitLine", (PyCFunction)pycvFitLine, METH_KEYWORDS, "FitLine(points, dist_type, param, reps, aeps) -> line"},
-  {"GetDims", pycvGetDims, METH_VARARGS, "GetDims(arr) -> dims"},
-  {"GetHuMoments", (PyCFunction)pycvGetHuMoments, METH_KEYWORDS, "GetHuMoments(cvmoments) -> (h1, h2, h3, h4, h5, h5, h7)"},
-  {"GetImage", pycvGetImage, METH_VARARGS, "GetImage(cvmat) -> image"},
-  {"GetMat", (PyCFunction)pycvGetMat, METH_KEYWORDS, "GetMat(image, allowND=0) -> cvmat"},
-  {"GetMinMaxHistValue", (PyCFunction)pycvGetMinMaxHistValue, METH_KEYWORDS, "GetMinMaxHistValue(hist) -> min_val,max_val,min_loc,max_loc"},
-  {"InitLineIterator", pycvInitLineIterator, METH_VARARGS, "InitLineIterator(image, pt1, pt2, connectivity=8, left_to_right=0) -> None"},
-  {"LoadImageM", (PyCFunction)pycvLoadImageM, METH_KEYWORDS, "LoadImageM(filename, iscolor=CV_LOAD_IMAGE_COLOR)"},
-  {"LoadImage", (PyCFunction)pycvLoadImage, METH_KEYWORDS, "LoadImage(filename, iscolor=CV_LOAD_IMAGE_COLOR)"},
-  {"ReshapeMatND", pycvReshapeMatND, METH_VARARGS, "Reshape(arr, new_cn, new_dims) -> matnd"},
-  {"Reshape", pycvReshape, METH_VARARGS, "Reshape(arr, new_cn, new_rows=0) -> cvmat"},
-  {"SetData", pycvSetData, METH_VARARGS, "SetData(arr, data, step)"},
-  {"SetMouseCallback", (PyCFunction)pycvSetMouseCallback, METH_KEYWORDS, "SetMouseCallback(window_name, on_mouse, param) -> None"},
-  {"Subdiv2DLocate", pycvSubdiv2DLocate, METH_VARARGS, "Subdiv2DLocate(subdiv, pt) -> (loc, where)"},
-  {"WaitKey", (PyCFunction)pycvWaitKey, METH_KEYWORDS, "WaitKey(delay=0) -> int"},
 
   //{"CalcOpticalFlowFarneback", (PyCFunction)pycvCalcOpticalFlowFarneback, METH_KEYWORDS, "CalcOpticalFlowFarneback(prev, next, flow, pyr_scale=0.5, levels=3, win_size=15, iterations=3, poly_n=7, poly_sigma=1.5, flags=0) -> None"},
   //{"_HOGComputeDescriptors", (PyCFunction)pycvHOGComputeDescriptors, METH_KEYWORDS, "_HOGComputeDescriptors(image, win_stride=block_stride, locations=None, padding=(0,0), win_size=(64,128), block_size=(16,16), block_stride=(8,8), cell_size=(8,8), nbins=9, gammaCorrection=true) -> list_of_descriptors"},

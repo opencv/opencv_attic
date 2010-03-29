@@ -19,6 +19,10 @@ for l in open("%s/api" % sys.argv[1]):
   if l[0] == '#':
     continue
   l = l.rstrip()
+  if (not l.startswith(' ')) and ('/' in l):
+    (l, flags) = l.split('/')
+  else:
+    flags = ""
   f = l.split()
   if len(f) != 0:
     if l[0] != ' ':
@@ -26,13 +30,13 @@ for l in open("%s/api" % sys.argv[1]):
         ty = f[1]
       else:
         ty = None
-      api.append((f[0], [], ty))
+      api.append((f[0], [], ty, flags))
     else:
       api[-1][1].append(argument(f))
 
 # Validation: check that any optional arguments are last
 had_error = False
-for (f, args, ty) in api:
+for (f, args, ty, flags) in api:
     if f == 'PolarToCart':
         print f, [(a.init != None) for a in args]
     has_init = [(a.init != None) for a in args if not 'O' in a.flags]
@@ -112,6 +116,8 @@ conversion_types = [
 'generic',
 'IplConvKernel*',
 'IplImage',
+'PyObject*',
+'PyCallableObject*'
 ]
 
 def safename(s):
@@ -121,185 +127,190 @@ def has_optional(al):
     """ return true if any argument is optional """
     return any([a.init for a in al])
 
-def gen(name, args, ty):
+def gen(name, args, ty, flags):
   yield ""
   if has_optional(args):
       yield "static PyObject *pycv%s(PyObject *self, PyObject *args, PyObject *kw)" % cname(name) 
   else:
       yield "static PyObject *pycv%s(PyObject *self, PyObject *args)" % cname(name)
-  yield "{"
-
-  destinations = []
-  for a in args:
-    remap = {
-     'CvArr' : 'CvArr*',
-     'CvMat' : 'CvMat*',
-     'CvMatND' : 'CvMatND*',
-     'IplImage' : 'IplImage*',
-     'CvMemStorage' : 'CvMemStorage*',
-     'CvHistogram':'CvHistogram*',
-     'CvSeq':'CvSeq*',
-     'CvHaarClassifierCascade' : 'CvHaarClassifierCascade*'
-    }
-    ctype = remap.get(a.ty, a.ty)
-    if a.init:
-      init = " = %s" % a.init
-    else:
-      init = ''
-    yield "  %s %s%s;" % (ctype, a.nm, init)
-    if 'O' in a.flags:
-      continue
-    if a.ty in (conversion_types + aggregate.keys()):
-      yield '  PyObject *pyobj_%s = NULL;' % (a.nm)
-      destinations.append('&pyobj_%s' % (a.nm))
-    elif a.ty in [ 'CvPoint2D32f' ]:
-      destinations.append('&%s.x, &%s.y' % (a.nm, a.nm))
-    elif a.ty in [ 'CvTermCriteria' ]:
-      destinations.append('&%s.type, &%s.max_iter, &%s.epsilon' % ((a.nm,)*3))
-    elif a.ty in [ 'CvSURFParams' ]:
-      destinations.append('&%s.extended, &%s.hessianThreshold, &%s.nOctaves, &%s.nOctaveLayers' % ((a.nm,)*4))
-    elif a.nm in [ 'CvBox2D' ]:
-      s = ", ".join([('&' + a.nm +'.' + fld) for fld in [ 'center.x', 'center.y', 'size.width', 'size.height', 'angle' ] ])
-      destinations.append(s)
-    else:
-      destinations.append('&%s' % a.nm)
-  fmap = {
-    'CvSURFParams' : '(idii)',
-    'double' : 'd',
-    'float' : 'f',
-    'int' : 'i',
-    'int64' : 'L',
-    'char*' : 's',
-  }
-  for k in (conversion_types + aggregate.keys()):
-    fmap[k] = 'O'
-  in_args = [ a for a in args if not 'O' in a.flags ]
-  fmt0 = "".join([ fmap[a.ty] for a in in_args if not a.init])
-  fmt1 = "".join([ fmap[a.ty] for a in in_args if a.init])
-      
-  yield ''
-  if len(fmt0 + fmt1) > 0:
-    if len(fmt1) > 0:
-      yield '  const char *keywords[] = { %s };' % (", ".join([ '"%s"' % arg.nm for arg in args if not 'O' in arg.flags ] + ['NULL']))
-      yield '  if (!PyArg_ParseTupleAndKeywords(args, kw, "%s|%s", %s))' % (fmt0, fmt1, ", ".join(['(char**)keywords'] + destinations))
-      if '(' in (fmt0 + fmt1):
-        print "Tuple with kwargs is not allowed, function", name
-        sys.exit(1)
-    else:
-      yield '  if (!PyArg_ParseTuple(args, "%s", %s))' % (fmt0, ", ".join(destinations))
-    yield '    return NULL;'
-
-  # Do the conversions:
-  for a in args:
-    joinwith = [f[2:] for f in a.flags if f.startswith("J:")]
-    if len(joinwith) > 0:
-      yield 'preShareData(%s, &%s);' % (joinwith[0], a.nm)
-    if 'O' in a.flags:
-      continue
-    if a.ty in (conversion_types + aggregate.keys()):
-      if a.init:
-        pred = '(pyobj_%s != NULL) && ' % a.nm
-      else:
-        pred = ''
-      yield '  if (%s!convert_to_%s(pyobj_%s, &%s, "%s")) return NULL;' % (pred, safename(a.ty), a.nm, a.nm, a.nm)
-
-  yield '#ifdef CVPY_VALIDATE_%s' % name
-  yield 'CVPY_VALIDATE_%s();' % name
-  yield '#endif'
-
-  def invokename(a):
-    if 'K' in a.flags:
-      prefix = "(const CvArr **)"
-    elif 'O' in a.flags and not 'A' in a.flags:
-      prefix = "&"
-    else:
-      prefix = ""
-    if a.ty in aggregate:
-      return prefix + aggregate[a.ty].replace('!', a.nm)
-    else:
-      return prefix + a.nm
-
-  def funcname(s):
-    # The name by which the function is called, in C
-    if s.startswith("CV"):
-      return s
-    else:
-      return "cv" + s
-  tocall = '%s(%s)' % (funcname(name), ", ".join(invokename(a) for a in args))
-  if ty == None:
-    yield '  ERRWRAP(%s);' % tocall
-    yield '  Py_RETURN_NONE;'
+  if 'doconly' in flags:
+    yield ";"
   else:
-    Rtypes = [
-      'int',
-      'int64',
-      'double',
-      'CvCapture*',
-      'CvVideoWriter*',
-      'CvPOSITObject*',
-      'CvScalar',
-      'CvSize',
-      'CvRect',
-      'CvSeq*',
-      'CvBox2D',
-      'CvSeqOfCvAvgComp*',
-      'CvSeqOfCvConvexityDefect*',
-      'CvSeqOfCvStarKeypoint*',
-      'CvSeqOfCvSURFPoint*',
-      'CvSeqOfCvSURFDescriptor*',
-      'CvContourTree*',
-      'IplConvKernel*',
-      'IplImage*',
-      'CvMat*',
-      'constCvMat*',
-      'ROCvMat*',
-      'CvMatND*',
-      'CvPoint2D32f_4',
-      'CvRNG',
-      'CvSubdiv2D*',
-      'CvSubdiv2DPoint*',
-      'CvSubdiv2DEdge',
-      'ROIplImage*',
-      'CvStereoBMState*',
-      'CvStereoGCState*',
-      'CvKalman*',
-      'float',
-      'generic',
-      'unsigned' ]
+    yield "{"
 
-    if ty in Rtypes:
-      yield '  %s r;' % (ty)
-      yield '  ERRWRAP(r = %s);' % (tocall)
-      yield '  return FROM_%s(r);' % safename(ty)
-    else:
-      all_returns = ty.split(",")
-      return_value_from_call = len(set(Rtypes) & set(all_returns)) != 0
-      if return_value_from_call:
-        yield '  %s r;' % list(set(Rtypes) & set(all_returns))[0]
-        yield '  ERRWRAP(r = %s);' % (tocall)
+    destinations = []
+    for a in args:
+      remap = {
+       'CvArr' : 'CvArr*',
+       'CvMat' : 'CvMat*',
+       'CvMatND' : 'CvMatND*',
+       'IplImage' : 'IplImage*',
+       'CvMemStorage' : 'CvMemStorage*',
+       'CvHistogram':'CvHistogram*',
+       'CvSeq':'CvSeq*',
+       'CvHaarClassifierCascade' : 'CvHaarClassifierCascade*'
+      }
+      ctype = remap.get(a.ty, a.ty)
+      if a.init:
+        init = " = %s" % a.init
       else:
-        yield '  ERRWRAP(%s);' % (tocall)
-      typed = dict([ (a.nm,a.ty) for a in args])
-      for i in range(len(all_returns)):
-        if all_returns[i] in Rtypes:
-          typed['r'] = all_returns[i]
-          all_returns[i] = "r"
-      if len(all_returns) == 1:
-        af = dict([ (a.nm,a.flags) for a in args])
-        joinwith = [f[2:] for f in af.get(all_returns[0], []) if f.startswith("J:")]
-        if len(joinwith) > 0:
-            yield '  return shareData(pyobj_%s, %s, %s);' % (joinwith[0], joinwith[0], all_returns[0])
+        init = ''
+      yield "  %s %s%s;" % (ctype, a.nm, init)
+      if 'O' in a.flags:
+        continue
+      if a.ty in (conversion_types + aggregate.keys()):
+        yield '  PyObject *pyobj_%s = NULL;' % (a.nm)
+        destinations.append('&pyobj_%s' % (a.nm))
+      elif a.ty in [ 'CvPoint2D32f' ]:
+        destinations.append('&%s.x, &%s.y' % (a.nm, a.nm))
+      elif a.ty in [ 'CvTermCriteria' ]:
+        destinations.append('&%s.type, &%s.max_iter, &%s.epsilon' % ((a.nm,)*3))
+      elif a.ty in [ 'CvSURFParams' ]:
+        destinations.append('&%s.extended, &%s.hessianThreshold, &%s.nOctaves, &%s.nOctaveLayers' % ((a.nm,)*4))
+      elif a.nm in [ 'CvBox2D' ]:
+        s = ", ".join([('&' + a.nm +'.' + fld) for fld in [ 'center.x', 'center.y', 'size.width', 'size.height', 'angle' ] ])
+        destinations.append(s)
+      else:
+        destinations.append('&%s' % a.nm)
+    fmap = {
+      'CvSURFParams' : '(idii)',
+      'double' : 'd',
+      'float' : 'f',
+      'int' : 'i',
+      'int64' : 'L',
+      'char*' : 's',
+    }
+    for k in (conversion_types + aggregate.keys()):
+      fmap[k] = 'O'
+    in_args = [ a for a in args if not 'O' in a.flags ]
+    fmt0 = "".join([ fmap[a.ty] for a in in_args if not a.init])
+    fmt1 = "".join([ fmap[a.ty] for a in in_args if a.init])
+        
+    yield ''
+    if len(fmt0 + fmt1) > 0:
+      if len(fmt1) > 0:
+        yield '  const char *keywords[] = { %s };' % (", ".join([ '"%s"' % arg.nm for arg in args if not 'O' in arg.flags ] + ['NULL']))
+        yield '  if (!PyArg_ParseTupleAndKeywords(args, kw, "%s|%s", %s))' % (fmt0, fmt1, ", ".join(['(char**)keywords'] + destinations))
+        if '(' in (fmt0 + fmt1):
+          print "Tuple with kwargs is not allowed, function", name
+          sys.exit(1)
+      else:
+        yield '  if (!PyArg_ParseTuple(args, "%s", %s))' % (fmt0, ", ".join(destinations))
+      yield '    return NULL;'
+
+    # Do the conversions:
+    for a in args:
+      joinwith = [f[2:] for f in a.flags if f.startswith("J:")]
+      if len(joinwith) > 0:
+        yield 'preShareData(%s, &%s);' % (joinwith[0], a.nm)
+      if 'O' in a.flags:
+        continue
+      if a.ty in (conversion_types + aggregate.keys()):
+        if a.init:
+          pred = '(pyobj_%s != NULL) && ' % a.nm
         else:
-            yield '  return FROM_%s(%s);' % (safename(typed[all_returns[0]]), all_returns[0])
-      else:
-        yield '  return Py_BuildValue("%s", %s);' % ("N" * len(all_returns), ", ".join(["FROM_%s(%s)" % (safename(typed[n]), n) for n in all_returns]))
+          pred = ''
+        yield '  if (%s!convert_to_%s(pyobj_%s, &%s, "%s")) return NULL;' % (pred, safename(a.ty), a.nm, a.nm, a.nm)
 
-  yield '}'
+    yield '#ifdef CVPY_VALIDATE_%s' % name
+    yield 'CVPY_VALIDATE_%s();' % name
+    yield '#endif'
+
+    def invokename(a):
+      if 'K' in a.flags:
+        prefix = "(const CvArr **)"
+      elif 'O' in a.flags and not 'A' in a.flags:
+        prefix = "&"
+      else:
+        prefix = ""
+      if a.ty in aggregate:
+        return prefix + aggregate[a.ty].replace('!', a.nm)
+      else:
+        return prefix + a.nm
+
+    def funcname(s):
+      # The name by which the function is called, in C
+      if s.startswith("CV"):
+        return s
+      else:
+        return "cv" + s
+    tocall = '%s(%s)' % (funcname(name), ", ".join(invokename(a) for a in args))
+    if 'stub' in flags:
+      yield '  return stub%s(%s);' % (name, ", ".join(invokename(a) for a in args))
+    elif ty == None:
+      yield '  ERRWRAP(%s);' % tocall
+      yield '  Py_RETURN_NONE;'
+    else:
+      Rtypes = [
+        'int',
+        'int64',
+        'double',
+        'CvCapture*',
+        'CvVideoWriter*',
+        'CvPOSITObject*',
+        'CvScalar',
+        'CvSize',
+        'CvRect',
+        'CvSeq*',
+        'CvBox2D',
+        'CvSeqOfCvAvgComp*',
+        'CvSeqOfCvConvexityDefect*',
+        'CvSeqOfCvStarKeypoint*',
+        'CvSeqOfCvSURFPoint*',
+        'CvSeqOfCvSURFDescriptor*',
+        'CvContourTree*',
+        'IplConvKernel*',
+        'IplImage*',
+        'CvMat*',
+        'constCvMat*',
+        'ROCvMat*',
+        'CvMatND*',
+        'CvPoint2D32f_4',
+        'CvRNG',
+        'CvSubdiv2D*',
+        'CvSubdiv2DPoint*',
+        'CvSubdiv2DEdge',
+        'ROIplImage*',
+        'CvStereoBMState*',
+        'CvStereoGCState*',
+        'CvKalman*',
+        'float',
+        'generic',
+        'unsigned' ]
+
+      if ty in Rtypes:
+        yield '  %s r;' % (ty)
+        yield '  ERRWRAP(r = %s);' % (tocall)
+        yield '  return FROM_%s(r);' % safename(ty)
+      else:
+        all_returns = ty.split(",")
+        return_value_from_call = len(set(Rtypes) & set(all_returns)) != 0
+        if return_value_from_call:
+          yield '  %s r;' % list(set(Rtypes) & set(all_returns))[0]
+          yield '  ERRWRAP(r = %s);' % (tocall)
+        else:
+          yield '  ERRWRAP(%s);' % (tocall)
+        typed = dict([ (a.nm,a.ty) for a in args])
+        for i in range(len(all_returns)):
+          if all_returns[i] in Rtypes:
+            typed['r'] = all_returns[i]
+            all_returns[i] = "r"
+        if len(all_returns) == 1:
+          af = dict([ (a.nm,a.flags) for a in args])
+          joinwith = [f[2:] for f in af.get(all_returns[0], []) if f.startswith("J:")]
+          if len(joinwith) > 0:
+              yield '  return shareData(pyobj_%s, %s, %s);' % (joinwith[0], joinwith[0], all_returns[0])
+          else:
+              yield '  return FROM_%s(%s);' % (safename(typed[all_returns[0]]), all_returns[0])
+        else:
+          yield '  return Py_BuildValue("%s", %s);' % ("N" * len(all_returns), ", ".join(["FROM_%s(%s)" % (safename(typed[n]), n) for n in all_returns]))
+
+    yield '}'
 
 gen_c = [ open("generated%d.i" % i, "w") for i in range(5) ]
 
 print "Generated %d functions" % len(api)
-for nm,args,ty in sorted(api):
+for nm,args,ty,flags in sorted(api):
 
   # Figure out docstring into ds_*
   ds_args = []
@@ -323,7 +334,7 @@ for nm,args,ty in sorted(api):
   print >>gen_c[1], entry % (nm)
   if nm.startswith('CV_'):
     print >>gen_c[1], entry % (nm[3:])
-  for l in gen(nm,args,ty):
+  for l in gen(nm,args,ty,flags):
     print >>gen_c[0], l
 
 for l in open("%s/defs" % sys.argv[1]):
