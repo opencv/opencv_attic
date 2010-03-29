@@ -1654,3 +1654,139 @@ HOGDetectMultiScale CvSeq*
   CvSize cell_size cvSize(8,8)
   int nbins 9
   int gammaCorrection 1
+
+# These functions are handwritten in cv.cpp; they appear here as 'doconly' declarations
+# so that their documentation can be auto-generated
+ApproxPoly  /doconly
+  cvarrseq src_seq
+  CvMemStorage storage
+  int method
+  double parameter 0.0
+  int parameter2 0
+CalcEMD2  /doconly
+  CvArr signature1
+  CvArr signature2
+  int distance_type
+  PyCallableObject* distance_func NULL
+  CvArr cost_matrix NULL
+  CvArr flow NULL
+  float lower_bound 0.0
+  PyObject* userdata NULL
+CalcOpticalFlowPyrLK currFeatures,status,track_error /doconly
+  CvArr prev
+  CvArr curr
+  CvArr prevPyr
+  CvArr currPyr
+  CvPoint2D32f* prevFeatures
+  int count
+  CvSize winSize
+  int level
+  CvTermCriteria criteria
+  int flags
+  CvPoint2D32f* guesses
+  CvPoint2D32f currFeatures /O
+  char status /O
+  float track_error /O
+ClipLine /doconly
+  CvSize imgSize
+  CvPoint pt1
+  CvPoint pt2
+CreateData /doconly
+  CvArr arr
+CreateHist /doconly
+  ints dims
+  int type
+  ranges ranges None
+  int uniform 1
+CreateImageHeader /doconly
+  int size
+  int depth
+  int channels
+CreateImage /doconly
+  int size
+  int depth
+  int channels
+CreateMatHeader /doconly
+  int rows
+  int cols
+  int type
+CreateMat /doconly
+  int rows
+  int cols
+  int type
+CreateMatNDHeader /doconly
+  ints dims
+  int type
+CreateMatND /doconly
+  ints dims
+  int type
+CreateMemStorage /doconly
+  int block_size
+CreateTrackbar /doconly
+  char* trackbar_name
+  char* window_name
+  int value
+  int count
+  PyCallableObject* on_change
+FindChessboardCorners /doconly
+  CvArr image
+  CvSize pattern_size
+  CvPoint2D32fs corners
+  int flags CV_CALIB_CB_ADAPTIVE_THRESH
+FindContours /doconly
+  CvArr image
+  CvMemStorage storage
+  int mode CV_RETR_LIST
+  int method CV_CHAIN_APPROX_SIMPLE
+  CvPoint offset (0,0)
+FitLine /doconly
+  CvArr points
+  int dist_type
+  double param
+  double reps
+  double aeps
+GetDims /doconly
+  CvArr arr
+  ints dims
+GetHuMoments /doconly
+  CvMoments moments
+GetImage /doconly
+  CvMat arr
+GetMat /doconly
+  IplImage arr
+  int allowND 0
+GetMinMaxHistValue /doconly
+  CvHistogram hist
+InitLineIterator /doconly
+  CvArr image
+  CvPoint pt1
+  CvPoint pt2
+  int connectivity 8
+  int left_to_right 0
+LoadImageM /doconly
+  char* filename
+  int iscolor CV_LOAD_IMAGE_COLOR
+LoadImage /doconly
+  char* filename
+  int iscolor CV_LOAD_IMAGE_COLOR
+ReshapeMatND /doconly
+  CvMat arr
+  int new_cn
+  int new_dims
+Reshape /doconly
+  CvArr arr
+  int new_cn
+  int new_dims
+SetData /doconly
+  CvArr arr
+  PyObject* data
+  int step
+SetMouseCallback /doconly
+  char* window_name
+  PyCallableObject* on_mouse
+  PyObject* param None
+Subdiv2DLocate /doconly
+  CvSubdiv2D* subdiv
+  CvPoint2D32f pt
+WaitKey /doconly
+  int delay 0
