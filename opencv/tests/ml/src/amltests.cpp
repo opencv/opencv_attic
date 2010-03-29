@@ -99,9 +99,11 @@ int CV_AMLTest::validate_test_results( int testCaseIdx )
     {
         resultNode["mean"] >> mean;
         resultNode["sigma"] >> sigma;
-        if ( abs(get_error( testCaseIdx, CV_TEST_ERROR ) - mean) > 6*sigma )
+        float curErr = get_error( testCaseIdx, CV_TEST_ERROR );
+        if ( abs( curErr - mean) > 6*sigma )
         {
-            ts->printf( CvTS::LOG, "in test case %d test error is out of range", testCaseIdx );
+            ts->printf( CvTS::LOG, "in test case %d test error is out of range:\n"
+                                    "abs(%f/*curEr*/ - %f/*mean*/ > %f/*6*sigma*/", testCaseIdx, curErr, mean, 6*sigma );
             return CvTS::FAIL_BAD_ACCURACY;
         }
     }
