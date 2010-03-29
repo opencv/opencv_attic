@@ -625,6 +625,18 @@ where $\eta_{ji}$ denote the normalized central moments.
 
 These values are proved to be invariant to the image scale, rotation, and reflection except the seventh one, whose sign is changed by reflection. Of course, this invariance was proved with the assumption of infinite image resolution. In case of a raster images the computed Hu invariants for the original and transformed images will be a bit different.
 
+\ifPy
+\begin{lstlisting}
+>>> import cv
+>>> original = cv.LoadImageM("building.jpg", cv.CV_LOAD_IMAGE_GRAYSCALE)
+>>> print cv.GetHuMoments(cv.Moments(original))
+(0.0010620951868446141, 1.7962726159653835e-07, 1.4932744974469421e-11, 4.4832441315737963e-12, -1.0819359198251739e-23, -9.5726503811945833e-16, -3.5050592804744648e-23)
+>>> flipped = cv.CloneMat(original)
+>>> cv.Flip(original, flipped)
+>>> print cv.GetHuMoments(cv.Moments(flipped))
+(0.0010620951868446141, 1.796272615965384e-07, 1.4932744974469935e-11, 4.4832441315740249e-12, -1.0819359198259393e-23, -9.572650381193327e-16, 3.5050592804745877e-23)
+\end{lstlisting}
+\fi
 
 \cvCPyFunc{GetNormalizedCentralMoment}
 Retrieves the normalized central moment from the moment state structure.
@@ -769,7 +781,7 @@ Calculates all of the moments up to the third order of a polygon or rasterized s
 \cvdefC{
 void cvMoments( \par const CvArr* arr,\par CvMoments* moments,\par int binary=0 );
 }
-\cvdefPy{Moments(arr, binary) -> moments}
+\cvdefPy{Moments(arr, binary = 0) -> moments}
 
 \begin{description}
 \cvarg{arr}{Image (1-channel or 3-channel with COI set) or polygon (CvSeq of points or a vector of points)}

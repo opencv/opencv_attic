@@ -145,7 +145,7 @@ class SphinxWriter:
         print >>self, "\n\n.. image:: %s\n\n" % filename
 
     def cmd_cvCppCross(self, c):
-        self.write(":ref:`%s`" % str(c.params[0]))
+        self.write(":func:`%s`" % str(c.params[0]))
 
     def cmd_cvCPyCross(self, c):
         self.write(":ref:`%s`" % str(c.params[0]))
@@ -202,9 +202,11 @@ class SphinxWriter:
         self.indent = 0
         nm = self.render(c.params[0].str)
         print >>self, "\n.. index:: %s\n" % nm
-        print >>self, ".. _%s:\n" % nm
-        print >>self, nm
-        print >>self, '-' * len(nm)
+        if 0:
+            print >>self, "\n.. _%s:\n" % nm
+        print >>self
+        print >>self, 'cv::%s' % nm
+        print >>self, '-' * (4+len(nm))
         print >>self
         self.state = 'fpreamble'
         if self.description != "":
@@ -498,6 +500,7 @@ class SphinxWriter:
                 "CvSeqOfCvSURFPoint" : ":class:`CvSeq` of :class:`CvSURFPoint`",
                 "CvSeqOfCvSURFDescriptor" : ":class:`CvSeq` of list of float",
                 "cvpoint2d32f_count" : "int",
+                "ranges" : "list of tuples of ints",
             }
             print >>self, "\n:type %s: %s" % (nm, translate.get(type, ':class:`%s`' % type))
 

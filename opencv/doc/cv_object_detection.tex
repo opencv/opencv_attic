@@ -292,6 +292,19 @@ CvSeq* cvHaarDetectObjects( \par const CvArr* image,\par CvHaarClassifierCascade
 
 The function finds rectangular regions in the given image that are likely to contain objects the cascade has been trained for and returns those regions as a sequence of rectangles. The function scans the image several times at different scales (see \cvCPyCross{SetImagesForHaarClassifierCascade}). Each time it considers overlapping regions in the image and applies the classifiers to the regions using \cvCPyCross{RunHaarClassifierCascade}. It may also apply some heuristics to reduce number of analyzed regions, such as Canny prunning. After it has proceeded and collected the candidate rectangles (regions that passed the classifier cascade), it groups them and returns a sequence of average rectangles for each large enough group. The default parameters (\texttt{scale\_factor} =1.1, \texttt{min\_neighbors} =3, \texttt{flags} =0) are tuned for accurate yet slow object detection. For a faster operation on real video images the settings are: \texttt{scale\_factor} =1.2, \texttt{min\_neighbors} =2, \texttt{flags} =\texttt{CV\_HAAR\_DO\_CANNY\_PRUNING}, \texttt{min\_size} =\textit{minimum possible face size} (for example, $\sim$ 1/4 to 1/16 of the image area in the case of video conferencing).
 
+\ifPy
+The function returns a list of tuples, \texttt{(rect, neighbors)}, where rect is a \cross{CvRect} specifying the object's extents
+and neighbors is a number of neighbors.
+
+\begin{lstlisting}
+>>> import cv
+>>> image = cv.LoadImageM("lena.jpg", cv.CV_LOAD_IMAGE_GRAYSCALE)
+>>> cascade = cv.Load("../../data/haarcascades/haarcascade_frontalface_alt.xml")
+>>> print cv.HaarDetectObjects(image, cascade, cv.CreateMemStorage(0), 1.2, 2, 0, (20, 20))
+[((217, 203, 169, 169), 24)]
+\end{lstlisting}
+\fi
+
 \ifC
 % ===== Example. Using cascade of Haar classifiers to find objects (e.g. faces). =====
 \begin{lstlisting}
@@ -358,6 +371,7 @@ int main( int argc, char** argv )
     return 0;
 }
 \end{lstlisting}
+
 
 \cvCPyFunc{SetImagesForHaarClassifierCascade}
 Assigns images to the hidden cascade.

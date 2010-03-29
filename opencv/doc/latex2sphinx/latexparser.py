@@ -58,7 +58,7 @@ dollarmath = QuotedString('$',  multiline=True, unquoteResults=False)
 param = Suppress(Literal('{')) + ZeroOrMoreAsList(dollarmath | filler2 | QuotedString('{', endQuoteChar='}', unquoteResults=False) | texcmd) + Suppress(Literal('}'))
 param.setParseAction(paramfun)
 def bs(c): return Literal("\\" + c)
-singles = bs("[") | bs("]") | bs("{") | bs("}") | bs("\\") | bs("&") | bs("_") | bs(",") | bs("#") | bs("\n") | bs(";") | bs("|") | bs("%") | bs("*")
+singles = bs("[") | bs("]") | bs("{") | bs("}") | bs("\\") | bs("&") | bs("_") | bs(",") | bs("#") | bs("\n") | bs(";") | bs("|") | bs("%") | bs("*") | bs("~")
 texcmd << (singles | Word("\\", "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", min = 2)) + ZeroOrMoreAsList(arg) + ZeroOrMoreAsList(param)
 def texcmdfun(s, loc, toks):
     return TexCmd(s, loc, toks)
