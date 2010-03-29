@@ -32,13 +32,13 @@ struct CvCascadeBoostTrainData : CvDTreeTrainData
                           const CvDTreeParams& _params=CvDTreeParams() );
     void precalculate();
 
-    virtual void get_class_labels( CvDTreeNode* n, int* labelsBuf, const int** labels );
-    virtual void get_cv_labels( CvDTreeNode* n, int* labelsBuf, const int** labels );
-    virtual void get_sample_indices( CvDTreeNode* n, int* indicesBuf, const int** labels );
+    virtual const int* get_class_labels( CvDTreeNode* n, int* labelsBuf );
+    virtual const int* get_cv_labels( CvDTreeNode* n, int* labelsBuf);
+    virtual const int* get_sample_indices( CvDTreeNode* n, int* indicesBuf );
     
-    virtual int get_ord_var_data( CvDTreeNode* n, int vi, float* ordValuesBuf, int* indicesBuf,
-                                  const float** ordValues, const int** indices );
-    virtual int get_cat_var_data( CvDTreeNode* n, int vi, int* catValuesBuf, const int** catValues );
+    virtual void get_ord_var_data( CvDTreeNode* n, int vi, float* ordValuesBuf, int* sortedIndicesBuf,
+                                  const float** ordValues, const int** sortedIndices, int* sampleIndicesBuf );
+    virtual const int* get_cat_var_data( CvDTreeNode* n, int vi, int* catValuesBuf );
     virtual float getVarValue( int vi, int si );
     virtual void free_train_data();
 
