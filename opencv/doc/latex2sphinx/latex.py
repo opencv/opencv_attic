@@ -299,7 +299,7 @@ class SphinxWriter:
                     else:
                         doc_outs = l[2]
                     if len(outs) != len(doc_outs):
-                        self.report_error(c, "function %s output documented tuple %d, code %d" % (l[0], len(outs), len(doc_outs)))
+                        self.report_error(c, "function %s output code tuple %d, documented %d" % (l[0], len(outs), len(doc_outs)))
             else:
                 # self.report_error(c, "function %s documented but not found in code" % l[0])
                 pass
@@ -501,6 +501,8 @@ class SphinxWriter:
                 "CvSeqOfCvSURFDescriptor" : ":class:`CvSeq` of list of float",
                 "cvpoint2d32f_count" : "int",
                 "ranges" : "list of tuples of ints",
+                "PyObject" : "object",
+                "edgeorpoint" : ":class:`CvSubdiv2DEdge`, :class:`CvSubdiv2DPoint`",
             }
             print >>self, "\n:type %s: %s" % (nm, translate.get(type, ':class:`%s`' % type))
 
