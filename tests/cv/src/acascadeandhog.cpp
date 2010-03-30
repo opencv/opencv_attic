@@ -204,8 +204,10 @@ void CV_DetectorTest::run( int start_from )
     validationFS << VALIDATION << "{";
 #endif
 
+    int progress = 0;
     for( int di = 0; di < test_case_count; di++ )
     {
+        progress = update_progress( progress, di, test_case_count, 0 );
 #ifdef GET_STAT
         validationFS << detectorNames[di] << "{";
 #endif
