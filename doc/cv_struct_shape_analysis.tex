@@ -475,6 +475,10 @@ and $\ge \texttt{sizeof(CvContour)}$ otherwise}
 \cvarg{offset}{Offset, by which every contour point is shifted. This is useful if the contours are extracted from the image ROI and then they should be analyzed in the whole image context}
 \end{description}
 
+The function retrieves contours from the binary image using the algorithm
+\cite{Suzuki85}. The contours are a useful tool for shape analysis and
+object detection and recognition.
+
 The function retrieves contours from the
 binary image and returns the number of retrieved contours. The
 pointer \texttt{first\_contour} is filled by the function. It will
@@ -484,9 +488,15 @@ contours may be reached from \texttt{first\_contour} using the
 \texttt{h\_next} and \texttt{v\_next} links. The sample in the
 \cvCPyCross{DrawContours} discussion shows how to use contours for
 connected component detection. Contours can be also used for shape
-analysis and object recognition - see \texttt{squares.c} in the OpenCV
-sample directory.
+analysis and object recognition - see
+\ifC
+\texttt{squares.c}
+\else
+\texttt{squares.py}
+\fi
+in the OpenCV sample directory.
 
+\textbf{Note:} the source \texttt{image} is modified by this function.
 
 \ifC % {
 
@@ -1055,6 +1065,8 @@ void findContours( const Mat\& image, vector<vector<Point> >\& contours,\par
 
 The function retrieves contours from the
 binary image using the algorithm \cite{Suzuki85}. The contours are a useful tool for shape analysis and object detection and recognition. See \texttt{squares.c} in the OpenCV sample directory.
+
+\textbf{Note:} the source \texttt{image} is modified by this function.
 
 \cvCppFunc{drawContours}
 Draws contours' outlines or filled contours.
