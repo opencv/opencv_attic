@@ -2,11 +2,11 @@
 
 \ifCPy
 
-\ifC
 
 \cvclass{CvMemStorage}\label{CvMemStorage}
 Growing memory storage.
 
+\ifC % {
 \begin{lstlisting}
 typedef struct CvMemStorage
 {
@@ -46,7 +46,24 @@ bottom of the stack and the pair (\texttt{top}, \texttt{free\_space})
 indicating top of the stack. The stack top may be saved via
 \cvCPyCross{SaveMemStoragePos}, restored via \cvCPyCross{RestoreMemStoragePos},
 or reset via \cvCPyCross{ClearStorage}.
+\else % }{
 
+Many OpenCV functions use a given storage area for their results
+and working storage.  These storage areas can be created using
+\cross{CreateMemStorage}.  OpenCV Python tracks the objects occupying a
+CvMemStorage, and automatically releases the CvMemStorage when there are
+no objects referring to it.  For this reason, there is explicit function
+to release a CvMemStorage.
+
+\begin{lstlisting}
+>>> import cv
+>>> image = cv.LoadImageM("building.jpg", cv.CV_LOAD_IMAGE_GRAYSCALE)
+>>> seq = cv.FindContours(image, cv.CreateMemStorage(), cv.CV_RETR_TREE, cv.CV_CHAIN_APPROX_SIMPLE)
+>>> del seq   # associated storage is also released
+\end{lstlisting}
+\fi % }
+
+\ifC
 \cvclass{CvMemBlock}\label{CvMemBlock}
 Memory storage block.
 
