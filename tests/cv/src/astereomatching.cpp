@@ -657,7 +657,7 @@ class CV_StereoBMTest : public CV_StereoMatchingTest
 {
 public:
     CV_StereoBMTest() : CV_StereoMatchingTest( "stereobm" )
-    { fill(rmsEps.begin(), rmsEps.end(), 0.4f); fill(fracEps.begin(), fracEps.end(), 0.02f); }
+    { fill(rmsEps.begin(), rmsEps.end(), 0.4f); fill(fracEps.begin(), fracEps.end(), 0.022f); }
 
 protected:
     struct RunParams
