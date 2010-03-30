@@ -1701,7 +1701,7 @@ double CvDTree::calc_node_dir( CvDTreeNode* node )
 
     if( data->get_var_type(vi) >= 0 ) // split on categorical var
     {
-        cv::AutoBuffer<int> inn_buf(n*(data->have_priors ? 1 : 2));
+        cv::AutoBuffer<int> inn_buf(n*(!data->have_priors ? 1 : 2));
         int* labels_buf = (int*)inn_buf;
         const int* labels = data->get_cat_var_data( node, vi, labels_buf );
         const int* subset = node->split->subset;
