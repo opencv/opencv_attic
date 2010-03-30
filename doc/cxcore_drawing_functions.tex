@@ -282,7 +282,7 @@ Initializes the line iterator.
 \cvdefC{
 int cvInitLineIterator( \par const CvArr* image,\par CvPoint pt1,\par CvPoint pt2,\par CvLineIterator* line\_iterator,\par int connectivity=8,\par int left\_to\_right=0 );
 }
-\cvdefPy{InitLineIterator(image, pt1, pt2, connectivity=8, left\_to\_right=0) -> None}
+\cvdefPy{InitLineIterator(image, pt1, pt2, connectivity=8, left\_to\_right=0) -> line\_iterator}
 
 \begin{description}
 \cvarg{image}{Image to sample the line from}
@@ -293,19 +293,57 @@ int cvInitLineIterator( \par const CvArr* image,\par CvPoint pt1,\par CvPoint pt
 \cvarg{left\_to\_right}{
 If ($ \texttt{left\_to\_right} = 0 $ ) then the line is scanned in the specified order, from \texttt{pt1} to \texttt{pt2}.
 If ($ \texttt{left\_to\_right} \ne 0$) the line is scanned from left-most point to right-most.}
+\cvPy{\cvarg{line\_iterator}{Iterator over the pixels of the line}}
 \end{description}
 
+\ifC
 The function initializes the line
 iterator and returns the number of pixels between the two end points.
-Both points must be inside the image. After the iterator has been
+Both points must be inside the image.
+After the iterator has been
 initialized, all the points on the raster line that connects the
 two ending points may be retrieved by successive calls of
-\texttt{CV\_NEXT\_LINE\_POINT} point. The points on the line are
+\texttt{CV\_NEXT\_LINE\_POINT} point.
+\fi
+\ifPy
+The function returns an iterator over the pixels connecting the two points.
+\fi
+
+The points on the line are
 calculated one by one using a 4-connected or 8-connected Bresenham
 algorithm.
 
+\ifPy
+Example: Using line iterator to calculate the sum of pixel values along a color line
+
+\begin{lstlisting}
+>>> import cv
+>>> img = cv.LoadImageM("building.jpg", cv.CV_LOAD_IMAGE_COLOR)
+>>> li = cv.InitLineIterator(img, (100, 100), (125, 150))
+>>> red_sum = 0
+>>> green_sum = 0
+>>> blue_sum = 0
+>>> for (r, g, b) in li:
+...     red_sum += r
+...     green_sum += g
+...     blue_sum += b
+>>> print red_sum, green_sum, blue_sum
+10935.0 9496.0 7946.0
+\end{lstlisting}
+
+or more concisely using \href{http://docs.python.org/library/functions.html\#zip}{zip}:
+
+\begin{lstlisting}
+>>> import cv
+>>> img = cv.LoadImageM("building.jpg", cv.CV_LOAD_IMAGE_COLOR)
+>>> li = cv.InitLineIterator(img, (100, 100), (125, 150))
+>>> print [sum(c) for c in zip(*li)]
+[10935.0, 9496.0, 7946.0]
+\end{lstlisting}
+\fi
+
 \ifC
-% Example: Using line iterator to calculate the sum of pixel values along the color line
+Example: Using line iterator to calculate the sum of pixel values along the color line.
 
 \begin{lstlisting}
 
