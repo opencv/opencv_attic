@@ -1765,7 +1765,7 @@ InitLineIterator line_iterator /doconly
   CvArr image
   CvPoint pt1
   CvPoint pt2
-  int line_iterator /O
+  iter line_iterator /O
   int connectivity 8
   int left_to_right 0
 LoadImageM /doconly
@@ -1777,7 +1777,7 @@ LoadImage /doconly
 ReshapeMatND /doconly
   CvMat arr
   int newCn
-  int newDims
+  ints newDims
 Reshape /doconly
   CvArr arr
   int newCn

@@ -122,6 +122,7 @@ static int convert_to_CvMatND(PyObject *o, CvMatND **dst, const char *name = "no
 static PyObject *what_data(PyObject *o);
 static PyObject *FROM_CvMat(CvMat *r);
 static PyObject *FROM_ROCvMatPTR(ROCvMat *r);
+static PyObject *shareDataND(PyObject *donor, CvMatND *pdonor, CvMatND *precipient);
 
 #define FROM_double(r)  PyFloat_FromDouble(r)
 #define FROM_float(r)  PyFloat_FromDouble(r)
@@ -337,6 +338,7 @@ static void iplimage_setorigin(iplimage_t *cva, PyObject *v)
 
 static PyGetSetDef iplimage_getseters[] = {
   {(char*)"nChannels", (getter)iplimage_getnChannels, (setter)NULL, (char*)"nChannels", NULL},
+  {(char*)"channels", (getter)iplimage_getnChannels, (setter)NULL, (char*)"nChannels", NULL},
   {(char*)"width", (getter)iplimage_getwidth, (setter)NULL, (char*)"width", NULL},
   {(char*)"height", (getter)iplimage_getheight, (setter)NULL, (char*)"height", NULL},
   {(char*)"depth", (getter)iplimage_getdepth, (setter)NULL, (char*)"depth", NULL},
@@ -471,6 +473,11 @@ static PyObject *cvmat_getrows(cvmat_t *cva)
 static PyObject *cvmat_getcols(cvmat_t *cva)
 {
   return PyInt_FromLong(cva->a->cols);
+}
+
+static PyObject *cvmat_getchannels(cvmat_t *cva)
+{
+  return PyInt_FromLong(CV_MAT_CN(cva->a->type));
 }
 
 #if PYTHON_USE_NUMPY
@@ -627,6 +634,7 @@ static PyGetSetDef cvmat_getseters[] = {
   {(char*)"step",   (getter)cvmat_getstep, (setter)NULL, (char*)"step",   NULL},
   {(char*)"rows",   (getter)cvmat_getrows, (setter)NULL, (char*)"rows",   NULL},
   {(char*)"cols",   (getter)cvmat_getcols, (setter)NULL, (char*)"cols",   NULL},
+  {(char*)"channels",(getter)cvmat_getchannels, (setter)NULL, (char*)"channels",   NULL},
   {(char*)"width",  (getter)cvmat_getcols, (setter)NULL, (char*)"width",  NULL},
   {(char*)"height", (getter)cvmat_getrows, (setter)NULL, (char*)"height", NULL},
 #if PYTHON_USE_NUMPY
@@ -778,10 +786,16 @@ static struct PyMethodDef cvmatnd_methods[] =
   {NULL,          NULL}
 };
 
+static PyObject *cvmatnd_getchannels(cvmatnd_t *cva)
+{
+  return PyInt_FromLong(CV_MAT_CN(cva->a->type));
+}
+
 static PyGetSetDef cvmatnd_getseters[] = {
 #if PYTHON_USE_NUMPY
   {(char*)"__array_struct__", (getter)cvmatnd_array_struct, (setter)NULL, (char*)"__array_struct__", NULL},
 #endif
+  {(char*)"channels",(getter)cvmatnd_getchannels, (setter)NULL, (char*)"channels",   NULL},
   {NULL}  /* Sentinel */
 };
 
@@ -3204,7 +3218,7 @@ static PyObject *pycvReshapeMatND(PyObject *self, PyObject *args)
   int new_cn = 0;
   PyObject *new_dims = NULL;
 
-  if (!PyArg_ParseTuple(args, "O|iO", &o, &new_cn, &new_dims))
+  if (!PyArg_ParseTuple(args, "OiO", &o, &new_cn, &new_dims))
     return NULL;
 
   CvMatND *cva;
@@ -3216,49 +3230,25 @@ static PyObject *pycvReshapeMatND(PyObject *self, PyObject *args)
       return NULL;
   }
 
-#if 0
-  if ((dims.count + 1) <= 2) {
-    CvMat *m = cvCreateMatHeader(100, 100, 1); // these args do not matter, because overwritten
-    if (new_dims != NULL) {
-      printf("newcn=%d newdims=%d newSizes=%p\n", new_cn, dims.count + 1, dims.i);
-      ERRWRAP(cvReshapeND(cva, m, new_cn, dims.count + 1, dims.i));
-    } else {
-      ERRWRAP(cvReshapeND(cva, m, new_cn, 0, NULL));
-    }
+  if (new_cn == 0)
+    new_cn = CV_MAT_CN(cvGetElemType(cva));
 
-    cvmat_t *om = PyObject_NEW(cvmat_t, &cvmat_Type);
-    om->a = m;
-    om->data = what_data(o);
-    Py_INCREF(om->data);
-    om->offset = 0;
-    return (PyObject*)om;
-  } else {
-    int dummy[1] = { 1 };
-    CvMatND *m = cvCreateMatNDHeader(1, dummy, 1); // these args do not matter, because overwritten
-    if (new_dims != NULL) {
-      printf("newcn=%d newdims=%d newSizes=%p\n", new_cn, dims.count + 1, dims.i);
-      ERRWRAP(cvReshapeND(cva, m, new_cn, dims.count + 1, dims.i));
-    } else {
-      ERRWRAP(cvReshapeND(cva, m, new_cn, 0, NULL));
-    }
+  int i;
+  int count = CV_MAT_CN(cvGetElemType(cva));
+  for (i = 0; i < cva->dims; i++)
+    count *= cva->dim[i].size;
 
-    cvmatnd_t *om = PyObject_NEW(cvmatnd_t, &cvmatnd_Type);
-    om->a = m;
-    om->data = what_data(o);
-    Py_INCREF(om->data);
-    om->offset = 0;
-    return (PyObject*)om;
+  int newcount = new_cn;
+  for (i = 0; i < dims.count; i++)
+    newcount *= dims.i[i];
+
+  if (count != newcount) {
+    PyErr_SetString(PyExc_TypeError, "Total number of elements must be unchanged");
+    return NULL;
   }
-#else
-  {
-    int size[] = { 2, 2, 2 };
-    CvMatND* mat = cvCreateMatND(3, size, CV_32F);
-    CvMat row_header;
-    CvArr *row;
-    row = cvReshapeND(mat, &row_header, 0, 1, 0);
-  }
-  Py_RETURN_NONE;
-#endif
+
+  CvMatND *pn = cvCreateMatNDHeader(dims.count, dims.i, CV_MAKETYPE(CV_MAT_TYPE(cva->type), new_cn));
+  return shareDataND(o, cva, pn);
 }
 
 static void OnMouse(int event, int x, int y, int flags, void* param)
@@ -3654,6 +3644,19 @@ static PyObject *shareData(PyObject *donor, CvArr *pdonor, CvMat *precipient)
     return (PyObject*)failmsg("Argument 'mat' must be either IplImage or CvMat");
   }
   ((cvmat_t*)recipient)->data = arr_data;
+  Py_INCREF(arr_data);
+  return recipient;
+}
+
+static PyObject *shareDataND(PyObject *donor, CvMatND *pdonor, CvMatND *precipient)
+{
+  PyObject *recipient = (PyObject*)PyObject_NEW(cvmatnd_t, &cvmatnd_Type);
+  ((cvmatnd_t*)recipient)->a = precipient;
+  ((cvmatnd_t*)recipient)->offset = 0;
+
+  PyObject *arr_data;
+  arr_data = ((cvmatnd_t*)donor)->data;
+  ((cvmatnd_t*)recipient)->data = arr_data;
   Py_INCREF(arr_data);
   return recipient;
 }

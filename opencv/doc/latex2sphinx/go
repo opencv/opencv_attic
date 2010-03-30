@@ -1,7 +1,6 @@
 #!/bin/bash
 
 LANGUAGES="c cpp py"
-LANGUAGES="py"
 
 mkdir -p $LANGUAGES
 tput clear
