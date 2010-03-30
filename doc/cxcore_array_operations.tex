@@ -2905,13 +2905,15 @@ Changes the shape of a multi-dimensional array without copying the data.
 \cvarg{newSizes}{Array of new dimension sizes. Only $\texttt{newDims}-1$ values are used, because the total number of elements must remain the same.
 Thus, if $\texttt{newDims} = 1$, \texttt{newSizes} array is not used.}
 \else
+\cvarg{newCn}{New number of channels. $\texttt{newCn} = 0$ means that the number of channels remains unchanged.}
 \cvarg{newDims}{List of new dimensions.}
 \fi
 \end{description}
 
-The function is an advanced version of \cvCPyCross{Reshape} that can work with multi-dimensional arrays as well (though it can work with ordinary images and matrices) and change the number of dimensions.
 
 \ifC
+The function is an advanced version of \cvCPyCross{Reshape} that can work with multi-dimensional arrays as well (though it can work with ordinary images and matrices) and change the number of dimensions.
+
 Below are the two samples from the \cvCPyCross{Reshape} description rewritten using \cvCPyCross{ReshapeMatND}:
 
 \begin{lstlisting}
@@ -2928,6 +2930,24 @@ CvMatND* mat = cvCreateMatND(3, size, CV_32F);
 CvMat row_header, *row;
 row = (CvMat*)cvReshapeND(mat, &row_header, 0, 1, 0);
 
+\end{lstlisting}
+\fi
+
+\ifPy
+Returns a new \cross{CvMatND} that shares the same data as \texttt{arr}
+but has different dimensions or number of channels.  The only requirement
+is that the total length of the data is unchanged.
+
+\begin{lstlisting}
+>>> import cv
+>>> mat = cv.CreateMatND([24], cv.CV_32FC1)
+>>> print cv.GetDims(cv.ReshapeMatND(mat, 0, [8, 3]))
+(8, 3)
+>>> m2 = cv.ReshapeMatND(mat, 4, [3, 2])
+>>> print cv.GetDims(m2)
+(3, 2)
+>>> print m2.channels
+4
 \end{lstlisting}
 \fi
 

@@ -680,10 +680,12 @@ class FunctionTests(OpenCVTests):
         self.assert_((nc * nr * nd) == elems)
 
         # Now test ReshapeMatND
-        mat = cv.CreateMatND([24], cv.CV_32F)
+        mat = cv.CreateMatND([24], cv.CV_32FC1)
         cv.Set(mat, 1.0)
-        self.assertEqual(cv.GetDims(cv.ReshapeMatND(mat, 0, [])), (24, 1))
-        self.assertEqual(cv.GetDims(cv.ReshapeMatND(mat, 0, [1])), (6, 4))
+        self.assertEqual(cv.GetDims(cv.ReshapeMatND(mat, 0, [24, 1])), (24, 1))
+        self.assertEqual(cv.GetDims(cv.ReshapeMatND(mat, 0, [6, 4])), (6, 4))
+        self.assertEqual(cv.GetDims(cv.ReshapeMatND(mat, 24, [1])), (1,))
+        self.assertRaises(TypeError, lambda: cv.ReshapeMatND(mat, 12, [1]))
 
     def test_Save(self):
         for o in [ cv.CreateImage((128,128), cv.IPL_DEPTH_8U, 1), cv.CreateMat(16, 16, cv.CV_32FC1) ]:
@@ -812,6 +814,18 @@ class AreaTests(OpenCVTests):
             r = numpy.ones((640, 480))
             cv.AddS(ones, 7, r)
             self.assert_(numpy.alltrue(r == (8 * ones)))
+
+            # create arrays, use them in OpenCV and replace the the array
+            # looking for leaks
+            def randdim():
+                return [random.randrange(1,6) for i in range(random.randrange(1, 6))]
+            as = [numpy.ones(randdim()).astype(numpy.uint8) for i in range(10)]
+            cs = [cv.fromarray(a, True) for a in as]
+            for i in range(1000):
+                as[random.randrange(10)] = numpy.ones(randdim()).astype(numpy.uint8)
+                cs[random.randrange(10)] = cv.fromarray(as[random.randrange(10)], True)
+                for j in range(10):
+                    self.assert_(all([c == chr(1) for c in cs[j].tostring()]))
 
         else:
             print "SKIPPING test_numpy - numpy support not built"
