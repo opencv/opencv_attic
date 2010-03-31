@@ -173,6 +173,15 @@ class SphinxWriter:
         self.addtag(nm, c)
         self.state = 'class'
 
+    def cmd_index(self, c):
+        pass
+
+    def cmd_hyperref(self, c):
+        pass
+
+    def cmd_footnote(self, c):
+        pass
+
     def addtag(self, nm, c):
         if nm == "":
             self.report_error(c, "empty name")
