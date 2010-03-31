@@ -427,9 +427,10 @@ void cvFloodFill(\par CvArr* image,\par CvPoint seed\_point,\par CvScalar new\_v
 \cvarg{lo\_diff}{Maximal lower brightness/color difference between the currently observed pixel and one of its neighbors belonging to the component, or a seed pixel being added to the component. In the case of 8-bit color images it is a packed value}
 \cvarg{up\_diff}{Maximal upper brightness/color difference between the currently observed pixel and one of its neighbors belonging to the component, or a seed pixel being added to the component. In the case of 8-bit color images it is a packed value}
 \ifC % {
-\cvarg{comp}{Pointer to the structure that the function fills with the information about the repainted domain}
+\cvarg{comp}{Pointer to the structure that the function fills with the information about the repainted domain.
+Note that the function does not fill \texttt{comp->contour} field. The boundary of the filled component can be retrieved from the output mask image using \cvCPyCross{FindContours}}
 \else % }{
-\cvarg{comp}{Returned connected component for the repainted domain}
+\cvarg{comp}{Returned connected component for the repainted domain. Note that the function does not fill \texttt{comp->contour} field. The boundary of the filled component can be retrieved from the output mask image using \cvCPyCross{FindContours}}
 \fi % }
 \cvarg{flags}{The operation flags. Lower bits contain connectivity value, 4 (by default) or 8, used within the function. Connectivity determines which neighbors of a pixel are considered. Upper bits can be 0 or a combination of the following flags:
 \begin{description}
