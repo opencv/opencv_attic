@@ -844,9 +844,10 @@ void HOGDescriptor::detectMultiScale(
 {
     double scale = 1.;
     const int maxLevels = 64;
+    int levels = 0;
 
     vector<double> levelScale;
-    for( int levels = 0; levels < maxLevels; levels++ )
+    for( levels = 0; levels < maxLevels; levels++ )
     {
         levelScale.push_back(scale);
         if( cvRound(img.cols/scale) < winSize.width ||
@@ -855,6 +856,8 @@ void HOGDescriptor::detectMultiScale(
             break;
         scale *= scale0;
     }
+    levels = std::max(levels, 1);
+    levelScale.resize(levels);
 
     ConcurrentRectVector allCandidates;
     
