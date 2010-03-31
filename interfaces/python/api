@@ -1324,6 +1324,7 @@ FindExtrinsicCameraParams2
   CvMat distCoeffs
   CvMat rvec
   CvMat tvec
+  int useExtrinsicGuess 0
 FindFundamentalMat int
   CvMat points1
   CvMat points2
