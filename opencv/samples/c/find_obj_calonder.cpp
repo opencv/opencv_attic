@@ -88,6 +88,8 @@ float CalcAffineReprojectionError(const vector<CvPoint>& p1, const vector<CvPoin
 
 int main( int argc, char** argv )
 {
+	printf("calonder_sample is under construction\n");
+	return 0;
 
 	IplImage* test_image;
 	IplImage* train_image;
