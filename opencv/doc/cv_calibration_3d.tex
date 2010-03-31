@@ -606,8 +606,8 @@ the function \cvCross{FindCornerSubPix}{cornerSubPix}.
 \fi
 Finds the object pose from the 3D-2D point correspondences
 
-\cvdefC{void cvFindExtrinsicCameraParams2( \par const CvMat* objectPoints,\par const CvMat* imagePoints,\par const CvMat* cameraMatrix,\par const CvMat* distCoeffs,\par CvMat* rvec,\par CvMat* tvec );}
-\cvdefPy{FindExtrinsicCameraParams2(objectPoints,imagePoints,cameraMatrix,distCoeffs,rvec,tvec)-> None}
+\cvdefC{void cvFindExtrinsicCameraParams2( \par const CvMat* objectPoints,\par const CvMat* imagePoints,\par const CvMat* cameraMatrix,\par const CvMat* distCoeffs,\par CvMat* rvec,\par CvMat* tvec, \par int useExtrinsicGuess=0);}
+\cvdefPy{FindExtrinsicCameraParams2(objectPoints,imagePoints,cameraMatrix,distCoeffs,rvec,tvec,useExtrinsicGuess=0)-> None}
 \cvdefCpp{void solvePnP( const Mat\& objectPoints,\par
                const Mat\& imagePoints,\par
                const Mat\& cameraMatrix,\par
@@ -621,6 +621,7 @@ Finds the object pose from the 3D-2D point correspondences
 \cvarg{distCoeffs}{The input 4x1, 1x4, 5x1 or 1x5 vector of distortion coefficients $(k_1, k_2, p_1, p_2[, k_3])$. If it is NULL, all of the distortion coefficients are set to 0}
 \cvarg{rvec}{The output rotation vector (see \cvCross{Rodrigues2}{Rodrigues}) that (together with \texttt{tvec}) brings points from the model coordinate system to the camera coordinate system}
 \cvarg{tvec}{The output translation vector}
+\cvarg{useExtrinsicGuess}{If true (1), the function will use the provided \texttt{rvec} and \texttt{tvec} as the initial approximations of the rotation and translation vectors, respectively, and will further optimize them.}
 \end{description}
 
 The function estimates the object pose given a set of object points, their corresponding image projections, as well as the camera matrix and the distortion coefficients. This function finds such a pose that minimizes reprojection error, i.e. the sum of squared distances between the observed projections \texttt{imagePoints} and the projected (using \cvCross{ProjectPoints2}{projectPoints}) \texttt{objectPoints}.
