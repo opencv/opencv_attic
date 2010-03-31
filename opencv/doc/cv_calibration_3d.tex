@@ -111,7 +111,11 @@ in the OpenCV Guide 3D Reconstruction Chapter).
 
 \fi
 
-\cvfunc{CalibrateCamera2}{calibrateCamera}
+\ifCPy
+\cvCPyFunc{CalibrateCamera2}
+\else
+\cvCppFunc{calibrateCamera}
+\fi
 Finds the camera intrinsic and extrinsic parameters from several views of a calibration pattern.
 
 \cvdefC{double cvCalibrateCamera2( \par const CvMat* objectPoints,\par const CvMat* imagePoints,\par const CvMat* pointCounts,\par CvSize imageSize,\par CvMat* cameraMatrix,\par CvMat* distCoeffs,\par CvMat* rvecs=NULL,\par CvMat* tvecs=NULL,\par int flags=0 );}
@@ -248,7 +252,11 @@ The functions are used inside \cvCppCross{stereoCalibrate} but can also be used 
 
 \fi
 
-\cvfunc{ComputeCorrespondEpilines}{computeCorrespondEpilines}
+\ifCPy
+\cvCPyFunc{ComputeCorrespondEpilines}
+\else
+\cvCppFunc{computeCorrespondEpilines}
+\fi
 For points in one image of a stereo pair, computes the corresponding epilines in the other image.
 
 \cvdefC{void cvComputeCorrespondEpilines( \par const CvMat* points,\par int whichImage,\par const CvMat* F, \par CvMat* lines);}
@@ -279,8 +287,11 @@ and, vice versa, when \texttt{whichImage=2}, $l^{(1)}_i$ is computed from $p^{(2
 
 Line coefficients are defined up to a scale. They are normalized, such that $a_i^2+b_i^2=1$.
 
-
-\cvfunc{ConvertPointsHomogeneous}{convertPointsHomogeneous}
+\ifCPy
+\cvCPyFunc{ConvertPointsHomogeneous}
+\else
+\cvCppFunc{convertPointsHomogeneous}
+\fi
 Convert points to/from homogeneous coordinates.
 
 \cvdefC{void cvConvertPointsHomogeneous( \par const CvMat* src,\par CvMat* dst );}
@@ -404,32 +415,41 @@ typedef struct CvStereoBMState
     int       numberOfDisparities; // maximum disparity - minimum disparity
     //post filters (knock out bad matches):
     int       textureThreshold; // areas with no texture are ignored
-    float     uniquenessRatio;// filter out pixels if there are other close matches
+    int       uniquenessRatio;// invalidate disparity at pixels where there are other close matches
                               // with different disparity
     int       speckleWindowSize; // the maximum area of speckles to remove
                                  // (set to 0 to disable speckle filtering)
     int       speckleRange; // acceptable range of disparity variation in each connected component
+    
+    int trySmallerWindows; // not used 
+    CvRect roi1, roi2; // clipping ROIs
+    
+    int disp12MaxDiff; // maximum allowed disparity difference in the left-right check 
+    
     // internal data
     ...
 }
 CvStereoBMState;
 \end{lstlisting}
-\else
+\fi
 \begin{description}
-\cvarg{preFilterType}{0 for now, int}
+\cvarg{preFilterType}{type of the prefilter, \texttt{CV\_STEREO\_BM\_NORMALIZED\_RESPONSE} or the default and the recommended \texttt{CV\_STEREO\_BM\_XSOBEL}, int}
 \cvarg{preFilterSize}{~5x5..21x21, int}
 \cvarg{preFilterCap}{up to ~31, int}
-\cvarg{SADWindowSize}{Could be 5x5..21x21, int}
+\cvarg{SADWindowSize}{Could be 5x5..21x21 or higher, but with 21x21 or smaller windows the processing speed is much higher, int}
 \cvarg{minDisparity}{minimum disparity (=0), int}
 \cvarg{numberOfDisparities}{maximum disparity - minimum disparity, int}
-\cvarg{textureThreshold}{areas with no texture are ignored, int}
-\cvarg{uniquenessRatio}{filter out pixels if there are other close matches with different disparity, float}
+\cvarg{textureThreshold}{the textureness threshold. That is, if the sum of absolute values of x-derivatives computed over \texttt{SADWindowSize} by \texttt{SADWindowSize} pixel neighborhood is smaller than the parameter, no disparity is computed at the pixel, int}
+\cvarg{uniquenessRatio}{the minimum margin in percents between the best (minimum) cost function value and the second best value to accept the computed disparity, int}
 \cvarg{speckleWindowSize}{the maximum area of speckles to remove (set to 0 to disable speckle filtering), int}
 \cvarg{speckleRange}{acceptable range of disparity variation in each connected component, int}
+\cvarg{trySmallerWindows}{not used currently (0), int}
+\cvarg{roi1, roi2}{These are the clipping ROIs for the left and the right images. The function \cvCPyCross{StereoRectify} returns the largest rectangles in the left and right images where after the rectification all the pixels are valid. If you copy those rectangles to the \texttt{CvStereoBMState} structure, the stereo correspondence function will automatically clear out the pixels outside of the "valid" disparity rectangle computed by \cvCPyCross{GetValidDisparityROI}. Thus you will get more "invalid disparity" pixels than usual, but the remaining pixels are more probable to be valid.}
+\cvarg{disp12MaxDiff}{The maximum allowed difference between the explicitly computed left-to-right disparity map and the implicitly (by \cvCPyCross{ValidateDisparity}) computed right-to-left disparity. If for some pixel the difference is larger than the specified threshold, the disparity at the pixel is invalidated. By default this parameter is set to (-1), which means that the left-right check is not performed.}
 \end{description}
-\fi
 
-The block matching stereo correspondence algorithm, by Kurt Konolige, is very fast one-pass stereo matching algorithm that uses sliding sums of absolute differences between pixels in the left image and the pixels in the right image, shifted by some varying amount of pixels (from \texttt{minDisparity} to \texttt{minDisparity+numberOfDisparities}). On a pair of images WxH the algorithm computes disparity in \texttt{O(W*H*numberOfDisparities)} time. In order to improve quality and readability of the disparity map, the algorithm includes pre-filtering and post-filtering procedures.
+
+The block matching stereo correspondence algorithm, by Kurt Konolige, is very fast single-pass stereo matching algorithm that uses sliding sums of absolute differences between pixels in the left image and the pixels in the right image, shifted by some varying amount of pixels (from \texttt{minDisparity} to \texttt{minDisparity+numberOfDisparities}). On a pair of images WxH the algorithm computes disparity in \texttt{O(W*H*numberOfDisparities)} time. In order to improve quality and readability of the disparity map, the algorithm includes pre-filtering and post-filtering procedures.
 
 Note that the algorithm searches for the corresponding blocks in x direction only. It means that the supplied stereo pair should be rectified. Vertical stereo layout is not directly supported, but in such a case the images could be transposed by user.
 
@@ -477,7 +497,11 @@ The graph cuts stereo correspondence algorithm, described in \cite{Kolmogorov03}
 
 \fi
 
-\cvfunc{DecomposeProjectionMatrix}{decomposeProjectionMatrix}
+\ifCPy
+\cvCPyFunc{DecomposeProjectionMatrix}
+\else
+\cvCppFunc{decomposeProjectionMatrix}
+\fi
 Decomposes the projection matrix into a rotation matrix and a camera matrix.
 
 \cvdefC{
@@ -511,7 +535,11 @@ It optionally returns three rotation matrices, one for each axis, and the three 
 
 The function is based on \cvCross{RQDecomp3x3}{RQDecomp3x3}.
 
-\cvfunc{DrawChessboardCorners}{drawChessboardCorners}
+\ifCPy
+\cvCPyFunc{DrawChessboardCorners}
+\else
+\cvCppFunc{drawChessboardCorners}
+\fi
 Renders the detected chessboard corners.
 
 \cvdefC{
@@ -530,7 +558,11 @@ void cvDrawChessboardCorners( \par CvArr* image,\par CvSize patternSize,\par CvP
 
 The function draws the individual chessboard corners detected as red circles if the board was not found or as colored corners connected with lines if the board was found.
 
-\cvfunc{FindChessboardCorners}{findChessboardCorners}
+\ifCPy
+\cvCPyFunc{FindChessboardCorners}
+\else
+\cvCppFunc{findChessboardCorners}
+\fi
 Finds the positions of the internal corners of the chessboard.
 
 \cvdefC{int cvFindChessboardCorners( \par const void* image,\par CvSize patternSize,\par CvPoint2D32f* corners,\par int* cornerCount=NULL,\par int flags=CV\_CALIB\_CB\_ADAPTIVE\_THRESH );}
@@ -567,7 +599,11 @@ the function \cvCross{FindCornerSubPix}{cornerSubPix}.
 
 \textbf{Note:} the function requires some white space (like a square-thick border, the wider the better) around the board to make the detection more robust in various environment (otherwise if there is no border and the background is dark, the outer black squares could not be segmented properly and so the square grouping and ordering algorithm will fail).
 
-\cvfunc{FindExtrinsicCameraParams2}{solvePnP}
+\ifCPy
+\cvCPyFunc{FindExtrinsicCameraParams2}
+\else
+\cvCppFunc{solvePnP}
+\fi
 Finds the object pose from the 3D-2D point correspondences
 
 \cvdefC{void cvFindExtrinsicCameraParams2( \par const CvMat* objectPoints,\par const CvMat* imagePoints,\par const CvMat* cameraMatrix,\par const CvMat* distCoeffs,\par CvMat* rvec,\par CvMat* tvec );}
@@ -589,8 +625,12 @@ Finds the object pose from the 3D-2D point correspondences
 
 The function estimates the object pose given a set of object points, their corresponding image projections, as well as the camera matrix and the distortion coefficients. This function finds such a pose that minimizes reprojection error, i.e. the sum of squared distances between the observed projections \texttt{imagePoints} and the projected (using \cvCross{ProjectPoints2}{projectPoints}) \texttt{objectPoints}.
 
+\ifCPy
+\cvCPyFunc{FindFundamentalMat}
+\else
+\cvCppFunc{findFundamentalMat}
+\fi
 
-\cvfunc{FindFundamentalMat}{findFundamentalMat}
 Calculates the fundamental matrix from the corresponding points in two images.
 
 \cvdefC{
@@ -677,7 +717,11 @@ Mat fundamental_matrix =
 \end{lstlisting}
 \fi
 
-\cvfunc{FindHomography}{findHomography}
+\ifCPy
+\cvCPyFunc{FindHomography}
+\else
+\cvCppFunc{findHomography}
+\fi
 Finds the perspective transformation between two planes.
 
 \cvdefC{void cvFindHomography( \par const CvMat* srcPoints,\par const CvMat* dstPoints,\par CvMat* H \par
@@ -904,7 +948,11 @@ By default, the undistortion functions in OpenCV (see \texttt{initUndistortRecti
 
 \fi
 
-\cvfunc{GetOptimalNewCameraMatrix}{getOptimalNewCameraMatrix}
+\ifCPy
+\cvCPyFunc{GetOptimalNewCameraMatrix}
+\else
+\cvCppFunc{getOptimalNewCameraMatrix}
+\fi
 Returns the new camera matrix based on the free scaling parameter
 
 \cvdefC{void cvGetOptimalNewCameraMatrix(
@@ -931,7 +979,12 @@ Returns the new camera matrix based on the free scaling parameter
 
 The function computes \cvCpp{and returns} the optimal new camera matrix based on the free scaling parameter. By varying  this parameter the user may retrieve only sensible pixels \texttt{alpha=0}, keep all the original image pixels if there is valuable information in the corners \texttt{alpha=1}, or get something in between. When \texttt{alpha>0}, the undistortion result will likely have some black pixels corresponding to "virtual" pixels outside of the captured distorted image. The original camera matrix, distortion coefficients, the computed new camera matrix and the \texttt{newImageSize} should be passed to \cvCross{InitUndistortRectifyMap}{initUndistortRectifyMap} to produce the maps for \cvCross{Remap}{remap}.
 
-\cvfunc{InitIntrinsicParams2D}{initCameraMatrix2D}
+\ifCPy
+\cvCPyFunc{InitIntrinsicParams2D}
+\else
+\cvCppFunc{initCameraMatrix2D}
+\fi
+
 Finds the initial camera matrix from the 3D-2D point correspondences
 
 \cvdefC{void cvInitIntrinsicParams2D(\par const CvMat* objectPoints,
@@ -962,7 +1015,7 @@ The function estimates and returns the initial camera matrix for camera calibrat
 Currently, the function only supports planar calibration patterns, i.e. patterns where each object point has z-coordinate =0.
 
 \ifCPy
-\cvfunc{InitUndistortMap}
+\cvCPyFunc{InitUndistortMap}
 Computes an undistortion map.
 
 \cvdefC{void cvInitUndistortMap( \par const CvMat* cameraMatrix,\par const CvMat* distCoeffs,\par CvArr* map1,\par CvArr* map2 );}
@@ -979,7 +1032,11 @@ The function is a simplified variant of \cvCross{InitUndistortRectifyMap}{initUn
 
 \fi
 
-\cvfunc{InitUndistortRectifyMap}{initUndistortRectifyMap}
+\ifCPy
+\cvCPyFunc{InitUndistortRectifyMap}
+\else
+\cvCppFunc{initUndistortRectifyMap}
+\fi
 Computes the undistortion and rectification transformation map.
 
 \cvdefC{void cvInitUndistortRectifyMap( \par const CvMat* cameraMatrix,
@@ -1073,7 +1130,11 @@ Difference norm between two projections is the maximal distance between correspo
 
 \fi
 
-\cvfunc{ProjectPoints2}{projectPoints}
+\ifCPy
+\cvCPyFunc{ProjectPoints2}
+\else
+\cvCppFunc{projectPoints}
+\fi
 Project 3D points on to an image plane.
 
 \cvdefC{void cvProjectPoints2( \par const CvMat* objectPoints,\par const CvMat* rvec,\par const CvMat* tvec,\par const CvMat* cameraMatrix,\par const CvMat* distCoeffs,\par CvMat* imagePoints,\par CvMat* dpdrot=NULL,\par CvMat* dpdt=NULL,\par CvMat* dpdf=NULL,\par CvMat* dpdc=NULL,\par CvMat* dpddist=NULL );}
@@ -1123,7 +1184,11 @@ current intrinsic and extrinsic parameters.
 Note, that by setting \texttt{rvec=tvec=(0,0,0)}, or by setting \texttt{cameraMatrix} to 3x3 identity matrix, or by passing zero distortion coefficients, you can get various useful partial cases of the function, i.e. you can compute the distorted coordinates for a sparse set of points, or apply a perspective transformation (and also compute the derivatives) in the ideal zero-distortion setup etc.
 
 
-\cvfunc{ReprojectImageTo3D}{reprojectImageTo3D}
+\ifCPy
+\cvCPyFunc{ReprojectImageTo3D}
+\else
+\cvCppFunc{reprojectImageTo3D}
+\fi
 Reprojects disparity image to 3D space.
 
 \cvdefC{void cvReprojectImageTo3D( const CvArr* disparity,\par
@@ -1152,8 +1217,11 @@ The function transforms 1-channel disparity map to 3-channel image representing 
 
 The matrix \texttt{Q} can be arbitrary $4 \times 4$ matrix, e.g. the one computed by \cvCross{StereoRectify}{stereoRectify}. To reproject a sparse set of points {(x,y,d),...} to 3D space, use \cvCross{PerspectiveTransform}{perspectiveTransform}.
 
-
-\cvfunc{RQDecomp3x3}{RQDecomp3x3}
+\ifCPy
+\cvCPyFunc{RQDecomp3x3}
+\else
+\cvCppFunc{RQDecomp3x3}
+\fi
 Computes the 'RQ' decomposition of 3x3 matrices.
 
 \cvdefC{
@@ -1223,7 +1291,11 @@ The function releases the stereo correspondence structure and all the associated
 
 \fi
 
-\cvfunc{Rodrigues2}{Rodrigues}
+\ifCPy
+\cvCPyFunc{Rodrigues2}
+\else
+\cvCppFunc{Rodrigues}
+\fi
 Converts a rotation matrix to a rotation vector or vice versa.
 
 \cvdefC{int cvRodrigues2( \par const CvMat* src,\par CvMat* dst,\par CvMat* jacobian=0 );}
@@ -1270,7 +1342,7 @@ used in the global 3D geometry optimization procedures like \cvCross{CalibrateCa
 
 \ifCpp
 
-\cvclass{StereoBM}
+\cvCppFunc{StereoBM}
 The class for computing stereo correspondence using block matching algorithm.
 
 \begin{lstlisting}
@@ -1299,9 +1371,97 @@ class StereoBM
 };
 \end{lstlisting}
 
+The class is a C++ wrapper for \hyperref[CvStereoBMState]{cvStereoBMState} and the associated functions. In particular, \texttt{StereoBM::operator ()} is the wrapper for \cvCPyCross{FindStereoCorrespondceBM}. See the respective descriptions.
+
+
+\cvCppFunc{StereoSGBM}
+The class for computing stereo correspondence using semi-global block matching algorithm.
+
+\begin{lstlisting}
+class StereoSGBM
+{
+    StereoSGBM();
+    StereoSGBM(int minDisparity, int numDisparities, int SADWindowSize,
+               int P1=0, int P2=0, int disp12MaxDiff=0,
+               int preFilterCap=0, int uniquenessRatio=0,
+               int speckleWindowSize=0, int speckleRange=0,
+               bool fullDP=false);
+    virtual ~StereoSGBM();
+    
+    virtual void operator()(const Mat& left, const Mat& right, Mat& disp);
+    
+    int minDisparity;
+    int numberOfDisparities;
+    int SADWindowSize;
+    int preFilterCap;
+    int uniquenessRatio;
+    int P1, P2;
+    int speckleWindowSize;
+    int speckleRange;
+    int disp12MaxDiff;
+    bool fullDP;
+    
+    ...
+};
+\end{lstlisting}
+
+The class implements modified H. Hirschmuller algorithm \cite{HH08}. The main differences between the implemented algorithm and the original one are:
+
+\begin{itemize}
+    \item by default the algorithm is single-pass, i.e. instead of 8 directions we only consider 5. Set \texttt{fullDP=true} to run the full variant of the algorithm (which could consume \emph{a lot} of memory)
+    \item the algorithm matches blocks, not individual pixels (though, by setting \texttt{SADWindowSize=1} the blocks are reduced to single pixels)
+    \item mutual information cost function is not implemented. Instead, we use a simpler Birchfield-Tomasi sub-pixel metric from \cite{BT96}, though the color images are supported as well.
+    \item we include some pre- and post- processing steps from K. Konolige algorithm \cvCPyCross{FindStereoCorrespondceBM}, such as pre-filtering (\texttt{CV\_STEREO\_BM\_XSOBEL} type) and post-filtering (uniqueness check, quadratic interpolation and speckle filtering)
+\end{itemize}
+
+\cvCppFunc{StereoSGBM::StereoSGBM}
+StereoSGBM constructors
+
+\cvdefCpp{
+StereoSGBM::StereoSGBM();\newline
+StereoSGBM::StereoSGBM(
+            \par int minDisparity, int numDisparities, int SADWindowSize,
+           \par int P1=0, int P2=0, int disp12MaxDiff=0,
+           \par int preFilterCap=0, int uniquenessRatio=0,
+           \par int speckleWindowSize=0, int speckleRange=0,
+           \par bool fullDP=false);
+}
+\begin{description}
+\cvarg{minDisparity}{The minimum possible disparity value. Normally it is 0, but sometimes rectification algorithms can shift images, so this parameter needs to be adjusted accordingly}
+\cvarg{numDisparities}{This is maximum disparity minus minimum disparity. Always greater than 0. In the current implementation this parameter must be divisible by 16.}
+\cvarg{SADWindowSize}{The matched block size. Must be an odd number \texttt{>=1}. Normally, it should be somewhere in \texttt{3..11} range}.
+\cvarg{P1, P2}{Parameters that control disparity smoothness. The larger the values, the smoother the disparity. \texttt{P1} is the penalty on the disparity change by plus or minus 1 between neighbor pixels. \texttt{P2} is the penalty on the disparity change by more than 1 between neighbor pixels. The algorithm requires \texttt{P2 > P1}. See \texttt{stereo\_match.cpp} sample where some reasonably good \texttt{P1} and \texttt{P2} values are shown (like \texttt{8*number\_of\_image\_channels*SADWindowSize*SADWindowSize} and \texttt{32*number\_of\_image\_channels*SADWindowSize*SADWindowSize}, respectively).}
+\cvarg{disp12MaxDiff}{Maximum allowed difference (in integer pixel units) in the left-right disparity check. Set it to non-positive value to disable the check.}
+\cvarg{preFilterCap}{Truncation value for the prefiltered image pixels. The algorithm first computes x-derivative at each pixel and clips its value by \texttt{[-preFilterCap, preFilterCap]} interval. The result values are passed to the Birchfield-Tomasi pixel cost function.}
+\cvarg{uniquenessRatio}{The margin in percents by which the best (minimum) computed cost function value should "win" the second best value to consider the found match correct. Normally, some value within 5-15 range is good enough}
+\cvarg{speckleWindowSize}{Maximum size of smooth disparity regions to consider them noise speckles and invdalidate. Set it to 0 to disable speckle filtering. Otherwise, set it somewhere in 50-200 range.}
+\cvarg{speckleRange}{Maximum disparity variation within each connected component. If you do speckle filtering, set it to some positive value, multiple of 16. Normally, 16 or 32 is good enough.}
+\cvarg{fullDP}{Set it to \texttt{true} to run full-scale 2-pass dynamic programming algorithm. It will consume O(W*H*numDisparities) bytes, which is large for 640x480 stereo and huge for HD-size pictures. By default this is \texttt{false}}
+\end{description}
+
+The first constructor initializes \texttt{StereoSGBM} with all the default parameters (so actually one will only have to set \texttt{StereoSGBM::numberOfDisparities} at minimum). The second constructor allows you to set each parameter to a custom value.
+
+\cvCppFunc{StereoSGBM::operator ()}
+Computes disparity using SGBM algorithm for a rectified stereo pair
+
+\cvdefCpp{
+void SGBM::operator()(const Mat\& left, const Mat\& right, Mat\& disp);
+}
+\begin{description}
+\cvarg{left}{The left image, 8-bit single-channel or 3-channel.}
+\cvarg{right}{The right image of the same size and the same type as the left one.}
+\cvarg{disp}{The output disparity map. It will be 16-bit signed single-channel image of the same size as the input images. It will contain scaled by 16 disparity values, so that to get the floating-point disparity map, you will need to divide each \texttt{disp} element by 16.}
+\end{description}
+
+The method executes SGBM algorithm on a rectified stereo pair. See \texttt{stereo\_match.cpp} OpenCV sample on how to prepare the images and call the method. Note that the method is not constant, thus you should not use the same \texttt{StereoSGBM} instance from within different threads simultaneously.
+
 \fi
 
-\cvfunc{StereoCalibrate}{stereoCalibrate}
+\ifCPy
+\cvCPyFunc{StereoCalibrate}
+\else
+\cvCppFunc{stereoCalibrate}
+\fi
 Calibrates stereo camera.
 
 \cvdefC{double cvStereoCalibrate( \par const CvMat* objectPoints, \par const CvMat* imagePoints1,
@@ -1391,7 +1551,11 @@ Similarly to \cvCross{CalibrateCamera2}{calibrateCamera}, the function minimizes
 The function returns the final value of the re-projection error.
 \fi
 
-\cvfunc{StereoRectify}{stereoRectify}
+\ifCPy
+\cvCPyFunc{StereoRectify}
+\else
+\cvCppFunc{stereoRectify}
+\fi
 Computes rectification transforms for each head of a calibrated stereo camera.
 
 \cvdefC{void cvStereoRectify( \par const CvMat* cameraMatrix1, const CvMat* cameraMatrix2,
@@ -1482,8 +1646,11 @@ Below is the screenshot from \texttt{stereo\_calib.cpp} sample. Some red horizon
 
 \includegraphics[width=0.8\textwidth]{pics/stereo_undistort.jpg}
 
-
-\cvfunc{StereoRectifyUncalibrated}{stereoRectifyUncalibrated}
+\ifCPy
+\cvCPyFunc{StereoRectifyUncalibrated}
+\else
+\cvCppFunc{stereoRectifyUncalibrated}
+\fi
 Computes rectification transform for uncalibrated stereo camera.
 
 \cvdefC{void cvStereoRectifyUncalibrated( \par const CvMat* points1, \par const CvMat* points2,
@@ -1510,7 +1677,11 @@ The function computes the rectification transformations without knowing intrinsi
 Note that while the algorithm does not need to know the intrinsic parameters of the cameras, it heavily depends on the epipolar geometry. Therefore, if the camera lenses have significant distortion, it would better be corrected before computing the fundamental matrix and calling this function. For example, distortion coefficients can be estimated for each head of stereo camera separately by using \cvCross{CalibrateCamera2}{calibrateCamera} and then the images can be corrected using \cvCross{Undistort2}{undistort}, or just the point coordinates can be corrected with \cvCross{UndistortPoints}{undistortPoints}.
 
 
-\cvfunc{Undistort2}{undistort}
+\ifCPy
+\cvCPyFunc{Undistort2}
+\else
+\cvCppFunc{undistort}
+\fi
 Transforms an image to compensate for lens distortion.
 
 \cvdefC{void cvUndistort2( \par const CvArr* src,\par CvArr* dst,\par const CvMat* cameraMatrix,
@@ -1539,7 +1710,11 @@ The camera matrix and the distortion parameters can be determined using
 \cvCross{CalibrateCamera2}{calibrateCamera}. If the resolution of images is different from the used at the calibration stage, $f_x, f_y, c_x$ and $c_y$ need to be scaled accordingly, while the distortion coefficients remain the same.
 
 
-\cvfunc{UndistortPoints}{undistortPoints}
+\ifCPy
+\cvCPyFunc{UndistortPoints}
+\else
+\cvCppFunc{undistortPoints}
+\fi
 Computes the ideal point coordinates from the observed point coordinates.
 
 \cvdefC{void cvUndistortPoints( \par const CvMat* src, \par CvMat* dst,
