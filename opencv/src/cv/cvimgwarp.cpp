@@ -425,7 +425,7 @@ struct VResizeLinearVec_32s8u
 };
 
 
-struct VResizeLinearVec_32f16u
+template<int shiftval> struct VResizeLinearVec_32f16
 {
     int operator()(const uchar** _src, uchar* _dst, const uchar* _beta, int width ) const
     {
@@ -439,8 +439,8 @@ struct VResizeLinearVec_32f16u
         int x = 0;
 
         __m128 b0 = _mm_set1_ps(beta[0]), b1 = _mm_set1_ps(beta[1]);
-        __m128i preshift = _mm_set1_epi32(SHRT_MIN);
-        __m128i postshift = _mm_set1_epi16(SHRT_MIN);
+        __m128i preshift = _mm_set1_epi32(shiftval);
+        __m128i postshift = _mm_set1_epi16((short)shiftval);
 
         if( (((size_t)S0|(size_t)S1)&15) == 0 )
             for( ; x <= width - 16; x += 16 )
@@ -520,6 +520,8 @@ struct VResizeLinearVec_32f16u
     }
 };
 
+typedef VResizeLinearVec_32f16<SHRT_MIN> VResizeLinearVec_32f16u;
+typedef VResizeLinearVec_32f16<0> VResizeLinearVec_32f16s; 
 
 struct VResizeLinearVec_32f
 {
@@ -667,7 +669,7 @@ struct VResizeCubicVec_32s8u
 };
 
 
-struct VResizeCubicVec_32f16u
+template<int shiftval> struct VResizeCubicVec_32f16
 {
     int operator()(const uchar** _src, uchar* _dst, const uchar* _beta, int width ) const
     {
@@ -681,8 +683,8 @@ struct VResizeCubicVec_32f16u
         int x = 0;
         __m128 b0 = _mm_set1_ps(beta[0]), b1 = _mm_set1_ps(beta[1]),
             b2 = _mm_set1_ps(beta[2]), b3 = _mm_set1_ps(beta[3]);
-        __m128i preshift = _mm_set1_epi32(SHRT_MIN);
-        __m128i postshift = _mm_set1_epi16(SHRT_MIN);
+        __m128i preshift = _mm_set1_epi32(shiftval);
+        __m128i postshift = _mm_set1_epi16((short)shiftval);
 
         for( ; x <= width - 8; x += 8 )
         {
@@ -725,6 +727,8 @@ struct VResizeCubicVec_32f16u
     }
 };
 
+typedef VResizeCubicVec_32f16<SHRT_MIN> VResizeCubicVec_32f16u;
+typedef VResizeCubicVec_32f16<0> VResizeCubicVec_32f16s; 
 
 struct VResizeCubicVec_32f
 {
@@ -780,20 +784,24 @@ struct VResizeCubicVec_32f
 
 typedef HResizeNoVec HResizeLinearVec_8u32s;
 typedef HResizeNoVec HResizeLinearVec_16u32f;
+typedef HResizeNoVec HResizeLinearVec_16s32f;
 typedef HResizeNoVec HResizeLinearVec_32f;
 
 #else
 
 typedef HResizeNoVec HResizeLinearVec_8u32s;
 typedef HResizeNoVec HResizeLinearVec_16u32f;
+typedef HResizeNoVec HResizeLinearVec_16s32f;
 typedef HResizeNoVec HResizeLinearVec_32f;
 
 typedef VResizeNoVec VResizeLinearVec_32s8u;
 typedef VResizeNoVec VResizeLinearVec_32f16u;
+typedef VResizeNoVec VResizeLinearVec_32f16s;
 typedef VResizeNoVec VResizeLinearVec_32f;
 
 typedef VResizeNoVec VResizeCubicVec_32s8u;
 typedef VResizeNoVec VResizeCubicVec_32f16u;
+typedef VResizeNoVec VResizeCubicVec_32f16s;
 typedef VResizeNoVec VResizeCubicVec_32f;
 
 #endif
@@ -1290,7 +1298,12 @@ void resize( const Mat& src, Mat& dst, Size dsize,
                 HResizeLinearVec_16u32f>,
             VResizeLinear<ushort, float, float, Cast<float, ushort>,
                 VResizeLinearVec_32f16u> >,
-        0, 0,
+        resizeGeneric_<
+            HResizeLinear<short, float, float, 1,
+                HResizeLinearVec_16s32f>,
+            VResizeLinear<short, float, float, Cast<float, short>,
+                VResizeLinearVec_32f16s> >,
+		0,
         resizeGeneric_<
             HResizeLinear<float, float, float, 1,
                 HResizeLinearVec_32f>,
@@ -1311,7 +1324,11 @@ void resize( const Mat& src, Mat& dst, Size dsize,
             HResizeCubic<ushort, float, float>,
             VResizeCubic<ushort, float, float, Cast<float, ushort>,
             VResizeCubicVec_32f16u> >,
-        0, 0,
+        resizeGeneric_<
+            HResizeCubic<short, float, float>,
+            VResizeCubic<short, float, float, Cast<float, short>,
+            VResizeCubicVec_32f16s> >,
+		0,
         resizeGeneric_<
             HResizeCubic<float, float, float>,
             VResizeCubic<float, float, float, Cast<float, float>,
@@ -1329,7 +1346,10 @@ void resize( const Mat& src, Mat& dst, Size dsize,
         resizeGeneric_<HResizeLanczos4<ushort, float, float>,
             VResizeLanczos4<ushort, float, float, Cast<float, ushort>,
             VResizeNoVec> >,
-        0, 0,
+       	resizeGeneric_<HResizeLanczos4<short, float, float>,
+            VResizeLanczos4<short, float, float, Cast<float, short>,
+            VResizeNoVec> >,
+		0,
         resizeGeneric_<HResizeLanczos4<float, float, float>,
             VResizeLanczos4<float, float, float, Cast<float, float>,
             VResizeNoVec> >,
@@ -1338,13 +1358,15 @@ void resize( const Mat& src, Mat& dst, Size dsize,
 
     static ResizeAreaFastFunc areafast_tab[] =
     {
-        resizeAreaFast_<uchar, int>, 0, resizeAreaFast_<ushort, float>,
-        0, 0, resizeAreaFast_<float, float>, 0, 0
+        resizeAreaFast_<uchar, int>, 0,
+		resizeAreaFast_<ushort, float>,
+		resizeAreaFast_<short, float>,
+        0, resizeAreaFast_<float, float>, 0, 0
     };
 
     static ResizeAreaFunc area_tab[] =
     {
-        resizeArea_<uchar>, 0, resizeArea_<ushort>, 0, 0, resizeArea_<float>, 0, 0
+        resizeArea_<uchar>, 0, resizeArea_<ushort>, resizeArea_<short>, 0, resizeArea_<float>, 0, 0
     };
 
     CV_Assert( !(dsize == Size()) || (inv_scale_x > 0 && inv_scale_y > 0) );
