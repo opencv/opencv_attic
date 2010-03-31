@@ -5232,22 +5232,22 @@ class PCA
 {
 public:
     // default constructor
-    PCA();newline
+    PCA();
     // computes PCA for a set of vectors stored as data rows or columns.
-    PCA(const Mat& data, const Mat& mean, int flags, int maxComponents=0);newline
+    PCA(const Mat& data, const Mat& mean, int flags, int maxComponents=0);
     // computes PCA for a set of vectors stored as data rows or columns
-    PCA& operator()(const Mat& data, const Mat& mean, int flags, int maxComponents=0);newline
+    PCA& operator()(const Mat& data, const Mat& mean, int flags, int maxComponents=0);
     // projects vector into the principal components space
-    Mat project(const Mat& vec) const;newline
-    void project(const Mat& vec, Mat& result) const;newline
+    Mat project(const Mat& vec) const;
+    void project(const Mat& vec, Mat& result) const;
     // reconstructs the vector from its PC projection
-    Mat backProject(const Mat& vec) const;newline
-    void backProject(const Mat& vec, Mat& result) const;newline
+    Mat backProject(const Mat& vec) const;
+    void backProject(const Mat& vec, Mat& result) const;
 
     // eigenvectors of the PC space, stored as the matrix rows
-    Mat eigenvectors;newline
+    Mat eigenvectors;
     // the corresponding eigenvalues; not used for PCA compression/decompression
-    Mat eigenvalues;newline
+    Mat eigenvalues;
     // mean vector, subtracted from the projected vector
     // or added to the reconstructed vector
     Mat mean;
@@ -5294,6 +5294,75 @@ PCA compressPCA(const Mat& pcaset, int maxComponents,
 \end{lstlisting}
 
 See also: \cvCppCross{calcCovarMatrix}, \cvCppCross{mulTransposed}, \cvCppCross{SVD}, \cvCppCross{dft}, \cvCppCross{dct}
+
+\cvCppFunc{PCA::PCA}
+PCA constructors
+
+\cvdefCpp{
+PCA::PCA();\newline
+PCA::PCA(const Mat\& data, const Mat\& mean, int flags, int maxComponents=0);
+}
+\begin{description}
+\cvarg{data}{the input samples, stored as the matrix rows or as the matrix columns}
+\cvarg{mean}{the optional mean value. If the matrix is empty (\texttt{Mat()}), the mean is computed from the data.}
+\cvarg{flags}{operation flags. Currently the parameter is only used to specify the data layout.}
+\begin{description}
+    \cvarg{CV\_PCA\_DATA\_AS\_ROWS}{Indicates that the input samples are stored as matrix rows.}
+    \cvarg{CV\_PCA\_DATA\_AS\_COLS}{Indicates that the input samples are stored as matrix columns.}
+\end{description}
+\cvarg{maxComponents}{The maximum number of components that PCA should retain. By default, all the components are retained.}
+\end{description}
+
+The default constructor initializes empty PCA structure. The second constructor initializes the structure and calls \cvCppCross{PCA::operator ()}.
+
+\cvCppFunc{PCA::operator ()}
+Performs Principal Component Analysis of the supplied dataset. 
+
+\cvdefCpp{
+PCA\& PCA::operator()(const Mat\& data, const Mat\& mean, int flags, int maxComponents=0);
+}
+\begin{description}
+\cvarg{data}{the input samples, stored as the matrix rows or as the matrix columns}
+\cvarg{mean}{the optional mean value. If the matrix is empty (\texttt{Mat()}), the mean is computed from the data.}
+\cvarg{flags}{operation flags. Currently the parameter is only used to specify the data layout.}
+\begin{description}
+    \cvarg{CV\_PCA\_DATA\_AS\_ROWS}{Indicates that the input samples are stored as matrix rows.}
+    \cvarg{CV\_PCA\_DATA\_AS\_COLS}{Indicates that the input samples are stored as matrix columns.}
+\end{description}
+\cvarg{maxComponents}{The maximum number of components that PCA should retain. By default, all the components are retained.}
+\end{description}
+
+The operator performs PCA of the supplied dataset. It is safe to reuse the same PCA structure for multiple dataset. That is, if the  structure has been previously used with another dataset, the existing internal data is reclaimed and the new \texttt{eigenvalues}, \texttt{eigenvectors} and \texttt{mean} are allocated and computed.
+
+The computed eigenvalues are sorted from the largest to the smallest and the corresponding eigenvectors are stored as \texttt{PCA::eigenvectors} rows. 
+
+\cvCppFunc{PCA::project}
+Project vector(s) to the principal component subspace
+
+\cvdefCpp{
+Mat PCA::project(const Mat\& vec) const;\newline
+void PCA::project(const Mat\& vec, Mat\& result) const;
+}
+\begin{description}
+\cvarg{vec}{the input vector(s). They have to have the same dimensionality and the same layout as the input data used at PCA phase. That is, if \texttt{CV\_PCA\_DATA\_AS\_ROWS} had been specified, then \texttt{vec.cols==data.cols} (that's vectors' dimensionality) and \texttt{vec.rows} is the number of vectors to project; and similarly for the \texttt{CV\_PCA\_DATA\_AS\_COLS} case.}
+\cvarg{result}{the output vectors. Let's now consider \texttt{CV\_PCA\_DATA\_AS\_COLS} case. In this case the output matrix will have as many columns as the number of input vectors, i.e. \texttt{result.cols==vec.cols} and the number of rows will match the number of principal components (e.g. \texttt{maxComponents} parameter passed to the constructor).}
+\end{description}
+
+The methods project one or more vectors to the principal component subspace, where each vector projection is represented by coefficients in the principal component basis. The first form of the method returns the matrix that the second form writes to the result. So the first form can be used as a part of expression, while the second form can be more efficient in a processing loop. 
+
+\cvCppFunc{PCA::backProject}
+Reconstruct vectors from their PC projections.
+
+\cvdefCpp{
+Mat PCA::backProject(const Mat\& vec) const;\newline
+void PCA::backProject(const Mat\& vec, Mat\& result) const;
+}
+\begin{description}
+\cvarg{vec}{Coordinates of the vectors in the principal component subspace. The layout and size are the same as of \texttt{PCA::project} output vectors.}
+\cvarg{result}{The reconstructed vectors. The layout and size are the same as of \texttt{PCA::project} input vectors.}
+\end{description}
+
+The methods are inverse operations to \cvCppCross{PCA::project}. They take PC coordinates of projected vectors and reconstruct the original vectors. Of course, unless all the principal components have been retained, the reconstructed vectors will be different from the originals, but typically the difference will be small is if the number of components is large enough (but still much smaller than the original vector dimensionality) - that's why PCA is used after all. 
 
 \cvCppFunc{perspectiveTransform}
 Performs perspective matrix transformation of vectors.
@@ -5401,6 +5470,174 @@ subtract(Scalar::all(0), dst, dst, mask);
 For some values of \texttt{p}, such as integer values, 0.5, and -0.5, specialized faster algorithms are used.
 
 See also: \cvCppCross{sqrt}, \cvCppCross{exp}, \cvCppCross{log}, \cvCppCross{cartToPolar}, \cvCppCross{polarToCart}
+
+
+\subsection{RNG}\label{RNG}
+
+Random number generator class.
+
+\begin{lstlisting}
+class CV_EXPORTS RNG
+{
+public:
+    enum { A=4164903690U, UNIFORM=0, NORMAL=1 };
+
+    // constructors
+    RNG();
+    RNG(uint64 state);
+    
+    // returns 32-bit unsigned random number
+    unsigned next();
+
+    // return random numbers of the specified type
+    operator uchar();
+    operator schar();
+    operator ushort();
+    operator short();
+    operator unsigned();
+	// returns a random integer sampled uniformly from [0, N).
+	unsigned operator()(unsigned N);
+	unsigned operator()();
+    operator int();
+    operator float();
+    operator double();
+    // returns a random number sampled uniformly from [a, b) range
+    int uniform(int a, int b);
+    float uniform(float a, float b);
+    double uniform(double a, double b);
+    
+    // returns Gaussian random number with zero mean.
+	double gaussian(double sigma);
+    
+    // fills array with random numbers sampled from the specified distribution
+    void fill( Mat& mat, int distType, const Scalar& a, const Scalar& b );
+    void fill( MatND& mat, int distType, const Scalar& a, const Scalar& b );
+
+    // internal state of the RNG (could change in the future)
+    uint64 state;
+};
+\end{lstlisting}
+
+The class \texttt{RNG} implements random number generator. It encapsulates the RNG state (currently, a 64-bit integer) and  has methods to return scalar random values and to fill arrays with random values. Currently it supports uniform and Gaussian (normal) distributions. The generator uses Multiply-With-Carry algorithm, introduced by G. Marsaglia (\url{http://en.wikipedia.org/wiki/Multiply-with-carry}). Gaussian-distribution random numbers are generated using Ziggurat algorithm (\url{http://en.wikipedia.org/wiki/Ziggurat_algorithm}), introduced by G. Marsaglia and W. W. Tsang. 
+
+\cvCppFunc{RNG::RNG}
+RNG constructors
+
+\cvdefCpp{
+RNG::RNG();\newline
+RNG::RNG(uint64 state);
+}
+\begin{description}
+\cvarg{state}{the 64-bit value used to initialize the RNG}
+\end{description}
+
+These are the RNG constructors. The first form sets the state to some pre-defined value, equal to \texttt{2**32-1} in the current implementation. The second form sets the state to the specified value. If the user passed \texttt{state=0}, the constructor uses the above default value instead, to avoid the singular random number sequence, consisting of all zeros.
+
+\cvCppFunc{RNG::next}
+Returns the next random number
+
+\cvdefCpp{
+unsigned RNG::next();
+}
+
+The method updates the state using MWC algorithm and returns the next 32-bit random number.
+
+
+\cvCppFunc{RNG::operator T}
+Returns the next random number of the specified type
+
+\cvdefCpp{
+RNG::operator uchar();
+RNG::operator schar();
+RNG::operator ushort();
+RNG::operator short();
+RNG::operator unsigned();
+RNG::operator int();
+RNG::operator float();
+RNG::operator double();
+}
+
+Each of the methods updates the state using MWC algorithm and returns the next random number of the specified type. In the case of integer types the returned number is from the whole available value range for the specified type. In the case of floating-point types the returned value is from \texttt{[0,1)} range.
+
+\cvCppFunc{RNG::operator ()}
+Returns the next random number
+
+\cvdefCpp{
+unsigned RNG::operator ()();\newline
+unsigned RNG::operator ()(unsigned N);
+}
+\begin{description}
+\cvarg{N}{The upper non-inclusive boundary of the returned random number}
+\end{description}
+
+The methods transforms the state using MWC algorithm and returns the next random number. The first form is equivalent to \cvCppCross{RNG::next}, the second form returns the random number modulo \texttt{N}, i.e. the result will be in the range \texttt{[0, N)}.
+
+\cvCppFunc{RNG::uniform}
+Returns the next random number sampled from the uniform distribution
+
+\cvdefCpp{
+int RNG::uniform(int a, int b);\newline
+float RNG::uniform(float a, float b);\newline
+double RNG::uniform(double a, double b);
+}
+\begin{description}
+\cvarg{a}{The lower inclusive boundary of the returned random numbers}
+\cvarg{b}{The upper non-inclusive boundary of the returned random numbers}
+\end{description}
+
+The methods transforms the state using MWC algorithm and returns the next uniformly-distributed random number of the specified type, deduced from the input parameter type, from the range \texttt{[a, b)}. There is one nuance, illustrated by the following sample:
+
+\begin{lstlisting}
+cv::RNG rng;
+
+// will always produce 0
+double a = rng.uniform(0, 1);
+
+// will produce double from [0, 1)
+double a1 = rng.uniform((double)0, (double)1);
+
+// will produce float from [0, 1)
+double b = rng.uniform(0.f, 1.f);
+
+// will produce double from [0, 1)
+double c = rng.uniform(0., 1.);
+
+// will likely cause compiler error because of ambiguity:
+//  RNG::uniform(0, (int)0.999999)? or RNG::uniform((double)0, 0.99999)?
+double d = rng.uniform(0, 0.999999);
+\end{lstlisting}
+
+That is, the compiler does not take into account type of the variable that you assign the result of \texttt{RNG::uniform} to, the only thing that matters to it is the type of \texttt{a} and \texttt{b} parameters. So if you want a floating-point random number, but the range boundaries are integer numbers, either put dots in the end, if they are constants, or use explicit type cast operators, as in \texttt{a1} initialization above.
+
+
+\cvCppFunc{RNG::gaussian}
+Returns the next random number sampled from the Gaussian distribution
+
+\cvdefCpp{
+double RNG::gaussian(double sigma);
+}
+\begin{description}
+\cvarg{sigma}{The standard deviation of the distribution}
+\end{description}
+
+The methods transforms the state using MWC algorithm and returns the next random number from the Gaussian distribution \texttt{N(0,sigma)}. That is, the mean value of the returned random numbers will be zero and the standard deviation will be the specified \texttt{sigma}.
+
+
+\cvCppFunc{RNG::fill}
+Fill arrays with random numbers 
+
+\cvdefCpp{
+void RNG::fill( Mat\& mat, int distType, const Scalar\& a, const Scalar\& b );\newline
+void RNG::fill( MatND\& mat, int distType, const Scalar\& a, const Scalar\& b );
+}
+\begin{description}
+\cvarg{mat}{2D or N-dimensional matrix. Currently matrices with more than 4 channels are not supported by the methods. Use \cvCppCross{reshape} as a possible workaround.}
+\cvarg{distType}{The distribution type, \texttt{RNG::UNIFORM} or \texttt{RNG::NORMAL}}
+\cvarg{a}{The first distribution parameter. In the case of uniform distribution this is inclusive lower boundary. In the case of normal distribution this is mean value.}
+\cvarg{b}{The second distribution parameter. In the case of uniform distribution this is non-inclusive upper boundary. In the case of normal distribution this is standard deviation.}
+\end{description}
+
+Each of the methods fills the matrix with the random values from the specified distribution. As the new numbers are generated, the RNG state is updated accordingly. In the case of multiple-channel images every channel is filled independently, i.e. RNG can not generate samples from multi-dimensional Gaussian distribution with non-diagonal covariation matrix directly. To do that, first, generate matrix from the distribution $N(0, I_n)$, i.e. Gaussian distribution with zero mean and identity covariation matrix, and then transform it using \cvCppCross{transform} and the specific covariation matrix.  
 
 \cvCppFunc{randu}
 Generates a single uniformly-distributed random number or array of random numbers
@@ -5781,21 +6018,21 @@ Class for computing Singular Value Decomposition
 class SVD
 {
 public:
-    enum { MODIFY_A=1, NO_UV=2, FULL_UV=4 };newline
+    enum { MODIFY_A=1, NO_UV=2, FULL_UV=4 };
     // default empty constructor
-    SVD();newline
-    // decomposes m into u, w and vt: m = u*w*vt;newline
+    SVD();
+    // decomposes A into u, w and vt: A = u*w*vt;
     // u and vt are orthogonal, w is diagonal
-    SVD( const Mat& m, int flags=0 );newline
-    // decomposes m into u, w and vt.
-    SVD& operator ()( const Mat& m, int flags=0 );newline
+    SVD( const Mat& A, int flags=0 );
+    // decomposes A into u, w and vt.
+    SVD& operator ()( const Mat& A, int flags=0 );
 
-    // finds such vector x, norm(x)=1, so that m*x = 0,
-    // where m is singular matrix
-    static void solveZ( const Mat& m, Mat& dst );newline
+    // finds such vector x, norm(x)=1, so that A*x = 0,
+    // where A is singular matrix
+    static void solveZ( const Mat& A, Mat& x );
     // does back-subsitution:
-    // dst = vt.t()*inv(w)*u.t()*rhs ~ inv(m)*rhs
-    void backSubst( const Mat& rhs, Mat& dst ) const;newline
+    // x = vt.t()*inv(w)*u.t()*rhs ~ inv(A)*rhs
+    void backSubst( const Mat& rhs, Mat& x ) const;
 
     Mat u, w, vt;
 };
@@ -5805,6 +6042,80 @@ The class \texttt{SVD} is used to compute Singular Value Decomposition of a floa
 For a bit faster operation you can pass \texttt{flags=SVD::MODIFY\_A|...} to modify the decomposed matrix when it is not necessarily to preserve it. If you want to compute condition number of a matrix or absolute value of its determinant - you do not need \texttt{u} and \texttt{vt}, so you can pass \texttt{flags=SVD::NO\_UV|...}. Another flag \texttt{FULL\_UV} indicates that full-size \texttt{u} and \texttt{vt} must be computed, which is not necessary most of the time.
 
 See also: \cvCppCross{invert}, \cvCppCross{solve}, \cvCppCross{eigen}, \cvCppCross{determinant}
+
+\cvCppFunc{SVD::SVD}
+SVD constructors
+
+\cvdefCpp{
+SVD::SVD();\newline
+SVD::SVD( const Mat\& A, int flags=0 );
+}
+\begin{description}
+\cvarg{A}{The decomposed matrix}
+\cvarg{flags}{Operation flags}
+\begin{description}
+    \cvarg{SVD::MODIFY\_A}{The algorithm can modify the decomposed matrix. It can save some space and speed-up processing a bit}
+    \cvarg{SVD::NO\_UV}{Only singular values are needed. The algorithm will not compute \texttt{U} and \texttt{V} matrices}
+    \cvarg{SVD::FULL\_UV}{When the matrix is not square, by default the algorithm produces \texttt{U} and \texttt{V} matrices of sufficiently large size for the further \texttt{A} reconstruction. If, however, \texttt{FULL\_UV} flag is specified, \texttt{U} and \texttt{V} will be full-size square orthogonal matrices.}
+\end{description}
+\end{description}
+
+The first constructor initializes empty \texttt{SVD} structure. The second constructor initializes empty \texttt{SVD} structure and then calls \cvCppCross{SVD::operator ()}.
+
+
+\cvCppFunc{SVD::operator ()}
+Performs SVD of a matrix
+
+\cvdefCpp{
+SVD\& SVD::operator ()( const Mat\& A, int flags=0 );
+}
+\begin{description}
+\cvarg{A}{The decomposed matrix}
+\cvarg{flags}{Operation flags}
+\begin{description}
+    \cvarg{SVD::MODIFY\_A}{The algorithm can modify the decomposed matrix. It can save some space and speed-up processing a bit}
+    \cvarg{SVD::NO\_UV}{Only singular values are needed. The algorithm will not compute \texttt{U} and \texttt{V} matrices}
+    \cvarg{SVD::FULL\_UV}{When the matrix is not square, by default the algorithm produces \texttt{U} and \texttt{V} matrices of sufficiently large size for the further \texttt{A} reconstruction. If, however, \texttt{FULL\_UV} flag is specified, \texttt{U} and \texttt{V} will be full-size square orthogonal matrices.}
+\end{description}
+\end{description}
+
+The operator performs singular value decomposition of the supplied matrix. The \texttt{U}, transposed \texttt{V} and the diagonal of \texttt{W} are stored in the structure. The same \texttt{SVD} structure can be reused many times with different matrices. Each time, if needed, the previous \texttt{u}, \texttt{vt} and \texttt{w} are reclaimed and the new matrices are created, which is all handled by \cvCppCross{Mat::create}.
+
+\cvCppFunc{SVD::solveZ}
+Solves under-determined singular linear system
+
+\cvdefCpp{
+static void SVD::solveZ( const Mat\& A, Mat\& x );
+}
+\begin{description}
+\cvarg{A}{The left-hand-side matrix.}
+\cvarg{x}{The found solution}
+\end{description}
+
+The method finds unit-length solution \textbf{x} of the under-determined system $A x = 0$. Theory says that such system has infinite number of solutions, so the algorithm finds the unit-length solution as the right singular vector corresponding to the smallest singular value (which should be 0). In practice, because of round errors and limited floating-point accuracy, the input matrix can appear to be close-to-singular rather than just singular. So, strictly speaking, the algorithm solves the following problem:
+
+\[
+x^* = \arg \min_{x: \|x\|=1} \|A \cdot x \|
+\]
+
+\cvCppFunc{SVD::backSubst}
+Performs singular value back substitution
+
+\cvdefCpp{
+void SVD::backSubst( const Mat\& rhs, Mat\& x ) const;
+}
+\begin{description}
+\cvarg{rhs}{The right-hand side of a linear system $\texttt{A} \texttt{x} = \texttt{rhs}$ being solved, where \texttt{A} is the matrix passed to \cvCppCross{SVD::SVD} or \cvCppCross{SVD::operator ()}}
+\cvarg{x}{The found solution of the system}
+\end{description}
+
+The method computes back substitution for the specified right-hand side:
+
+\[
+\texttt{x} = \texttt{vt}^T \cdot diag(\texttt{w})^{-1} \cdot \texttt{u}^T \cdot \texttt{rhs} \sim \texttt{A}^{-1} \cdot \texttt{rhs}
+\]
+
+Using this technique you can either get a very accurate solution of convenient linear system, or the best (in the least-squares terms) pseudo-solution of an overdetermined linear system. Note that explicit SVD with the further back substitution only makes sense if you need to solve many linear systems with the same left-hand side (e.g. \texttt{A}). If all you need is to solve a single system (possibly with multiple \texttt{rhs} immediately available), simply call \cvCppCross{solve} add pass \texttt{cv::DECOMP\_SVD} there - it will do absolutely the same thing. 
 
 \cvCppFunc{sum}
 Calculates sum of array elements
