@@ -1267,7 +1267,7 @@ RQDecomp3x3 eulerAngles
   CvMat Qy NULL
   CvMat Qz NULL
   CvPoint3D64f eulerAngles /O
-FindHomography H
+FindHomography
   CvMat srcPoints
   CvMat dstPoints
   CvMat H
