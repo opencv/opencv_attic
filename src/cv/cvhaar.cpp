@@ -848,7 +848,7 @@ struct HaarDetectObjects_ScaleImage_Invoker
         {
             ippiRectStdDev_32f_C1R(sum1.ptr<float>(y1), sum1.step,
                                    sqsum1.ptr<double>(y1), sqsum1.step,
-                                   norm1.ptr<float>(y1), norm1.step,
+                                   (float*)norm1.ptr<float>(y1), norm1.step,
                                    ippiSize(ssz.width, ssz.height), equRect );
             
             int positive = (ssz.width/ystep)*((ssz.height + ystep-1)/ystep);
@@ -871,7 +871,7 @@ struct HaarDetectObjects_ScaleImage_Invoker
                 if( ippiApplyHaarClassifier_32f_C1R(
                             sum1.ptr<float>(y1), sum1.step,
                             norm1.ptr<float>(y1), norm1.step,
-                            mask1.ptr<uchar>(y1), mask1.step,
+                            (uchar*)mask1.ptr<uchar>(y1), mask1.step,
                             ippiSize(ssz.width, ssz.height), &positive,
                             cascade->hid_cascade->stage_classifier[j].threshold,
                             (IppiHaarClassifier_32f*)cascade->hid_cascade->ipp_stages[j]) < 0 )
