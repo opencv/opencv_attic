@@ -45,7 +45,7 @@ class FBackDemo:
                     iterations=3, poly_n=5, poly_sigma=1.2, flags=0)
                 self.draw_flow(flow, prev_gray)
                 c = WaitKey(7)
-                if c == ord("q"):
+                if c in [27, ord('q'), ord('Q')]:
                     break
             prev_gray, gray = gray, prev_gray        
             first_frame = False
