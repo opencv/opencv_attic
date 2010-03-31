@@ -519,7 +519,7 @@ The function calculates one or more integral images for the source image as foll
 \]
 
 \[
-\texttt{tiltedSum}(X,Y) = \sum_{y<Y,abs(x-X)<y} \texttt{image}(x,y)
+\texttt{tiltedSum}(X,Y) = \sum_{y<Y,abs(x-X+1)\leq Y-y-1} \texttt{image}(x,y)
 \]
 
 Using these integral images, one may calculate sum, mean and standard deviation over a specific up-right or rotated rectangular region of the image in a constant time, for example:
@@ -1119,7 +1119,7 @@ The functions \texttt{integral} calculate one or more integral images for the so
 \]
 
 \[
-\texttt{tilted}(X,Y) = \sum_{y<Y,abs(x-X)<y} \texttt{image}(x,y)
+\texttt{tilted}(X,Y) = \sum_{y<Y,abs(x-X+1)\leq Y-y-1} \texttt{image}(x,y)
 \]
 
 Using these integral images, one may calculate sum, mean and standard deviation over a specific up-right or rotated rectangular region of the image in a constant time, for example:
@@ -1130,6 +1130,9 @@ Using these integral images, one may calculate sum, mean and standard deviation 
 
 It makes possible to do a fast blurring or fast block correlation with variable window size, for example. In the case of multi-channel images, sums for each channel are accumulated independently.
 
+As a practical example, the next figure shows the calculation of the integral of a straight rectangle \texttt{Rect(3,3,3,2)} and of a tilted rectangle \texttt{Rect(5,1,2,3)}. The selected pixels in the original \texttt{image} are shown, as well as the relative pixels in the integral images \texttt{sum} and \texttt{tilted}.
+ 
+\begin{center}\includegraphics[width=0.8\textwidth]{pics/integral.png}\end{center}
 
 \cvCppFunc{threshold}
 Applies a fixed-level threshold to each array element
