@@ -1124,7 +1124,7 @@ The example scenarios of function use are:
 
 \ifPy
 
-\cvfunc{fromarray}
+\cvCPyFunc{fromarray}
 
 Create a CvMat from an object that supports the array interface.
 
@@ -1871,7 +1871,7 @@ Calculates the inverse square root.
 
 The function calculates the inverse square root of the argument, and normally it is faster than \texttt{1./sqrt(value)}. If the argument is zero or negative, the result is not determined. Special values ($\pm \infty $ , NaN) are not handled.
 
-\subsection{Inv}
+\cvCPyFunc{Inv}
 
 Synonym for \cross{Invert}
 
@@ -2980,7 +2980,7 @@ are not handled.
 
 \else
 
-\cvfunc{Round}
+\cvCPyFunc{Round}
 
 Converts a floating-point number to the nearest integer value.
 
@@ -2995,7 +2995,7 @@ operations. If the absolute value of the argument is greater than
 $2^{31}$, the result is not determined. Special values ($\pm \infty$ , NaN)
 are not handled.
 
-\cvfunc{Floor}
+\cvCPyFunc{Floor}
 
 Converts a floating-point number to the nearest integer value that is not larger than the argument.
 
@@ -3010,7 +3010,7 @@ operations. If the absolute value of the argument is greater than
 $2^{31}$, the result is not determined. Special values ($\pm \infty$ , NaN)
 are not handled.
 
-\cvfunc{Ceil}
+\cvCPyFunc{Ceil}
 
 Converts a floating-point number to the nearest integer value that is not smaller than the argument.
 
