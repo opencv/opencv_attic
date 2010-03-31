@@ -911,29 +911,9 @@ class CvForestTree;
 
 namespace cv
 {
-    struct DTreeBestSplitFinder
-    {
-        DTreeBestSplitFinder(){ tree = 0; node = 0; }
-        DTreeBestSplitFinder( CvDTree* _tree, CvDTreeNode* _node);
-        DTreeBestSplitFinder( const DTreeBestSplitFinder& finder, Split );
-        virtual void operator()(const BlockedRange& range);
-        void join( DTreeBestSplitFinder& rhs );
-        Ptr<CvDTreeSplit> bestSplit;
-        Ptr<CvDTreeSplit> split;
-        int splitSize;
-        CvDTree* tree;
-        CvDTreeNode* node;
-    };
-
-    struct ForestTreeBestSplitFinder : DTreeBestSplitFinder
-    {
-        ForestTreeBestSplitFinder() : DTreeBestSplitFinder() {}
-        ForestTreeBestSplitFinder( CvForestTree* _tree, CvDTreeNode* _node );
-        ForestTreeBestSplitFinder( const ForestTreeBestSplitFinder& finder, Split );
-        virtual void operator()(const BlockedRange& range);
-    };
+    struct DTreeBestSplitFinder;
+    struct ForestTreeBestSplitFinder;
 }
-
 
 class CV_EXPORTS CvDTree : public CvStatModel
 {
