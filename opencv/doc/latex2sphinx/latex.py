@@ -182,6 +182,9 @@ class SphinxWriter:
     def cmd_footnote(self, c):
         pass
 
+    def cmd_textasciitilde(self, c):
+        self.write('~')
+
     def addtag(self, nm, c):
         if nm == "":
             self.report_error(c, "empty name")
@@ -557,6 +560,9 @@ class SphinxWriter:
     def cmd_texttt(self, c):
         self.write("``" + self.render(c.params[0].str) + "``")
 
+    def cmd_code(self, c):
+        self.cmd_texttt(c)
+
     def default_cmd(self, c):
         if self.f == self.f_section:
             self.write(repr(c))
@@ -565,7 +571,7 @@ class SphinxWriter:
         # if writing the index or chapter heading, anything goes
         if not self.f in [self.f_index, self.f_chapter]:
             self.write(c.cmd)
-            if (not 'lstlisting' in self.ee()) and (not c.cmd in "#{}%&*\\_"):
+            if (not 'lstlisting' in self.ee()) and (not c.cmd in "#{}%&*\\_^"):
                 if not c.cmd in self.unhandled_commands:
                     self.report_error(c, 'unhandled command %s' % c.cmd)
                     self.unhandled_commands.add(c.cmd)

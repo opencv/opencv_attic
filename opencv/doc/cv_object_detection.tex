@@ -455,9 +455,9 @@ public:
 \cvCppFunc{FeatureEvaluator::read}
 Reads parameters of the features from a FileStorage node.
 
-\begin{lstlisting}
-bool FeatureEvaluator::read(const FileNode& node);
-\end{lstlisting}
+\cvdefCpp{
+bool FeatureEvaluator::read(const FileNode\& node);
+}
 
 \begin{description}
 \cvarg{node}{File node from which the feature parameters are read.}
@@ -466,23 +466,23 @@ bool FeatureEvaluator::read(const FileNode& node);
 \cvCppFunc{FeatureEvaluator::clone}
 Returns a full copy of the feature evaluator.
 
-\begin{lstlisting}
+\cvdefCpp{
 Ptr<FeatureEvaluator> FeatureEvaluator::clone() const;
-\end{lstlisting}
+}
 
 \cvCppFunc{FeatureEvaluator::getFeatureType}
 Returns the feature type (HAAR or LBP for now).
 
-\begin{lstlisting}
+\cvdefCpp{
 int FeatureEvaluator::getFeatureType() const;
-\end{lstlisting}
+}
 
 \cvCppFunc{FeatureEvaluator::setImage}
 Sets the image in which to compute the features.
 
-\begin{lstlisting}
-bool FeatureEvaluator::setImage(const Mat& img, Size origWinSize);
-\end{lstlisting}
+\cvdefCpp{
+bool FeatureEvaluator::setImage(const Mat\& img, Size origWinSize);
+}
 
 \begin{description}
 \cvarg{img}{Matrix of type  \texttt{CV\_8UC1} containing the image in which to compute the features.}
@@ -492,9 +492,9 @@ bool FeatureEvaluator::setImage(const Mat& img, Size origWinSize);
 \cvCppFunc{FeatureEvaluator::setWindow}
 Sets window in the current image in which the features will be computed (called by \cvCppCross{CascadeClassifier::runAt}).
 
-\begin{lstlisting}
+\cvdefCpp{
 bool FeatureEvaluator::setWindow(Point p); 
-\end{lstlisting}
+}
 
 \begin{description}
 \cvarg{p}{The upper left point of window in which the features will be computed. Size of the window is equal to size of training images.}
@@ -503,9 +503,9 @@ bool FeatureEvaluator::setWindow(Point p);
 \cvCppFunc{FeatureEvaluator::calcOrd}
 Computes value of an ordered (numerical) feature.
 
-\begin{lstlisting}
+\cvdefCpp{
 double FeatureEvaluator::calcOrd(int featureIdx) const;
-\end{lstlisting}
+}
 
 \begin{description}
 \cvarg{featureIdx}{Index of feature whose value will be computed.}
@@ -515,9 +515,9 @@ Returns computed value of ordered feature.
 \cvCppFunc{FeatureEvaluator::calcCat}
 Computes value of a categorical feature.
 
-\begin{lstlisting}
+\cvdefCpp{
 int FeatureEvaluator::calcCat(int featureIdx) const;
-\end{lstlisting}
+}
 
 \begin{description}
 \cvarg{featureIdx}{Index of feature whose value will be computed.}
@@ -527,9 +527,9 @@ Returns computed label of categorical feature, i.e. value from [0,... (number of
 \cvCppFunc{FeatureEvaluator::create}
 Constructs feature evaluator.
 
-\begin{lstlisting}
+\cvdefCpp{
 static Ptr<FeatureEvaluator> FeatureEvaluator::create(int type);
-\end{lstlisting}
+}
 
 \begin{description}
 \cvarg{type}{Type of features evaluated by cascade (HAAR or LBP for now).}
@@ -609,9 +609,9 @@ public:
 \cvCppFunc{CascadeClassifier::CascadeClassifier}
 Loads the classifier from file.
 
-\begin{lstlisting}
-CascadeClassifier::CascadeClassifier(const string& filename);
-\end{lstlisting}
+\cvdefCpp{
+CascadeClassifier::CascadeClassifier(const string\& filename);
+}
 
 \begin{description}
 \cvarg{filename}{Name of file from which classifier will be load.}
@@ -620,16 +620,16 @@ CascadeClassifier::CascadeClassifier(const string& filename);
 \cvCppFunc{CascadeClassifier::empty}
 Checks if the classifier has been loaded or not.
 
-\begin{lstlisting}
+\cvdefCpp{
 bool CascadeClassifier::empty() const;
-\end{lstlisting}
+}
 
 \cvCppFunc{CascadeClassifier::load}
 Loads the classifier from file. The previous content is destroyed.
 
-\begin{lstlisting}
-bool CascadeClassifier::load(const string& filename);
-\end{lstlisting}
+\cvdefCpp{
+bool CascadeClassifier::load(const string\& filename);
+}
 
 \begin{description}
 \cvarg{filename}{Name of file from which classifier will be load. File may contain as old haar classifier (trained by haartraining application) or new cascade classifier (trained traincascade application).}
@@ -638,20 +638,20 @@ bool CascadeClassifier::load(const string& filename);
 \cvCppFunc{CascadeClassifier::read}
 Reads the classifier from a FileStorage node. File may contain a new cascade classifier (trained traincascade application) only.
 
-\begin{lstlisting}
-bool CascadeClassifier::read(const FileNode& node);
-\end{lstlisting}
+\cvdefCpp{
+bool CascadeClassifier::read(const FileNode\& node);
+}
 
 \cvCppFunc{CascadeClassifier::detectMultiScale}
 Detects objects of different sizes in the input image. The detected objects are returned as a list of rectangles.
 
-\begin{lstlisting}
-void CascadeClassifier::detectMultiScale( const Mat& image,
-                           vector<Rect>& objects,
+\cvdefCpp{
+void CascadeClassifier::detectMultiScale( const Mat\& image,
+                           vector<Rect>\& objects,
                            double scaleFactor=1.1,
                            int minNeighbors=3, int flags=0,
                            Size minSize=Size());
-\end{lstlisting}
+}
 
 \begin{description}
 \cvarg{image}{Matrix of type  \texttt{CV\_8U} containing the image in which to detect objects.}
@@ -665,9 +665,9 @@ void CascadeClassifier::detectMultiScale( const Mat& image,
 \cvCppFunc{CascadeClassifier::setImage}
 Sets the image for detection (called by detectMultiScale at each image level).
 
-\begin{lstlisting}
-bool CascadeClassifier::setImage( Ptr<FeatureEvaluator>& feval, const Mat& image );
-\end{lstlisting}
+\cvdefCpp{
+bool CascadeClassifier::setImage( Ptr<FeatureEvaluator>\& feval, const Mat\& image );
+}
 
 \begin{description}
 \cvarg{feval}{Pointer to feature evaluator which is used for computing features.}
@@ -677,9 +677,9 @@ bool CascadeClassifier::setImage( Ptr<FeatureEvaluator>& feval, const Mat& image
 \cvCppFunc{CascadeClassifier::runAt}
 Runs the detector at the specified point (the image that the detector is working with should be set by setImage).
 
-\begin{lstlisting}
-int CascadeClassifier::runAt( Ptr<FeatureEvaluator>& feval, Point pt );
-\end{lstlisting}
+\cvdefCpp{
+int CascadeClassifier::runAt( Ptr<FeatureEvaluator>\& feval, Point pt );
+}
 
 \begin{description}
 \cvarg{feval}{Feature evaluator which is used for computing features.}

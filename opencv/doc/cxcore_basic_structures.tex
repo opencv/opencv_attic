@@ -865,10 +865,10 @@ public:
 The rectangle is described by the coordinates of the top-left corner (which is the default interpretation of \texttt{Rect\_::x} and \texttt{Rect\_::y} in OpenCV; though, in your algorithms you may count \texttt{x} and \texttt{y} from the bottom-left corner), the rectangle width and height.
 
 Another assumption OpenCV usually makes is that the top and left boundary of the rectangle are inclusive, while the right and bottom boundaries are not, for example, the method \texttt{Rect\_::contains} returns true if
-\begin{eqnarray*}
-      x \leq pt.x < x+width,\\
+\[
+      x \leq pt.x < x+width,
       y \leq pt.y < y+height
-\end{eqnarray*}
+\]
 And virtually every loop over an image \cross{ROI} in OpenCV (where ROI is specified by \texttt{Rect\_<int>}) is implemented as:
 \begin{lstlisting}
 for(int y = roi.y; y < roi.y + rect.height; y++)
@@ -1589,7 +1589,7 @@ This is a list of implemented matrix operations that can be combined in arbitrar
     \item comparison: $\texttt{A}\gtreqqless \texttt{B},\;\texttt{A} \ne \texttt{B},\;\texttt{A}\gtreqqless \alpha,\; \texttt{A} \ne \alpha$.
           The result of comparison is 8-bit single channel mask, which elements are set to 255
           (if the particular element or pair of elements satisfy the condition) and 0 otherwise.
-    \item bitwise logical operations: \verb"A & B, A & s, A | B, A | s, A ^ B, A ^ s, ~A"
+    \item bitwise logical operations: \texttt{A \& B, A \& s, A | B, A | s, A \^ B, A \^ s, \textasciitilde A}
     \item element-wise minimum and maximum: \texttt{min(A, B), min(A, $\alpha$), max(A, B), max(A, $\alpha$)}
     \item element-wise absolute value: \texttt{abs(A)}
     \item cross-product, dot-product: \texttt{A.cross(B), A.dot(B)}
@@ -1643,11 +1643,11 @@ Various matrix constructors
 These are various constructors that form a matrix. As noticed in the
 \hyperref{AutomaticMemoryManagement2}{introduction}, often the default constructor is enough, and the proper matrix will be allocated by an OpenCV function. The constructed matrix can further be assigned to another matrix or matrix expression, in which case the old content is dereferenced, or be allocated with \cross{Mat::create}.
 
-\subsection{cv::Mat::\~{}Mat}\index{cv::Mat::\~{}Mat}\label{cppfunc.Mat::destructor}
+\cvCppFunc{Mat::Mat}index{cv::Mat::\textasciitilde Mat}label{cppfunc.Mat::destructor}
 Matrix destructor
 
 \cvdefCpp{
-Mat::\~{}Mat();
+Mat::\textasciitilde Mat();
 }
 
 The matrix destructor calls \cross{Mat::release}.
@@ -1668,7 +1668,7 @@ Mat\& operator = (const Scalar\& s);
 
 These are the available assignment operators, and they all are very different, so, please, look at the operator parameters description. 
 
-\subsection{cv::Mat::operator MatExpr\_}\index{cv::Mat::operator MatExpr\_}\label{cppfunc.Mat::operator MatExpr}
+\cvCppFunc{Mat::operator MatExpr}\index{cv::Mat::operator MatExpr\_}\label{cppfunc.Mat::operator MatExpr}
 Mat-to-MatExpr cast operator
 
 \cvdefCpp{
@@ -1957,9 +1957,9 @@ Computes cross-product of two 3-element vectors
 \cvdefCpp{
 Mat Mat::cross(const Mat\& m) const;
 }
-\begin{lstlisting}
+\begin{description}
 \cvarg{m}{Another cross-product operand}
-\end{lstlisting}
+\end{description}
 
 The method computes cross-product of the two 3-element vectors. The vectors must be 3-elements floating-point vectors of the same shape and the same size. The result will be another 3-element vector of the same shape and the same type as operands.
 
@@ -1969,9 +1969,9 @@ Computes dot-product of two vectors
 \cvdefCpp{
 double Mat::dot(const Mat\& m) const;
 }
-\begin{lstlisting}
+\begin{description}
 \cvarg{m}{Another dot-product operand.}
-\end{lstlisting}
+\end{description}
 
 The method computes dot-product of the two matrices. If the matrices are not single-column or single-row vectors, the top-to-bottom left-to-right scan ordering is used to treat them as 1D vectors. The vectors must have the same size and the same type. If the matrices have more than one channel, the dot products from all the channels are summed together. 
 
