@@ -1449,7 +1449,7 @@ class CV_EXPORTS BackgroundSubtractorMOG : public BackgroundSubtractor
 {
 public:
     BackgroundSubtractorMOG();
-    BackgroundSubtractorMOG(int history, int nmixtures, double backgroundRatio);
+    BackgroundSubtractorMOG(int history, int nmixtures, double backgroundRatio, double noiseSigma=0);
     virtual ~BackgroundSubtractorMOG();
     virtual void operator()(const Mat& image, Mat& fgmask, double learningRate=0);
     
@@ -1463,363 +1463,364 @@ public:
     int nmixtures;
     double varThreshold;
     double backgroundRatio;
+    double noiseSigma;
 };
  
 
-    // CvAffinePose: defines a parameterized affine transformation of an image patch.
-    // An image patch is rotated on angle phi (in degrees), then scaled lambda1 times
-    // along horizontal and lambda2 times along vertical direction, and then rotated again
-    // on angle (theta - phi).
-    class CvAffinePose
-        {
-        public:
-            float phi;
-            float theta;
-            float lambda1;
-            float lambda2;
-        };
+// CvAffinePose: defines a parameterized affine transformation of an image patch.
+// An image patch is rotated on angle phi (in degrees), then scaled lambda1 times
+// along horizontal and lambda2 times along vertical direction, and then rotated again
+// on angle (theta - phi).
+class CV_EXPORTS CvAffinePose
+{
+public:
+    float phi;
+    float theta;
+    float lambda1;
+    float lambda2;
+};
+
+
+class CV_EXPORTS OneWayDescriptor
+{
+public:
+    OneWayDescriptor();
+    ~OneWayDescriptor();
+    
+    // allocates memory for given descriptor parameters
+    void Allocate(int pose_count, CvSize size, int nChannels);
+    
+    // GenerateSamples: generates affine transformed patches with averaging them over small transformation variations.
+    // If external poses and transforms were specified, uses them instead of generating random ones
+    // - pose_count: the number of poses to be generated
+    // - frontal: the input patch (can be a roi in a larger image)
+    // - norm: if nonzero, normalizes the output patch so that the sum of pixel intensities is 1
+    void GenerateSamples(int pose_count, IplImage* frontal, int norm = 0);
+    
+    // GenerateSamplesFast: generates affine transformed patches with averaging them over small transformation variations.
+    // Uses precalculated transformed pca components.
+    // - frontal: the input patch (can be a roi in a larger image)
+    // - pca_hr_avg: pca average vector
+    // - pca_hr_eigenvectors: pca eigenvectors
+    // - pca_descriptors: an array of precomputed descriptors of pca components containing their affine transformations
+    //   pca_descriptors[0] corresponds to the average, pca_descriptors[1]-pca_descriptors[pca_dim] correspond to eigenvectors
+    void GenerateSamplesFast(IplImage* frontal, CvMat* pca_hr_avg,
+                             CvMat* pca_hr_eigenvectors, OneWayDescriptor* pca_descriptors);
+    
+    // sets the poses and corresponding transforms
+    void SetTransforms(CvAffinePose* poses, CvMat** transforms);
+    
+    // Initialize: builds a descriptor.
+    // - pose_count: the number of poses to build. If poses were set externally, uses them rather than generating random ones
+    // - frontal: input patch. Can be a roi in a larger image
+    // - feature_name: the feature name to be associated with the descriptor
+    // - norm: if 1, the affine transformed patches are normalized so that their sum is 1
+    void Initialize(int pose_count, IplImage* frontal, const char* feature_name = 0, int norm = 0);
+    
+    // InitializeFast: builds a descriptor using precomputed descriptors of pca components
+    // - pose_count: the number of poses to build
+    // - frontal: input patch. Can be a roi in a larger image
+    // - feature_name: the feature name to be associated with the descriptor
+    // - pca_hr_avg: average vector for PCA
+    // - pca_hr_eigenvectors: PCA eigenvectors (one vector per row)
+    // - pca_descriptors: precomputed descriptors of PCA components, the first descriptor for the average vector
+    // followed by the descriptors for eigenvectors
+    void InitializeFast(int pose_count, IplImage* frontal, const char* feature_name,
+                        CvMat* pca_hr_avg, CvMat* pca_hr_eigenvectors, OneWayDescriptor* pca_descriptors);
+    
+    // ProjectPCASample: unwarps an image patch into a vector and projects it into PCA space
+    // - patch: input image patch
+    // - avg: PCA average vector
+    // - eigenvectors: PCA eigenvectors, one per row
+    // - pca_coeffs: output PCA coefficients
+    void ProjectPCASample(IplImage* patch, CvMat* avg, CvMat* eigenvectors, CvMat* pca_coeffs) const;
+    
+    // InitializePCACoeffs: projects all warped patches into PCA space
+    // - avg: PCA average vector
+    // - eigenvectors: PCA eigenvectors, one per row
+    void InitializePCACoeffs(CvMat* avg, CvMat* eigenvectors);
+    
+    // EstimatePose: finds the closest match between an input patch and a set of patches with different poses
+    // - patch: input image patch
+    // - pose_idx: the output index of the closest pose
+    // - distance: the distance to the closest pose (L2 distance)
+    void EstimatePose(IplImage* patch, int& pose_idx, float& distance) const;
+    
+    // EstimatePosePCA: finds the closest match between an input patch and a set of patches with different poses.
+    // The distance between patches is computed in PCA space
+    // - patch: input image patch
+    // - pose_idx: the output index of the closest pose
+    // - distance: distance to the closest pose (L2 distance in PCA space)
+    // - avg: PCA average vector. If 0, matching without PCA is used
+    // - eigenvectors: PCA eigenvectors, one per row
+    void EstimatePosePCA(CvArr* patch, int& pose_idx, float& distance, CvMat* avg, CvMat* eigenvalues) const;
+    
+    // GetPatchSize: returns the size of each image patch after warping (2 times smaller than the input patch)
+    CvSize GetPatchSize() const
+    {
+        return m_patch_size;
+    }
+    
+    // GetInputPatchSize: returns the required size of the patch that the descriptor is built from
+    // (2 time larger than the patch after warping)
+    CvSize GetInputPatchSize() const
+    {
+        return cvSize(m_patch_size.width*2, m_patch_size.height*2);
+    }
+    
+    // GetPatch: returns a patch corresponding to specified pose index
+    // - index: pose index
+    // - return value: the patch corresponding to specified pose index
+    IplImage* GetPatch(int index);
+    
+    // GetPose: returns a pose corresponding to specified pose index
+    // - index: pose index
+    // - return value: the pose corresponding to specified pose index
+    CvAffinePose GetPose(int index) const;
+    
+    // Save: saves all patches with different poses to a specified path
+    void Save(const char* path);
+    
+    // ReadByName: reads a descriptor from a file storage
+    // - fs: file storage
+    // - parent: parent node
+    // - name: node name
+    // - return value: 1 if succeeded, 0 otherwise
+    int ReadByName(CvFileStorage* fs, CvFileNode* parent, const char* name);
+    
+    // Write: writes a descriptor into a file storage
+    // - fs: file storage
+    // - name: node name
+    void Write(CvFileStorage* fs, const char* name);
+    
+    // GetFeatureName: returns a name corresponding to a feature
+    const char* GetFeatureName() const;
+    
+    // GetCenter: returns the center of the feature
+    CvPoint GetCenter() const;
+    
+    void SetPCADimHigh(int pca_dim_high) {m_pca_dim_high = pca_dim_high;};
+    void SetPCADimLow(int pca_dim_low) {m_pca_dim_low = pca_dim_low;};
+    
+    int GetPCADimLow() const;
+    int GetPCADimHigh() const;
+    
+    CvMat** GetPCACoeffs() const {return m_pca_coeffs;}
+    
+protected:
+    int m_pose_count; // the number of poses
+    CvSize m_patch_size; // size of each image
+    IplImage** m_samples; // an array of length m_pose_count containing the patch in different poses
+    IplImage* m_input_patch;
+    IplImage* m_train_patch;
+    CvMat** m_pca_coeffs; // an array of length m_pose_count containing pca decomposition of the patch in different poses
+    CvAffinePose* m_affine_poses; // an array of poses
+    CvMat** m_transforms; // an array of affine transforms corresponding to poses
+    
+    std::string m_feature_name; // the name of the feature associated with the descriptor
+    CvPoint m_center; // the coordinates of the feature (the center of the input image ROI)
+    
+    int m_pca_dim_high; // the number of descriptor pca components to use for generating affine poses
+    int m_pca_dim_low; // the number of pca components to use for comparison
+};
+
+
+// OneWayDescriptorBase: encapsulates functionality for training/loading a set of one way descriptors
+// and finding the nearest closest descriptor to an input feature
+class CV_EXPORTS OneWayDescriptorBase
+{
+public:
+    
+    // creates an instance of OneWayDescriptor from a set of training files
+    // - patch_size: size of the input (large) patch
+    // - pose_count: the number of poses to generate for each descriptor
+    // - train_path: path to training files
+    // - pca_config: the name of the file that contains PCA for small patches (2 times smaller
+    // than patch_size each dimension
+    // - pca_hr_config: the name of the file that contains PCA for large patches (of patch_size size)
+    // - pca_desc_config: the name of the file that contains descriptors of PCA components
+    OneWayDescriptorBase(CvSize patch_size, int pose_count, const char* train_path = 0, const char* pca_config = 0,
+                         const char* pca_hr_config = 0, const char* pca_desc_config = 0, int pyr_levels = 1,
+                         int pca_dim_high = 100, int pca_dim_low = 100);
+    
+    ~OneWayDescriptorBase();
+    
+    // Allocate: allocates memory for a given number of descriptors
+    void Allocate(int train_feature_count);
+    
+    // AllocatePCADescriptors: allocates memory for pca descriptors
+    void AllocatePCADescriptors();
+    
+    // returns patch size
+    CvSize GetPatchSize() const {return m_patch_size;};
+    // returns the number of poses for each descriptor
+    int GetPoseCount() const {return m_pose_count;};
+    
+    // returns the number of pyramid levels
+    int GetPyrLevels() const {return m_pyr_levels;};
+    
+    // returns the number of descriptors
+    int GetDescriptorCount() const {return m_train_feature_count;};
+    
+    // CreateDescriptorsFromImage: creates descriptors for each of the input features
+    // - src: input image
+    // - features: input features
+    // - pyr_levels: the number of pyramid levels
+    void CreateDescriptorsFromImage(IplImage* src, const std::vector<cv::KeyPoint>& features);
+    
+    // CreatePCADescriptors: generates descriptors for PCA components, needed for fast generation of feature descriptors
+    void CreatePCADescriptors();
+    
+    // returns a feature descriptor by feature index
+    const OneWayDescriptor* GetDescriptor(int desc_idx) const {return &m_descriptors[desc_idx];};
+    
+    // FindDescriptor: finds the closest descriptor
+    // - patch: input image patch
+    // - desc_idx: output index of the closest descriptor to the input patch
+    // - pose_idx: output index of the closest pose of the closest descriptor to the input patch
+    // - distance: distance from the input patch to the closest feature pose
+    // - _scales: scales of the input patch for each descriptor
+    // - scale_ranges: input scales variation (float[2])
+    void FindDescriptor(IplImage* patch, int& desc_idx, int& pose_idx, float& distance, float* _scale = 0, float* scale_ranges = 0) const;
+    
+    // - patch: input image patch
+    // - n: number of the closest indexes
+    // - desc_idxs: output indexes of the closest descriptor to the input patch (n)
+    // - pose_idx: output indexes of the closest pose of the closest descriptor to the input patch (n)
+    // - distances: distance from the input patch to the closest feature pose (n)
+    // - _scales: scales of the input patch
+    // - scale_ranges: input scales variation (float[2])
+    void FindDescriptor(IplImage* patch, int n, std::vector<int>& desc_idxs, std::vector<int>& pose_idxs,
+                        std::vector<float>& distances, std::vector<float>& _scales, float* scale_ranges = 0) const;
+    
+    // FindDescriptor: finds the closest descriptor
+    // - src: input image
+    // - pt: center of the feature
+    // - desc_idx: output index of the closest descriptor to the input patch
+    // - pose_idx: output index of the closest pose of the closest descriptor to the input patch
+    // - distance: distance from the input patch to the closest feature pose
+    void FindDescriptor(IplImage* src, cv::Point2f pt, int& desc_idx, int& pose_idx, float& distance) const;
+    
+    // InitializePoses: generates random poses
+    void InitializePoses();
+    
+    // InitializeTransformsFromPoses: generates 2x3 affine matrices from poses (initializes m_transforms)
+    void InitializeTransformsFromPoses();
+    
+    // InitializePoseTransforms: subsequently calls InitializePoses and InitializeTransformsFromPoses
+    void InitializePoseTransforms();
+    
+    // InitializeDescriptor: initializes a descriptor
+    // - desc_idx: descriptor index
+    // - train_image: image patch (ROI is supported)
+    // - feature_label: feature textual label
+    void InitializeDescriptor(int desc_idx, IplImage* train_image, const char* feature_label);
+    
+    void InitializeDescriptor(int desc_idx, IplImage* train_image, const cv::KeyPoint& keypoint, const char* feature_label);
+    
+    // InitializeDescriptors: load features from an image and create descriptors for each of them
+    void InitializeDescriptors(IplImage* train_image, const vector<cv::KeyPoint>& features,
+                               const char* feature_label = "", int desc_start_idx = 0);
+    
+    // LoadPCADescriptors: loads PCA descriptors from a file
+    // - filename: input filename
+    int LoadPCADescriptors(const char* filename);
+    
+    // SavePCADescriptors: saves PCA descriptors to a file
+    // - filename: output filename
+    void SavePCADescriptors(const char* filename);
+    
+    // SetPCAHigh: sets the high resolution pca matrices (copied to internal structures)
+    void SetPCAHigh(CvMat* avg, CvMat* eigenvectors);
+    
+    // SetPCALow: sets the low resolution pca matrices (copied to internal structures)
+    void SetPCALow(CvMat* avg, CvMat* eigenvectors);
+    
+    int GetLowPCA(CvMat** avg, CvMat** eigenvectors)
+    {
+        *avg = m_pca_avg;
+        *eigenvectors = m_pca_eigenvectors;
+        return m_pca_dim_low;
+    };
+    
+    void ConvertDescriptorsArrayToTree(); // Converting pca_descriptors array to KD tree
     
     
-    class CV_EXPORTS OneWayDescriptor
-        {
-        public:
-            OneWayDescriptor();
-            ~OneWayDescriptor();
-            
-            // allocates memory for given descriptor parameters
-            void Allocate(int pose_count, CvSize size, int nChannels);
-            
-            // GenerateSamples: generates affine transformed patches with averaging them over small transformation variations.
-            // If external poses and transforms were specified, uses them instead of generating random ones
-            // - pose_count: the number of poses to be generated
-            // - frontal: the input patch (can be a roi in a larger image)
-            // - norm: if nonzero, normalizes the output patch so that the sum of pixel intensities is 1
-            void GenerateSamples(int pose_count, IplImage* frontal, int norm = 0);
-            
-            // GenerateSamplesFast: generates affine transformed patches with averaging them over small transformation variations.
-            // Uses precalculated transformed pca components.
-            // - frontal: the input patch (can be a roi in a larger image)
-            // - pca_hr_avg: pca average vector
-            // - pca_hr_eigenvectors: pca eigenvectors
-            // - pca_descriptors: an array of precomputed descriptors of pca components containing their affine transformations
-            //   pca_descriptors[0] corresponds to the average, pca_descriptors[1]-pca_descriptors[pca_dim] correspond to eigenvectors
-            void GenerateSamplesFast(IplImage* frontal, CvMat* pca_hr_avg,
-                                     CvMat* pca_hr_eigenvectors, OneWayDescriptor* pca_descriptors);
-            
-            // sets the poses and corresponding transforms
-            void SetTransforms(CvAffinePose* poses, CvMat** transforms);
-            
-            // Initialize: builds a descriptor.
-            // - pose_count: the number of poses to build. If poses were set externally, uses them rather than generating random ones
-            // - frontal: input patch. Can be a roi in a larger image
-            // - feature_name: the feature name to be associated with the descriptor
-            // - norm: if 1, the affine transformed patches are normalized so that their sum is 1
-            void Initialize(int pose_count, IplImage* frontal, const char* feature_name = 0, int norm = 0);
-            
-            // InitializeFast: builds a descriptor using precomputed descriptors of pca components
-            // - pose_count: the number of poses to build
-            // - frontal: input patch. Can be a roi in a larger image
-            // - feature_name: the feature name to be associated with the descriptor
-            // - pca_hr_avg: average vector for PCA
-            // - pca_hr_eigenvectors: PCA eigenvectors (one vector per row)
-            // - pca_descriptors: precomputed descriptors of PCA components, the first descriptor for the average vector
-            // followed by the descriptors for eigenvectors
-            void InitializeFast(int pose_count, IplImage* frontal, const char* feature_name,
-                                CvMat* pca_hr_avg, CvMat* pca_hr_eigenvectors, OneWayDescriptor* pca_descriptors);
-            
-            // ProjectPCASample: unwarps an image patch into a vector and projects it into PCA space
-            // - patch: input image patch
-            // - avg: PCA average vector
-            // - eigenvectors: PCA eigenvectors, one per row
-            // - pca_coeffs: output PCA coefficients
-            void ProjectPCASample(IplImage* patch, CvMat* avg, CvMat* eigenvectors, CvMat* pca_coeffs) const;
-            
-            // InitializePCACoeffs: projects all warped patches into PCA space
-            // - avg: PCA average vector
-            // - eigenvectors: PCA eigenvectors, one per row
-            void InitializePCACoeffs(CvMat* avg, CvMat* eigenvectors);
-            
-            // EstimatePose: finds the closest match between an input patch and a set of patches with different poses
-            // - patch: input image patch
-            // - pose_idx: the output index of the closest pose
-            // - distance: the distance to the closest pose (L2 distance)
-            void EstimatePose(IplImage* patch, int& pose_idx, float& distance) const;
-            
-            // EstimatePosePCA: finds the closest match between an input patch and a set of patches with different poses.
-            // The distance between patches is computed in PCA space
-            // - patch: input image patch
-            // - pose_idx: the output index of the closest pose
-            // - distance: distance to the closest pose (L2 distance in PCA space)
-            // - avg: PCA average vector. If 0, matching without PCA is used
-            // - eigenvectors: PCA eigenvectors, one per row
-            void EstimatePosePCA(CvArr* patch, int& pose_idx, float& distance, CvMat* avg, CvMat* eigenvalues) const;
-            
-            // GetPatchSize: returns the size of each image patch after warping (2 times smaller than the input patch)
-            CvSize GetPatchSize() const
-            {
-                return m_patch_size;
-            }
-            
-            // GetInputPatchSize: returns the required size of the patch that the descriptor is built from
-            // (2 time larger than the patch after warping)
-            CvSize GetInputPatchSize() const
-            {
-                return cvSize(m_patch_size.width*2, m_patch_size.height*2);
-            }
-            
-            // GetPatch: returns a patch corresponding to specified pose index
-            // - index: pose index
-            // - return value: the patch corresponding to specified pose index
-            IplImage* GetPatch(int index);
-            
-            // GetPose: returns a pose corresponding to specified pose index
-            // - index: pose index
-            // - return value: the pose corresponding to specified pose index
-            CvAffinePose GetPose(int index) const;
-            
-            // Save: saves all patches with different poses to a specified path
-            void Save(const char* path);
-            
-            // ReadByName: reads a descriptor from a file storage
-            // - fs: file storage
-            // - parent: parent node
-            // - name: node name
-            // - return value: 1 if succeeded, 0 otherwise
-            int ReadByName(CvFileStorage* fs, CvFileNode* parent, const char* name);
-            
-            // Write: writes a descriptor into a file storage
-            // - fs: file storage
-            // - name: node name
-            void Write(CvFileStorage* fs, const char* name);
-            
-            // GetFeatureName: returns a name corresponding to a feature
-            const char* GetFeatureName() const;
-            
-            // GetCenter: returns the center of the feature
-            CvPoint GetCenter() const;
-            
-            void SetPCADimHigh(int pca_dim_high) {m_pca_dim_high = pca_dim_high;};
-            void SetPCADimLow(int pca_dim_low) {m_pca_dim_low = pca_dim_low;};
-            
-            int GetPCADimLow() const;
-            int GetPCADimHigh() const;
-            
-            CvMat** GetPCACoeffs() const {return m_pca_coeffs;}
-            
-        protected:
-            int m_pose_count; // the number of poses
-            CvSize m_patch_size; // size of each image
-            IplImage** m_samples; // an array of length m_pose_count containing the patch in different poses
-            IplImage* m_input_patch;
-            IplImage* m_train_patch;
-            CvMat** m_pca_coeffs; // an array of length m_pose_count containing pca decomposition of the patch in different poses
-            CvAffinePose* m_affine_poses; // an array of poses
-            CvMat** m_transforms; // an array of affine transforms corresponding to poses
-            
-            std::string m_feature_name; // the name of the feature associated with the descriptor
-            CvPoint m_center; // the coordinates of the feature (the center of the input image ROI)
-            
-            int m_pca_dim_high; // the number of descriptor pca components to use for generating affine poses
-            int m_pca_dim_low; // the number of pca components to use for comparison
-        };
+protected:
+    CvSize m_patch_size; // patch size
+    int m_pose_count; // the number of poses for each descriptor
+    int m_train_feature_count; // the number of the training features
+    OneWayDescriptor* m_descriptors; // array of train feature descriptors
+    CvMat* m_pca_avg; // PCA average Vector for small patches
+    CvMat* m_pca_eigenvectors; // PCA eigenvectors for small patches
+    CvMat* m_pca_hr_avg; // PCA average Vector for large patches
+    CvMat* m_pca_hr_eigenvectors; // PCA eigenvectors for large patches
+    OneWayDescriptor* m_pca_descriptors; // an array of PCA descriptors
+    
+    cv::flann::Index* m_pca_descriptors_tree;
+    CvMat* m_pca_descriptors_matrix;
+    
+    CvAffinePose* m_poses; // array of poses
+    CvMat** m_transforms; // array of affine transformations corresponding to poses
+    
+    int m_pca_dim_high;
+    int m_pca_dim_low;
+    
+    int m_pyr_levels;
+    
+};
+
+class OneWayDescriptorObject : public OneWayDescriptorBase
+{
+public:
+    // creates an instance of OneWayDescriptorObject from a set of training files
+    // - patch_size: size of the input (large) patch
+    // - pose_count: the number of poses to generate for each descriptor
+    // - train_path: path to training files
+    // - pca_config: the name of the file that contains PCA for small patches (2 times smaller
+    // than patch_size each dimension
+    // - pca_hr_config: the name of the file that contains PCA for large patches (of patch_size size)
+    // - pca_desc_config: the name of the file that contains descriptors of PCA components
+    OneWayDescriptorObject(CvSize patch_size, int pose_count, const char* train_path, const char* pca_config,
+                           const char* pca_hr_config = 0, const char* pca_desc_config = 0, int pyr_levels = 1);
+    
+    ~OneWayDescriptorObject();
+    
+    // Allocate: allocates memory for a given number of features
+    // - train_feature_count: the total number of features
+    // - object_feature_count: the number of features extracted from the object
+    void Allocate(int train_feature_count, int object_feature_count);
     
     
-    // OneWayDescriptorBase: encapsulates functionality for training/loading a set of one way descriptors
-    // and finding the nearest closest descriptor to an input feature
-    class CV_EXPORTS OneWayDescriptorBase
-        {
-        public:
-            
-            // creates an instance of OneWayDescriptor from a set of training files
-            // - patch_size: size of the input (large) patch
-            // - pose_count: the number of poses to generate for each descriptor
-            // - train_path: path to training files
-            // - pca_config: the name of the file that contains PCA for small patches (2 times smaller
-            // than patch_size each dimension
-            // - pca_hr_config: the name of the file that contains PCA for large patches (of patch_size size)
-            // - pca_desc_config: the name of the file that contains descriptors of PCA components
-            OneWayDescriptorBase(CvSize patch_size, int pose_count, const char* train_path = 0, const char* pca_config = 0,
-                                 const char* pca_hr_config = 0, const char* pca_desc_config = 0, int pyr_levels = 1,
-                                 int pca_dim_high = 100, int pca_dim_low = 100);
-            
-            ~OneWayDescriptorBase();
-            
-            // Allocate: allocates memory for a given number of descriptors
-            void Allocate(int train_feature_count);
-            
-            // AllocatePCADescriptors: allocates memory for pca descriptors
-            void AllocatePCADescriptors();
-            
-            // returns patch size
-            CvSize GetPatchSize() const {return m_patch_size;};
-            // returns the number of poses for each descriptor
-            int GetPoseCount() const {return m_pose_count;};
-            
-            // returns the number of pyramid levels
-            int GetPyrLevels() const {return m_pyr_levels;};
-            
-            // returns the number of descriptors
-            int GetDescriptorCount() const {return m_train_feature_count;};
-            
-            // CreateDescriptorsFromImage: creates descriptors for each of the input features
-            // - src: input image
-            // - features: input features
-            // - pyr_levels: the number of pyramid levels
-            void CreateDescriptorsFromImage(IplImage* src, const std::vector<cv::KeyPoint>& features);
-            
-            // CreatePCADescriptors: generates descriptors for PCA components, needed for fast generation of feature descriptors
-            void CreatePCADescriptors();
-            
-            // returns a feature descriptor by feature index
-            const OneWayDescriptor* GetDescriptor(int desc_idx) const {return &m_descriptors[desc_idx];};
-            
-            // FindDescriptor: finds the closest descriptor
-            // - patch: input image patch
-            // - desc_idx: output index of the closest descriptor to the input patch
-            // - pose_idx: output index of the closest pose of the closest descriptor to the input patch
-            // - distance: distance from the input patch to the closest feature pose
-            // - _scales: scales of the input patch for each descriptor
-            // - scale_ranges: input scales variation (float[2])
-            void FindDescriptor(IplImage* patch, int& desc_idx, int& pose_idx, float& distance, float* _scale = 0, float* scale_ranges = 0) const;
-            
-            // - patch: input image patch
-            // - n: number of the closest indexes
-            // - desc_idxs: output indexes of the closest descriptor to the input patch (n)
-            // - pose_idx: output indexes of the closest pose of the closest descriptor to the input patch (n)
-            // - distances: distance from the input patch to the closest feature pose (n)
-            // - _scales: scales of the input patch
-            // - scale_ranges: input scales variation (float[2])
-            void FindDescriptor(IplImage* patch, int n, std::vector<int>& desc_idxs, std::vector<int>& pose_idxs,
-                                std::vector<float>& distances, std::vector<float>& _scales, float* scale_ranges = 0) const;
-            
-            // FindDescriptor: finds the closest descriptor
-            // - src: input image
-            // - pt: center of the feature
-            // - desc_idx: output index of the closest descriptor to the input patch
-            // - pose_idx: output index of the closest pose of the closest descriptor to the input patch
-            // - distance: distance from the input patch to the closest feature pose
-            void FindDescriptor(IplImage* src, cv::Point2f pt, int& desc_idx, int& pose_idx, float& distance) const;
-            
-            // InitializePoses: generates random poses
-            void InitializePoses();
-            
-            // InitializeTransformsFromPoses: generates 2x3 affine matrices from poses (initializes m_transforms)
-            void InitializeTransformsFromPoses();
-            
-            // InitializePoseTransforms: subsequently calls InitializePoses and InitializeTransformsFromPoses
-            void InitializePoseTransforms();
-            
-            // InitializeDescriptor: initializes a descriptor
-            // - desc_idx: descriptor index
-            // - train_image: image patch (ROI is supported)
-            // - feature_label: feature textual label
-            void InitializeDescriptor(int desc_idx, IplImage* train_image, const char* feature_label);
-            
-            void InitializeDescriptor(int desc_idx, IplImage* train_image, const cv::KeyPoint& keypoint, const char* feature_label);
-            
-            // InitializeDescriptors: load features from an image and create descriptors for each of them
-            void InitializeDescriptors(IplImage* train_image, const vector<cv::KeyPoint>& features,
-                                       const char* feature_label = "", int desc_start_idx = 0);
-            
-            // LoadPCADescriptors: loads PCA descriptors from a file
-            // - filename: input filename
-            int LoadPCADescriptors(const char* filename);
-            
-            // SavePCADescriptors: saves PCA descriptors to a file
-            // - filename: output filename
-            void SavePCADescriptors(const char* filename);
-            
-            // SetPCAHigh: sets the high resolution pca matrices (copied to internal structures)
-            void SetPCAHigh(CvMat* avg, CvMat* eigenvectors);
-            
-            // SetPCALow: sets the low resolution pca matrices (copied to internal structures)
-            void SetPCALow(CvMat* avg, CvMat* eigenvectors);
-            
-            int GetLowPCA(CvMat** avg, CvMat** eigenvectors)
-            {
-                *avg = m_pca_avg;
-                *eigenvectors = m_pca_eigenvectors;
-                return m_pca_dim_low;
-            };
-            
-            void ConvertDescriptorsArrayToTree(); // Converting pca_descriptors array to KD tree
-            
-            
-        protected:
-            CvSize m_patch_size; // patch size
-            int m_pose_count; // the number of poses for each descriptor
-            int m_train_feature_count; // the number of the training features
-            OneWayDescriptor* m_descriptors; // array of train feature descriptors
-            CvMat* m_pca_avg; // PCA average Vector for small patches
-            CvMat* m_pca_eigenvectors; // PCA eigenvectors for small patches
-            CvMat* m_pca_hr_avg; // PCA average Vector for large patches
-            CvMat* m_pca_hr_eigenvectors; // PCA eigenvectors for large patches
-            OneWayDescriptor* m_pca_descriptors; // an array of PCA descriptors
-            
-            cv::flann::Index* m_pca_descriptors_tree;
-            CvMat* m_pca_descriptors_matrix;
-            
-            CvAffinePose* m_poses; // array of poses
-            CvMat** m_transforms; // array of affine transformations corresponding to poses
-            
-            int m_pca_dim_high;
-            int m_pca_dim_low;
-            
-            int m_pyr_levels;
-            
-        };
+    void SetLabeledFeatures(const vector<cv::KeyPoint>& features) {m_train_features = features;};
+    vector<cv::KeyPoint>& GetLabeledFeatures() {return m_train_features;};
+    const vector<cv::KeyPoint>& GetLabeledFeatures() const {return m_train_features;};
+    vector<cv::KeyPoint> _GetLabeledFeatures() const;
     
-    class OneWayDescriptorObject : public OneWayDescriptorBase
-        {
-        public:
-            // creates an instance of OneWayDescriptorObject from a set of training files
-            // - patch_size: size of the input (large) patch
-            // - pose_count: the number of poses to generate for each descriptor
-            // - train_path: path to training files
-            // - pca_config: the name of the file that contains PCA for small patches (2 times smaller
-            // than patch_size each dimension
-            // - pca_hr_config: the name of the file that contains PCA for large patches (of patch_size size)
-            // - pca_desc_config: the name of the file that contains descriptors of PCA components
-            OneWayDescriptorObject(CvSize patch_size, int pose_count, const char* train_path, const char* pca_config,
-                                   const char* pca_hr_config = 0, const char* pca_desc_config = 0, int pyr_levels = 1);
-            
-            ~OneWayDescriptorObject();
-            
-            // Allocate: allocates memory for a given number of features
-            // - train_feature_count: the total number of features
-            // - object_feature_count: the number of features extracted from the object
-            void Allocate(int train_feature_count, int object_feature_count);
-            
-            
-            void SetLabeledFeatures(const vector<cv::KeyPoint>& features) {m_train_features = features;};
-            vector<cv::KeyPoint>& GetLabeledFeatures() {return m_train_features;};
-            const vector<cv::KeyPoint>& GetLabeledFeatures() const {return m_train_features;};
-            vector<cv::KeyPoint> _GetLabeledFeatures() const;
-            
-            // IsDescriptorObject: returns 1 if descriptor with specified index is positive, otherwise 0
-            int IsDescriptorObject(int desc_idx) const;
-            
-            // MatchPointToPart: returns the part number of a feature if it matches one of the object parts, otherwise -1
-            int MatchPointToPart(CvPoint pt) const;
-            
-            // GetDescriptorPart: returns the part number of the feature corresponding to a specified descriptor
-            // - desc_idx: descriptor index
-            int GetDescriptorPart(int desc_idx) const;
-            
-            
-            void InitializeObjectDescriptors(IplImage* train_image, const vector<cv::KeyPoint>& features,
-                                             const char* feature_label, int desc_start_idx = 0, float scale = 1.0f,
-                                             int is_background = 0);
-            
-            // GetObjectFeatureCount: returns the number of object features
-            int GetObjectFeatureCount() const {return m_object_feature_count;};
-            
-        protected:
-            int* m_part_id; // contains part id for each of object descriptors
-            vector<cv::KeyPoint> m_train_features; // train features
-            int m_object_feature_count; // the number of the positive features
-            
-        };
+    // IsDescriptorObject: returns 1 if descriptor with specified index is positive, otherwise 0
+    int IsDescriptorObject(int desc_idx) const;
+    
+    // MatchPointToPart: returns the part number of a feature if it matches one of the object parts, otherwise -1
+    int MatchPointToPart(CvPoint pt) const;
+    
+    // GetDescriptorPart: returns the part number of the feature corresponding to a specified descriptor
+    // - desc_idx: descriptor index
+    int GetDescriptorPart(int desc_idx) const;
+    
+    
+    void InitializeObjectDescriptors(IplImage* train_image, const vector<cv::KeyPoint>& features,
+                                     const char* feature_label, int desc_start_idx = 0, float scale = 1.0f,
+                                     int is_background = 0);
+    
+    // GetObjectFeatureCount: returns the number of object features
+    int GetObjectFeatureCount() const {return m_object_feature_count;};
+    
+protected:
+    int* m_part_id; // contains part id for each of object descriptors
+    vector<cv::KeyPoint> m_train_features; // train features
+    int m_object_feature_count; // the number of the positive features
+    
+};
     
 
 }

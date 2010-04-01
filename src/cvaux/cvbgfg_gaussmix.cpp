@@ -67,6 +67,7 @@ static const int defaultNMixtures = CV_BGFG_MOG_NGAUSSIANS;
 static const int defaultHistory = CV_BGFG_MOG_WINDOW_SIZE;
 static const double defaultBackgroundRatio = CV_BGFG_MOG_BACKGROUND_THRESHOLD;
 static const double defaultVarThreshold = CV_BGFG_MOG_STD_THRESHOLD*CV_BGFG_MOG_STD_THRESHOLD;
+static const double defaultNoiseSigma = CV_BGFG_MOG_SIGMA_INIT*0.5;
     
 BackgroundSubtractorMOG::BackgroundSubtractorMOG()
 {
@@ -78,9 +79,12 @@ BackgroundSubtractorMOG::BackgroundSubtractorMOG()
     history = defaultHistory;
     varThreshold = defaultVarThreshold;
     backgroundRatio = defaultBackgroundRatio;
+    noiseSigma = defaultNoiseSigma;
 }
     
-BackgroundSubtractorMOG::BackgroundSubtractorMOG(int _history, int _nmixtures, double _backgroundRatio)
+BackgroundSubtractorMOG::BackgroundSubtractorMOG(int _history, int _nmixtures,
+                                                 double _backgroundRatio,
+                                                 double _noiseSigma)
 {
     frameSize = Size(0,0);
     frameType = 0;
@@ -90,6 +94,7 @@ BackgroundSubtractorMOG::BackgroundSubtractorMOG(int _history, int _nmixtures, d
     history = _history > 0 ? _history : defaultHistory;
     varThreshold = defaultVarThreshold;
     backgroundRatio = min(_backgroundRatio > 0 ? _backgroundRatio : 0.95, 1.);
+    noiseSigma = _noiseSigma <= 0 ? defaultNoiseSigma : _noiseSigma;
 }
     
 BackgroundSubtractorMOG::~BackgroundSubtractorMOG()
@@ -110,30 +115,8 @@ void BackgroundSubtractorMOG::initialize(Size _frameSize, int _frameType)
     // the mixture sort key (w/sum_of_variances), the mixture weight (w),
     // the mean (nchannels values) and
     // the diagonal covariance matrix (another nchannels values)
-    bgmodel.create( frameSize.height, frameSize.width*nmixtures*(2 + 2*nchannels), CV_32F );
-    const float w0 = (float)CV_BGFG_MOG_WEIGHT_INIT;
-    const float var0 = (float)(CV_BGFG_MOG_SIGMA_INIT*CV_BGFG_MOG_SIGMA_INIT);
-    const float sk0 = (float)(CV_BGFG_MOG_WEIGHT_INIT/(CV_BGFG_MOG_SIGMA_INIT*sqrt((double)nchannels)));
-    
-    for( int y = 0; y < frameSize.height; y++ )
-    {
-        float* mptr = bgmodel.ptr<float>(y);
-        for( int x = 0; x < frameSize.width; x++ )
-        {
-            for( int k = 0; k < nmixtures; k++ )
-            {
-                mptr[0] = sk0;
-                mptr[1] = w0;
-                mptr += 2;
-                for( int c = 0; c < nchannels; c++ )
-                {
-                    mptr[c] = 0;
-                    mptr[c + nchannels] = var0;
-                }
-                mptr += nchannels*2;
-            }
-        }
-    }
+    bgmodel.create( 1, frameSize.height*frameSize.width*nmixtures*(2 + 2*nchannels), CV_32F );
+    bgmodel = Scalar::all(0);
 }
 
     
@@ -151,66 +134,121 @@ static void process8uC1( BackgroundSubtractorMOG& obj, const Mat& image, Mat& fg
     int x, y, k, k1, rows = image.rows, cols = image.cols;
     float alpha = (float)learningRate, T = (float)obj.backgroundRatio, vT = (float)obj.varThreshold;
     int K = obj.nmixtures;
+    MixData<float>* mptr = (MixData<float>*)obj.bgmodel.data;
     
     const float w0 = (float)CV_BGFG_MOG_WEIGHT_INIT;
-    const float sk0 = (float)(CV_BGFG_MOG_WEIGHT_INIT/CV_BGFG_MOG_SIGMA_INIT);
+    const float sk0 = (float)(w0/CV_BGFG_MOG_SIGMA_INIT);
     const float var0 = (float)(CV_BGFG_MOG_SIGMA_INIT*CV_BGFG_MOG_SIGMA_INIT);
+    const float minVar = (float)(obj.noiseSigma*obj.noiseSigma);
     
     for( y = 0; y < rows; y++ )
     {
         const uchar* src = image.ptr<uchar>(y);
         uchar* dst = fgmask.ptr<uchar>(y);
-        MixData<float>* mptr = (MixData<float>*)obj.bgmodel.ptr(y);
         
-        for( x = 0; x < cols; x++, mptr += K )
+        if( alpha > 0 )
         {
-            float wsum = 0, dw = 0;
-            float pix = src[x];
-            for( k = 0; k < K; k++ )
+            for( x = 0; x < cols; x++, mptr += K )
             {
-                float w = mptr[k].weight;
-                float mu = mptr[k].mean;
-                float var = mptr[k].var;
-                float diff = pix - mu, d2 = diff*diff;
-                if( d2 < vT*var )
+                float wsum = 0;
+                float pix = src[x];
+                int kHit = -1, kForeground = -1;
+                
+                for( k = 0; k < K; k++ )
                 {
-                    dw = alpha*(1.f - w);
-                    mptr[k].weight = w + dw;
-                    mptr[k].mean = mu + alpha*diff;
-                    mptr[k].var = var = max(var + alpha*(d2 - var), FLT_EPSILON);
-                    mptr[k].sortKey = w/sqrt(var);
-                    
-                    for( k1 = k-1; k1 >= 0; k1-- )
+                    float w = mptr[k].weight;
+                    wsum += w;
+                    if( w < FLT_EPSILON )
+                        break;
+                    float mu = mptr[k].mean;
+                    float var = mptr[k].var;
+                    float diff = pix - mu;
+                    float d2 = diff*diff;
+                    if( d2 < vT*var )
                     {
-                        if( mptr[k1].sortKey > mptr[k1+1].sortKey )
-                            break;
-                        std::swap( mptr[k1], mptr[k1+1] );
+                        wsum -= w;
+                        float dw = alpha*(1.f - w);
+                        mptr[k].weight = w + dw;
+                        mptr[k].mean = mu + alpha*diff;
+                        var = max(var + alpha*(d2 - var), minVar);
+                        mptr[k].var = var;
+                        mptr[k].sortKey = w/sqrt(var);
+                        
+                        for( k1 = k-1; k1 >= 0; k1-- )
+                        {
+                            if( mptr[k1].sortKey >= mptr[k1+1].sortKey )
+                                break;
+                            std::swap( mptr[k1], mptr[k1+1] );
+                        }
+                        
+                        kHit = k1+1;
+                        break;
                     }
-                    break;
                 }
-                wsum += w;
+                
+                if( kHit < 0 ) // no appropriate gaussian mixture found at all, remove the weakest mixture and create a new one
+                {
+                    kHit = k = min(k, K-1);
+                    wsum += w0 - mptr[k].weight;
+                    mptr[k].weight = w0;
+                    mptr[k].mean = pix;
+                    mptr[k].var = var0;
+                    mptr[k].sortKey = sk0;
+                }
+                else
+                    for( ; k < K; k++ )
+                        wsum += mptr[k].weight;
+                
+                float wscale = 1.f/wsum;
+                wsum = 0;
+                for( k = 0; k < K; k++ )
+                {
+                    wsum += mptr[k].weight *= wscale;
+                    mptr[k].sortKey *= wscale;
+                    if( wsum > T && kForeground < 0 )
+                        kForeground = k+1;
+                }
+                
+                dst[x] = (uchar)(-(kHit >= kForeground));
             }
-            
-            dst[x] = (uchar)(-(wsum >= T));
-            wsum += dw;
-            
-            if( k == K ) // no appropriate gaussian mixture found at all, remove the weakest mixture and create a new one
+        }
+        else
+        {
+            for( x = 0; x < cols; x++, mptr += K )
             {
-                wsum += w0 - mptr[K-1].weight;
-                mptr[K-1].weight = w0;
-                mptr[K-1].mean = pix;
-                mptr[K-1].var = var0;
-                mptr[K-1].sortKey = sk0;
-            }
-            else
-                for( ; k < K; k++ )
-                    wsum += mptr[k].weight;
-            
-            dw = 1.f/wsum;
-            for( k = 0; k < K; k++ )
-            {
-                mptr[k].weight *= dw;
-                mptr[k].sortKey *= dw;
+                float pix = src[x];
+                int kHit = -1, kForeground = -1;
+                
+                for( k = 0; k < K; k++ )
+                {
+                    if( mptr[k].weight < FLT_EPSILON )
+                        break;
+                    float mu = mptr[k].mean;
+                    float var = mptr[k].var;
+                    float diff = pix - mu;
+                    float d2 = diff*diff;
+                    if( d2 < vT*var )
+                    {
+                        kHit = k;
+                        break;
+                    }
+                }
+                
+                if( kHit >= 0 )
+                {
+                    float wsum = 0;
+                    for( k = 0; k < K; k++ )
+                    {
+                        wsum += mptr[k].weight;
+                        if( wsum > T )
+                        {
+                            kForeground = k+1;
+                            break;
+                        }
+                    }
+                }
+                
+                dst[x] = (uchar)(kHit < 0 || kHit >= kForeground ? 255 : 0);
             }
         }
     }
@@ -223,68 +261,121 @@ static void process8uC3( BackgroundSubtractorMOG& obj, const Mat& image, Mat& fg
     int K = obj.nmixtures;
     
     const float w0 = (float)CV_BGFG_MOG_WEIGHT_INIT;
-    const float sk0 = (float)(CV_BGFG_MOG_WEIGHT_INIT/CV_BGFG_MOG_SIGMA_INIT);
+    const float sk0 = (float)(w0/CV_BGFG_MOG_SIGMA_INIT*sqrt(3.));
     const float var0 = (float)(CV_BGFG_MOG_SIGMA_INIT*CV_BGFG_MOG_SIGMA_INIT);
+    const float minVar = (float)(obj.noiseSigma*obj.noiseSigma);
+    MixData<Vec3f>* mptr = (MixData<Vec3f>*)obj.bgmodel.data;
     
     for( y = 0; y < rows; y++ )
     {
         const uchar* src = image.ptr<uchar>(y);
         uchar* dst = fgmask.ptr<uchar>(y);
-        MixData<Vec3f>* mptr = (MixData<Vec3f>*)obj.bgmodel.ptr(y);
         
-        for( x = 0; x < cols; x++, mptr += K )
+        if( alpha > 0 )
         {
-            float wsum = 0, dw = 0;
-            Vec3f pix(src[x*3], src[x*3+1], src[x*3+2]);
-            for( k = 0; k < K; k++ )
+            for( x = 0; x < cols; x++, mptr += K )
             {
-                float w = mptr[k].weight;
-                Vec3f mu = mptr[k].mean[0];
-                Vec3f var = mptr[k].var[0];
-                Vec3f diff = pix - mu;
-                float d2 = diff.dot(diff);
-                if( d2 < vT*(var[0] + var[1] + var[2]) )
+                float wsum = 0;
+                Vec3f pix(src[x*3], src[x*3+1], src[x*3+2]);
+                int kHit = -1, kForeground = -1;
+                
+                for( k = 0; k < K; k++ )
                 {
-                    dw = alpha*(1.f - w);
-                    mptr[k].weight = w + dw;
-                    mptr[k].mean = mu + alpha*diff;
-                    var = Vec3f(max(var[0] + alpha*(diff[0]*diff[0] - var[0]), FLT_EPSILON),
-                                max(var[1] + alpha*(diff[1]*diff[1] - var[1]), FLT_EPSILON),
-                                max(var[2] + alpha*(diff[2]*diff[2] - var[2]), FLT_EPSILON));
-                    mptr[k].var = var;
-                    mptr[k].sortKey = w/sqrt(var[0] + var[1] + var[2]);
-                    
-                    for( k1 = k-1; k1 >= 0; k1-- )
+                    float w = mptr[k].weight;
+                    wsum += w;
+                    if( w < FLT_EPSILON )
+                        break;
+                    Vec3f mu = mptr[k].mean;
+                    Vec3f var = mptr[k].var;
+                    Vec3f diff = pix - mu;
+                    float d2 = diff.dot(diff);
+                    if( d2 < vT*(var[0] + var[1] + var[2]) )
                     {
-                        if( mptr[k1].sortKey > mptr[k1+1].sortKey )
-                            break;
-                        std::swap( mptr[k1], mptr[k1+1] );
+                        wsum -= w;
+                        float dw = alpha*(1.f - w);
+                        mptr[k].weight = w + dw;
+                        mptr[k].mean = mu + alpha*diff;
+                        var = Vec3f(max(var[0] + alpha*(diff[0]*diff[0] - var[0]), minVar),
+                                    max(var[1] + alpha*(diff[1]*diff[1] - var[1]), minVar),
+                                    max(var[2] + alpha*(diff[2]*diff[2] - var[2]), minVar));
+                        mptr[k].var = var;
+                        mptr[k].sortKey = w/sqrt(var[0] + var[1] + var[2]);
+                        
+                        for( k1 = k-1; k1 >= 0; k1-- )
+                        {
+                            if( mptr[k1].sortKey >= mptr[k1+1].sortKey )
+                                break;
+                            std::swap( mptr[k1], mptr[k1+1] );
+                        }
+                        
+                        kHit = k1+1;
+                        break;
                     }
-                    break;
                 }
-                wsum += w;
+                
+                if( kHit < 0 ) // no appropriate gaussian mixture found at all, remove the weakest mixture and create a new one
+                {
+                    kHit = k = min(k, K-1);
+                    wsum += w0 - mptr[k].weight;
+                    mptr[k].weight = w0;
+                    mptr[k].mean = pix;
+                    mptr[k].var = Vec3f(var0, var0, var0);
+                    mptr[k].sortKey = sk0;
+                }
+                else
+                    for( ; k < K; k++ )
+                        wsum += mptr[k].weight;
+            
+                float wscale = 1.f/wsum;
+                wsum = 0;
+                for( k = 0; k < K; k++ )
+                {
+                    wsum += mptr[k].weight *= wscale;
+                    mptr[k].sortKey *= wscale;
+                    if( wsum > T && kForeground < 0 )
+                        kForeground = k+1;
+                }
+                
+                dst[x] = (uchar)(-(kHit >= kForeground));
             }
-            
-            dst[x] = (uchar)(-(wsum >= T));
-            wsum += dw;
-            
-            if( k == K ) // no appropriate gaussian mixture found at all, remove the weakest mixture and create a new one
+        }
+        else
+        {
+            for( x = 0; x < cols; x++, mptr += K )
             {
-                wsum += w0 - mptr[K-1].weight;
-                mptr[K-1].weight = w0;
-                mptr[K-1].mean = pix;
-                mptr[K-1].var = Vec3f(var0, var0, var0);
-                mptr[K-1].sortKey = sk0;
-            }
-            else
-                for( ; k < K; k++ )
-                    wsum += mptr[k].weight;
-            
-            dw = 1.f/wsum;
-            for( k = 0; k < K; k++ )
-            {
-                mptr[k].weight *= dw;
-                mptr[k].sortKey *= dw;
+                Vec3f pix(src[x*3], src[x*3+1], src[x*3+2]);
+                int kHit = -1, kForeground = -1;
+                
+                for( k = 0; k < K; k++ )
+                {
+                    if( mptr[k].weight < FLT_EPSILON )
+                        break;
+                    Vec3f mu = mptr[k].mean;
+                    Vec3f var = mptr[k].var;
+                    Vec3f diff = pix - mu;
+                    float d2 = diff.dot(diff);
+                    if( d2 < vT*(var[0] + var[1] + var[2]) )
+                    {
+                        kHit = k;
+                        break;
+                    }
+                }
+ 
+                if( kHit >= 0 )
+                {
+                    float wsum = 0;
+                    for( k = 0; k < K; k++ )
+                    {
+                        wsum += mptr[k].weight;
+                        if( wsum > T )
+                        {
+                            kForeground = k+1;
+                            break;
+                        }
+                    }
+                }
+                
+                dst[x] = (uchar)(kHit < 0 || kHit >= kForeground ? 255 : 0);
             }
         }
     }
@@ -295,13 +386,14 @@ void BackgroundSubtractorMOG::operator()(const Mat& image, Mat& fgmask, double l
     bool needToInitialize = nframes == 0 || learningRate >= 1 || image.size() != frameSize || image.type() != frameType;
     
     if( needToInitialize )
-        initialize(frameSize, frameType);
+        initialize(image.size(), image.type());
     
     CV_Assert( image.depth() == CV_8U );
     fgmask.create( image.size(), CV_8U );
     
     ++nframes;
     learningRate = learningRate >= 0 && nframes > 1 ? learningRate : 1./min( nframes, history );
+    CV_Assert(learningRate >= 0);
     
     if( image.type() == CV_8UC1 )
         process8uC1( *this, image, fgmask, learningRate );
@@ -366,7 +458,7 @@ icvUpdateGaussianBGModel( IplImage* curr_frame, CvGaussBGModel*  bg_model, doubl
     //cvMorphologyEx( bg_model->foreground, bg_model->foreground, 0, 0, CV_MOP_OPEN, 1 );
     //cvMorphologyEx( bg_model->foreground, bg_model->foreground, 0, 0, CV_MOP_CLOSE, 1 );
     
-    cvFindContours( bg_model->foreground, bg_model->storage, &first_seq, sizeof(CvContour), CV_RETR_LIST );
+    /*cvFindContours( bg_model->foreground, bg_model->storage, &first_seq, sizeof(CvContour), CV_RETR_LIST );
     for( seq = first_seq; seq; seq = seq->h_next )
     {
         CvContour* cnt = (CvContour*)seq;
@@ -392,7 +484,9 @@ icvUpdateGaussianBGModel( IplImage* curr_frame, CvGaussBGModel*  bg_model, doubl
     }
     bg_model->foreground_regions = first_seq;
     cvZero(bg_model->foreground);
-    cvDrawContours(bg_model->foreground, first_seq, CV_RGB(0, 0, 255), CV_RGB(0, 0, 255), 10, -1);
+    cvDrawContours(bg_model->foreground, first_seq, CV_RGB(0, 0, 255), CV_RGB(0, 0, 255), 10, -1);*/
+    CvMat _mask = mask;
+    cvCopy(&_mask, bg_model->foreground);
     
     return region_count;
 }
@@ -446,3 +540,4 @@ cvCreateGaussianBGModel( IplImage* first_frame, CvGaussBGStatModelParams* parame
 }
 
 /* End of file. */
+
