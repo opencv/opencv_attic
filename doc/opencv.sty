@@ -20,9 +20,17 @@ showtabs=false,                 % show tabs within strings adding particular und
 }
 
 \newcommand{\cvclass}[1]{
+\ifthenelse{\equal{\targetlang}{cpp}}
+{
+\subsection{cv::#1}
+%\addcontentsline{toc}{subsection}{#1} 
+\index{cv...!#1}
+}
+{
 \subsection{#1}
 %\addcontentsline{toc}{subsection}{#1} 
 \index{cv...!#1}
+}
 }
 
 \newcommand{\cvfunc}[1]{

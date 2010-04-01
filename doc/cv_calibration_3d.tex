@@ -727,7 +727,7 @@ Finds the perspective transformation between two planes.
 
 \cvdefC{void cvFindHomography( \par const CvMat* srcPoints,\par const CvMat* dstPoints,\par CvMat* H \par
 int method=0, \par double ransacReprojThreshold=0, \par CvMat* status=NULL);}
-\cvdefPy{FindHomography(srcPoints,dstPoints,H,method,ransacReprojThreshold=0.0, status=None)-> H}
+\cvdefPy{FindHomography(srcPoints,dstPoints,H,method,ransacReprojThreshold=0.0, status=None)-> None}
 \cvdefCpp{Mat findHomography( const Mat\& srcPoints, const Mat\& dstPoints,\par
                     Mat\& status, int method=0,\par
                     double ransacReprojThreshold=0 );\newline
@@ -1343,7 +1343,7 @@ used in the global 3D geometry optimization procedures like \cvCross{CalibrateCa
 
 \ifCpp
 
-\cvCppFunc{StereoBM}
+\cvclass{StereoBM}
 The class for computing stereo correspondence using block matching algorithm.
 
 \begin{lstlisting}
@@ -1375,7 +1375,7 @@ class StereoBM
 The class is a C++ wrapper for \hyperref[CvStereoBMState]{cvStereoBMState} and the associated functions. In particular, \texttt{StereoBM::operator ()} is the wrapper for \cvCPyCross{FindStereoCorrespondceBM}. See the respective descriptions.
 
 
-\cvCppFunc{StereoSGBM}
+\cvclass{StereoSGBM}
 The class for computing stereo correspondence using semi-global block matching algorithm.
 
 \begin{lstlisting}
