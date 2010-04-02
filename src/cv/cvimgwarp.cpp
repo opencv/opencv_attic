@@ -2092,8 +2092,8 @@ static void remapBilinear( const Mat& _src, Mat& _dst, const Mat& _xy,
                                 v3 = S0 + sy1*sstep + sx1*cn;
                             }
                             else if( borderType == BORDER_TRANSPARENT &&
-                                (unsigned)sx >= (unsigned)(ssize.width-1) &&
-                                (unsigned)sy >= (unsigned)(ssize.height-1))
+                                ((unsigned)sx >= (unsigned)(ssize.width-1) ||
+                                (unsigned)sy >= (unsigned)(ssize.height-1)))
                                 continue;
                             else
                             {
