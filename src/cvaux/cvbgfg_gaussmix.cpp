@@ -429,7 +429,6 @@ static int CV_CDECL
 icvUpdateGaussianBGModel( IplImage* curr_frame, CvGaussBGModel*  bg_model, double learningRate )
 {
     int region_count = 0;
-    CvSeq *first_seq = NULL, *prev_seq = NULL, *seq = NULL;
     
     cv::Mat image = cv::cvarrToMat(curr_frame), mask = cv::cvarrToMat(bg_model->foreground);
     
@@ -458,7 +457,9 @@ icvUpdateGaussianBGModel( IplImage* curr_frame, CvGaussBGModel*  bg_model, doubl
     //cvMorphologyEx( bg_model->foreground, bg_model->foreground, 0, 0, CV_MOP_OPEN, 1 );
     //cvMorphologyEx( bg_model->foreground, bg_model->foreground, 0, 0, CV_MOP_CLOSE, 1 );
     
-    /*cvFindContours( bg_model->foreground, bg_model->storage, &first_seq, sizeof(CvContour), CV_RETR_LIST );
+    /*
+    CvSeq *first_seq = NULL, *prev_seq = NULL, *seq = NULL;
+    cvFindContours( bg_model->foreground, bg_model->storage, &first_seq, sizeof(CvContour), CV_RETR_LIST );
     for( seq = first_seq; seq; seq = seq->h_next )
     {
         CvContour* cnt = (CvContour*)seq;
