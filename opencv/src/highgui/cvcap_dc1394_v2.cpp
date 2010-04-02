@@ -286,6 +286,8 @@ bool CvCaptureCAM_DC1394_v2_CPP::startCapture()
         for (i = 0; i < (int)videoModes.num; i++)
         {
             dc1394video_mode_t mode = videoModes.modes[i];
+			if (mode >= DC1394_VIDEO_MODE_FORMAT7_MIN && mode <= DC1394_VIDEO_MODE_FORMAT7_MAX)
+				continue;
             int pref = -1;
             dc1394color_coding_t colorCoding;
             dc1394_get_color_coding_from_video_mode(dcCam, mode, &colorCoding);
