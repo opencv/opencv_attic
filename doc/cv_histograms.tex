@@ -589,7 +589,7 @@ int main( int argc, char** argv )
     // saturation varies from 0 (black-gray-white) to
     // 255 (pure spectrum color)
     float sranges[] = { 0, 256 };
-    float* ranges[] = { hranges, sranges };
+    const float* ranges[] = { hranges, sranges };
     MatND hist;
     // we compute the histogram from the 0-th and 1-st channels
     int channels[] = {0, 1};
