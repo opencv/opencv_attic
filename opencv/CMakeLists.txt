@@ -702,6 +702,12 @@ if(CMAKE_COMPILER_IS_GNUCXX)
         set(EXTRA_C_FLAGS "${EXTRA_C_FLAGS} -Werror")
     endif()
 
+	if(X86)
+		if(NOT APPLE)
+			set(EXTRA_C_FLAGS "${EXTRA_C_FLAGS} -march=i686")
+		endif()
+	endif()
+
     # Other optimizations
     if(USE_OMIT_FRAME_POINTER)
        set(EXTRA_C_FLAGS_RELEASE "${EXTRA_C_FLAGS_RELEASE} -fomit-frame-pointer")
