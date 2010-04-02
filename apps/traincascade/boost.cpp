@@ -2,10 +2,6 @@
 #include "cascadeclassifier.h"
 #include <queue>
 
-#ifdef _OPENMP
-#include "omp.h"
-#endif
-
 using namespace std;
 
 static inline double
@@ -247,11 +243,7 @@ void CvCascadeBoostTrainData::setData( const CvFeatureEvaluator* _featureEvaluat
     numPrecalcIdx = min( (_precalcIdxBufSize*1048576) /
                 int((is_buf_16u ? sizeof(unsigned short) : sizeof (int))*sample_count), var_count );
 
-    int maxNumThreads = 1;
-#ifdef _OPENMP
-    maxNumThreads = omp_get_num_procs();
-#endif
-    valCache.create( max(numPrecalcVal, maxNumThreads), sample_count, CV_32FC1 );
+    valCache.create( numPrecalcVal, sample_count, CV_32FC1 );
     var_type = cvCreateMat( 1, var_count + 2, CV_32SC1 );
     
     if ( featureEvaluator->getMaxCatCount() > 0 ) 
@@ -463,63 +455,112 @@ float CvCascadeBoostTrainData::getVarValue( int vi, int si )
 	return (*featureEvaluator)( vi, si );
 }
 
+
+struct FeatureIdxOnlyPrecalc
+{
+    FeatureIdxOnlyPrecalc( const CvFeatureEvaluator* _feval, CvMat* _buf, int _sample_count, bool _is_buf_16u )
+    {
+        feval = _feval;
+        sample_count = _sample_count;
+        udst = (unsigned short*)_buf->data.s;
+        idst = _buf->data.i;
+        is_buf_16u = _is_buf_16u;
+    }
+    void operator()( const BlockedRange& range ) const
+    {
+        cv::AutoBuffer<float> valCache(sample_count);
+        float* valCachePtr = (float*)valCache;
+        for ( int fi = range.begin(); fi < range.end(); fi++)
+        {
+            for( int si = 0; si < sample_count; si++ )
+            {
+                valCachePtr[si] = (*feval)( fi, si );
+                if ( is_buf_16u )
+                    *(udst + fi*sample_count + si) = (unsigned short)si;
+                else
+                    *(idst + fi*sample_count + si) = si;
+            }
+            if ( is_buf_16u )
+                icvSortUShAux( udst + fi*sample_count, sample_count, valCachePtr );
+            else
+                icvSortIntAux( idst + fi*sample_count, sample_count, valCachePtr );
+        }
+    }
+    const CvFeatureEvaluator* feval;
+    int sample_count;
+    int* idst;
+    unsigned short* udst;
+    bool is_buf_16u;
+};
+
+struct FeatureValAndIdxPrecalc
+{
+    FeatureValAndIdxPrecalc( const CvFeatureEvaluator* _feval, CvMat* _buf, Mat* _valCache, int _sample_count, bool _is_buf_16u )
+    {
+        feval = _feval;
+        valCache = _valCache;
+        sample_count = _sample_count;
+        udst = (unsigned short*)_buf->data.s;
+        idst = _buf->data.i;
+        is_buf_16u = _is_buf_16u;
+    }
+    void operator()( const BlockedRange& range ) const
+    {
+        for ( int fi = range.begin(); fi < range.end(); fi++)
+        {
+            for( int si = 0; si < sample_count; si++ )
+            {
+                valCache->at<float>(fi,si) = (*feval)( fi, si );
+                if ( is_buf_16u )
+                    *(udst + fi*sample_count + si) = (unsigned short)si;
+                else
+                    *(idst + fi*sample_count + si) = si;
+            }
+            if ( is_buf_16u )
+                icvSortUShAux( udst + fi*sample_count, sample_count, valCache->ptr<float>(fi) );
+            else
+                icvSortIntAux( idst + fi*sample_count, sample_count, valCache->ptr<float>(fi) );
+        }
+    }
+    const CvFeatureEvaluator* feval;
+    Mat* valCache;
+    int sample_count;
+    int* idst;
+    unsigned short* udst;
+    bool is_buf_16u;
+};
+
+struct FeatureValOnlyPrecalc
+{
+    FeatureValOnlyPrecalc( const CvFeatureEvaluator* _feval, Mat* _valCache, int _sample_count )
+    {
+        feval = _feval;
+        valCache = _valCache;
+        sample_count = _sample_count;
+    }
+    void operator()( const BlockedRange& range ) const
+    {
+        for ( int fi = range.begin(); fi < range.end(); fi++)
+            for( int si = 0; si < sample_count; si++ )
+                valCache->at<float>(fi,si) = (*feval)( fi, si );
+    }
+    const CvFeatureEvaluator* feval;
+    Mat* valCache;
+    int sample_count;
+};
+
 void CvCascadeBoostTrainData::precalculate()
 {
     int minNum = MIN( numPrecalcVal, numPrecalcIdx);
-    unsigned short* udst = (unsigned short*)buf->data.s;
-    int* idst = buf->data.i;
-    
     CV_DbgAssert( !valCache.empty() );
-    double proctime = -TIME( 0 );
-	
-#ifdef _OPENMP
-    int maxNumThreads = omp_get_num_procs();
-#pragma omp parallel for num_threads(maxNumThreads) schedule(dynamic)
-#endif
-    for ( int fi = numPrecalcVal; fi < numPrecalcIdx; fi++)
-    {
-        int threadIdx = 0;
-#ifdef _OPENMP
-		threadIdx = omp_get_thread_num();
-#endif
-        for( int si = 0; si < sample_count; si++ )
-        {
-            valCache.ptr<float>(threadIdx)[si] = (*featureEvaluator)( fi, si );
-            if ( is_buf_16u )
-                *(udst + fi*sample_count + si) = (unsigned short)si;
-            else
-                *(idst + fi*sample_count + si) = si;
-        }
-        if ( is_buf_16u )
-            icvSortUShAux( udst + fi*sample_count, sample_count, valCache.ptr<float>(threadIdx) );
-        else
-            icvSortIntAux( idst + fi*sample_count, sample_count, valCache.ptr<float>(threadIdx) );
-    }
-#ifdef _OPENMP
-#pragma omp parallel for num_threads(maxNumThreads) schedule(dynamic)
-#endif
-    for ( int fi = 0; fi < minNum; fi++)
-    {
-        for( int si = 0; si < sample_count; si++ )
-        {
-            valCache.ptr<float>(fi)[si] = (*featureEvaluator)( fi, si );
-            if ( is_buf_16u )
-                *(udst + fi*sample_count + si) = (unsigned short)si;
-            else
-                *(idst + fi*sample_count + si) = si;
-        }
-        if ( is_buf_16u )
-            icvSortUShAux( udst + fi*sample_count, sample_count, valCache.ptr<float>(fi) );
-        else
-            icvSortIntAux( idst + fi*sample_count, sample_count, valCache.ptr<float>(fi) );
-    }
-#ifdef _OPENMP
-#pragma omp parallel for num_threads(maxNumThreads) schedule(dynamic)
-#endif
-    for ( int fi = minNum; fi < numPrecalcVal; fi++)
-        for( int si = 0; si < sample_count; si++ )
-            valCache.ptr<float>(fi)[si] = (*featureEvaluator)( fi, si );
 
+    double proctime = -TIME( 0 );
+    parallel_for( BlockedRange(numPrecalcVal, numPrecalcIdx),
+                  FeatureIdxOnlyPrecalc(featureEvaluator, buf, sample_count, is_buf_16u) );
+    parallel_for( BlockedRange(0, minNum),
+                  FeatureValAndIdxPrecalc(featureEvaluator, buf, &valCache, sample_count, is_buf_16u) );
+    parallel_for( BlockedRange(minNum, numPrecalcVal),
+                  FeatureValOnlyPrecalc(featureEvaluator, &valCache, sample_count) );
     cout << "Precalculation time: " << (proctime + TIME( 0 )) << endl;
 }
 
