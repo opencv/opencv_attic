@@ -311,6 +311,10 @@ void CV_ResizeTest::get_test_array_types_and_sizes( int test_case_idx, CvSize** 
         sizes[INPUT_OUTPUT][0] = sizes[REF_INPUT_OUTPUT][0] = sizes[INPUT][0];
         sizes[INPUT][0] = sz;
     }
+    if( interpolation == 4 &&
+       (MIN(sizes[INPUT][0].width,sizes[INPUT_OUTPUT][0].width) < 4 ||
+        MIN(sizes[INPUT][0].height,sizes[INPUT_OUTPUT][0].height) < 4))
+        interpolation = 2;
 }
 
 
