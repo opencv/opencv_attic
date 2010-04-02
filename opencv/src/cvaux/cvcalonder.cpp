@@ -173,7 +173,8 @@ namespace cv {
 				
 				make_patch(keypt_it->image, Point2f(keypt_it->x,keypt_it->y) ,patch, Size(PATCH_SIZE,PATCH_SIZE),rng);
 
-				addExample(class_id, getData(&((IplImage)patch)));
+                IplImage _patch = patch;
+				addExample(class_id, getData(&_patch));
 			}
 		}
 
