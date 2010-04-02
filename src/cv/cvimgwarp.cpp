@@ -3238,8 +3238,8 @@ cvLogPolar( const CvArr* srcarr, CvArr* dstarr,
 
         for( phi = 0; phi < dsize.height; phi++ )
         {
-            double cp = cos(phi*2*CV_PI/(dsize.height-1));
-            double sp = sin(phi*2*CV_PI/(dsize.height-1));
+            double cp = cos(phi*2*CV_PI/dsize.height);
+            double sp = sin(phi*2*CV_PI/dsize.height);
             float* mx = (float*)(mapx->data.ptr + phi*mapx->step);
             float* my = (float*)(mapy->data.ptr + phi*mapy->step);
 
@@ -3258,7 +3258,7 @@ cvLogPolar( const CvArr* srcarr, CvArr* dstarr,
     {
         int x, y;
         CvMat bufx, bufy, bufp, bufa;
-        double ascale = (ssize.height-1)/(2*CV_PI);
+        double ascale = ssize.height/(2*CV_PI);
         cv::AutoBuffer<float> _buf(4*dsize.width);
         float* buf = _buf;
 
@@ -3351,14 +3351,14 @@ void cvLinearPolar( const CvArr* srcarr, CvArr* dstarr,
 
         for( phi = 0; phi < dsize.height; phi++ )
         {
-            double cp = cos(phi*2*CV_PI/(dsize.height-1));
-            double sp = sin(phi*2*CV_PI/(dsize.height-1));
+            double cp = cos(phi*2*CV_PI/dsize.height);
+            double sp = sin(phi*2*CV_PI/dsize.height);
             float* mx = (float*)(mapx->data.ptr + phi*mapx->step);
             float* my = (float*)(mapy->data.ptr + phi*mapy->step);
 
             for( rho = 0; rho < dsize.width; rho++ )
             {
-                double r = maxRadius*(rho+1)/double(dsize.width-1);
+                double r = maxRadius*(rho+1)/dsize.width;
                 double x = r*cp + center.x;
                 double y = r*sp + center.y;
 
@@ -3371,8 +3371,8 @@ void cvLinearPolar( const CvArr* srcarr, CvArr* dstarr,
     {
         int x, y;
         CvMat bufx, bufy, bufp, bufa;
-        const double ascale = (ssize.height-1)/(2*CV_PI);
-        const double pscale = (ssize.width-1)/maxRadius;
+        const double ascale = ssize.height/(2*CV_PI);
+        const double pscale = ssize.width/maxRadius;
 
         cv::AutoBuffer<float> _buf(4*dsize.width);
         float* buf = _buf;
