@@ -2551,8 +2551,8 @@ int CxCore_InvertTest::prepare_test_case( int test_case_idx )
 
 void CxCore_InvertTest::get_minmax_bounds( int /*i*/, int /*j*/, int /*type*/, CvScalar* low, CvScalar* high )
 {
-    *low = cvScalarAll(-2.);
-    *high = cvScalarAll(2.);
+    *low = cvScalarAll(-1.);
+    *high = cvScalarAll(1.);
 }
 
 
@@ -2562,7 +2562,7 @@ void CxCore_InvertTest::run_func()
 }
 
 
-static double cvTsSVDet( CvMat* mat )
+static double cvTsSVDet( CvMat* mat, double* ratio )
 {
     int type = CV_MAT_TYPE(mat->type);
     int i, nm = MIN( mat->rows, mat->cols );
@@ -2575,11 +2575,13 @@ static double cvTsSVDet( CvMat* mat )
     {
         for( i = 0; i < nm; i++ )
             det *= w->data.fl[i];
+        *ratio = w->data.fl[nm-1] < FLT_EPSILON ? FLT_MAX : w->data.fl[0]/w->data.fl[nm-1];
     }
     else
     {
         for( i = 0; i < nm; i++ )
             det *= w->data.db[i];
+        *ratio = w->data.db[nm-1] < FLT_EPSILON ? DBL_MAX : w->data.db[0]/w->data.db[nm-1];
     }
 
     cvReleaseMat( &w );
@@ -2589,8 +2591,9 @@ static double cvTsSVDet( CvMat* mat )
 void CxCore_InvertTest::prepare_to_validation( int )
 {
     CvMat* input = &test_mat[INPUT][0];
-    double det = cvTsSVDet( input );
+    double ratio = 0, det = cvTsSVDet( input, &ratio );
     double threshold = (CV_MAT_DEPTH(input->type) == CV_32F ? FLT_EPSILON : DBL_EPSILON)*500;
+    double rthreshold = CV_MAT_DEPTH(input->type) == CV_32F ? 1e6 : 1e12;
 
     if( CV_MAT_TYPE(input->type) == CV_32FC1 )
         cvTsConvert( input, &test_mat[TEMP][1] );
@@ -2598,7 +2601,9 @@ void CxCore_InvertTest::prepare_to_validation( int )
         cvTsCopy( input, &test_mat[TEMP][1], 0 );
 
     if( (method == CV_LU && result == 0) ||
-        (det < threshold || result < threshold) )
+        det < threshold ||
+        (method == CV_LU && ratio > rthreshold) ||
+        (method == CV_SVD && result < threshold) )
     {
         cvTsZero( &test_mat[OUTPUT][0] );
         cvTsZero( &test_mat[REF_OUTPUT][0] );
