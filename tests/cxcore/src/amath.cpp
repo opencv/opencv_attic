@@ -2741,14 +2741,14 @@ int CxCore_SolveTest::prepare_test_case( int test_case_idx )
 
 void CxCore_SolveTest::get_minmax_bounds( int /*i*/, int /*j*/, int /*type*/, CvScalar* low, CvScalar* high )
 {
-    *low = cvScalarAll(-2.);
-    *high = cvScalarAll(2.);
+    *low = cvScalarAll(-1.);
+    *high = cvScalarAll(1.);
 }
 
 
 double CxCore_SolveTest::get_success_error_level( int /*test_case_idx*/, int, int )
 {
-    return CV_MAT_DEPTH(cvGetElemType(test_array[OUTPUT][0])) == CV_32F ? 3e-2 : 1e-8;
+    return CV_MAT_DEPTH(cvGetElemType(test_array[OUTPUT][0])) == CV_32F ? 1e-2 : 1e-8;
 }
 
 
@@ -2761,26 +2761,41 @@ void CxCore_SolveTest::prepare_to_validation( int )
 {
     //int rank = test_mat[REF_OUTPUT][0].rows;
     CvMat* dst;
+    CvMat* input = &test_mat[INPUT][0];
 
-    if( method == CV_LU && result == 0 )
+    if( method == CV_LU )
     {
-        if( CV_MAT_TYPE(test_mat[INPUT][0].type) == CV_32FC1 )
-            cvTsConvert( &test_mat[INPUT][0], &test_mat[TEMP][1] );
-        else
-            cvTsCopy( &test_mat[INPUT][0], &test_mat[TEMP][1], 0 );
+        if( result == 0 )
+        {
+            if( CV_MAT_TYPE(input->type) == CV_32FC1 )
+                cvTsConvert( input, &test_mat[TEMP][1] );
+            else
+                cvTsCopy( input, &test_mat[TEMP][1], 0 );
 
-        cvTsZero( &test_mat[OUTPUT][0] );
-        double det = cvTsLU( &test_mat[TEMP][1], 0, 0 );
-        cvTsAdd( 0, cvScalarAll(0.), 0, cvScalarAll(0.), cvScalarAll(det != 0),
-                 &test_mat[REF_OUTPUT][0], 0 );
-        return;
+            cvTsZero( &test_mat[OUTPUT][0] );
+            double det = cvTsLU( &test_mat[TEMP][1], 0, 0 );
+            cvTsAdd( 0, cvScalarAll(0.), 0, cvScalarAll(0.), cvScalarAll(det != 0),
+                     &test_mat[REF_OUTPUT][0], 0 );
+            return;
+        }
+     
+        double threshold = (CV_MAT_DEPTH(input->type) == CV_32F ? FLT_EPSILON : DBL_EPSILON)*500;
+        double rthreshold = CV_MAT_DEPTH(input->type) == CV_32F ? 1e6 : 1e12;   
+        double ratio = 0, det = cvTsSVDet( input, &ratio );
+        if( det < threshold || ratio > rthreshold )
+        {
+            cvTsZero( &test_mat[OUTPUT][0] );
+            cvTsZero( &test_mat[REF_OUTPUT][0] );
+            return;
+        }
     }
+        
 
-    dst = test_mat[INPUT][0].rows <= test_mat[INPUT][0].cols ? &test_mat[OUTPUT][0] : &test_mat[INPUT][1];
+    dst = input->rows <= input->cols ? &test_mat[OUTPUT][0] : &test_mat[INPUT][1];
 
-    cvTsGEMM( &test_mat[INPUT][0], &test_mat[TEMP][0], 1., &test_mat[INPUT][1], -1., dst, 0 );
+    cvTsGEMM( input, &test_mat[TEMP][0], 1., &test_mat[INPUT][1], -1., dst, 0 );
     if( dst != &test_mat[OUTPUT][0] )
-        cvTsGEMM( &test_mat[INPUT][0], dst, 1., 0, 0., &test_mat[OUTPUT][0], CV_GEMM_A_T );
+        cvTsGEMM( input, dst, 1., 0, 0., &test_mat[OUTPUT][0], CV_GEMM_A_T );
     cvTsZero( &test_mat[REF_OUTPUT][0] );
 }
 
