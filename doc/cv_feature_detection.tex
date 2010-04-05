@@ -1057,7 +1057,7 @@ public:
     // runs the extractor on the specified image; returns the MSERs,
     // each encoded as a contour (vector<Point>, see findContours)
     // the optional mask marks the area where MSERs are searched for
-    void operator()(Mat& image, vector<vector<Point> >& msers, const Mat& mask) const;
+    void operator()( const Mat& image, vector<vector<Point> >& msers, const Mat& mask ) const;
 };
 \end{lstlisting}
 
