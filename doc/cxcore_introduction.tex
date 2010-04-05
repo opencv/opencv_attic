@@ -374,7 +374,7 @@ for(; it != it_end; ++it)
 
 // method 2. process the first chroma plane using pre-stored row pointer.
 // method 3. process the second chroma plane using
-             individual element access operations
+//           individual element access operations
 for( int y = 0; y < img_yuv.rows; y++ )
 {
     uchar* Uptr = planes[1].ptr<uchar>(y);
