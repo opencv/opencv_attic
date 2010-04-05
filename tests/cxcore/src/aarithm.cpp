@@ -65,6 +65,7 @@ protected:
     void get_timing_test_array_types_and_sizes( int /*test_case_idx*/,
                         CvSize** sizes, int** types, CvSize** whole_sizes, bool *are_images );
     void generate_scalars( int depth );
+    void finalize_scalar( CvScalar& s );
     CvScalar alpha, beta, gamma;
     int gen_scalars;
     bool calc_abs;
@@ -168,6 +169,13 @@ void CxCore_ArithmTestImpl::generate_scalars( int depth )
         cvTsConvert( &db, &fl );
         cvTsConvert( &fl, &db );
     }
+}
+
+void CxCore_ArithmTestImpl::finalize_scalar( CvScalar& s )
+{
+    int depth = CV_MAT_DEPTH(test_mat[INPUT][0].type);
+    if( depth < CV_32F )
+        s = cvScalar(cvRound(s.val[0]), cvRound(s.val[1]), cvRound(s.val[2]), cvRound(s.val[3]));
 }
 
 void CxCore_ArithmTestImpl::get_test_array_types_and_sizes( int test_case_idx,
@@ -338,6 +346,7 @@ CxCore_AddSTest::CxCore_AddSTest()
 
 void CxCore_AddSTest::run_func()
 {
+    finalize_scalar(gamma);
     if(!test_nd)
     {
         if( test_mat[INPUT][0].cols % 2 == 0 )
@@ -381,6 +390,7 @@ CxCore_SubRSTest::CxCore_SubRSTest()
 
 void CxCore_SubRSTest::run_func()
 {
+    finalize_scalar(gamma);
     if(!test_nd)
     {
         cvSubRS( test_array[INPUT][0], gamma,
@@ -517,6 +527,7 @@ CxCore_AbsDiffSTest::CxCore_AbsDiffSTest()
 
 void CxCore_AbsDiffSTest::run_func()
 {
+    finalize_scalar(gamma);
     if(!test_nd)
     {
         cvAbsDiffS( test_array[INPUT][0], test_array[OUTPUT][0], gamma );

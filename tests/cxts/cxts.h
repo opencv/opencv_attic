@@ -431,7 +431,7 @@ protected:
 
     // reads common parameters of the test system; called from init()
     virtual int read_params( CvFileStorage* fs );
-
+    
     // checks, whether the test needs to be run (1) or not (0); called from run()
     virtual int filter( CvTest* test );
 
