@@ -703,9 +703,11 @@ if(CMAKE_COMPILER_IS_GNUCXX)
     endif()
 
 	if(X86)
-		if(NOT APPLE)
-			set(EXTRA_C_FLAGS "${EXTRA_C_FLAGS} -march=i686")
-		endif()
+        if(NOT X86_64)
+            if(NOT APPLE)
+                set(EXTRA_C_FLAGS "${EXTRA_C_FLAGS} -march=i686")
+            endif()
+        endif()
 	endif()
 
     # Other optimizations
