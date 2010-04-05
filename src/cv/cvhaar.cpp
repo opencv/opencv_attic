@@ -821,8 +821,8 @@ struct HaarDetectObjects_ScaleImage_Invoker
 {
     HaarDetectObjects_ScaleImage_Invoker( const CvHaarClassifierCascade* _cascade,
                                           int _stripSize, double _factor,
-                                          const Mat& _sum1, const Mat& _sqsum1, Mat& _norm1,
-                                          Mat& _mask1, Rect _equRect, ConcurrentRectVector& _vec )
+                                          const Mat& _sum1, const Mat& _sqsum1, Mat* _norm1,
+                                          Mat* _mask1, Rect _equRect, ConcurrentRectVector& _vec )
     {
         cascade = _cascade;
         stripSize = _stripSize;
@@ -846,19 +846,20 @@ struct HaarDetectObjects_ScaleImage_Invoker
     #ifdef HAVE_IPP
         if( cascade->hid_cascade->ipp_stages )
         {
+            IppiRect iequRect = {equRect.x, equRect.y, equRect.width, equRect.height};
             ippiRectStdDev_32f_C1R(sum1.ptr<float>(y1), sum1.step,
                                    sqsum1.ptr<double>(y1), sqsum1.step,
-                                   (float*)norm1.ptr<float>(y1), norm1.step,
-                                   ippiSize(ssz.width, ssz.height), equRect );
+                                   norm1->ptr<float>(y1), norm1->step,
+                                   ippiSize(ssz.width, ssz.height), iequRect );
             
             int positive = (ssz.width/ystep)*((ssz.height + ystep-1)/ystep);
-            
+
             if( ystep == 1 )
-                mask1 = Scalar::all(1);
+                (*mask1) = Scalar::all(1);
             else
                 for( y = y1; y < y2; y++ )
                 {
-                    uchar* mask1row = mask1.ptr(y);
+                    uchar* mask1row = mask1->ptr(y);
                     memset( mask1row, 0, ssz.width );
                     
                     if( y % ystep == 0 )
@@ -870,8 +871,8 @@ struct HaarDetectObjects_ScaleImage_Invoker
             {
                 if( ippiApplyHaarClassifier_32f_C1R(
                             sum1.ptr<float>(y1), sum1.step,
-                            norm1.ptr<float>(y1), norm1.step,
-                            (uchar*)mask1.ptr<uchar>(y1), mask1.step,
+                            norm1->ptr<float>(y1), norm1->step,
+                            mask1->ptr<uchar>(y1), mask1->step,
                             ippiSize(ssz.width, ssz.height), &positive,
                             cascade->hid_cascade->stage_classifier[j].threshold,
                             (IppiHaarClassifier_32f*)cascade->hid_cascade->ipp_stages[j]) < 0 )
@@ -883,7 +884,7 @@ struct HaarDetectObjects_ScaleImage_Invoker
             if( positive > 0 )
                 for( y = y1; y < y2; y += ystep )
                 {
-                    uchar* mask1row = mask1.row(y);
+                    uchar* mask1row = mask1->ptr(y);
                     for( x = 0; x < ssz.width; x += ystep )
                         if( mask1row[x] != 0 )
                         {
@@ -910,7 +911,7 @@ struct HaarDetectObjects_ScaleImage_Invoker
     const CvHaarClassifierCascade* cascade;
     int stripSize;
     double factor;
-    Mat sum1, sqsum1, norm1, mask1;
+    Mat sum1, sqsum1, *norm1, *mask1;
     Rect equRect;
     ConcurrentRectVector* vec;
 };
@@ -1099,7 +1100,7 @@ cvHaarDetectObjects( const CvArr* _img,
             if( use_ipp )
             {
                 cv::Mat fsum(sum1.rows, sum1.cols, CV_32F, sum1.data.ptr, sum1.step);
-                cv::Mat(sum1).convertTo(fsum, CV_32F, 1, -(1<<24));
+                cv::Mat(&sum1).convertTo(fsum, CV_32F, 1, -(1<<24));
             }
             else
 #endif
@@ -1109,7 +1110,7 @@ cvHaarDetectObjects( const CvArr* _img,
             cv::parallel_for(cv::BlockedRange(0, stripCount),
                          cv::HaarDetectObjects_ScaleImage_Invoker(cascade,
                                 (((sz1.height + stripCount - 1)/stripCount + ystep-1)/ystep)*ystep,
-                                factor, cv::Mat(&sum1), cv::Mat(&sqsum1), _norm1, _mask1,
+                                factor, cv::Mat(&sum1), cv::Mat(&sqsum1), &_norm1, &_mask1,
                                 cv::Rect(equRect), allCandidates));
         }
     }

@@ -670,7 +670,7 @@ cvExtractSURF( const CvArr* _img, const CvArr* _mask,
 			   int useProvidedKeyPts)
 {
     const int ORI_RADIUS = cv::SURFInvoker::ORI_RADIUS;
-    const int ORI_SIGMA = cv::SURFInvoker::ORI_SIGMA;
+    const float ORI_SIGMA = cv::SURFInvoker::ORI_SIGMA;
     const float DESC_SIGMA = cv::SURFInvoker::DESC_SIGMA;
     
     CvMat *sum = 0, *mask1 = 0, *mask_sum = 0;
