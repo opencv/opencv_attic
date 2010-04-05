@@ -1278,7 +1278,7 @@ MSER::MSER( int _delta, int _min_area, int _max_area,
         _min_diversity, _max_evolution, _area_threshold, _min_margin, _edge_blur_size);
 }
 
-void MSER::operator()(Mat& image, vector<vector<Point> >& dstcontours, const Mat& mask) const
+void MSER::operator()( const Mat& image, vector<vector<Point> >& dstcontours, const Mat& mask ) const
 {
     CvMat _image = image, _mask, *pmask = 0;
     if( mask.data )
