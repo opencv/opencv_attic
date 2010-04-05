@@ -1002,7 +1002,7 @@ public:
           float _max_variation, float _min_diversity,
           int _max_evolution, double _area_threshold,
           double _min_margin, int _edge_blur_size );
-    void operator()(Mat& image, vector<vector<Point> >& msers, const Mat& mask) const;
+    void operator()( const Mat& image, vector<vector<Point> >& msers, const Mat& mask ) const;
 };
 
 
