@@ -1783,6 +1783,10 @@ void CvTS::print_summary_tailer( int streams )
     }
 }
 
+#if defined _MSC_VER && _MSC_VER < 1400
+#undef vsnprintf
+#define vsnprintf _vsnprintf
+#endif
 
 void CvTS::vprintf( int streams, const char* fmt, va_list l )
 {

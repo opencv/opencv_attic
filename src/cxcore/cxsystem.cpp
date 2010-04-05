@@ -44,8 +44,28 @@
 
 #if defined WIN32 || defined WIN64 || defined _WIN64 || defined WINCE
 #include <tchar.h>
-#ifdef _MSC_VER
-#include <intrin.h>
+#if defined _MSC_VER
+  #if _MSC_VER >= 1400
+    #include <intrin.h>
+  #elif defined _M_IX86 
+    static void __cpuid(int* cpuid_data, int)
+    {
+        __asm
+        {
+            push ebx
+            push edi
+            mov edi, cpuid_data
+            mov eax, 1
+            cpuid
+            mov [edi], eax
+            mov [edi + 4], ebx
+            mov [edi + 8], ecx
+            mov [edi + 12], edx
+            pop edi
+            pop ebx
+        }
+    }
+  #endif
 #endif
 #else
 #include <pthread.h>
