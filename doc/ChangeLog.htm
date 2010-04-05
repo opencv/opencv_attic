@@ -49,7 +49,10 @@ OpenCV 2.1 is basically a stabilized OpenCV 2.0, yet there are a few new feature
     if they are available. That is, it should be more safe to use WITH_SSE* flags in CMake.
     However, if you want maximum portability, it's recommended to turn on just WITH_SSE and WITH_SSE2
     and leave other SSE* turned off, as we found that using WITH_SSE3, WITH_SSSE3 and WITH_SSE4_1 can yield
-    the code incompatible with Intel's pre-Penryn or AMD chips. 
+    the code incompatible with Intel's pre-Penryn or AMD chips.
+
+  - Experimental "static" OpenCV configuration in CMake was contributed by Jose Luis Blanco.
+    Pass "BUILD_SHARED_LIBS=OFF" to CMake to build OpenCV statically.   
 
 >>> New functionality, features:
 
