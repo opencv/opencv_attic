@@ -175,6 +175,12 @@ cvInitMatHeader( CvMat* arr, int rows, int cols,
 }
 
 
+#undef CV_IS_MAT_HDR_Z
+#define CV_IS_MAT_HDR_Z(mat) \
+    ((mat) != NULL && \
+    (((const CvMat*)(mat))->type & CV_MAGIC_MASK) == CV_MAT_MAGIC_VAL && \
+    ((const CvMat*)(mat))->cols >= 0 && ((const CvMat*)(mat))->rows >= 0)
+
 // Deallocates the CvMat structure and underlying data
 CV_IMPL void
 cvReleaseMat( CvMat** array )
@@ -186,7 +192,7 @@ cvReleaseMat( CvMat** array )
     {
         CvMat* arr = *array;
         
-        if( !CV_IS_MAT_HDR(arr) && !CV_IS_MATND_HDR(arr) )
+        if( !CV_IS_MAT_HDR_Z(arr) && !CV_IS_MATND_HDR(arr) )
             CV_Error( CV_StsBadFlag, "" );
 
         *array = 0;

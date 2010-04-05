@@ -845,9 +845,9 @@ int main(int argc, char** argv)
         return -1;
     cvtColor(img, gray, CV_BGR2GRAY);
     // smooth it, otherwise a lot of false circles may be detected
-    GaussianBlur( gray, gray, 9, 9, 2, 2 );
+    GaussianBlur( gray, gray, Size(9, 9), 2, 2 );
     vector<Vec3f> circles;
-    houghCircles(gray, circles, CV_HOUGH_GRADIENT,
+    HoughCircles(gray, circles, CV_HOUGH_GRADIENT,
                  2, gray->rows/4, 200, 100 );
     for( size_t i = 0; i < circles.size(); i++ )
     {
