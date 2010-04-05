@@ -169,6 +169,26 @@ static void change_color( int color )
 
 #endif
 
+
+// reads 16-digit hexadecimal number (i.e. 64-bit integer)
+static int64 read_seed( const char* str )
+{
+    int64 val = 0;
+    if( str && strlen(str) == 16 )
+    {
+        for( int i = 0; str[i]; i++ )
+        {
+            int c = tolower(str[i]);
+            if( !isxdigit(c) )
+                return 0;
+            val = val * 16 +
+            (str[i] < 'a' ? str[i] - '0' : str[i] - 'a' + 10);
+        }
+    }
+    return val;
+}
+
+
 /***************************** memory manager *****************************/
 
 typedef struct CvTestAllocBlock
@@ -1076,7 +1096,7 @@ void CvTS::clear()
         free( ostrm_base_name );
         ostrm_base_name = 0;
     }
-    params.rng_seed = (uint64)-1;
+    params.rng_seed = 0;
     params.debug_mode = -1;
     params.print_only_failed = 0;
     params.skip_header = 0;
@@ -1332,6 +1352,12 @@ int CvTS::run( int argc, char** argv )
         {
             params.test_filter_pattern = argv[++i];
             params.test_filter_mode = CHOOSE_TESTS;
+        }
+        else if( strcmp( argv[i], "-seed" ) == 0 )
+        {
+            params.rng_seed = read_seed(argv[++i]);
+            if( params.rng_seed == 0 )
+                fprintf(stderr, "Invalid or zero RNG seed. Will use the seed from the config file or default one\n");
         }
     }
 
@@ -1630,22 +1656,8 @@ int CvTS::read_params( CvFileStorage* fs )
     if( params.test_case_count_scale <= 0 )
         params.test_case_count_scale = 1.;
     str = cvReadStringByName( fs, node, "seed", 0 );
-    params.rng_seed = 0;
-    if( str && strlen(str) == 16 )
-    {
-        params.rng_seed = 0;
-        for( int i = 0; i < 16; i++ )
-        {
-            int c = tolower(str[i]);
-            if( !isxdigit(c) )
-            {
-                params.rng_seed = 0;
-                break;
-            }
-            params.rng_seed = params.rng_seed * 16 +
-                (str[i] < 'a' ? str[i] - '0' : str[i] - 'a' + 10);
-        }
-    }
+    if( str && params.rng_seed == 0 )
+        params.rng_seed = read_seed(str);
 
     if( params.rng_seed == 0 )
         params.rng_seed = cvGetTickCount();
