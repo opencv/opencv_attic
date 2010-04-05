@@ -216,7 +216,7 @@ CV_INLINE  int  cvRound( double value )
 #if (defined _MSC_VER && defined _M_X64) || (defined __GNUC__ && defined __x86_64__ && !defined __APPLE__)
     __m128d t = _mm_set_sd( value );
     return _mm_cvtsd_si32(t);
-#elif defined _MSC_VER && defined _M_X86
+#elif defined _MSC_VER && defined _M_IX86
     int t;
     __asm
     {
@@ -228,7 +228,7 @@ CV_INLINE  int  cvRound( double value )
     return (int)lrint(value);
 #else
     // while this is not IEEE754-compliant rounding, it's usually a good enough approximation
-    return (int)(value + 0.5);
+    return (int)(value + (value >= 0 ? 0.5 : -0.5));
 #endif
 }
 
