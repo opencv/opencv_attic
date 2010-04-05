@@ -184,7 +184,7 @@ in the case of 8-bit and 16-bit images
 R, G and B are converted to floating-point format and scaled to fit the 0 to 1 range.
 \[ V_{max} \leftarrow {max}(R,G,B) \]
 \[ V_{min} \leftarrow {min}(R,G,B) \]
-\[ L \leftarrow \frac{V_{max} - V_{min}}{2} \]
+\[ L \leftarrow \frac{V_{max} + V_{min}}{2} \]
 \[ S \leftarrow \fork
 {\frac{V_{max} - V_{min}}{V_{max} + V_{min}}}{if $L < 0.5$}
 {\frac{V_{max} - V_{min}}{2 - (V_{max} + V_{min})}}{if $L \ge 0.5$} \]
@@ -193,7 +193,7 @@ R, G and B are converted to floating-point format and scaled to fit the 0 to 1 r
 {{120+60(B - R)}/{S}}{if $V_{max}=G$}
 {{240+60(R - G)}/{S}}{if $V_{max}=B$} \]
 if $H<0$ then $H \leftarrow H+360$
-On output $0 \leq V \leq 1$, $0 \leq S \leq 1$, $0 \leq H \leq 360$.
+On output $0 \leq L \leq 1$, $0 \leq S \leq 1$, $0 \leq H \leq 360$.
 
 The values are then converted to the destination data type:
 \begin{description}
@@ -838,7 +838,7 @@ H, S, V are left as is
   R, G and B are converted to floating-point format and scaled to fit the 0 to 1 range.
   \[ V_{max} \leftarrow {max}(R,G,B) \]
   \[ V_{min} \leftarrow {min}(R,G,B) \]
-  \[ L \leftarrow \frac{V_{max} - V_{min}}{2} \]
+  \[ L \leftarrow \frac{V_{max} + V_{min}}{2} \]
   \[ S \leftarrow \fork
     {\frac{V_{max} - V_{min}}{V_{max} + V_{min}}}{if $L < 0.5$}
     {\frac{V_{max} - V_{min}}{2 - (V_{max} + V_{min})}}{if $L \ge 0.5$} \]
@@ -847,7 +847,7 @@ H, S, V are left as is
   {{120+60(B - R)}/{S}}{if $V_{max}=G$}
   {{240+60(R - G)}/{S}}{if $V_{max}=B$} \]
   if $H<0$ then $H \leftarrow H+360$
-On output $0 \leq V \leq 1$, $0 \leq S \leq 1$, $0 \leq H \leq 360$.
+On output $0 \leq L \leq 1$, $0 \leq S \leq 1$, $0 \leq H \leq 360$.
 
 The values are then converted to the destination data type:
 \begin{description}

@@ -810,13 +810,14 @@ Draws a text string
  \texttt{FONT\_HERSHEY\_COMPLEX\_SMALL}, \texttt{FONT\_HERSHEY\_SCRIPT\_SIMPLEX} or \texttt{FONT\_HERSHEY\_SCRIPT\_COMPLEX},
    where each of the font id's can be combined with \texttt{FONT\_HERSHEY\_ITALIC} to get the slanted letters.}
 \cvarg{fontScale}{The font scale factor that is multiplied by the font-specific base size}
+\cvarg{color}{The text color}
 \cvarg{thickness}{Thickness of the lines used to draw the text}
 \cvarg{lineType}{The line type; see \texttt{line} for details}
 \cvarg{bottomLeftOrigin}{When true, the image data origin is at the bottom-left corner, otherwise it's at the top-left corner}
 \end{description}
 
-The function \texttt{putText} draws a text string in the image.
+The function \texttt{putText} renders the specified text string in the image.
 Symbols that can not be rendered using the specified font are
-replaced question marks. See \cvCppCross{getTextSize} for a text rendering code example.
+replaced by question marks. See \cvCppCross{getTextSize} for a text rendering code example.
 
 \fi
