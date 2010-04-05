@@ -3,6 +3,7 @@
  */
 
 #include <iostream>
+#include <cstdio>
 #include <stdio.h>
 #include "cv.h"
 #include "highgui.h"

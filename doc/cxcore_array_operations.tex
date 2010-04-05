@@ -1018,7 +1018,7 @@ Computes eigenvalues and eigenvectors of a symmetric matrix.
 
 \cvdefC{
 void cvEigenVV(\par CvArr* mat,\par CvArr* evects,\par CvArr* evals,\par double eps=0,
-\par int lowindex = 0, \par int highindex = 0);}
+\par int lowindex = -1, \par int highindex = -1);}
 \cvdefPy{EigenVV(mat,evects,evals,eps,lowindex,highindex)-> None}
 
 \begin{description}
@@ -1041,8 +1041,8 @@ mat*evects(i,:)' = evals(i)*evects(i,:)' (in MATLAB notation)
 \end{lstlisting}
 
 If either low- or highindex is supplied the other is required, too.
-Indexing is 1-based. Example: To calculate the largest eigenvector/-value set
-lowindex = highindex = 1.
+Indexing is 0-based. Example: To calculate the largest eigenvector/-value set
+\texttt{lowindex=highindex=0}. To calculate all the eigenvalues, leave \texttt{lowindex=highindex=-1}.
 For legacy reasons this function always returns a square matrix the same size
 as the source matrix with eigenvectors and a vector the length of the source
 matrix with eigenvalues. The selected eigenvectors/-values are always in the
