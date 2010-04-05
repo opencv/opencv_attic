@@ -111,7 +111,7 @@ StereoSGBM::~StereoSGBM()
 static void calcPixelCostBT( const Mat& img1, const Mat& img2, int y,
                             int minD, int maxD, CostType* cost,
                             PixType* buffer, const PixType* tab,
-                            int tabOfs, int ftzero )
+                            int tabOfs, int )
 {
     int x, c, width = img1.cols, cn = img1.channels();
     int minX1 = max(maxD, 0), maxX1 = width + min(minD, 0);

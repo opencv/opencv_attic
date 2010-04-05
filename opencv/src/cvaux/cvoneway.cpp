@@ -131,13 +131,13 @@ namespace cv{
         cvReleaseImage(&workspace_float);
     }
     
-    void generate_mean_patch_fast(IplImage* frontal, IplImage* result, CvAffinePose pose,
-                                  CvMat* pca_hr_avg, CvMat* pca_hr_eigenvectors, const OneWayDescriptor* pca_descriptors)
+    void generate_mean_patch_fast(IplImage* /*frontal*/, IplImage* /*result*/, CvAffinePose /*pose*/,
+                                  CvMat* /*pca_hr_avg*/, CvMat* /*pca_hr_eigenvectors*/, const OneWayDescriptor* /*pca_descriptors*/)
     {
-        for(int i = 0; i < pca_hr_eigenvectors->cols; i++)
+        /*for(int i = 0; i < pca_hr_eigenvectors->cols; i++)
         {
             
-        }
+        }*/
     }
     
     void readPCAFeatures(const char* filename, CvMat** avg, CvMat** eigenvectors);
@@ -309,7 +309,7 @@ namespace cv{
         IplImage* temp2 = cvCloneImage(temp);
         CvMat* rotation_phi = cvCreateMat(2, 3, CV_32FC1);
         
-        CvSize new_size = cvSize(temp->width*pose.lambda1, temp->height*pose.lambda2);
+        CvSize new_size = cvSize(cvRound(temp->width*pose.lambda1), cvRound(temp->height*pose.lambda2));
         IplImage* temp3 = cvCreateImage(new_size, IPL_DEPTH_32F, src->nChannels);
         
         cvConvertScale(src, temp);
@@ -355,10 +355,10 @@ namespace cv{
             //AffineTransformPatch(frontal, patch_8u, m_affine_poses[i]);
             generate_mean_patch(frontal, patch_8u, m_affine_poses[i], num_mean_components, noise_intensity);
             
-            float scale = 1.0f;
+            double scale = 1.0f;
             if(norm)
             {
-                float sum = cvSum(patch_8u).val[0];
+                double sum = cvSum(patch_8u).val[0];
                 scale = 1/sum;
             }
             cvConvertScale(patch_8u, m_samples[i], scale);
@@ -391,7 +391,7 @@ namespace cv{
         cvMinMaxLoc(frontal, 0, &maxval);
         CvMat* frontal_data = ConvertImageToMatrix(frontal);
         
-        float sum = cvSum(frontal_data).val[0];
+        double sum = cvSum(frontal_data).val[0];
         cvConvertScale(frontal_data, frontal_data, 1.0f/sum);
         cvProjectPCA(frontal_data, pca_hr_avg, pca_hr_eigenvectors, pca_coeffs);
         for(int i = 0; i < m_pose_count; i++)
@@ -399,7 +399,7 @@ namespace cv{
             cvSetZero(m_samples[i]);
             for(int j = 0; j < m_pca_dim_high; j++)
             {
-                float coeff = cvmGet(pca_coeffs, 0, j);
+                double coeff = cvmGet(pca_coeffs, 0, j);
                 IplImage* patch = pca_descriptors[j + 1].GetPatch(i);
                 cvAddWeighted(m_samples[i], 1.0, patch, coeff, 0, m_samples[i]);
                 
@@ -416,7 +416,7 @@ namespace cv{
             }
             
             cvAdd(pca_descriptors[0].GetPatch(i), m_samples[i], m_samples[i]);
-            float sum = cvSum(m_samples[i]).val[0];
+            double sum = cvSum(m_samples[i]).val[0];
             cvConvertScale(m_samples[i], m_samples[i], 1.0/sum);
             
 #if 0
@@ -519,7 +519,7 @@ namespace cv{
             }
             return;
         }
-        CvRect roi;
+        CvRect roi={0,0,0,0};
         if (!CV_IS_MAT(patch))
         {
             roi = cvGetImageROI((IplImage*)patch);
@@ -540,7 +540,7 @@ namespace cv{
         else
         {
             IplImage* patch_32f = cvCreateImage(cvSize(roi.width, roi.height), IPL_DEPTH_32F, 1);
-            float sum = cvSum(patch).val[0];
+            double sum = cvSum(patch).val[0];
             cvConvertScale(patch, patch_32f, 1.0f/sum);
             ProjectPCASample(patch_32f, avg, eigenvectors, pca_coeffs);
             cvReleaseImage(&patch_32f);
@@ -552,7 +552,7 @@ namespace cv{
         
         for(int i = 0; i < m_pose_count; i++)
         {
-            float dist = cvNorm(m_pca_coeffs[i], pca_coeffs);
+            double dist = cvNorm(m_pca_coeffs[i], pca_coeffs);
             //		float dist = 0;
             //		float data1, data2;
             //		//CvMat* pose_pca_coeffs = m_pca_coeffs[i];
@@ -583,7 +583,7 @@ namespace cv{
             //#endif
             if(dist < distance)
             {
-                distance = dist;
+                distance = (float)dist;
                 pose_idx = i;
             }
         }
@@ -598,7 +598,7 @@ namespace cv{
         
         CvRect roi = cvGetImageROI(patch);
         IplImage* patch_32f = cvCreateImage(cvSize(roi.width, roi.height), IPL_DEPTH_32F, patch->nChannels);
-        float sum = cvSum(patch).val[0];
+        double sum = cvSum(patch).val[0];
         cvConvertScale(patch, patch_32f, 1/sum);
         
         for(int i = 0; i < m_pose_count; i++)
@@ -607,7 +607,7 @@ namespace cv{
             {
                 continue;
             }
-            float dist = cvNorm(m_samples[i], patch_32f);
+            double dist = cvNorm(m_samples[i], patch_32f);
             //float dist = 0.0f;
             //float i1,i2;
             
@@ -621,7 +621,7 @@ namespace cv{
             
             if(dist < distance)
             {
-                distance = dist;
+                distance = (float)dist;
                 pose_idx = i;
             }
             
@@ -701,7 +701,7 @@ namespace cv{
             {
                 for(int x = 0; x < m_samples[i]->width; x++)
                 {
-                    float val = cvmGet(mat, i, y*m_samples[i]->width + x);
+                    float val = (float)cvmGet(mat, i, y*m_samples[i]->width + x);
                     *((float*)(m_samples[i]->imageData + y*m_samples[i]->widthStep) + x) = val;
                 }
             }
@@ -748,7 +748,7 @@ namespace cv{
                 cvCopy(patch,test_img);
             }
             IplImage* patch_32f = cvCreateImage(cvSize(_roi.width, _roi.height), IPL_DEPTH_32F, 1);
-            float sum = cvSum(test_img).val[0];
+            double sum = cvSum(test_img).val[0];
             cvConvertScale(test_img, patch_32f, 1.0f/sum);
             
             //ProjectPCASample(patch_32f, avg, eigenvectors, pca_coeffs);
@@ -945,7 +945,7 @@ namespace cv{
                 cvCopy(patch,test_img);
             }
             IplImage* patch_32f = cvCreateImage(cvSize(_roi.width, _roi.height), IPL_DEPTH_32F, 1);
-            float sum = cvSum(test_img).val[0];
+            double sum = cvSum(test_img).val[0];
             cvConvertScale(test_img, patch_32f, 1.0f/sum);
             
             //ProjectPCASample(patch_32f, avg, eigenvectors, pca_coeffs);
@@ -1361,15 +1361,13 @@ namespace cv{
     
     void OneWayDescriptorBase::FindDescriptor(IplImage* src, cv::Point2f pt, int& desc_idx, int& pose_idx, float& distance) const
     {
-        
-        CvRect roi = cvRect(pt.x - m_patch_size.width/4, pt.y - m_patch_size.height/4, m_patch_size.width/2, m_patch_size.height/2);
+        CvRect roi = cvRect(cvRound(pt.x - m_patch_size.width/4),
+                            cvRound(pt.y - m_patch_size.height/4),
+                            m_patch_size.width/2, m_patch_size.height/2);
         cvSetImageROI(src, roi);
         
-        
         FindDescriptor(src, desc_idx, pose_idx, distance);
-        
-        cvResetImageROI(src);
-        
+        cvResetImageROI(src);   
     }
     
     void OneWayDescriptorBase::FindDescriptor(IplImage* patch, int& desc_idx, int& pose_idx, float& distance, float* _scale, float* scale_ranges) const
@@ -1511,10 +1509,10 @@ namespace cv{
             m_poses = new CvAffinePose[m_pose_count];
             for(int i = 0; i < m_pose_count; i++)
             {
-                m_poses[i].phi = cvmGet(poses, i, 0);
-                m_poses[i].theta = cvmGet(poses, i, 1);
-                m_poses[i].lambda1 = cvmGet(poses, i, 2);
-                m_poses[i].lambda2 = cvmGet(poses, i, 3);
+                m_poses[i].phi = (float)cvmGet(poses, i, 0);
+                m_poses[i].theta = (float)cvmGet(poses, i, 1);
+                m_poses[i].lambda1 = (float)cvmGet(poses, i, 2);
+                m_poses[i].lambda2 = (float)cvmGet(poses, i, 3);
             }
             cvReleaseMat(&poses);
             
@@ -1756,7 +1754,7 @@ namespace cv{
             {
                 for(int x = 0; x < roi.width; x++)
                 {
-                    float val = cvmGet(eigenvector, 0, roi.width*y + x);
+                    float val = (float)cvmGet(eigenvector, 0, roi.width*y + x);
                     *((float*)(img->imageData + (roi.y + y)*img->widthStep) + roi.x + x) = val;
                 }
             }
@@ -1767,7 +1765,7 @@ namespace cv{
             {
                 for(int x = 0; x < roi.width; x++)
                 {
-                    float val = cvmGet(eigenvector, 0, roi.width*y + x);
+                    float val = (float)cvmGet(eigenvector, 0, roi.width*y + x);
                     img->imageData[(roi.y + y)*img->widthStep + roi.x + x] = (unsigned char)val;
                 }
             }

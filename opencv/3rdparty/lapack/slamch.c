@@ -78,7 +78,7 @@ slamch_(char *cmach) {
         /* Use SMALL plus a bit, to avoid the possibility of rounding causing overflow
          when computing  1/sfmin. */
         sfmin = FLT_MIN;
-        small = 2. / FLT_MAX;
+        small = (float)(2. / FLT_MAX);
         if (small <= sfmin) small = sfmin * (1 + eps);
         return small;
     } else if ('U' == ch || 'u' == ch) {
