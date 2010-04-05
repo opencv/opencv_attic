@@ -89,7 +89,7 @@ template<class VecUpdate> struct MorphRowIVec
         
         cn *= ESZ;
         int i, k, _ksize = ksize*cn;
-        width *= cn;
+        width = (width & -4)*cn;
         VecUpdate updateOp;
 
         for( i = 0; i <= width - 16; i += 16 )
@@ -103,7 +103,7 @@ template<class VecUpdate> struct MorphRowIVec
             _mm_storeu_si128((__m128i*)(dst + i), s);
         }
 
-        for( ; i <= width - 4; i += 4 )
+        for( ; i < width; i += 4 )
         {
             __m128i s = _mm_cvtsi32_si128(*(const int*)(src + i));
             for( k = cn; k < _ksize; k += cn )
@@ -130,10 +130,10 @@ template<class VecUpdate> struct MorphRowFVec
             return 0;
         
         int i, k, _ksize = ksize*cn;
-        width *= cn;
+        width = (width & -4)*cn;
         VecUpdate updateOp;
 
-        for( i = 0; i <= width - 4; i += 4 )
+        for( i = 0; i < width; i += 4 )
         {
             __m128 s = _mm_loadu_ps((const float*)src + i);
             for( k = cn; k < _ksize; k += cn )
