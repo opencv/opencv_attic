@@ -1048,7 +1048,7 @@ double CxCore_MatrixTestImpl::get_success_error_level( int test_case_idx, int i,
 {
     int input_depth = CV_MAT_DEPTH(cvGetElemType( test_array[INPUT][0] ));
     double input_precision = input_depth < CV_32F ? 0 : input_depth == CV_32F ?
-                            1e-5 : 5e-12;
+                            5e-5 : 5e-11;
     double output_precision = CvArrTest::get_success_error_level( test_case_idx, i, j );
     return MAX(input_precision, output_precision);
 }
@@ -2575,13 +2575,13 @@ static double cvTsSVDet( CvMat* mat, double* ratio )
     {
         for( i = 0; i < nm; i++ )
             det *= w->data.fl[i];
-        *ratio = w->data.fl[nm-1] < FLT_EPSILON ? FLT_MAX : w->data.fl[0]/w->data.fl[nm-1];
+        *ratio = w->data.fl[nm-1] < FLT_EPSILON ? FLT_MAX : w->data.fl[nm-1]/w->data.fl[0];
     }
     else
     {
         for( i = 0; i < nm; i++ )
             det *= w->data.db[i];
-        *ratio = w->data.db[nm-1] < FLT_EPSILON ? DBL_MAX : w->data.db[0]/w->data.db[nm-1];
+        *ratio = w->data.db[nm-1] < FLT_EPSILON ? DBL_MAX : w->data.db[nm-1]/w->data.db[0];
     }
 
     cvReleaseMat( &w );
@@ -2592,18 +2592,16 @@ void CxCore_InvertTest::prepare_to_validation( int )
 {
     CvMat* input = &test_mat[INPUT][0];
     double ratio = 0, det = cvTsSVDet( input, &ratio );
-    double threshold = (CV_MAT_DEPTH(input->type) == CV_32F ? FLT_EPSILON : DBL_EPSILON)*500;
-    double rthreshold = CV_MAT_DEPTH(input->type) == CV_32F ? 1e6 : 1e12;
+    double threshold = (CV_MAT_DEPTH(input->type) == CV_32F ? FLT_EPSILON : DBL_EPSILON)*1000;
 
     if( CV_MAT_TYPE(input->type) == CV_32FC1 )
         cvTsConvert( input, &test_mat[TEMP][1] );
     else
         cvTsCopy( input, &test_mat[TEMP][1], 0 );
 
-    if( (method == CV_LU && result == 0) ||
-        det < threshold ||
-        (method == CV_LU && ratio > rthreshold) ||
-        (method == CV_SVD && result < threshold) )
+    if( det < threshold ||
+        ((method == CV_LU || method == CV_CHOLESKY) && (result == 0 || ratio < threshold)) ||
+        ((method == CV_SVD || method == CV_SVD_SYM) && result < threshold) )
     {
         cvTsZero( &test_mat[OUTPUT][0] );
         cvTsZero( &test_mat[REF_OUTPUT][0] );
@@ -2779,10 +2777,9 @@ void CxCore_SolveTest::prepare_to_validation( int )
             return;
         }
      
-        double threshold = (CV_MAT_DEPTH(input->type) == CV_32F ? FLT_EPSILON : DBL_EPSILON)*500;
-        double rthreshold = CV_MAT_DEPTH(input->type) == CV_32F ? 1e6 : 1e12;   
+        double threshold = (CV_MAT_DEPTH(input->type) == CV_32F ? FLT_EPSILON : DBL_EPSILON)*1000;
         double ratio = 0, det = cvTsSVDet( input, &ratio );
-        if( det < threshold || ratio > rthreshold )
+        if( det < threshold || ratio < threshold )
         {
             cvTsZero( &test_mat[OUTPUT][0] );
             cvTsZero( &test_mat[REF_OUTPUT][0] );
