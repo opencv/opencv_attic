@@ -1612,7 +1612,7 @@ int CV_UndistortMapTest::prepare_test_case( int test_case_idx )
 }
 
 
-void CV_UndistortMapTest::prepare_to_validation( int test_case_idx )
+void CV_UndistortMapTest::prepare_to_validation( int )
 {
 	if (!dualChannel )
 		cvTsInitUndistortMap( &test_mat[INPUT][0], &test_mat[INPUT][1],
