@@ -1108,7 +1108,7 @@ endif()
 
 if(APPLE)
 message(STATUS "")
-if(HAVE_CARBON)
+if(WITH_CARBON)
 message(STATUS "  GUI Back-end:                Carbon")
 else()
 message(STATUS "  GUI Back-end:                Cocoa")
