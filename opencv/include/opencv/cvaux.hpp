@@ -45,6 +45,7 @@
 #ifdef __cplusplus
 
 #include <iosfwd>
+#include <limits>
 
 class CV_EXPORTS CvImage
 {
@@ -1822,6 +1823,158 @@ protected:
     
 };
     
+
+/****************************************************************************************\
+*                             2D image feature detectors                                *
+\****************************************************************************************/
+
+class FeatureDetector
+{
+public:
+    void detect( const Mat& image, vector<KeyPoint>& keypoints, const Mat& mask=Mat() ) const
+    {
+        detectImpl( image, mask, keypoints );
+    }
+
+protected:
+    virtual void detectImpl( const Mat& image, const Mat& mask, vector<KeyPoint>& keypoints ) const = 0;
+
+    static void removeInvalidPoints( const Mat& mask, vector<KeyPoint>& keypoints );
+};
+
+
+class FastFeatureDetector : public FeatureDetector
+{
+public:
+    FastFeatureDetector( int _threshold, bool _nonmaxSuppression = true );
+
+protected:
+    virtual void detectImpl( const Mat& image, const Mat& mask, vector<KeyPoint>& keypoints ) const;
+
+    int threshold;
+    bool nonmaxSuppression;
+};
+
+
+class GoodFeaturesToTrackDetector : public FeatureDetector
+{
+public:
+    GoodFeaturesToTrackDetector( int _maxCorners, double _qualityLevel, double _minDistance,
+                                 int _blockSize=3, bool _useHarrisDetector=false, double _k=0.04 );
+protected:
+    virtual void detectImpl( const Mat& image, const Mat& mask, vector<KeyPoint>& keypoints ) const;
+
+    int maxCorners;
+    double qualityLevel;
+    double minDistance;
+    int blockSize;
+    bool useHarrisDetector;
+    double k;
+};
+
+class MserFeatureDetector : public FeatureDetector
+{
+public:
+    MserFeatureDetector( int delta, int minArea, int maxArea, float maxVariation, float minDiversity,
+                         int maxEvolution, double areaThreshold, double minMargin, int edgeBlurSize );
+protected:
+    virtual void detectImpl( const Mat& image, const Mat& mask, vector<KeyPoint>& keypoints ) const;
+
+    MSER mser;
+};
+
+class StarFeatureDetector : public FeatureDetector
+{
+public:
+    StarFeatureDetector( int maxSize=16, int responseThreshold=30, int lineThresholdProjected = 10,
+                         int lineThresholdBinarized=8, int suppressNonmaxSize=5 );
+
+protected:
+    virtual void detectImpl( const Mat& image, const Mat& mask, vector<KeyPoint>& keypoints ) const;
+
+    StarDetector star;
+};
+
+class SurfFeatureDetector : public FeatureDetector
+{
+public:
+    SurfFeatureDetector( double hessianThreshold = 400., int octaves = 3, int octaveLayers = 4 );
+
+protected:
+    virtual void detectImpl( const Mat& image, const Mat& mask, vector<KeyPoint>& keypoints ) const;
+
+    SURF surf;
+};
+
+
+/****************************************************************************************\
+*                             descriptors for image keypoints                            *
+\****************************************************************************************/
+
+class DescriptorExtractor
+{
+public:
+    virtual void compute( const Mat& image, vector<KeyPoint>& keypoints, Mat& descriptors ) const = 0;
+
+protected:
+    static void removeBorderKeypoints( vector<KeyPoint>& keypoints,
+                                       Size imageSize, int borderPixels );
+};
+
+
+class SurfDescriptorExtractor : public DescriptorExtractor
+{
+public:
+    SurfDescriptorExtractor( int nOctaves=4,
+                             int nOctaveLayers=2, bool extended=false );
+
+    virtual void compute( const Mat& image, vector<KeyPoint>& keypoints, Mat& descriptors) const;
+
+protected:
+    SURF surf;
+};
+
+/****************************************************************************************\
+*                                descriptors matching                                   *
+\****************************************************************************************/
+/*struct Match
+{
+    int index1;      // index of the descriptor from the first set.
+    int index2;      // index of the descriptor from the second set.
+    double distance; // computed distance between them.
+
+    Match(int index1, int index2, double distance)
+        : index1(index1), index2(index2), distance(distance) {}
+    operator double() const { return distance; }
+};
+
+class DescriptorMatcher
+{
+public:
+    void match( const Mat& descriptors_1, const Mat& descriptors_2, vector<Match>& matches) const
+    {
+        matchImpl(descriptors_1, descriptors_2, cv::Mat(), matches);
+    }
+    void match( const Mat& descriptors_1, const Mat& descriptors_2, const Mat& mask,
+              vector<Match>& matches) const
+    {
+        matchImpl(descriptors_1, descriptors_2, mask, matches);
+    }
+
+    void matchWindowed( const vector<KeyPoint>& keypoints_1, const Mat& descriptors_1,
+                      const vector<KeyPoint>& keypoints_2, const Mat& descriptors_2,
+                      float maxDeltaX, float maxDeltaY, vector<Match>& matches) const;
+
+protected:
+    virtual void matchImpl( const Mat& descriptors_1, const Mat& descriptors_2,
+                          const Mat& mask, vector<Match>& matches) const = 0;
+
+    static bool possibleMatch( const Mat& mask, int index_1, int index_2)
+    {
+        return mask.empty() || mask.at<char>(index_1, index_2);
+    }
+};
+*/
 
 }
 
