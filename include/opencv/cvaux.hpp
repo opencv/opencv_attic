@@ -1744,6 +1744,9 @@ public:
         return m_pca_dim_low;
     };
     
+    int GetPCADimLow() const {return m_pca_dim_low;};
+    int GetPCADimHigh() const {return m_pca_dim_high;};
+    
     void ConvertDescriptorsArrayToTree(); // Converting pca_descriptors array to KD tree
     
     
