@@ -537,7 +537,9 @@ class SphinxWriter:
         print >>self, "\\hline"
 
     def cmd_cite(self, c):
-        self.write("[%s]_" % str(c.params[0]))
+        # XXX jcb - these references are crashing Sphinx 0.65
+        # self.write("[%s]_" % str(c.params[0]))
+        self.write("%s" % str(c.params[0]))
 
     def cmd_href(self, c):
         if len(c.params) == 2:

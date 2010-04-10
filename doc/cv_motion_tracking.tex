@@ -147,9 +147,7 @@ Calculates the optical flow for a sparse feature set using the iterative Lucas-K
 \cvdefC{
 void cvCalcOpticalFlowPyrLK( \par const CvArr* prev,\par const CvArr* curr,\par CvArr* prevPyr,\par CvArr* currPyr,\par const CvPoint2D32f* prevFeatures,\par CvPoint2D32f* currFeatures,\par int count,\par CvSize winSize,\par int level,\par char* status,\par float* track\_error,\par CvTermCriteria criteria,\par int flags );
 }
-\cvdefPy{
-CalcOpticalFlowPyrLK(  prev, curr, prevPyr, currPyr, prevFeatures, winSize, level, criteria, flags, guesses = None) -> (currFeatures, status, track\_error)
-}
+\cvdefPy{CalcOpticalFlowPyrLK(  prev, curr, prevPyr, currPyr, prevFeatures, winSize, level, criteria, flags, guesses = None) -> (currFeatures, status, track\_error)}
 
 \begin{description}
 \cvarg{prev}{First frame, at time \texttt{t}}
@@ -345,7 +343,10 @@ CvKalman;
 The structure \texttt{CvKalman} is used to keep the Kalman filter
 state. It is created by the \cvCPyCross{CreateKalman} function, updated
 by the \cvCPyCross{KalmanPredict} and \cvCPyCross{KalmanCorrect} functions
-and released by the \cvCPyCross{ReleaseKalman} function. Normally, the
+\ifC
+and released by the \cvCPyCross{ReleaseKalman} function
+\fi
+. Normally, the
 structure is used for the standard Kalman filter (notation and the
 formulas below are borrowed from the excellent Kalman tutorial
 \cite{Welch95})
@@ -391,9 +392,7 @@ Allocates the Kalman filter structure.
 CvKalman* cvCreateKalman( \par int dynam\_params,\par int measure\_params,\par int control\_params=0 );
 }
 
-\cvdefPy{
-CreateKalman(dynam\_params, measure\_params, control\_params=0) -> CvKalman
-}
+\cvdefPy{CreateKalman(dynam\_params, measure\_params, control\_params=0) -> CvKalman}
 
 \begin{description}
 \cvarg{dynam\_params}{dimensionality of the state vector}
@@ -407,12 +406,8 @@ The function allocates \cvCPyCross{CvKalman} and all its matrices and initialize
 \cvCPyFunc{KalmanCorrect}
 Adjusts the model state.
 
-\cvdefC{
-const CvMat* cvKalmanCorrect( CvKalman* kalman, const CvMat* measurement );
-}
-\cvdefPy{
-KalmanCorrect(kalman, measurement) -> cvmat
-}
+\cvdefC{const CvMat* cvKalmanCorrect( CvKalman* kalman, const CvMat* measurement );}
+\cvdefPy{KalmanCorrect(kalman, measurement) -> cvmat}
 
 \begin{description}
 \ifC
@@ -561,12 +556,8 @@ int main(int argc, char** argv)
 \cvCPyFunc{KalmanPredict}
 Estimates the subsequent model state.
 
-\cvdefC{
-const CvMat* cvKalmanPredict( \par CvKalman* kalman, \par const CvMat* control=NULL );
-}
-\cvdefPy{
-KalmanPredict(kalman, control=None) -> cvmat
-}
+\cvdefC{const CvMat* cvKalmanPredict( \par CvKalman* kalman, \par const CvMat* control=NULL);}
+\cvdefPy{KalmanPredict(kalman, control=None) -> cvmat}
 
 \begin{description}
 \ifC

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-LANGUAGES="c cpp py"
+LANGUAGES="${LANGUAGES:=c cpp py}"
 
 mkdir -p $LANGUAGES
 tput clear
