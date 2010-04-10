@@ -169,7 +169,7 @@ public:
         assert(!image ?
                 1 : image->roi ?
                 y<image->roi->height : y<image->height);
-        
+
         return !image ? 0 :
             !image->roi ?
                 (uchar*)(image->imageData + y*image->widthStep) :
@@ -182,7 +182,7 @@ public:
         assert(0<=y);
         assert(!image ?
                 1 : image->roi ?
-                y<image->roi->height : y<image->height); 
+                y<image->roi->height : y<image->height);
 
         return !image ? 0 :
             !image->roi ?
@@ -653,12 +653,12 @@ namespace cv
 
 class CV_EXPORTS Octree
 {
-public:    
+public:
     struct Node
     {
         Node() {}
         int begin, end;
-        float x_min, x_max, y_min, y_max, z_min, z_max;		
+        float x_min, x_max, y_min, y_max, z_min, z_max;
         int maxLevels;
         bool isLeaf;
         int children[8];
@@ -676,7 +676,7 @@ private:
     int minPoints;
     vector<Point3f> points;
     vector<Node> nodes;
-	
+
 	virtual void buildNext(size_t node_ind);
 };
 
@@ -692,15 +692,15 @@ public:
 
     void buildOctree();
     void clearOctree();
-    float estimateResolution(float tryRatio = 0.1f);        
+    float estimateResolution(float tryRatio = 0.1f);
     void computeNormals(float normalRadius, int minNeighbors = 20);
     void computeNormals(const vector<int>& subset, float normalRadius, int minNeighbors = 20);
-    
+
     void writeAsVrml(const String& file, const vector<Scalar>& colors = vector<Scalar>()) const;
-    
+
     vector<Point3f> vtx;
     vector<Point3f> normals;
-    float resolution;    
+    float resolution;
     Octree octree;
 
     const static Point3f allzero;
@@ -709,7 +709,7 @@ public:
 class CV_EXPORTS SpinImageModel
 {
 public:
-    
+
     /* model parameters, leave unset for default or auto estimate */
     float normalRadius;
     int minNeighbors;
@@ -717,7 +717,7 @@ public:
     float binSize;
     int imageWidth;
 
-    float lambda;                        
+    float lambda;
     float gamma;
 
     float T_GeometriccConsistency;
@@ -729,14 +729,14 @@ public:
     ~SpinImageModel();
 
     void setLogger(std::ostream* log);
-    void selectRandomSubset(float ratio);         
-    void setSubset(const vector<int>& subset);         
+    void selectRandomSubset(float ratio);
+    void setSubset(const vector<int>& subset);
     void compute();
 
-    void match(const SpinImageModel& scene, vector< vector<Vec2i> >& result);    
+    void match(const SpinImageModel& scene, vector< vector<Vec2i> >& result);
 
     Mat packRandomScaledSpins(bool separateScale = false, size_t xCount = 10, size_t yCount = 10) const;
-    
+
     size_t getSpinCount() const { return spinImages.rows; }
     Mat getSpinImage(size_t index) const { return spinImages.row(index); }
     const Point3f& getSpinVertex(size_t index) const { return mesh.vtx[subset[index]]; }
@@ -751,23 +751,23 @@ public:
     static Point2f calcSpinMapCoo(const Point3f& point, const Point3f& vertex, const Point3f& normal);
 
     static float geometricConsistency(const Point3f& pointScene1, const Point3f& normalScene1,
-                                      const Point3f& pointModel1, const Point3f& normalModel1,   
-                                      const Point3f& pointScene2, const Point3f& normalScene2,                               
+                                      const Point3f& pointModel1, const Point3f& normalModel1,
+                                      const Point3f& pointScene2, const Point3f& normalScene2,
                                       const Point3f& pointModel2, const Point3f& normalModel2);
 
     static float groupingCreteria(const Point3f& pointScene1, const Point3f& normalScene1,
                                   const Point3f& pointModel1, const Point3f& normalModel1,
-                                  const Point3f& pointScene2, const Point3f& normalScene2,                               
-                                  const Point3f& pointModel2, const Point3f& normalModel2, 
+                                  const Point3f& pointScene2, const Point3f& normalScene2,
+                                  const Point3f& pointModel2, const Point3f& normalModel2,
                                   float gamma);
-protected:       
+protected:
     void defaultParams();
 
-    void matchSpinToModel(const Mat& spin, vector<int>& indeces, 
-        vector<float>& corrCoeffs, bool useExtremeOutliers = true) const; 
+    void matchSpinToModel(const Mat& spin, vector<int>& indeces,
+        vector<float>& corrCoeffs, bool useExtremeOutliers = true) const;
 
     void repackSpinImages(const vector<uchar>& mask, Mat& spinImages, bool reAlloc = true) const;
-             
+
     vector<int> subset;
     Mesh3D mesh;
     Mat spinImages;
@@ -778,7 +778,7 @@ class CV_EXPORTS TickMeter
 {
 public:
     TickMeter();
-    void start();    
+    void start();
     void stop();
 
     int64 getTimeTicks() const;
@@ -897,7 +897,7 @@ public:
         DEFAULT_NUM_DISTANCE_BUCKETS = 7 };
 };
 
-    
+
 class CV_EXPORTS PatchGenerator
 {
 public:
@@ -914,7 +914,8 @@ public:
                         Mat& warped, int border, RNG& rng) const;
     void generateRandomTransform(Point2f srcCenter, Point2f dstCenter,
                                  Mat& transform, RNG& rng, bool inverse=false) const;
-	void setAffineParam(double lambda, double theta, double phi);
+	 void setAffineParam(double lambda, double theta, double phi);
+
     double backgroundMin, backgroundMax;
     double noiseRange;
     bool randomBlur;
@@ -923,10 +924,10 @@ public:
     double phiMin, phiMax;
 };
 
-    
+
 class CV_EXPORTS LDetector
 {
-public:    
+public:
     LDetector();
     LDetector(int _radius, int _threshold, int _nOctaves,
               int _nViews, double _baseFeatureSize, double _clusteringDistance);
@@ -935,16 +936,16 @@ public:
     void getMostStable2D(const Mat& image, vector<KeyPoint>& keypoints,
                          int maxCount, const PatchGenerator& patchGenerator) const;
     void setVerbose(bool verbose);
-    
+
     void read(const FileNode& node);
     void write(FileStorage& fs, const String& name=String()) const;
-    
+
     int radius;
     int threshold;
     int nOctaves;
     int nViews;
     bool verbose;
-    
+
     double baseFeatureSize;
     double clusteringDistance;
 };
@@ -992,14 +993,14 @@ public:
     virtual int operator()(const Mat& patch, vector<float>& signature) const;
     virtual void clear();
     void setVerbose(bool verbose);
-    
+
     int getClassCount() const;
     int getStructCount() const;
     int getStructSize() const;
     int getSignatureSize() const;
     int getCompressionMethod() const;
-    Size getPatchSize() const;    
-    
+    Size getPatchSize() const;
+
     struct Feature
     {
         uchar x1, y1, x2, y2;
@@ -1010,7 +1011,7 @@ public:
         template<typename _Tp> bool operator ()(const Mat_<_Tp>& patch) const
         { return patch(y1,x1) > patch(y2, x2); }
     };
-    
+
     enum
     {
         PATCH_SIZE = 31,
@@ -1023,14 +1024,14 @@ public:
         COMPRESSION_PCA = 2,
         DEFAULT_COMPRESSION_METHOD = COMPRESSION_NONE
     };
-    
+
 protected:
     virtual void prepare(int _nclasses, int _patchSize, int _signatureSize,
                          int _nstructs, int _structSize,
                          int _nviews, int _compressionMethod);
     virtual void finalize(RNG& rng);
     virtual int getLeaf(int fidx, const Mat& patch) const;
-    
+
     bool verbose;
     int nstructs;
     int structSize;
@@ -1055,7 +1056,7 @@ public:
                          int _structSize=FernClassifier::DEFAULT_STRUCT_SIZE,
                          int _nviews=FernClassifier::DEFAULT_VIEWS,
                          const LDetector& detector=LDetector(),
-                         const PatchGenerator& patchGenerator=PatchGenerator()); 
+                         const PatchGenerator& patchGenerator=PatchGenerator());
     virtual ~PlanarObjectDetector();
     virtual void train(const vector<Mat>& pyr, int _npoints=300,
                        int _patchSize=FernClassifier::PATCH_SIZE,
@@ -1076,13 +1077,13 @@ public:
     const LDetector& getDetector() const;
     const FernClassifier& getClassifier() const;
     void setVerbose(bool verbose);
-    
+
     void read(const FileNode& node);
     void write(FileStorage& fs, const String& name=String()) const;
     bool operator()(const Mat& image, Mat& H, vector<Point2f>& corners) const;
     bool operator()(const vector<Mat>& pyr, const vector<KeyPoint>& keypoints,
                     Mat& H, vector<Point2f>& corners, vector<int>* pairs=0) const;
-    
+
 protected:
     bool verbose;
     Rect modelROI;
@@ -1111,9 +1112,9 @@ public:
             Mat& visibility, // visibility matrix. rows correspond to points, columns correspond to cameras
                              // 1 - point is visible for the camera, 0 - invisible
             Mat& P0, // starting vector of parameters, first cameras then points
-            Mat& X, // measurements, in order of visibility. non visible cases are skipped 
+            Mat& X, // measurements, in order of visibility. non visible cases are skipped
             TermCriteria criteria, // termination criteria
-            
+
             // callback for estimation of Jacobian matrices
             void (CV_CDECL * fjac)(int i, int j, Mat& point_params,
                                    Mat& cam_params, Mat& A, Mat& B, void* data),
@@ -1123,7 +1124,7 @@ public:
             void* data // user-specific data passed to the callbacks
             );
     virtual ~LevMarqSparse();
-    
+
     virtual void run( int npoints, // number of points
             int ncameras, // number of cameras
             int nPointParams, // number of params per one point  (3 in case of 3D points)
@@ -1133,9 +1134,9 @@ public:
             Mat& visibility, // visibility matrix. rows correspond to points, columns correspond to cameras
                              // 1 - point is visible for the camera, 0 - invisible
             Mat& P0, // starting vector of parameters, first cameras then points
-            Mat& X, // measurements, in order of visibility. non visible cases are skipped 
+            Mat& X, // measurements, in order of visibility. non visible cases are skipped
             TermCriteria criteria, // termination criteria
-            
+
             // callback for estimation of Jacobian matrices
             void (CV_CDECL * fjac)(int i, int j, Mat& point_params,
                                    Mat& cam_params, Mat& A, Mat& B, void* data),
@@ -1146,69 +1147,69 @@ public:
             );
 
     virtual void clear();
-    
+
     // useful function to do simple bundle adjastment tasks
     static void bundleAdjust(vector<Point3d>& points, //positions of points in global coordinate system (input and output)
-                             const vector<vector<Point2d> >& imagePoints, //projections of 3d points for every camera 
-                             const vector<vector<int> >& visibility, //visibility of 3d points for every camera 
+                             const vector<vector<Point2d> >& imagePoints, //projections of 3d points for every camera
+                             const vector<vector<int> >& visibility, //visibility of 3d points for every camera
                              vector<Mat>& cameraMatrix, //intrinsic matrices of all cameras (input and output)
                              vector<Mat>& R, //rotation matrices of all cameras (input and output)
                              vector<Mat>& T, //translation vector of all cameras (input and output)
                              vector<Mat>& distCoeffs, //distortion coefficients of all cameras (input and output)
                              const TermCriteria& criteria=
                              TermCriteria(TermCriteria::COUNT+TermCriteria::EPS, 30, DBL_EPSILON));
-    
+
 protected:
     virtual void optimize(); //main function that runs minimization
-    
+
     //iteratively asks for measurement for visible camera-point pairs
-    void ask_for_proj();                                        
+    void ask_for_proj();
     //iteratively asks for Jacobians for every camera_point pair
-    void ask_for_projac();    
-        
+    void ask_for_projac();
+
     CvMat* err; //error X-hX
     double prevErrNorm, errNorm;
     double lambda;
     CvTermCriteria criteria;
     int iters;
-    
+
     CvMat** U; //size of array is equal to number of cameras
     CvMat** V; //size of array is equal to number of points
     CvMat** inv_V_star; //inverse of V*
 
     CvMat* A;
     CvMat* B;
-    CvMat* W; 
+    CvMat* W;
 
-    CvMat* X; //measurement 
-    CvMat* hX; //current measurement extimation given new parameter vector 
-    
-    CvMat* prevP; //current already accepted parameter. 
+    CvMat* X; //measurement
+    CvMat* hX; //current measurement extimation given new parameter vector
+
+    CvMat* prevP; //current already accepted parameter.
     CvMat* P; // parameters used to evaluate function with new params
-              // this parameters may be rejected 
-    
+              // this parameters may be rejected
+
     CvMat* deltaP; //computed increase of parameters (result of normal system solution )
 
     CvMat** ea; // sum_i  AijT * e_ij , used as right part of normal equation
-                // length of array is j = number of cameras  
+                // length of array is j = number of cameras
     CvMat** eb; // sum_j  BijT * e_ij , used as right part of normal equation
                 // length of array is i = number of points
 
     CvMat** Yj; //length of array is i = num_points
 
-    CvMat* S; //big matrix of block Sjk  , each block has size num_cam_params x num_cam_params 
+    CvMat* S; //big matrix of block Sjk  , each block has size num_cam_params x num_cam_params
 
     CvMat* JtJ_diag; //diagonal of JtJ,  used to backup diagonal elements before augmentation
 
     CvMat* Vis_index; // matrix which element is index of measurement for point i and camera j
-               
+
     int num_cams;
     int num_points;
     int num_err_param;
     int num_cam_param;
     int num_point_param;
 
-    //target function and jacobian pointers, which needs to be initialized 
+    //target function and jacobian pointers, which needs to be initialized
     void (*fjac)(int i, int j, Mat& point_params, Mat& cam_params, Mat& A, Mat& B, void* data);
     void (*func)(int i, int j, Mat& point_params, Mat& cam_params, Mat& estim, void* data );
 
@@ -1221,7 +1222,7 @@ struct DefaultRngAuto
     const uint64 old_state;
 
     DefaultRngAuto() : old_state(theRNG().state) { theRNG().state = def_state; }
-    ~DefaultRngAuto() { theRNG().state = old_state; }   
+    ~DefaultRngAuto() { theRNG().state = old_state; }
 
     DefaultRngAuto& operator=(const DefaultRngAuto&);
 };
@@ -1241,7 +1242,7 @@ struct DefaultRngAuto
 	//class RTTester;
 
 	//namespace features {
-	static const size_t DEFAULT_REDUCED_NUM_DIM = 176;  
+	static const size_t DEFAULT_REDUCED_NUM_DIM = 176;
 	static const float LOWER_QUANT_PERC = .03f;
 	static const float UPPER_QUANT_PERC = .92f;
 	static const int PATCH_SIZE = 32;
@@ -1268,33 +1269,68 @@ struct DefaultRngAuto
 	public:
 		typedef enum { PDT_GAUSS=1, PDT_BERNOULLI, PDT_DBFRIENDLY } PHI_DISTR_TYPE;
 		~CSMatrixGenerator();
-		static float* getCSMatrix(int m, int n, PHI_DISTR_TYPE dt);     // do NOT free returned pointer   
-
+		static float* getCSMatrix(int m, int n, PHI_DISTR_TYPE dt);     // do NOT free returned pointer
 
 	private:
 		static float *cs_phi_;    // matrix for compressive sensing
 		static int cs_phi_m_, cs_phi_n_;
 	};
 
-	class CV_EXPORTS RandomizedTree
-	{  
-	public:
-		friend class RTreeClassifier;  
-		//friend class ::RTTester;
 
+   template< typename T >
+   struct AlignedMemBlock
+   {
+      AlignedMemBlock() : raw(NULL), data(NULL) { };
+
+      // Alloc's an `a` bytes-aligned block good to hold `sz` elements of class T
+      AlignedMemBlock(const int n, const int a)
+      {
+         alloc(n, a);
+      }
+
+      ~AlignedMemBlock()
+      {
+         free(raw);
+      }
+
+      void alloc(const int n, const int a)
+      {
+         uchar* raw = (uchar*)malloc(n*sizeof(T) + a);
+         int delta = (a - uint64_t(raw)%a)%a;          // # bytes required for padding s.t. we get `a`-aligned
+         data = reinterpret_cast<T*>(raw + delta);
+      }
+
+      // Methods to access the aligned data. NEVER EVER FREE A RETURNED POINTER!
+      inline T* p() { return data; }
+      inline T* operator()() { return data; }
+
+   private:
+      T *raw;     // raw block, probably not aligned
+      T *data;    // exposed data, aligned, DO NOT FREE
+   };
+
+   typedef AlignedMemBlock<float> FloatSignature;
+   typedef AlignedMemBlock<uchar> Signature;
+
+	class CV_EXPORTS RandomizedTree
+	{
+	public:
+		friend class RTreeClassifier;
+		//friend class ::RTTester;
 
 		RandomizedTree();
 		~RandomizedTree();
 
 		void train(std::vector<BaseKeypoint> const& base_set, cv::RNG &rng,
 			int depth, int views, size_t reduced_num_dim, int num_quant_bits);
-		void train(std::vector<BaseKeypoint> const& base_set, cv::RNG &rng,
+
+      void train(std::vector<BaseKeypoint> const& base_set, cv::RNG &rng,
 			PatchGenerator &make_patch, int depth, int views, size_t reduced_num_dim,
 			int num_quant_bits);
 
 		// following two funcs are EXPERIMENTAL (do not use unless you know exactly what you do)
 		static void quantizeVector(float *vec, int dim, int N, float bnds[2], int clamp_mode=0);
-		static void quantizeVector(float *src, int dim, int N, float bnds[2], uchar *dst);  
+		static void quantizeVector(float *src, int dim, int N, float bnds[2], uchar *dst);
 
 		// patch_data must be a 32x32 array (no row padding)
 		float* getPosterior(uchar* patch_data);
@@ -1306,11 +1342,8 @@ struct DefaultRngAuto
 		void write(const char* file_name) const;
 		void write(std::ostream &os) const;
 
-		int classes() { return classes_; }
-		int depth() { return depth_; }
-
-		//void setKeepFloatPosteriors(bool b) { keep_float_posteriors_ = b; }
-		void discardFloatPosteriors() { freePosteriors(1); }
+		inline int classes() { return classes_; }
+		inline int depth() { return depth_; }
 
 		inline void applyQuantization(int num_quant_bits) { makePosteriors2(num_quant_bits); }
 
@@ -1321,26 +1354,28 @@ struct DefaultRngAuto
 	private:
 		int classes_;
 		int depth_;
-		int num_leaves_;  
-		std::vector<RTreeNode> nodes_;  
-		float **posteriors_;        // 16-bytes aligned posteriors
-		uchar **posteriors2_;     // 16-bytes aligned posteriors
-		std::vector<int> leaf_counts_;
+		int num_leaves_;
+		std::vector<RTreeNode> nodes_;
+		//float **posteriors_;       // 16-bytes aligned posteriors
+		//uchar **posteriors2_;      // 16-bytes aligned posteriors
+      FloatSignature *posteriors_;
+      Signature  *posteriors2_;
+      std::vector<int> leaf_counts_;
 
 		void createNodes(int num_nodes, cv::RNG &rng);
 		void allocPosteriorsAligned(int num_leaves, int num_classes);
 		void freePosteriors(int which);    // which: 1=posteriors_, 2=posteriors2_, 3=both
 		void init(int classes, int depth, cv::RNG &rng);
 		void addExample(int class_id, uchar* patch_data);
-		void finalize(size_t reduced_num_dim, int num_quant_bits);  
+		void finalize(size_t reduced_num_dim, int num_quant_bits);
 		int getIndex(uchar* patch_data) const;
 		inline float* getPosteriorByIndex(int index);
 		inline uchar* getPosteriorByIndex2(int index);
 		inline const float* getPosteriorByIndex(int index) const;
-		//void makeRandomMeasMatrix(float *cs_phi, PHI_DISTR_TYPE dt, size_t reduced_num_dim);  
+		//void makeRandomMeasMatrix(float *cs_phi, PHI_DISTR_TYPE dt, size_t reduced_num_dim);
 		void convertPosteriorsToChar();
 		void makePosteriors2(int num_quant_bits);
-		void compressLeaves(size_t reduced_num_dim);  
+		void compressLeaves(size_t reduced_num_dim);
 		void estimateQuantPercForPosteriors(float perc[2]);
 	};
 
@@ -1372,30 +1407,35 @@ struct DefaultRngAuto
 	//namespace features {
 
 	class CV_EXPORTS RTreeClassifier
-	{   
+	{
 	public:
 		//friend class ::RTTester;
-		static const int DEFAULT_TREES = 48;
-		static const size_t DEFAULT_NUM_QUANT_BITS = 4;  
+		static const int DEFAULT_TREES = 80;
+		static const size_t DEFAULT_NUM_QUANT_BITS = 4;
 
-		RTreeClassifier();
+      //static const int SIG_LEN = 176;
+
+      RTreeClassifier();
 
 		//modified
-		void train(std::vector<BaseKeypoint> const& base_set, 
+		void train(std::vector<BaseKeypoint> const& base_set,
 			cv::RNG &rng,
 			int num_trees = RTreeClassifier::DEFAULT_TREES,
 			int depth = DEFAULT_DEPTH,
 			int views = DEFAULT_VIEWS,
 			size_t reduced_num_dim = DEFAULT_REDUCED_NUM_DIM,
-			int num_quant_bits = DEFAULT_NUM_QUANT_BITS, bool print_status = true);
-		void train(std::vector<BaseKeypoint> const& base_set,
-			cv::RNG &rng, 
+			int num_quant_bits = DEFAULT_NUM_QUANT_BITS,
+         bool print_status = true);
+
+      void train(std::vector<BaseKeypoint> const& base_set,
+			cv::RNG &rng,
 			PatchGenerator &make_patch,
-			int num_trees = RTreeClassifier::DEFAULT_TREES,
+			int num_trees = DEFAULT_TREES,
 			int depth = DEFAULT_DEPTH,
 			int views = DEFAULT_VIEWS,
 			size_t reduced_num_dim = DEFAULT_REDUCED_NUM_DIM,
-			int num_quant_bits = DEFAULT_NUM_QUANT_BITS, bool print_status = true);
+			int num_quant_bits = DEFAULT_NUM_QUANT_BITS,
+         bool print_status = true);
 
 		// sig must point to a memory block of at least classes()*sizeof(float|uchar) bytes
 		void getSignature(IplImage *patch, uchar *sig);
@@ -1406,7 +1446,7 @@ struct DefaultRngAuto
 
 		static int countNonZeroElements(float *vec, int n, double tol=1e-10);
 		static inline void safeSignatureAlloc(uchar **sig, int num_sig=1, int sig_len=176);
-		static inline uchar* safeSignatureAlloc(int num_sig=1, int sig_len=176);  
+		static inline uchar* safeSignatureAlloc(int num_sig=1, int sig_len=176);
 
 		inline int classes() { return classes_; }
 		inline int original_num_classes() { return original_num_classes_; }
@@ -1427,26 +1467,26 @@ struct DefaultRngAuto
 
 		std::vector<RandomizedTree> trees_;
 
-	private:    
+	private:
 		int classes_;
 		int num_quant_bits_;
 		uchar **posteriors_;
 		ushort *ptemp_;
-		int original_num_classes_;  
+		int original_num_classes_;
 		bool keep_floats_;
 	};
-    
+
 CV_EXPORTS bool find4QuadCornerSubpix(const Mat& img, std::vector<Point2f>& corners, Size region_size);
 
-    
+
 class CV_EXPORTS BackgroundSubtractor
 {
 public:
     virtual ~BackgroundSubtractor();
     virtual void operator()(const Mat& image, Mat& fgmask, double learningRate=0);
 };
-    
-    
+
+
 class CV_EXPORTS BackgroundSubtractorMOG : public BackgroundSubtractor
 {
 public:
@@ -1454,9 +1494,9 @@ public:
     BackgroundSubtractorMOG(int history, int nmixtures, double backgroundRatio, double noiseSigma=0);
     virtual ~BackgroundSubtractorMOG();
     virtual void operator()(const Mat& image, Mat& fgmask, double learningRate=0);
-    
+
     virtual void initialize(Size frameSize, int frameType);
-    
+
     Size frameSize;
     int frameType;
     Mat bgmodel;
@@ -1467,7 +1507,7 @@ public:
     double backgroundRatio;
     double noiseSigma;
 };
- 
+
 
 // CvAffinePose: defines a parameterized affine transformation of an image patch.
 // An image patch is rotated on angle phi (in degrees), then scaled lambda1 times
@@ -1488,17 +1528,17 @@ class CV_EXPORTS OneWayDescriptor
 public:
     OneWayDescriptor();
     ~OneWayDescriptor();
-    
+
     // allocates memory for given descriptor parameters
     void Allocate(int pose_count, CvSize size, int nChannels);
-    
+
     // GenerateSamples: generates affine transformed patches with averaging them over small transformation variations.
     // If external poses and transforms were specified, uses them instead of generating random ones
     // - pose_count: the number of poses to be generated
     // - frontal: the input patch (can be a roi in a larger image)
     // - norm: if nonzero, normalizes the output patch so that the sum of pixel intensities is 1
     void GenerateSamples(int pose_count, IplImage* frontal, int norm = 0);
-    
+
     // GenerateSamplesFast: generates affine transformed patches with averaging them over small transformation variations.
     // Uses precalculated transformed pca components.
     // - frontal: the input patch (can be a roi in a larger image)
@@ -1508,17 +1548,17 @@ public:
     //   pca_descriptors[0] corresponds to the average, pca_descriptors[1]-pca_descriptors[pca_dim] correspond to eigenvectors
     void GenerateSamplesFast(IplImage* frontal, CvMat* pca_hr_avg,
                              CvMat* pca_hr_eigenvectors, OneWayDescriptor* pca_descriptors);
-    
+
     // sets the poses and corresponding transforms
     void SetTransforms(CvAffinePose* poses, CvMat** transforms);
-    
+
     // Initialize: builds a descriptor.
     // - pose_count: the number of poses to build. If poses were set externally, uses them rather than generating random ones
     // - frontal: input patch. Can be a roi in a larger image
     // - feature_name: the feature name to be associated with the descriptor
     // - norm: if 1, the affine transformed patches are normalized so that their sum is 1
     void Initialize(int pose_count, IplImage* frontal, const char* feature_name = 0, int norm = 0);
-    
+
     // InitializeFast: builds a descriptor using precomputed descriptors of pca components
     // - pose_count: the number of poses to build
     // - frontal: input patch. Can be a roi in a larger image
@@ -1529,25 +1569,25 @@ public:
     // followed by the descriptors for eigenvectors
     void InitializeFast(int pose_count, IplImage* frontal, const char* feature_name,
                         CvMat* pca_hr_avg, CvMat* pca_hr_eigenvectors, OneWayDescriptor* pca_descriptors);
-    
+
     // ProjectPCASample: unwarps an image patch into a vector and projects it into PCA space
     // - patch: input image patch
     // - avg: PCA average vector
     // - eigenvectors: PCA eigenvectors, one per row
     // - pca_coeffs: output PCA coefficients
     void ProjectPCASample(IplImage* patch, CvMat* avg, CvMat* eigenvectors, CvMat* pca_coeffs) const;
-    
+
     // InitializePCACoeffs: projects all warped patches into PCA space
     // - avg: PCA average vector
     // - eigenvectors: PCA eigenvectors, one per row
     void InitializePCACoeffs(CvMat* avg, CvMat* eigenvectors);
-    
+
     // EstimatePose: finds the closest match between an input patch and a set of patches with different poses
     // - patch: input image patch
     // - pose_idx: the output index of the closest pose
     // - distance: the distance to the closest pose (L2 distance)
     void EstimatePose(IplImage* patch, int& pose_idx, float& distance) const;
-    
+
     // EstimatePosePCA: finds the closest match between an input patch and a set of patches with different poses.
     // The distance between patches is computed in PCA space
     // - patch: input image patch
@@ -1556,59 +1596,59 @@ public:
     // - avg: PCA average vector. If 0, matching without PCA is used
     // - eigenvectors: PCA eigenvectors, one per row
     void EstimatePosePCA(CvArr* patch, int& pose_idx, float& distance, CvMat* avg, CvMat* eigenvalues) const;
-    
+
     // GetPatchSize: returns the size of each image patch after warping (2 times smaller than the input patch)
     CvSize GetPatchSize() const
     {
         return m_patch_size;
     }
-    
+
     // GetInputPatchSize: returns the required size of the patch that the descriptor is built from
     // (2 time larger than the patch after warping)
     CvSize GetInputPatchSize() const
     {
         return cvSize(m_patch_size.width*2, m_patch_size.height*2);
     }
-    
+
     // GetPatch: returns a patch corresponding to specified pose index
     // - index: pose index
     // - return value: the patch corresponding to specified pose index
     IplImage* GetPatch(int index);
-    
+
     // GetPose: returns a pose corresponding to specified pose index
     // - index: pose index
     // - return value: the pose corresponding to specified pose index
     CvAffinePose GetPose(int index) const;
-    
+
     // Save: saves all patches with different poses to a specified path
     void Save(const char* path);
-    
+
     // ReadByName: reads a descriptor from a file storage
     // - fs: file storage
     // - parent: parent node
     // - name: node name
     // - return value: 1 if succeeded, 0 otherwise
     int ReadByName(CvFileStorage* fs, CvFileNode* parent, const char* name);
-    
+
     // Write: writes a descriptor into a file storage
     // - fs: file storage
     // - name: node name
     void Write(CvFileStorage* fs, const char* name);
-    
+
     // GetFeatureName: returns a name corresponding to a feature
     const char* GetFeatureName() const;
-    
+
     // GetCenter: returns the center of the feature
     CvPoint GetCenter() const;
-    
+
     void SetPCADimHigh(int pca_dim_high) {m_pca_dim_high = pca_dim_high;};
     void SetPCADimLow(int pca_dim_low) {m_pca_dim_low = pca_dim_low;};
-    
+
     int GetPCADimLow() const;
     int GetPCADimHigh() const;
-    
+
     CvMat** GetPCACoeffs() const {return m_pca_coeffs;}
-    
+
 protected:
     int m_pose_count; // the number of poses
     CvSize m_patch_size; // size of each image
@@ -1618,10 +1658,10 @@ protected:
     CvMat** m_pca_coeffs; // an array of length m_pose_count containing pca decomposition of the patch in different poses
     CvAffinePose* m_affine_poses; // an array of poses
     CvMat** m_transforms; // an array of affine transforms corresponding to poses
-    
+
     std::string m_feature_name; // the name of the feature associated with the descriptor
     CvPoint m_center; // the coordinates of the feature (the center of the input image ROI)
-    
+
     int m_pca_dim_high; // the number of descriptor pca components to use for generating affine poses
     int m_pca_dim_low; // the number of pca components to use for comparison
 };
@@ -1632,7 +1672,7 @@ protected:
 class CV_EXPORTS OneWayDescriptorBase
 {
 public:
-    
+
     // creates an instance of OneWayDescriptor from a set of training files
     // - patch_size: size of the input (large) patch
     // - pose_count: the number of poses to generate for each descriptor
@@ -1644,38 +1684,38 @@ public:
     OneWayDescriptorBase(CvSize patch_size, int pose_count, const char* train_path = 0, const char* pca_config = 0,
                          const char* pca_hr_config = 0, const char* pca_desc_config = 0, int pyr_levels = 1,
                          int pca_dim_high = 100, int pca_dim_low = 100);
-    
+
     ~OneWayDescriptorBase();
-    
+
     // Allocate: allocates memory for a given number of descriptors
     void Allocate(int train_feature_count);
-    
+
     // AllocatePCADescriptors: allocates memory for pca descriptors
     void AllocatePCADescriptors();
-    
+
     // returns patch size
     CvSize GetPatchSize() const {return m_patch_size;};
     // returns the number of poses for each descriptor
     int GetPoseCount() const {return m_pose_count;};
-    
+
     // returns the number of pyramid levels
     int GetPyrLevels() const {return m_pyr_levels;};
-    
+
     // returns the number of descriptors
     int GetDescriptorCount() const {return m_train_feature_count;};
-    
+
     // CreateDescriptorsFromImage: creates descriptors for each of the input features
     // - src: input image
     // - features: input features
     // - pyr_levels: the number of pyramid levels
     void CreateDescriptorsFromImage(IplImage* src, const std::vector<cv::KeyPoint>& features);
-    
+
     // CreatePCADescriptors: generates descriptors for PCA components, needed for fast generation of feature descriptors
     void CreatePCADescriptors();
-    
+
     // returns a feature descriptor by feature index
     const OneWayDescriptor* GetDescriptor(int desc_idx) const {return &m_descriptors[desc_idx];};
-    
+
     // FindDescriptor: finds the closest descriptor
     // - patch: input image patch
     // - desc_idx: output index of the closest descriptor to the input patch
@@ -1684,7 +1724,7 @@ public:
     // - _scales: scales of the input patch for each descriptor
     // - scale_ranges: input scales variation (float[2])
     void FindDescriptor(IplImage* patch, int& desc_idx, int& pose_idx, float& distance, float* _scale = 0, float* scale_ranges = 0) const;
-    
+
     // - patch: input image patch
     // - n: number of the closest indexes
     // - desc_idxs: output indexes of the closest descriptor to the input patch (n)
@@ -1694,7 +1734,7 @@ public:
     // - scale_ranges: input scales variation (float[2])
     void FindDescriptor(IplImage* patch, int n, std::vector<int>& desc_idxs, std::vector<int>& pose_idxs,
                         std::vector<float>& distances, std::vector<float>& _scales, float* scale_ranges = 0) const;
-    
+
     // FindDescriptor: finds the closest descriptor
     // - src: input image
     // - pt: center of the feature
@@ -1702,55 +1742,55 @@ public:
     // - pose_idx: output index of the closest pose of the closest descriptor to the input patch
     // - distance: distance from the input patch to the closest feature pose
     void FindDescriptor(IplImage* src, cv::Point2f pt, int& desc_idx, int& pose_idx, float& distance) const;
-    
+
     // InitializePoses: generates random poses
     void InitializePoses();
-    
+
     // InitializeTransformsFromPoses: generates 2x3 affine matrices from poses (initializes m_transforms)
     void InitializeTransformsFromPoses();
-    
+
     // InitializePoseTransforms: subsequently calls InitializePoses and InitializeTransformsFromPoses
     void InitializePoseTransforms();
-    
+
     // InitializeDescriptor: initializes a descriptor
     // - desc_idx: descriptor index
     // - train_image: image patch (ROI is supported)
     // - feature_label: feature textual label
     void InitializeDescriptor(int desc_idx, IplImage* train_image, const char* feature_label);
-    
+
     void InitializeDescriptor(int desc_idx, IplImage* train_image, const cv::KeyPoint& keypoint, const char* feature_label);
-    
+
     // InitializeDescriptors: load features from an image and create descriptors for each of them
     void InitializeDescriptors(IplImage* train_image, const vector<cv::KeyPoint>& features,
                                const char* feature_label = "", int desc_start_idx = 0);
-    
+
     // LoadPCADescriptors: loads PCA descriptors from a file
     // - filename: input filename
     int LoadPCADescriptors(const char* filename);
-    
+
     // SavePCADescriptors: saves PCA descriptors to a file
     // - filename: output filename
     void SavePCADescriptors(const char* filename);
-    
+
     // SetPCAHigh: sets the high resolution pca matrices (copied to internal structures)
     void SetPCAHigh(CvMat* avg, CvMat* eigenvectors);
-    
+
     // SetPCALow: sets the low resolution pca matrices (copied to internal structures)
     void SetPCALow(CvMat* avg, CvMat* eigenvectors);
-    
+
     int GetLowPCA(CvMat** avg, CvMat** eigenvectors)
     {
         *avg = m_pca_avg;
         *eigenvectors = m_pca_eigenvectors;
         return m_pca_dim_low;
     };
-    
+
     int GetPCADimLow() const {return m_pca_dim_low;};
     int GetPCADimHigh() const {return m_pca_dim_high;};
-    
+
     void ConvertDescriptorsArrayToTree(); // Converting pca_descriptors array to KD tree
-    
-    
+
+
 protected:
     CvSize m_patch_size; // patch size
     int m_pose_count; // the number of poses for each descriptor
@@ -1761,18 +1801,18 @@ protected:
     CvMat* m_pca_hr_avg; // PCA average Vector for large patches
     CvMat* m_pca_hr_eigenvectors; // PCA eigenvectors for large patches
     OneWayDescriptor* m_pca_descriptors; // an array of PCA descriptors
-    
+
     cv::flann::Index* m_pca_descriptors_tree;
     CvMat* m_pca_descriptors_matrix;
-    
+
     CvAffinePose* m_poses; // array of poses
     CvMat** m_transforms; // array of affine transformations corresponding to poses
-    
+
     int m_pca_dim_high;
     int m_pca_dim_low;
-    
+
     int m_pyr_levels;
-    
+
 };
 
 class OneWayDescriptorObject : public OneWayDescriptorBase
@@ -1788,45 +1828,44 @@ public:
     // - pca_desc_config: the name of the file that contains descriptors of PCA components
     OneWayDescriptorObject(CvSize patch_size, int pose_count, const char* train_path, const char* pca_config,
                            const char* pca_hr_config = 0, const char* pca_desc_config = 0, int pyr_levels = 1);
-    
+
     ~OneWayDescriptorObject();
-    
+
     // Allocate: allocates memory for a given number of features
     // - train_feature_count: the total number of features
     // - object_feature_count: the number of features extracted from the object
     void Allocate(int train_feature_count, int object_feature_count);
-    
-    
+
+
     void SetLabeledFeatures(const vector<cv::KeyPoint>& features) {m_train_features = features;};
     vector<cv::KeyPoint>& GetLabeledFeatures() {return m_train_features;};
     const vector<cv::KeyPoint>& GetLabeledFeatures() const {return m_train_features;};
     vector<cv::KeyPoint> _GetLabeledFeatures() const;
-    
+
     // IsDescriptorObject: returns 1 if descriptor with specified index is positive, otherwise 0
     int IsDescriptorObject(int desc_idx) const;
-    
+
     // MatchPointToPart: returns the part number of a feature if it matches one of the object parts, otherwise -1
     int MatchPointToPart(CvPoint pt) const;
-    
+
     // GetDescriptorPart: returns the part number of the feature corresponding to a specified descriptor
     // - desc_idx: descriptor index
     int GetDescriptorPart(int desc_idx) const;
-    
-    
+
+
     void InitializeObjectDescriptors(IplImage* train_image, const vector<cv::KeyPoint>& features,
                                      const char* feature_label, int desc_start_idx = 0, float scale = 1.0f,
                                      int is_background = 0);
-    
+
     // GetObjectFeatureCount: returns the number of object features
     int GetObjectFeatureCount() const {return m_object_feature_count;};
-    
+
 protected:
     int* m_part_id; // contains part id for each of object descriptors
     vector<cv::KeyPoint> m_train_features; // train features
     int m_object_feature_count; // the number of the positive features
-    
+
 };
-    
 
 /****************************************************************************************\
 *                             2D image feature detectors                                *
@@ -1979,7 +2018,6 @@ protected:
     }
 };
 */
-
 }
 
 #endif /* __cplusplus */
