@@ -42,7 +42,7 @@
 
 #include "cvtest.h"
 
-#if 1
+#if 0
 
 #include "highgui.h"
 #include <vector>
