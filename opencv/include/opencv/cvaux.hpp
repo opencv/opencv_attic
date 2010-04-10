@@ -914,6 +914,7 @@ public:
                         Mat& warped, int border, RNG& rng) const;
     void generateRandomTransform(Point2f srcCenter, Point2f dstCenter,
                                  Mat& transform, RNG& rng, bool inverse=false) const;
+	void setAffineParam(double lambda, double theta, double phi);
     double backgroundMin, backgroundMax;
     double noiseRange;
     bool randomBlur;
