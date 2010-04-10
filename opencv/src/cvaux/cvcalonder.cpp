@@ -41,8 +41,6 @@
 //M*/
 #include "_cvaux.h"
 
-#if 0
-
 #include <cxcore.h>
 #include <cvwimage.h>
 #include <vector>
@@ -1006,5 +1004,3 @@ printf("alloc posteriors aligned\n");
 
 	//} // namespace features
 }
-
-#endif
