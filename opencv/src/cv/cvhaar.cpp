@@ -1243,6 +1243,8 @@ cvHaarDetectObjects( const CvArr* _img,
     
     if( minNeighbors != 0 || findBiggestObject )
         groupRectangles(rectList, rweights, std::max(minNeighbors, 1), GROUP_EPS);
+    else
+        rweights.resize(rectList.size(),0);
         
     if( findBiggestObject && rectList.size() )
     {
