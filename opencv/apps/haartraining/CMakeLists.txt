@@ -1,7 +1,7 @@
 project(haartraining)
 
 IF(WIN32)
-link_directories(${CMAKE_SOURCE_DIR}/lib ${CMAKE_SOURCE_DIR}/bin .)
+link_directories(${CMAKE_SOURCE_DIR}/lib ${CMAKE_SOURCE_DIR}/bin ${CMAKE_CURRENT_BINARY_DIR})
 ENDIF(WIN32)
 link_libraries(cxcore cv cvhaartraining highgui)
 
