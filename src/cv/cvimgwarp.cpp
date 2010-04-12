@@ -1369,6 +1369,9 @@ void resize( const Mat& src, Mat& dst, Size dsize,
         resizeArea_<uchar>, 0, resizeArea_<ushort>, resizeArea_<short>, 0, resizeArea_<float>, 0, 0
     };
 
+    Size ssize = src.size();
+    
+    CV_Assert( ssize.area() > 0 );
     CV_Assert( !(dsize == Size()) || (inv_scale_x > 0 && inv_scale_y > 0) );
     if( dsize == Size() )
     {
@@ -1382,7 +1385,6 @@ void resize( const Mat& src, Mat& dst, Size dsize,
     }
     dst.create(dsize, src.type());
 
-    Size ssize = src.size();
     int depth = src.depth(), cn = src.channels();
     double scale_x = 1./inv_scale_x, scale_y = 1./inv_scale_y;
     int k, sx, sy, dx, dy;
@@ -1937,7 +1939,7 @@ static void remapBilinear( const Mat& _src, Mat& _dst, const Mat& _xy,
     VecOp vecOp;
 
     unsigned width1 = std::max(ssize.width-1, 0), height1 = std::max(ssize.height-1, 0);
-    CV_Assert( cn <= 4 );
+    CV_Assert( cn <= 4 && ssize.area() > 0 );
 #if CV_SSE2
     if( _src.type() == CV_8UC3 )
         width1 = std::max(ssize.width-2, 0);
@@ -2731,7 +2733,7 @@ void warpAffine( const Mat& src, Mat& dst, const Mat& M0, Size dsize,
                  int flags, int borderType, const Scalar& borderValue )
 {
     dst.create( dsize, src.type() );
-    CV_Assert( dst.data != src.data );
+    CV_Assert( dst.data != src.data && src.cols > 0 && src.rows > 0 );
 
     const int BLOCK_SZ = 64;
     short XY[BLOCK_SZ*BLOCK_SZ*2], A[BLOCK_SZ*BLOCK_SZ];
@@ -2866,7 +2868,7 @@ void warpPerspective( const Mat& src, Mat& dst, const Mat& M0, Size dsize,
                       int flags, int borderType, const Scalar& borderValue )
 {
     dst.create( dsize, src.type() );
-    CV_Assert( dst.data != src.data );
+    CV_Assert( dst.data != src.data && src.cols > 0 && src.rows > 0 );
 
     const int BLOCK_SZ = 32;
     short XY[BLOCK_SZ*BLOCK_SZ*2], A[BLOCK_SZ*BLOCK_SZ];
