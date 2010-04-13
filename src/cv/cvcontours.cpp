@@ -1567,6 +1567,9 @@ void cv::drawContours( Mat& image, const vector<vector<Point> >& contours,
     vector<CvSeq> seq;
     vector<CvSeqBlock> block;
 
+    if( !last )
+        return;
+    
     seq.resize(last);
     block.resize(last);
     
