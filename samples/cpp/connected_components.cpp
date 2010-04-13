@@ -47,4 +47,5 @@ int main( int argc, char** argv )
 	on_trackbar(threshval, 0);
 
     waitKey(0);
+    return 0;
 }
