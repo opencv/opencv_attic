@@ -65,12 +65,15 @@ The function CreateStructuringElementEx allocates and fills the structure \textt
 Dilates an image by using a specific structuring element.
 
 \cvdefC{void cvDilate(\par const CvArr* src,\par CvArr* dst,\par IplConvKernel* element=NULL,\par int iterations=1 );}
-\cvdefPy{Dilate(src,dst,element=NULL,iterations=1)-> None}
+\cvdefPy{Dilate(src,dst,element=None,iterations=1)-> None}
 
 \begin{description}
 \cvarg{src}{Source image}
 \cvarg{dst}{Destination image}
-\cvarg{element}{Structuring element used for dilation. If it is \texttt{NULL}, a $3\times 3$ rectangular structuring element is used}
+\cvarg{element}{Structuring element used for dilation. If it is
+\cvC{\texttt{NULL},}
+\cvPy{\texttt{None},}
+a $3\times 3$ rectangular structuring element is used}
 \cvarg{iterations}{Number of times dilation is applied}
 \end{description}
 
@@ -86,12 +89,15 @@ The function supports the in-place mode. Dilation can be applied several (\textt
 Erodes an image by using a specific structuring element.
 
 \cvdefC{void cvErode(\par const CvArr* src,\par  CvArr* dst,\par  IplConvKernel* element=NULL,\par  int iterations=1);}
-\cvdefPy{Erode(src,dst,element=NULL,iterations=1)-> None}
+\cvdefPy{Erode(src,dst,element=None,iterations=1)-> None}
 
 \begin{description}
 \cvarg{src}{Source image}
 \cvarg{dst}{Destination image}
-\cvarg{element}{Structuring element used for erosion. If it is \texttt{NULL}, a $3\times 3$ rectangular structuring element is used}
+\cvarg{element}{Structuring element used for erosion. If it is
+\cvC{\texttt{NULL},}
+\cvPy{\texttt{None},}
+a $3\times 3$ rectangular structuring element is used}
 \cvarg{iterations}{Number of times erosion is applied}
 \end{description}
 
