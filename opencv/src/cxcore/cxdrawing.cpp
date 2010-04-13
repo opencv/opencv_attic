@@ -1915,7 +1915,7 @@ void putText( Mat& img, const string& text, Point org,
     int base_line = -(ascii[0] & 15);
     int hscale = cvRound(fontScale*XY_ONE), vscale = hscale;
 
-    if( line_type == CV_AA && img.type() != CV_8U )
+    if( line_type == CV_AA && img.depth() != CV_8U )
         line_type = 8;
 
     if( bottomLeftOrigin )
