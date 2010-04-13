@@ -651,6 +651,8 @@ The function \texttt{waitKey} waits for key event infinitely (when $\texttt{dela
 
 \textbf{Note:} This function is the only method in HighGUI that can fetch and handle events, so it needs to be called periodically for normal event processing, unless HighGUI is used within some environment that takes care of event processing.
 
+\textbf{Note 2:} The function only works if there is at least one HighGUI window created and the window is active. If there are several HighGUI windows, any of them can be active.
+
 \section{Reading and Writing Images and Video}
 
 \cvCppFunc{imdecode}
