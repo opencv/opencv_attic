@@ -2554,6 +2554,8 @@ static PyObject *FROM_generic(generic r)
     return FROM_IplImagePTR((IplImage*)r);
   else if (strcmp(t->type_name, "opencv-matrix") == 0)
     return FROM_CvMat((CvMat*)r);
+  else if (strcmp(t->type_name, "opencv-nd-matrix") == 0)
+    return FROM_CvMatNDPTR((CvMatND*)r);
   else if (strcmp(t->type_name, "opencv-haar-classifier") == 0)
     return FROM_CvHaarClassifierCascadePTR((CvHaarClassifierCascade*)r);
   else {
