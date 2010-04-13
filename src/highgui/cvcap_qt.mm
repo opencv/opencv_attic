@@ -99,7 +99,7 @@ public:
 	CvCaptureCAM(int cameraNum = -1) ;
 	~CvCaptureCAM(); 
 	virtual bool grabFrame(); 
-	virtual IplImage* retrieveFrame();
+	virtual IplImage* retrieveFrame(int);
 	virtual IplImage* queryFrame(); 
 	virtual double getProperty(int property_id); 
 	virtual bool setProperty(int property_id, double value); 
@@ -142,7 +142,7 @@ public:
 	CvCaptureFile(const char* filename) ;
 	~CvCaptureFile(); 
 	virtual bool grabFrame(); 
-	virtual IplImage* retrieveFrame();
+	virtual IplImage* retrieveFrame(int);
 	virtual IplImage* queryFrame(); 
 	virtual double getProperty(int property_id); 
 	virtual bool setProperty(int property_id, double value); 
@@ -291,7 +291,7 @@ bool CvCaptureCAM::grabFrame(double timeOut) {
 	return total <= timeOut; 	
 }
 
-IplImage* CvCaptureCAM::retrieveFrame() {
+IplImage* CvCaptureCAM::retrieveFrame(int) {
 	return [capture getOutput]; 
 }
 
@@ -304,7 +304,7 @@ IplImage* CvCaptureCAM::queryFrame() {
 		startCaptureDevice(camNum); 
 		 */
 	}
-	return retrieveFrame(); 
+	return retrieveFrame(0); 
 }	
 
 void CvCaptureCAM::stopCaptureDevice() {
@@ -779,13 +779,13 @@ IplImage* CvCaptureFile::retrieveFramePixelBuffer() {
 }
 
 
-IplImage* CvCaptureFile::retrieveFrame() {
+IplImage* CvCaptureFile::retrieveFrame(int) {
 	return retrieveFramePixelBuffer(); 
 }
 
 IplImage* CvCaptureFile::queryFrame() {
 	grabFrame(); 
-	return retrieveFrame(); 
+	return retrieveFrame(0); 
 }	
 
 double CvCaptureFile::getFPS() {
