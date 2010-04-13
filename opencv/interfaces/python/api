@@ -1292,11 +1292,6 @@ FindStereoCorrespondenceGC
   CvArr dispRight
   CvStereoGCState* state
   int useDisparityGuess 0
-#CalcImageHomography 
-#  floats line
-#  CvPoint3D32f center
-#  floats intrinsic
-#  floats intrinsic
 CalibrateCamera2 
   CvMat objectPoints
   CvMat imagePoints
