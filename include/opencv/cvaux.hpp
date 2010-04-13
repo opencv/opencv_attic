@@ -1296,7 +1296,7 @@ struct DefaultRngAuto
       void alloc(const int n, const int a)
       {
          uchar* raw = (uchar*)malloc(n*sizeof(T) + a);
-         int delta = (a - uint64_t(raw)%a)%a;          // # bytes required for padding s.t. we get `a`-aligned
+         int delta = (a - uint64(raw)%a)%a;          // # bytes required for padding s.t. we get `a`-aligned
          data = reinterpret_cast<T*>(raw + delta);
       }
 
@@ -1815,7 +1815,7 @@ protected:
 
 };
 
-class OneWayDescriptorObject : public OneWayDescriptorBase
+class CV_EXPORTS OneWayDescriptorObject : public OneWayDescriptorBase
 {
 public:
     // creates an instance of OneWayDescriptorObject from a set of training files
@@ -1871,7 +1871,7 @@ protected:
 *                             2D image feature detectors                                *
 \****************************************************************************************/
 
-class FeatureDetector
+class CV_EXPORTS FeatureDetector
 {
 public:
     void detect( const Mat& image, vector<KeyPoint>& keypoints, const Mat& mask=Mat() ) const
@@ -1886,7 +1886,7 @@ protected:
 };
 
 
-class FastFeatureDetector : public FeatureDetector
+class CV_EXPORTS FastFeatureDetector : public FeatureDetector
 {
 public:
     FastFeatureDetector( int _threshold, bool _nonmaxSuppression = true );
@@ -1899,7 +1899,7 @@ protected:
 };
 
 
-class GoodFeaturesToTrackDetector : public FeatureDetector
+class CV_EXPORTS GoodFeaturesToTrackDetector : public FeatureDetector
 {
 public:
     GoodFeaturesToTrackDetector( int _maxCorners, double _qualityLevel, double _minDistance,
@@ -1915,7 +1915,7 @@ protected:
     double k;
 };
 
-class MserFeatureDetector : public FeatureDetector
+class CV_EXPORTS MserFeatureDetector : public FeatureDetector
 {
 public:
     MserFeatureDetector( int delta, int minArea, int maxArea, float maxVariation, float minDiversity,
@@ -1926,7 +1926,7 @@ protected:
     MSER mser;
 };
 
-class StarFeatureDetector : public FeatureDetector
+class CV_EXPORTS StarFeatureDetector : public FeatureDetector
 {
 public:
     StarFeatureDetector( int maxSize=16, int responseThreshold=30, int lineThresholdProjected = 10,
@@ -1938,7 +1938,7 @@ protected:
     StarDetector star;
 };
 
-class SurfFeatureDetector : public FeatureDetector
+class CV_EXPORTS SurfFeatureDetector : public FeatureDetector
 {
 public:
     SurfFeatureDetector( double hessianThreshold = 400., int octaves = 3, int octaveLayers = 4 );
@@ -1954,7 +1954,7 @@ protected:
 *                             descriptors for image keypoints                            *
 \****************************************************************************************/
 
-class DescriptorExtractor
+class CV_EXPORTS CV_EXPORTS DescriptorExtractor
 {
 public:
     virtual void compute( const Mat& image, vector<KeyPoint>& keypoints, Mat& descriptors ) const = 0;
@@ -1965,7 +1965,7 @@ protected:
 };
 
 
-class SurfDescriptorExtractor : public DescriptorExtractor
+class CV_EXPORTS SurfDescriptorExtractor : public DescriptorExtractor
 {
 public:
     SurfDescriptorExtractor( int nOctaves=4,
