@@ -4,5 +4,6 @@
 # ----------------------------------------------------------------------------
 
 add_subdirectory(c)
+add_subdirectory(cpp)
 add_subdirectory(swig_python)
 add_subdirectory(octave)
