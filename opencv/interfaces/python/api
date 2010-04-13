@@ -1693,34 +1693,34 @@ ClipLine point1,point2 /doconly
   CvPoint pt2
 CreateData /doconly
   CvArr arr
-CreateHist /doconly
+CreateHist CvHistogram /doconly
   ints dims
   int type
   ranges ranges None
   int uniform 1
-CreateImageHeader /doconly
+CreateImageHeader IplImage* /doconly
   int size
   int depth
   int channels
-CreateImage /doconly
+CreateImage IplImage* /doconly
   int size
   int depth
   int channels
-CreateMatHeader /doconly
+CreateMatHeader CvMat /doconly
   int rows
   int cols
   int type
-CreateMat /doconly
+CreateMat CvMat /doconly
   int rows
   int cols
   int type
-CreateMatNDHeader /doconly
+CreateMatNDHeader CvMatND /doconly
   ints dims
   int type
-CreateMatND /doconly
+CreateMatND CvMatND /doconly
   ints dims
   int type
-CreateMemStorage /doconly
+CreateMemStorage CvMemStorage /doconly
   int blockSize
 CreateTrackbar /doconly
   char* trackbarName
