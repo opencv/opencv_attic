@@ -97,7 +97,7 @@ void drawCorrespondences( const Mat& img1, const Mat& img2, const Mat& transfMtr
         vec2 /= vec2.at<float>(2,0);
         Point truePt2 = Point(cvRound(vec2.at<float>(0,0)), cvRound(vec2.at<float>(1,0))),
               diff = truePt2 - pt2;
-        if( sqrt(diff.x*diff.x + diff.y *diff.y ) < err )
+        if( sqrt((double)(diff.x*diff.x + diff.y *diff.y)) < err )
         {
             circle(drawImg, pt1, 3, GREEN);
             circle(drawImg, Point(pt2.x+img1.cols, pt2.y), 3, GREEN);
