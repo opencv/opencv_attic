@@ -83,10 +83,11 @@ enum { INTER_BITS=5, INTER_BITS2=INTER_BITS*2,
 
 static inline Point normalizeAnchor( Point anchor, Size ksize )
 {
-    if( anchor == Point(-1,-1) )
-        anchor = Point(ksize.width/2, ksize.height/2);
-    else
-        CV_Assert( anchor.inside(Rect(0, 0, ksize.width, ksize.height)) );
+    if( anchor.x == -1 )
+        anchor.x = ksize.width/2;
+    if( anchor.y == -1 )
+        anchor.y = ksize.height/2;
+    CV_Assert( anchor.inside(Rect(0, 0, ksize.width, ksize.height)) );
     return anchor;
 }
 
