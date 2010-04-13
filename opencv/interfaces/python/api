@@ -1630,6 +1630,13 @@ DecodeImageM CvMat*
   CvMat buf
   int iscolor CV_LOAD_IMAGE_COLOR
 StartWindowThread
+SetWindowProperty
+  char* name
+  int prop_id
+  double prop_value
+GetWindowProperty double
+  char* name
+  int prop_id
 
 GetTickCount int64
 GetTickFrequency int64
