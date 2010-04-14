@@ -73,7 +73,7 @@ void drawCorrespondences( const Mat& img1, const Mat& img2, const Mat& transfMtr
     drawImg.create(size, CV_MAKETYPE(img1.depth(), 3));
     Mat drawImg1 = drawImg(Rect(0, 0, img1.cols, img1.rows));
     cvtColor(img1, drawImg1, CV_GRAY2RGB);
-    Mat drawImg2 = drawImg(Rect(img1.cols, 0, img2.cols, img1.rows));
+    Mat drawImg2 = drawImg(Rect(img1.cols, 0, img2.cols, img2.rows));
     cvtColor(img2, drawImg2, CV_GRAY2RGB);
     
     for(vector<KeyPoint>::const_iterator it = keypoints1.begin(); it < keypoints1.end(); ++it )
@@ -193,8 +193,8 @@ void iter( Ptr<FeatureDetector> detector, Ptr<DescriptorExtractor> descriptor,
         transfMtr.at<float>(1,0) = rng->uniform(-0.2f, 0.2f);
         transfMtr.at<float>(1,1) = rng->uniform( 0.7f, 1.3f);
         transfMtr.at<float>(1,2) = rng->uniform(-0.1f, 0.3f)*img1.rows;
-        transfMtr.at<float>(2,0) = 0.f;
-        transfMtr.at<float>(2,1) = 0.f;
+        transfMtr.at<float>(2,0) = rng->uniform( -1e-4f, 1e-4f);
+        transfMtr.at<float>(2,1) = rng->uniform( -1e-4f, 1e-4f);
         transfMtr.at<float>(2,2) = rng->uniform( 0.7f, 1.3f);
     }
 
