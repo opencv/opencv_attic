@@ -527,34 +527,11 @@ That's all there is to it!
 
 #if defined _MSC_VER && _MSC_VER >= 1200
 
+extern "C" { __declspec(dllexport) unsigned int __lc_codepage = 0; }
+
 #pragma comment(lib, "libgcc_.a")
 #pragma comment(lib, "libmingwex_.a")
 #pragma comment(lib, "libcoldname_.a")
-#if _MSC_VER >= 1500
-#ifdef _DEBUG
-#pragma comment(lib, "libmsvcr90d_.a")
-#else
-#pragma comment(lib, "libmsvcr90_.a")
-#endif
-#elif _MSC_VER >= 1400
-#ifdef _DEBUG
-#pragma comment(lib, "libmsvcr80d_.a")
-#else
-#pragma comment(lib, "libmsvcr80_.a")
-#endif
-#elif _MSC_VER >= 1310
-#ifdef _DEBUG
-#pragma comment(lib, "libmsvcr71_.a")
-#else
-#pragma comment(lib, "libmsvcr71d_.a")
-#endif
-#else
-#ifdef _DEBUG
-#pragma comment(lib, "libmsvcrt_.a")
-#else
-#pragma comment(lib, "libmsvcrtd_.a")
-#endif
-#endif
 #ifdef WIN64
 #pragma comment(lib, "libavformat64.a")
 #pragma comment(lib, "libavcodec64.a")
