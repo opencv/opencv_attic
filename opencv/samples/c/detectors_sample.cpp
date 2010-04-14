@@ -54,6 +54,13 @@ void bruteForceMatche( const Mat& descriptors_1,
     }
 }
 
+inline Point2f applyHomography( const Mat_<double>& H, const Point2f& pt )
+{
+    double w = 1./(H(2,0)*pt.x + H(2,1)*pt.y + H(2,2));
+    return Point2f( cvRound( (H(0,0)*pt.x + H(0,1)*pt.y + H(0,2))*w ),
+                    cvRound( (H(1,0)*pt.x + H(1,1)*pt.y + H(1,2))*w ));
+}
+
 void drawCorrespondences( const Mat& img1, const Mat& img2, const Mat& transfMtr,
                           const vector<KeyPoint>& keypoints1, const vector<KeyPoint>& keypoints2,
                           const vector<Match>& matches, float maxDist, Mat& drawImg )
@@ -91,13 +98,9 @@ void drawCorrespondences( const Mat& img1, const Mat& img2, const Mat& transfMtr
     float err = 3;
     for(vector<Match>::const_iterator it = matches.begin(); it < matches.end(); ++it )
     {
-        Point pt1 = keypoints1[it->index1].pt, pt2 = keypoints2[it->index2].pt;
-        vec1.at<float>(0,0) = pt1.x; vec1.at<float>(1,0) = pt1.y; vec1.at<float>(2,0) = 1.f;
-        vec2 = transfMtr * vec1;
-        vec2 /= vec2.at<float>(2,0);
-        Point truePt2 = Point(cvRound(vec2.at<float>(0,0)), cvRound(vec2.at<float>(1,0))),
-              diff = truePt2 - pt2;
-        if( sqrt((double)(diff.x*diff.x + diff.y *diff.y)) < err )
+        Point2f pt1 = keypoints1[it->index1].pt, pt2 = keypoints2[it->index2].pt;
+        Point2f diff = applyHomography(transfMtr, pt1) - pt2;
+        if( norm(diff) < err )
         {
             circle(drawImg, pt1, 3, GREEN);
             circle(drawImg, Point(pt2.x+img1.cols, pt2.y), 3, GREEN);
