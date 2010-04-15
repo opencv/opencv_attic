@@ -819,11 +819,11 @@ class AreaTests(OpenCVTests):
             # looking for leaks
             def randdim():
                 return [random.randrange(1,6) for i in range(random.randrange(1, 6))]
-            as = [numpy.ones(randdim()).astype(numpy.uint8) for i in range(10)]
-            cs = [cv.fromarray(a, True) for a in as]
+            arrays = [numpy.ones(randdim()).astype(numpy.uint8) for i in range(10)]
+            cs = [cv.fromarray(a, True) for a in arrays]
             for i in range(1000):
-                as[random.randrange(10)] = numpy.ones(randdim()).astype(numpy.uint8)
-                cs[random.randrange(10)] = cv.fromarray(as[random.randrange(10)], True)
+                arrays[random.randrange(10)] = numpy.ones(randdim()).astype(numpy.uint8)
+                cs[random.randrange(10)] = cv.fromarray(arrays[random.randrange(10)], True)
                 for j in range(10):
                     self.assert_(all([c == chr(1) for c in cs[j].tostring()]))
 
