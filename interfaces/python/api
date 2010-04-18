@@ -1272,7 +1272,7 @@ FindHomography
   CvMat dstPoints
   CvMat H
   int method 0
-  double ransacReprojThreshold 0.0
+  double ransacReprojThreshold 3.0
   CvMat status NULL
 CreateStereoBMState CvStereoBMState*
   int preset CV_STEREO_BM_BASIC

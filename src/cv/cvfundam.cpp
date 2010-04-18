@@ -220,6 +220,7 @@ cvFindHomography( const CvMat* objectPoints, const CvMat* imagePoints,
 {
     const double confidence = 0.995;
     const int maxIters = 2000;
+    const double defaultRANSACReprojThreshold = 3;
     bool result = false;
     Ptr<CvMat> m, M, tempMask;
 
@@ -231,6 +232,8 @@ cvFindHomography( const CvMat* objectPoints, const CvMat* imagePoints,
 
     count = MAX(imagePoints->cols, imagePoints->rows);
     CV_Assert( count >= 4 );
+    if( ransacReprojThreshold <= 0 )
+        ransacReprojThreshold = defaultRANSACReprojThreshold;
 
     m = cvCreateMat( 1, count, CV_64FC2 );
     cvConvertPointsHomogeneous( imagePoints, m );

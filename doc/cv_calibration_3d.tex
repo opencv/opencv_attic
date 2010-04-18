@@ -726,16 +726,16 @@ Mat fundamental_matrix =
 Finds the perspective transformation between two planes.
 
 \cvdefC{void cvFindHomography( \par const CvMat* srcPoints,\par const CvMat* dstPoints,\par CvMat* H \par
-int method=0, \par double ransacReprojThreshold=0, \par CvMat* status=NULL);}
-\cvdefPy{FindHomography(srcPoints,dstPoints,H,method,ransacReprojThreshold=0.0, status=None)-> None}
+int method=0, \par double ransacReprojThreshold=3, \par CvMat* status=NULL);}
+\cvdefPy{FindHomography(srcPoints,dstPoints,H,method,ransacReprojThreshold=3.0, status=None)-> None}
 \cvdefCpp{Mat findHomography( const Mat\& srcPoints, const Mat\& dstPoints,\par
                     Mat\& status, int method=0,\par
-                    double ransacReprojThreshold=0 );\newline
+                    double ransacReprojThreshold=3 );\newline
 Mat findHomography( const Mat\& srcPoints, const Mat\& dstPoints,\par
                     vector<uchar>\& status, int method=0,\par
-                    double ransacReprojThreshold=0 );\newline
+                    double ransacReprojThreshold=3 );\newline
 Mat findHomography( const Mat\& srcPoints, const Mat\& dstPoints,\par
-                    int method=0, double ransacReprojThreshold=0 );}
+                    int method=0, double ransacReprojThreshold=3 );}
 
 \begin{description}
 
