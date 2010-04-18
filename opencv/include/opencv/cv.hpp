@@ -722,16 +722,16 @@ enum { LMEDS=4, RANSAC=8 };
 CV_EXPORTS Mat findHomography( const Mat& srcPoints,
                                const Mat& dstPoints,
                                Mat& mask, int method=0,
-                               double ransacReprojThreshold=0 );
+                               double ransacReprojThreshold=3 );
     
 CV_EXPORTS Mat findHomography( const Mat& srcPoints,
                                const Mat& dstPoints,
                                vector<uchar>& mask, int method=0,
-                               double ransacReprojThreshold=0 );
+                               double ransacReprojThreshold=3 );
 
 CV_EXPORTS Mat findHomography( const Mat& srcPoints,
                                const Mat& dstPoints,
-                               int method=0, double ransacReprojThreshold=0 );
+                               int method=0, double ransacReprojThreshold=3 );
 
 /* Computes RQ decomposition for 3x3 matrices */
 CV_EXPORTS void RQDecomp3x3( const Mat& M, Mat& R, Mat& Q );
