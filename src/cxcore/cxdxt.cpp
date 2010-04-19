@@ -1058,7 +1058,7 @@ RealDFT( const T* src, T* dst, int n, int nf, int* factors, const int* itab,
 #ifdef HAVE_IPP
 finalize:
 #endif
-    if( complex_output )
+    if( complex_output && (n & 1) == 0 )
     {
         dst[-1] = dst[0];
         dst[0] = 0;
