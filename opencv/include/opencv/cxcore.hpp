@@ -237,7 +237,7 @@ public:
     Vec cross(const Vec& v) const;
     template<typename T2> operator Vec<T2, cn>() const;
     operator CvScalar() const;
-    _Tp operator [](int i) const;
+    const _Tp& operator [](int i) const;
     _Tp& operator[](int i);
 
     _Tp val[cn];
@@ -332,6 +332,7 @@ public:
 
     _Tp dot(const Point3_& pt) const;
     double ddot(const Point3_& pt) const;
+    Point3_ cross(const Point3_& pt) const;
     
     _Tp x, y, z;
 };
@@ -759,6 +760,12 @@ public:
     Mat(const IplImage* img, bool copyData=false);
     // builds matrix from std::vector with or without copying the data
     template<typename _Tp> explicit Mat(const vector<_Tp>& vec, bool copyData=false);
+    // builds matrix from cv::Vec; the data is copied
+    template<typename _Tp, int n> explicit Mat(const Vec<_Tp, n>& vec);
+    // builds matrix from a 2D point
+    template<typename _Tp> explicit Mat(const Point_<_Tp>& pt);
+    // builds matrix from a 3D point
+    template<typename _Tp> explicit Mat(const Point3_<_Tp>& pt);
     // helper constructor to compile matrix expressions
     Mat(const MatExpr_Base& expr);
     // destructor - calls release()
@@ -1259,9 +1266,11 @@ public:
     Mat_(const Mat_& m, const Rect& roi);
     // to support complex matrix expressions
     Mat_(const MatExpr_Base& expr);
-    // makes a matrix out of Vec or std::vector. The matrix will have a single column
-    template<int n> explicit Mat_(const Vec<_Tp, n>& vec);
+    // makes a matrix out of Vec, std::vector, Point_ or Point3_. The matrix will have a single column
     explicit Mat_(const vector<_Tp>& vec, bool copyData=false);
+    template<int n> explicit Mat_(const Vec<_Tp, n>& vec);
+    explicit Mat_(const Point_<_Tp>& pt);
+    explicit Mat_(const Point3_<_Tp>& pt);
 
     Mat_& operator = (const Mat& m);
     Mat_& operator = (const Mat_& m);

@@ -45,6 +45,7 @@
 
 #ifndef SKIP_INCLUDES
 #include <limits.h>
+#include <string.h>
 #endif // SKIP_INCLUDES
 
 #ifdef __cplusplus
@@ -84,8 +85,8 @@ inline Mat::Mat(Size _size, int _type)
 }
     
 inline Mat::Mat(Size _size, int _type, const Scalar& _s)
-: flags(0), rows(0), cols(0), step(0), data(0), refcount(0),
-datastart(0), dataend(0)
+    : flags(0), rows(0), cols(0), step(0), data(0), refcount(0),
+    datastart(0), dataend(0)
 {
     if( _size.height > 0 && _size.width > 0 )
     {
@@ -256,6 +257,40 @@ template<typename _Tp> inline Mat::Mat(const vector<_Tp>& vec, bool copyData)
     else
         Mat((int)vec.size(), 1, DataType<_Tp>::type, (uchar*)&vec[0]).copyTo(*this);
 }
+    
+    
+template<typename _Tp, int n> inline Mat::Mat(const Vec<_Tp, n>& vec)
+    : flags(MAGIC_VAL | DataType<_Tp>::type | CV_MAT_CONT_FLAG),
+    rows(0), cols(0), step(0), data(0), refcount(0),
+    datastart(0), dataend(0)
+{
+    create(n, 1, DataType<_Tp>::type);
+    memcpy(data, &vec[0], n*sizeof(_Tp));
+}
+
+    
+template<typename _Tp> inline Mat::Mat(const Point_<_Tp>& pt)
+    : flags(MAGIC_VAL | DataType<_Tp>::type | CV_MAT_CONT_FLAG),
+    rows(0), cols(0), step(0), data(0), refcount(0),
+    datastart(0), dataend(0)
+{
+    create(2, 1, DataType<_Tp>::type);
+    ((_Tp*)data)[0] = pt.x;
+    ((_Tp*)data)[1] = pt.y;
+}
+    
+
+template<typename _Tp> inline Mat::Mat(const Point3_<_Tp>& pt)
+    : flags(MAGIC_VAL | DataType<_Tp>::type | CV_MAT_CONT_FLAG),
+    rows(0), cols(0), step(0), data(0), refcount(0),
+    datastart(0), dataend(0)
+{
+    create(3, 1, DataType<_Tp>::type);
+    ((_Tp*)data)[0] = pt.x;
+    ((_Tp*)data)[1] = pt.y;
+    ((_Tp*)data)[2] = pt.z;
+}
+    
     
 inline Mat::~Mat()
 {
@@ -592,6 +627,23 @@ template<typename _Tp> template<int n> inline Mat_<_Tp>::Mat_(const Vec<_Tp, n>&
     for( int i = 0; i < n; i++ )
         d[i] = vec[i];
 }
+    
+template<typename _Tp> inline Mat_<_Tp>::Mat_(const Point_<_Tp>& pt)
+    : Mat(2, 1, DataType<_Tp>::type)
+{
+    ((_Tp*)data)[0] = pt.x;
+    ((_Tp*)data)[1] = pt.y;
+}
+
+
+template<typename _Tp> inline Mat_<_Tp>::Mat_(const Point3_<_Tp>& pt)
+    : Mat(3, 1, DataType<_Tp>::type)
+{
+    ((_Tp*)data)[0] = pt.x;
+    ((_Tp*)data)[1] = pt.y;
+    ((_Tp*)data)[2] = pt.z;
+}
+    
 
 template<typename _Tp> inline Mat_<_Tp>::Mat_(const vector<_Tp>& vec, bool copyData)
     : Mat(vec, copyData)
@@ -700,25 +752,33 @@ template<typename _Tp> inline const _Tp* Mat_<_Tp>::operator [](int y) const
 
 template<typename _Tp> inline _Tp& Mat_<_Tp>::operator ()(int row, int col)
 {
-    CV_DbgAssert( (unsigned)row < (unsigned)rows && (unsigned)col < (unsigned)cols );
+    CV_DbgAssert( (unsigned)row < (unsigned)rows &&
+                 (unsigned)col < (unsigned)cols &&
+                 type() == DataType<_Tp>::type );
     return ((_Tp*)(data + step*row))[col];
 }
 
 template<typename _Tp> inline const _Tp& Mat_<_Tp>::operator ()(int row, int col) const
 {
-    CV_DbgAssert( (unsigned)row < (unsigned)rows && (unsigned)col < (unsigned)cols );
+    CV_DbgAssert( (unsigned)row < (unsigned)rows &&
+                 (unsigned)col < (unsigned)cols &&
+                 type() == DataType<_Tp>::type );
     return ((const _Tp*)(data + step*row))[col];
 }
 
 template<typename _Tp> inline _Tp& Mat_<_Tp>::operator ()(Point pt)
 {
-    CV_DbgAssert( (unsigned)pt.y < (unsigned)rows && (unsigned)pt.x < (unsigned)cols );
+    CV_DbgAssert( (unsigned)pt.y < (unsigned)rows &&
+                 (unsigned)pt.x < (unsigned)cols &&
+                 type() == DataType<_Tp>::type );
     return ((_Tp*)(data + step*pt.y))[pt.x];
 }
 
 template<typename _Tp> inline const _Tp& Mat_<_Tp>::operator ()(Point pt) const
 {
-    CV_DbgAssert( (unsigned)pt.y < (unsigned)rows && (unsigned)pt.x < (unsigned)cols );
+    CV_DbgAssert( (unsigned)pt.y < (unsigned)rows &&
+                  (unsigned)pt.x < (unsigned)cols &&
+                 type() == DataType<_Tp>::type );
     return ((const _Tp*)(data + step*pt.y))[pt.x];
 }
 

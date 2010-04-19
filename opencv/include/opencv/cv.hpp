@@ -965,6 +965,9 @@ public:
             float _response=0, int _octave=0, int _class_id=-1)
             : pt(x, y), size(_size), angle(_angle),
             response(_response), octave(_octave), class_id(_class_id) {}
+    static void convert(const std::vector<KeyPoint>& u, std::vector<Point2f>& v);
+    static void convert(const std::vector<Point2f>& u, std::vector<KeyPoint>& v,
+                        float size=1, float response=1, int octave=0, int class_id=-1);
     
     Point2f pt;
     float size;

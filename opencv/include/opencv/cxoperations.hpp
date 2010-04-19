@@ -334,7 +334,7 @@ template<typename _Tp, int cn> inline Vec<_Tp, cn>::operator CvScalar() const
     return s;
 }
 
-template<typename _Tp, int cn> inline _Tp Vec<_Tp, cn>::operator [](int i) const { return val[i]; }
+template<typename _Tp, int cn> inline const _Tp& Vec<_Tp, cn>::operator [](int i) const { return val[i]; }
 template<typename _Tp, int cn> inline _Tp& Vec<_Tp, cn>::operator[](int i) { return val[i]; }
 
 template<typename _Tp1, typename _Tp2, int cn> static inline Vec<_Tp1, cn>&
@@ -713,6 +713,11 @@ template<typename _Tp> inline _Tp Point3_<_Tp>::dot(const Point3_& pt) const
 { return saturate_cast<_Tp>(x*pt.x + y*pt.y + z*pt.z); }
 template<typename _Tp> inline double Point3_<_Tp>::ddot(const Point3_& pt) const
 { return (double)x*pt.x + (double)y*pt.y + (double)z*pt.z; }
+    
+template<typename _Tp> inline Point3_<_Tp> Point3_<_Tp>::cross(const Point3_<_Tp>& pt) const
+{
+    return Point3_<_Tp>(y*pt.z - z*pt.y, z*pt.x - x*pt.z, x*pt.y - y*pt.x);
+}
 
 template<typename _Tp> static inline Point3_<_Tp>&
 operator += (Point3_<_Tp>& a, const Point3_<_Tp>& b)
