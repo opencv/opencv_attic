@@ -241,6 +241,26 @@ void read(const FileNode& node, vector<KeyPoint>& keypoints)
     }
 }
     
+
+void KeyPoint::convert(const std::vector<KeyPoint>& u, std::vector<Point2f>& v)
+{
+    size_t i, sz = u.size();
+    v.resize(sz);
+    
+    for( i = 0; i < sz; i++ )
+        v[i] = u[i].pt;
+}
+    
+void KeyPoint::convert( const std::vector<Point2f>& u, std::vector<KeyPoint>& v,
+                        float size, float response, int octave, int class_id )
+{
+    size_t i, sz = u.size();
+    v.resize(sz);
+    
+    for( i = 0; i < sz; i++ )
+        v[i] = KeyPoint(u[i], size, -1, response, octave, class_id);
+}
+    
 }
 
 CV_IMPL void
