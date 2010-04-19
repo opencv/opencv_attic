@@ -46,7 +46,7 @@ using namespace std;
 // rectified results along with the computed disparity images.
 //
 static void
-StereoCalib(const char* imageList, int useUncalibrated)
+StereoCalib(const char* path, const char* imageList, int useUncalibrated)
 {
     CvRect roi1, roi2;
     int nx = 0, ny = 0;
@@ -112,9 +112,14 @@ StereoCalib(const char* imageList, int useUncalibrated)
             buf[--len] = '\0';
         if( buf[0] == '#')
             continue;
-        IplImage* img = cvLoadImage( buf, 0 );
+	char fullpath[1024];
+	sprintf(fullpath, "%s/%s", path, buf);
+        IplImage* img = cvLoadImage( fullpath, 0 );
         if( !img )
-            break;
+        {
+            printf("Cannot read file %s\n", fullpath);
+            return;
+        }
         imageSize = cvGetSize(img);
         imageNames[lr].push_back(buf);
     //FIND CHESSBOARDS AND CORNERS THEREIN:
@@ -372,7 +377,13 @@ StereoCalib(const char* imageList, int useUncalibrated)
 
 int main(int argc, char** argv)
 {
-    StereoCalib(argc > 1 ? argv[1] : "stereo_calib.txt", 0);
+    if(argc > 1 && !strcmp(argv[1], "--help"))
+    {
+        printf("Usage:\n ./stereo_calib <path to images> <file wtih image list>\n");
+        return 0;
+    }	
+
+    StereoCalib(argc > 1 ? argv[1] : ".", argc > 2 ? argv[2] : "stereo_calib.txt", 0);
     return 0;
 }
 
