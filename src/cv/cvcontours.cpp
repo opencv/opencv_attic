@@ -1590,7 +1590,7 @@ void cv::drawContours( Mat& image, const vector<vector<Point> >& contours,
             !ci.empty() ? (void*)&ci[0] : 0, (int)ci.size(), &seq[i], &block[i] );
     }
 
-    if( hierarchy.empty() || maxLevel == 0 || contourIdx < 0 )
+    if( hierarchy.empty() || maxLevel == 0 )
         for( i = first; i < last; i++ )
         {
             seq[i].h_next = i < last-1 ? &seq[i+1] : 0;

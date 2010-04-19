@@ -26,6 +26,7 @@ if (BUILD_EXAMPLES)
     ENDMACRO(MY_DEFINE_EXAMPLE)
     
     MY_DEFINE_EXAMPLE(connected_components	connected_components.cpp)
+	MY_DEFINE_EXAMPLE(contours2	 contours2.cpp)
     MY_DEFINE_EXAMPLE(morphology2  morphology2.cpp)
 	MY_DEFINE_EXAMPLE(segment_objects  segment_objects.cpp)
 endif(BUILD_EXAMPLES)
