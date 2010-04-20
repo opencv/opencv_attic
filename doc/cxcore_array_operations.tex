@@ -6034,7 +6034,9 @@ public:
     // x = vt.t()*inv(w)*u.t()*rhs ~ inv(A)*rhs
     void backSubst( const Mat& rhs, Mat& x ) const;
 
-    Mat u, w, vt;
+    Mat u; // the left orthogonal matrix
+    Mat w; // vector of singular values
+    Mat vt; // the right orthogonal matrix
 };
 \end{lstlisting}
 
@@ -6055,8 +6057,8 @@ SVD::SVD( const Mat\& A, int flags=0 );
 \cvarg{flags}{Operation flags}
 \begin{description}
     \cvarg{SVD::MODIFY\_A}{The algorithm can modify the decomposed matrix. It can save some space and speed-up processing a bit}
-    \cvarg{SVD::NO\_UV}{Only singular values are needed. The algorithm will not compute \texttt{U} and \texttt{V} matrices}
-    \cvarg{SVD::FULL\_UV}{When the matrix is not square, by default the algorithm produces \texttt{U} and \texttt{V} matrices of sufficiently large size for the further \texttt{A} reconstruction. If, however, \texttt{FULL\_UV} flag is specified, \texttt{U} and \texttt{V} will be full-size square orthogonal matrices.}
+    \cvarg{SVD::NO\_UV}{Indicates that only the vector of singular values \texttt{w} is to be computed, while \texttt{u} and \texttt{vt} will be set to empty matrices}
+    \cvarg{SVD::FULL\_UV}{When the matrix is not square, by default the algorithm produces \texttt{u} and \texttt{vt} matrices of sufficiently large size for the further \texttt{A} reconstruction. If, however, \texttt{FULL\_UV} flag is specified, \texttt{u} and \texttt{vt} will be full-size square orthogonal matrices.}
 \end{description}
 \end{description}
 
@@ -6074,12 +6076,12 @@ SVD\& SVD::operator ()( const Mat\& A, int flags=0 );
 \cvarg{flags}{Operation flags}
 \begin{description}
     \cvarg{SVD::MODIFY\_A}{The algorithm can modify the decomposed matrix. It can save some space and speed-up processing a bit}
-    \cvarg{SVD::NO\_UV}{Only singular values are needed. The algorithm will not compute \texttt{U} and \texttt{V} matrices}
-    \cvarg{SVD::FULL\_UV}{When the matrix is not square, by default the algorithm produces \texttt{U} and \texttt{V} matrices of sufficiently large size for the further \texttt{A} reconstruction. If, however, \texttt{FULL\_UV} flag is specified, \texttt{U} and \texttt{V} will be full-size square orthogonal matrices.}
+    \cvarg{SVD::NO\_UV}{Only singular values are needed. The algorithm will not compute \texttt{u} and \texttt{vt} matrices}
+    \cvarg{SVD::FULL\_UV}{When the matrix is not square, by default the algorithm produces \texttt{u} and \texttt{vt} matrices of sufficiently large size for the further \texttt{A} reconstruction. If, however, \texttt{FULL\_UV} flag is specified, \texttt{u} and \texttt{vt} will be full-size square orthogonal matrices.}
 \end{description}
 \end{description}
 
-The operator performs singular value decomposition of the supplied matrix. The \texttt{U}, transposed \texttt{V} and the diagonal of \texttt{W} are stored in the structure. The same \texttt{SVD} structure can be reused many times with different matrices. Each time, if needed, the previous \texttt{u}, \texttt{vt} and \texttt{w} are reclaimed and the new matrices are created, which is all handled by \cvCppCross{Mat::create}.
+The operator performs singular value decomposition of the supplied matrix. The \texttt{u}, \texttt{vt} and the vector of singular values \texttt{w} are stored in the structure. The same \texttt{SVD} structure can be reused many times with different matrices. Each time, if needed, the previous \texttt{u}, \texttt{vt} and \texttt{w} are reclaimed and the new matrices are created, which is all handled by \cvCppCross{Mat::create}.
 
 \cvCppFunc{SVD::solveZ}
 Solves under-determined singular linear system
