@@ -498,6 +498,20 @@ int cvFindChessboardCorners( const void* arr, CvSize pattern_size,
     if( found )
         found = icvCheckBoardMonotony( out_corners, pattern_size );
 
+	// check that none of the found corners is too close to the image boundary
+    if( found )
+	{
+		const int BORDER = 8;
+		for( k = 0; k < pattern_size.width*pattern_size.height; k++ )
+		{
+			if( out_corners[k].x <= BORDER || out_corners[k].x > img->cols - BORDER ||
+			    out_corners[k].y <= BORDER || out_corners[k].y > img->rows - BORDER )
+				break;
+		}
+		
+		found = k == pattern_size.width*pattern_size.height;
+	}
+
     if( found && pattern_size.height % 2 == 0 && pattern_size.width % 2 == 0 )
     {
         int last_row = (pattern_size.height-1)*pattern_size.width;
