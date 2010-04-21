@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<opencv_storage>
+<run_params>
+  <bark>
+    <hessianThreshold>400.</hessianThreshold>
+    <octaves>3</octaves>
+    <octaveLayers>4</octaveLayers></bark>
+  <bikes>
+    <hessianThreshold>400.</hessianThreshold>
+    <octaves>3</octaves>
+    <octaveLayers>4</octaveLayers></bikes>
+  <boat>
+    <hessianThreshold>400.</hessianThreshold>
+    <octaves>3</octaves>
+    <octaveLayers>4</octaveLayers></boat>
+  <graf>
+    <hessianThreshold>400.</hessianThreshold>
+    <octaves>3</octaves>
+    <octaveLayers>4</octaveLayers></graf>
+  <leuven>
+    <hessianThreshold>400.</hessianThreshold>
+    <octaves>3</octaves>
+    <octaveLayers>4</octaveLayers></leuven>
+  <trees>
+    <hessianThreshold>400.</hessianThreshold>
+    <octaves>3</octaves>
+    <octaveLayers>4</octaveLayers></trees>
+  <ubc>
+    <hessianThreshold>400.</hessianThreshold>
+    <octaves>3</octaves>
+    <octaveLayers>4</octaveLayers></ubc>
+  <wall>
+    <hessianThreshold>400.</hessianThreshold>
+    <octaves>3</octaves>
+    <octaveLayers>4</octaveLayers></wall></run_params>
+</opencv_storage>

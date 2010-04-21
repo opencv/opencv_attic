@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<opencv_storage>
+<run_params>
+  <bark>
+    <threshold>15</threshold>
+    <nonmaxSuppression>1</nonmaxSuppression></bark>
+  <bikes>
+    <threshold>10</threshold>
+    <nonmaxSuppression>1</nonmaxSuppression></bikes>
+  <boat>
+    <threshold>50</threshold>
+    <nonmaxSuppression>1</nonmaxSuppression></boat>
+  <graf>
+    <threshold>20</threshold>
+    <nonmaxSuppression>1</nonmaxSuppression></graf>
+  <leuven>
+    <threshold>42</threshold>
+    <nonmaxSuppression>1</nonmaxSuppression></leuven>
+  <trees>
+    <threshold>55</threshold>
+    <nonmaxSuppression>1</nonmaxSuppression></trees>
+  <ubc>
+    <threshold>57</threshold>
+    <nonmaxSuppression>1</nonmaxSuppression></ubc>
+  <wall>
+    <threshold>55</threshold>
+    <nonmaxSuppression>1</nonmaxSuppression></wall></run_params>
+</opencv_storage>
