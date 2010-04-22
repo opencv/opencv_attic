@@ -213,7 +213,7 @@ string DATASET_NAMES[DATASETS_COUNT] = { "bark", "bikes", "boat", "graf", "leuve
 class CV_DetectorRepeatabilityTest : public CvTest
 {
 public:
-    CV_DetectorRepeatabilityTest( const char* _detectorName, const char* testName ) : CvTest( testName, "detectors-repeatability" )
+    CV_DetectorRepeatabilityTest( const char* _detectorName, const char* testName ) : CvTest( testName, "repeatability-of-detector" )
     {
         detectorName = _detectorName;
         isAffineInvariant = false;
@@ -508,7 +508,7 @@ void CV_DetectorRepeatabilityTest::processResults()
 class CV_FastDetectorTest : public CV_DetectorRepeatabilityTest
 {
 public:
-    CV_FastDetectorTest() : CV_DetectorRepeatabilityTest( "fast", "fast-detector-repeatability" )
+    CV_FastDetectorTest() : CV_DetectorRepeatabilityTest( "fast", "repeatability-fast-detector" )
     { runParams.resize(DATASETS_COUNT); }
 
 protected:
@@ -619,7 +619,7 @@ void CV_BaseGfttDetectorTest::setDefaultRunParams( int datasetIdx )
 class CV_GfttDetectorTest : public CV_BaseGfttDetectorTest
 {
 public:
-    CV_GfttDetectorTest() : CV_BaseGfttDetectorTest( "gftt", "gftt-detector-repeatability" ) {}
+    CV_GfttDetectorTest() : CV_BaseGfttDetectorTest( "gftt", "repeatability-gftt-detector" ) {}
 };
 
 CV_GfttDetectorTest gfttDetector;
@@ -627,7 +627,7 @@ CV_GfttDetectorTest gfttDetector;
 class CV_HarrisDetectorTest : public CV_BaseGfttDetectorTest
 {
 public:
-    CV_HarrisDetectorTest() : CV_BaseGfttDetectorTest( "harris", "harris-detector-repeatability" )
+    CV_HarrisDetectorTest() : CV_BaseGfttDetectorTest( "harris", "repeatability-harris-detector" )
         { useHarrisDetector = true; }
 };
 
@@ -637,7 +637,7 @@ CV_HarrisDetectorTest harrisDetector;
 class CV_MserDetectorTest : public CV_DetectorRepeatabilityTest
 {
 public:
-    CV_MserDetectorTest() : CV_DetectorRepeatabilityTest( "mser", "mser-detector-repeatability" )
+    CV_MserDetectorTest() : CV_DetectorRepeatabilityTest( "mser", "repeatability-mser-detector" )
     { runParams.resize(DATASETS_COUNT); }
 
 protected:
@@ -719,7 +719,7 @@ CV_MserDetectorTest mserDetector;
 class CV_StarDetectorTest : public CV_DetectorRepeatabilityTest
 {
 public:
-    CV_StarDetectorTest() : CV_DetectorRepeatabilityTest( "star", "star-detector-repeatability" )
+    CV_StarDetectorTest() : CV_DetectorRepeatabilityTest( "star", "repeatability-star-detector" )
     { runParams.resize(DATASETS_COUNT); }
 
 protected:
@@ -781,7 +781,7 @@ CV_StarDetectorTest starDetector;
 class CV_SurfDetectorTest : public CV_DetectorRepeatabilityTest
 {
 public:
-    CV_SurfDetectorTest() : CV_DetectorRepeatabilityTest( "surf", "surf-detector-repeatability" )
+    CV_SurfDetectorTest() : CV_DetectorRepeatabilityTest( "surf", "repeatability-surf-detector" )
     { runParams.resize(DATASETS_COUNT); }
 
 protected:
