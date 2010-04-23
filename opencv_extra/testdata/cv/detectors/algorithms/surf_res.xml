@@ -3,210 +3,210 @@
 <results>
   <bark>
     <case0>
-      <repeating_locations_count>358</repeating_locations_count>
-      <repeating_locations_rltv>2.7881619334220886e-01</repeating_locations_rltv>
-      <repeating_regions_count>79</repeating_regions_count>
-      <repeating_regions_rltv>6.1526481062173843e-02</repeating_regions_rltv></case0>
+      <repeating_locations_count>423</repeating_locations_count>
+      <repeating_locations_rltv>3.2943925261497498e-01</repeating_locations_rltv>
+      <repeating_regions_count>90</repeating_regions_count>
+      <repeating_regions_rltv>7.0093460381031036e-02</repeating_regions_rltv></case0>
     <case1>
-      <repeating_locations_count>66</repeating_locations_count>
-      <repeating_locations_rltv>1.0060975700616837e-01</repeating_locations_rltv>
-      <repeating_regions_count>15</repeating_regions_count>
-      <repeating_regions_rltv>2.2865854203701019e-02</repeating_regions_rltv></case1>
+      <repeating_locations_count>82</repeating_locations_count>
+      <repeating_locations_rltv>1.2500000000000000e-01</repeating_locations_rltv>
+      <repeating_regions_count>16</repeating_regions_count>
+      <repeating_regions_rltv>2.4390242993831635e-02</repeating_regions_rltv></case1>
     <case2>
-      <repeating_locations_count>70</repeating_locations_count>
-      <repeating_locations_rltv>1.2477718293666840e-01</repeating_locations_rltv>
+      <repeating_locations_count>84</repeating_locations_count>
+      <repeating_locations_rltv>1.4973261952400208e-01</repeating_locations_rltv>
       <repeating_regions_count>0</repeating_regions_count>
       <repeating_regions_rltv>0.</repeating_regions_rltv></case2>
     <case3>
-      <repeating_locations_count>37</repeating_locations_count>
-      <repeating_locations_rltv>1.0027100145816803e-01</repeating_locations_rltv>
-      <repeating_regions_count>26</repeating_regions_count>
-      <repeating_regions_rltv>7.0460706949234009e-02</repeating_regions_rltv></case3>
+      <repeating_locations_count>45</repeating_locations_count>
+      <repeating_locations_rltv>1.2195122241973877e-01</repeating_locations_rltv>
+      <repeating_regions_count>33</repeating_regions_count>
+      <repeating_regions_rltv>8.9430890977382660e-02</repeating_regions_rltv></case3>
     <case4>
-      <repeating_locations_count>12</repeating_locations_count>
-      <repeating_locations_rltv>5.3097344934940338e-02</repeating_locations_rltv>
-      <repeating_regions_count>2</repeating_regions_count>
-      <repeating_regions_rltv>8.8495574891567230e-03</repeating_regions_rltv></case4></bark>
+      <repeating_locations_count>18</repeating_locations_count>
+      <repeating_locations_rltv>7.9646021127700806e-02</repeating_locations_rltv>
+      <repeating_regions_count>5</repeating_regions_count>
+      <repeating_regions_rltv>2.2123893722891808e-02</repeating_regions_rltv></case4></bark>
   <bikes>
     <case0>
-      <repeating_locations_count>1570</repeating_locations_count>
-      <repeating_locations_rltv>7.6847773790359497e-01</repeating_locations_rltv>
-      <repeating_regions_count>1540</repeating_regions_count>
-      <repeating_regions_rltv>7.5379341840744019e-01</repeating_regions_rltv></case0>
+      <repeating_locations_count>1613</repeating_locations_count>
+      <repeating_locations_rltv>7.8952521085739136e-01</repeating_locations_rltv>
+      <repeating_regions_count>1577</repeating_regions_count>
+      <repeating_regions_rltv>7.7190405130386353e-01</repeating_regions_rltv></case0>
     <case1>
-      <repeating_locations_count>1309</repeating_locations_count>
-      <repeating_locations_rltv>7.1647506952285767e-01</repeating_locations_rltv>
-      <repeating_regions_count>1277</repeating_regions_count>
-      <repeating_regions_rltv>6.9896006584167480e-01</repeating_regions_rltv></case1>
+      <repeating_locations_count>1351</repeating_locations_count>
+      <repeating_locations_rltv>7.3946362733840942e-01</repeating_locations_rltv>
+      <repeating_regions_count>1315</repeating_regions_count>
+      <repeating_regions_rltv>7.1975916624069214e-01</repeating_regions_rltv></case1>
     <case2>
-      <repeating_locations_count>899</repeating_locations_count>
-      <repeating_locations_rltv>6.3849431276321411e-01</repeating_locations_rltv>
-      <repeating_regions_count>855</repeating_regions_count>
-      <repeating_regions_rltv>6.0724431276321411e-01</repeating_regions_rltv></case2>
+      <repeating_locations_count>940</repeating_locations_count>
+      <repeating_locations_rltv>6.6761362552642822e-01</repeating_locations_rltv>
+      <repeating_regions_count>893</repeating_regions_count>
+      <repeating_regions_rltv>6.3423293828964233e-01</repeating_regions_rltv></case2>
     <case3>
-      <repeating_locations_count>613</repeating_locations_count>
-      <repeating_locations_rltv>5.5424952507019043e-01</repeating_locations_rltv>
-      <repeating_regions_count>582</repeating_regions_count>
-      <repeating_regions_rltv>5.2622061967849731e-01</repeating_regions_rltv></case3>
+      <repeating_locations_count>661</repeating_locations_count>
+      <repeating_locations_rltv>5.9764915704727173e-01</repeating_locations_rltv>
+      <repeating_regions_count>623</repeating_regions_count>
+      <repeating_regions_rltv>5.6329113245010376e-01</repeating_regions_rltv></case3>
     <case4>
-      <repeating_locations_count>324</repeating_locations_count>
-      <repeating_locations_rltv>3.8117647171020508e-01</repeating_locations_rltv>
-      <repeating_regions_count>289</repeating_regions_count>
-      <repeating_regions_rltv>3.4000000357627869e-01</repeating_regions_rltv></case4></bikes>
+      <repeating_locations_count>368</repeating_locations_count>
+      <repeating_locations_rltv>4.3294116854667664e-01</repeating_locations_rltv>
+      <repeating_regions_count>328</repeating_regions_count>
+      <repeating_regions_rltv>3.8588234782218933e-01</repeating_regions_rltv></case4></bikes>
   <boat>
     <case0>
-      <repeating_locations_count>1612</repeating_locations_count>
-      <repeating_locations_rltv>3.0052199959754944e-01</repeating_locations_rltv>
-      <repeating_regions_count>1379</repeating_regions_count>
-      <repeating_regions_rltv>2.5708428025245667e-01</repeating_regions_rltv></case0>
+      <repeating_locations_count>1820</repeating_locations_count>
+      <repeating_locations_rltv>3.3929902315139771e-01</repeating_locations_rltv>
+      <repeating_regions_count>1547</repeating_regions_count>
+      <repeating_regions_rltv>2.8840416669845581e-01</repeating_regions_rltv></case0>
     <case1>
-      <repeating_locations_count>839</repeating_locations_count>
-      <repeating_locations_rltv>2.6112666726112366e-01</repeating_locations_rltv>
-      <repeating_regions_count>31</repeating_regions_count>
-      <repeating_regions_rltv>9.6483035013079643e-03</repeating_regions_rltv></case1>
+      <repeating_locations_count>958</repeating_locations_count>
+      <repeating_locations_rltv>2.9816371202468872e-01</repeating_locations_rltv>
+      <repeating_regions_count>40</repeating_regions_count>
+      <repeating_regions_rltv>1.2449423782527447e-02</repeating_regions_rltv></case1>
     <case2>
-      <repeating_locations_count>417</repeating_locations_count>
-      <repeating_locations_rltv>2.1232178807258606e-01</repeating_locations_rltv>
+      <repeating_locations_count>484</repeating_locations_count>
+      <repeating_locations_rltv>2.4643585085868835e-01</repeating_locations_rltv>
       <repeating_regions_count>0</repeating_regions_count>
       <repeating_regions_rltv>0.</repeating_regions_rltv></case2>
     <case3>
-      <repeating_locations_count>232</repeating_locations_count>
-      <repeating_locations_rltv>1.8815895915031433e-01</repeating_locations_rltv>
-      <repeating_regions_count>156</repeating_regions_count>
-      <repeating_regions_rltv>1.2652067840099335e-01</repeating_regions_rltv></case3>
+      <repeating_locations_count>273</repeating_locations_count>
+      <repeating_locations_rltv>2.2141119837760925e-01</repeating_locations_rltv>
+      <repeating_regions_count>173</repeating_regions_count>
+      <repeating_regions_rltv>1.4030818641185760e-01</repeating_regions_rltv></case3>
     <case4>
-      <repeating_locations_count>66</repeating_locations_count>
-      <repeating_locations_rltv>7.3333330452442169e-02</repeating_locations_rltv>
+      <repeating_locations_count>80</repeating_locations_count>
+      <repeating_locations_rltv>8.8888891041278839e-02</repeating_locations_rltv>
       <repeating_regions_count>6</repeating_regions_count>
       <repeating_regions_rltv>6.6666668280959129e-03</repeating_regions_rltv></case4></boat>
   <graf>
     <case0>
-      <repeating_locations_count>853</repeating_locations_count>
-      <repeating_locations_rltv>2.7507254481315613e-01</repeating_locations_rltv>
-      <repeating_regions_count>700</repeating_regions_count>
-      <repeating_regions_rltv>2.2573363780975342e-01</repeating_regions_rltv></case0>
+      <repeating_locations_count>958</repeating_locations_count>
+      <repeating_locations_rltv>3.0893260240554810e-01</repeating_locations_rltv>
+      <repeating_regions_count>776</repeating_regions_count>
+      <repeating_regions_rltv>2.5024184584617615e-01</repeating_regions_rltv></case0>
     <case1>
-      <repeating_locations_count>421</repeating_locations_count>
-      <repeating_locations_rltv>1.5215034782886505e-01</repeating_locations_rltv>
-      <repeating_regions_count>280</repeating_regions_count>
-      <repeating_regions_rltv>1.0119263082742691e-01</repeating_regions_rltv></case1>
+      <repeating_locations_count>487</repeating_locations_count>
+      <repeating_locations_rltv>1.7600288987159729e-01</repeating_locations_rltv>
+      <repeating_regions_count>322</repeating_regions_count>
+      <repeating_regions_rltv>1.1637151986360550e-01</repeating_regions_rltv></case1>
     <case2>
-      <repeating_locations_count>226</repeating_locations_count>
-      <repeating_locations_rltv>1.0453283786773682e-01</repeating_locations_rltv>
+      <repeating_locations_count>263</repeating_locations_count>
+      <repeating_locations_rltv>1.2164662033319473e-01</repeating_locations_rltv>
       <repeating_regions_count>8</repeating_regions_count>
       <repeating_regions_rltv>3.7002775352448225e-03</repeating_regions_rltv></case2>
     <case3>
-      <repeating_locations_count>118</repeating_locations_count>
-      <repeating_locations_rltv>6.9248825311660767e-02</repeating_locations_rltv>
-      <repeating_regions_count>41</repeating_regions_count>
-      <repeating_regions_rltv>2.4061033502221107e-02</repeating_regions_rltv></case3>
+      <repeating_locations_count>139</repeating_locations_count>
+      <repeating_locations_rltv>8.1572771072387695e-02</repeating_locations_rltv>
+      <repeating_regions_count>48</repeating_regions_count>
+      <repeating_regions_rltv>2.8169013559818268e-02</repeating_regions_rltv></case3>
     <case4>
-      <repeating_locations_count>86</repeating_locations_count>
-      <repeating_locations_rltv>6.6358022391796112e-02</repeating_locations_rltv>
+      <repeating_locations_count>99</repeating_locations_count>
+      <repeating_locations_rltv>7.6388888061046600e-02</repeating_locations_rltv>
       <repeating_regions_count>0</repeating_regions_count>
       <repeating_regions_rltv>0.</repeating_regions_rltv></case4></graf>
   <leuven>
     <case0>
-      <repeating_locations_count>1773</repeating_locations_count>
-      <repeating_locations_rltv>7.0976781845092773e-01</repeating_locations_rltv>
-      <repeating_regions_count>1750</repeating_regions_count>
-      <repeating_regions_rltv>7.0056045055389404e-01</repeating_regions_rltv></case0>
+      <repeating_locations_count>1796</repeating_locations_count>
+      <repeating_locations_rltv>7.1897518634796143e-01</repeating_locations_rltv>
+      <repeating_regions_count>1761</repeating_regions_count>
+      <repeating_regions_rltv>7.0496398210525513e-01</repeating_regions_rltv></case0>
     <case1>
-      <repeating_locations_count>1353</repeating_locations_count>
-      <repeating_locations_rltv>6.6356056928634644e-01</repeating_locations_rltv>
-      <repeating_regions_count>1319</repeating_regions_count>
-      <repeating_regions_rltv>6.4688575267791748e-01</repeating_regions_rltv></case1>
+      <repeating_locations_count>1374</repeating_locations_count>
+      <repeating_locations_rltv>6.7385971546173096e-01</repeating_locations_rltv>
+      <repeating_regions_count>1340</repeating_regions_count>
+      <repeating_regions_rltv>6.5718489885330200e-01</repeating_regions_rltv></case1>
     <case2>
-      <repeating_locations_count>995</repeating_locations_count>
-      <repeating_locations_rltv>6.1080420017242432e-01</repeating_locations_rltv>
-      <repeating_regions_count>971</repeating_regions_count>
-      <repeating_regions_rltv>5.9607118368148804e-01</repeating_regions_rltv></case2>
+      <repeating_locations_count>1018</repeating_locations_count>
+      <repeating_locations_rltv>6.2492328882217407e-01</repeating_locations_rltv>
+      <repeating_regions_count>987</repeating_regions_count>
+      <repeating_regions_rltv>6.0589319467544556e-01</repeating_regions_rltv></case2>
     <case3>
-      <repeating_locations_count>703</repeating_locations_count>
-      <repeating_locations_rltv>5.6375300884246826e-01</repeating_locations_rltv>
-      <repeating_regions_count>673</repeating_regions_count>
-      <repeating_regions_rltv>5.3969526290893555e-01</repeating_regions_rltv></case3>
+      <repeating_locations_count>723</repeating_locations_count>
+      <repeating_locations_rltv>5.7979148626327515e-01</repeating_locations_rltv>
+      <repeating_regions_count>694</repeating_regions_count>
+      <repeating_regions_rltv>5.5653566122055054e-01</repeating_regions_rltv></case3>
     <case4>
-      <repeating_locations_count>550</repeating_locations_count>
-      <repeating_locations_rltv>5.2732503414154053e-01</repeating_locations_rltv>
-      <repeating_regions_count>524</repeating_regions_count>
-      <repeating_regions_rltv>5.0239694118499756e-01</repeating_regions_rltv></case4></leuven>
+      <repeating_locations_count>576</repeating_locations_count>
+      <repeating_locations_rltv>5.5225312709808350e-01</repeating_locations_rltv>
+      <repeating_regions_count>547</repeating_regions_count>
+      <repeating_regions_rltv>5.2444869279861450e-01</repeating_regions_rltv></case4></leuven>
   <trees>
     <case0>
-      <repeating_locations_count>2837</repeating_locations_count>
-      <repeating_locations_rltv>3.5811662673950195e-01</repeating_locations_rltv>
-      <repeating_regions_count>2555</repeating_regions_count>
-      <repeating_regions_rltv>3.2251957058906555e-01</repeating_regions_rltv></case0>
+      <repeating_locations_count>3060</repeating_locations_count>
+      <repeating_locations_rltv>3.8626608252525330e-01</repeating_locations_rltv>
+      <repeating_regions_count>2728</repeating_regions_count>
+      <repeating_regions_rltv>3.4435749053955078e-01</repeating_regions_rltv></case0>
     <case1>
-      <repeating_locations_count>1950</repeating_locations_count>
-      <repeating_locations_rltv>2.5872361660003662e-01</repeating_locations_rltv>
-      <repeating_regions_count>1652</repeating_regions_count>
-      <repeating_regions_rltv>2.1918535232543945e-01</repeating_regions_rltv></case1>
+      <repeating_locations_count>2238</repeating_locations_count>
+      <repeating_locations_rltv>2.9693511128425598e-01</repeating_locations_rltv>
+      <repeating_regions_count>1867</repeating_regions_count>
+      <repeating_regions_rltv>2.4771128594875336e-01</repeating_regions_rltv></case1>
     <case2>
-      <repeating_locations_count>1285</repeating_locations_count>
-      <repeating_locations_rltv>2.0062451064586639e-01</repeating_locations_rltv>
-      <repeating_regions_count>990</repeating_regions_count>
-      <repeating_regions_rltv>1.5456674993038177e-01</repeating_regions_rltv></case2>
+      <repeating_locations_count>1480</repeating_locations_count>
+      <repeating_locations_rltv>2.3106947541236877e-01</repeating_locations_rltv>
+      <repeating_regions_count>1122</repeating_regions_count>
+      <repeating_regions_rltv>1.7517563700675964e-01</repeating_regions_rltv></case2>
     <case3>
-      <repeating_locations_count>1169</repeating_locations_count>
-      <repeating_locations_rltv>2.0051458477973938e-01</repeating_locations_rltv>
-      <repeating_regions_count>883</repeating_regions_count>
-      <repeating_regions_rltv>1.5145798027515411e-01</repeating_regions_rltv></case3>
+      <repeating_locations_count>1357</repeating_locations_count>
+      <repeating_locations_rltv>2.3276157677173615e-01</repeating_locations_rltv>
+      <repeating_regions_count>1011</repeating_regions_count>
+      <repeating_regions_rltv>1.7341338098049164e-01</repeating_regions_rltv></case3>
     <case4>
-      <repeating_locations_count>730</repeating_locations_count>
-      <repeating_locations_rltv>1.7144198715686798e-01</repeating_locations_rltv>
-      <repeating_regions_count>508</repeating_regions_count>
-      <repeating_regions_rltv>1.1930483579635620e-01</repeating_regions_rltv></case4></trees>
+      <repeating_locations_count>863</repeating_locations_count>
+      <repeating_locations_rltv>2.0267730951309204e-01</repeating_locations_rltv>
+      <repeating_regions_count>596</repeating_regions_count>
+      <repeating_regions_rltv>1.3997182250022888e-01</repeating_regions_rltv></case4></trees>
   <ubc>
     <case0>
-      <repeating_locations_count>3373</repeating_locations_count>
-      <repeating_locations_rltv>8.2732403278350830e-01</repeating_locations_rltv>
-      <repeating_regions_count>3341</repeating_regions_count>
-      <repeating_regions_rltv>8.1947511434555054e-01</repeating_regions_rltv></case0>
+      <repeating_locations_count>3389</repeating_locations_count>
+      <repeating_locations_rltv>8.3124846220016479e-01</repeating_locations_rltv>
+      <repeating_regions_count>3351</repeating_regions_count>
+      <repeating_regions_rltv>8.2192790508270264e-01</repeating_regions_rltv></case0>
     <case1>
-      <repeating_locations_count>3013</repeating_locations_count>
-      <repeating_locations_rltv>7.4047678709030151e-01</repeating_locations_rltv>
-      <repeating_regions_count>2963</repeating_regions_count>
-      <repeating_regions_rltv>7.2818875312805176e-01</repeating_regions_rltv></case1>
+      <repeating_locations_count>3045</repeating_locations_count>
+      <repeating_locations_rltv>7.4834114313125610e-01</repeating_locations_rltv>
+      <repeating_regions_count>2983</repeating_regions_count>
+      <repeating_regions_rltv>7.3310393095016479e-01</repeating_regions_rltv></case1>
     <case2>
-      <repeating_locations_count>2468</repeating_locations_count>
-      <repeating_locations_rltv>6.1870145797729492e-01</repeating_locations_rltv>
-      <repeating_regions_count>2416</repeating_regions_count>
-      <repeating_regions_rltv>6.0566556453704834e-01</repeating_regions_rltv></case2>
+      <repeating_locations_count>2535</repeating_locations_count>
+      <repeating_locations_rltv>6.3549762964248657e-01</repeating_locations_rltv>
+      <repeating_regions_count>2458</repeating_regions_count>
+      <repeating_regions_rltv>6.1619454622268677e-01</repeating_regions_rltv></case2>
     <case3>
-      <repeating_locations_count>1690</repeating_locations_count>
-      <repeating_locations_rltv>4.4415244460105896e-01</repeating_locations_rltv>
-      <repeating_regions_count>1577</repeating_regions_count>
-      <repeating_regions_rltv>4.1445466876029968e-01</repeating_regions_rltv></case3>
+      <repeating_locations_count>1767</repeating_locations_count>
+      <repeating_locations_rltv>4.6438896656036377e-01</repeating_locations_rltv>
+      <repeating_regions_count>1634</repeating_regions_count>
+      <repeating_regions_rltv>4.2943495512008667e-01</repeating_regions_rltv></case3>
     <case4>
-      <repeating_locations_count>1009</repeating_locations_count>
-      <repeating_locations_rltv>3.0364128947257996e-01</repeating_locations_rltv>
-      <repeating_regions_count>897</repeating_regions_count>
-      <repeating_regions_rltv>2.6993680000305176e-01</repeating_regions_rltv></case4></ubc>
+      <repeating_locations_count>1097</repeating_locations_count>
+      <repeating_locations_rltv>3.3012339472770691e-01</repeating_locations_rltv>
+      <repeating_regions_count>950</repeating_regions_count>
+      <repeating_regions_rltv>2.8588625788688660e-01</repeating_regions_rltv></case4></ubc>
   <wall>
     <case0>
-      <repeating_locations_count>2453</repeating_locations_count>
-      <repeating_locations_rltv>4.1512945294380188e-01</repeating_locations_rltv>
-      <repeating_regions_count>2311</repeating_regions_count>
-      <repeating_regions_rltv>3.9109832048416138e-01</repeating_regions_rltv></case0>
+      <repeating_locations_count>2738</repeating_locations_count>
+      <repeating_locations_rltv>4.6336096525192261e-01</repeating_locations_rltv>
+      <repeating_regions_count>2572</repeating_regions_count>
+      <repeating_regions_rltv>4.3526822328567505e-01</repeating_regions_rltv></case0>
     <case1>
-      <repeating_locations_count>2523</repeating_locations_count>
-      <repeating_locations_rltv>4.5533296465873718e-01</repeating_locations_rltv>
-      <repeating_regions_count>2372</repeating_regions_count>
-      <repeating_regions_rltv>4.2808157205581665e-01</repeating_regions_rltv></case1>
+      <repeating_locations_count>2696</repeating_locations_count>
+      <repeating_locations_rltv>4.8655477166175842e-01</repeating_locations_rltv>
+      <repeating_regions_count>2518</repeating_regions_count>
+      <repeating_regions_rltv>4.5443060994148254e-01</repeating_regions_rltv></case1>
     <case2>
-      <repeating_locations_count>1250</repeating_locations_count>
-      <repeating_locations_rltv>2.5709584355354309e-01</repeating_locations_rltv>
-      <repeating_regions_count>1063</repeating_regions_count>
-      <repeating_regions_rltv>2.1863430738449097e-01</repeating_regions_rltv></case2>
+      <repeating_locations_count>1426</repeating_locations_count>
+      <repeating_locations_rltv>2.9329493641853333e-01</repeating_locations_rltv>
+      <repeating_regions_count>1202</repeating_regions_count>
+      <repeating_regions_rltv>2.4722336232662201e-01</repeating_regions_rltv></case2>
     <case3>
-      <repeating_locations_count>701</repeating_locations_count>
-      <repeating_locations_rltv>1.5986317396163940e-01</repeating_locations_rltv>
-      <repeating_regions_count>510</repeating_regions_count>
-      <repeating_regions_rltv>1.1630558967590332e-01</repeating_regions_rltv></case3>
+      <repeating_locations_count>838</repeating_locations_count>
+      <repeating_locations_rltv>1.9110603630542755e-01</repeating_locations_rltv>
+      <repeating_regions_count>608</repeating_regions_count>
+      <repeating_regions_rltv>1.3865450024604797e-01</repeating_regions_rltv></case3>
     <case4>
-      <repeating_locations_count>420</repeating_locations_count>
-      <repeating_locations_rltv>1.2138728052377701e-01</repeating_locations_rltv>
-      <repeating_regions_count>222</repeating_regions_count>
-      <repeating_regions_rltv>6.4161852002143860e-02</repeating_regions_rltv></case4></wall></results>
+      <repeating_locations_count>487</repeating_locations_count>
+      <repeating_locations_rltv>1.4075145125389099e-01</repeating_locations_rltv>
+      <repeating_regions_count>254</repeating_regions_count>
+      <repeating_regions_rltv>7.3410406708717346e-02</repeating_regions_rltv></case4></wall></results>
 </opencv_storage>

@@ -57,8 +57,7 @@ void bruteForceMatche( const Mat& descriptors_1,
 inline Point2f applyHomography( const Mat_<double>& H, const Point2f& pt )
 {
     double w = 1./(H(2,0)*pt.x + H(2,1)*pt.y + H(2,2));
-    return Point2f( cvRound( (H(0,0)*pt.x + H(0,1)*pt.y + H(0,2))*w ),
-                    cvRound( (H(1,0)*pt.x + H(1,1)*pt.y + H(1,2))*w ));
+    return Point2f( (H(0,0)*pt.x + H(0,1)*pt.y + H(0,2))*w, (H(1,0)*pt.x + H(1,1)*pt.y + H(1,2))*w );
 }
 
 void drawCorrespondences( const Mat& img1, const Mat& img2, const Mat& transfMtr,
