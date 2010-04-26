@@ -6,54 +6,6 @@
 using namespace cv;
 using namespace std;
 
-struct Match
-{
-    int index1;      // index of the descriptor from the first set.
-    int index2;      // index of the descriptor from the second set.
-    double distance; // computed distance between them.
-
-    Match(int index1, int index2, double distance)
-        : index1(index1), index2(index2), distance(distance) {}
-    operator double() const { return distance; }
-};
-
-void bruteForceMatche( const Mat& descriptors_1,
-                       const Mat& descriptors_2,
-                       const Mat& mask,
-                       vector<Match>& matches )
-{
-    assert(mask.empty() || (mask.rows == descriptors_1.rows && mask.cols == descriptors_2.rows));
-    assert(descriptors_1.cols == descriptors_2.cols);
-    assert(descriptors_1.type() == CV_32F || descriptors_2.type() == CV_32F);
-
-    matches.clear();
-    matches.reserve(descriptors_1.rows);
-
-    for (int i = 0; i < descriptors_1.rows; ++i)
-    {
-        Mat d1 = descriptors_1.row(i);
-        int matchIndex = -1;
-        float matchDistance = std::numeric_limits<float>::max();
-
-        for (int j = 0; j < descriptors_2.rows; ++j)
-        {
-            if( mask.empty() || mask.at<char>(i,j) )
-            {
-                Mat d2 = descriptors_2.row(j);
-                float distance = norm(d1, d2);
-                if( distance < matchDistance )
-                {
-                    matchDistance = distance;
-                    matchIndex = j;
-                }
-            }
-        }
-
-        if (matchIndex != -1)
-            matches.push_back( Match(i, matchIndex, (double)matchDistance) );
-    }
-}
-
 inline Point2f applyHomography( const Mat_<double>& H, const Point2f& pt )
 {
     double w = 1./(H(2,0)*pt.x + H(2,1)*pt.y + H(2,2));
@@ -62,7 +14,8 @@ inline Point2f applyHomography( const Mat_<double>& H, const Point2f& pt )
 
 void drawCorrespondences( const Mat& img1, const Mat& img2, const Mat& transfMtr,
                           const vector<KeyPoint>& keypoints1, const vector<KeyPoint>& keypoints2,
-                          const vector<Match>& matches, float maxDist, Mat& drawImg )
+                          const vector<int>& matches, const vector<double>& distances,
+                          float maxDist, Mat& drawImg )
 {
     Scalar RED = CV_RGB(255, 0, 0);
     Scalar PINK = CV_RGB(255,130,230);
@@ -95,9 +48,12 @@ void drawCorrespondences( const Mat& img1, const Mat& img2, const Mat& transfMtr
     
     Mat vec1(3, 1, CV_32FC1), vec2;
     float err = 3;
-    for(vector<Match>::const_iterator it = matches.begin(); it < matches.end(); ++it )
+    vector<int>::const_iterator mit = matches.begin();
+    vector<double>::const_iterator dit = distances.begin();
+    assert( matches.size() == distances.size() );
+    for( int i1 = 0; mit < matches.end(); ++mit, ++dit, i1++ )
     {
-        Point2f pt1 = keypoints1[it->index1].pt, pt2 = keypoints2[it->index2].pt;
+        Point2f pt1 = keypoints1[i1].pt, pt2 = keypoints2[*mit].pt;
         Point2f diff = applyHomography(transfMtr, pt1) - pt2;
         if( norm(diff) < err )
         {
@@ -107,7 +63,7 @@ void drawCorrespondences( const Mat& img1, const Mat& img2, const Mat& transfMtr
         }
         else
         {
-            if( it->distance > maxDist )
+            if( *dit > maxDist )
             {
                 circle(drawImg, pt1, 3, PINK);
                 circle(drawImg, Point(pt2.x+img1.cols, pt2.y), 3, PINK);
@@ -125,26 +81,26 @@ void drawCorrespondences( const Mat& img1, const Mat& img2, const Mat& transfMtr
 FeatureDetector* createDetector( const string& detectorType )
 {
 	FeatureDetector* fd = 0;
-	if( !strcmp( detectorType.c_str(), "FAST" ) )
+    if( !detectorType.compare( "FAST" ) )
 	{
 		fd = new FastFeatureDetector( 1/*threshold*/, true/*nonmax_suppression*/ );
 	}
-    else if( !strcmp( detectorType.c_str(), "STAR" ) )
+    else if( !detectorType.compare( "STAR" ) )
 	{
 		fd = new StarFeatureDetector( 16/*max_size*/, 30/*response_threshold*/, 10/*line_threshold_projected*/,
 									  8/*line_threshold_binarized*/, 5/*suppress_nonmax_size*/ );
 	}
-	else if( !strcmp( detectorType.c_str(), "SURF" ) )
+    else if( !detectorType.compare( "SURF" ) )
 	{
 		fd = new SurfFeatureDetector( 400./*hessian_threshold*/, 3 /*octaves*/, 4/*octave_layers*/ );
 	}
-	else if( !strcmp( detectorType.c_str(), "MSER" ) )
+    else if( !detectorType.compare( "MSER" ) )
 	{
 		fd = new MserFeatureDetector( 5/*delta*/, 60/*min_area*/, 14400/*_max_area*/, 0.25f/*max_variation*/,
 				0.2/*min_diversity*/, 200/*max_evolution*/, 1.01/*area_threshold*/, 0.003/*min_margin*/, 
 				5/*edge_blur_size*/ );
 	}
-	else if( !strcmp( detectorType.c_str(), "GFTT" ) )
+    else if( !detectorType.compare( "GFTT" ) )
 	{
         fd = new GoodFeaturesToTrackDetector( 1000/*maxCorners*/, 0.01/*qualityLevel*/, 1./*minDistance*/,
                                               3/*int _blockSize*/, true/*useHarrisDetector*/, 0.04/*k*/ );
@@ -158,12 +114,12 @@ FeatureDetector* createDetector( const string& detectorType )
 DescriptorExtractor* createDescExtractor( const string& descriptorType )
 {
 	DescriptorExtractor* de = 0;
-	if( !strcmp( descriptorType.c_str(), "CALONDER" ) )
+    if( !descriptorType.compare( "CALONDER" ) )
 	{
 		assert(0);
         //de = new CalonderDescriptorExtractor<float>("");
 	}
-	else if( !strcmp( descriptorType.c_str(), "SURF" ) )
+    else if( !descriptorType.compare( "SURF" ) )
 	{
 		de = new SurfDescriptorExtractor( 3/*octaves*/, 4/*octave_layers*/, false/*extended*/ );
 	}
@@ -172,10 +128,10 @@ DescriptorExtractor* createDescExtractor( const string& descriptorType )
 	return de;
 }
 
-/*DescriptorMatcher* createDescMatcher( const string& matherType)
+DescriptorMatcher* createDescMatcher( const string& matherType = string() )
 {
 	return new BruteForceMatcher<L2<float> >();
-}*/
+}
 
 const string DETECTOR_TYPE_STR = "detector_type";
 const string DESCRIPTOR_TYPE_STR = "descriptor_type";
@@ -218,14 +174,18 @@ void iter( Ptr<FeatureDetector> detector, Ptr<DescriptorExtractor> descriptor,
     cout << ">" << endl;
 
     cout << "< Matching keypoints by descriptors... ";
-    vector<Match> matches;
-    bruteForceMatche(descs1, descs2, Mat(), matches);
+    vector<int> matches;
+    vector<double> distances;
+    Ptr<DescriptorMatcher> matcher = createDescMatcher();
+    matcher->add( descs1 );
+    matcher->match( descs2, Mat(), matches, &distances );
     cout << ">" << endl;
 
     // TODO time
 
     Mat drawImg;
-    drawCorrespondences(img1, img2, transfMtr, keypoints1, keypoints2, matches, maxDist, drawImg );
+    drawCorrespondences(img1, img2, transfMtr, keypoints1, keypoints2,
+                        matches, distances, maxDist, drawImg );
     imshow( winName, drawImg);
 }
 
@@ -274,7 +234,7 @@ int main(int argc, char** argv)
     }
 
     namedWindow(winName, 1);
-    maxDist = 25;
+    maxDist = 12;
     createTrackbar( "maxDist", winName, &maxDist, 100, onMaxDistChange );
 
     onMaxDistChange(maxDist, 0);

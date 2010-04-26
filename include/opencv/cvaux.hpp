@@ -1868,7 +1868,7 @@ protected:
 };
 
 /****************************************************************************************\
-*                             2D image feature detectors                                *
+*                                    FeatureDetector                                     *
 \****************************************************************************************/
 
 class CV_EXPORTS FeatureDetector
@@ -1951,10 +1951,10 @@ protected:
 
 
 /****************************************************************************************\
-*                             descriptors for image keypoints                            *
+*                                 DescriptorExtractor                                    *
 \****************************************************************************************/
 
-class CV_EXPORTS CV_EXPORTS DescriptorExtractor
+class CV_EXPORTS DescriptorExtractor
 {
 public:
     virtual void compute( const Mat& image, vector<KeyPoint>& keypoints, Mat& descriptors ) const = 0;
@@ -1977,47 +1977,400 @@ protected:
     SURF surf;
 };
 
-/****************************************************************************************\
-*                                descriptors matching                                   *
-\****************************************************************************************/
-/*struct Match
-{
-    int index1;      // index of the descriptor from the first set.
-    int index2;      // index of the descriptor from the second set.
-    double distance; // computed distance between them.
-
-    Match(int index1, int index2, double distance)
-        : index1(index1), index2(index2), distance(distance) {}
-    operator double() const { return distance; }
-};
-
-class DescriptorMatcher
+template<typename T>
+class CV_EXPORTS CalonderDescriptorExtractor : public DescriptorExtractor
 {
 public:
-    void match( const Mat& descriptors_1, const Mat& descriptors_2, vector<Match>& matches) const
+    CalonderDescriptorExtractor( const string& classifierFile )
     {
-        matchImpl(descriptors_1, descriptors_2, cv::Mat(), matches);
-    }
-    void match( const Mat& descriptors_1, const Mat& descriptors_2, const Mat& mask,
-              vector<Match>& matches) const
-    {
-        matchImpl(descriptors_1, descriptors_2, mask, matches);
+        classifier.read(classifierFile.c_str());
     }
 
-    void matchWindowed( const vector<KeyPoint>& keypoints_1, const Mat& descriptors_1,
-                      const vector<KeyPoint>& keypoints_2, const Mat& descriptors_2,
-                      float maxDeltaX, float maxDeltaY, vector<Match>& matches) const;
+    virtual void compute( const Mat& image, vector<KeyPoint>& keypoints, Mat& descriptors) const
+    {
+        // Cannot compute descriptors for keypoints on the image border.
+        removeBorderKeypoints(keypoints, image.size(), BORDER_SIZE);
+
+        // TODO Check 16-byte aligned
+        descriptors.create( keypoints.size(), classifier.classes(), DataType<T>::type );
+        PatchGenerator patchGen;
+        RNG rng;
+
+        for( size_t i = 0; i < keypoints.size(); i++ )
+        {
+            Mat patch;
+            patchGen( image, keypoints[i].pt, patch, Size(PATCH_SIZE, PATCH_SIZE), rng );
+            IplImage ipl = patch;
+            classifier.getSignature( &ipl, descriptors.ptr<T>(i));
+        }
+    }
 
 protected:
-    virtual void matchImpl( const Mat& descriptors_1, const Mat& descriptors_2,
-                          const Mat& mask, vector<Match>& matches) const = 0;
+    static const int BORDER_SIZE = 16;
+    RTreeClassifier classifier;
+};
 
-    static bool possibleMatch( const Mat& mask, int index_1, int index_2)
+/****************************************************************************************\
+*                                          Distance                                      *
+\****************************************************************************************/
+template<typename T>
+struct CV_EXPORTS Accumulator
+{
+    typedef T Type;
+};
+
+template<> struct Accumulator<uint8_t>  { typedef uint32_t Type; };
+template<> struct Accumulator<uint16_t> { typedef uint32_t Type; };
+template<> struct Accumulator<int8_t>   { typedef int32_t Type; };
+template<> struct Accumulator<int16_t>  { typedef int32_t Type; };
+
+/*
+    Squared Euclidean distance functor
+*/
+template<class T>
+struct CV_EXPORTS L2
+{
+    typedef T ValueType;
+    typedef typename Accumulator<T>::Type ResultType;
+
+    ResultType operator()( const T* a, const T* b, int size ) const
+    {
+        ResultType result = ResultType();
+        for( int i = 0; i < size; i++ )
+        {
+            ResultType diff = a[i] - b[i];
+            result += diff*diff;
+        }
+        return result;
+    }
+};
+
+/****************************************************************************************\
+*                                  DescriptorMatcher                                     *
+\****************************************************************************************/
+/*
+  DescriptorMatcher
+*/
+class CV_EXPORTS DescriptorMatcher
+{
+public:
+    // Add descriptors to the training set
+    void add( const Mat& descriptors );
+
+    // Index the descriptors training set
+    void index();
+
+    // Find the best match for each descriptor from a query set
+    void match( const Mat& query, vector<int>& matches) const;
+
+    // Find the best matches between two descriptor sets, with constraints
+    // on which pairs of descriptors can be matched.
+    void match( const Mat& query, const Mat& mask,
+                vector<int>& matches, vector<double>* distances = 0 ) const;
+
+    // Find the best keypoint matches for small view changes.
+    /*void matchWindowed( const vector<KeyPoint>& keypoints_1, const Mat& descriptors_1,
+                        const vector<KeyPoint>& keypoints_2, const Mat& descriptors_2,
+                        float maxDeltaX, float maxDeltaY, vector<Match>& matches) const;*/
+
+protected:
+    Mat train;
+
+    // Find matches; match() calls this. Must be implemented by the subclass.
+    virtual void matchImpl( const Mat& descriptors_1, const Mat& descriptors_2,
+                            const Mat& mask, vector<int>& matches, vector<double>& distances ) const = 0;
+
+    static bool possibleMatch( const Mat& mask, int index_1, int index_2 )
     {
         return mask.empty() || mask.at<char>(index_1, index_2);
     }
 };
+
+inline void DescriptorMatcher::add( const Mat& descriptors )
+{
+    if( train.empty() )
+    {
+        train = descriptors;
+    }
+    else
+    {
+        // merge train and descriptors
+        Mat m( train.rows + descriptors.rows, train.cols, CV_32F );
+        Mat m1 = m.rowRange( 0, train.rows );
+        train.copyTo( m1 );
+        Mat m2 = m.rowRange( train.rows + 1, m.rows );
+        descriptors.copyTo( m2 );
+    }
+}
+
+inline void DescriptorMatcher::match( const Mat& query, vector<int>& matches ) const
+{
+    vector<double> distances;
+    matchImpl( query, train, Mat(), matches, distances );
+}
+
+inline void DescriptorMatcher::match( const Mat& query, const Mat& mask,
+                                      vector<int>& matches, vector<double>* distances ) const
+{
+    if( distances )
+        matchImpl( train, query, mask, matches, *distances );
+    else
+    {
+        vector<double> innDistances;
+        matchImpl( train, query, mask, matches, innDistances );
+    }
+}
+
+/*
+  BruteForceMatcher
 */
+template<class Distance>
+class CV_EXPORTS BruteForceMatcher : public DescriptorMatcher
+{
+public:
+    BruteForceMatcher( Distance d = Distance() ) : distance(d) {}
+
+protected:
+   virtual void matchImpl( const Mat& descriptors_1, const Mat& descriptors_2,
+                           const Mat& mask, vector<int>& matches, vector<double>& distances) const;
+
+   Distance distance;
+};
+
+template<class Distance>
+void BruteForceMatcher<Distance>::matchImpl( const Mat& descriptors_1, const Mat& descriptors_2,
+                                             const Mat& mask, vector<int>& matches,
+                                             vector<double>& distances) const
+{
+    typedef typename Distance::ValueType ValueType;
+    typedef typename Distance::ResultType DistanceType;
+
+    assert( mask.empty() || (mask.rows == descriptors_1.rows && mask.cols == descriptors_2.rows) );
+
+    assert( descriptors_1.cols == descriptors_2.cols );
+    assert( DataType<ValueType>::type == descriptors_1.type() );
+    assert( DataType<ValueType>::type == descriptors_2.type() );
+
+    int dimension = descriptors_1.cols;
+    matches.clear();
+    matches.reserve(descriptors_1.rows);
+
+    for( int i = 0; i < descriptors_1.rows; i++ )
+    {
+        const ValueType* d1 = descriptors_1.ptr<ValueType>(i);
+        int matchIndex = -1;
+        DistanceType matchDistance = std::numeric_limits<DistanceType>::max();
+
+        for( int j = 0; j < descriptors_2.rows; j++ )
+        {
+            if( possibleMatch(mask, i, j) )
+            {
+                const ValueType* d2 = descriptors_2.ptr<ValueType>(j);
+                DistanceType curDistance = distance(d1, d2, dimension);
+                if( curDistance < matchDistance )
+                {
+                    matchDistance = curDistance;
+                    matchIndex = j;
+                }
+            }
+        }
+
+        if( matchIndex != -1 )
+        {
+            matches.push_back( matchIndex );
+            distances.push_back( matchDistance );
+        }
+    }
+}
+
+
+/****************************************************************************************\
+*                                DescriptorMatchGeneric                                  *
+\****************************************************************************************/
+/*
+    A storage for sets of keypoints together with corresponding images and class IDs
+*/
+class CV_EXPORTS KeyPointCollection
+{
+public:
+    // adds keypoints from a single image to the storage
+    void add( const Mat& _image, const vector<KeyPoint>& _points );
+
+    // Returns the total number of keypoints in the collection
+    size_t calcKeypointCount() const;
+
+    // Returns the keypoint by its global index
+    KeyPoint getKeyPoint( int index ) const;
+
+    vector<Mat> images;
+    vector<vector<KeyPoint> > points;
+
+    // global indices of the first points in each image,
+    // startIndices.size() = points.size()
+    vector<int> startIndices;
+};
+
+/*
+    Abstract interface for a keypoint descriptor
+*/
+class CV_EXPORTS DescriptorMatchGeneric
+{
+public:
+    enum IndexType
+    {
+        NoIndex,
+        KDTreeIndex
+    };
+
+    DescriptorMatchGeneric() {}
+    virtual ~DescriptorMatchGeneric() {}
+
+    // Adds keypoints to the training set (descriptors are supposed to be calculated here)
+    virtual void add( KeyPointCollection& keypoints );
+
+    // Adds keypoints from a single image to the training set (descriptors are supposed to be calculated here)
+    virtual void add( const Mat& image, vector<KeyPoint>& points ) = 0;
+
+    // Classifies test keypoints
+    virtual void classify( const Mat& image, vector<KeyPoint>& points );
+
+    // Matches test keypoints to the training set
+    virtual void match( const Mat& image, vector<KeyPoint>& points, vector<int>& indices ) = 0;
+
+protected:
+    KeyPointCollection collection;
+};
+
+/*
+    One way descriptor
+*/
+class CV_EXPORTS DescriptorMatchOneWay : public DescriptorMatchGeneric
+{
+public:
+    class DescriptorMatchOneWayParams
+    {
+    public:
+        DescriptorMatchOneWayParams( int _poseCount = poseCountDefault,
+                                     Size _patchSize = Size(patchWidth, patchHeight),
+                                     string _trainPath = string(),
+                                     string _pcaConfig = string(), string _pcaHrConfig = string(),
+                                     string _pcaDescConfig = string(),
+                                     float minScale = minScaleDefault, float maxScale = maxScaleDefault,
+                                     float stepScale = stepScaleDefault) :
+            poseCount(_poseCount), patchSize(_patchSize), trainPath(_trainPath),
+            pcaConfig(_pcaConfig), pcaHrConfig(_pcaHrConfig), pcaDescConfig(_pcaDescConfig) {}
+
+        int poseCount;
+        Size patchSize;
+        string trainPath;
+        string pcaConfig, pcaHrConfig, pcaDescConfig;
+
+        float minScale, maxScale, stepScale;
+
+        const static int poseCountDefault = 500;
+        const static int patchWidth = 24;
+        const static int patchHeight = 24;
+        static const float minScaleDefault, maxScaleDefault, stepScaleDefault;
+    };
+
+    DescriptorMatchOneWay();
+
+    // Equivalent to calling PointMatchOneWay() followed by Initialize(_params)
+    DescriptorMatchOneWay( const DescriptorMatchOneWayParams& _params );
+    virtual ~DescriptorMatchOneWay();
+
+    // Sets one way descriptor parameters
+    void initialize( const DescriptorMatchOneWay::DescriptorMatchOneWayParams& _params );
+
+    // Calculates one way descriptors for a set of keypoints
+    virtual void add( const Mat& image, vector<KeyPoint>& keypoints );
+
+    // Calculates one way descriptors for a set of keypoints
+    virtual void add( const KeyPointCollection& keypoints );
+
+    // Matches a set of keypoints from a single image ot the training set. A rectangle with a center in a keypoint
+    // and size (patch_width/2*scale, patch_height/2*scale) is cropped from the source image for each
+    // keypoint. scale is iterated from DescriptorOneWayParams::min_scale to DescriptorOneWayParams::max_scale.
+    // The minimum distance to each training patch with all its affine poses is found over all scales.
+    // The class ID of a match is returned for each keypoint. The distance is calculated over PCA components
+    // loaded with DescriptorOneWay::Initialize, kd tree is used for finding minimum distances.
+    virtual void match( const Mat& image, vector<KeyPoint>& points, vector<int>& indices );
+
+    // Classify a set of keypoints. The same as match, but returns point classes rather than indices
+    virtual void classify( const Mat& image, vector<KeyPoint>& points );
+
+protected:
+    Ptr<OneWayDescriptorBase> base;
+    DescriptorMatchOneWayParams params;
+    vector<int> classIds;
+};
+
+/****************************************************************************************\
+*                                DescriptorMatchVector                                   *
+\****************************************************************************************/
+/*
+    An abstract class used for matching descriptors that can be described as vectors in a finite-dimensional space
+*/
+template<class Extractor, class Matcher>
+class CV_EXPORTS DescriptorMatchVector : public DescriptorMatchGeneric
+{
+public:
+    using DescriptorMatchGeneric::add;
+
+    DescriptorMatchVector( const Extractor& _extractor = Extractor(), const Matcher& _matcher = Matcher() ) :
+                           extractor(_extractor), matcher(_matcher) {}
+
+    ~DescriptorMatchVector() {}
+
+    // Builds flann index
+    void index();
+
+    // Calculates descriptors for a set of keypoints from a single image
+    virtual void add(const Mat& image, vector<KeyPoint>& keypoints)
+    {
+        Mat descriptors;
+        extractor.compute( image, keypoints, descriptors );
+        matcher.add( descriptors );
+
+        collection.add( Mat(), keypoints );
+    };
+
+    // Matches a set of keypoints with the training set
+    virtual void match( const Mat& image, vector<KeyPoint>& points, vector<int>& keypointIndices)
+    {
+        Mat descriptors;
+        extractor.compute( image, points, descriptors );
+
+        matcher.match( descriptors, keypointIndices );
+    };
+
+protected:
+    Extractor extractor;
+    Matcher matcher;
+    vector<int> classIds;
+};
+
+// A factory function for creating an arbitrary descriptor matcher at runtime
+/*inline DescriptorMatchGeneric* createDescriptorMatcher(std::string extractor = "SURF", std::string matcher = "BruteForce")
+{
+    DescriptorMatchGeneric* descriptors = NULL;
+
+    if(matcher.compare("BruteForce") != 0)
+    {
+        // only one matcher exists now
+        return 0;
+    }
+
+    if(extractor.compare("SURF"))
+    {
+        descriptors = new DescriptorMatchVector<features_2d::SurfDescriptorExtractor, features_2d::BruteForceMatcher<features_2d::L2<float> > >();
+    }
+    else if(extractor.compare("OneWay"))
+    {
+        descriptors = new DescriptorMatchOneWay();
+    }
+}*/
+
 }
 
 #endif /* __cplusplus */
