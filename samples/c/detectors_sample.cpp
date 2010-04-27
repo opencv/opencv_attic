@@ -50,7 +50,7 @@ void drawCorrespondences( const Mat& img1, const Mat& img2, const Mat& transfMtr
     float err = 3;
     vector<int>::const_iterator mit = matches.begin();
     vector<double>::const_iterator dit = distances.begin();
-    assert( matches.size() == distances.size() );
+    assert( matches.size() == distances.size() && matches.size() == keypoints1.size() );
     for( int i1 = 0; mit < matches.end(); ++mit, ++dit, i1++ )
     {
         Point2f pt1 = keypoints1[i1].pt, pt2 = keypoints2[*mit].pt;
@@ -177,15 +177,15 @@ void iter( Ptr<FeatureDetector> detector, Ptr<DescriptorExtractor> descriptor,
     vector<int> matches;
     vector<double> distances;
     Ptr<DescriptorMatcher> matcher = createDescMatcher();
-    matcher->add( descs1 );
-    matcher->match( descs2, Mat(), matches, &distances );
+    matcher->add( descs2 );
+    matcher->match( descs1, matches, &distances );
     cout << ">" << endl;
 
     // TODO time
 
     Mat drawImg;
-    drawCorrespondences(img1, img2, transfMtr, keypoints1, keypoints2,
-                        matches, distances, maxDist, drawImg );
+    drawCorrespondences( img1, img2, transfMtr, keypoints1, keypoints2,
+                         matches, distances, maxDist, drawImg );
     imshow( winName, drawImg);
 }
 
