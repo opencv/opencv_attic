@@ -47,9 +47,10 @@ using namespace cv;
 /****************************************************************************************\
 *                                 DescriptorExtractor                                    *
 \****************************************************************************************/
+
 /*
-    DescriptorExtractor
-*/
+ *   DescriptorExtractor
+ */
 struct RoiPredicate
 {
     RoiPredicate(float _minX, float _minY, float _maxX, float _maxY)
@@ -76,16 +77,16 @@ void DescriptorExtractor::removeBorderKeypoints( vector<KeyPoint>& keypoints,
 }
 
 /*
-  SurfDescriptorExtractor
-*/
+ * SurfDescriptorExtractor
+ */
 SurfDescriptorExtractor::SurfDescriptorExtractor( int nOctaves,
                                                   int nOctaveLayers, bool extended )
     : surf( 0.0, nOctaves, nOctaveLayers, extended )
 {}
 
-void SurfDescriptorExtractor::compute(const cv::Mat& image,
-                                      std::vector<cv::KeyPoint>& keypoints,
-                                      cv::Mat& descriptors) const
+void SurfDescriptorExtractor::compute( const Mat& image,
+                                       vector<KeyPoint>& keypoints,
+                                       Mat& descriptors) const
 {
     // Compute descriptors for given keypoints
     vector<float> _descriptors;
@@ -101,9 +102,10 @@ void SurfDescriptorExtractor::compute(const cv::Mat& image,
 /****************************************************************************************\
 *                                DescriptorMatchGeneric                                  *
 \****************************************************************************************/
+
 /*
-  KeyPointCollection
-*/
+ * KeyPointCollection
+ */
 void KeyPointCollection::add( const Mat& _image, const vector<KeyPoint>& _points )
 {
     // update m_start_indices
@@ -135,8 +137,8 @@ size_t KeyPointCollection::calcKeypointCount() const
 }
 
 /*
-  DescriptorMatchGeneric
-*/
+ * DescriptorMatchGeneric
+ */
 void DescriptorMatchGeneric::add( KeyPointCollection& collection )
 {
     for( size_t i = 0; i < collection.images.size(); i++ )
@@ -154,15 +156,14 @@ void DescriptorMatchGeneric::classify( const Mat& image, vector<cv::KeyPoint>& p
 };
 
 /*
-  DescriptorMatchOneWay
-*/
+ * DescriptorMatchOneWay
+ */
 const float DescriptorMatchOneWay::DescriptorMatchOneWayParams::minScaleDefault = 1.0;
 const float DescriptorMatchOneWay::DescriptorMatchOneWayParams::maxScaleDefault = 3.0;
 const float DescriptorMatchOneWay::DescriptorMatchOneWayParams::stepScaleDefault = 1.15;
 
 DescriptorMatchOneWay::DescriptorMatchOneWay()
-{
-}
+{}
 
 DescriptorMatchOneWay::DescriptorMatchOneWay( const DescriptorMatchOneWay::DescriptorMatchOneWayParams& _params)
 {
@@ -170,8 +171,7 @@ DescriptorMatchOneWay::DescriptorMatchOneWay( const DescriptorMatchOneWay::Descr
 }
 
 DescriptorMatchOneWay::~DescriptorMatchOneWay()
-{
-}
+{}
 
 void DescriptorMatchOneWay::initialize( const DescriptorMatchOneWay::DescriptorMatchOneWayParams& _params)
 {
@@ -181,11 +181,11 @@ void DescriptorMatchOneWay::initialize( const DescriptorMatchOneWay::DescriptorM
 
 void DescriptorMatchOneWay::add( const Mat& image, vector<KeyPoint>& keypoints )
 {
-    if( !base )
+    if( base.empty() )
     {
         base = new OneWayDescriptorObject( params.patchSize, params.poseCount, params.trainPath.c_str(),
-                                             params.pcaConfig.c_str(), params.pcaHrConfig.c_str(),
-                                             params.pcaDescConfig.c_str());
+                                           params.pcaConfig.c_str(), params.pcaHrConfig.c_str(),
+                                           params.pcaDescConfig.c_str());
     }
 
     size_t trainFeatureCount = keypoints.size();
@@ -206,7 +206,7 @@ void DescriptorMatchOneWay::add( const Mat& image, vector<KeyPoint>& keypoints )
 
 void DescriptorMatchOneWay::add( const KeyPointCollection& keypoints )
 {
-    if( !base )
+    if( base.empty() )
     {
         base = new OneWayDescriptorObject( params.patchSize, params.poseCount, params.trainPath.c_str(),
                                            params.pcaConfig.c_str(), params.pcaHrConfig.c_str(),
@@ -236,20 +236,17 @@ void DescriptorMatchOneWay::add( const KeyPointCollection& keypoints )
 #endif
 }
 
-/*
-  DescriptorMatchOneWay
-*/
 void DescriptorMatchOneWay::match( const Mat& image, vector<KeyPoint>& points, vector<int>& indices)
 {
     indices.resize(points.size());
     IplImage _image = image;
     for( size_t i = 0; i < points.size(); i++ )
     {
-        int desc_idx = -1;
-        int pose_idx = -1;
+        int descIdx = -1;
+        int poseIdx = -1;
         float distance;
-        base->FindDescriptor( &_image, points[i].pt, desc_idx, pose_idx, distance );
-        indices[i] = desc_idx;
+        base->FindDescriptor( &_image, points[i].pt, descIdx, poseIdx, distance );
+        indices[i] = descIdx;
     }
 }
 
@@ -258,10 +255,10 @@ void DescriptorMatchOneWay::classify( const Mat& image, vector<KeyPoint>& points
     IplImage _image = image;
     for( size_t i = 0; i < points.size(); i++ )
     {
-        int desc_idx = -1;
-        int pose_idx = -1;
+        int descIdx = -1;
+        int poseIdx = -1;
         float distance;
-        base->FindDescriptor(&_image, points[i].pt, desc_idx, pose_idx, distance);
-        points[i].class_id = collection.getKeyPoint(desc_idx).class_id;
+        base->FindDescriptor(&_image, points[i].pt, descIdx, poseIdx, distance);
+        points[i].class_id = collection.getKeyPoint(descIdx).class_id;
     }
 }

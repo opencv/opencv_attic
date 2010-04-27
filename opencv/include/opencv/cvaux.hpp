@@ -1227,254 +1227,255 @@ struct DefaultRngAuto
     DefaultRngAuto& operator=(const DefaultRngAuto&);
 };
 
-	/****************************************************************************************\
-	*            Calonder Descriptor														 *
-	\****************************************************************************************/
-	/*!
-	A pseudo-random number generator usable with std::random_shuffle.
-	*/
-	typedef cv::RNG CalonderRng;
-	typedef unsigned int int_type;
+/****************************************************************************************\
+*            Calonder Descriptor														 *
+\****************************************************************************************/
 
-	//----------------------------
-	//randomized_tree.h
+/*
+A pseudo-random number generator usable with std::random_shuffle.
+*/
+typedef cv::RNG CalonderRng;
+typedef unsigned int int_type;
 
-	//class RTTester;
+//----------------------------
+//randomized_tree.h
 
-	//namespace features {
-	static const size_t DEFAULT_REDUCED_NUM_DIM = 176;
-	static const float LOWER_QUANT_PERC = .03f;
-	static const float UPPER_QUANT_PERC = .92f;
-	static const int PATCH_SIZE = 32;
-	static const int DEFAULT_DEPTH = 9;
-	static const int DEFAULT_VIEWS = 5000;
-	struct RTreeNode;
+//class RTTester;
 
-	struct BaseKeypoint
-	{
-		int x;
-		int y;
-		IplImage* image;
+//namespace features {
+static const size_t DEFAULT_REDUCED_NUM_DIM = 176;
+static const float LOWER_QUANT_PERC = .03f;
+static const float UPPER_QUANT_PERC = .92f;
+static const int PATCH_SIZE = 32;
+static const int DEFAULT_DEPTH = 9;
+static const int DEFAULT_VIEWS = 5000;
+struct RTreeNode;
 
-		BaseKeypoint()
-			: x(0), y(0), image(NULL)
-		{}
+struct BaseKeypoint
+{
+    int x;
+    int y;
+    IplImage* image;
 
-		BaseKeypoint(int x, int y, IplImage* image)
-			: x(x), y(y), image(image)
-		{}
-	};
+    BaseKeypoint()
+        : x(0), y(0), image(NULL)
+    {}
 
-	class CSMatrixGenerator {
-	public:
-		typedef enum { PDT_GAUSS=1, PDT_BERNOULLI, PDT_DBFRIENDLY } PHI_DISTR_TYPE;
-		~CSMatrixGenerator();
-		static float* getCSMatrix(int m, int n, PHI_DISTR_TYPE dt);     // do NOT free returned pointer
+    BaseKeypoint(int x, int y, IplImage* image)
+        : x(x), y(y), image(image)
+    {}
+};
 
-	private:
-		static float *cs_phi_;    // matrix for compressive sensing
-		static int cs_phi_m_, cs_phi_n_;
-	};
+class CSMatrixGenerator {
+public:
+    typedef enum { PDT_GAUSS=1, PDT_BERNOULLI, PDT_DBFRIENDLY } PHI_DISTR_TYPE;
+    ~CSMatrixGenerator();
+    static float* getCSMatrix(int m, int n, PHI_DISTR_TYPE dt);     // do NOT free returned pointer
 
-
-   template< typename T >
-   struct AlignedMemBlock
-   {
-      AlignedMemBlock() : raw(NULL), data(NULL) { };
-
-      // Alloc's an `a` bytes-aligned block good to hold `sz` elements of class T
-      AlignedMemBlock(const int n, const int a)
-      {
-         alloc(n, a);
-      }
-
-      ~AlignedMemBlock()
-      {
-         free(raw);
-      }
-
-      void alloc(const int n, const int a)
-      {
-         uchar* raw = (uchar*)malloc(n*sizeof(T) + a);
-         int delta = (a - uint64(raw)%a)%a;          // # bytes required for padding s.t. we get `a`-aligned
-         data = reinterpret_cast<T*>(raw + delta);
-      }
-
-      // Methods to access the aligned data. NEVER EVER FREE A RETURNED POINTER!
-      inline T* p() { return data; }
-      inline T* operator()() { return data; }
-
-   private:
-      T *raw;     // raw block, probably not aligned
-      T *data;    // exposed data, aligned, DO NOT FREE
-   };
-
-   typedef AlignedMemBlock<float> FloatSignature;
-   typedef AlignedMemBlock<uchar> Signature;
-
-	class CV_EXPORTS RandomizedTree
-	{
-	public:
-		friend class RTreeClassifier;
-		//friend class ::RTTester;
-
-		RandomizedTree();
-		~RandomizedTree();
-
-		void train(std::vector<BaseKeypoint> const& base_set, cv::RNG &rng,
-			int depth, int views, size_t reduced_num_dim, int num_quant_bits);
-
-      void train(std::vector<BaseKeypoint> const& base_set, cv::RNG &rng,
-			PatchGenerator &make_patch, int depth, int views, size_t reduced_num_dim,
-			int num_quant_bits);
-
-		// following two funcs are EXPERIMENTAL (do not use unless you know exactly what you do)
-		static void quantizeVector(float *vec, int dim, int N, float bnds[2], int clamp_mode=0);
-		static void quantizeVector(float *src, int dim, int N, float bnds[2], uchar *dst);
-
-		// patch_data must be a 32x32 array (no row padding)
-		float* getPosterior(uchar* patch_data);
-		const float* getPosterior(uchar* patch_data) const;
-		uchar* getPosterior2(uchar* patch_data);
-
-		void read(const char* file_name, int num_quant_bits);
-		void read(std::istream &is, int num_quant_bits);
-		void write(const char* file_name) const;
-		void write(std::ostream &os) const;
-
-		inline int classes() { return classes_; }
-		inline int depth() { return depth_; }
-
-		inline void applyQuantization(int num_quant_bits) { makePosteriors2(num_quant_bits); }
-
-		// debug
-		void savePosteriors(std::string url, bool append=false);
-		void savePosteriors2(std::string url, bool append=false);
-
-	private:
-		int classes_;
-		int depth_;
-		int num_leaves_;
-		std::vector<RTreeNode> nodes_;
-		//float **posteriors_;       // 16-bytes aligned posteriors
-		//uchar **posteriors2_;      // 16-bytes aligned posteriors
-      FloatSignature *posteriors_;
-      Signature  *posteriors2_;
-      std::vector<int> leaf_counts_;
-
-		void createNodes(int num_nodes, cv::RNG &rng);
-		void allocPosteriorsAligned(int num_leaves, int num_classes);
-		void freePosteriors(int which);    // which: 1=posteriors_, 2=posteriors2_, 3=both
-		void init(int classes, int depth, cv::RNG &rng);
-		void addExample(int class_id, uchar* patch_data);
-		void finalize(size_t reduced_num_dim, int num_quant_bits);
-		int getIndex(uchar* patch_data) const;
-		inline float* getPosteriorByIndex(int index);
-		inline uchar* getPosteriorByIndex2(int index);
-		inline const float* getPosteriorByIndex(int index) const;
-		//void makeRandomMeasMatrix(float *cs_phi, PHI_DISTR_TYPE dt, size_t reduced_num_dim);
-		void convertPosteriorsToChar();
-		void makePosteriors2(int num_quant_bits);
-		void compressLeaves(size_t reduced_num_dim);
-		void estimateQuantPercForPosteriors(float perc[2]);
-	};
-
-	struct RTreeNode
-	{
-		short offset1, offset2;
-
-		RTreeNode() {}
-
-		RTreeNode(uchar x1, uchar y1, uchar x2, uchar y2)
-			: offset1(y1*PATCH_SIZE + x1),
-			offset2(y2*PATCH_SIZE + x2)
-		{}
-
-		//! Left child on 0, right child on 1
-		inline bool operator() (uchar* patch_data) const
-		{
-			return patch_data[offset1] > patch_data[offset2];
-		}
-	};
+private:
+    static float *cs_phi_;    // matrix for compressive sensing
+    static int cs_phi_m_, cs_phi_n_;
+};
 
 
+template< typename T >
+struct AlignedMemBlock
+{
+  AlignedMemBlock() : raw(NULL), data(NULL) { };
 
-	//} // namespace features
-	//----------------------------
-	//rtree_classifier.h
-	//class RTTester;
+  // Alloc's an `a` bytes-aligned block good to hold `sz` elements of class T
+  AlignedMemBlock(const int n, const int a)
+  {
+     alloc(n, a);
+  }
 
-	//namespace features {
+  ~AlignedMemBlock()
+  {
+     free(raw);
+  }
 
-	class CV_EXPORTS RTreeClassifier
-	{
-	public:
-		//friend class ::RTTester;
-		static const int DEFAULT_TREES = 80;
-		static const size_t DEFAULT_NUM_QUANT_BITS = 4;
+  void alloc(const int n, const int a)
+  {
+     uchar* raw = (uchar*)malloc(n*sizeof(T) + a);
+     int delta = (a - uint64(raw)%a)%a;          // # bytes required for padding s.t. we get `a`-aligned
+     data = reinterpret_cast<T*>(raw + delta);
+  }
 
-      //static const int SIG_LEN = 176;
+  // Methods to access the aligned data. NEVER EVER FREE A RETURNED POINTER!
+  inline T* p() { return data; }
+  inline T* operator()() { return data; }
 
-      RTreeClassifier();
+private:
+  T *raw;     // raw block, probably not aligned
+  T *data;    // exposed data, aligned, DO NOT FREE
+};
 
-		//modified
-		void train(std::vector<BaseKeypoint> const& base_set,
-			cv::RNG &rng,
-			int num_trees = RTreeClassifier::DEFAULT_TREES,
-			int depth = DEFAULT_DEPTH,
-			int views = DEFAULT_VIEWS,
-			size_t reduced_num_dim = DEFAULT_REDUCED_NUM_DIM,
-			int num_quant_bits = DEFAULT_NUM_QUANT_BITS,
-         bool print_status = true);
+typedef AlignedMemBlock<float> FloatSignature;
+typedef AlignedMemBlock<uchar> Signature;
 
-      void train(std::vector<BaseKeypoint> const& base_set,
-			cv::RNG &rng,
-			PatchGenerator &make_patch,
-			int num_trees = DEFAULT_TREES,
-			int depth = DEFAULT_DEPTH,
-			int views = DEFAULT_VIEWS,
-			size_t reduced_num_dim = DEFAULT_REDUCED_NUM_DIM,
-			int num_quant_bits = DEFAULT_NUM_QUANT_BITS,
-         bool print_status = true);
+class CV_EXPORTS RandomizedTree
+{
+public:
+    friend class RTreeClassifier;
+    //friend class ::RTTester;
 
-		// sig must point to a memory block of at least classes()*sizeof(float|uchar) bytes
-		void getSignature(IplImage *patch, uchar *sig);
-		void getSignature(IplImage *patch, float *sig);
-		void getSparseSignature(IplImage *patch, float *sig, float thresh);
-		// TODO: deprecated in favor of getSignature overload, remove
-		void getFloatSignature(IplImage *patch, float *sig) { getSignature(patch, sig); }
+    RandomizedTree();
+    ~RandomizedTree();
 
-		static int countNonZeroElements(float *vec, int n, double tol=1e-10);
-		static inline void safeSignatureAlloc(uchar **sig, int num_sig=1, int sig_len=176);
-		static inline uchar* safeSignatureAlloc(int num_sig=1, int sig_len=176);
+    void train(std::vector<BaseKeypoint> const& base_set, cv::RNG &rng,
+        int depth, int views, size_t reduced_num_dim, int num_quant_bits);
 
-		inline int classes() { return classes_; }
-		inline int original_num_classes() { return original_num_classes_; }
+  void train(std::vector<BaseKeypoint> const& base_set, cv::RNG &rng,
+        PatchGenerator &make_patch, int depth, int views, size_t reduced_num_dim,
+        int num_quant_bits);
 
-		void setQuantization(int num_quant_bits);
-		void discardFloatPosteriors();
+    // following two funcs are EXPERIMENTAL (do not use unless you know exactly what you do)
+    static void quantizeVector(float *vec, int dim, int N, float bnds[2], int clamp_mode=0);
+    static void quantizeVector(float *src, int dim, int N, float bnds[2], uchar *dst);
 
-		void read(const char* file_name);
-		void read(std::istream &is);
-		void write(const char* file_name) const;
-		void write(std::ostream &os) const;
+    // patch_data must be a 32x32 array (no row padding)
+    float* getPosterior(uchar* patch_data);
+    const float* getPosterior(uchar* patch_data) const;
+    uchar* getPosterior2(uchar* patch_data);
 
-		// experimental and debug
-		void saveAllFloatPosteriors(std::string file_url);
-		void saveAllBytePosteriors(std::string file_url);
-		void setFloatPosteriorsFromTextfile_176(std::string url);
-		float countZeroElements();
+    void read(const char* file_name, int num_quant_bits);
+    void read(std::istream &is, int num_quant_bits);
+    void write(const char* file_name) const;
+    void write(std::ostream &os) const;
 
-		std::vector<RandomizedTree> trees_;
+    inline int classes() { return classes_; }
+    inline int depth() { return depth_; }
 
-	private:
-		int classes_;
-		int num_quant_bits_;
-		uchar **posteriors_;
-		ushort *ptemp_;
-		int original_num_classes_;
-		bool keep_floats_;
-	};
+    inline void applyQuantization(int num_quant_bits) { makePosteriors2(num_quant_bits); }
+
+    // debug
+    void savePosteriors(std::string url, bool append=false);
+    void savePosteriors2(std::string url, bool append=false);
+
+private:
+    int classes_;
+    int depth_;
+    int num_leaves_;
+    std::vector<RTreeNode> nodes_;
+    //float **posteriors_;       // 16-bytes aligned posteriors
+    //uchar **posteriors2_;      // 16-bytes aligned posteriors
+  FloatSignature *posteriors_;
+  Signature  *posteriors2_;
+  std::vector<int> leaf_counts_;
+
+    void createNodes(int num_nodes, cv::RNG &rng);
+    void allocPosteriorsAligned(int num_leaves, int num_classes);
+    void freePosteriors(int which);    // which: 1=posteriors_, 2=posteriors2_, 3=both
+    void init(int classes, int depth, cv::RNG &rng);
+    void addExample(int class_id, uchar* patch_data);
+    void finalize(size_t reduced_num_dim, int num_quant_bits);
+    int getIndex(uchar* patch_data) const;
+    inline float* getPosteriorByIndex(int index);
+    inline uchar* getPosteriorByIndex2(int index);
+    inline const float* getPosteriorByIndex(int index) const;
+    //void makeRandomMeasMatrix(float *cs_phi, PHI_DISTR_TYPE dt, size_t reduced_num_dim);
+    void convertPosteriorsToChar();
+    void makePosteriors2(int num_quant_bits);
+    void compressLeaves(size_t reduced_num_dim);
+    void estimateQuantPercForPosteriors(float perc[2]);
+};
+
+struct RTreeNode
+{
+    short offset1, offset2;
+
+    RTreeNode() {}
+
+    RTreeNode(uchar x1, uchar y1, uchar x2, uchar y2)
+        : offset1(y1*PATCH_SIZE + x1),
+        offset2(y2*PATCH_SIZE + x2)
+    {}
+
+    //! Left child on 0, right child on 1
+    inline bool operator() (uchar* patch_data) const
+    {
+        return patch_data[offset1] > patch_data[offset2];
+    }
+};
+
+
+
+//} // namespace features
+//----------------------------
+//rtree_classifier.h
+//class RTTester;
+
+//namespace features {
+
+class CV_EXPORTS RTreeClassifier
+{
+public:
+    //friend class ::RTTester;
+    static const int DEFAULT_TREES = 80;
+    static const size_t DEFAULT_NUM_QUANT_BITS = 4;
+
+  //static const int SIG_LEN = 176;
+
+  RTreeClassifier();
+
+    //modified
+    void train(std::vector<BaseKeypoint> const& base_set,
+        cv::RNG &rng,
+        int num_trees = RTreeClassifier::DEFAULT_TREES,
+        int depth = DEFAULT_DEPTH,
+        int views = DEFAULT_VIEWS,
+        size_t reduced_num_dim = DEFAULT_REDUCED_NUM_DIM,
+        int num_quant_bits = DEFAULT_NUM_QUANT_BITS,
+     bool print_status = true);
+
+  void train(std::vector<BaseKeypoint> const& base_set,
+        cv::RNG &rng,
+        PatchGenerator &make_patch,
+        int num_trees = DEFAULT_TREES,
+        int depth = DEFAULT_DEPTH,
+        int views = DEFAULT_VIEWS,
+        size_t reduced_num_dim = DEFAULT_REDUCED_NUM_DIM,
+        int num_quant_bits = DEFAULT_NUM_QUANT_BITS,
+     bool print_status = true);
+
+    // sig must point to a memory block of at least classes()*sizeof(float|uchar) bytes
+    void getSignature(IplImage *patch, uchar *sig);
+    void getSignature(IplImage *patch, float *sig);
+    void getSparseSignature(IplImage *patch, float *sig, float thresh);
+    // TODO: deprecated in favor of getSignature overload, remove
+    void getFloatSignature(IplImage *patch, float *sig) { getSignature(patch, sig); }
+
+    static int countNonZeroElements(float *vec, int n, double tol=1e-10);
+    static inline void safeSignatureAlloc(uchar **sig, int num_sig=1, int sig_len=176);
+    static inline uchar* safeSignatureAlloc(int num_sig=1, int sig_len=176);
+
+    inline int classes() { return classes_; }
+    inline int original_num_classes() { return original_num_classes_; }
+
+    void setQuantization(int num_quant_bits);
+    void discardFloatPosteriors();
+
+    void read(const char* file_name);
+    void read(std::istream &is);
+    void write(const char* file_name) const;
+    void write(std::ostream &os) const;
+
+    // experimental and debug
+    void saveAllFloatPosteriors(std::string file_url);
+    void saveAllBytePosteriors(std::string file_url);
+    void setFloatPosteriorsFromTextfile_176(std::string url);
+    float countZeroElements();
+
+    std::vector<RandomizedTree> trees_;
+
+private:
+    int classes_;
+    int num_quant_bits_;
+    uchar **posteriors_;
+    ushort *ptemp_;
+    int original_num_classes_;
+    bool keep_floats_;
+};
 
 CV_EXPORTS bool find4QuadCornerSubpix(const Mat& img, std::vector<Point2f>& corners, Size region_size);
 
@@ -1871,20 +1872,38 @@ protected:
 *                                    FeatureDetector                                     *
 \****************************************************************************************/
 
+/*
+ * Abstract base class for 2D image feature detectors.
+ */
 class CV_EXPORTS FeatureDetector
 {
 public:
+    /*
+     * Detect keypoints in an image.
+     *
+     * image        The image.
+     * keypoints    The detected keypoints.
+     * mask         Mask specifying where to look for keypoints (optional). Must be a char matrix with non-zero values in the region of interest.
+     */
     void detect( const Mat& image, vector<KeyPoint>& keypoints, const Mat& mask=Mat() ) const
     {
         detectImpl( image, mask, keypoints );
     }
 
 protected:
+    /*
+     * Detect keypoints; detect() calls this. Must be implemented by the subclass.
+     */
     virtual void detectImpl( const Mat& image, const Mat& mask, vector<KeyPoint>& keypoints ) const = 0;
 
+    /*
+     * Remove keypoints that are not in the mask.
+     *
+     * Helper function, useful when wrapping a library call for keypoint detection that
+     * does not support a mask argument.
+     */
     static void removeInvalidPoints( const Mat& mask, vector<KeyPoint>& keypoints );
 };
-
 
 class CV_EXPORTS FastFeatureDetector : public FeatureDetector
 {
@@ -1954,12 +1973,33 @@ protected:
 *                                 DescriptorExtractor                                    *
 \****************************************************************************************/
 
+/*
+ * Abstract base class for computing descriptors for image keypoints.
+ *
+ * In this interface we assume a keypoint descriptor can be represented as a
+ * dense, fixed-dimensional vector of some basic type. Most descriptors used
+ * in practice follow this pattern, as it makes it very easy to compute
+ * distances between descriptors. Therefore we represent a collection of
+ * descriptors as a cv::Mat, where each row is one keypoint descriptor.
+ */
 class CV_EXPORTS DescriptorExtractor
 {
 public:
+    /*
+     * Compute the descriptors for a set of keypoints in an image.
+     *
+     * Must be implemented by the subclass.
+     *
+     * image        The image.
+     * keypoints    The keypoints. Keypoints for which a descriptor cannot be computed are removed.
+     * descriptors  The descriptors. Row i is the descriptor for keypoint i.
+     */
     virtual void compute( const Mat& image, vector<KeyPoint>& keypoints, Mat& descriptors ) const = 0;
 
 protected:
+    /*
+     * Remove keypoints within border_pixels of an image edge.
+     */
     static void removeBorderKeypoints( vector<KeyPoint>& keypoints,
                                        Size imageSize, int borderPixels );
 };
@@ -2025,8 +2065,8 @@ template<> struct Accumulator<int8_t>   { typedef int32_t Type; };
 template<> struct Accumulator<int16_t>  { typedef int32_t Type; };
 
 /*
-    Squared Euclidean distance functor
-*/
+ * Squared Euclidean distance functor
+ */
 template<class T>
 struct CV_EXPORTS L2
 {
@@ -2049,26 +2089,58 @@ struct CV_EXPORTS L2
 *                                  DescriptorMatcher                                     *
 \****************************************************************************************/
 /*
-  DescriptorMatcher
-*/
+ * Abstract base class for matching two sets of descriptors.
+ */
 class CV_EXPORTS DescriptorMatcher
 {
 public:
-    // Add descriptors to the training set
+    /*
+     * Add descriptors to the training set
+     * descriptors Descriptors to add to the training set
+     */
     void add( const Mat& descriptors );
 
-    // Index the descriptors training set
+    /*
+     * Index the descriptors training set
+     */
     void index();
 
-    // Find the best match for each descriptor from a query set
-    void match( const Mat& query, vector<int>& matches) const;
+    /*
+     * Find the best match for each descriptor from a query set
+     *
+     * query         The query set of descriptors
+     * matches       Indices of the closest matches from the training set
+     */
+    void match( const Mat& query, vector<int>& matches, vector<double>* distances = 0 ) const;
 
-    // Find the best matches between two descriptor sets, with constraints
-    // on which pairs of descriptors can be matched.
+    /*
+     * Find the best matches between two descriptor sets, with constraints
+     * on which pairs of descriptors can be matched.
+     *
+     * The mask describes which descriptors can be matched. descriptors_1[i]
+     * can be matched with descriptors_2[j] only if mask.at<char>(i,j) is non-zero.
+     *
+     * query         The query set of descriptors
+     * mask          Mask specifying permissible matches.
+     * matches       Indices of the closest matches from the training set
+     */
     void match( const Mat& query, const Mat& mask,
                 vector<int>& matches, vector<double>* distances = 0 ) const;
 
-    // Find the best keypoint matches for small view changes.
+    /*
+     * Find the best keypoint matches for small view changes.
+     *
+     * This function will only match descriptors whose keypoints have close enough
+     * image coordinates.
+     *
+     * keypoints_1   The first set of keypoints.
+     * descriptors_1 The first set of descriptors.
+     * keypoints_2   The second set of keypoints.
+     * descriptors_2 The second set of descriptors.
+     * maxDeltaX     The maximum horizontal displacement.
+     * maxDeltaY     The maximum vertical displacement.
+     * matches       The matches between both sets.
+     */
     /*void matchWindowed( const vector<KeyPoint>& keypoints_1, const Mat& descriptors_1,
                         const vector<KeyPoint>& keypoints_2, const Mat& descriptors_2,
                         float maxDeltaX, float maxDeltaY, vector<Match>& matches) const;*/
@@ -2076,7 +2148,10 @@ public:
 protected:
     Mat train;
 
-    // Find matches; match() calls this. Must be implemented by the subclass.
+    /*
+     * Find matches; match() calls this. Must be implemented by the subclass.
+     * The mask may be empty.
+     */
     virtual void matchImpl( const Mat& descriptors_1, const Mat& descriptors_2,
                             const Mat& mask, vector<int>& matches, vector<double>& distances ) const = 0;
 
@@ -2100,30 +2175,42 @@ inline void DescriptorMatcher::add( const Mat& descriptors )
         train.copyTo( m1 );
         Mat m2 = m.rowRange( train.rows + 1, m.rows );
         descriptors.copyTo( m2 );
+        train = m;
     }
 }
 
-inline void DescriptorMatcher::match( const Mat& query, vector<int>& matches ) const
+inline void DescriptorMatcher::match( const Mat& query, vector<int>& matches, vector<double>* distances ) const
 {
-    vector<double> distances;
-    matchImpl( query, train, Mat(), matches, distances );
+    if( distances )
+        matchImpl( query, train, Mat(), matches, *distances );
+    else
+    {
+        vector<double> innDistances;
+        matchImpl( query, train, Mat(), matches, innDistances );
+    }
 }
 
 inline void DescriptorMatcher::match( const Mat& query, const Mat& mask,
                                       vector<int>& matches, vector<double>* distances ) const
 {
     if( distances )
-        matchImpl( train, query, mask, matches, *distances );
+        matchImpl( query, train, mask, matches, *distances );
     else
     {
         vector<double> innDistances;
-        matchImpl( train, query, mask, matches, innDistances );
+        matchImpl( query, train, mask, matches, innDistances );
     }
 }
 
 /*
-  BruteForceMatcher
-*/
+ * Brute-force descriptor matcher.
+ *
+ * For each descriptor in the first set, this matcher finds the closest
+ * descriptor in the second set by trying each one.
+ *
+ * For efficiency, BruteForceMatcher is templated on the distance metric.
+ * For float descriptors, a common choice would be features_2d::L2<float>.
+ */
 template<class Distance>
 class CV_EXPORTS BruteForceMatcher : public DescriptorMatcher
 {
@@ -2188,12 +2275,14 @@ void BruteForceMatcher<Distance>::matchImpl( const Mat& descriptors_1, const Mat
 *                                DescriptorMatchGeneric                                  *
 \****************************************************************************************/
 /*
-    A storage for sets of keypoints together with corresponding images and class IDs
-*/
+ * A storage for sets of keypoints together with corresponding images and class IDs
+ */
 class CV_EXPORTS KeyPointCollection
 {
 public:
-    // adds keypoints from a single image to the storage
+    // Adds keypoints from a single image to the storage
+    // image    Source image
+    // points   A vector of keypoints
     void add( const Mat& _image, const vector<KeyPoint>& _points );
 
     // Returns the total number of keypoints in the collection
@@ -2211,8 +2300,8 @@ public:
 };
 
 /*
-    Abstract interface for a keypoint descriptor
-*/
+ *   Abstract interface for a keypoint descriptor
+ */
 class CV_EXPORTS DescriptorMatchGeneric
 {
 public:
@@ -2232,9 +2321,14 @@ public:
     virtual void add( const Mat& image, vector<KeyPoint>& points ) = 0;
 
     // Classifies test keypoints
+    // image    The source image
+    // points   Test keypoints from the source image
     virtual void classify( const Mat& image, vector<KeyPoint>& points );
 
     // Matches test keypoints to the training set
+    // image        The source image
+    // points       Test keypoints from the source image
+    // class_ids    A vector to be filled with keypoint class_ids
     virtual void match( const Mat& image, vector<KeyPoint>& points, vector<int>& indices ) = 0;
 
 protected:
@@ -2242,8 +2336,8 @@ protected:
 };
 
 /*
-    One way descriptor
-*/
+ *  One way descriptor
+ */
 class CV_EXPORTS DescriptorMatchOneWay : public DescriptorMatchGeneric
 {
 public:
@@ -2308,9 +2402,10 @@ protected:
 /****************************************************************************************\
 *                                DescriptorMatchVector                                   *
 \****************************************************************************************/
+
 /*
-    An abstract class used for matching descriptors that can be described as vectors in a finite-dimensional space
-*/
+ *  An abstract class used for matching descriptors that can be described as vectors in a finite-dimensional space
+ */
 template<class Extractor, class Matcher>
 class CV_EXPORTS DescriptorMatchVector : public DescriptorMatchGeneric
 {
