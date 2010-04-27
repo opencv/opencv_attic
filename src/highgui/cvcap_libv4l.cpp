@@ -492,7 +492,6 @@ static void v4l2_free_ranges(CvCaptureCAM_V4L* capture) {
       double value = (capture->v4l2_ctrl_ranges[i]->initial_value == 0)?0.0:((float)capture->v4l2_ctrl_ranges[i]->initial_value - capture->v4l2_ctrl_ranges[i]->minimum) / (capture->v4l2_ctrl_ranges[i]->maximum - capture->v4l2_ctrl_ranges[i]->minimum);
       /* Return device to default values: */
       /* double value = (capture->v4l2_ctrl_ranges[i]->default_value == 0)?0.0:((float)capture->v4l2_ctrl_ranges[i]->default_value - capture->v4l2_ctrl_ranges[i]->minimum + 1) / (capture->v4l2_ctrl_ranges[i]->maximum - capture->v4l2_ctrl_ranges[i]->minimum); */
-printf("-%d, %d, %d, %d, %d, %f\n", capture->v4l2_ctrl_ranges[i]->ctrl_id, capture->v4l2_ctrl_ranges[i]->initial_value, capture->v4l2_ctrl_ranges[i]->default_value, capture->v4l2_ctrl_ranges[i]->minimum, capture->v4l2_ctrl_ranges[i]->maximum, value);
       icvSetPropertyCAM_V4L(capture, capture->v4l2_ctrl_ranges[i]->ctrl_id, value);
       free(capture->v4l2_ctrl_ranges[i]);
     }
@@ -699,12 +698,12 @@ static int _capture_V4L2 (CvCaptureCAM_V4L *capture, char *deviceName)
   capture->form.fmt.pix.height = DEFAULT_V4L_HEIGHT;
 
   if (-1 == xioctl (capture->deviceHandle, VIDIOC_S_FMT, &capture->form)) {
-      fprintf( stderr, "HIGHGUI ERROR: libv4l unable to ioctl S_FMT\n\n");
+      fprintf(stderr, "HIGHGUI ERROR: libv4l unable to ioctl S_FMT\n");
       return -1;
   }
 
   if (V4L2_PIX_FMT_BGR24 != capture->form.fmt.pix.pixelformat) {
-      fprintf( stderr, "HIGHGUI ERROR: libv4l unable convert to requested pixfmt\n\n");
+      fprintf( stderr, "HIGHGUI ERROR: libv4l unable convert to requested pixfmt\n");
       return -1;
   }
 
@@ -783,11 +782,11 @@ static int _capture_V4L2 (CvCaptureCAM_V4L *capture, char *deviceName)
 
        capture->buffers[n_buffers].length = buf.length;
        capture->buffers[n_buffers].start =
-         mmap (NULL /* start anywhere */,
-               buf.length,
-               PROT_READ | PROT_WRITE /* required */,
-               MAP_SHARED /* recommended */,
-               capture->deviceHandle, buf.m.offset);
+         v4l2_mmap (NULL /* start anywhere */,
+                    buf.length,
+                    PROT_READ | PROT_WRITE /* required */,
+                    MAP_SHARED /* recommended */,
+                    capture->deviceHandle, buf.m.offset);
 
        if (MAP_FAILED == capture->buffers[n_buffers].start) {
            perror ("mmap");
