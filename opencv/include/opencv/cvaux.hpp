@@ -1325,7 +1325,7 @@ public:
     void train(std::vector<BaseKeypoint> const& base_set, cv::RNG &rng,
         int depth, int views, size_t reduced_num_dim, int num_quant_bits);
 
-  void train(std::vector<BaseKeypoint> const& base_set, cv::RNG &rng,
+    void train(std::vector<BaseKeypoint> const& base_set, cv::RNG &rng,
         PatchGenerator &make_patch, int depth, int views, size_t reduced_num_dim,
         int num_quant_bits);
 
@@ -1426,7 +1426,7 @@ public:
         int views = DEFAULT_VIEWS,
         size_t reduced_num_dim = DEFAULT_REDUCED_NUM_DIM,
         int num_quant_bits = DEFAULT_NUM_QUANT_BITS,
-     bool print_status = true);
+        bool print_status = true);
 
   void train(std::vector<BaseKeypoint> const& base_set,
         cv::RNG &rng,
@@ -1436,7 +1436,7 @@ public:
         int views = DEFAULT_VIEWS,
         size_t reduced_num_dim = DEFAULT_REDUCED_NUM_DIM,
         int num_quant_bits = DEFAULT_NUM_QUANT_BITS,
-     bool print_status = true);
+        bool print_status = true);
 
     // sig must point to a memory block of at least classes()*sizeof(float|uchar) bytes
     void getSignature(IplImage *patch, uchar *sig);
@@ -1449,7 +1449,7 @@ public:
     static inline void safeSignatureAlloc(uchar **sig, int num_sig=1, int sig_len=176);
     static inline uchar* safeSignatureAlloc(int num_sig=1, int sig_len=176);
 
-    inline int classes() { return classes_; }
+    inline int classes() const { return classes_; }
     inline int original_num_classes() { return original_num_classes_; }
 
     void setQuantization(int num_quant_bits);
@@ -2017,7 +2017,7 @@ protected:
     SURF surf;
 };
 
-template<typename T>
+/*template<typename T>
 class CV_EXPORTS CalonderDescriptorExtractor : public DescriptorExtractor
 {
 public:
@@ -2048,7 +2048,7 @@ public:
 protected:
     static const int BORDER_SIZE = 16;
     RTreeClassifier classifier;
-};
+};*/
 
 /****************************************************************************************\
 *                                          Distance                                      *
@@ -2111,6 +2111,9 @@ public:
      * query         The query set of descriptors
      * matches       Indices of the closest matches from the training set
      */
+
+
+    // TODO: remove vector<double>* distances = 0 ???
     void match( const Mat& query, vector<int>& matches, vector<double>* distances = 0 ) const;
 
     /*
@@ -2272,7 +2275,7 @@ void BruteForceMatcher<Distance>::matchImpl( const Mat& descriptors_1, const Mat
 
 
 /****************************************************************************************\
-*                                DescriptorMatchGeneric                                  *
+*                                GenericDescriptorMatch                                  *
 \****************************************************************************************/
 /*
  * A storage for sets of keypoints together with corresponding images and class IDs
@@ -2302,7 +2305,7 @@ public:
 /*
  *   Abstract interface for a keypoint descriptor
  */
-class CV_EXPORTS DescriptorMatchGeneric
+class CV_EXPORTS GenericDescriptorMatch
 {
 public:
     enum IndexType
@@ -2311,8 +2314,8 @@ public:
         KDTreeIndex
     };
 
-    DescriptorMatchGeneric() {}
-    virtual ~DescriptorMatchGeneric() {}
+    GenericDescriptorMatch() {}
+    virtual ~GenericDescriptorMatch() {}
 
     // Adds keypoints to the training set (descriptors are supposed to be calculated here)
     virtual void add( KeyPointCollection& keypoints );
@@ -2336,21 +2339,21 @@ protected:
 };
 
 /*
- *  One way descriptor
+ *  OneWayDescriptorMatch
  */
-class CV_EXPORTS DescriptorMatchOneWay : public DescriptorMatchGeneric
+class CV_EXPORTS OneWayDescriptorMatch : public GenericDescriptorMatch
 {
 public:
-    class DescriptorMatchOneWayParams
+    class Params
     {
     public:
-        DescriptorMatchOneWayParams( int _poseCount = poseCountDefault,
-                                     Size _patchSize = Size(patchWidth, patchHeight),
-                                     string _trainPath = string(),
-                                     string _pcaConfig = string(), string _pcaHrConfig = string(),
-                                     string _pcaDescConfig = string(),
-                                     float minScale = minScaleDefault, float maxScale = maxScaleDefault,
-                                     float stepScale = stepScaleDefault) :
+        Params( int _poseCount = POSE_COUNT,
+                Size _patchSize = Size(PATCH_WIDTH, PATCH_HEIGHT),
+                string _trainPath = string(),
+                string _pcaConfig = string(), string _pcaHrConfig = string(),
+                string _pcaDescConfig = string(),
+                float minScale = MIN_SCALE, float maxScale = MAX_SCALE,
+                float stepScale = STEP_SCALE) :
             poseCount(_poseCount), patchSize(_patchSize), trainPath(_trainPath),
             pcaConfig(_pcaConfig), pcaHrConfig(_pcaHrConfig), pcaDescConfig(_pcaDescConfig) {}
 
@@ -2361,28 +2364,30 @@ public:
 
         float minScale, maxScale, stepScale;
 
-        const static int poseCountDefault = 500;
-        const static int patchWidth = 24;
-        const static int patchHeight = 24;
-        static const float minScaleDefault, maxScaleDefault, stepScaleDefault;
+        const static int POSE_COUNT = 500;
+        const static int PATCH_WIDTH = 24;
+        const static int PATCH_HEIGHT = 24;
+        static const float MIN_SCALE = 1.f;
+        static const float MAX_SCALE = 3.f;
+        static const float STEP_SCALE = 1.15f;
     };
 
-    DescriptorMatchOneWay();
+    OneWayDescriptorMatch();
 
     // Equivalent to calling PointMatchOneWay() followed by Initialize(_params)
-    DescriptorMatchOneWay( const DescriptorMatchOneWayParams& _params );
-    virtual ~DescriptorMatchOneWay();
+    OneWayDescriptorMatch( const Params& _params );
+    virtual ~OneWayDescriptorMatch();
 
     // Sets one way descriptor parameters
-    void initialize( const DescriptorMatchOneWay::DescriptorMatchOneWayParams& _params );
+    void initialize( const Params& _params );
 
     // Calculates one way descriptors for a set of keypoints
     virtual void add( const Mat& image, vector<KeyPoint>& keypoints );
 
     // Calculates one way descriptors for a set of keypoints
-    virtual void add( const KeyPointCollection& keypoints );
+    virtual void add( KeyPointCollection& keypoints );
 
-    // Matches a set of keypoints from a single image ot the training set. A rectangle with a center in a keypoint
+    // Matches a set of keypoints from a single image of the training set. A rectangle with a center in a keypoint
     // and size (patch_width/2*scale, patch_height/2*scale) is cropped from the source image for each
     // keypoint. scale is iterated from DescriptorOneWayParams::min_scale to DescriptorOneWayParams::max_scale.
     // The minimum distance to each training patch with all its affine poses is found over all scales.
@@ -2395,33 +2400,147 @@ public:
 
 protected:
     Ptr<OneWayDescriptorBase> base;
-    DescriptorMatchOneWayParams params;
-    vector<int> classIds;
+    Params params;
+};
+
+/*
+ *  CalonderDescriptorMatch
+ */
+class CV_EXPORTS CalonderDescriptorMatch : public GenericDescriptorMatch
+{
+public:
+    class Params
+    {
+    public:
+        static const int DEFAULT_NUM_TREES = 80;
+        static const int DEFAULT_DEPTH = 9;
+        static const int DEFAULT_VIEWS = 5000;
+        static const size_t DEFAULT_REDUCED_NUM_DIM = 176;
+        static const size_t DEFAULT_NUM_QUANT_BITS = 4;
+        static const int DEFAULT_PATCH_SIZE = PATCH_SIZE;
+
+        Params( const RNG& _rng = RNG(), const PatchGenerator& _patchGen = PatchGenerator(),
+                int _numTrees=DEFAULT_NUM_TREES,
+                int _depth=DEFAULT_DEPTH,
+                int _views=DEFAULT_VIEWS,
+                size_t _reducedNumDim=DEFAULT_REDUCED_NUM_DIM,
+                int _numQuantBits=DEFAULT_NUM_QUANT_BITS,
+                bool _printStatus=true,
+                int _patchSize=DEFAULT_PATCH_SIZE );
+        Params( const string& _filename );
+
+        RNG rng;
+        PatchGenerator patchGen;
+        int numTrees;
+        int depth;
+        int views;
+        int patchSize;
+        size_t reducedNumDim;
+        int numQuantBits;
+        bool printStatus;
+
+        string filename;
+    };
+
+    CalonderDescriptorMatch();
+
+    CalonderDescriptorMatch( const Params& _params );
+    virtual ~CalonderDescriptorMatch();
+
+    void initialize( const Params& _params );
+
+    virtual void add( const Mat& image, vector<KeyPoint>& keypoints );
+
+    virtual void match( const Mat& image, vector<KeyPoint>& keypoints, vector<int>& indices );
+
+    virtual void classify( const Mat& image, vector<KeyPoint>& keypoints );
+
+protected:
+    void trainRTreeClassifier();
+    Mat extractPatch( const Mat& image, const Point& pt, int patchSize ) const;
+    void calcBestProbAndMatchIdx( const Mat& image, const Point& pt,
+                                  float& bestProb, int& bestMatchIdx, float* signature );
+
+    Ptr<RTreeClassifier> classifier;
+    Params params;
+};
+
+/*
+ *  FernDescriptorMatch
+ */
+class CV_EXPORTS FernDescriptorMatch : public GenericDescriptorMatch
+{
+public:
+    class Params
+    {
+    public:
+        Params( int _nclasses=0,
+                int _patchSize=FernClassifier::PATCH_SIZE,
+                int _signatureSize=FernClassifier::DEFAULT_SIGNATURE_SIZE,
+                int _nstructs=FernClassifier::DEFAULT_STRUCTS,
+                int _structSize=FernClassifier::DEFAULT_STRUCT_SIZE,
+                int _nviews=FernClassifier::DEFAULT_VIEWS,
+                int _compressionMethod=FernClassifier::COMPRESSION_NONE,
+                const PatchGenerator& patchGenerator=PatchGenerator() );
+
+        Params( const string& _filename );
+
+        int nclasses;
+        int patchSize;
+        int signatureSize;
+        int nstructs;
+        int structSize;
+        int nviews;
+        int compressionMethod;
+        PatchGenerator patchGenerator;
+
+        string filename;
+    };
+
+    FernDescriptorMatch();
+
+    FernDescriptorMatch( const Params& _params );
+    virtual ~FernDescriptorMatch();
+
+    void initialize( const Params& _params );
+
+    virtual void add( const Mat& image, vector<KeyPoint>& keypoints );
+
+    virtual void match( const Mat& image, vector<KeyPoint>& keypoints, vector<int>& indices );
+
+    virtual void classify( const Mat& image, vector<KeyPoint>& keypoints );
+
+protected:
+    void trainFernClassifier();
+    void calcBestProbAndMatchIdx( const Mat& image, const Point2f& pt,
+                                  float& bestProb, int& bestMatchIdx, vector<float>& signature );
+    Ptr<FernClassifier> classifier;
+    Params params;
 };
 
 /****************************************************************************************\
-*                                DescriptorMatchVector                                   *
+*                                VectorDescriptorMatch                                   *
 \****************************************************************************************/
 
 /*
  *  An abstract class used for matching descriptors that can be described as vectors in a finite-dimensional space
  */
 template<class Extractor, class Matcher>
-class CV_EXPORTS DescriptorMatchVector : public DescriptorMatchGeneric
+class CV_EXPORTS VectorDescriptorMatch : public GenericDescriptorMatch
 {
 public:
-    using DescriptorMatchGeneric::add;
+    using GenericDescriptorMatch::add;
 
-    DescriptorMatchVector( const Extractor& _extractor = Extractor(), const Matcher& _matcher = Matcher() ) :
+    VectorDescriptorMatch( const Extractor& _extractor = Extractor(), const Matcher& _matcher = Matcher() ) :
                            extractor(_extractor), matcher(_matcher) {}
 
-    ~DescriptorMatchVector() {}
+    ~VectorDescriptorMatch() {}
 
     // Builds flann index
     void index();
 
     // Calculates descriptors for a set of keypoints from a single image
-    virtual void add(const Mat& image, vector<KeyPoint>& keypoints)
+    virtual void add( const Mat& image, vector<KeyPoint>& keypoints )
     {
         Mat descriptors;
         extractor.compute( image, keypoints, descriptors );
@@ -2431,7 +2550,7 @@ public:
     };
 
     // Matches a set of keypoints with the training set
-    virtual void match( const Mat& image, vector<KeyPoint>& points, vector<int>& keypointIndices)
+    virtual void match( const Mat& image, vector<KeyPoint>& points, vector<int>& keypointIndices )
     {
         Mat descriptors;
         extractor.compute( image, points, descriptors );
@@ -2446,9 +2565,9 @@ protected:
 };
 
 // A factory function for creating an arbitrary descriptor matcher at runtime
-/*inline DescriptorMatchGeneric* createDescriptorMatcher(std::string extractor = "SURF", std::string matcher = "BruteForce")
+/*inline GenericDescriptorMatch* createDescriptorMatcher(std::string extractor = "SURF", std::string matcher = "BruteForce")
 {
-    DescriptorMatchGeneric* descriptors = NULL;
+    GenericDescriptorMatch* descriptors = NULL;
 
     if(matcher.compare("BruteForce") != 0)
     {

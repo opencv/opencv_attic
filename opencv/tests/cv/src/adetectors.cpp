@@ -68,7 +68,7 @@ inline void linearizeHomographyAt( const Mat_<double>& H, const Point2f& pt, Mat
 
 //----------------------------------- Repeatability ---------------------------------------------------
 
-// find the key points located in the part of the scene present in both images
+// Find the key points located in the part of the scene present in both images
 // and project keypoints2 on img1
 void getCommonKeyPointsOnImg1( const Mat& img1, const Mat img2, const Mat& H12,
                                const vector<KeyPoint>& keypoints1, const vector<KeyPoint>& keypoints2,
