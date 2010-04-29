@@ -47,7 +47,6 @@ using namespace cv;
 /****************************************************************************************\
 *                                 DescriptorExtractor                                    *
 \****************************************************************************************/
-
 /*
  *   DescriptorExtractor
  */
@@ -76,9 +75,9 @@ void DescriptorExtractor::removeBorderKeypoints( vector<KeyPoint>& keypoints,
                      keypoints.end());
 }
 
-/*
- * SurfDescriptorExtractor
- */
+/****************************************************************************************\
+*                                SurfDescriptorExtractor                                  *
+\****************************************************************************************/
 SurfDescriptorExtractor::SurfDescriptorExtractor( int nOctaves,
                                                   int nOctaveLayers, bool extended )
     : surf( 0.0, nOctaves, nOctaveLayers, extended )
@@ -100,9 +99,8 @@ void SurfDescriptorExtractor::compute( const Mat& image,
 }
 
 /****************************************************************************************\
-*                                DescriptorMatchGeneric                                  *
+*                                GenericDescriptorMatch                                  *
 \****************************************************************************************/
-
 /*
  * KeyPointCollection
  */
@@ -124,7 +122,7 @@ KeyPoint KeyPointCollection::getKeyPoint( int index ) const
     size_t i = 0;
     for(; i < startIndices.size() && startIndices[i] <= index; i++);
     i--;
-    assert(i < startIndices.size() && index - startIndices[i] < points[i].size());
+    assert(i < startIndices.size() && (size_t)index - startIndices[i] < points[i].size());
 
     return points[i][index - startIndices[i]];
 }
@@ -137,15 +135,15 @@ size_t KeyPointCollection::calcKeypointCount() const
 }
 
 /*
- * DescriptorMatchGeneric
+ * GenericDescriptorMatch
  */
-void DescriptorMatchGeneric::add( KeyPointCollection& collection )
+void GenericDescriptorMatch::add( KeyPointCollection& collection )
 {
     for( size_t i = 0; i < collection.images.size(); i++ )
         add( collection.images[i], collection.points[i] );
 }
 
-void DescriptorMatchGeneric::classify( const Mat& image, vector<cv::KeyPoint>& points )
+void GenericDescriptorMatch::classify( const Mat& image, vector<cv::KeyPoint>& points )
 {
     vector<int> keypointIndices;
     match( image, points, keypointIndices );
@@ -155,43 +153,36 @@ void DescriptorMatchGeneric::classify( const Mat& image, vector<cv::KeyPoint>& p
         points[i].class_id = collection.getKeyPoint(keypointIndices[i]).class_id;
 };
 
-/*
- * DescriptorMatchOneWay
- */
-const float DescriptorMatchOneWay::DescriptorMatchOneWayParams::minScaleDefault = 1.0;
-const float DescriptorMatchOneWay::DescriptorMatchOneWayParams::maxScaleDefault = 3.0;
-const float DescriptorMatchOneWay::DescriptorMatchOneWayParams::stepScaleDefault = 1.15;
-
-DescriptorMatchOneWay::DescriptorMatchOneWay()
+/****************************************************************************************\
+*                                OneWayDescriptorMatch                                  *
+\****************************************************************************************/
+OneWayDescriptorMatch::OneWayDescriptorMatch()
 {}
 
-DescriptorMatchOneWay::DescriptorMatchOneWay( const DescriptorMatchOneWay::DescriptorMatchOneWayParams& _params)
+OneWayDescriptorMatch::OneWayDescriptorMatch( const Params& _params)
 {
     initialize(_params);
 }
 
-DescriptorMatchOneWay::~DescriptorMatchOneWay()
+OneWayDescriptorMatch::~OneWayDescriptorMatch()
 {}
 
-void DescriptorMatchOneWay::initialize( const DescriptorMatchOneWay::DescriptorMatchOneWayParams& _params)
+void OneWayDescriptorMatch::initialize( const Params& _params)
 {
     base.release();
     params = _params;
 }
 
-void DescriptorMatchOneWay::add( const Mat& image, vector<KeyPoint>& keypoints )
+void OneWayDescriptorMatch::add( const Mat& image, vector<KeyPoint>& keypoints )
 {
     if( base.empty() )
-    {
         base = new OneWayDescriptorObject( params.patchSize, params.poseCount, params.trainPath.c_str(),
                                            params.pcaConfig.c_str(), params.pcaHrConfig.c_str(),
                                            params.pcaDescConfig.c_str());
-    }
 
     size_t trainFeatureCount = keypoints.size();
 
     base->Allocate( trainFeatureCount );
-    // classIds.insert( classIds.end(), trainFeatureCount, -1);
 
     IplImage _image = image;
     for( size_t i = 0; i < keypoints.size(); i++ )
@@ -204,24 +195,20 @@ void DescriptorMatchOneWay::add( const Mat& image, vector<KeyPoint>& keypoints )
 #endif
 }
 
-void DescriptorMatchOneWay::add( const KeyPointCollection& keypoints )
+void OneWayDescriptorMatch::add( KeyPointCollection& keypoints )
 {
     if( base.empty() )
-    {
         base = new OneWayDescriptorObject( params.patchSize, params.poseCount, params.trainPath.c_str(),
                                            params.pcaConfig.c_str(), params.pcaHrConfig.c_str(),
                                            params.pcaDescConfig.c_str());
-    }
 
     size_t trainFeatureCount = keypoints.calcKeypointCount();
 
-    base->Allocate( trainFeatureCount ); //TBD
+    base->Allocate( trainFeatureCount );
 
     int count = 0;
     for( size_t i = 0; i < keypoints.points.size(); i++ )
     {
-        // classIds.insert(classIds.end(), keypoints.classIds[i].begin(), keypoints.classIds[i].end());
-
         for( size_t j = 0; j < keypoints.points[i].size(); j++ )
         {
             IplImage img = keypoints.images[i];
@@ -236,7 +223,7 @@ void DescriptorMatchOneWay::add( const KeyPointCollection& keypoints )
 #endif
 }
 
-void DescriptorMatchOneWay::match( const Mat& image, vector<KeyPoint>& points, vector<int>& indices)
+void OneWayDescriptorMatch::match( const Mat& image, vector<KeyPoint>& points, vector<int>& indices)
 {
     indices.resize(points.size());
     IplImage _image = image;
@@ -250,7 +237,7 @@ void DescriptorMatchOneWay::match( const Mat& image, vector<KeyPoint>& points, v
     }
 }
 
-void DescriptorMatchOneWay::classify( const Mat& image, vector<KeyPoint>& points )
+void OneWayDescriptorMatch::classify( const Mat& image, vector<KeyPoint>& points )
 {
     IplImage _image = image;
     for( size_t i = 0; i < points.size(); i++ )
@@ -262,3 +249,256 @@ void DescriptorMatchOneWay::classify( const Mat& image, vector<KeyPoint>& points
         points[i].class_id = collection.getKeyPoint(descIdx).class_id;
     }
 }
+
+/****************************************************************************************\
+*                                CalonderDescriptorMatch                                 *
+\****************************************************************************************/
+CalonderDescriptorMatch::Params::Params( const RNG& _rng, const PatchGenerator& _patchGen,
+                                         int _numTrees, int _depth, int _views,
+                                         size_t _reducedNumDim,
+                                         int _numQuantBits,
+                                         bool _printStatus,
+                                         int _patchSize ) :
+        rng(_rng), patchGen(_patchGen), numTrees(_numTrees), depth(_depth), views(_views),
+        patchSize(_patchSize), reducedNumDim(_reducedNumDim), numQuantBits(_numQuantBits), printStatus(_printStatus)
+{}
+
+CalonderDescriptorMatch::Params::Params( const string& _filename )
+{
+    filename = _filename;
+}
+
+CalonderDescriptorMatch::CalonderDescriptorMatch()
+{}
+
+CalonderDescriptorMatch::CalonderDescriptorMatch( const Params& _params )
+{
+    initialize(_params);
+}
+
+CalonderDescriptorMatch::~CalonderDescriptorMatch()
+{}
+
+void CalonderDescriptorMatch::initialize( const Params& _params )
+{
+    classifier.release();
+    params = _params;
+    if( !params.filename.empty() )
+    {
+        classifier = new RTreeClassifier;
+        classifier->read( params.filename.c_str() );
+    }
+}
+
+void CalonderDescriptorMatch::add( const Mat& image, vector<KeyPoint>& keypoints )
+{
+    if( params.filename.empty() )
+        collection.add( image, keypoints );
+}
+
+Mat CalonderDescriptorMatch::extractPatch( const Mat& image, const Point& pt, int patchSize ) const
+{
+    const int offset = patchSize / 2;
+    return image( Rect(pt.x - offset, pt.y - offset, patchSize, patchSize) );
+}
+
+void CalonderDescriptorMatch::calcBestProbAndMatchIdx( const Mat& image, const Point& pt,
+                                                       float& bestProb, int& bestMatchIdx, float* signature )
+{
+    IplImage roi = extractPatch( image, pt, params.patchSize );
+    classifier->getSignature( &roi, signature );
+
+    bestProb = 0;
+    bestMatchIdx = -1;
+    for( size_t ci = 0; ci < (size_t)classifier->classes(); ci++ )
+    {
+        if( signature[ci] > bestProb )
+        {
+            bestProb = signature[ci];
+            bestMatchIdx = ci;
+        }
+    }
+}
+
+void CalonderDescriptorMatch::trainRTreeClassifier()
+{
+    if( classifier.empty() )
+    {
+        assert( params.filename.empty() );
+        classifier = new RTreeClassifier;
+
+        vector<BaseKeypoint> baseKeyPoints;
+        vector<IplImage> iplImages( collection.images.size() );
+        for( size_t imageIdx = 0; imageIdx < collection.images.size(); imageIdx++ )
+        {
+            iplImages[imageIdx] = collection.images[imageIdx];
+            for( size_t pointIdx = 0; pointIdx < collection.points[imageIdx].size(); pointIdx++ )
+            {
+                BaseKeypoint bkp;
+                KeyPoint kp = collection.points[imageIdx][pointIdx];
+                bkp.x = kp.pt.x;
+                bkp.y = kp.pt.y;
+                bkp.image = &iplImages[imageIdx];
+                baseKeyPoints.push_back(bkp);
+            }
+        }
+        classifier->train( baseKeyPoints, params.rng, params.patchGen, params.numTrees,
+                           params.depth, params.views, params.reducedNumDim, params.numQuantBits,
+                           params.printStatus );
+    }
+}
+
+void CalonderDescriptorMatch::match( const Mat& image, vector<KeyPoint>& keypoints, vector<int>& indices )
+{
+    trainRTreeClassifier();
+
+    float bestProb = 0;
+    AutoBuffer<float> signature( classifier->classes() );
+    indices.resize( keypoints.size() );
+
+    for( size_t pi = 0; pi < keypoints.size(); pi++ )
+        calcBestProbAndMatchIdx( image, keypoints[pi].pt, bestProb, indices[pi], signature );
+}
+
+void CalonderDescriptorMatch::classify( const Mat& image, vector<KeyPoint>& keypoints )
+{
+    trainRTreeClassifier();
+
+    AutoBuffer<float> signature( classifier->classes() );
+    for( size_t pi = 0; pi < keypoints.size(); pi++ )
+    {
+        float bestProb = 0;
+        int bestMatchIdx = -1;
+        calcBestProbAndMatchIdx( image, keypoints[pi].pt, bestProb, bestMatchIdx, signature );
+        keypoints[pi].class_id = collection.getKeyPoint(bestMatchIdx).class_id;
+    }
+}
+
+/****************************************************************************************\
+*                                  FernDescriptorMatch                                   *
+\****************************************************************************************/
+FernDescriptorMatch::Params::Params( int _nclasses, int _patchSize, int _signatureSize,
+                                     int _nstructs, int _structSize, int _nviews, int _compressionMethod,
+                                     const PatchGenerator& _patchGenerator ) :
+    nclasses(_nclasses), patchSize(_patchSize), signatureSize(_signatureSize),
+    nstructs(_nstructs), structSize(_structSize), nviews(_nviews),
+    compressionMethod(_compressionMethod), patchGenerator(_patchGenerator)
+{}
+
+FernDescriptorMatch::Params::Params( const string& _filename )
+{
+    filename = _filename;
+}
+
+FernDescriptorMatch::FernDescriptorMatch()
+{}
+
+FernDescriptorMatch::FernDescriptorMatch( const Params& _params )
+{}
+
+FernDescriptorMatch::~FernDescriptorMatch()
+{}
+
+void FernDescriptorMatch::initialize( const Params& _params )
+{
+    classifier.release();
+    params = _params;
+    if( !params.filename.empty() )
+    {
+        classifier = new FernClassifier;
+        FileStorage fs(params.filename, FileStorage::READ);
+        if( fs.isOpened() )
+            classifier->read( fs.getFirstTopLevelNode() );
+    }
+}
+
+void FernDescriptorMatch::add( const Mat& image, vector<KeyPoint>& keypoints )
+{
+    if( params.filename.empty() )
+        collection.add( image, keypoints );
+}
+
+void FernDescriptorMatch::trainFernClassifier()
+{
+    if( classifier.empty() )
+    {
+        assert( params.filename.empty() );
+
+        vector<Point2f> points;
+        vector<Ptr<Mat> > refimgs( collection.images.size() );
+        vector<int> labels;
+        for( size_t imageIdx = 0; imageIdx < collection.images.size(); imageIdx++ )
+        {
+            refimgs[imageIdx] = &collection.images[imageIdx];
+            for( size_t pointIdx = 0; pointIdx < collection.points[imageIdx].size(); pointIdx++ )
+            {
+                points.push_back(collection.points[imageIdx][pointIdx].pt);
+                labels.push_back(imageIdx);
+            }
+        }
+
+        classifier = new FernClassifier( points, refimgs, labels, params.nclasses, params.patchSize,
+                                         params.signatureSize, params.nstructs, params.structSize, params.nviews,
+                                         params.compressionMethod, params.patchGenerator );
+    }
+}
+
+void FernDescriptorMatch::calcBestProbAndMatchIdx( const Mat& image, const Point2f& pt,
+                                                   float& bestProb, int& bestMatchIdx, vector<float>& signature )
+{
+    (*classifier)( image, pt, signature);
+
+    bestProb = 0;
+    bestMatchIdx = -1;
+    for( size_t ci = 0; ci < (size_t)classifier->getClassCount(); ci++ )
+    {
+        if( signature[ci] > bestProb )
+        {
+            bestProb = signature[ci];
+            bestMatchIdx = ci;
+        }
+    }
+}
+
+void FernDescriptorMatch::match( const Mat& image, vector<KeyPoint>& keypoints, vector<int>& indices )
+{
+    trainFernClassifier();
+
+    float bestProb = 0;
+    indices.resize( keypoints.size() );
+    vector<float> signature( (size_t)classifier->getClassCount() );
+
+    for( size_t pi = 0; pi < keypoints.size(); pi++ )
+        calcBestProbAndMatchIdx( image, keypoints[pi].pt, bestProb, indices[pi], signature );
+}
+
+void FernDescriptorMatch::classify( const Mat& image, vector<KeyPoint>& keypoints )
+{
+    trainFernClassifier();
+
+    vector<float> signature( (size_t)classifier->getClassCount() );
+    for( size_t pi = 0; pi < keypoints.size(); pi++ )
+    {
+        float bestProb = 0;
+        int bestMatchIdx = -1;
+        calcBestProbAndMatchIdx( image, keypoints[pi].pt, bestProb, bestMatchIdx, signature );
+        keypoints[pi].class_id = collection.getKeyPoint(bestMatchIdx).class_id;
+    }
+}
+
+class Detector
+{
+public:
+    class Params
+    {
+        int p1;
+    };
+    Detector(){};
+    Detector(const Params& params){};
+};
+
+
+/*template <class TDetector> TDetector* createDetector(const TDetector::Params& params)
+{
+    return new TDetector(params);
+}*/
