@@ -149,6 +149,21 @@ void StarFeatureDetector::detectImpl( const Mat& image, const Mat& mask, vector<
     removeInvalidPoints(mask, keypoints);
 }
 
+/*
+    SiftFeatureDetector
+*/
+SiftFeatureDetector::SiftFeatureDetector(double threshold, double edgeThreshold, int angleMode,
+                                         int nOctaves, int nOctaveLayers, int firstOctave) :
+    sift(threshold, edgeThreshold, angleMode, nOctaves, nOctaveLayers, firstOctave)
+{
+}
+
+void SiftFeatureDetector::detectImpl( const Mat& image, const Mat& mask,
+                                      vector<KeyPoint>& keypoints) const
+{
+    sift(image, mask, keypoints);
+}
+
 
 /*
     SurfFeatureDetector

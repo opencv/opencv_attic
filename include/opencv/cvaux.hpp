@@ -1957,6 +1957,21 @@ protected:
     StarDetector star;
 };
 
+class CV_EXPORTS SiftFeatureDetector : public FeatureDetector
+{
+public:
+    SiftFeatureDetector( double threshold=SIFT::DetectorParams::DEFAULT_THRESHOLD,
+                         double edgeThreshold=SIFT::DetectorParams::DEFAULT_EDGE_THRESHOLD,
+                         int angleMode=SIFT::DetectorParams::FIRST_ANGLE,
+                         int nOctaves=SIFT::CommonParams::DEFAULT_NOCTAVES,
+                         int nOctaveLayers=SIFT::CommonParams::DEFAULT_NOCTAVE_LAYERS,
+                         int firstOctave=SIFT::CommonParams::DEFAULT_FIRST_OCTAVE );
+protected:
+    virtual void detectImpl( const Mat& image, const Mat& mask, vector<KeyPoint>& keypoints ) const;
+
+    SIFT sift;
+};
+
 class CV_EXPORTS SurfFeatureDetector : public FeatureDetector
 {
 public:
@@ -2004,6 +2019,19 @@ protected:
                                        Size imageSize, int borderPixels );
 };
 
+class CV_EXPORTS SiftDescriptorExtractor : public DescriptorExtractor
+{
+public:
+    SiftDescriptorExtractor( double magnification, bool isNormalize=true,
+                             int nOctaves=SIFT::CommonParams::DEFAULT_NOCTAVES,
+                             int nOctaveLayers=SIFT::CommonParams::DEFAULT_NOCTAVE_LAYERS,
+                             int firstOctave=SIFT::CommonParams::DEFAULT_FIRST_OCTAVE );
+
+    virtual void compute( const Mat& image, vector<KeyPoint>& keypoints, Mat& descriptors) const;
+
+protected:
+    SIFT sift;
+};
 
 class CV_EXPORTS SurfDescriptorExtractor : public DescriptorExtractor
 {

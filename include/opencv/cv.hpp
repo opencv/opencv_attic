@@ -980,6 +980,76 @@ public:
 CV_EXPORTS void write(FileStorage& fs, const string& name, const vector<KeyPoint>& keypoints);
 CV_EXPORTS void read(const FileNode& node, vector<KeyPoint>& keypoints);    
 
+class CV_EXPORTS SIFT
+{
+public:
+    struct CommonParams
+    {
+        static const int    DEFAULT_NOCTAVES = 4;
+        static const int    DEFAULT_NOCTAVE_LAYERS = 3;
+        static const int    DEFAULT_FIRST_OCTAVE = -1;
+
+        CommonParams() : nOctaves(DEFAULT_NOCTAVES), nOctaveLayers(DEFAULT_NOCTAVE_LAYERS),
+                         firstOctave(DEFAULT_FIRST_OCTAVE) {}
+        CommonParams( int _nOctaves, int _nOctaveLayers, int _firstOctave ) :
+                         nOctaves(_nOctaves), nOctaveLayers(_nOctaveLayers),
+                         firstOctave(_firstOctave) {}
+        int nOctaves, nOctaveLayers, firstOctave;
+    };
+
+    struct DetectorParams
+    {
+        static const double DEFAULT_THRESHOLD;
+        static const double DEFAULT_EDGE_THRESHOLD;
+        enum{ FIRST_ANGLE = 0, AVERAGE_ANGLE = 1 };
+        DetectorParams() : threshold(DEFAULT_THRESHOLD), edgeThreshold(DEFAULT_EDGE_THRESHOLD),
+                           angleMode(FIRST_ANGLE) {}
+        DetectorParams( double _threshold, double _edgeThreshold, int _angleMode ) :
+                threshold(_threshold), edgeThreshold(_edgeThreshold), angleMode(_angleMode) {}
+        double threshold, edgeThreshold;
+        int angleMode;
+    };
+
+    struct DescriptorParams
+    {
+        static const double DEFAULT_MAGNIFICATION;
+        static const bool DEFAULT_IS_NORMALIZE = true;
+        static const int DESCRIPTOR_SIZE = -1;
+        DescriptorParams() : magnification(DEFAULT_MAGNIFICATION), isNormalize(DEFAULT_IS_NORMALIZE) {}
+        DescriptorParams( double _magnification, bool _isNormalize ) :
+                             magnification(_magnification), isNormalize(_isNormalize) {}
+        double magnification;
+        bool isNormalize;
+    };
+
+    SIFT();
+    // sift-detector constructor
+    SIFT( double _threshold, double _edgeThreshold, int _angleMode=DetectorParams::FIRST_ANGLE,
+          int _nOctaves=CommonParams::DEFAULT_NOCTAVES,
+          int _nOctaveLayers=CommonParams::DEFAULT_NOCTAVE_LAYERS,
+          int _firstOctave=CommonParams::DEFAULT_FIRST_OCTAVE );
+    // sift-descriptor constructor
+    SIFT( double _magnification, bool _isNormalize=true,
+          int _nOctaves=CommonParams::DEFAULT_NOCTAVES,
+          int _nOctaveLayers=CommonParams::DEFAULT_NOCTAVE_LAYERS,
+          int _firstOctave=CommonParams::DEFAULT_FIRST_OCTAVE );
+    SIFT( const CommonParams& _commParams,
+          const DetectorParams& _detectorParams = DetectorParams(),
+          const DescriptorParams& _descriptorParams = DescriptorParams() );
+
+    int descriptorSize() const { return DescriptorParams::DESCRIPTOR_SIZE; }
+    void operator()(const Mat& img, const Mat& mask,
+                    vector<KeyPoint>& keypoints) const;
+    void operator()(const Mat& img, const Mat& mask,
+                    vector<KeyPoint>& keypoints,
+                    Mat& descriptors,
+                    bool useProvidedKeypoints=false) const;
+protected:
+    CommonParams commParams;
+    DetectorParams detectorParams;
+    DescriptorParams descriptorParams;
+};
+
 class CV_EXPORTS SURF : public CvSURFParams
 {
 public:

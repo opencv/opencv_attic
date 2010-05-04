@@ -76,6 +76,22 @@ void DescriptorExtractor::removeBorderKeypoints( vector<KeyPoint>& keypoints,
 }
 
 /****************************************************************************************\
+*                                SiftDescriptorExtractor                                  *
+\****************************************************************************************/
+SiftDescriptorExtractor::SiftDescriptorExtractor( double magnification, bool isNormalize,
+                                                  int nOctaves, int nOctaveLayers, int firstOctave )
+    : sift( magnification, isNormalize, nOctaves, nOctaveLayers, firstOctave )
+{}
+
+void SiftDescriptorExtractor::compute( const Mat& image,
+                                       vector<KeyPoint>& keypoints,
+                                       Mat& descriptors) const
+{
+    bool useProvidedKeypoints = true;
+    sift(image, Mat(), keypoints, descriptors, useProvidedKeypoints);
+}
+
+/****************************************************************************************\
 *                                SurfDescriptorExtractor                                  *
 \****************************************************************************************/
 SurfDescriptorExtractor::SurfDescriptorExtractor( int nOctaves,
