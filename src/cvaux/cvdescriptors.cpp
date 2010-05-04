@@ -69,9 +69,9 @@ void DescriptorExtractor::removeBorderKeypoints( vector<KeyPoint>& keypoints,
                                                  Size imageSize, int borderPixels )
 {
     keypoints.erase( remove_if(keypoints.begin(), keypoints.end(),
-                               RoiPredicate(borderPixels, borderPixels,
-                                            imageSize.width - borderPixels,
-                                            imageSize.height - borderPixels)),
+                               RoiPredicate((float)borderPixels, (float)borderPixels,
+                                            (float)(imageSize.width - borderPixels),
+                                            (float)(imageSize.height - borderPixels))),
                      keypoints.end());
 }
 
@@ -156,6 +156,10 @@ void GenericDescriptorMatch::classify( const Mat& image, vector<cv::KeyPoint>& p
 /****************************************************************************************\
 *                                OneWayDescriptorMatch                                  *
 \****************************************************************************************/
+const float OneWayDescriptorMatch::Params::MIN_SCALE = 1.f;
+const float OneWayDescriptorMatch::Params::MAX_SCALE = 3.f;
+const float OneWayDescriptorMatch::Params::STEP_SCALE = 1.15f;
+
 OneWayDescriptorMatch::OneWayDescriptorMatch()
 {}
 
@@ -336,8 +340,8 @@ void CalonderDescriptorMatch::trainRTreeClassifier()
             {
                 BaseKeypoint bkp;
                 KeyPoint kp = collection.points[imageIdx][pointIdx];
-                bkp.x = kp.pt.x;
-                bkp.y = kp.pt.y;
+                bkp.x = cvRound(kp.pt.x);
+                bkp.y = cvRound(kp.pt.y);
                 bkp.image = &iplImages[imageIdx];
                 baseKeyPoints.push_back(bkp);
             }
@@ -394,7 +398,9 @@ FernDescriptorMatch::FernDescriptorMatch()
 {}
 
 FernDescriptorMatch::FernDescriptorMatch( const Params& _params )
-{}
+{
+    params = _params;
+}
 
 FernDescriptorMatch::~FernDescriptorMatch()
 {}
@@ -485,20 +491,3 @@ void FernDescriptorMatch::classify( const Mat& image, vector<KeyPoint>& keypoint
         keypoints[pi].class_id = collection.getKeyPoint(bestMatchIdx).class_id;
     }
 }
-
-class Detector
-{
-public:
-    class Params
-    {
-        int p1;
-    };
-    Detector(){};
-    Detector(const Params& params){};
-};
-
-
-/*template <class TDetector> TDetector* createDetector(const TDetector::Params& params)
-{
-    return new TDetector(params);
-}*/
