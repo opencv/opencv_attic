@@ -50,6 +50,8 @@
 #include<iostream>
 #include<limits>
 
+#define log2(a) log((a)) /CV_LOG2
+
 /*
  * from sift.hpp of original code
  */
@@ -453,12 +455,12 @@ VL::float_t
 fast_mod_2pi(VL::float_t x)
 {
 #ifdef VL_USEFASTMATH
-  while(x < VL::float_t(0)      ) x += VL::float_t(2*M_PI) ;
-  while(x > VL::float_t(2*M_PI) ) x -= VL::float_t(2*M_PI) ;
+  while(x < VL::float_t(0)      ) x += VL::float_t(2*CV_PI) ;
+  while(x > VL::float_t(2*CV_PI) ) x -= VL::float_t(2*CV_PI) ;
   return x ;
 #else
-  return (x>=0) ? std::fmod(x, VL::float_t(2*M_PI))
-    : 2*M_PI + std::fmod(x, VL::float_t(2*M_PI)) ;
+  return (x>=0) ? std::fmod(x, VL::float_t(2*CV_PI))
+    : 2*CV_PI + std::fmod(x, VL::float_t(2*CV_PI)) ;
 #endif
 }
 
@@ -533,10 +535,10 @@ fast_atan2(VL::float_t y, VL::float_t x)
 
   if (x >= 0) {
     r = (x - abs_y) / (x + abs_y) ;
-    angle = VL::float_t(M_PI/4.0) ;
+    angle = VL::float_t(CV_PI/4.0) ;
   } else {
     r = (x + abs_y) / (abs_y - x) ;
-    angle = VL::float_t(3*M_PI/4.0) ;
+    angle = VL::float_t(3*CV_PI/4.0) ;
   }
   angle += (c3*r*r - c1) * r ;
   return (y < 0) ? -angle : angle ;
@@ -1595,7 +1597,7 @@ Sift::prepareGrad(int o)
           VL::float_t Gx = 0.5 * ( *(src+xo) - *(src-xo) ) ;
           VL::float_t Gy = 0.5 * ( *(src+yo) - *(src-yo) ) ;
           VL::float_t m = fast_sqrt( Gx*Gx + Gy*Gy ) ;
-          VL::float_t t = fast_mod_2pi( fast_atan2(Gy, Gx) + VL::float_t(2*M_PI) );
+          VL::float_t t = fast_mod_2pi( fast_atan2(Gy, Gx) + VL::float_t(2*CV_PI) );
           *grad++ = pixel_t( m ) ;
           *grad++ = pixel_t( t ) ;
           ++src ;
@@ -1701,8 +1703,8 @@ Sift::computeKeypointOrientations(VL::float_t angles [4], Keypoint keypoint)
       VL::float_t mod = *(pt + xs*xo + ys*yo) ;
       VL::float_t ang = *(pt + xs*xo + ys*yo + 1) ;
 
-      //      int bin = (int) floor( nbins * ang / (2*M_PI) ) ;
-      int bin = (int) floor( nbins * ang / (2*M_PI) ) ;
+      //      int bin = (int) floor( nbins * ang / (2*CV_PI) ) ;
+      int bin = (int) floor( nbins * ang / (2*CV_PI) ) ;
       hist[bin] += mod * wgt ;
     }
   }
@@ -1752,7 +1754,7 @@ Sift::computeKeypointOrientations(VL::float_t angles [4], Keypoint keypoint)
       // quadratic interpolation
       //      VL::float_t di = -0.5 * (hp - hm) / (hp+hm-2*h0) ;
       VL::float_t di = -0.5 * (hp - hm) / (hp+hm-2*h0) ;
-      VL::float_t th = 2*M_PI * (i+di+0.5) / nbins ;
+      VL::float_t th = 2*CV_PI * (i+di+0.5) / nbins ;
       angles [ nangles++ ] = th ;
       if( nangles == 4 )
         goto enough_angles ;
@@ -1908,7 +1910,7 @@ Sift::computeKeypointDescriptor
       // orientation and extension.
       VL::float_t nx = ( ct0 * dx + st0 * dy) / SBP ;
       VL::float_t ny = (-st0 * dx + ct0 * dy) / SBP ;
-      VL::float_t nt = NBO * theta / (2*M_PI) ;
+      VL::float_t nt = NBO * theta / (2*CV_PI) ;
 
       // Get the gaussian weight of the sample. The gaussian window
       // has a standard deviation equal to NBP/2. Note that dx and dy
@@ -1971,7 +1973,7 @@ Sift::computeKeypointDescriptor
 }
 
 /****************************************************************************************\
-  1.) wrapper of Vedaldi`s SIFT
+  2.) wrapper of Vedaldi`s SIFT
 \****************************************************************************************/
 
 using namespace cv;

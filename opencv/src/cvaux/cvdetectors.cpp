@@ -54,7 +54,7 @@ struct MaskPredicate
 
     bool operator() (const KeyPoint& key_pt) const
     {
-      return mask.at<char>( (int)(key_pt.pt.y + 0.5f), (int)(key_pt.pt.x + 0.5f) );
+      return mask.at<uchar>( (int)(key_pt.pt.y + 0.5f), (int)(key_pt.pt.x + 0.5f) ) != 0;
     }
 
     const Mat& mask;
@@ -152,7 +152,7 @@ void StarFeatureDetector::detectImpl( const Mat& image, const Mat& mask, vector<
 /*
     SiftFeatureDetector
 */
-SiftFeatureDetector::SiftFeatureDetector(double threshold, double edgeThreshold, int angleMode,
+/*SiftFeatureDetector::SiftFeatureDetector(double threshold, double edgeThreshold, int angleMode,
                                          int nOctaves, int nOctaveLayers, int firstOctave) :
     sift(threshold, edgeThreshold, angleMode, nOctaves, nOctaveLayers, firstOctave)
 {
@@ -162,7 +162,7 @@ void SiftFeatureDetector::detectImpl( const Mat& image, const Mat& mask,
                                       vector<KeyPoint>& keypoints) const
 {
     sift(image, mask, keypoints);
-}
+}*/
 
 
 /*
