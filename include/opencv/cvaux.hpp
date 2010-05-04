@@ -1957,7 +1957,7 @@ protected:
     StarDetector star;
 };
 
-class CV_EXPORTS SiftFeatureDetector : public FeatureDetector
+/*class CV_EXPORTS SiftFeatureDetector : public FeatureDetector
 {
 public:
     SiftFeatureDetector( double threshold=SIFT::DetectorParams::DEFAULT_THRESHOLD,
@@ -1970,7 +1970,7 @@ protected:
     virtual void detectImpl( const Mat& image, const Mat& mask, vector<KeyPoint>& keypoints ) const;
 
     SIFT sift;
-};
+};*/
 
 class CV_EXPORTS SurfFeatureDetector : public FeatureDetector
 {
@@ -2019,7 +2019,7 @@ protected:
                                        Size imageSize, int borderPixels );
 };
 
-class CV_EXPORTS SiftDescriptorExtractor : public DescriptorExtractor
+/*class CV_EXPORTS SiftDescriptorExtractor : public DescriptorExtractor
 {
 public:
     SiftDescriptorExtractor( double magnification, bool isNormalize=true,
@@ -2031,7 +2031,7 @@ public:
 
 protected:
     SIFT sift;
-};
+};*/
 
 class CV_EXPORTS SurfDescriptorExtractor : public DescriptorExtractor
 {
