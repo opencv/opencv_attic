@@ -412,6 +412,7 @@ void CV_DetectorRepeatabilityTest::run( int )
     readAllRunParams();
     readResults();
 
+    int notReadDatasets = 0;
     int progress = 0, progressCount = DATASETS_COUNT*TEST_CASE_COUNT;
     for(int di = 0; di < DATASETS_COUNT; di++ )
     {   
@@ -421,6 +422,7 @@ void CV_DetectorRepeatabilityTest::run( int )
             calcRepeatability[di].clear();
             ts->printf( CvTS::LOG, "images or homography matrices of dataset named %s can not be read\n",
                         DATASET_NAMES[di].c_str());
+            notReadDatasets++;
         }
         else
         {
@@ -441,7 +443,13 @@ void CV_DetectorRepeatabilityTest::run( int )
             }
         }
     }
-    processResults();
+    if( notReadDatasets == DATASETS_COUNT )
+    {
+        ts->printf(CvTS::LOG, "All datasets were not be read\n");
+        ts->set_failed_test_info( CvTS::FAIL_INVALID_TEST_DATA );
+    }
+    else
+        processResults();
 }
 
 void testLog( CvTS* ts, bool isBadAccuracy )
@@ -777,6 +785,66 @@ void CV_StarDetectorTest::setDefaultRunParams( int datasetIdx )
 }
 
 CV_StarDetectorTest starDetector;
+
+//--------------------------------- SIFT detector test --------------------------------------------
+class CV_SiftDetectorTest : public CV_DetectorRepeatabilityTest
+{
+public:
+    CV_SiftDetectorTest() : CV_DetectorRepeatabilityTest( "sift", "repeatability-sift-detector" )
+    { runParams.resize(DATASETS_COUNT); }
+
+protected:
+    virtual FeatureDetector* createDetector( int datasetIdx );
+    virtual void readRunParams( FileNode& fn, int datasetIdx );
+    virtual void writeRunParams( FileStorage& fs, int datasetIdx );
+    virtual void setDefaultRunParams( int datasetIdx );
+
+    struct RunParams
+    {
+        SIFT::CommonParams comm;
+        SIFT::DetectorParams detect;
+    };
+
+    vector<RunParams> runParams;
+};
+
+FeatureDetector* CV_SiftDetectorTest::createDetector( int datasetIdx )
+{
+    return new SiftFeatureDetector( runParams[datasetIdx].detect.threshold,
+                                    runParams[datasetIdx].detect.edgeThreshold,
+                                    runParams[datasetIdx].detect.angleMode,
+                                    runParams[datasetIdx].comm.nOctaves,
+                                    runParams[datasetIdx].comm.nOctaveLayers,
+                                    runParams[datasetIdx].comm.firstOctave );
+}
+
+void CV_SiftDetectorTest::readRunParams( FileNode& fn, int datasetIdx )
+{
+    runParams[datasetIdx].detect.threshold = fn["threshold"];
+    runParams[datasetIdx].detect.edgeThreshold = fn["edgeThreshold"];
+    runParams[datasetIdx].detect.angleMode = fn["angleMode"];
+    runParams[datasetIdx].comm.nOctaves = fn["nOctaves"];
+    runParams[datasetIdx].comm.nOctaveLayers = fn["nOctaveLayers"];
+    runParams[datasetIdx].comm.firstOctave = fn["firstOctave"];
+}
+
+void CV_SiftDetectorTest::writeRunParams( FileStorage& fs, int datasetIdx )
+{
+    fs << "threshold" << runParams[datasetIdx].detect.threshold;
+    fs << "edgeThreshold" << runParams[datasetIdx].detect.edgeThreshold;
+    fs << "angleMode" << runParams[datasetIdx].detect.angleMode;
+    fs << "nOctaves" << runParams[datasetIdx].comm.nOctaves;
+    fs << "nOctaveLayers" << runParams[datasetIdx].comm.nOctaveLayers;
+    fs << "firstOctave" << runParams[datasetIdx].comm.firstOctave;
+ }
+
+void CV_SiftDetectorTest::setDefaultRunParams( int datasetIdx )
+{
+    runParams[datasetIdx].detect = SIFT::DetectorParams();
+    runParams[datasetIdx].comm = SIFT::CommonParams();
+}
+
+CV_SiftDetectorTest siftDetector;
 
 //--------------------------------- SURF detector test --------------------------------------------
 class CV_SurfDetectorTest : public CV_DetectorRepeatabilityTest

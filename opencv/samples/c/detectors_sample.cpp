@@ -90,6 +90,12 @@ FeatureDetector* createDetector( const string& detectorType )
 		fd = new StarFeatureDetector( 16/*max_size*/, 30/*response_threshold*/, 10/*line_threshold_projected*/,
 									  8/*line_threshold_binarized*/, 5/*suppress_nonmax_size*/ );
 	}
+    else if( !detectorType.compare( "SIFT" ) )
+    {
+        fd = new SiftFeatureDetector(SIFT::DetectorParams::DEFAULT_THRESHOLD,
+                                     SIFT::DetectorParams::DEFAULT_EDGE_THRESHOLD,
+                                     SIFT::DetectorParams::AVERAGE_ANGLE);
+    }
     else if( !detectorType.compare( "SURF" ) )
 	{
 		fd = new SurfFeatureDetector( 400./*hessian_threshold*/, 3 /*octaves*/, 4/*octave_layers*/ );
@@ -169,8 +175,11 @@ void iter( Ptr<FeatureDetector> detector, Ptr<DescriptorExtractor> descriptor,
 
     cout << "< Computing  descriptors... ";
     Mat descs1, descs2;
-    descriptor->compute( img1, keypoints1, descs1 );
-    descriptor->compute( img2, keypoints2, descs2 );
+    if( keypoints1.size()>0 && keypoints2.size()>0 )
+    {
+        descriptor->compute( img1, keypoints1, descs1 );
+        descriptor->compute( img2, keypoints2, descs2 );
+    }
     cout << ">" << endl;
 
     cout << "< Matching keypoints by descriptors... ";
