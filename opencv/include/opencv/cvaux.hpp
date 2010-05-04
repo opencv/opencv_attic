@@ -2059,10 +2059,10 @@ struct CV_EXPORTS Accumulator
     typedef T Type;
 };
 
-template<> struct Accumulator<uint8_t>  { typedef uint32_t Type; };
-template<> struct Accumulator<uint16_t> { typedef uint32_t Type; };
-template<> struct Accumulator<int8_t>   { typedef int32_t Type; };
-template<> struct Accumulator<int16_t>  { typedef int32_t Type; };
+template<> struct Accumulator<unsigned char>  { typedef unsigned int Type; };
+template<> struct Accumulator<unsigned short> { typedef unsigned int Type; };
+template<> struct Accumulator<char>   { typedef int Type; };
+template<> struct Accumulator<short>  { typedef int Type; };
 
 /*
  * Squared Euclidean distance functor
@@ -2347,15 +2347,23 @@ public:
     class Params
     {
     public:
+        static const int POSE_COUNT = 500;
+        static const int PATCH_WIDTH = 24;
+        static const int PATCH_HEIGHT = 24;
+        static const float MIN_SCALE;
+        static const float MAX_SCALE;
+        static const float STEP_SCALE;
+
         Params( int _poseCount = POSE_COUNT,
                 Size _patchSize = Size(PATCH_WIDTH, PATCH_HEIGHT),
                 string _trainPath = string(),
                 string _pcaConfig = string(), string _pcaHrConfig = string(),
                 string _pcaDescConfig = string(),
-                float minScale = MIN_SCALE, float maxScale = MAX_SCALE,
-                float stepScale = STEP_SCALE) :
-            poseCount(_poseCount), patchSize(_patchSize), trainPath(_trainPath),
-            pcaConfig(_pcaConfig), pcaHrConfig(_pcaHrConfig), pcaDescConfig(_pcaDescConfig) {}
+                float _minScale = MIN_SCALE, float _maxScale = MAX_SCALE,
+                float _stepScale = STEP_SCALE) :
+        poseCount(_poseCount), patchSize(_patchSize), trainPath(_trainPath),
+        pcaConfig(_pcaConfig), pcaHrConfig(_pcaHrConfig), pcaDescConfig(_pcaDescConfig),
+        minScale(_minScale), maxScale(_maxScale), stepScale(_stepScale) {}
 
         int poseCount;
         Size patchSize;
@@ -2363,13 +2371,6 @@ public:
         string pcaConfig, pcaHrConfig, pcaDescConfig;
 
         float minScale, maxScale, stepScale;
-
-        const static int POSE_COUNT = 500;
-        const static int PATCH_WIDTH = 24;
-        const static int PATCH_HEIGHT = 24;
-        static const float MIN_SCALE = 1.f;
-        static const float MAX_SCALE = 3.f;
-        static const float STEP_SCALE = 1.15f;
     };
 
     OneWayDescriptorMatch();
