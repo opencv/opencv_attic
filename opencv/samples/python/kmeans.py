@@ -49,7 +49,7 @@ if __name__ == "__main__":
         for i in range(sample_count):
             cluster_idx = int(clusters[i, 0])
             pt = (cv.Round(points[i, 0][0]), cv.Round(points[i, 0][1]))
-            cv.Circle(img, pt, 2, color_tab[cluster_idx], cv.CV_FILLED, cv. CV_AA, 0)
+            cv.Circle(img, pt, 2, color_tab[cluster_idx], cv.CV_FILLED, cv.CV_AA, 0)
 
         cv.ShowImage("clusters", img)
 
