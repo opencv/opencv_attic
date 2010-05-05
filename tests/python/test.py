@@ -568,6 +568,16 @@ class FunctionTests(OpenCVTests):
         cv.AbsDiff(made, src, made)
         self.assert_(cv.CountNonZero(made) == 0)
 
+        for m1 in [cv.CreateMat(1, 10, cv.CV_8UC1), cv.CreateImage((10, 1), 8, 1)]:
+            for i in range(10):
+                m1[0, i] = i
+            def aslist(cvmat): return list(array.array('B', cvmat.tostring()))
+            m2 = cv.GetSubRect(m1, (5, 0, 4, 1))
+            m3 = cv.GetSubRect(m2, (1, 0, 2, 1))
+            self.assertEqual(aslist(m1), range(10))
+            self.assertEqual(aslist(m2), range(5, 9))
+            self.assertEqual(aslist(m3), range(6, 8))
+
     def test_HoughLines2_PROBABILISTIC(self):
         li = cv.HoughLines2(self.yield_line_image(),
                                                 cv.CreateMemStorage(),
@@ -826,6 +836,15 @@ class AreaTests(OpenCVTests):
                 cs[random.randrange(10)] = cv.fromarray(arrays[random.randrange(10)], True)
                 for j in range(10):
                     self.assert_(all([c == chr(1) for c in cs[j].tostring()]))
+
+            # 
+            m = numpy.identity(4, dtype = numpy.float32)
+            rvec = cv.CreateMat(3, 1, cv.CV_32FC1)
+            rvec[0,0] = 1
+            rvec[1,0] = 1
+            rvec[2,0] = 1
+            cv.Rodrigues2(rvec, m[:3,:3])
+            print m
 
         else:
             print "SKIPPING test_numpy - numpy support not built"
