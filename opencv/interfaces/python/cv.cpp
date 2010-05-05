@@ -1600,7 +1600,15 @@ static int convert_to_CvMat(PyObject *o, CvMat **dst, const char *name)
   Py_ssize_t buffer_len;
 
   if (!is_cvmat(o)) {
+#if !PYTHON_USE_NUMPY
     return failmsg("Argument '%s' must be CvMat", name);
+#else
+    PyObject *asmat = fromarray(o, 0);
+    if (asmat == NULL)
+      return failmsg("Argument '%s' must be CvMat", name);
+    // now have the array obect as a cvmat, can use regular conversion
+    return convert_to_CvMat(asmat, dst, name);
+#endif
   } else {
     m->a->refcount = NULL;
     if (m->data && PyString_Check(m->data)) {
@@ -3640,8 +3648,10 @@ static PyObject *shareData(PyObject *donor, CvArr *pdonor, CvMat *precipient)
   PyObject *arr_data;
   if (is_cvmat(donor)) {
     arr_data = ((cvmat_t*)donor)->data;
+    ((cvmat_t*)recipient)->offset += ((cvmat_t*)donor)->offset;
   } else if (is_iplimage(donor)) {
     arr_data = ((iplimage_t*)donor)->data;
+    ((cvmat_t*)recipient)->offset += ((iplimage_t*)donor)->offset;
   } else {
     return (PyObject*)failmsg("Argument 'mat' must be either IplImage or CvMat");
   }
