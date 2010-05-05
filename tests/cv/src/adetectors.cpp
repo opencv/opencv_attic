@@ -787,7 +787,7 @@ void CV_StarDetectorTest::setDefaultRunParams( int datasetIdx )
 CV_StarDetectorTest starDetector;
 
 //--------------------------------- SIFT detector test --------------------------------------------
-/*class CV_SiftDetectorTest : public CV_DetectorRepeatabilityTest
+class CV_SiftDetectorTest : public CV_DetectorRepeatabilityTest
 {
 public:
     CV_SiftDetectorTest() : CV_DetectorRepeatabilityTest( "sift", "repeatability-sift-detector" )
@@ -844,7 +844,7 @@ void CV_SiftDetectorTest::setDefaultRunParams( int datasetIdx )
     runParams[datasetIdx].comm = SIFT::CommonParams();
 }
 
-CV_SiftDetectorTest siftDetector;*/
+CV_SiftDetectorTest siftDetector;
 
 //--------------------------------- SURF detector test --------------------------------------------
 class CV_SurfDetectorTest : public CV_DetectorRepeatabilityTest
