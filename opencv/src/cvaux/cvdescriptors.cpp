@@ -78,7 +78,7 @@ void DescriptorExtractor::removeBorderKeypoints( vector<KeyPoint>& keypoints,
 /****************************************************************************************\
 *                                SiftDescriptorExtractor                                  *
 \****************************************************************************************/
-/*SiftDescriptorExtractor::SiftDescriptorExtractor( double magnification, bool isNormalize,
+SiftDescriptorExtractor::SiftDescriptorExtractor( double magnification, bool isNormalize,
                                                   int nOctaves, int nOctaveLayers, int firstOctave )
     : sift( magnification, isNormalize, nOctaves, nOctaveLayers, firstOctave )
 {}
@@ -89,7 +89,7 @@ void SiftDescriptorExtractor::compute( const Mat& image,
 {
     bool useProvidedKeypoints = true;
     sift(image, Mat(), keypoints, descriptors, useProvidedKeypoints);
-}*/
+}
 
 /****************************************************************************************\
 *                                SurfDescriptorExtractor                                  *
@@ -172,10 +172,6 @@ void GenericDescriptorMatch::classify( const Mat& image, vector<cv::KeyPoint>& p
 /****************************************************************************************\
 *                                OneWayDescriptorMatch                                  *
 \****************************************************************************************/
-const float OneWayDescriptorMatch::Params::MIN_SCALE = 1.f;
-const float OneWayDescriptorMatch::Params::MAX_SCALE = 3.f;
-const float OneWayDescriptorMatch::Params::STEP_SCALE = 1.15f;
-
 OneWayDescriptorMatch::OneWayDescriptorMatch()
 {}
 

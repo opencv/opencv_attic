@@ -9,7 +9,7 @@ using namespace std;
 inline Point2f applyHomography( const Mat_<double>& H, const Point2f& pt )
 {
     double w = 1./(H(2,0)*pt.x + H(2,1)*pt.y + H(2,2));
-    return Point2f( (H(0,0)*pt.x + H(0,1)*pt.y + H(0,2))*w, (H(1,0)*pt.x + H(1,1)*pt.y + H(1,2))*w );
+    return Point2f( (float)((H(0,0)*pt.x + H(0,1)*pt.y + H(0,2))*w), (float)((H(1,0)*pt.x + H(1,1)*pt.y + H(1,2))*w) );
 }
 
 void drawCorrespondences( const Mat& img1, const Mat& img2, const Mat& transfMtr,
@@ -43,7 +43,7 @@ void drawCorrespondences( const Mat& img1, const Mat& img2, const Mat& transfMtr
     for(vector<KeyPoint>::const_iterator it = keypoints2.begin(); it < keypoints2.end(); ++it )
     {
 		Point p = it->pt;
-        circle(drawImg, Point(p.x+img1.cols, p.y), 3, RED);
+        circle(drawImg, Point2f(p.x+img1.cols, p.y), 3, RED);
     }
     
     Mat vec1(3, 1, CV_32FC1), vec2;
@@ -58,21 +58,21 @@ void drawCorrespondences( const Mat& img1, const Mat& img2, const Mat& transfMtr
         if( norm(diff) < err )
         {
             circle(drawImg, pt1, 3, GREEN);
-            circle(drawImg, Point(pt2.x+img1.cols, pt2.y), 3, GREEN);
-            line(drawImg, pt1, Point(pt2.x+img1.cols, pt2.y), GREEN);
+            circle(drawImg, Point2f(pt2.x+img1.cols, pt2.y), 3, GREEN);
+            line(drawImg, pt1, Point2f(pt2.x+img1.cols, pt2.y), GREEN);
         }
         else
         {
             if( *dit > maxDist )
             {
                 circle(drawImg, pt1, 3, PINK);
-                circle(drawImg, Point(pt2.x+img1.cols, pt2.y), 3, PINK);
+                circle(drawImg, Point2f(pt2.x+img1.cols, pt2.y), 3, PINK);
             }
             else
             {
                 circle(drawImg, pt1, 3, BLUE);
-                circle(drawImg, Point(pt2.x+img1.cols, pt2.y), 3, BLUE);
-                line(drawImg, pt1, Point(pt2.x+img1.cols, pt2.y), BLUE);
+                circle(drawImg, Point2f(pt2.x+img1.cols, pt2.y), 3, BLUE);
+                line(drawImg, pt1, Point2f(pt2.x+img1.cols, pt2.y), BLUE);
             }
         }
     }
@@ -90,12 +90,12 @@ FeatureDetector* createDetector( const string& detectorType )
 		fd = new StarFeatureDetector( 16/*max_size*/, 30/*response_threshold*/, 10/*line_threshold_projected*/,
 									  8/*line_threshold_binarized*/, 5/*suppress_nonmax_size*/ );
 	}
-    /*else if( !detectorType.compare( "SIFT" ) )
+    else if( !detectorType.compare( "SIFT" ) )
     {
-        fd = new SiftFeatureDetector(SIFT::DetectorParams::DEFAULT_THRESHOLD,
-                                     SIFT::DetectorParams::DEFAULT_EDGE_THRESHOLD,
-                                     SIFT::DetectorParams::AVERAGE_ANGLE);
-    }*/
+        fd = new SiftFeatureDetector(SIFT::DetectorParams::GET_DEFAULT_THRESHOLD(),
+                                     SIFT::DetectorParams::GET_DEFAULT_EDGE_THRESHOLD(),
+                                     SIFT::DetectorParams::FIRST_ANGLE);
+    }
     else if( !detectorType.compare( "SURF" ) )
 	{
 		fd = new SurfFeatureDetector( 400./*hessian_threshold*/, 3 /*octaves*/, 4/*octave_layers*/ );

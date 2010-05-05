@@ -985,10 +985,9 @@ class CV_EXPORTS SIFT
 public:
     struct CommonParams
     {
-        static const int    DEFAULT_NOCTAVES = 4;
-        static const int    DEFAULT_NOCTAVE_LAYERS = 3;
-        static const int    DEFAULT_FIRST_OCTAVE = -1;
-
+        static const int DEFAULT_NOCTAVES = 4;
+        static const int DEFAULT_NOCTAVE_LAYERS = 3;
+        static const int DEFAULT_FIRST_OCTAVE = -1;
         CommonParams() : nOctaves(DEFAULT_NOCTAVES), nOctaveLayers(DEFAULT_NOCTAVE_LAYERS),
                          firstOctave(DEFAULT_FIRST_OCTAVE) {}
         CommonParams( int _nOctaves, int _nOctaveLayers, int _firstOctave ) :
@@ -999,10 +998,10 @@ public:
 
     struct DetectorParams
     {
-        static const double DEFAULT_THRESHOLD;
-        static const double DEFAULT_EDGE_THRESHOLD;
+        static double GET_DEFAULT_THRESHOLD() { return 0.04 / SIFT::CommonParams::DEFAULT_NOCTAVE_LAYERS / 2.0; }
+        static double GET_DEFAULT_EDGE_THRESHOLD() { return 10.0; }
         enum{ FIRST_ANGLE = 0, AVERAGE_ANGLE = 1 };
-        DetectorParams() : threshold(DEFAULT_THRESHOLD), edgeThreshold(DEFAULT_EDGE_THRESHOLD),
+        DetectorParams() : threshold(GET_DEFAULT_THRESHOLD()), edgeThreshold(GET_DEFAULT_EDGE_THRESHOLD()),
                            angleMode(FIRST_ANGLE) {}
         DetectorParams( double _threshold, double _edgeThreshold, int _angleMode ) :
                 threshold(_threshold), edgeThreshold(_edgeThreshold), angleMode(_angleMode) {}
@@ -1012,10 +1011,10 @@ public:
 
     struct DescriptorParams
     {
-        static const double DEFAULT_MAGNIFICATION;
+        static double GET_DEFAULT_MAGNIFICATION() { return 3.0; }
         static const bool DEFAULT_IS_NORMALIZE = true;
         static const int DESCRIPTOR_SIZE = -1;
-        DescriptorParams() : magnification(DEFAULT_MAGNIFICATION), isNormalize(DEFAULT_IS_NORMALIZE) {}
+        DescriptorParams() : magnification(GET_DEFAULT_MAGNIFICATION()), isNormalize(DEFAULT_IS_NORMALIZE) {}
         DescriptorParams( double _magnification, bool _isNormalize ) :
                              magnification(_magnification), isNormalize(_isNormalize) {}
         double magnification;

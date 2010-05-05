@@ -1978,10 +1978,6 @@ Sift::computeKeypointDescriptor
 
 using namespace cv;
 
-const double SIFT::DetectorParams::DEFAULT_THRESHOLD = 0.04 / SIFT::CommonParams::DEFAULT_NOCTAVE_LAYERS / 2.0;
-const double SIFT::DetectorParams::DEFAULT_EDGE_THRESHOLD = 10.0;
-const double SIFT::DescriptorParams::DEFAULT_MAGNIFICATION = 3.0;
-
 SIFT::SIFT()
 {}
 

@@ -1957,11 +1957,11 @@ protected:
     StarDetector star;
 };
 
-/*class CV_EXPORTS SiftFeatureDetector : public FeatureDetector
+class CV_EXPORTS SiftFeatureDetector : public FeatureDetector
 {
 public:
-    SiftFeatureDetector( double threshold=SIFT::DetectorParams::DEFAULT_THRESHOLD,
-                         double edgeThreshold=SIFT::DetectorParams::DEFAULT_EDGE_THRESHOLD,
+    SiftFeatureDetector( double threshold=SIFT::DetectorParams::GET_DEFAULT_THRESHOLD(),
+                         double edgeThreshold=SIFT::DetectorParams::GET_DEFAULT_EDGE_THRESHOLD(),
                          int angleMode=SIFT::DetectorParams::FIRST_ANGLE,
                          int nOctaves=SIFT::CommonParams::DEFAULT_NOCTAVES,
                          int nOctaveLayers=SIFT::CommonParams::DEFAULT_NOCTAVE_LAYERS,
@@ -1970,7 +1970,7 @@ protected:
     virtual void detectImpl( const Mat& image, const Mat& mask, vector<KeyPoint>& keypoints ) const;
 
     SIFT sift;
-};*/
+};
 
 class CV_EXPORTS SurfFeatureDetector : public FeatureDetector
 {
@@ -2019,7 +2019,7 @@ protected:
                                        Size imageSize, int borderPixels );
 };
 
-/*class CV_EXPORTS SiftDescriptorExtractor : public DescriptorExtractor
+class CV_EXPORTS SiftDescriptorExtractor : public DescriptorExtractor
 {
 public:
     SiftDescriptorExtractor( double magnification, bool isNormalize=true,
@@ -2031,7 +2031,7 @@ public:
 
 protected:
     SIFT sift;
-};*/
+};
 
 class CV_EXPORTS SurfDescriptorExtractor : public DescriptorExtractor
 {
@@ -2378,17 +2378,17 @@ public:
         static const int POSE_COUNT = 500;
         static const int PATCH_WIDTH = 24;
         static const int PATCH_HEIGHT = 24;
-        static const float MIN_SCALE;
-        static const float MAX_SCALE;
-        static const float STEP_SCALE;
+        static float GET_MIN_SCALE() { return 1.f; }
+        static float GET_MAX_SCALE() { return 3.f; }
+        static float GET_STEP_SCALE() { return 1.15f; }
 
         Params( int _poseCount = POSE_COUNT,
                 Size _patchSize = Size(PATCH_WIDTH, PATCH_HEIGHT),
                 string _trainPath = string(),
                 string _pcaConfig = string(), string _pcaHrConfig = string(),
                 string _pcaDescConfig = string(),
-                float _minScale = MIN_SCALE, float _maxScale = MAX_SCALE,
-                float _stepScale = STEP_SCALE) :
+                float _minScale = GET_MIN_SCALE(), float _maxScale = GET_MAX_SCALE(),
+                float _stepScale = GET_STEP_SCALE() ) :
         poseCount(_poseCount), patchSize(_patchSize), trainPath(_trainPath),
         pcaConfig(_pcaConfig), pcaHrConfig(_pcaHrConfig), pcaDescConfig(_pcaDescConfig),
         minScale(_minScale), maxScale(_maxScale), stepScale(_stepScale) {}
