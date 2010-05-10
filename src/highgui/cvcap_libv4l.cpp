@@ -166,8 +166,15 @@ the symptoms were damaged image and 'Corrupt JPEG data: premature end of data se
 - cvGetCaptureProperty adjusted to support the changes
 - Returns device properties to initial values after device closes
 
+13th patch: Apr 27, 2010, Filipe Almeida filipe.almeida@ist.utl.pt
+- Solved problem mmaping the device using uvcvideo driver (use o v4l2_mmap instead of mmap)
 make & enjoy!
 
+14th patch: May 10, 2010, Filipe Almeida filipe.almeida@ist.utl.pt
+- Bug #142: Solved/Workaround "setting frame width and height does not work"
+  There was a problem setting up the size when the input is a v4l2 device
+  The workaround closes the camera and reopens it with the new definition
+  Planning for future rewrite of this whole library (July/August 2010)
 */
 
 /*M///////////////////////////////////////////////////////////////////////////////////////
@@ -278,9 +285,13 @@ typedef struct v4l2_ctrl_range {
 
 typedef struct CvCaptureCAM_V4L
 {
+    char* deviceName;
     int deviceHandle;
     int bufferIndex;
     int FirstCapture;
+
+    int width; int height;
+
     struct video_capability capability;
     struct video_window     captureWindow;
     struct video_picture    imageProperties;
@@ -636,6 +647,8 @@ static int _capture_V4L2 (CvCaptureCAM_V4L *capture, char *deviceName)
 {
    int detect_v4l2 = 0;
 
+   capture->deviceName = strdup(deviceName);
+
    detect_v4l2 = try_init_v4l2(capture, deviceName);
 
    if (detect_v4l2 != 1) {
@@ -694,8 +707,8 @@ static int _capture_V4L2 (CvCaptureCAM_V4L *capture, char *deviceName)
   capture->form.type                = V4L2_BUF_TYPE_VIDEO_CAPTURE;
   capture->form.fmt.pix.pixelformat = V4L2_PIX_FMT_BGR24;
   capture->form.fmt.pix.field       = V4L2_FIELD_ANY;
-  capture->form.fmt.pix.width = DEFAULT_V4L_WIDTH;
-  capture->form.fmt.pix.height = DEFAULT_V4L_HEIGHT;
+  capture->form.fmt.pix.width = capture->width;
+  capture->form.fmt.pix.height = capture->height;
 
   if (-1 == xioctl (capture->deviceHandle, VIDIOC_S_FMT, &capture->form)) {
       fprintf(stderr, "HIGHGUI ERROR: libv4l unable to ioctl S_FMT\n");
@@ -707,7 +720,7 @@ static int _capture_V4L2 (CvCaptureCAM_V4L *capture, char *deviceName)
       return -1;
   }
 
-   icvSetVideoSize(capture, DEFAULT_V4L_WIDTH, DEFAULT_V4L_HEIGHT);
+   /* icvSetVideoSize(capture, DEFAULT_V4L_WIDTH, DEFAULT_V4L_HEIGHT); */
 
    unsigned int min;
 
@@ -978,6 +991,11 @@ static CvCaptureCAM_V4L * icvCaptureFromCAM_V4L (int index)
       fprintf( stderr, "HIGHGUI ERROR: V4L: Could not allocate memory for capture process.\n");
       return NULL;
    }
+
+   /* set the default size */
+   capture->width  = DEFAULT_V4L_WIDTH;
+   capture->height = DEFAULT_V4L_HEIGHT;
+
    /* Select camera, or rather, V4L video source */
    if (index<0) { // Asking for the first device available
      for (; autoindex<MAX_CAMERAS;autoindex++)
@@ -1376,6 +1394,10 @@ static int icvSetVideoSize( CvCaptureCAM_V4L* capture, int w, int h) {
 
   if (capture->is_v4l2_device == 1)
   {
+    char deviceName[MAX_DEVICE_DRIVER_NAME];
+    sprintf(deviceName, "%s", capture->deviceName);
+    icvCloseCAM_V4L(capture);
+    _capture_V4L2(capture, deviceName);
 
     CLEAR (capture->crop);
     capture->crop.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
@@ -1605,6 +1627,7 @@ static int icvSetPropertyCAM_V4L(CvCaptureCAM_V4L* capture, int property_id, dou
     switch (property_id) {
     case CV_CAP_PROP_FRAME_WIDTH:
         width = cvRound(value);
+        capture->width = width;
         if(width !=0 && height != 0) {
             retval = icvSetVideoSize( capture, width, height);
             width = height = 0;
@@ -1612,6 +1635,7 @@ static int icvSetPropertyCAM_V4L(CvCaptureCAM_V4L* capture, int property_id, dou
         break;
     case CV_CAP_PROP_FRAME_HEIGHT:
         height = cvRound(value);
+        capture->height = height;
         if(width !=0 && height != 0) {
             retval = icvSetVideoSize( capture, width, height);
             width = height = 0;
