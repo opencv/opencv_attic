@@ -1578,31 +1578,92 @@ for(y = 0; y < size.height; y++, data += step )
         data[x] = (float)fabs(data[x]);
 
 \end{lstlisting}
+\fi
 
-\cvCPyFunc{GetReal?D}
+\cvCPyFunc{GetReal1D}
+Return a specific element of single-channel 1D array.
+
+\cvdefC{
+double cvGetReal1D(const CvArr* arr, int idx0);
+}
+\cvdefPy{GetReal1D(arr, idx0)->float}
+
+\begin{description}
+\cvarg{arr}{Input array. Must have a single channel.}
+\cvarg{idx0}{The first zero-based component of the element index}
+\end{description}
+
+
+Returns a specific element of a single-channel array. If the array has
+multiple channels, a runtime error is raised. Note that \cvCPyCross{Get}
+function can be used safely for both single-channel and multiple-channel
+arrays though they are a bit slower.
+
+In the case of a sparse array the functions return 0 if the requested node does not exist (no new node is created by the functions).
+
+\cvCPyFunc{GetReal2D}
+Return a specific element of single-channel 2D array.
+
+\cvdefC{
+double cvGetReal2D(const CvArr* arr, int idx0, int idx1); \newline
+}
+\cvdefPy{GetReal2D(arr, idx0, idx1)->float}
+
+\begin{description}
+\cvarg{arr}{Input array. Must have a single channel.}
+\cvarg{idx0}{The first zero-based component of the element index}
+\cvarg{idx1}{The second zero-based component of the element index}
+\end{description}
+
+Returns a specific element of a single-channel array. If the array has
+multiple channels, a runtime error is raised. Note that \cvCPyCross{Get}
+function can be used safely for both single-channel and multiple-channel
+arrays though they are a bit slower.
+
+In the case of a sparse array the functions return 0 if the requested node does not exist (no new node is created by the functions).
+
+\cvCPyFunc{GetReal3D}
 Return a specific element of single-channel array.
 
 \cvdefC{
-double cvGetReal1D(const CvArr* arr, int idx0); \newline
-double cvGetReal2D(const CvArr* arr, int idx0, int idx1); \newline
 double cvGetReal3D(const CvArr* arr, int idx0, int idx1, int idx2); \newline
-double cvGetRealND(const CvArr* arr, int* idx);
 }
+\cvdefPy{GetReal3D(arr, idx0, idx1, idx2)->float}
 
 \begin{description}
 \cvarg{arr}{Input array. Must have a single channel.}
 \cvarg{idx0}{The first zero-based component of the element index}
 \cvarg{idx1}{The second zero-based component of the element index}
 \cvarg{idx2}{The third zero-based component of the element index}
-\cvarg{idx}{Array of the element indices}
 \end{description}
 
-
-The functions \texttt{cvGetReal*D} return a specific element of a single-channel array. If the array has multiple channels, a runtime error is raised. Note that \cvCPyCross{Get} function can be used safely for both single-channel and multiple-channel arrays though they are a bit slower.
+Returns a specific element of a single-channel array. If the array has
+multiple channels, a runtime error is raised. Note that \cvCPyCross{Get}
+function can be used safely for both single-channel and multiple-channel
+arrays though they are a bit slower.
 
 In the case of a sparse array the functions return 0 if the requested node does not exist (no new node is created by the functions).
 
-\fi
+\cvCPyFunc{GetRealND}
+Return a specific element of single-channel array.
+
+\cvdefC{
+double cvGetRealND(const CvArr* arr, int* idx)->float;
+}
+\cvdefPy{GetRealND(arr, idx)->float}
+
+\begin{description}
+\cvarg{arr}{Input array. Must have a single channel.}
+\cvarg{idx}{Array of the element indices}
+\end{description}
+
+Returns a specific element of a single-channel array. If the array has
+multiple channels, a runtime error is raised. Note that \cvCPyCross{Get}
+function can be used safely for both single-channel and multiple-channel
+arrays though they are a bit slower.
+
+In the case of a sparse array the functions return 0 if the requested node does not exist (no new node is created by the functions).
+
 
 \ifC %{
 \cvCPyFunc{GetRow(s)}
