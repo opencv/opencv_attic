@@ -22,7 +22,7 @@ int block_size = 1000;
 float  parameter;
 double threshold;
 double rezult, min_rezult;
-CvFilter filter = CV_GAUSSIAN_5x5;
+int filter = CV_GAUSSIAN_5x5;
 CvConnectedComp *cur_comp, min_comp;
 CvSeq *comp;
 CvMemStorage *storage;

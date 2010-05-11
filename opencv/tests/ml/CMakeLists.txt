@@ -2,7 +2,7 @@
 #  CMake file for cxcoretest. See root CMakeLists.txt
 #
 # ----------------------------------------------------------------------------
-project(mltest)
+project(opencv_test_ml)
 
 file(GLOB test_srcs "src/*.cpp")
 source_group("Src" FILES ${test_srcs})
@@ -31,9 +31,13 @@ if(WIN32 AND MSVC)
     endforeach()
 endif()
 
-include_directories(../cxts)
+include_directories(../cxts
+	                "${CMAKE_SOURCE_DIR}/include/opencv"
+					"${CMAKE_SOURCE_DIR}/modules/core/include"
+					"${CMAKE_SOURCE_DIR}/modules/ml/include"
+					)  
 
-set(the_target "mltest")
+set(the_target "opencv_test_ml")
 
 add_executable(${the_target} ${test_srcs} ${test_hdrs})
 
@@ -44,14 +48,14 @@ set_target_properties(${the_target} PROPERTIES
 	)
 
 
-add_dependencies(${the_target} cxts cxcore ml)
+add_dependencies(${the_target} opencv_ts opencv_core opencv_ml)
 
 # Add the required libraries for linking:
-target_link_libraries(${the_target} ${OPENCV_LINKER_LIBS} cxcore ml cxts)
+target_link_libraries(${the_target} ${OPENCV_LINKER_LIBS} opencv_ts opencv_core opencv_ml)
 
 enable_testing()
 get_target_property(LOC ${the_target} LOCATION)
-add_test(mltest "${LOC}")
+add_test(${the_target} "${LOC}")
 
 if(WIN32)
 install(TARGETS ${the_target} RUNTIME DESTINATION bin COMPONENT main)

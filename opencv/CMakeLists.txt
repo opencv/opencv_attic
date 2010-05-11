@@ -181,7 +181,6 @@ endif()
 set(BUILD_EXAMPLES OFF CACHE BOOL "Build all examples")
 set(INSTALL_C_EXAMPLES OFF CACHE BOOL "Install C examples")
 set(INSTALL_PYTHON_EXAMPLES OFF CACHE BOOL "Install Python examples")
-set(INSTALL_OCTAVE_EXAMPLES OFF CACHE BOOL "Install Octave examples")
 
 # Build tests:
 # ===================================================
@@ -196,6 +195,7 @@ else()
 endif()
 
 include(OpenCVPCHSupport.cmake REQUIRED)
+include(OpenCVModule.cmake REQUIRED)
 
 if(UNIX)
     include(OpenCVFindPkgConfig.cmake OPTIONAL)
@@ -449,10 +449,8 @@ if(UNIX)
 endif()
 
 set(BUILD_NEW_PYTHON_SUPPORT ON CACHE BOOL "Build with Python support")
-set(BUILD_SWIG_PYTHON_SUPPORT OFF CACHE BOOL "Build with older SWIG-based Python support")
-set(BUILD_OCTAVE_SUPPORT OFF CACHE BOOL "Build with Octave support")
 
-if(BUILD_SWIG_PYTHON_SUPPORT OR BUILD_NEW_PYTHON_SUPPORT)
+if(BUILD_NEW_PYTHON_SUPPORT)
     find_package(PythonInterp)
     find_package(PythonLibs)
 
@@ -494,10 +492,6 @@ if(BUILD_SWIG_PYTHON_SUPPORT OR BUILD_NEW_PYTHON_SUPPORT)
 
 endif()
     
-if(PYTHONLIBS_FOUND AND BUILD_SWIG_PYTHON_SUPPORT)
-    find_package(SWIG)
-endif()
-
 ############################### TBB ################################
 
 if (WITH_TBB)
@@ -1055,8 +1049,8 @@ endif()
 #-----------------------------------
 # Subdirectories:
 #-----------------------------------
-add_subdirectory(src)
-add_subdirectory(apps)
+add_subdirectory(include)
+add_subdirectory(modules)
 
 if(BUILD_LATEX_DOCS)
   include(OpenCVFindLATEX.cmake REQUIRED)
@@ -1069,7 +1063,7 @@ endif()
 add_subdirectory(doc)
 add_subdirectory(data)
 
-if(BUILD_EXAMPLES OR INSTALL_PYTHON_EXAMPLES OR INSTALL_OCTAVE_EXAMPLES)
+if(BUILD_EXAMPLES OR INSTALL_PYTHON_EXAMPLES)
     add_subdirectory(samples)
 endif()
 
@@ -1078,7 +1072,6 @@ if(BUILD_TESTS)
     add_subdirectory(tests)
 endif()
 
-add_subdirectory(interfaces)
 add_subdirectory(3rdparty)
 
 
@@ -1176,11 +1169,6 @@ endif()
 
 message(STATUS "")
 message(STATUS "  Interfaces: ")
-if(PYTHONLIBS_FOUND AND BUILD_SWIG_PYTHON_SUPPORT)
-message(STATUS "    Old Python:                1")
-else()
-message(STATUS "    Old Python:                0")
-endif()
 message(STATUS "    Python:                    ${BUILD_NEW_PYTHON_SUPPORT}")
 message(STATUS "    Python interpreter:        ${PYTHON_EXECUTABLE}")
 message(STATUS "    Python numpy:              ${PYTHON_USE_NUMPY}")

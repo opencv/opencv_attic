@@ -2,14 +2,15 @@
 #  CMake file for cxts. See root CMakeLists.txt
 #
 # ----------------------------------------------------------------------------
-project(cxts)
+project(opencv_ts)
 
 file(GLOB lib_srcs "*.cpp")
 source_group("Src" FILES ${lib_srcs})
 file(GLOB lib_hdrs "*.h*")
 source_group("Include" FILES ${lib_hdrs})
 
-include_directories(.)
+include_directories(.
+	"${CMAKE_SOURCE_DIR}/modules/core/include")
 
 if(WIN32 AND MSVC)
     set(pch_header "_cxts.h")
@@ -36,7 +37,7 @@ endif()
 # ----------------------------------------------------------------------------------
 # 				Define the library target:
 # ----------------------------------------------------------------------------------
-set(the_target "cxts")
+set(the_target "opencv_ts")
 
 add_library(${the_target} ${lib_srcs} ${lib_hdrs})
 
@@ -55,10 +56,10 @@ set_target_properties(${the_target} PROPERTIES
 	DEFINE_SYMBOL "CVAPI_EXPORTS"
 	)
 
-add_dependencies(${the_target} cxcore)
+add_dependencies(${the_target} opencv_core)
 
 # Add the required libraries for linking:
-target_link_libraries(${the_target} ${OPENCV_LINKER_LIBS} cxcore)
+target_link_libraries(${the_target} ${OPENCV_LINKER_LIBS} opencv_core)
 
 if(WIN32)
 install(TARGETS ${the_target}

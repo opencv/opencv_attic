@@ -10,14 +10,27 @@ if (BUILD_EXAMPLES)
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unused-function")
     endif()
     
+	include_directories(
+		"${CMAKE_SOURCE_DIR}/modules/core/include"
+		"${CMAKE_SOURCE_DIR}/modules/imgproc/include"
+		"${CMAKE_SOURCE_DIR}/modules/video/include"
+		"${CMAKE_SOURCE_DIR}/modules/highgui/include"
+		"${CMAKE_SOURCE_DIR}/modules/ml/include"
+		"${CMAKE_SOURCE_DIR}/modules/calib3d/include"
+		"${CMAKE_SOURCE_DIR}/modules/features2d/include"
+		"${CMAKE_SOURCE_DIR}/modules/objdetect/include"
+		"${CMAKE_SOURCE_DIR}/modules/legacy/include"
+		"${CMAKE_SOURCE_DIR}/modules/contrib/include"
+	)
+
     # ---------------------------------------------
     #      Define executable targets
     # ---------------------------------------------
     MACRO(MY_DEFINE_EXAMPLE name srcs)
     	add_executable(${name} ${srcs})
 		set_target_properties(${name} PROPERTIES PROJECT_LABEL "(EXAMPLE) ${name}")
-    	add_dependencies(${name} cv cxcore highgui ml cvaux)
-    	target_link_libraries(${name} ${OPENCV_LINKER_LIBS} cv cxcore highgui ml cvaux)
+    	add_dependencies(${name} opencv_core opencv_imgproc opencv_highgui opencv_ml opencv_video opencv_objdetect opencv_features2d opencv_calib3d opencv_legacy opencv_contrib)
+    	target_link_libraries(${name} ${OPENCV_LINKER_LIBS} opencv_core opencv_imgproc opencv_highgui opencv_ml opencv_video opencv_objdetect opencv_features2d opencv_calib3d opencv_legacy opencv_contrib)
 
         if(WIN32)
             install(TARGETS ${name}
@@ -28,7 +41,7 @@ if (BUILD_EXAMPLES)
     MY_DEFINE_EXAMPLE(adaptiveskindetector 	adaptiveskindetector.cpp)
     MY_DEFINE_EXAMPLE(bgfg_codebook 	bgfg_codebook.cpp)
     MY_DEFINE_EXAMPLE(bgfg_segm			bgfg_segm.cpp)
-    MY_DEFINE_EXAMPLE(blobtrack			blobtrack.cpp)
+    MY_DEFINE_EXAMPLE(blobtrack_sample			blobtrack_sample.cpp)
     MY_DEFINE_EXAMPLE(camshiftdemo		camshiftdemo.c)
     MY_DEFINE_EXAMPLE(contours			contours.c)
     MY_DEFINE_EXAMPLE(convert_cascade	convert_cascade.c)
