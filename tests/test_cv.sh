@@ -1,6 +1,6 @@
 #! /bin/sh
 if [ -n "${TESTDATA_DIR}" ] ; then
-  ./cvtest -d $TESTDATA_DIR/cv
+  ./opencv_test -d $TESTDATA_DIR/cv
 else
-  ./cvtest -d $srcdir/../../opencv_extra/testdata/cv
+  ./opencv_test -d $srcdir/../../opencv_extra/testdata/cv
 fi
