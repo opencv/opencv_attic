@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<opencv_storage>
+<run_params>
+  <bark>
+	<isSaveKeypoints>0</isSaveKeypoints>
+    <threshold>20</threshold>
+    <nonmaxSuppression>1</nonmaxSuppression></bark>
+  <bikes>
+	<isSaveKeypoints>0</isSaveKeypoints>
+    <threshold>23</threshold>
+    <nonmaxSuppression>1</nonmaxSuppression></bikes>
+  <boat>
+	<isSaveKeypoints>0</isSaveKeypoints>
+    <threshold>50</threshold>
+    <nonmaxSuppression>1</nonmaxSuppression></boat>
+  <graf>
+	<isSaveKeypoints>0</isSaveKeypoints>
+    <threshold>20</threshold>
+    <nonmaxSuppression>1</nonmaxSuppression></graf>
+  <leuven>
+	<isSaveKeypoints>0</isSaveKeypoints>
+    <threshold>42</threshold>
+    <nonmaxSuppression>1</nonmaxSuppression></leuven>
+  <trees>
+	<isSaveKeypoints>0</isSaveKeypoints>
+    <threshold>70</threshold>
+    <nonmaxSuppression>1</nonmaxSuppression></trees>
+  <ubc>
+	<isSaveKeypoints>0</isSaveKeypoints>
+    <threshold>57</threshold>
+    <nonmaxSuppression>1</nonmaxSuppression></ubc>
+  <wall>
+	<isSaveKeypoints>0</isSaveKeypoints>
+    <threshold>55</threshold>
+    <nonmaxSuppression>1</nonmaxSuppression></wall></run_params>
+</opencv_storage>

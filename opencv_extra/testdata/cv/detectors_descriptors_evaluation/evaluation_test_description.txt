@@ -38,6 +38,10 @@ TODO: affine adaptation.
 Detector quality:
     1.) repeatability,
     2.) correspondence count.
+Common run parameter of detectors:
+    <isSaveKeypoints>
+        if 1 (true), then keypoints will be saved in directory [keypoints_datasets],
+        if 0 (false), then keypoints will not be saved.
 
 Source:
     opencv/tests/cv/src/adetectordescriptor_evaluation.cpp
@@ -51,22 +55,19 @@ Testdata:
 
 To run these tests:
 1. specify the test names in configure file of cvtest system. The test names:
-    "repeatability-fast-detector"
-    "repeatability-gftt-detector" (GFTT with useHarrisDetector == false)
-    "repeatability-harris-detector" (GFTT with useHarrisDetector == false)
-    "repeatability-mser-detector"
-    "repeatability-star-detector"
-    "repeatability-sift-detector"
-    "repeatability-surf-detector"
+    "quality-detector-fast"
+    "quality-detector-gftt" (GFTT with useHarrisDetector == false)
+    "quality-detector-harris" (GFTT with useHarrisDetector == false)
+    "quality-detector-mser"
+    "quality-detector-star"
+    "quality-detector-sift"
+    "quality-detector-surf"
 2. run cvtest with -d and -f parameters, for example ./cvtest -d /home/opencv_extra/testdata/cv -f /home/cvcfg.xml
 
 If there is not the file with run parameters for some detector in the directory [detectors], the default values of 
 these parameters will be used and written in such file.
 If there is not the file with quality results for some detector in the directory [detectors], the corresponding 
 test will not be validate the results, but simply save them in such file.
-If there is not the file with keypoints of given detector on some images dataset in the directory 
-[keypoints_datasets] such file will be written. In current implementation of this regression test the keypoints sets
-are not compared and written keyponts file may be used in descriptor test.
 TODO: regression keipoints sets comparison (?).
 
 ------------------------------------------------------------------------
@@ -81,30 +82,29 @@ Descriptor quality:
     2.) precision.
 Common run parameters of descriptors:
     <keypointsFilename> 
-        is a keypoints filename located in [keypoints_datasets], e.g. surf_bark.xml. The descriptors will be calculated for
+        is a keypoints filename located in [keypoints_datasets], e.g. surf_bark.xml.gz. The descriptors will be calculated for
         these keypoints. Such file may be written by detector evaluation test.
     <projectKeypointsFrom1Image>
         if 0 (false) then first image keypoints (from 6) will be projected on other images using homography matrix to evaluate 
         the descriptor. If 1 (true) then all 6 keypoints sets calculated by some detector will be used to evaluate the descriptor.
     <matchFilter>
-		is not supported now. This parameter specify a filter to matches, e.g. confidence of Lowe. Now one correspondence is found
-		for each keypoint of first image and not filtered.
+        is not supported now. This parameter specify a filter to matches, e.g. confidence of Lowe. Now one correspondence is found
+        for each keypoint of first image and not filtered.
 TODO: support <matchFilter>.
 
 Source:
     opencv/tests/cv/src/adetectordescriptor_evaluation.cpp
     DescriptorQualityTest is a base class for the descriptor quality test.
-    Keypoints file must be in [keypoints_datasets].
 
 Testdata:
     The tests run the descriptors on the images from [images_datasets] (as Mikolajczyk et al.).
     Run parameters and results are in [descriptors].
-    
-
+    Keypoints file must be in [keypoints_datasets].
+   
 To run these tests:
 1. specify the test names in configure file of cvtest system. The test names:
-    "quality-sift-descriptor"
-    "quality-surf-descriptor"
+    "quality-descriptor-sift"
+    "quality-descriptor-surf"
 2. run cvtest with -d and -f parameters, for example ./cvtest -d /home/opencv_extra/testdata/cv -f /home/cvcfg.xml
 
 If there is not the file with run parameters for some descriptor in the directory [descriptors], the default values of 

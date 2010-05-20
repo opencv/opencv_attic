@@ -2,75 +2,91 @@
 <opencv_storage>
 <run_params>
   <bark>
-    <keypointsFilename>surf_bark.xml</keypointsFilename>
-    <projectKeypointsFrom1Image>0</projectKeypointsFrom1Image>
+    <keypointsFilename>surf_bark.xml.gz</keypointsFilename>
+    <projectKeypointsFrom1Image>1</projectKeypointsFrom1Image>
     <matchFilter>0</matchFilter>
     <magnification>3.</magnification>
     <isNormalize>1</isNormalize>
+    <recalculateAngles>1</recalculateAngles>
     <nOctaves>4</nOctaves>
     <nOctaveLayers>3</nOctaveLayers>
-    <firstOctave>-1</firstOctave></bark>
+    <firstOctave>-1</firstOctave>
+    <angleMode>0</angleMode></bark>
   <bikes>
-    <keypointsFilename>surf_bikes.xml</keypointsFilename>
-    <projectKeypointsFrom1Image>0</projectKeypointsFrom1Image>
+    <keypointsFilename>surf_bikes.xml.gz</keypointsFilename>
+    <projectKeypointsFrom1Image>1</projectKeypointsFrom1Image>
     <matchFilter>0</matchFilter>
     <magnification>3.</magnification>
     <isNormalize>1</isNormalize>
+    <recalculateAngles>1</recalculateAngles>
     <nOctaves>4</nOctaves>
     <nOctaveLayers>3</nOctaveLayers>
-    <firstOctave>-1</firstOctave></bikes>
+    <firstOctave>-1</firstOctave>
+    <angleMode>0</angleMode></bikes>
   <boat>
-    <keypointsFilename>surf_boat.xml</keypointsFilename>
-    <projectKeypointsFrom1Image>0</projectKeypointsFrom1Image>
+    <keypointsFilename>surf_boat.xml.gz</keypointsFilename>
+    <projectKeypointsFrom1Image>1</projectKeypointsFrom1Image>
     <matchFilter>0</matchFilter>
     <magnification>3.</magnification>
     <isNormalize>1</isNormalize>
+    <recalculateAngles>1</recalculateAngles>
     <nOctaves>4</nOctaves>
     <nOctaveLayers>3</nOctaveLayers>
-    <firstOctave>-1</firstOctave></boat>
+    <firstOctave>-1</firstOctave>
+    <angleMode>0</angleMode></boat>
   <graf>
-    <keypointsFilename>surf_graf.xml</keypointsFilename>
-    <projectKeypointsFrom1Image>0</projectKeypointsFrom1Image>
+    <keypointsFilename>surf_graf.xml.gz</keypointsFilename>
+    <projectKeypointsFrom1Image>1</projectKeypointsFrom1Image>
     <matchFilter>0</matchFilter>
     <magnification>3.</magnification>
     <isNormalize>1</isNormalize>
+    <recalculateAngles>1</recalculateAngles>
     <nOctaves>4</nOctaves>
     <nOctaveLayers>3</nOctaveLayers>
-    <firstOctave>-1</firstOctave></graf>
+    <firstOctave>-1</firstOctave>
+    <angleMode>0</angleMode></graf>
   <leuven>
-    <keypointsFilename>surf_leuven.xml</keypointsFilename>
-    <projectKeypointsFrom1Image>0</projectKeypointsFrom1Image>
+    <keypointsFilename>surf_leuven.xml.gz</keypointsFilename>
+    <projectKeypointsFrom1Image>1</projectKeypointsFrom1Image>
     <matchFilter>0</matchFilter>
     <magnification>3.</magnification>
     <isNormalize>1</isNormalize>
+    <recalculateAngles>1</recalculateAngles>
     <nOctaves>4</nOctaves>
     <nOctaveLayers>3</nOctaveLayers>
-    <firstOctave>-1</firstOctave></leuven>
+    <firstOctave>-1</firstOctave>
+    <angleMode>0</angleMode></leuven>
   <trees>
-    <keypointsFilename>surf_trees.xml</keypointsFilename>
-    <projectKeypointsFrom1Image>0</projectKeypointsFrom1Image>
+    <keypointsFilename>surf_trees.xml.gz</keypointsFilename>
+    <projectKeypointsFrom1Image>1</projectKeypointsFrom1Image>
     <matchFilter>0</matchFilter>
     <magnification>3.</magnification>
     <isNormalize>1</isNormalize>
+    <recalculateAngles>1</recalculateAngles>
     <nOctaves>4</nOctaves>
     <nOctaveLayers>3</nOctaveLayers>
-    <firstOctave>-1</firstOctave></trees>
+    <firstOctave>-1</firstOctave>
+    <angleMode>0</angleMode></trees>
   <ubc>
-    <keypointsFilename>surf_ubc.xml</keypointsFilename>
-    <projectKeypointsFrom1Image>0</projectKeypointsFrom1Image>
+    <keypointsFilename>surf_ubc.xml.gz</keypointsFilename>
+    <projectKeypointsFrom1Image>1</projectKeypointsFrom1Image>
     <matchFilter>0</matchFilter>
     <magnification>3.</magnification>
     <isNormalize>1</isNormalize>
+    <recalculateAngles>1</recalculateAngles>
     <nOctaves>4</nOctaves>
     <nOctaveLayers>3</nOctaveLayers>
-    <firstOctave>-1</firstOctave></ubc>
+    <firstOctave>-1</firstOctave>
+    <angleMode>0</angleMode></ubc>
   <wall>
-    <keypointsFilename>surf_wall.xml</keypointsFilename>
-    <projectKeypointsFrom1Image>0</projectKeypointsFrom1Image>
+    <keypointsFilename>surf_wall.xml.gz</keypointsFilename>
+    <projectKeypointsFrom1Image>1</projectKeypointsFrom1Image>
     <matchFilter>0</matchFilter>
     <magnification>3.</magnification>
     <isNormalize>1</isNormalize>
+    <recalculateAngles>1</recalculateAngles>
     <nOctaves>4</nOctaves>
     <nOctaveLayers>3</nOctaveLayers>
-    <firstOctave>-1</firstOctave></wall></run_params>
+    <firstOctave>-1</firstOctave>
+    <angleMode>0</angleMode></wall></run_params>
 </opencv_storage>

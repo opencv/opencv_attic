@@ -3,130 +3,130 @@
 <results>
   <bark>
     <case0>
-      <recall>4.6937726438045502e-02</recall>
-      <precision>3.0894309282302856e-01</precision></case0>
+      <recall>5.4536253213882446e-02</recall>
+      <precision>5.8322054147720337e-01</precision></case0>
     <case1>
-      <recall>4.9655172973871231e-02</recall>
-      <precision>1.9485791027545929e-01</precision></case1>
+      <recall>3.6255724728107452e-02</recall>
+      <precision>3.8024356961250305e-01</precision></case1>
     <case2>
-      <recall>5.1608424633741379e-02</recall>
-      <precision>1.5098172426223755e-01</precision></case2>
+      <recall>5.0345510244369507e-02</recall>
+      <precision>5.5209743976593018e-01</precision></case2>
     <case3>
-      <recall>5.3353093564510345e-02</recall>
-      <precision>9.7759671509265900e-02</precision></case3>
+      <recall>5.6405827403068542e-02</recall>
+      <precision>6.1840325593948364e-01</precision></case3>
     <case4>
-      <recall>5.1621444523334503e-02</recall>
-      <precision>5.2774019539356232e-02</precision></case4></bark>
+      <recall>3.6810573190450668e-02</recall>
+      <precision>4.0352064371109009e-01</precision></case4></bark>
   <bikes>
     <case0>
-      <recall>6.4117357134819031e-02</recall>
-      <precision>6.5894973278045654e-01</precision></case0>
+      <recall>6.2270332127809525e-02</recall>
+      <precision>8.7979686260223389e-01</precision></case0>
     <case1>
-      <recall>6.1282344162464142e-02</recall>
-      <precision>5.7336342334747314e-01</precision></case1>
+      <recall>6.0915116220712662e-02</recall>
+      <precision>8.6625283956527710e-01</precision></case1>
     <case2>
-      <recall>5.8658156543970108e-02</recall>
-      <precision>4.3615818023681641e-01</precision></case2>
+      <recall>5.3303033113479614e-02</recall>
+      <precision>7.5451469421386719e-01</precision></case2>
     <case3>
-      <recall>5.4728627204895020e-02</recall>
-      <precision>3.4029346704483032e-01</precision></case3>
+      <recall>4.5478139072656631e-02</recall>
+      <precision>6.4277654886245728e-01</precision></case3>
     <case4>
-      <recall>5.4767441004514694e-02</recall>
-      <precision>2.6776579022407532e-01</precision></case4></bikes>
+      <recall>3.6019146442413330e-02</recall>
+      <precision>5.0959366559982300e-01</precision></case4></bikes>
   <boat>
     <case0>
-      <recall>4.1133809834718704e-02</recall>
-      <precision>5.5033904314041138e-01</precision></case0>
+      <recall>5.2444834262132645e-02</recall>
+      <precision>8.1002086400985718e-01</precision></case0>
     <case1>
-      <recall>4.0231883525848389e-02</recall>
-      <precision>3.6202400922775269e-01</precision></case1>
+      <recall>5.1288120448589325e-02</recall>
+      <precision>7.9258096218109131e-01</precision></case1>
     <case2>
-      <recall>4.2051609605550766e-02</recall>
-      <precision>2.7543035149574280e-01</precision></case2>
+      <recall>4.1463743895292282e-02</recall>
+      <precision>6.3954097032546997e-01</precision></case2>
     <case3>
-      <recall>4.2308602482080460e-02</recall>
-      <precision>1.8681319057941437e-01</precision></case3>
+      <recall>3.4649450331926346e-02</recall>
+      <precision>5.3468960523605347e-01</precision></case3>
     <case4>
-      <recall>2.2350041195750237e-02</recall>
-      <precision>7.1055382490158081e-02</precision></case4></boat>
+      <recall>1.1662993580102921e-02</recall>
+      <precision>1.7944705486297607e-01</precision></case4></boat>
   <graf>
     <case0>
-      <recall>5.1081966608762741e-02</recall>
-      <precision>5.5603140592575073e-01</precision></case0>
+      <recall>6.5857566893100739e-02</recall>
+      <precision>7.6248216629028320e-01</precision></case0>
     <case1>
-      <recall>3.7391662597656250e-02</recall>
-      <precision>3.2310983538627625e-01</precision></case1>
+      <recall>4.8754982650279999e-02</recall>
+      <precision>5.3285712003707886e-01</precision></case1>
     <case2>
-      <recall>2.3911541327834129e-02</recall>
-      <precision>1.2357142567634583e-01</precision></case2>
+      <recall>3.3894091844558716e-02</recall>
+      <precision>2.9172611236572266e-01</precision></case2>
     <case3>
-      <recall>1.2508686631917953e-02</recall>
-      <precision>1.2847965583205223e-02</precision></case3>
+      <recall>2.7995521202683449e-02</recall>
+      <precision>7.1326673030853271e-02</precision></case3>
     <case4>
       <recall>0.</recall>
       <precision>0.</precision></case4></graf>
   <leuven>
     <case0>
-      <recall>6.2826506793498993e-02</recall>
-      <precision>6.1673414707183838e-01</precision></case0>
+      <recall>7.1955054998397827e-02</recall>
+      <precision>9.4197028875350952e-01</precision></case0>
     <case1>
-      <recall>5.6580465286970139e-02</recall>
-      <precision>4.6766507625579834e-01</precision></case1>
+      <recall>6.9466635584831238e-02</recall>
+      <precision>9.0958166122436523e-01</precision></case1>
     <case2>
-      <recall>5.0013944506645203e-02</recall>
-      <precision>3.6326804757118225e-01</precision></case2>
+      <recall>6.7532733082771301e-02</recall>
+      <precision>8.8394063711166382e-01</precision></case2>
     <case3>
-      <recall>4.5190155506134033e-02</recall>
-      <precision>2.7297297120094299e-01</precision></case3>
+      <recall>6.3859395682811737e-02</recall>
+      <precision>8.3603239059448242e-01</precision></case3>
     <case4>
-      <recall>3.9722077548503876e-02</recall>
-      <precision>2.0445343852043152e-01</precision></case4></leuven>
+      <recall>6.0952968895435333e-02</recall>
+      <precision>8.0189961194992065e-01</precision></case4></leuven>
   <trees>
     <case0>
-      <recall>4.4259142130613327e-02</recall>
-      <precision>3.5689654946327209e-01</precision></case0>
+      <recall>5.2062064409255981e-02</recall>
+      <precision>4.3965518474578857e-01</precision></case0>
     <case1>
-      <recall>3.5541083663702011e-02</recall>
-      <precision>2.9465824365615845e-01</precision></case1>
+      <recall>4.2148984968662262e-02</recall>
+      <precision>3.5574713349342346e-01</precision></case1>
     <case2>
-      <recall>2.4520568549633026e-02</recall>
-      <precision>1.9241814315319061e-01</precision></case2>
+      <recall>2.6501404121518135e-02</recall>
+      <precision>2.2228604555130005e-01</precision></case2>
     <case3>
-      <recall>1.8617020919919014e-02</recall>
-      <precision>1.2464100867509842e-01</precision></case3>
+      <recall>2.4341879412531853e-02</recall>
+      <precision>2.0471535623073578e-01</precision></case3>
     <case4>
-      <recall>1.3647109270095825e-02</recall>
-      <precision>7.2946585714817047e-02</precision></case4></trees>
+      <recall>1.5454358421266079e-02</recall>
+      <precision>1.2923607230186462e-01</precision></case4></trees>
   <ubc>
     <case0>
-      <recall>6.0455806553363800e-02</recall>
-      <precision>8.8540971279144287e-01</precision></case0>
+      <recall>6.6172815859317780e-02</recall>
+      <precision>9.7601598501205444e-01</precision></case0>
     <case1>
-      <recall>5.7946644723415375e-02</recall>
-      <precision>8.4943372011184692e-01</precision></case1>
+      <recall>6.5585620701313019e-02</recall>
+      <precision>9.6735507249832153e-01</precision></case1>
     <case2>
-      <recall>5.5387057363986969e-02</recall>
-      <precision>7.9080611467361450e-01</precision></case2>
+      <recall>6.4185373485088348e-02</recall>
+      <precision>9.4670218229293823e-01</precision></case2>
     <case3>
-      <recall>4.8495147377252579e-02</recall>
-      <precision>6.6555631160736084e-01</precision></case3>
+      <recall>6.1249379068613052e-02</recall>
+      <precision>9.0339773893356323e-01</precision></case3>
     <case4>
-      <recall>3.6073330789804459e-02</recall>
-      <precision>4.8735019564628601e-01</precision></case4></ubc>
+      <recall>5.1673516631126404e-02</recall>
+      <precision>7.6215857267379761e-01</precision></case4></ubc>
   <wall>
     <case0>
-      <recall>9.9084481596946716e-02</recall>
-      <precision>5.1413106918334961e-01</precision></case0>
+      <recall>9.8741620779037476e-02</recall>
+      <precision>6.4603364467620850e-01</precision></case0>
     <case1>
-      <recall>8.6750380694866180e-02</recall>
-      <precision>4.0685096383094788e-01</precision></case1>
+      <recall>1.0431620478630066e-01</recall>
+      <precision>6.5504807233810425e-01</precision></case1>
     <case2>
-      <recall>7.0275560021400452e-02</recall>
-      <precision>2.5901442766189575e-01</precision></case2>
+      <recall>7.0737235248088837e-02</recall>
+      <precision>4.1286057233810425e-01</precision></case2>
     <case3>
-      <recall>3.8695298135280609e-02</recall>
-      <precision>1.1478365212678909e-01</precision></case3>
+      <recall>3.7828572094440460e-02</recall>
+      <precision>1.9891826808452606e-01</precision></case3>
     <case4>
-      <recall>1.8043683841824532e-02</recall>
-      <precision>2.2850271314382553e-02</precision></case4></wall></results>
+      <recall>1.9156346097588539e-02</recall>
+      <precision>5.9495192021131516e-02</precision></case4></wall></results>
 </opencv_storage>

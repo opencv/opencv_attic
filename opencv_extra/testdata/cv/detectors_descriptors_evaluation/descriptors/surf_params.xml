@@ -2,57 +2,57 @@
 <opencv_storage>
 <run_params>
   <bark>
-    <keypointsFilename>surf_bark.xml</keypointsFilename>
-    <projectKeypointsFrom1Image>0</projectKeypointsFrom1Image>
+    <keypointsFilename>surf_bark.xml.gz</keypointsFilename>
+    <projectKeypointsFrom1Image>1</projectKeypointsFrom1Image>
     <matchFilter>0</matchFilter>
     <nOctaves>4</nOctaves>
     <nOctaveLayers>2</nOctaveLayers>
     <extended>0</extended></bark>
   <bikes>
-    <keypointsFilename>surf_bikes.xml</keypointsFilename>
-    <projectKeypointsFrom1Image>0</projectKeypointsFrom1Image>
+    <keypointsFilename>surf_bikes.xml.gz</keypointsFilename>
+    <projectKeypointsFrom1Image>1</projectKeypointsFrom1Image>
     <matchFilter>0</matchFilter>
     <nOctaves>4</nOctaves>
     <nOctaveLayers>2</nOctaveLayers>
     <extended>0</extended></bikes>
   <boat>
-    <keypointsFilename>surf_boat.xml</keypointsFilename>
-    <projectKeypointsFrom1Image>0</projectKeypointsFrom1Image>
+    <keypointsFilename>surf_boat.xml.gz</keypointsFilename>
+    <projectKeypointsFrom1Image>1</projectKeypointsFrom1Image>
     <matchFilter>0</matchFilter>
     <nOctaves>4</nOctaves>
     <nOctaveLayers>2</nOctaveLayers>
     <extended>0</extended></boat>
   <graf>
-    <keypointsFilename>surf_graf.xml</keypointsFilename>
-    <projectKeypointsFrom1Image>0</projectKeypointsFrom1Image>
+    <keypointsFilename>surf_graf.xml.gz</keypointsFilename>
+    <projectKeypointsFrom1Image>1</projectKeypointsFrom1Image>
     <matchFilter>0</matchFilter>
     <nOctaves>4</nOctaves>
     <nOctaveLayers>2</nOctaveLayers>
     <extended>0</extended></graf>
   <leuven>
-    <keypointsFilename>surf_leuven.xml</keypointsFilename>
-    <projectKeypointsFrom1Image>0</projectKeypointsFrom1Image>
+    <keypointsFilename>surf_leuven.xml.gz</keypointsFilename>
+    <projectKeypointsFrom1Image>1</projectKeypointsFrom1Image>
     <matchFilter>0</matchFilter>
     <nOctaves>4</nOctaves>
     <nOctaveLayers>2</nOctaveLayers>
     <extended>0</extended></leuven>
   <trees>
-    <keypointsFilename>surf_trees.xml</keypointsFilename>
-    <projectKeypointsFrom1Image>0</projectKeypointsFrom1Image>
+    <keypointsFilename>surf_trees.xml.gz</keypointsFilename>
+    <projectKeypointsFrom1Image>1</projectKeypointsFrom1Image>
     <matchFilter>0</matchFilter>
     <nOctaves>4</nOctaves>
     <nOctaveLayers>2</nOctaveLayers>
     <extended>0</extended></trees>
   <ubc>
-    <keypointsFilename>surf_ubc.xml</keypointsFilename>
-    <projectKeypointsFrom1Image>0</projectKeypointsFrom1Image>
+    <keypointsFilename>surf_ubc.xml.gz</keypointsFilename>
+    <projectKeypointsFrom1Image>1</projectKeypointsFrom1Image>
     <matchFilter>0</matchFilter>
     <nOctaves>4</nOctaves>
     <nOctaveLayers>2</nOctaveLayers>
     <extended>0</extended></ubc>
   <wall>
-    <keypointsFilename>surf_wall.xml</keypointsFilename>
-    <projectKeypointsFrom1Image>0</projectKeypointsFrom1Image>
+    <keypointsFilename>surf_wall.xml.gz</keypointsFilename>
+    <projectKeypointsFrom1Image>1</projectKeypointsFrom1Image>
     <matchFilter>0</matchFilter>
     <nOctaves>4</nOctaves>
     <nOctaveLayers>2</nOctaveLayers>
