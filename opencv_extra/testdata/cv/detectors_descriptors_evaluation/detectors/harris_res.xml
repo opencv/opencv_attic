@@ -3,8 +3,8 @@
 <results>
   <bark>
     <case0>
-      <repeatability>7.4661506652832031e+01</repeatability>
-      <correspondence_count>386</correspondence_count></case0>
+      <repeatability>8.3883491516113281e+01</repeatability>
+      <correspondence_count>432</correspondence_count></case0>
     <case1>
       <repeatability>0.</repeatability>
       <correspondence_count>0</correspondence_count></case1>
@@ -19,24 +19,24 @@
       <correspondence_count>0</correspondence_count></case4></bark>
   <bikes>
     <case0>
-      <repeatability>9.7077919006347656e+01</repeatability>
-      <correspondence_count>299</correspondence_count></case0>
+      <repeatability>9.7727272033691406e+01</repeatability>
+      <correspondence_count>301</correspondence_count></case0>
     <case1>
-      <repeatability>9.3650794982910156e+01</repeatability>
-      <correspondence_count>236</correspondence_count></case1>
+      <repeatability>9.6825393676757812e+01</repeatability>
+      <correspondence_count>244</correspondence_count></case1>
     <case2>
-      <repeatability>7.3932586669921875e+01</repeatability>
-      <correspondence_count>329</correspondence_count></case2>
+      <repeatability>8.2247192382812500e+01</repeatability>
+      <correspondence_count>366</correspondence_count></case2>
     <case3>
-      <repeatability>6.5671638488769531e+01</repeatability>
-      <correspondence_count>220</correspondence_count></case3>
+      <repeatability>7.8805969238281250e+01</repeatability>
+      <correspondence_count>264</correspondence_count></case3>
     <case4>
-      <repeatability>4.2807018280029297e+01</repeatability>
-      <correspondence_count>122</correspondence_count></case4></bikes>
+      <repeatability>7.5438598632812500e+01</repeatability>
+      <correspondence_count>215</correspondence_count></case4></bikes>
   <boat>
     <case0>
-      <repeatability>7.4705017089843750e+01</repeatability>
-      <correspondence_count>1013</correspondence_count></case0>
+      <repeatability>8.1300811767578125e+01</repeatability>
+      <correspondence_count>1100</correspondence_count></case0>
     <case1>
       <repeatability>0.</repeatability>
       <correspondence_count>0</correspondence_count></case1>
@@ -51,14 +51,14 @@
       <correspondence_count>0</correspondence_count></case4></boat>
   <graf>
     <case0>
-      <repeatability>7.9444442749023438e+01</repeatability>
-      <correspondence_count>572</correspondence_count></case0>
+      <repeatability>8.2541900634765625e+01</repeatability>
+      <correspondence_count>591</correspondence_count></case0>
     <case1>
-      <repeatability>2.5555555343627930e+01</repeatability>
-      <correspondence_count>207</correspondence_count></case1>
+      <repeatability>2.8553615570068359e+01</repeatability>
+      <correspondence_count>229</correspondence_count></case1>
     <case2>
-      <repeatability>1.4038127899169922e+01</repeatability>
-      <correspondence_count>81</correspondence_count></case2>
+      <repeatability>1.4236110687255859e+01</repeatability>
+      <correspondence_count>82</correspondence_count></case2>
     <case3>
       <repeatability>0.</repeatability>
       <correspondence_count>0</correspondence_count></case3>
@@ -67,66 +67,66 @@
       <correspondence_count>0</correspondence_count></case4></graf>
   <leuven>
     <case0>
-      <repeatability>7.7770225524902344e+01</repeatability>
-      <correspondence_count>1144</correspondence_count></case0>
+      <repeatability>7.9877220153808594e+01</repeatability>
+      <correspondence_count>1171</correspondence_count></case0>
     <case1>
-      <repeatability>7.5943000793457031e+01</repeatability>
-      <correspondence_count>906</correspondence_count></case1>
+      <repeatability>7.9110740661621094e+01</repeatability>
+      <correspondence_count>943</correspondence_count></case1>
     <case2>
-      <repeatability>7.4295776367187500e+01</repeatability>
-      <correspondence_count>633</correspondence_count></case2>
+      <repeatability>7.7529411315917969e+01</repeatability>
+      <correspondence_count>659</correspondence_count></case2>
     <case3>
-      <repeatability>7.1513000488281250e+01</repeatability>
-      <correspondence_count>605</correspondence_count></case3>
+      <repeatability>75.</repeatability>
+      <correspondence_count>633</correspondence_count></case3>
     <case4>
-      <repeatability>6.8627449035644531e+01</repeatability>
-      <correspondence_count>455</correspondence_count></case4></leuven>
+      <repeatability>7.1969696044921875e+01</repeatability>
+      <correspondence_count>475</correspondence_count></case4></leuven>
   <trees>
     <case0>
-      <repeatability>5.2861034393310547e+01</repeatability>
-      <correspondence_count>776</correspondence_count></case0>
+      <repeatability>5.8185539245605469e+01</repeatability>
+      <correspondence_count>853</correspondence_count></case0>
     <case1>
-      <repeatability>4.5878379821777344e+01</repeatability>
-      <correspondence_count>679</correspondence_count></case1>
+      <repeatability>5.3689910888671875e+01</repeatability>
+      <correspondence_count>793</correspondence_count></case1>
     <case2>
-      <repeatability>3.0394121170043945e+01</repeatability>
-      <correspondence_count>455</correspondence_count></case2>
+      <repeatability>3.8209751129150391e+01</repeatability>
+      <correspondence_count>572</correspondence_count></case2>
     <case3>
-      <repeatability>2.4832214355468750e+01</repeatability>
-      <correspondence_count>370</correspondence_count></case3>
+      <repeatability>3.3400539398193359e+01</repeatability>
+      <correspondence_count>497</correspondence_count></case3>
     <case4>
-      <repeatability>2.4637681961059570e+01</repeatability>
-      <correspondence_count>272</correspondence_count></case4></trees>
+      <repeatability>3.5149864196777344e+01</repeatability>
+      <correspondence_count>387</correspondence_count></case4></trees>
   <ubc>
     <case0>
-      <repeatability>8.8666664123535156e+01</repeatability>
-      <correspondence_count>1330</correspondence_count></case0>
+      <repeatability>8.9533332824707031e+01</repeatability>
+      <correspondence_count>1343</correspondence_count></case0>
     <case1>
-      <repeatability>8.3922615051269531e+01</repeatability>
-      <correspondence_count>1258</correspondence_count></case1>
+      <repeatability>8.5390258789062500e+01</repeatability>
+      <correspondence_count>1280</correspondence_count></case1>
     <case2>
-      <repeatability>7.7236312866210938e+01</repeatability>
-      <correspondence_count>1157</correspondence_count></case2>
+      <repeatability>7.9773033142089844e+01</repeatability>
+      <correspondence_count>1195</correspondence_count></case2>
     <case3>
-      <repeatability>6.4576385498046875e+01</repeatability>
-      <correspondence_count>968</correspondence_count></case3>
+      <repeatability>6.8845893859863281e+01</repeatability>
+      <correspondence_count>1032</correspondence_count></case3>
     <case4>
-      <repeatability>55.</repeatability>
-      <correspondence_count>825</correspondence_count></case4></ubc>
+      <repeatability>61.</repeatability>
+      <correspondence_count>915</correspondence_count></case4></ubc>
   <wall>
     <case0>
-      <repeatability>7.5872093200683594e+01</repeatability>
-      <correspondence_count>1044</correspondence_count></case0>
+      <repeatability>7.8935859680175781e+01</repeatability>
+      <correspondence_count>1083</correspondence_count></case0>
     <case1>
-      <repeatability>7.0692192077636719e+01</repeatability>
-      <correspondence_count>960</correspondence_count></case1>
+      <repeatability>7.4057647705078125e+01</repeatability>
+      <correspondence_count>1002</correspondence_count></case1>
     <case2>
-      <repeatability>5.6345634460449219e+01</repeatability>
-      <correspondence_count>626</correspondence_count></case2>
+      <repeatability>5.9259258270263672e+01</repeatability>
+      <correspondence_count>656</correspondence_count></case2>
     <case3>
-      <repeatability>3.4778598785400391e+01</repeatability>
-      <correspondence_count>377</correspondence_count></case3>
+      <repeatability>3.8227146148681641e+01</repeatability>
+      <correspondence_count>414</correspondence_count></case3>
     <case4>
-      <repeatability>1.5611353874206543e+01</repeatability>
-      <correspondence_count>143</correspondence_count></case4></wall></results>
+      <repeatability>1.8838993072509766e+01</repeatability>
+      <correspondence_count>172</correspondence_count></case4></wall></results>
 </opencv_storage>

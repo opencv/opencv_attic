@@ -3,62 +3,62 @@
 <results>
   <bark>
     <case0>
-      <repeatability>6.0340633392333984e+01</repeatability>
-      <correspondence_count>496</correspondence_count></case0>
+      <repeatability>6.3776721954345703e+01</repeatability>
+      <correspondence_count>537</correspondence_count></case0>
     <case1>
-      <repeatability>6.1893203735351562e+01</repeatability>
-      <correspondence_count>255</correspondence_count></case1>
+      <repeatability>6.6430259704589844e+01</repeatability>
+      <correspondence_count>281</correspondence_count></case1>
     <case2>
-      <repeatability>7.0212768554687500e+01</repeatability>
-      <correspondence_count>231</correspondence_count></case2>
+      <repeatability>7.1220932006835938e+01</repeatability>
+      <correspondence_count>245</correspondence_count></case2>
     <case3>
-      <repeatability>6.6666664123535156e+01</repeatability>
-      <correspondence_count>146</correspondence_count></case3>
+      <repeatability>6.7105262756347656e+01</repeatability>
+      <correspondence_count>153</correspondence_count></case3>
     <case4>
-      <repeatability>5.6779659271240234e+01</repeatability>
-      <correspondence_count>67</correspondence_count></case4></bark>
+      <repeatability>6.1983470916748047e+01</repeatability>
+      <correspondence_count>75</correspondence_count></case4></bark>
   <bikes>
     <case0>
-      <repeatability>6.6184974670410156e+01</repeatability>
-      <correspondence_count>229</correspondence_count></case0>
+      <repeatability>6.6763008117675781e+01</repeatability>
+      <correspondence_count>231</correspondence_count></case0>
     <case1>
-      <repeatability>5.8255451202392578e+01</repeatability>
-      <correspondence_count>187</correspondence_count></case1>
+      <repeatability>6.1846153259277344e+01</repeatability>
+      <correspondence_count>201</correspondence_count></case1>
     <case2>
-      <repeatability>5.2653060913085938e+01</repeatability>
-      <correspondence_count>129</correspondence_count></case2>
+      <repeatability>5.7723575592041016e+01</repeatability>
+      <correspondence_count>142</correspondence_count></case2>
     <case3>
-      <repeatability>4.9327354431152344e+01</repeatability>
-      <correspondence_count>110</correspondence_count></case3>
+      <repeatability>5.4260089874267578e+01</repeatability>
+      <correspondence_count>121</correspondence_count></case3>
     <case4>
-      <repeatability>4.9122806549072266e+01</repeatability>
-      <correspondence_count>84</correspondence_count></case4></bikes>
+      <repeatability>5.3801170349121094e+01</repeatability>
+      <correspondence_count>92</correspondence_count></case4></bikes>
   <boat>
     <case0>
-      <repeatability>4.3771625518798828e+01</repeatability>
-      <correspondence_count>253</correspondence_count></case0>
+      <repeatability>4.6271186828613281e+01</repeatability>
+      <correspondence_count>273</correspondence_count></case0>
     <case1>
-      <repeatability>7.9238754272460938e+01</repeatability>
-      <correspondence_count>458</correspondence_count></case1>
+      <repeatability>7.8813560485839844e+01</repeatability>
+      <correspondence_count>465</correspondence_count></case1>
     <case2>
-      <repeatability>4.4811321258544922e+01</repeatability>
-      <correspondence_count>95</correspondence_count></case2>
+      <repeatability>4.8113208770751953e+01</repeatability>
+      <correspondence_count>102</correspondence_count></case2>
     <case3>
-      <repeatability>3.4948097229003906e+01</repeatability>
-      <correspondence_count>202</correspondence_count></case3>
+      <repeatability>3.8644069671630859e+01</repeatability>
+      <correspondence_count>228</correspondence_count></case3>
     <case4>
-      <repeatability>1.6666666030883789e+01</repeatability>
-      <correspondence_count>21</correspondence_count></case4></boat>
+      <repeatability>2.4218750000000000e+01</repeatability>
+      <correspondence_count>31</correspondence_count></case4></boat>
   <graf>
     <case0>
-      <repeatability>7.0276008605957031e+01</repeatability>
-      <correspondence_count>331</correspondence_count></case0>
+      <repeatability>7.4686195373535156e+01</repeatability>
+      <correspondence_count>357</correspondence_count></case0>
     <case1>
-      <repeatability>6.1893203735351562e+01</repeatability>
-      <correspondence_count>255</correspondence_count></case1>
+      <repeatability>7.1052635192871094e+01</repeatability>
+      <correspondence_count>297</correspondence_count></case1>
     <case2>
-      <repeatability>3.0555555343627930e+01</repeatability>
-      <correspondence_count>110</correspondence_count></case2>
+      <repeatability>5.4545455932617188e+01</repeatability>
+      <correspondence_count>198</correspondence_count></case2>
     <case3>
       <repeatability>0.</repeatability>
       <correspondence_count>0</correspondence_count></case3>
@@ -67,66 +67,66 @@
       <correspondence_count>0</correspondence_count></case4></graf>
   <leuven>
     <case0>
-      <repeatability>7.4137931823730469e+01</repeatability>
-      <correspondence_count>258</correspondence_count></case0>
+      <repeatability>75.</repeatability>
+      <correspondence_count>267</correspondence_count></case0>
     <case1>
-      <repeatability>7.1746032714843750e+01</repeatability>
-      <correspondence_count>226</correspondence_count></case1>
+      <repeatability>7.0897834777832031e+01</repeatability>
+      <correspondence_count>229</correspondence_count></case1>
     <case2>
-      <repeatability>6.4794006347656250e+01</repeatability>
-      <correspondence_count>173</correspondence_count></case2>
+      <repeatability>6.6911766052246094e+01</repeatability>
+      <correspondence_count>182</correspondence_count></case2>
     <case3>
-      <repeatability>6.7567565917968750e+01</repeatability>
-      <correspondence_count>150</correspondence_count></case3>
+      <repeatability>6.8831169128417969e+01</repeatability>
+      <correspondence_count>159</correspondence_count></case3>
     <case4>
-      <repeatability>5.7297298431396484e+01</repeatability>
-      <correspondence_count>106</correspondence_count></case4></leuven>
+      <repeatability>5.7512954711914062e+01</repeatability>
+      <correspondence_count>111</correspondence_count></case4></leuven>
   <trees>
     <case0>
-      <repeatability>50.</repeatability>
-      <correspondence_count>890</correspondence_count></case0>
+      <repeatability>5.4033149719238281e+01</repeatability>
+      <correspondence_count>978</correspondence_count></case0>
     <case1>
-      <repeatability>5.0446163177490234e+01</repeatability>
-      <correspondence_count>848</correspondence_count></case1>
+      <repeatability>5.2288730621337891e+01</repeatability>
+      <correspondence_count>891</correspondence_count></case1>
     <case2>
-      <repeatability>4.4862796783447266e+01</repeatability>
-      <correspondence_count>703</correspondence_count></case2>
+      <repeatability>4.6516006469726562e+01</repeatability>
+      <correspondence_count>741</correspondence_count></case2>
     <case3>
-      <repeatability>4.3103446960449219e+01</repeatability>
-      <correspondence_count>575</correspondence_count></case3>
+      <repeatability>4.4119796752929688e+01</repeatability>
+      <correspondence_count>604</correspondence_count></case3>
     <case4>
-      <repeatability>4.1447963714599609e+01</repeatability>
-      <correspondence_count>458</correspondence_count></case4></trees>
+      <repeatability>4.0985050201416016e+01</repeatability>
+      <correspondence_count>466</correspondence_count></case4></trees>
   <ubc>
     <case0>
-      <repeatability>6.9917358398437500e+01</repeatability>
-      <correspondence_count>423</correspondence_count></case0>
+      <repeatability>7.1680000305175781e+01</repeatability>
+      <correspondence_count>448</correspondence_count></case0>
     <case1>
-      <repeatability>6.5686271667480469e+01</repeatability>
-      <correspondence_count>402</correspondence_count></case1>
+      <repeatability>6.7192428588867188e+01</repeatability>
+      <correspondence_count>426</correspondence_count></case1>
     <case2>
-      <repeatability>5.9967319488525391e+01</repeatability>
-      <correspondence_count>367</correspondence_count></case2>
+      <repeatability>6.2145111083984375e+01</repeatability>
+      <correspondence_count>394</correspondence_count></case2>
     <case3>
-      <repeatability>4.8202613830566406e+01</repeatability>
-      <correspondence_count>295</correspondence_count></case3>
+      <repeatability>5.2681388854980469e+01</repeatability>
+      <correspondence_count>334</correspondence_count></case3>
     <case4>
-      <repeatability>5.0922508239746094e+01</repeatability>
-      <correspondence_count>138</correspondence_count></case4></ubc>
+      <repeatability>5.3846153259277344e+01</repeatability>
+      <correspondence_count>154</correspondence_count></case4></ubc>
   <wall>
     <case0>
-      <repeatability>6.1205562591552734e+01</repeatability>
-      <correspondence_count>792</correspondence_count></case0>
+      <repeatability>6.4401542663574219e+01</repeatability>
+      <correspondence_count>834</correspondence_count></case0>
     <case1>
-      <repeatability>5.6276325225830078e+01</repeatability>
-      <correspondence_count>668</correspondence_count></case1>
+      <repeatability>5.9817729949951172e+01</repeatability>
+      <correspondence_count>722</correspondence_count></case1>
     <case2>
-      <repeatability>5.0619834899902344e+01</repeatability>
-      <correspondence_count>490</correspondence_count></case2>
+      <repeatability>5.4964176177978516e+01</repeatability>
+      <correspondence_count>537</correspondence_count></case2>
     <case3>
-      <repeatability>3.9233371734619141e+01</repeatability>
-      <correspondence_count>348</correspondence_count></case3>
+      <repeatability>4.4900222778320312e+01</repeatability>
+      <correspondence_count>405</correspondence_count></case3>
     <case4>
-      <repeatability>8.1805362701416016e+00</repeatability>
-      <correspondence_count>58</correspondence_count></case4></wall></results>
+      <repeatability>1.3854595184326172e+01</repeatability>
+      <correspondence_count>101</correspondence_count></case4></wall></results>
 </opencv_storage>
