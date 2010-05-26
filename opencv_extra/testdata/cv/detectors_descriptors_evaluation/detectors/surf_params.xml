@@ -2,42 +2,42 @@
 <opencv_storage>
 <run_params>
   <bark>
-  	<isSaveKeypoints>1</isSaveKeypoints>
+  	<isSaveKeypoints>0</isSaveKeypoints>
     <hessianThreshold>700.</hessianThreshold>
     <octaves>3</octaves>
     <octaveLayers>4</octaveLayers></bark>
   <bikes>
-  	<isSaveKeypoints>1</isSaveKeypoints>
+  	<isSaveKeypoints>0</isSaveKeypoints>
     <hessianThreshold>800.</hessianThreshold>
     <octaves>3</octaves>
     <octaveLayers>4</octaveLayers></bikes>
   <boat>
-  	<isSaveKeypoints>1</isSaveKeypoints>
+  	<isSaveKeypoints>0</isSaveKeypoints>
     <hessianThreshold>3300.</hessianThreshold>
     <octaves>3</octaves>
     <octaveLayers>4</octaveLayers></boat>
   <graf>
-  	<isSaveKeypoints>1</isSaveKeypoints>
+  	<isSaveKeypoints>0</isSaveKeypoints>
     <hessianThreshold>2300.</hessianThreshold>
     <octaves>3</octaves>
     <octaveLayers>4</octaveLayers></graf>
   <leuven>
-  	<isSaveKeypoints>1</isSaveKeypoints>
+  	<isSaveKeypoints>0</isSaveKeypoints>
     <hessianThreshold>1100.</hessianThreshold>
     <octaves>3</octaves>
     <octaveLayers>4</octaveLayers></leuven>
   <trees>
-  	<isSaveKeypoints>1</isSaveKeypoints>
+  	<isSaveKeypoints>0</isSaveKeypoints>
     <hessianThreshold>3100.</hessianThreshold>
     <octaves>3</octaves>
     <octaveLayers>4</octaveLayers></trees>
   <ubc>
-  	<isSaveKeypoints>1</isSaveKeypoints>
+  	<isSaveKeypoints>0</isSaveKeypoints>
     <hessianThreshold>1700.</hessianThreshold>
     <octaves>3</octaves>
     <octaveLayers>4</octaveLayers></ubc>
   <wall>
-  	<isSaveKeypoints>1</isSaveKeypoints>
+  	<isSaveKeypoints>0</isSaveKeypoints>
     <hessianThreshold>1700.</hessianThreshold>
     <octaves>3</octaves>
     <octaveLayers>4</octaveLayers></wall></run_params>
