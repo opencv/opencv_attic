@@ -5,112 +5,60 @@
     <keypointsFilename>surf_bark.xml.gz</keypointsFilename>
     <projectKeypointsFrom1Image>1</projectKeypointsFrom1Image>
     <matchFilter>0</matchFilter>
-    <poseCount>500</poseCount>
+    <runParamsIsIdentical>0</runParamsIsIdentical>
+    <poseCount>50</poseCount>
     <patchWidth>24</patchWidth>
     <patchHeight>24</patchHeight>
     <pcaFilename>detectors_descriptors_evaluation/one_way_train_images/pca.yml</pcaFilename>
     <trainPath>detectors_descriptors_evaluation/one_way_train_images/</trainPath>
     <trainImagesList>one_way_train_images.txt</trainImagesList>
-    <minScale>1</minScale>
-    <maxScale>3</maxScale>
-    <stepScale>1.15</stepScale>
+    <minScale>0.7</minScale>
+    <maxScale>1.5</maxScale>
+    <stepScale>1.2</stepScale>
   </bark>
   <bikes>
     <keypointsFilename>surf_bikes.xml.gz</keypointsFilename>
     <projectKeypointsFrom1Image>1</projectKeypointsFrom1Image>
     <matchFilter>0</matchFilter>
-    <poseCount>500</poseCount>
-    <patchWidth>24</patchWidth>
-    <patchHeight>24</patchHeight>
-    <pcaFilename>detectors_descriptors_evaluation/one_way_train_images/pca.yml</pcaFilename>
-    <trainPath>detectors_descriptors_evaluation/one_way_train_images/</trainPath>
-    <trainImagesList>one_way_train_images.txt</trainImagesList>
-    <minScale>1</minScale>
-    <maxScale>3</maxScale>
-    <stepScale>1.15</stepScale>
-  </bikes>
+    <runParamsIsIdentical>1</runParamsIsIdentical>
+    <minScale>0.7</minScale>
+    <maxScale>1.5</maxScale>
+    <stepScale>1.2</stepScale>
+ </bikes>
   <boat>
     <keypointsFilename>surf_boat.xml.gz</keypointsFilename>
     <projectKeypointsFrom1Image>1</projectKeypointsFrom1Image>
     <matchFilter>0</matchFilter>
-    <poseCount>500</poseCount>
-    <patchWidth>24</patchWidth>
-    <patchHeight>24</patchHeight>
-    <pcaFilename>detectors_descriptors_evaluation/one_way_train_images/pca.yml</pcaFilename>
-    <trainPath>detectors_descriptors_evaluation/one_way_train_images/</trainPath>
-    <trainImagesList>one_way_train_images.txt</trainImagesList>
-    <minScale>1</minScale>
-    <maxScale>3</maxScale>
-    <stepScale>1.15</stepScale>
-  </boat>
+    <runParamsIsIdentical>1</runParamsIsIdentical>
+ </boat>
   <graf>
     <keypointsFilename>surf_graf.xml.gz</keypointsFilename>
     <projectKeypointsFrom1Image>1</projectKeypointsFrom1Image>
     <matchFilter>0</matchFilter>
-    <poseCount>500</poseCount>
-    <patchWidth>24</patchWidth>
-    <patchHeight>24</patchHeight>
-    <pcaFilename>detectors_descriptors_evaluation/one_way_train_images/pca.yml</pcaFilename>
-    <trainPath>detectors_descriptors_evaluation/one_way_train_images/</trainPath>
-    <trainImagesList>one_way_train_images.txt</trainImagesList>
-    <minScale>1</minScale>
-    <maxScale>3</maxScale>
-    <stepScale>1.15</stepScale>
-  </graf>
+    <runParamsIsIdentical>1</runParamsIsIdentical>
+ </graf>
   <leuven>
     <keypointsFilename>surf_leuven.xml.gz</keypointsFilename>
     <projectKeypointsFrom1Image>1</projectKeypointsFrom1Image>
     <matchFilter>0</matchFilter>
-    <poseCount>500</poseCount>
-    <patchWidth>24</patchWidth>
-    <patchHeight>24</patchHeight>
-    <pcaFilename>detectors_descriptors_evaluation/one_way_train_images/pca.yml</pcaFilename>
-    <trainPath>detectors_descriptors_evaluation/one_way_train_images/</trainPath>
-    <trainImagesList>one_way_train_images.txt</trainImagesList>
-    <minScale>1</minScale>
-    <maxScale>3</maxScale>
-    <stepScale>1.15</stepScale>
-  </leuven>
+    <runParamsIsIdentical>1</runParamsIsIdentical>
+ </leuven>
   <trees>
     <keypointsFilename>surf_trees.xml.gz</keypointsFilename>
     <projectKeypointsFrom1Image>1</projectKeypointsFrom1Image>
     <matchFilter>0</matchFilter>
-    <poseCount>500</poseCount>
-    <patchWidth>24</patchWidth>
-    <patchHeight>24</patchHeight>
-    <pcaFilename>detectors_descriptors_evaluation/one_way_train_images/pca.yml</pcaFilename>
-    <trainPath>detectors_descriptors_evaluation/one_way_train_images/</trainPath>
-    <trainImagesList>one_way_train_images.txt</trainImagesList>
-    <minScale>1</minScale>
-    <maxScale>3</maxScale>
-    <stepScale>1.15</stepScale>
+    <runParamsIsIdentical>1</runParamsIsIdentical>
   </trees>
   <ubc>
     <keypointsFilename>surf_ubc.xml.gz</keypointsFilename>
     <projectKeypointsFrom1Image>1</projectKeypointsFrom1Image>
     <matchFilter>0</matchFilter>
-    <poseCount>500</poseCount>
-    <patchWidth>24</patchWidth>
-    <patchHeight>24</patchHeight>
-    <pcaFilename>detectors_descriptors_evaluation/one_way_train_images/pca.yml</pcaFilename>
-    <trainPath>detectors_descriptors_evaluation/one_way_train_images/</trainPath>
-    <trainImagesList>one_way_train_images.txt</trainImagesList>
-    <minScale>1</minScale>
-    <maxScale>3</maxScale>
-    <stepScale>1.15</stepScale>
-  </ubc>
+    <runParamsIsIdentical>1</runParamsIsIdentical>
+ </ubc>
   <wall>
     <keypointsFilename>surf_wall.xml.gz</keypointsFilename>
     <projectKeypointsFrom1Image>1</projectKeypointsFrom1Image>
     <matchFilter>0</matchFilter>
-    <poseCount>500</poseCount>
-    <patchWidth>24</patchWidth>
-    <patchHeight>24</patchHeight>
-    <pcaFilename>detectors_descriptors_evaluation/one_way_train_images/pca.yml</pcaFilename>
-    <trainPath>detectors_descriptors_evaluation/one_way_train_images/</trainPath>
-    <trainImagesList>one_way_train_images.txt</trainImagesList>
-    <minScale>1</minScale>
-    <maxScale>3</maxScale>
-    <stepScale>1.15</stepScale>
-  </wall></run_params>
+    <runParamsIsIdentical>1</runParamsIsIdentical>
+ </wall></run_params>
 </opencv_storage>
