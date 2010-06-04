@@ -2,47 +2,73 @@
 <opencv_storage>
 <run_params>
   <default>
+    <projectKeypointsFrom1Image>1</projectKeypointsFrom1Image>
+    <matchFilter>0</matchFilter>
     <nOctaves>4</nOctaves>
     <nOctaveLayers>2</nOctaveLayers>
     <extended>0</extended></default>
   <bark>
+    <isActiveParams>0</isActiveParams>
     <keypointsFilename>surf_bark.xml.gz</keypointsFilename>
     <projectKeypointsFrom1Image>1</projectKeypointsFrom1Image>
     <matchFilter>0</matchFilter>
-    <isActiveParams>0</isActiveParams></bark>
+    <nOctaves>4</nOctaves>
+    <nOctaveLayers>2</nOctaveLayers>
+    <extended>0</extended></bark>
   <bikes>
+    <isActiveParams>0</isActiveParams>
     <keypointsFilename>surf_bikes.xml.gz</keypointsFilename>
     <projectKeypointsFrom1Image>1</projectKeypointsFrom1Image>
     <matchFilter>0</matchFilter>
-    <isActiveParams>0</isActiveParams></bikes>
+    <nOctaves>4</nOctaves>
+    <nOctaveLayers>2</nOctaveLayers>
+    <extended>0</extended></bikes>
   <boat>
+    <isActiveParams>0</isActiveParams>
     <keypointsFilename>surf_boat.xml.gz</keypointsFilename>
     <projectKeypointsFrom1Image>1</projectKeypointsFrom1Image>
     <matchFilter>0</matchFilter>
-    <isActiveParams>0</isActiveParams></boat>
+    <nOctaves>4</nOctaves>
+    <nOctaveLayers>2</nOctaveLayers>
+    <extended>0</extended></boat>
   <graf>
+    <isActiveParams>0</isActiveParams>
     <keypointsFilename>surf_graf.xml.gz</keypointsFilename>
     <projectKeypointsFrom1Image>1</projectKeypointsFrom1Image>
     <matchFilter>0</matchFilter>
-    <isActiveParams>0</isActiveParams></graf>
+    <nOctaves>4</nOctaves>
+    <nOctaveLayers>2</nOctaveLayers>
+    <extended>0</extended></graf>
   <leuven>
+    <isActiveParams>0</isActiveParams>
     <keypointsFilename>surf_leuven.xml.gz</keypointsFilename>
     <projectKeypointsFrom1Image>1</projectKeypointsFrom1Image>
     <matchFilter>0</matchFilter>
-    <isActiveParams>0</isActiveParams></leuven>
+    <nOctaves>4</nOctaves>
+    <nOctaveLayers>2</nOctaveLayers>
+    <extended>0</extended></leuven>
   <trees>
+    <isActiveParams>0</isActiveParams>
     <keypointsFilename>surf_trees.xml.gz</keypointsFilename>
     <projectKeypointsFrom1Image>1</projectKeypointsFrom1Image>
     <matchFilter>0</matchFilter>
-    <isActiveParams>0</isActiveParams></trees>
+    <nOctaves>4</nOctaves>
+    <nOctaveLayers>2</nOctaveLayers>
+    <extended>0</extended></trees>
   <ubc>
+    <isActiveParams>0</isActiveParams>
     <keypointsFilename>surf_ubc.xml.gz</keypointsFilename>
     <projectKeypointsFrom1Image>1</projectKeypointsFrom1Image>
     <matchFilter>0</matchFilter>
-    <isActiveParams>0</isActiveParams></ubc>
+    <nOctaves>4</nOctaves>
+    <nOctaveLayers>2</nOctaveLayers>
+    <extended>0</extended></ubc>
   <wall>
+    <isActiveParams>0</isActiveParams>
     <keypointsFilename>surf_wall.xml.gz</keypointsFilename>
     <projectKeypointsFrom1Image>1</projectKeypointsFrom1Image>
     <matchFilter>0</matchFilter>
-    <isActiveParams>0</isActiveParams></wall></run_params>
+    <nOctaves>4</nOctaves>
+    <nOctaveLayers>2</nOctaveLayers>
+    <extended>0</extended></wall></run_params>
 </opencv_storage>

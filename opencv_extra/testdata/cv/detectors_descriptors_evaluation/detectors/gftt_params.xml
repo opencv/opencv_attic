@@ -2,6 +2,7 @@
 <opencv_storage>
 <run_params>
   <default>
+    <isSaveKeypoints>0</isSaveKeypoints>
     <maxCorners>1500</maxCorners>
     <qualityLevel>1.0000000000000000e-02</qualityLevel>
     <minDistance>2.</minDistance>
@@ -9,27 +10,75 @@
     <useHarrisDetector>0</useHarrisDetector>
     <k>4.0000000000000001e-02</k></default>
   <bark>
+    <isActiveParams>0</isActiveParams>
     <isSaveKeypoints>0</isSaveKeypoints>
-    <isActiveParams>0</isActiveParams></bark>
+    <maxCorners>1500</maxCorners>
+    <qualityLevel>1.0000000000000000e-02</qualityLevel>
+    <minDistance>2.</minDistance>
+    <blockSize>3</blockSize>
+    <useHarrisDetector>0</useHarrisDetector>
+    <k>4.0000000000000001e-02</k></bark>
   <bikes>
+    <isActiveParams>0</isActiveParams>
     <isSaveKeypoints>0</isSaveKeypoints>
-    <isActiveParams>0</isActiveParams></bikes>
+    <maxCorners>1500</maxCorners>
+    <qualityLevel>1.0000000000000000e-02</qualityLevel>
+    <minDistance>2.</minDistance>
+    <blockSize>3</blockSize>
+    <useHarrisDetector>0</useHarrisDetector>
+    <k>4.0000000000000001e-02</k></bikes>
   <boat>
+    <isActiveParams>0</isActiveParams>
     <isSaveKeypoints>0</isSaveKeypoints>
-    <isActiveParams>0</isActiveParams></boat>
+    <maxCorners>1500</maxCorners>
+    <qualityLevel>1.0000000000000000e-02</qualityLevel>
+    <minDistance>2.</minDistance>
+    <blockSize>3</blockSize>
+    <useHarrisDetector>0</useHarrisDetector>
+    <k>4.0000000000000001e-02</k></boat>
   <graf>
+    <isActiveParams>0</isActiveParams>
     <isSaveKeypoints>0</isSaveKeypoints>
-    <isActiveParams>0</isActiveParams></graf>
+    <maxCorners>1500</maxCorners>
+    <qualityLevel>1.0000000000000000e-02</qualityLevel>
+    <minDistance>2.</minDistance>
+    <blockSize>3</blockSize>
+    <useHarrisDetector>0</useHarrisDetector>
+    <k>4.0000000000000001e-02</k></graf>
   <leuven>
+    <isActiveParams>0</isActiveParams>
     <isSaveKeypoints>0</isSaveKeypoints>
-    <isActiveParams>0</isActiveParams></leuven>
+    <maxCorners>1500</maxCorners>
+    <qualityLevel>1.0000000000000000e-02</qualityLevel>
+    <minDistance>2.</minDistance>
+    <blockSize>3</blockSize>
+    <useHarrisDetector>0</useHarrisDetector>
+    <k>4.0000000000000001e-02</k></leuven>
   <trees>
+    <isActiveParams>0</isActiveParams>
     <isSaveKeypoints>0</isSaveKeypoints>
-    <isActiveParams>0</isActiveParams></trees>
+    <maxCorners>1500</maxCorners>
+    <qualityLevel>1.0000000000000000e-02</qualityLevel>
+    <minDistance>2.</minDistance>
+    <blockSize>3</blockSize>
+    <useHarrisDetector>0</useHarrisDetector>
+    <k>4.0000000000000001e-02</k></trees>
   <ubc>
+    <isActiveParams>0</isActiveParams>
     <isSaveKeypoints>0</isSaveKeypoints>
-    <isActiveParams>0</isActiveParams></ubc>
+    <maxCorners>1500</maxCorners>
+    <qualityLevel>1.0000000000000000e-02</qualityLevel>
+    <minDistance>2.</minDistance>
+    <blockSize>3</blockSize>
+    <useHarrisDetector>0</useHarrisDetector>
+    <k>4.0000000000000001e-02</k></ubc>
   <wall>
+    <isActiveParams>0</isActiveParams>
     <isSaveKeypoints>0</isSaveKeypoints>
-    <isActiveParams>0</isActiveParams></wall></run_params>
+    <maxCorners>1500</maxCorners>
+    <qualityLevel>1.0000000000000000e-02</qualityLevel>
+    <minDistance>2.</minDistance>
+    <blockSize>3</blockSize>
+    <useHarrisDetector>0</useHarrisDetector>
+    <k>4.0000000000000001e-02</k></wall></run_params>
 </opencv_storage>

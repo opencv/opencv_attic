@@ -2,6 +2,8 @@
 <opencv_storage>
 <run_params>
   <default>
+    <projectKeypointsFrom1Image>1</projectKeypointsFrom1Image>
+    <matchFilter>0</matchFilter>
     <magnification>3.</magnification>
     <isNormalize>1</isNormalize>
     <recalculateAngles>1</recalculateAngles>
@@ -10,43 +12,99 @@
     <firstOctave>-1</firstOctave>
     <angleMode>0</angleMode></default>
   <bark>
+    <isActiveParams>0</isActiveParams>
     <keypointsFilename>surf_bark.xml.gz</keypointsFilename>
     <projectKeypointsFrom1Image>1</projectKeypointsFrom1Image>
     <matchFilter>0</matchFilter>
-    <isActiveParams>0</isActiveParams></bark>
+    <magnification>3.</magnification>
+    <isNormalize>1</isNormalize>
+    <recalculateAngles>1</recalculateAngles>
+    <nOctaves>4</nOctaves>
+    <nOctaveLayers>3</nOctaveLayers>
+    <firstOctave>-1</firstOctave>
+    <angleMode>0</angleMode></bark>
   <bikes>
+    <isActiveParams>0</isActiveParams>
     <keypointsFilename>surf_bikes.xml.gz</keypointsFilename>
     <projectKeypointsFrom1Image>1</projectKeypointsFrom1Image>
     <matchFilter>0</matchFilter>
-    <isActiveParams>0</isActiveParams></bikes>
+    <magnification>3.</magnification>
+    <isNormalize>1</isNormalize>
+    <recalculateAngles>1</recalculateAngles>
+    <nOctaves>4</nOctaves>
+    <nOctaveLayers>3</nOctaveLayers>
+    <firstOctave>-1</firstOctave>
+    <angleMode>0</angleMode></bikes>
   <boat>
+    <isActiveParams>0</isActiveParams>
     <keypointsFilename>surf_boat.xml.gz</keypointsFilename>
     <projectKeypointsFrom1Image>1</projectKeypointsFrom1Image>
     <matchFilter>0</matchFilter>
-    <isActiveParams>0</isActiveParams></boat>
+    <magnification>3.</magnification>
+    <isNormalize>1</isNormalize>
+    <recalculateAngles>1</recalculateAngles>
+    <nOctaves>4</nOctaves>
+    <nOctaveLayers>3</nOctaveLayers>
+    <firstOctave>-1</firstOctave>
+    <angleMode>0</angleMode></boat>
   <graf>
+    <isActiveParams>0</isActiveParams>
     <keypointsFilename>surf_graf.xml.gz</keypointsFilename>
     <projectKeypointsFrom1Image>1</projectKeypointsFrom1Image>
     <matchFilter>0</matchFilter>
-    <isActiveParams>0</isActiveParams></graf>
+    <magnification>3.</magnification>
+    <isNormalize>1</isNormalize>
+    <recalculateAngles>1</recalculateAngles>
+    <nOctaves>4</nOctaves>
+    <nOctaveLayers>3</nOctaveLayers>
+    <firstOctave>-1</firstOctave>
+    <angleMode>0</angleMode></graf>
   <leuven>
+    <isActiveParams>0</isActiveParams>
     <keypointsFilename>surf_leuven.xml.gz</keypointsFilename>
     <projectKeypointsFrom1Image>1</projectKeypointsFrom1Image>
     <matchFilter>0</matchFilter>
-    <isActiveParams>0</isActiveParams></leuven>
+    <magnification>3.</magnification>
+    <isNormalize>1</isNormalize>
+    <recalculateAngles>1</recalculateAngles>
+    <nOctaves>4</nOctaves>
+    <nOctaveLayers>3</nOctaveLayers>
+    <firstOctave>-1</firstOctave>
+    <angleMode>0</angleMode></leuven>
   <trees>
+    <isActiveParams>0</isActiveParams>
     <keypointsFilename>surf_trees.xml.gz</keypointsFilename>
     <projectKeypointsFrom1Image>1</projectKeypointsFrom1Image>
     <matchFilter>0</matchFilter>
-    <isActiveParams>0</isActiveParams></trees>
+    <magnification>3.</magnification>
+    <isNormalize>1</isNormalize>
+    <recalculateAngles>1</recalculateAngles>
+    <nOctaves>4</nOctaves>
+    <nOctaveLayers>3</nOctaveLayers>
+    <firstOctave>-1</firstOctave>
+    <angleMode>0</angleMode></trees>
   <ubc>
+    <isActiveParams>0</isActiveParams>
     <keypointsFilename>surf_ubc.xml.gz</keypointsFilename>
     <projectKeypointsFrom1Image>1</projectKeypointsFrom1Image>
     <matchFilter>0</matchFilter>
-    <isActiveParams>0</isActiveParams></ubc>
+    <magnification>3.</magnification>
+    <isNormalize>1</isNormalize>
+    <recalculateAngles>1</recalculateAngles>
+    <nOctaves>4</nOctaves>
+    <nOctaveLayers>3</nOctaveLayers>
+    <firstOctave>-1</firstOctave>
+    <angleMode>0</angleMode></ubc>
   <wall>
+    <isActiveParams>0</isActiveParams>
     <keypointsFilename>surf_wall.xml.gz</keypointsFilename>
     <projectKeypointsFrom1Image>1</projectKeypointsFrom1Image>
     <matchFilter>0</matchFilter>
-    <isActiveParams>0</isActiveParams></wall></run_params>
+    <magnification>3.</magnification>
+    <isNormalize>1</isNormalize>
+    <recalculateAngles>1</recalculateAngles>
+    <nOctaves>4</nOctaves>
+    <nOctaveLayers>3</nOctaveLayers>
+    <firstOctave>-1</firstOctave>
+    <angleMode>0</angleMode></wall></run_params>
 </opencv_storage>
