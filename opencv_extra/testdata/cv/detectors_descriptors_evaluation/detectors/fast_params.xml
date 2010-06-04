@@ -1,36 +1,31 @@
 <?xml version="1.0"?>
 <opencv_storage>
 <run_params>
+  <default>
+    <threshold>1</threshold>
+    <nonmaxSuppression>1</nonmaxSuppression></default>
   <bark>
-	<isSaveKeypoints>0</isSaveKeypoints>
-    <threshold>20</threshold>
-    <nonmaxSuppression>1</nonmaxSuppression></bark>
+    <isSaveKeypoints>0</isSaveKeypoints>
+    <isActiveParams>0</isActiveParams></bark>
   <bikes>
-	<isSaveKeypoints>0</isSaveKeypoints>
-    <threshold>23</threshold>
-    <nonmaxSuppression>1</nonmaxSuppression></bikes>
+    <isSaveKeypoints>0</isSaveKeypoints>
+    <isActiveParams>0</isActiveParams></bikes>
   <boat>
-	<isSaveKeypoints>0</isSaveKeypoints>
-    <threshold>50</threshold>
-    <nonmaxSuppression>1</nonmaxSuppression></boat>
+    <isSaveKeypoints>0</isSaveKeypoints>
+    <isActiveParams>0</isActiveParams></boat>
   <graf>
-	<isSaveKeypoints>0</isSaveKeypoints>
-    <threshold>20</threshold>
-    <nonmaxSuppression>1</nonmaxSuppression></graf>
+    <isSaveKeypoints>0</isSaveKeypoints>
+    <isActiveParams>0</isActiveParams></graf>
   <leuven>
-	<isSaveKeypoints>0</isSaveKeypoints>
-    <threshold>42</threshold>
-    <nonmaxSuppression>1</nonmaxSuppression></leuven>
+    <isSaveKeypoints>0</isSaveKeypoints>
+    <isActiveParams>0</isActiveParams></leuven>
   <trees>
-	<isSaveKeypoints>0</isSaveKeypoints>
-    <threshold>70</threshold>
-    <nonmaxSuppression>1</nonmaxSuppression></trees>
+    <isSaveKeypoints>0</isSaveKeypoints>
+    <isActiveParams>0</isActiveParams></trees>
   <ubc>
-	<isSaveKeypoints>0</isSaveKeypoints>
-    <threshold>57</threshold>
-    <nonmaxSuppression>1</nonmaxSuppression></ubc>
+    <isSaveKeypoints>0</isSaveKeypoints>
+    <isActiveParams>0</isActiveParams></ubc>
   <wall>
-	<isSaveKeypoints>0</isSaveKeypoints>
-    <threshold>55</threshold>
-    <nonmaxSuppression>1</nonmaxSuppression></wall></run_params>
+    <isSaveKeypoints>0</isSaveKeypoints>
+    <isActiveParams>0</isActiveParams></wall></run_params>
 </opencv_storage>

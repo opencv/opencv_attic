@@ -1,68 +1,35 @@
 <?xml version="1.0"?>
 <opencv_storage>
 <run_params>
+  <default>
+    <threshold>6.6666666666666671e-03</threshold>
+    <edgeThreshold>10.</edgeThreshold>
+    <nOctaves>4</nOctaves>
+    <nOctaveLayers>3</nOctaveLayers>
+    <firstOctave>-1</firstOctave>
+    <angleMode>0</angleMode></default>
   <bark>
-  	<isSaveKeypoints>0</isSaveKeypoints>
-    <threshold>6.6666666666666671e-03</threshold>
-    <edgeThreshold>2</edgeThreshold>
-    <angleMode>0</angleMode>
-    <nOctaves>4</nOctaves>
-    <nOctaveLayers>3</nOctaveLayers>
-    <firstOctave>-1</firstOctave></bark>
+    <isSaveKeypoints>0</isSaveKeypoints>
+    <isActiveParams>0</isActiveParams></bark>
   <bikes>
-  	<isSaveKeypoints>0</isSaveKeypoints>
-    <threshold>6.6666666666666671e-03</threshold>
-    <edgeThreshold>3.</edgeThreshold>
-    <angleMode>0</angleMode>
-    <nOctaves>4</nOctaves>
-    <nOctaveLayers>3</nOctaveLayers>
-    <firstOctave>-1</firstOctave></bikes>
+    <isSaveKeypoints>0</isSaveKeypoints>
+    <isActiveParams>0</isActiveParams></bikes>
   <boat>
-  	<isSaveKeypoints>0</isSaveKeypoints>
-    <threshold>6.6666666666666671e-03</threshold>
-    <edgeThreshold>2.</edgeThreshold>
-    <angleMode>0</angleMode>
-    <nOctaves>4</nOctaves>
-    <nOctaveLayers>3</nOctaveLayers>
-    <firstOctave>-1</firstOctave></boat>
+    <isSaveKeypoints>0</isSaveKeypoints>
+    <isActiveParams>0</isActiveParams></boat>
   <graf>
-  	<isSaveKeypoints>0</isSaveKeypoints>
-    <threshold>6.6666666666666671e-03</threshold>
-    <edgeThreshold>4.</edgeThreshold>
-    <angleMode>0</angleMode>
-    <nOctaves>4</nOctaves>
-    <nOctaveLayers>3</nOctaveLayers>
-    <firstOctave>-1</firstOctave></graf>
+    <isSaveKeypoints>0</isSaveKeypoints>
+    <isActiveParams>0</isActiveParams></graf>
   <leuven>
-  	<isSaveKeypoints>0</isSaveKeypoints>
-    <threshold>6.6666666666666671e-03</threshold>
-    <edgeThreshold>4.</edgeThreshold>
-    <angleMode>0</angleMode>
-    <nOctaves>4</nOctaves>
-    <nOctaveLayers>3</nOctaveLayers>
-    <firstOctave>-1</firstOctave></leuven>
+    <isSaveKeypoints>0</isSaveKeypoints>
+    <isActiveParams>0</isActiveParams></leuven>
   <trees>
-  	<isSaveKeypoints>0</isSaveKeypoints>
-    <threshold>6.6666666666666671e-03</threshold>
-    <edgeThreshold>1.7</edgeThreshold>
-    <angleMode>0</angleMode>
-    <nOctaves>4</nOctaves>
-    <nOctaveLayers>3</nOctaveLayers>
-    <firstOctave>-1</firstOctave></trees>
+    <isSaveKeypoints>0</isSaveKeypoints>
+    <isActiveParams>0</isActiveParams></trees>
   <ubc>
-  	<isSaveKeypoints>0</isSaveKeypoints>
-    <threshold>6.6666666666666671e-03</threshold>
-    <edgeThreshold>2.</edgeThreshold>
-    <angleMode>0</angleMode>
-    <nOctaves>4</nOctaves>
-    <nOctaveLayers>3</nOctaveLayers>
-    <firstOctave>-1</firstOctave></ubc>
+    <isSaveKeypoints>0</isSaveKeypoints>
+    <isActiveParams>0</isActiveParams></ubc>
   <wall>
-  	<isSaveKeypoints>0</isSaveKeypoints>
-    <threshold>6.6666666666666671e-03</threshold>
-    <edgeThreshold>2.</edgeThreshold>
-    <angleMode>0</angleMode>
-    <nOctaves>4</nOctaves>
-    <nOctaveLayers>3</nOctaveLayers>
-    <firstOctave>-1</firstOctave></wall></run_params>
+    <isSaveKeypoints>0</isSaveKeypoints>
+    <isActiveParams>0</isActiveParams></wall></run_params>
 </opencv_storage>

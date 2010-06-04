@@ -1,60 +1,35 @@
 <?xml version="1.0"?>
 <opencv_storage>
 <run_params>
+  <default>
+    <maxCorners>1500</maxCorners>
+    <qualityLevel>1.0000000000000000e-02</qualityLevel>
+    <minDistance>2.</minDistance>
+    <blockSize>3</blockSize>
+    <useHarrisDetector>0</useHarrisDetector>
+    <k>4.0000000000000001e-02</k></default>
   <bark>
-	<isSaveKeypoints>0</isSaveKeypoints>
-    <maxCorners>1500</maxCorners>
-    <qualityLevel>1.0000000000000000e-02</qualityLevel>
-    <minDistance>2.</minDistance>
-    <blockSize>3</blockSize>
-    <k>4.0000000000000001e-02</k></bark>
+    <isSaveKeypoints>0</isSaveKeypoints>
+    <isActiveParams>0</isActiveParams></bark>
   <bikes>
-  	<isSaveKeypoints>0</isSaveKeypoints>
-    <maxCorners>1500</maxCorners>
-    <qualityLevel>1.0000000000000000e-02</qualityLevel>
-    <minDistance>2.</minDistance>
-    <blockSize>3</blockSize>
-    <k>4.0000000000000001e-02</k></bikes>
+    <isSaveKeypoints>0</isSaveKeypoints>
+    <isActiveParams>0</isActiveParams></bikes>
   <boat>
-  	<isSaveKeypoints>0</isSaveKeypoints>
-    <maxCorners>1500</maxCorners>
-    <qualityLevel>1.0000000000000000e-02</qualityLevel>
-    <minDistance>2.</minDistance>
-    <blockSize>3</blockSize>
-    <k>4.0000000000000001e-02</k></boat>
+    <isSaveKeypoints>0</isSaveKeypoints>
+    <isActiveParams>0</isActiveParams></boat>
   <graf>
-  	<isSaveKeypoints>0</isSaveKeypoints>
-    <maxCorners>1500</maxCorners>
-    <qualityLevel>1.0000000000000000e-02</qualityLevel>
-    <minDistance>2.</minDistance>
-    <blockSize>3</blockSize>
-    <k>4.0000000000000001e-02</k></graf>
+    <isSaveKeypoints>0</isSaveKeypoints>
+    <isActiveParams>0</isActiveParams></graf>
   <leuven>
-  	<isSaveKeypoints>0</isSaveKeypoints>
-    <maxCorners>1500</maxCorners>
-    <qualityLevel>1.0000000000000000e-02</qualityLevel>
-    <minDistance>2.</minDistance>
-    <blockSize>3</blockSize>
-    <k>4.0000000000000001e-02</k></leuven>
+    <isSaveKeypoints>0</isSaveKeypoints>
+    <isActiveParams>0</isActiveParams></leuven>
   <trees>
-  	<isSaveKeypoints>0</isSaveKeypoints>
-    <maxCorners>1500</maxCorners>
-    <qualityLevel>1.0000000000000000e-02</qualityLevel>
-    <minDistance>2.</minDistance>
-    <blockSize>3</blockSize>
-    <k>4.0000000000000001e-02</k></trees>
+    <isSaveKeypoints>0</isSaveKeypoints>
+    <isActiveParams>0</isActiveParams></trees>
   <ubc>
-  	<isSaveKeypoints>0</isSaveKeypoints>
-    <maxCorners>1500</maxCorners>
-    <qualityLevel>1.0000000000000000e-02</qualityLevel>
-    <minDistance>2.</minDistance>
-    <blockSize>3</blockSize>
-    <k>4.0000000000000001e-02</k></ubc>
+    <isSaveKeypoints>0</isSaveKeypoints>
+    <isActiveParams>0</isActiveParams></ubc>
   <wall>
-  	<isSaveKeypoints>0</isSaveKeypoints>
-    <maxCorners>1500</maxCorners>
-    <qualityLevel>1.0000000000000000e-02</qualityLevel>
-    <minDistance>2.</minDistance>
-    <blockSize>3</blockSize>
-    <k>4.0000000000000001e-02</k></wall></run_params>
+    <isSaveKeypoints>0</isSaveKeypoints>
+    <isActiveParams>0</isActiveParams></wall></run_params>
 </opencv_storage>

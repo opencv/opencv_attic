@@ -1,44 +1,32 @@
 <?xml version="1.0"?>
 <opencv_storage>
 <run_params>
+  <default>
+    <hessianThreshold>400.</hessianThreshold>
+    <octaves>3</octaves>
+    <octaveLayers>4</octaveLayers></default>
   <bark>
-  	<isSaveKeypoints>0</isSaveKeypoints>
-    <hessianThreshold>700.</hessianThreshold>
-    <octaves>3</octaves>
-    <octaveLayers>4</octaveLayers></bark>
+    <isSaveKeypoints>0</isSaveKeypoints>
+    <isActiveParams>0</isActiveParams></bark>
   <bikes>
-  	<isSaveKeypoints>0</isSaveKeypoints>
-    <hessianThreshold>800.</hessianThreshold>
-    <octaves>3</octaves>
-    <octaveLayers>4</octaveLayers></bikes>
+    <isSaveKeypoints>0</isSaveKeypoints>
+    <isActiveParams>0</isActiveParams></bikes>
   <boat>
-  	<isSaveKeypoints>0</isSaveKeypoints>
-    <hessianThreshold>3300.</hessianThreshold>
-    <octaves>3</octaves>
-    <octaveLayers>4</octaveLayers></boat>
+    <isSaveKeypoints>0</isSaveKeypoints>
+    <isActiveParams>0</isActiveParams></boat>
   <graf>
-  	<isSaveKeypoints>0</isSaveKeypoints>
-    <hessianThreshold>2300.</hessianThreshold>
-    <octaves>3</octaves>
-    <octaveLayers>4</octaveLayers></graf>
+    <isSaveKeypoints>0</isSaveKeypoints>
+    <isActiveParams>0</isActiveParams></graf>
   <leuven>
-  	<isSaveKeypoints>0</isSaveKeypoints>
-    <hessianThreshold>1100.</hessianThreshold>
-    <octaves>3</octaves>
-    <octaveLayers>4</octaveLayers></leuven>
+    <isSaveKeypoints>0</isSaveKeypoints>
+    <isActiveParams>0</isActiveParams></leuven>
   <trees>
-  	<isSaveKeypoints>0</isSaveKeypoints>
-    <hessianThreshold>3100.</hessianThreshold>
-    <octaves>3</octaves>
-    <octaveLayers>4</octaveLayers></trees>
+    <isSaveKeypoints>0</isSaveKeypoints>
+    <isActiveParams>0</isActiveParams></trees>
   <ubc>
-  	<isSaveKeypoints>0</isSaveKeypoints>
-    <hessianThreshold>1700.</hessianThreshold>
-    <octaves>3</octaves>
-    <octaveLayers>4</octaveLayers></ubc>
+    <isSaveKeypoints>0</isSaveKeypoints>
+    <isActiveParams>0</isActiveParams></ubc>
   <wall>
-  	<isSaveKeypoints>0</isSaveKeypoints>
-    <hessianThreshold>1700.</hessianThreshold>
-    <octaves>3</octaves>
-    <octaveLayers>4</octaveLayers></wall></run_params>
+    <isSaveKeypoints>0</isSaveKeypoints>
+    <isActiveParams>0</isActiveParams></wall></run_params>
 </opencv_storage>

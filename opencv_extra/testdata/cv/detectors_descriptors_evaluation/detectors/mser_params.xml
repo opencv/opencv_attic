@@ -1,92 +1,38 @@
 <?xml version="1.0"?>
 <opencv_storage>
 <run_params>
+  <default>
+    <delta>5</delta>
+    <minArea>60</minArea>
+    <maxArea>14400</maxArea>
+    <maxVariation>2.5000000000000000e-01</maxVariation>
+    <minDiversity>2.0000000298023224e-01</minDiversity>
+    <maxEvolution>200</maxEvolution>
+    <areaThreshold>1.0100000000000000e+00</areaThreshold>
+    <minMargin>3.0000000000000001e-03</minMargin>
+    <edgeBlurSize>5</edgeBlurSize></default>
   <bark>
-  	<isSaveKeypoints>0</isSaveKeypoints>
-    <delta>1</delta>
-    <minArea>50</minArea>
-    <maxArea>16000</maxArea>
-    <maxVariation>8.000000000000000e-01</maxVariation>
-    <minDiversity>1.0000000298023224e-01</minDiversity>
-    <maxEvolution>200</maxEvolution>
-    <areaThreshold>1.0100000000000000e+00</areaThreshold>
-    <minMargin>3.0000000000000001e-03</minMargin>
-    <edgeBlurSize>5</edgeBlurSize></bark>
+    <isSaveKeypoints>0</isSaveKeypoints>
+    <isActiveParams>0</isActiveParams></bark>
   <bikes>
-  	<isSaveKeypoints>0</isSaveKeypoints>
-    <delta>5</delta>
-    <minArea>60</minArea>
-    <maxArea>14400</maxArea>
-    <maxVariation>2.5000000000000000e-01</maxVariation>
-    <minDiversity>2.0000000298023224e-01</minDiversity>
-    <maxEvolution>200</maxEvolution>
-    <areaThreshold>1.0100000000000000e+00</areaThreshold>
-    <minMargin>3.0000000000000001e-03</minMargin>
-    <edgeBlurSize>5</edgeBlurSize></bikes>
+    <isSaveKeypoints>0</isSaveKeypoints>
+    <isActiveParams>0</isActiveParams></bikes>
   <boat>
-  	<isSaveKeypoints>0</isSaveKeypoints>
-    <delta>2</delta>
-    <minArea>20</minArea>
-    <maxArea>16000</maxArea>
-    <maxVariation>8.000000000000000e-01</maxVariation>
-    <minDiversity>5.0e-02</minDiversity>
-    <maxEvolution>200</maxEvolution>
-    <areaThreshold>1.0100000000000000e+00</areaThreshold>
-    <minMargin>3.0000000000000001e-03</minMargin>
-    <edgeBlurSize>5</edgeBlurSize></boat>
+    <isSaveKeypoints>0</isSaveKeypoints>
+    <isActiveParams>0</isActiveParams></boat>
   <graf>
-  	<isSaveKeypoints>0</isSaveKeypoints>
-    <delta>5</delta>
-    <minArea>60</minArea>
-    <maxArea>14400</maxArea>
-    <maxVariation>2.5000000000000000e-01</maxVariation>
-    <minDiversity>2.0000000298023224e-01</minDiversity>
-    <maxEvolution>200</maxEvolution>
-    <areaThreshold>1.0100000000000000e+00</areaThreshold>
-    <minMargin>3.0000000000000001e-03</minMargin>
-    <edgeBlurSize>5</edgeBlurSize></graf>
+    <isSaveKeypoints>0</isSaveKeypoints>
+    <isActiveParams>0</isActiveParams></graf>
   <leuven>
-  	<isSaveKeypoints>0</isSaveKeypoints>
-    <delta>5</delta>
-    <minArea>60</minArea>
-    <maxArea>14400</maxArea>
-    <maxVariation>2.5000000000000000e-01</maxVariation>
-    <minDiversity>2.0000000298023224e-01</minDiversity>
-    <maxEvolution>200</maxEvolution>
-    <areaThreshold>1.0100000000000000e+00</areaThreshold>
-    <minMargin>3.0000000000000001e-03</minMargin>
-    <edgeBlurSize>5</edgeBlurSize></leuven>
+    <isSaveKeypoints>0</isSaveKeypoints>
+    <isActiveParams>0</isActiveParams></leuven>
   <trees>
-  	<isSaveKeypoints>0</isSaveKeypoints>
-    <delta>5</delta>
-    <minArea>60</minArea>
-    <maxArea>14400</maxArea>
-    <maxVariation>2.5000000000000000e-01</maxVariation>
-    <minDiversity>2.0000000298023224e-01</minDiversity>
-    <maxEvolution>200</maxEvolution>
-    <areaThreshold>1.0100000000000000e+00</areaThreshold>
-    <minMargin>3.0000000000000001e-03</minMargin>
-    <edgeBlurSize>5</edgeBlurSize></trees>
+    <isSaveKeypoints>0</isSaveKeypoints>
+    <isActiveParams>0</isActiveParams></trees>
   <ubc>
-  	<isSaveKeypoints>0</isSaveKeypoints>
-    <delta>5</delta>
-    <minArea>60</minArea>
-    <maxArea>14400</maxArea>
-    <maxVariation>2.5000000000000000e-01</maxVariation>
-    <minDiversity>2.0000000298023224e-01</minDiversity>
-    <maxEvolution>200</maxEvolution>
-    <areaThreshold>1.0100000000000000e+00</areaThreshold>
-    <minMargin>3.0000000000000001e-03</minMargin>
-    <edgeBlurSize>5</edgeBlurSize></ubc>
+    <isSaveKeypoints>0</isSaveKeypoints>
+    <isActiveParams>0</isActiveParams></ubc>
   <wall>
-  	<isSaveKeypoints>0</isSaveKeypoints>
-    <delta>5</delta>
-    <minArea>60</minArea>
-    <maxArea>14400</maxArea>
-    <maxVariation>2.5000000000000000e-01</maxVariation>
-    <minDiversity>2.0000000298023224e-01</minDiversity>
-    <maxEvolution>200</maxEvolution>
-    <areaThreshold>1.0100000000000000e+00</areaThreshold>
-    <minMargin>3.0000000000000001e-03</minMargin>
-    <edgeBlurSize>5</edgeBlurSize></wall></run_params>
+    <isSaveKeypoints>0</isSaveKeypoints>
+    <isActiveParams>0</isActiveParams></wall></run_params>
 </opencv_storage>

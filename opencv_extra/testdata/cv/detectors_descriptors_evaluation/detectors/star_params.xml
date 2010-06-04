@@ -1,60 +1,34 @@
 <?xml version="1.0"?>
 <opencv_storage>
 <run_params>
+  <default>
+    <maxSize>16</maxSize>
+    <responseThreshold>30</responseThreshold>
+    <lineThresholdProjected>10</lineThresholdProjected>
+    <lineThresholdBinarized>8</lineThresholdBinarized>
+    <suppressNonmaxSize>5</suppressNonmaxSize></default>
   <bark>
-  	<isSaveKeypoints>0</isSaveKeypoints>
-    <maxSize>10</maxSize>
-    <responseThreshold>15</responseThreshold>
-    <lineThresholdProjected>30</lineThresholdProjected>
-    <lineThresholdBinarized>15</lineThresholdBinarized>
-    <suppressNonmaxSize>5</suppressNonmaxSize></bark>
+    <isSaveKeypoints>0</isSaveKeypoints>
+    <isActiveParams>0</isActiveParams></bark>
   <bikes>
-  	<isSaveKeypoints>0</isSaveKeypoints>
-    <maxSize>16</maxSize>
-    <responseThreshold>25</responseThreshold>
-    <lineThresholdProjected>10</lineThresholdProjected>
-    <lineThresholdBinarized>8</lineThresholdBinarized>
-    <suppressNonmaxSize>5</suppressNonmaxSize></bikes>
+    <isSaveKeypoints>0</isSaveKeypoints>
+    <isActiveParams>0</isActiveParams></bikes>
   <boat>
-  	<isSaveKeypoints>0</isSaveKeypoints>
-    <maxSize>16</maxSize>
-    <responseThreshold>25</responseThreshold>
-    <lineThresholdProjected>10</lineThresholdProjected>
-    <lineThresholdBinarized>8</lineThresholdBinarized>
-    <suppressNonmaxSize>5</suppressNonmaxSize></boat>
+    <isSaveKeypoints>0</isSaveKeypoints>
+    <isActiveParams>0</isActiveParams></boat>
   <graf>
-  	<isSaveKeypoints>0</isSaveKeypoints>
-    <maxSize>16</maxSize>
-    <responseThreshold>30</responseThreshold>
-    <lineThresholdProjected>10</lineThresholdProjected>
-    <lineThresholdBinarized>8</lineThresholdBinarized>
-    <suppressNonmaxSize>5</suppressNonmaxSize></graf>
+    <isSaveKeypoints>0</isSaveKeypoints>
+    <isActiveParams>0</isActiveParams></graf>
   <leuven>
-  	<isSaveKeypoints>0</isSaveKeypoints>
-    <maxSize>16</maxSize>
-    <responseThreshold>30</responseThreshold>
-    <lineThresholdProjected>10</lineThresholdProjected>
-    <lineThresholdBinarized>8</lineThresholdBinarized>
-    <suppressNonmaxSize>5</suppressNonmaxSize></leuven>
+    <isSaveKeypoints>0</isSaveKeypoints>
+    <isActiveParams>0</isActiveParams></leuven>
   <trees>
-  	<isSaveKeypoints>0</isSaveKeypoints>
-    <maxSize>16</maxSize>
-    <responseThreshold>30</responseThreshold>
-    <lineThresholdProjected>10</lineThresholdProjected>
-    <lineThresholdBinarized>8</lineThresholdBinarized>
-    <suppressNonmaxSize>5</suppressNonmaxSize></trees>
+    <isSaveKeypoints>0</isSaveKeypoints>
+    <isActiveParams>0</isActiveParams></trees>
   <ubc>
-  	<isSaveKeypoints>0</isSaveKeypoints>
-    <maxSize>16</maxSize>
-    <responseThreshold>30</responseThreshold>
-    <lineThresholdProjected>10</lineThresholdProjected>
-    <lineThresholdBinarized>8</lineThresholdBinarized>
-    <suppressNonmaxSize>5</suppressNonmaxSize></ubc>
+    <isSaveKeypoints>0</isSaveKeypoints>
+    <isActiveParams>0</isActiveParams></ubc>
   <wall>
-  	<isSaveKeypoints>0</isSaveKeypoints>
-    <maxSize>16</maxSize>
-    <responseThreshold>30</responseThreshold>
-    <lineThresholdProjected>10</lineThresholdProjected>
-    <lineThresholdBinarized>8</lineThresholdBinarized>
-    <suppressNonmaxSize>5</suppressNonmaxSize></wall></run_params>
+    <isSaveKeypoints>0</isSaveKeypoints>
+    <isActiveParams>0</isActiveParams></wall></run_params>
 </opencv_storage>

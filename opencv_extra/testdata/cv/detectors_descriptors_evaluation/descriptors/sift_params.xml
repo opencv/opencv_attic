@@ -1,92 +1,52 @@
 <?xml version="1.0"?>
 <opencv_storage>
 <run_params>
+  <default>
+    <magnification>3.</magnification>
+    <isNormalize>1</isNormalize>
+    <recalculateAngles>1</recalculateAngles>
+    <nOctaves>4</nOctaves>
+    <nOctaveLayers>3</nOctaveLayers>
+    <firstOctave>-1</firstOctave>
+    <angleMode>0</angleMode></default>
   <bark>
     <keypointsFilename>surf_bark.xml.gz</keypointsFilename>
     <projectKeypointsFrom1Image>1</projectKeypointsFrom1Image>
     <matchFilter>0</matchFilter>
-    <magnification>3.</magnification>
-    <isNormalize>1</isNormalize>
-    <recalculateAngles>1</recalculateAngles>
-    <nOctaves>4</nOctaves>
-    <nOctaveLayers>3</nOctaveLayers>
-    <firstOctave>-1</firstOctave>
-    <angleMode>0</angleMode></bark>
+    <isActiveParams>0</isActiveParams></bark>
   <bikes>
     <keypointsFilename>surf_bikes.xml.gz</keypointsFilename>
     <projectKeypointsFrom1Image>1</projectKeypointsFrom1Image>
     <matchFilter>0</matchFilter>
-    <magnification>3.</magnification>
-    <isNormalize>1</isNormalize>
-    <recalculateAngles>1</recalculateAngles>
-    <nOctaves>4</nOctaves>
-    <nOctaveLayers>3</nOctaveLayers>
-    <firstOctave>-1</firstOctave>
-    <angleMode>0</angleMode></bikes>
+    <isActiveParams>0</isActiveParams></bikes>
   <boat>
     <keypointsFilename>surf_boat.xml.gz</keypointsFilename>
     <projectKeypointsFrom1Image>1</projectKeypointsFrom1Image>
     <matchFilter>0</matchFilter>
-    <magnification>3.</magnification>
-    <isNormalize>1</isNormalize>
-    <recalculateAngles>1</recalculateAngles>
-    <nOctaves>4</nOctaves>
-    <nOctaveLayers>3</nOctaveLayers>
-    <firstOctave>-1</firstOctave>
-    <angleMode>0</angleMode></boat>
+    <isActiveParams>0</isActiveParams></boat>
   <graf>
     <keypointsFilename>surf_graf.xml.gz</keypointsFilename>
     <projectKeypointsFrom1Image>1</projectKeypointsFrom1Image>
     <matchFilter>0</matchFilter>
-    <magnification>3.</magnification>
-    <isNormalize>1</isNormalize>
-    <recalculateAngles>1</recalculateAngles>
-    <nOctaves>4</nOctaves>
-    <nOctaveLayers>3</nOctaveLayers>
-    <firstOctave>-1</firstOctave>
-    <angleMode>0</angleMode></graf>
+    <isActiveParams>0</isActiveParams></graf>
   <leuven>
     <keypointsFilename>surf_leuven.xml.gz</keypointsFilename>
     <projectKeypointsFrom1Image>1</projectKeypointsFrom1Image>
     <matchFilter>0</matchFilter>
-    <magnification>3.</magnification>
-    <isNormalize>1</isNormalize>
-    <recalculateAngles>1</recalculateAngles>
-    <nOctaves>4</nOctaves>
-    <nOctaveLayers>3</nOctaveLayers>
-    <firstOctave>-1</firstOctave>
-    <angleMode>0</angleMode></leuven>
+    <isActiveParams>0</isActiveParams></leuven>
   <trees>
     <keypointsFilename>surf_trees.xml.gz</keypointsFilename>
     <projectKeypointsFrom1Image>1</projectKeypointsFrom1Image>
     <matchFilter>0</matchFilter>
-    <magnification>3.</magnification>
-    <isNormalize>1</isNormalize>
-    <recalculateAngles>1</recalculateAngles>
-    <nOctaves>4</nOctaves>
-    <nOctaveLayers>3</nOctaveLayers>
-    <firstOctave>-1</firstOctave>
-    <angleMode>0</angleMode></trees>
+    <isActiveParams>0</isActiveParams></trees>
   <ubc>
     <keypointsFilename>surf_ubc.xml.gz</keypointsFilename>
     <projectKeypointsFrom1Image>1</projectKeypointsFrom1Image>
     <matchFilter>0</matchFilter>
-    <magnification>3.</magnification>
-    <isNormalize>1</isNormalize>
-    <recalculateAngles>1</recalculateAngles>
-    <nOctaves>4</nOctaves>
-    <nOctaveLayers>3</nOctaveLayers>
-    <firstOctave>-1</firstOctave>
-    <angleMode>0</angleMode></ubc>
+    <isActiveParams>0</isActiveParams></ubc>
   <wall>
     <keypointsFilename>surf_wall.xml.gz</keypointsFilename>
     <projectKeypointsFrom1Image>1</projectKeypointsFrom1Image>
     <matchFilter>0</matchFilter>
-    <magnification>3.</magnification>
-    <isNormalize>1</isNormalize>
-    <recalculateAngles>1</recalculateAngles>
-    <nOctaves>4</nOctaves>
-    <nOctaveLayers>3</nOctaveLayers>
-    <firstOctave>-1</firstOctave>
-    <angleMode>0</angleMode></wall></run_params>
+    <isActiveParams>0</isActiveParams></wall></run_params>
 </opencv_storage>

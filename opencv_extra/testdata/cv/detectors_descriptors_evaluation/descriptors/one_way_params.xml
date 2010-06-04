@@ -1,11 +1,7 @@
 <?xml version="1.0"?>
 <opencv_storage>
 <run_params>
-  <bark>
-    <keypointsFilename>surf_bark.xml.gz</keypointsFilename>
-    <projectKeypointsFrom1Image>1</projectKeypointsFrom1Image>
-    <matchFilter>0</matchFilter>
-    <runParamsIsIdentical>0</runParamsIsIdentical>
+  <default>
     <poseCount>50</poseCount>
     <patchWidth>24</patchWidth>
     <patchHeight>24</patchHeight>
@@ -15,50 +11,53 @@
     <minScale>0.7</minScale>
     <maxScale>1.5</maxScale>
     <stepScale>1.2</stepScale>
-  </bark>
+  </default>
+  <bark>
+    <keypointsFilename>surf_bark.xml.gz</keypointsFilename>
+    <projectKeypointsFrom1Image>1</projectKeypointsFrom1Image>
+    <matchFilter>0</matchFilter>
+    <isParamsActive>0</isParamsActive>
+ </bark>
   <bikes>
     <keypointsFilename>surf_bikes.xml.gz</keypointsFilename>
     <projectKeypointsFrom1Image>1</projectKeypointsFrom1Image>
     <matchFilter>0</matchFilter>
-    <runParamsIsIdentical>1</runParamsIsIdentical>
-    <minScale>0.7</minScale>
-    <maxScale>1.5</maxScale>
-    <stepScale>1.2</stepScale>
+    <isParamsActive>0</isParamsActive>
  </bikes>
   <boat>
     <keypointsFilename>surf_boat.xml.gz</keypointsFilename>
     <projectKeypointsFrom1Image>1</projectKeypointsFrom1Image>
     <matchFilter>0</matchFilter>
-    <runParamsIsIdentical>1</runParamsIsIdentical>
+    <isParamsActive>0</isParamsActive>
  </boat>
   <graf>
     <keypointsFilename>surf_graf.xml.gz</keypointsFilename>
     <projectKeypointsFrom1Image>1</projectKeypointsFrom1Image>
     <matchFilter>0</matchFilter>
-    <runParamsIsIdentical>1</runParamsIsIdentical>
+    <isParamsActive>0</isParamsActive>
  </graf>
   <leuven>
     <keypointsFilename>surf_leuven.xml.gz</keypointsFilename>
     <projectKeypointsFrom1Image>1</projectKeypointsFrom1Image>
     <matchFilter>0</matchFilter>
-    <runParamsIsIdentical>1</runParamsIsIdentical>
+    <isParamsActive>0</isParamsActive>
  </leuven>
   <trees>
     <keypointsFilename>surf_trees.xml.gz</keypointsFilename>
     <projectKeypointsFrom1Image>1</projectKeypointsFrom1Image>
     <matchFilter>0</matchFilter>
-    <runParamsIsIdentical>1</runParamsIsIdentical>
+    <isParamsActive>0</isParamsActive>
   </trees>
   <ubc>
     <keypointsFilename>surf_ubc.xml.gz</keypointsFilename>
     <projectKeypointsFrom1Image>1</projectKeypointsFrom1Image>
     <matchFilter>0</matchFilter>
-    <runParamsIsIdentical>1</runParamsIsIdentical>
+    <isParamsActive>0</isParamsActive>
  </ubc>
   <wall>
     <keypointsFilename>surf_wall.xml.gz</keypointsFilename>
     <projectKeypointsFrom1Image>1</projectKeypointsFrom1Image>
     <matchFilter>0</matchFilter>
-    <runParamsIsIdentical>1</runParamsIsIdentical>
+    <isParamsActive>0</isParamsActive>
  </wall></run_params>
 </opencv_storage>
