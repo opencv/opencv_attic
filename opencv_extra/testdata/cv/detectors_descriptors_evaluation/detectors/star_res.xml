@@ -3,52 +3,52 @@
 <results>
   <bark>
     <case0>
-      <repeatability>7.5391502380371094e+01</repeatability>
-      <correspondence_count>674</correspondence_count></case0>
+      <repeatability>7.9365081787109375e+01</repeatability>
+      <correspondence_count>50</correspondence_count></case0>
     <case1>
-      <repeatability>4.5454544067382812e+01</repeatability>
-      <correspondence_count>245</correspondence_count></case1>
+      <repeatability>5.2173912048339844e+01</repeatability>
+      <correspondence_count>24</correspondence_count></case1>
     <case2>
-      <repeatability>2.7272727966308594e+01</repeatability>
-      <correspondence_count>114</correspondence_count></case2>
+      <repeatability>5.7142856597900391e+01</repeatability>
+      <correspondence_count>40</correspondence_count></case2>
     <case3>
-      <repeatability>0.</repeatability>
-      <correspondence_count>0</correspondence_count></case3>
+      <repeatability>3.5555557250976562e+01</repeatability>
+      <correspondence_count>16</correspondence_count></case3>
     <case4>
       <repeatability>0.</repeatability>
       <correspondence_count>0</correspondence_count></case4></bark>
   <bikes>
     <case0>
-      <repeatability>6.9168899536132812e+01</repeatability>
-      <correspondence_count>258</correspondence_count></case0>
+      <repeatability>7.0731704711914062e+01</repeatability>
+      <correspondence_count>174</correspondence_count></case0>
     <case1>
-      <repeatability>6.3768115997314453e+01</repeatability>
-      <correspondence_count>176</correspondence_count></case1>
+      <repeatability>6.2841529846191406e+01</repeatability>
+      <correspondence_count>115</correspondence_count></case1>
     <case2>
-      <repeatability>5.7432434082031250e+01</repeatability>
-      <correspondence_count>85</correspondence_count></case2>
+      <repeatability>5.5208332061767578e+01</repeatability>
+      <correspondence_count>53</correspondence_count></case2>
     <case3>
-      <repeatability>4.6987953186035156e+01</repeatability>
-      <correspondence_count>39</correspondence_count></case3>
+      <repeatability>4.1304347991943359e+01</repeatability>
+      <correspondence_count>19</correspondence_count></case3>
     <case4>
-      <repeatability>50.</repeatability>
-      <correspondence_count>20</correspondence_count></case4></bikes>
+      <repeatability>4.1666667938232422e+01</repeatability>
+      <correspondence_count>10</correspondence_count></case4></bikes>
   <boat>
     <case0>
-      <repeatability>6.1684940338134766e+01</repeatability>
-      <correspondence_count>1069</correspondence_count></case0>
+      <repeatability>6.1734695434570312e+01</repeatability>
+      <correspondence_count>968</correspondence_count></case0>
     <case1>
-      <repeatability>5.0229568481445312e+01</repeatability>
-      <correspondence_count>547</correspondence_count></case1>
+      <repeatability>5.0866462707519531e+01</repeatability>
+      <correspondence_count>499</correspondence_count></case1>
     <case2>
-      <repeatability>5.2845527648925781e+01</repeatability>
-      <correspondence_count>390</correspondence_count></case2>
+      <repeatability>5.2023986816406250e+01</repeatability>
+      <correspondence_count>347</correspondence_count></case2>
     <case3>
-      <repeatability>4.3902439117431641e+01</repeatability>
-      <correspondence_count>234</correspondence_count></case3>
+      <repeatability>4.3991851806640625e+01</repeatability>
+      <correspondence_count>216</correspondence_count></case3>
     <case4>
-      <repeatability>1.7575757980346680e+01</repeatability>
-      <correspondence_count>58</correspondence_count></case4></boat>
+      <repeatability>1.7377048492431641e+01</repeatability>
+      <correspondence_count>53</correspondence_count></case4></boat>
   <graf>
     <case0>
       <repeatability>6.3417888641357422e+01</repeatability>
