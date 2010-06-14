@@ -1,7 +1,7 @@
 -------------------------------------------
 Introduction
 -------------------------------------------
-createsamples application was developed to obtain automatically
+tracker3D application was developed to obtain automatically
 training images from video or camera only by selecting an object
 in one frame. To do so you need only a pre-recored video or
 live input from camera.
