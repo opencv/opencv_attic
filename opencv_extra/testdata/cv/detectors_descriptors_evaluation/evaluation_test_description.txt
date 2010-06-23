@@ -31,7 +31,7 @@ Repeatability criterions:
 
 Current test implementation supports case of the elliptic regions and close to MatLab code 
 from http://www.robots.ox.ac.uk/~vgg/research/affine/evaluation.html#eval_soft. But KeyPoint class used 
-for storing a key point detected by inheritor of FeatureDetector (cvaux.hpp) is a circular region. We 
+for storing a key point detected by some inheritor of FeatureDetector (features2d.hpp) is a circular region. We 
 assume that the circular region (KeyPoint) is a local case of elliptic region.
 TODO: affine adaptation.
 
@@ -78,6 +78,15 @@ To add test for new detector:
        virtual void writeDatasetRunParams( FileStorage& fs, int datasetIdx ) const;
        virtual void setDefaultDatasetRunParams( int datasetIdx );
 See existing detector test classes.
+
+To plot graphics of detector quality:
+1. Go to folder detector/plots. This folder contains data (csv files) written by the test and script createPlots.p
+need to plot graphics of detectors quality. Both metrics are supported: repeatability and correspondences count. 
+Detectors are evaluated on each image dataset (8) independently. Each dataset is used to assess detectors quality 
+under some transformation: rotation+zoom, viewpoint changes, blur, light changes or JPEG compression.
+2. Run gnuplot on createPlots.p script, i.e. type "gnuplot createPlots.p".
+To add new detector evaluation in graphics modify createPlots.p.
+
 ------------------------------------------------------------------------
           2. Description evaluation tests
 ------------------------------------------------------------------------
