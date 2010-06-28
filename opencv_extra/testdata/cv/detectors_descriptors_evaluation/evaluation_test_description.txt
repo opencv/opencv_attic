@@ -72,11 +72,8 @@ TODO: regression keipoints sets comparison (?).
 
 To add test for new detector:
 1. if new detector class is not an inheritor of FeatureDetector, wrap this class as inheritor of FeatureDetector,
-2. inherit class from DetectorQualityTest to test new detector and override following methods:
-       virtual FeatureDetector* createDetector( int datasetIdx );
-       virtual void readDatasetRunParams( FileNode& fn, int datasetIdx );
-       virtual void writeDatasetRunParams( FileStorage& fs, int datasetIdx ) const;
-       virtual void setDefaultDatasetRunParams( int datasetIdx );
+2. add object creation in factory function createDetector,
+3. create instance of DetectorQualityTest passing detector name and test name as parameters  
 See existing detector test classes.
 
 To plot graphics of detector quality:
@@ -131,9 +128,6 @@ test will not be validate the results, but simply save them in such file.
 
 To add test for new descriptor:
 1. if new descriptor class is not an inheritor of GenericDescriptorMatch, wrap this class as inheritor of GenericDescriptorMatch,
-2. inherit class from DescriptorQualityTest to test new descriptor and override following methods:
-       virtual GenericDescriptorMatch* createDescriptorMatch( int datasetIdx );
-       virtual void readDatasetRunParams( FileNode& fn, int datasetIdx );
-       virtual void writeDatasetRunParams( FileStorage& fs, int datasetIdx ) const;
-       virtual void setDefaultDatasetRunParams( int datasetIdx );
+2. add object creation in factory function createDescriptorMatch,
+3. create instance of DescriptorQualityTest passing descriptor name and test name as parameters  
 See existing descriptor test classes.
