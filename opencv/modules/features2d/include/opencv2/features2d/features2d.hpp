@@ -232,6 +232,7 @@ public:
     float response; //!< the response by which the most strong keypoints have been selected. Can be used for the further sorting or subsampling
     int octave; //!< octave (pyramid layer) from which the keypoint has been extracted
     int class_id; //!< object class (if the keypoints need to be clustered by an object they belong to) 
+    Mat data;
 };
 
 //! writes vector of keypoints to the file storage
