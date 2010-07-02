@@ -1,1 +1,0 @@
-define_opencv_module(calib3d opencv_core opencv_imgproc)
