@@ -49,90 +49,6 @@ using namespace std;
 using namespace cv;
 
 /****************************************************************************************\
-*           Functions to evaluate affine covariant detectors and descriptors.            *
-\****************************************************************************************/
-
-static inline Point2f applyHomography( const Mat_<double>& H, const Point2f& pt )
-{
-    double z = H(2,0)*pt.x + H(2,1)*pt.y + H(2,2);
-    if( z )
-    {
-        double w = 1./z;
-        return Point2f( (H(0,0)*pt.x + H(0,1)*pt.y + H(0,2))*w, (H(1,0)*pt.x + H(1,1)*pt.y + H(1,2))*w );
-    }
-    return Point2f( numeric_limits<float>::max(), numeric_limits<float>::max() );
-}
-
-static inline void linearizeHomographyAt( const Mat_<double>& H, const Point2f& pt, Mat_<double>& A )
-{
-    A.create(2,2);
-    double p1 = H(0,0)*pt.x + H(0,1)*pt.y + H(0,2),
-           p2 = H(1,0)*pt.x + H(1,1)*pt.y + H(1,2),
-           p3 = H(2,0)*pt.x + H(2,1)*pt.y + H(2,2),
-           p3_2 = p3*p3;
-    if( p3 )
-    {
-        A(0,0) = H(0,0)/p3 - p1*H(2,0)/p3_2; // fxdx
-        A(0,1) = H(0,1)/p3 - p1*H(2,1)/p3_2; // fxdy
-
-        A(1,0) = H(1,0)/p3 - p2*H(2,0)/p3_2; // fydx
-        A(1,1) = H(1,1)/p3 - p2*H(2,1)/p3_2; // fydx
-    }
-    else
-        A.setTo(Scalar::all(numeric_limits<double>::max()));
-}
-
-static void calcKeyPointProjections( const vector<KeyPoint>& src, const Mat_<double>& H, vector<KeyPoint>& dst )
-{
-    if(  !src.empty() )
-    {
-        assert( !H.empty() && H.cols == 3 && H.rows == 3);
-        dst.resize(src.size());
-        vector<KeyPoint>::const_iterator srcIt = src.begin();
-        vector<KeyPoint>::iterator       dstIt = dst.begin();
-        for( ; srcIt != src.end(); ++srcIt, ++dstIt )
-        {
-            Point2f dstPt = applyHomography(H, srcIt->pt);
-
-            float srcSize2 = srcIt->size * srcIt->size;
-            Mat_<double> M(2, 2);
-            M(0,0) = M(1,1) = 1./srcSize2;
-            M(1,0) = M(0,1) = 0;
-            Mat_<double> invM; invert(M, invM);
-            Mat_<double> Aff; linearizeHomographyAt(H, srcIt->pt, Aff);
-            Mat_<double> dstM; invert(Aff*invM*Aff.t(), dstM);
-            Mat_<double> eval; eigen( dstM, eval );
-            assert( eval(0,0) && eval(1,0) );
-            float dstSize = pow(1./(eval(0,0)*eval(1,0)), 0.25);
-
-            // TODO: check angle projection
-            float srcAngleRad = srcIt->angle*CV_PI/180;
-            Point2f vec1(cos(srcAngleRad), sin(srcAngleRad)), vec2;
-            vec2.x = Aff(0,0)*vec1.x + Aff(0,1)*vec1.y;
-            vec2.y = Aff(1,0)*vec1.x + Aff(0,1)*vec1.y;
-            float dstAngleGrad = fastAtan2(vec2.y, vec2.x);
-
-            *dstIt = KeyPoint( dstPt, dstSize, dstAngleGrad, srcIt->response, srcIt->octave, srcIt->class_id );
-        }
-    }
-}
-
-static void filterKeyPointsByImageSize( vector<KeyPoint>& keypoints, const Size& imgSize )
-{
-    if( !keypoints.empty() )
-    {
-        vector<KeyPoint> filtered;
-        filtered.reserve(keypoints.size());
-        Rect r(0, 0, imgSize.width, imgSize.height);
-        vector<KeyPoint>::const_iterator it = keypoints.begin();
-        for( int i = 0; it != keypoints.end(); ++it, i++ )
-            if( r.contains(it->pt) )
-                filtered.push_back(*it);
-        keypoints.assign(filtered.begin(), filtered.end());
-    }
-}
-
-/****************************************************************************************\
 *                                  Detectors evaluation                                 *
 \****************************************************************************************/
 const int DATASETS_COUNT = 8;
@@ -842,8 +758,8 @@ protected:
     };
     vector<CommonRunParams> commRunParams;
 
-    Ptr<GenericDescriptorMatch> specificDescMatch;
-    Ptr<GenericDescriptorMatch> defaultDescMatch;
+    Ptr<GenericDescriptorMatcher> specificDescMatcher;
+    Ptr<GenericDescriptorMatcher> defaultDescMatcher;
 
     CommonRunParams commRunParamsDefault;
     string matcherName;
@@ -907,7 +823,7 @@ void DescriptorQualityTest::readDefaultRunParams (FileNode &fn)
     {
         commRunParamsDefault.projectKeypointsFrom1Image = (int)fn[PROJECT_KEYPOINTS_FROM_1IMAGE] != 0;
         commRunParamsDefault.matchFilter = (int)fn[MATCH_FILTER];
-        defaultDescMatch->read (fn);
+        defaultDescMatcher->read (fn);
     }
 }
 
@@ -915,7 +831,7 @@ void DescriptorQualityTest::writeDefaultRunParams (FileStorage &fs) const
 {
     fs << PROJECT_KEYPOINTS_FROM_1IMAGE << commRunParamsDefault.projectKeypointsFrom1Image;
     fs << MATCH_FILTER << commRunParamsDefault.matchFilter;
-    defaultDescMatch->write (fs);
+    defaultDescMatcher->write (fs);
 }
 
 void DescriptorQualityTest::readDatasetRunParams( FileNode& fn, int datasetIdx )
@@ -926,7 +842,7 @@ void DescriptorQualityTest::readDatasetRunParams( FileNode& fn, int datasetIdx )
         commRunParams[datasetIdx].keypontsFilename = (string)fn[KEYPOINTS_FILENAME];
         commRunParams[datasetIdx].projectKeypointsFrom1Image = (int)fn[PROJECT_KEYPOINTS_FROM_1IMAGE] != 0;
         commRunParams[datasetIdx].matchFilter = (int)fn[MATCH_FILTER];
-        specificDescMatch->read (fn);
+        specificDescMatcher->read (fn);
     }
     else
     {
@@ -941,7 +857,7 @@ void DescriptorQualityTest::writeDatasetRunParams( FileStorage& fs, int datasetI
     fs << PROJECT_KEYPOINTS_FROM_1IMAGE << commRunParams[datasetIdx].projectKeypointsFrom1Image;
     fs << MATCH_FILTER << commRunParams[datasetIdx].matchFilter;
 
-    defaultDescMatch->write (fs);
+    defaultDescMatcher->write (fs);
 }
 
 void DescriptorQualityTest::setDefaultDatasetRunParams( int datasetIdx )
@@ -965,15 +881,15 @@ void DescriptorQualityTest::writePlotData( int di ) const
 
 void DescriptorQualityTest::readAlgorithm( )
 {
-    defaultDescMatch = createGenericDescriptorMatch( algName );
-    specificDescMatch = createGenericDescriptorMatch( algName );
+    defaultDescMatcher = createGenericDescriptorMatcher( algName );
+    specificDescMatcher = createGenericDescriptorMatcher( algName );
 
-    if( defaultDescMatch == 0 )
+    if( defaultDescMatcher == 0 )
     {
         Ptr<DescriptorExtractor> extractor = createDescriptorExtractor( algName );
         Ptr<DescriptorMatcher> matcher = createDescriptorMatcher( matcherName );
-        defaultDescMatch = new VectorDescriptorMatch( extractor, matcher );
-        specificDescMatch = new VectorDescriptorMatch( extractor, matcher );
+        defaultDescMatcher = new VectorDescriptorMatcher( extractor, matcher );
+        specificDescMatcher = new VectorDescriptorMatcher( extractor, matcher );
 
         if( extractor == 0 || matcher == 0 )
         {
@@ -1048,7 +964,7 @@ void DescriptorQualityTest::runDatasetTest (const vector<Mat> &imgs, const vecto
        return;
     }
 
-    Ptr<GenericDescriptorMatch> descMatch = commRunParams[di].isActiveParams ? specificDescMatch : defaultDescMatch;
+    Ptr<GenericDescriptorMatcher> descMatcher = commRunParams[di].isActiveParams ? specificDescMatcher : defaultDescMatcher;
     calcQuality[di].resize(TEST_CASE_COUNT);
 
     vector<KeyPoint> keypoints1;
@@ -1066,8 +982,8 @@ void DescriptorQualityTest::runDatasetTest (const vector<Mat> &imgs, const vecto
         if( commRunParams[di].projectKeypointsFrom1Image )
         {
             // TODO need to test function calcKeyPointProjections
-            calcKeyPointProjections( keypoints1, Hs[ci], keypoints2 );
-            filterKeyPointsByImageSize( keypoints2,  imgs[ci+1].size() );
+            KeyPoint::project( keypoints1, keypoints2, Hs[ci] );
+            KeyPoint::filterByRect( keypoints2, Rect(0, 0, imgs[ci+1].cols, imgs[ci+1].rows) );
         }
         else
             readKeypoints( keypontsFS, keypoints2, ci+1 );
@@ -1077,9 +993,9 @@ void DescriptorQualityTest::runDatasetTest (const vector<Mat> &imgs, const vecto
         vector<vector<uchar> > correctMatchesMask;
         vector<Point2f> recallPrecisionCurve; // not used because we need recallPrecisionCurve for
                                               // all images in dataset
-        evaluateDescriptorMatch( imgs[0], imgs[ci+1], Hs[ci], keypoints1, keypoints2,
-                                 &matches1to2, &correctMatchesMask, recallPrecisionCurve,
-                                 descMatch );
+        evaluateDescriptorMatcher( imgs[0], imgs[ci+1], Hs[ci], keypoints1, keypoints2,
+                                   &matches1to2, &correctMatchesMask, recallPrecisionCurve,
+                                   descMatcher );
         allMatches1to2.insert( allMatches1to2.end(), matches1to2.begin(), matches1to2.end() );
         allCorrectMatchesMask.insert( allCorrectMatchesMask.end(), correctMatchesMask.begin(), correctMatchesMask.end() );
     }
@@ -1150,9 +1066,9 @@ void OneWayDescriptorQualityTest::processRunParamsFile ()
     OneWayDescriptorBase *base = new OneWayDescriptorBase(patchSize, poseCount, pcaFilename,
                                                trainPath, trainImagesList);
 
-    OneWayDescriptorMatch *match = new OneWayDescriptorMatch ();
-    match->initialize( OneWayDescriptorMatch::Params (), base );
-    defaultDescMatch = match;
+    OneWayDescriptorMatcher *matcher = new OneWayDescriptorMatcher();
+    matcher->initialize( OneWayDescriptorMatcher::Params (), base );
+    defaultDescMatcher = matcher;
     writeAllDatasetsRunParams();
 }
 

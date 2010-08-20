@@ -452,14 +452,14 @@ float cv::getRecall( const vector<Point2f>& recallPrecisionCurve, float l_precis
     return recall;
 }
 
-void cv::evaluateDescriptorMatch( const Mat& img1, const Mat& img2, const Mat& H1to2,
-                                  vector<KeyPoint>& keypoints1, vector<KeyPoint>& keypoints2,
-                                  vector<vector<DMatch> >* _matches1to2, vector<vector<uchar> >* _correctMatches1to2Mask,
-                                  vector<Point2f>& recallPrecisionCurve,
-                                  const Ptr<GenericDescriptorMatch>& _dmatch )
+void cv::evaluateDescriptorMatcher( const Mat& img1, const Mat& img2, const Mat& H1to2,
+                                    vector<KeyPoint>& keypoints1, vector<KeyPoint>& keypoints2,
+                                    vector<vector<DMatch> >* _matches1to2, vector<vector<uchar> >* _correctMatches1to2Mask,
+                                    vector<Point2f>& recallPrecisionCurve,
+                                    const Ptr<GenericDescriptorMatcher>& _dmatcher )
 {
-    Ptr<GenericDescriptorMatch> dmatch = _dmatch;
-    dmatch->clear();
+    Ptr<GenericDescriptorMatcher> dmatcher = _dmatcher;
+    dmatcher->clear();
 
     vector<vector<DMatch> > *matches1to2, buf1;
     vector<vector<uchar> > *correctMatches1to2Mask, buf2;
@@ -469,7 +469,7 @@ void cv::evaluateDescriptorMatch( const Mat& img1, const Mat& img2, const Mat& H
     if( keypoints1.empty() )
         CV_Error( CV_StsBadArg, "keypoints1 must be no empty" );
 
-    if( matches1to2->empty() && dmatch.empty() )
+    if( matches1to2->empty() && dmatcher.empty() )
         CV_Error( CV_StsBadArg, "dmatch must be no empty when matches1to2 is empty" );
 
     bool computeKeypoints2ByPrj = keypoints2.empty();
@@ -481,10 +481,10 @@ void cv::evaluateDescriptorMatch( const Mat& img1, const Mat& img2, const Mat& H
 
     if( matches1to2->empty() || computeKeypoints2ByPrj )
     {
-        dmatch->clear();
-        dmatch->add( img2, keypoints2 );
+        dmatcher->clear();
+        dmatcher->add( img2, keypoints2 );
         // TODO: use more sophisticated strategy to choose threshold
-        dmatch->match( img1, keypoints1, *matches1to2, std::numeric_limits<float>::max() );
+        dmatcher->matchMany2Many( img1, keypoints1, *matches1to2 );
     }
     float repeatability;
     int correspCount;
@@ -501,8 +501,8 @@ void cv::evaluateDescriptorMatch( const Mat& img1, const Mat& img2, const Mat& H
         (*correctMatches1to2Mask)[i].resize((*matches1to2)[i].size());
         for( size_t j = 0;j < (*matches1to2)[i].size(); j++ )
         {
-            int indexQuery = (*matches1to2)[i][j].indexQuery;
-            int indexTrain = (*matches1to2)[i][j].indexTrain;
+            int indexQuery = (*matches1to2)[i][j].queryIndex;
+            int indexTrain = (*matches1to2)[i][j].trainIndex;
             (*correctMatches1to2Mask)[i][j] = thresholdedOverlapMask( indexQuery, indexTrain );
             ddd += thresholdedOverlapMask( indexQuery, indexTrain ) != 0 ? 1 : 0;
         }

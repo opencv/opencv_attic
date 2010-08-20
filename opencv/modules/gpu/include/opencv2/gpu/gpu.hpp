@@ -68,7 +68,7 @@ namespace cv
 
         //////////////////////////////// GpuMat ////////////////////////////////
         class Stream;
-        class MatPL;
+        class CudaMem;
 
         //! Smart pointer for GPU memory with reference counting. Its interface is mostly similar with cv::Mat.
         class CV_EXPORTS GpuMat
@@ -111,12 +111,16 @@ namespace cv
 
             //! pefroms blocking upload data to GpuMat. .
             void upload(const cv::Mat& m);
-            void upload(const MatPL& m, Stream& stream);
 
-            //! Downloads data from device to host memory. Blocking calls.
+            //! upload async
+            void upload(const CudaMem& m, Stream& stream);
+
+            //! downloads data from device to host memory. Blocking calls.
             operator Mat() const;
             void download(cv::Mat& m) const;
-            void download(MatPL& m, Stream& stream) const;
+
+            //! download async
+            void download(CudaMem& m, Stream& stream) const;
 
             //! returns a new GpuMatrix header for the specified row
             GpuMat row(int y) const;
@@ -223,51 +227,51 @@ namespace cv
             uchar* dataend;
         };
 
-        //////////////////////////////// MatPL ////////////////////////////////
-        // MatPL is limited cv::Mat with page locked memory allocation.
+        //////////////////////////////// CudaMem ////////////////////////////////
+        // CudaMem is limited cv::Mat with page locked memory allocation.
         // Page locked memory is only needed for async and faster coping to GPU.
         // It is convertable to cv::Mat header without reference counting
         // so you can use it with other opencv functions.
 
-        class CV_EXPORTS MatPL
+        class CV_EXPORTS CudaMem
         {
-        public:
+        public:            
+            enum  { ALLOC_PAGE_LOCKED = 1, ALLOC_ZEROCOPY = 2, ALLOC_WRITE_COMBINED = 4 };
 
-            //Supported.  Now behaviour is like ALLOC_DEFAULT.
-            enum  { ALLOC_PAGE_LOCKED = 0, ALLOC_ZEROCOPY = 1, ALLOC_WRITE_COMBINED = 4 };
+            CudaMem();
+            CudaMem(const CudaMem& m);
 
-            MatPL();
-            MatPL(const MatPL& m);
-
-            MatPL(int _rows, int _cols, int _type, int type_alloc = ALLOC_PAGE_LOCKED);
-            MatPL(Size _size, int _type, int type_alloc = ALLOC_PAGE_LOCKED);
+            CudaMem(int _rows, int _cols, int _type, int _alloc_type = ALLOC_PAGE_LOCKED);
+            CudaMem(Size _size, int _type, int _alloc_type = ALLOC_PAGE_LOCKED);
 
 
             //! creates from cv::Mat with coping data
-            explicit MatPL(const Mat& m, int type_alloc = ALLOC_PAGE_LOCKED);
+            explicit CudaMem(const Mat& m, int _alloc_type = ALLOC_PAGE_LOCKED);
 
-            ~MatPL();
+            ~CudaMem();
 
-            MatPL& operator = (const MatPL& m);
+            CudaMem& operator = (const CudaMem& m);
 
             //! returns deep copy of the matrix, i.e. the data is copied
-            MatPL clone() const;
+            CudaMem clone() const;
 
             //! allocates new matrix data unless the matrix already has specified size and type.
-            void create(int _rows, int _cols, int _type, int type_alloc = ALLOC_PAGE_LOCKED);
-            void create(Size _size, int _type, int type_alloc = ALLOC_PAGE_LOCKED);
+            void create(int _rows, int _cols, int _type, int _alloc_type = ALLOC_PAGE_LOCKED);
+            void create(Size _size, int _type, int _alloc_type = ALLOC_PAGE_LOCKED);
 
             //! decrements reference counter and released memory if needed.
             void release();
 
-            //! returns matrix header with disabled reference counting for MatPL data.
+            //! returns matrix header with disabled reference counting for CudaMem data.
             Mat createMatHeader() const;
             operator Mat() const;
 
+            //! maps host memory into device address space and returns GpuMat header for it. Throws exception if not supported by hardware.            
+            GpuMat createGpuMatHeader() const;
             operator GpuMat() const;
 
+            //returns if host memory can be mapperd to gpu address space;
             static bool can_device_map_to_host();
-
 
             // Please see cv::Mat for descriptions
             bool isContinuous() const;
@@ -286,14 +290,13 @@ namespace cv
             int rows, cols;
             size_t step;
 
-            int alloc_type;
-
             uchar* data;
             int* refcount;
 
             uchar* datastart;
             uchar* dataend;
 
+            int alloc_type;
         };
 
         //////////////////////////////// CudaStream ////////////////////////////////
@@ -314,13 +317,13 @@ namespace cv
             void waitForCompletion();
 
             //! downloads asynchronously.
-            // Warning! cv::Mat must point to page locked memory (i.e. to MatPL data or to its subMat)
-            void enqueueDownload(const GpuMat& src, MatPL& dst);
+            // Warning! cv::Mat must point to page locked memory (i.e. to CudaMem data or to its subMat)
+            void enqueueDownload(const GpuMat& src, CudaMem& dst);
             void enqueueDownload(const GpuMat& src, Mat& dst);
 
             //! uploads asynchronously.
-            // Warning! cv::Mat must point to page locked memory (i.e. to MatPL data or to its ROI)
-            void enqueueUpload(const MatPL& src, GpuMat& dst);
+            // Warning! cv::Mat must point to page locked memory (i.e. to CudaMem data or to its ROI)
+            void enqueueUpload(const CudaMem& src, GpuMat& dst);
             void enqueueUpload(const Mat& src, GpuMat& dst);
 
             void enqueueCopy(const GpuMat& src, GpuMat& dst);
@@ -339,11 +342,14 @@ namespace cv
         };
 
         ////////////////////////////// Image processing //////////////////////////////
-
+        // DST[x,y] = SRC[xmap[x,y],ymap[x,y]] with bilinear interpolation. 
+        // xymap.type() == xymap.type() == CV_32FC1
         CV_EXPORTS void remap(const GpuMat& src, const GpuMat& xmap, const GpuMat& ymap, GpuMat& dst);
 
-
+        // Does mean shift filtering on GPU.
         CV_EXPORTS void meanShiftFiltering_GPU(const GpuMat& src, GpuMat& dst, int sp, int sr, TermCriteria criteria = TermCriteria(TermCriteria::MAX_ITER + TermCriteria::EPS, 5, 1));
+
+        CV_EXPORTS void colorizeDisp(const GpuMat& src_disp, GpuMat& dst_disp, int ndisp);
 
         //////////////////////////////// StereoBM_GPU ////////////////////////////////
 
@@ -356,8 +362,7 @@ namespace cv
 
             //! the default constructor
             StereoBM_GPU();
-            //! the full constructor taking the camera-specific preset, number of disparities and the SAD window size
-            //! ndisparities should be multiple of 8. SSD WindowsSize is fixed to 19 now
+            //! the full constructor taking the camera-specific preset, number of disparities and the SAD window size. ndisparities must be multiple of 8. 
             StereoBM_GPU(int preset, int ndisparities = DEFAULT_NDISP, int winSize = DEFAULT_WINSZ);
 
             //! the stereo correspondence operator. Finds the disparity for the specified rectified stereo pair
@@ -386,6 +391,8 @@ namespace cv
         };
 
         ////////////////////////// StereoBeliefPropagation ///////////////////////////
+        // "Efficient Belief Propagation for Early Vision" 
+        // P.Felzenszwalb
 
         class CV_EXPORTS StereoBeliefPropagation
         {
@@ -438,6 +445,9 @@ namespace cv
         };
 
         /////////////////////////// StereoConstantSpaceBP ///////////////////////////
+        // "A Constant-Space Belief Propagation Algorithm for Stereo Matching"
+        // Qingxiong Yang, Liang Wang†, Narendra Ahuja         
+        // http://vision.ai.uiuc.edu/~qyang6/
 
         class CV_EXPORTS StereoConstantSpaceBP
         {
@@ -484,6 +494,8 @@ namespace cv
             int min_disp_th;
 
             int msg_type;
+
+            bool use_local_init_data_cost;
         private:
             GpuMat u[2], d[2], l[2], r[2];
             GpuMat disp_selected_pyr[2];
@@ -494,6 +506,46 @@ namespace cv
             GpuMat temp;
 
             GpuMat out;
+        };
+
+        /////////////////////////// DisparityBilateralFilter ///////////////////////////
+        // Disparity map refinement using joint bilateral filtering given a single color image.
+        // Qingxiong Yang, Liang Wang†, Narendra Ahuja         
+        // http://vision.ai.uiuc.edu/~qyang6/
+
+        class CV_EXPORTS DisparityBilateralFilter
+        {
+        public:
+            enum { DEFAULT_NDISP  = 64 };
+            enum { DEFAULT_RADIUS = 3 };
+            enum { DEFAULT_ITERS  = 1 };
+
+            //! the default constructor
+            explicit DisparityBilateralFilter(int ndisp = DEFAULT_NDISP, int radius = DEFAULT_RADIUS, int iters = DEFAULT_ITERS);
+
+            //! the full constructor taking the number of disparities, filter radius,
+            //! number of iterations, truncation of data continuity, truncation of disparity continuity
+            //! and filter range sigma
+            DisparityBilateralFilter(int ndisp, int radius, int iters, float edge_threshold, float max_disc_threshold, float sigma_range);
+
+            //! the disparity map refinement operator. Refine disparity map using joint bilateral filtering given a single color image.
+            //! disparity must have CV_8U or CV_16S type, image must have CV_8UC1 or CV_8UC3 type.
+            void operator()(const GpuMat& disparity, const GpuMat& image, GpuMat& dst);
+
+            //! Acync version
+            void operator()(const GpuMat& disparity, const GpuMat& image, GpuMat& dst, Stream& stream);
+
+        private:
+            int ndisp;
+            int radius;
+            int iters;
+
+            float edge_threshold;
+            float max_disc_threshold;
+            float sigma_range;
+
+            GpuMat table_color;
+            GpuMat table_space;
         };
     }
 

@@ -64,7 +64,7 @@ void doIteration( const Mat& img1, Mat& img2, bool isWarpPerspective,
     cout << ">" << endl;
 
     cout << "< Matching descriptors..." << endl;
-    vector<int> matches;
+    vector<DMatch> matches;
     descriptorMatcher->clear();
     descriptorMatcher->add( descriptors2 );
     descriptorMatcher->match( descriptors1, matches );
@@ -72,10 +72,10 @@ void doIteration( const Mat& img1, Mat& img2, bool isWarpPerspective,
 
     if( !H12.empty() )
     {
-        cout << "< Evaluate descriptor match..." << endl;
+        cout << "< Evaluate descriptor matcher..." << endl;
         vector<Point2f> curve;
-        Ptr<GenericDescriptorMatch> gdm = new VectorDescriptorMatch( descriptorExtractor, descriptorMatcher );
-        evaluateDescriptorMatch( img1, img2, H12, keypoints1, keypoints2, 0, 0, curve, gdm );
+        Ptr<GenericDescriptorMatcher> gdm = new VectorDescriptorMatcher( descriptorExtractor, descriptorMatcher );
+        evaluateDescriptorMatcher( img1, img2, H12, keypoints1, keypoints2, 0, 0, curve, gdm );
         for( float l_p = 0; l_p < 1 - FLT_EPSILON; l_p+=0.1 )
             cout << "1-precision = " << l_p << "; recall = " << getRecall( curve, l_p ) << endl;
         cout << ">" << endl;
@@ -84,8 +84,11 @@ void doIteration( const Mat& img1, Mat& img2, bool isWarpPerspective,
     if( !isWarpPerspective && ransacReprojThreshold >= 0 )
     {
         cout << "< Computing homography (RANSAC)..." << endl;
+
         vector<Point2f> points1; KeyPoint::convert(keypoints1, points1);
-        vector<Point2f> points2; KeyPoint::convert(keypoints2, points2, matches);
+        vector<int> keypointIdxs; DescriptorMatcher::convertMatches( matches, keypointIdxs );
+        vector<Point2f> points2; KeyPoint::convert(keypoints2, points2, keypointIdxs);
+
         H12 = findHomography( Mat(points1), Mat(points2), CV_RANSAC, ransacReprojThreshold );
         cout << ">" << endl;
     }
@@ -93,16 +96,22 @@ void doIteration( const Mat& img1, Mat& img2, bool isWarpPerspective,
     Mat drawImg;
     if( !H12.empty() ) // filter outliers
     {
-        vector<char> matchesMask( matches.size(), 0 );
-        vector<Point2f> points1; KeyPoint::convert(keypoints1, points1);
-        vector<Point2f> points2; KeyPoint::convert(keypoints2, points2, matches);
+        vector<int> keypointIdxs;
+        DescriptorMatcher::convertMatches( matches, keypointIdxs, false );
+        vector<Point2f> points1; KeyPoint::convert( keypoints1, points1, keypointIdxs );
+        DescriptorMatcher::convertMatches( matches, keypointIdxs, true );
+        vector<Point2f> points2; KeyPoint::convert( keypoints2, points2, keypointIdxs );
+
         Mat points1t; perspectiveTransform(Mat(points1), points1t, H12);
-        vector<int>::const_iterator mit = matches.begin();
-        for( size_t i1 = 0; i1 < points1.size(); i1++ )
+
+        vector<char> matchesMask( matches.size(), 0 );
+        assert( points1.size() == points2.size() );
+        for( size_t i = 0; i < points1.size(); i++ )
         {
-            if( norm(points2[i1] - points1t.at<Point2f>(i1,0)) < 4 ) // inlier
-                matchesMask[i1] = 1;
+            if( norm(points2[i] - points1t.at<Point2f>(i,0)) < 4 ) // inlier
+                matchesMask[i] = 1;
         }
+
         // draw inliers
         drawMatches( img1, keypoints1, img2, keypoints2, matches, drawImg, CV_RGB(0, 255, 0), CV_RGB(0, 0, 255), matchesMask
 #if DRAW_RICH_KEYPOINTS_MODE

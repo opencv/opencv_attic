@@ -243,6 +243,12 @@ public:
     //! area of keypoint regions union (now keypoint region is circle)
     static float overlap(const KeyPoint& kp1, const KeyPoint& kp2);
 
+    //! computes projection of keiponts using homography matrix
+    static void project( const vector<KeyPoint>& src, vector<KeyPoint>& dst, const Mat& H );
+
+    //! computes projection of keiponts using homography matrix
+    static void filterByRect( vector<KeyPoint>& keypoints, const Rect& rect, vector<int>* origIndices=0 );
+
     Point2f pt; //!< coordinates of the keypoints
     float size; //!< diameter of the meaningfull keypoint neighborhood
     float angle; //!< computed orientation of the keypoint (-1 if not applicable)
@@ -1585,8 +1591,12 @@ struct CV_EXPORTS L1
  */
 struct CV_EXPORTS DMatch
 {
-    int indexTrain;
-    int indexQuery;
+    DMatch() : queryIndex(-1),  trainIndex(-1), distance(std::numeric_limits<float>::max()) {}
+    DMatch( int _queryIndex, int _trainIndex, float _distance ) :
+            queryIndex(_queryIndex), trainIndex(_trainIndex), distance(_distance) {}
+
+    int queryIndex;
+    int trainIndex;
     float distance;
 
     //less is better
@@ -1608,9 +1618,9 @@ public:
     virtual ~DescriptorMatcher() {}
     /*
      * Add descriptors to the training set
-     * descriptors Descriptors to add to the training set
+     * descriptors  Descriptors to add to the training set
      */
-    void add( const Mat& descriptors );
+    void add( const Mat& descriptors, const vector<KeyPoint>& keypoints=vector<KeyPoint>() );
 
     /*
      * Index the descriptors training set
@@ -1618,14 +1628,6 @@ public:
     virtual void index() = 0;
 
     /*
-     * Find the best match for each descriptor from a query set
-     *
-     * query         The query set of descriptors
-     * matches       Indices of the closest matches from the training set
-     */
-    void match( const Mat& query, vector<int>& matches ) const;
-
-    /*
      * Find the best matches between two descriptor sets, with constraints
      * on which pairs of descriptors can be matched.
      *
@@ -1633,40 +1635,15 @@ public:
      * can be matched with descriptors_2[j] only if mask.at<char>(i,j) is non-zero.
      *
      * query         The query set of descriptors
+     * matches       DMatches of the closest matches from the training set
      * mask          Mask specifying permissible matches.
-     * matches       Indices of the closest matches from the training set
      */
-    void match( const Mat& query, const Mat& mask, vector<int>& matches ) const;
+    void match( const Mat& query, vector<DMatch>& matches, const Mat& mask=Mat() ) const;
 
-    /*
-     * Find the best match for each descriptor from a query set
-     *
-     * query         The query set of descriptors
-     * matches       DMatches of the closest matches from the training set
-     */
-    void match( const Mat& query, vector<DMatch>& matches ) const;
+    void matchRatioCheck( const Mat& queryDescriptors, vector<DMatch>& matches,
+                          float ratio=0.7f, float clusterRadius=3.f, const Mat& mask=Mat() ) const;
 
-    /*
-     * Find the best matches between two descriptor sets, with constraints
-     * on which pairs of descriptors can be matched.
-     *
-     * The mask describes which descriptors can be matched. descriptors_1[i]
-     * can be matched with descriptors_2[j] only if mask.at<char>(i,j) is non-zero.
-     *
-     * query         The query set of descriptors
-     * mask          Mask specifying permissible matches.
-     * matches       DMatches of the closest matches from the training set
-     */
-    void match( const Mat& query, const Mat& mask, vector<DMatch>& matches ) const;
-
-    /*
-     * Find many matches for each descriptor from a query set
-     *
-     * query         The query set of descriptors
-     * matches       DMatches of the closest matches from the training set
-     * threshold     Distance threshold for descriptors matching
-     */
-    void match( const Mat& query, vector<vector<DMatch> >& matches, float threshold ) const;
+    void matchCrossCheck( const Mat& query, vector<DMatch>& matches, float minRatio=0.7f, const Mat& mask=Mat() ) const;
 
     /*
       * Find many matches for each descriptor from a query set, with constraints
@@ -1676,32 +1653,35 @@ public:
       * can be matched with descriptors_2[j] only if mask.at<char>(i,j) is non-zero.
       *
       * query         The query set of descriptors
-      * mask          Mask specifying permissible matches.
       * matches       DMatches of the closest matches from the training set
-      * threshold     Distance threshold for descriptors matching
+      * mask          Mask specifying permissible matches.
+      * threshold     Distance threshold for descriptors matching ()
       */
-    void match( const Mat& query, const Mat& mask,
-                vector<vector<DMatch> >&  matches, float threshold ) const;
+    void matchMany2Many( const Mat& query, vector<vector<DMatch> >&  matches,
+                         float distThreshold=-1.f, float minDistRatio=-1.f, const Mat& mask=Mat(), bool sorted=false ) const;
 
     virtual void clear();
 
+    static void convertMatches( const vector<DMatch>& src, vector<int>& dst,
+                                bool trainIndices=true /* if false then query indices */ );
+
 protected:
-    Mat train;
+    Mat trainDescriptors;
+    vector<KeyPoint> trainKeypoints;
 
     /*
      * Find matches; match() calls this. Must be implemented by the subclass.
      * The mask may be empty.
      */
-    virtual void matchImpl( const Mat& query, const Mat& mask, vector<int>& matches ) const = 0;
+    virtual void matchImpl( const Mat& query, const Mat& train, vector<DMatch>& matches, const Mat& mask ) const = 0;
 
-    /*
-     * Find matches; match() calls this. Must be implemented by the subclass.
-     * The mask may be empty.
-     */
-    virtual void matchImpl( const Mat& query, const Mat& mask, vector<DMatch>& matches ) const = 0;
+    virtual void matchRatioCheckImpl( const Mat& query, vector<DMatch>& matches,
+                                      float ratio, float clusterRadius, const Mat& mask ) const = 0;
 
-    virtual void matchImpl( const Mat& query, const Mat& mask, vector<vector<DMatch> >& matches, float threshold ) const = 0;
+    virtual void matchCrossCheckImpl( const Mat& query, vector<DMatch>& matches, float minRatio, const Mat& mask ) const = 0;
 
+    virtual void matchMany2ManyImpl( const Mat& query, const Mat& train, vector<vector<DMatch> >& matches,
+                                     float distThreshold, float minDistRatio, const Mat& mask, bool sorted ) const = 0;
 
     static bool possibleMatch( const Mat& mask, int index_1, int index_2 )
     {
@@ -1722,33 +1702,27 @@ template<class Distance>
 class CV_EXPORTS BruteForceMatcher : public DescriptorMatcher
 {
 public:
-    BruteForceMatcher( Distance d = Distance() ) : distance(d) {}
+    BruteForceMatcher( Distance _distance=Distance() ) : DescriptorMatcher(), distance(_distance) {}
+    virtual ~BruteForceMatcher() {}
+
     virtual void index() {}
+
 protected:
-   virtual void matchImpl( const Mat& query, const Mat& mask, vector<int>& matches ) const;
+    virtual void matchImpl( const Mat& query, const Mat& train, vector<DMatch>& matches, const Mat& mask ) const;
 
-   virtual void matchImpl( const Mat& query, const Mat& mask, vector<DMatch>& matches ) const;
+    virtual void matchRatioCheckImpl( const Mat& query, vector<DMatch>& matches,
+                                      float ratio, float clusterRadius, const Mat& mask ) const;
 
-   virtual void matchImpl( const Mat& query, const Mat& mask, vector<vector<DMatch> >& matches, float threshold ) const;
+    virtual void matchCrossCheckImpl( const Mat& query, vector<DMatch>& matches, float minRatio, const Mat& mask ) const;
 
-   Distance distance;
+    virtual void matchMany2ManyImpl( const Mat& query, const Mat& train, vector<vector<DMatch> >& matches,
+                                     float distThreshold, float minDistRatio, const Mat& mask, bool sorted ) const;
+
+    Distance distance;
 };
 
 template<class Distance> inline
-void BruteForceMatcher<Distance>::matchImpl( const Mat& query, const Mat& mask, vector<int>& matches ) const
-{
-    vector<DMatch> fullMatches;
-    matchImpl( query, mask, fullMatches);
-    matches.clear();
-    matches.resize( fullMatches.size() );
-    for( size_t i=0;i<fullMatches.size();i++)
-    {
-        matches[i] = fullMatches[i].indexTrain;
-    }
-}
-
-template<class Distance> inline
-void BruteForceMatcher<Distance>::matchImpl( const Mat& query, const Mat& mask, vector<DMatch>& matches ) const
+void BruteForceMatcher<Distance>::matchImpl( const Mat& query, const Mat& train, vector<DMatch>& matches, const Mat& mask ) const
 {
     typedef typename Distance::ValueType ValueType;
     typedef typename Distance::ResultType DistanceType;
@@ -1784,18 +1758,125 @@ void BruteForceMatcher<Distance>::matchImpl( const Mat& query, const Mat& mask, 
         }
 
         if( matchIndex != -1 )
+            matches.push_back( DMatch(i, matchIndex, matchDistance) );
+    }
+}
+
+template<class Distance> inline
+void BruteForceMatcher<Distance>::matchRatioCheckImpl( const Mat& query, vector<DMatch>& matches,
+                                                       float ratio, float clusterRadius, const Mat& mask ) const
+{
+    typedef typename Distance::ValueType ValueType;
+    typedef typename Distance::ResultType DistanceType;
+
+    assert( mask.empty() || (mask.rows == query.rows && mask.cols == trainDescriptors.rows) );
+
+    assert( query.cols == trainDescriptors.cols ||  query.empty() ||  trainDescriptors.empty() );
+    assert( DataType<ValueType>::type == query.type() ||  query.empty() );
+    assert( DataType<ValueType>::type == trainDescriptors.type() ||  trainDescriptors.empty() );
+
+    CV_Assert( !trainKeypoints.empty() );
+
+    vector<vector<DMatch> > m2mMatches;
+    BruteForceMatcher::matchMany2Many( query, m2mMatches, -1, ratio, mask, false );
+
+    matches.clear();
+
+    clusterRadius *=2;
+    for( size_t i = 0; i < m2mMatches.size(); i++ )
+    {
+        float minX = std::numeric_limits<float>::max();
+        float maxX = std::numeric_limits<float>::min();
+        float minY = std::numeric_limits<float>::max();
+        float maxY = std::numeric_limits<float>::min();
+
+        for( size_t j = 0; j < m2mMatches[i].size(); j++ )
         {
-            DMatch match;
-            match.indexTrain = matchIndex;
-            match.indexQuery = i;
-            match.distance = matchDistance;
-            matches.push_back( match );
+            int trainIdx = m2mMatches[i][j].trainIndex;
+            float x = trainKeypoints[trainIdx].pt.x;
+            float y = trainKeypoints[trainIdx].pt.y;
+            minX = std::min( minX, x );
+            maxX = std::max( maxX, x );
+            minY = std::min( minY, y );
+            maxY = std::max( maxY, y );
+        }
+
+        if( fabs(maxX - minX) < clusterRadius && fabs(maxY - minY) < clusterRadius )
+        {
+            assert( !m2mMatches[i].empty() );
+            matches.push_back( m2mMatches[i][0] ); // best match
         }
     }
 }
 
 template<class Distance> inline
-void BruteForceMatcher<Distance>::matchImpl( const Mat& query, const Mat& mask, vector<vector<DMatch> >& matches, float threshold ) const
+void BruteForceMatcher<Distance>::matchCrossCheckImpl( const Mat& query, vector<DMatch>& matches, float minRatio, const Mat& mask ) const
+{
+    typedef typename Distance::ValueType ValueType;
+    typedef typename Distance::ResultType DistanceType;
+
+    assert( mask.empty() || (mask.rows == query.rows && mask.cols == trainDescriptors.rows) );
+
+    assert( query.cols == trainDescriptors.cols ||  query.empty() ||  trainDescriptors.empty() );
+    assert( DataType<ValueType>::type == query.type() ||  query.empty() );
+    assert( DataType<ValueType>::type == trainDescriptors.type() ||  trainDescriptors.empty() );
+
+    vector<vector<DMatch> > matchesQuery2Train;
+    BruteForceMatcher::matchMany2ManyImpl( query, trainDescriptors, matchesQuery2Train, -1.f, minRatio, mask, true );
+
+#if 1
+    vector<DMatch> matchesTrain2Query;
+    BruteForceMatcher::matchImpl( trainDescriptors, query, matchesTrain2Query, Mat() );
+
+    matches.clear();
+    for( size_t i = 0; i < matchesQuery2Train.size(); i++ )
+    {
+        for( size_t j = 0; j < matchesQuery2Train[i].size(); j++ )
+        {
+            int trainIdx = matchesQuery2Train[i][j].trainIndex;
+            int queryIdx = matchesQuery2Train[i][j].queryIndex;
+
+            if( matchesTrain2Query[trainIdx].trainIndex == queryIdx )
+            {
+                matches.push_back( matchesQuery2Train[i][j] );
+                break;
+            }
+        }
+    }
+
+#else
+    vector<vector<DMatch> > matchesTrain2Query;
+    BruteForceMatcher::matchMany2ManyImpl( trainDescriptors, query, matchesTrain2Query, -1.f, minRatio, Mat(), false );
+
+    matches.clear();
+    for( size_t i = 0; i < matchesQuery2Train.size(); i++ )
+    {
+        bool findMatch = false;
+        for( size_t j = 0; j < matchesQuery2Train[i].size(); j++ )
+        {
+            int trainIdx = matchesQuery2Train[i][j].trainIndex;
+            int queryIdx = matchesQuery2Train[i][j].queryIndex;
+
+            assert( matchesQuery2Train[i][j].queryIndex == (int)i );
+            for( size_t k = 0; k < matchesTrain2Query[trainIdx].size(); k++ )
+            {
+                if( matchesTrain2Query[trainIdx][k].trainIndex == queryIdx )
+                {
+                    matches.push_back( matchesQuery2Train[i][j] );
+                    findMatch = true;
+                    break;
+                }
+            }
+            if( findMatch )
+                break;
+        }
+    }
+#endif
+}
+
+template<class Distance> inline
+void BruteForceMatcher<Distance>::matchMany2ManyImpl( const Mat& query, const Mat& train, vector<vector<DMatch> >& matches,
+                                                      float distThreshold, float minDistRatio, const Mat& mask, bool sorted ) const
 {
     typedef typename Distance::ValueType ValueType;
     typedef typename Distance::ResultType DistanceType;
@@ -1810,9 +1891,29 @@ void BruteForceMatcher<Distance>::matchImpl( const Mat& query, const Mat& mask, 
     matches.clear();
     matches.resize( query.rows );
 
+    minDistRatio = minDistRatio <= 1.f ? minDistRatio : -1;
     for( int i = 0; i < query.rows; i++ )
     {
         const ValueType* d1 = (const ValueType*)(query.data + query.step*i);
+
+        float minDistance = std::numeric_limits<float>::max();
+        int bestMatchIdx = -1;
+        // find best match (with min distance)
+        for( int j = 0; j < train.rows; j++ )
+        {
+            if( possibleMatch(mask, i, j) )
+            {
+                const ValueType* d2 = (const ValueType*)(train.data + train.step*j);
+                DistanceType curDistance = distance(d1, d2, dimension);
+                if( curDistance < minDistance )
+                {
+                    minDistance = curDistance;
+                    bestMatchIdx = j;
+                }
+            }
+        }
+        if( bestMatchIdx >= 0 ) // best match will be the first always
+            matches[i].push_back( DMatch(i, bestMatchIdx, minDistance) );
 
         for( int j = 0; j < train.rows; j++ )
         {
@@ -1820,26 +1921,24 @@ void BruteForceMatcher<Distance>::matchImpl( const Mat& query, const Mat& mask, 
             {
                 const ValueType* d2 = (const ValueType*)(train.data + train.step*j);
                 DistanceType curDistance = distance(d1, d2, dimension);
-                if( curDistance < threshold )
-                {
-                    DMatch match;
-                    match.distance = curDistance;
-                    match.indexQuery = i;
-                    match.indexTrain = j;
-                    matches[i].push_back( match );
-                }
+                if( (distThreshold < std::numeric_limits<float>::epsilon() || curDistance < distThreshold) &&
+                    (minDistRatio < std::numeric_limits<float>::epsilon() || minDistance > minDistRatio * curDistance) &&
+                    j != bestMatchIdx )
+                    matches[i].push_back( DMatch(i, j, curDistance) );
             }
         }
+        if( sorted )
+            std::sort( matches[i].begin(), matches[i].end() );
     }
 }
 
-template<>
-void BruteForceMatcher<L2<float> >::matchImpl( const Mat& query, const Mat& mask, vector<DMatch>& matches ) const;
+//template<>
+//void BruteForceMatcher<L2<float> >::matchImpl( const Mat& query, const Mat& train, vector<DMatch>& matches, const Mat& mask ) const;
 
 CV_EXPORTS Ptr<DescriptorMatcher> createDescriptorMatcher( const string& descriptorMatcherType );
 
 /****************************************************************************************\
-*                                GenericDescriptorMatch                                  *
+*                                GenericDescriptorMatcher                                *
 \****************************************************************************************/
 /*
  * A storage for sets of keypoints together with corresponding images and class IDs
@@ -1872,7 +1971,7 @@ public:
 /*
  *   Abstract interface for a keypoint descriptor
  */
-class CV_EXPORTS GenericDescriptorMatch
+class CV_EXPORTS GenericDescriptorMatcher
 {
 public:
     enum IndexType
@@ -1881,8 +1980,8 @@ public:
         KDTreeIndex
     };
 
-    GenericDescriptorMatch() {}
-    virtual ~GenericDescriptorMatch() {}
+    GenericDescriptorMatcher() {}
+    virtual ~GenericDescriptorMatcher() {}
 
     // Adds keypoints to the training set (descriptors are supposed to be calculated here)
     virtual void add( KeyPointCollection& keypoints );
@@ -1898,16 +1997,11 @@ public:
     // Matches test keypoints to the training set
     // image        The source image
     // points       Test keypoints from the source image
-    // indices      A vector to be filled with keypoint class indices
-    virtual void match( const Mat& image, vector<KeyPoint>& points, vector<int>& indices ) = 0;
-
-    // Matches test keypoints to the training set
-    // image        The source image
-    // points       Test keypoints from the source image
     // matches      A vector to be filled with keypoint matches
-    virtual void match( const Mat& image, vector<KeyPoint>& points, vector<DMatch>& matches );
+    virtual void match( const Mat& image, vector<KeyPoint>& points, vector<DMatch>& matches, const Mat& mask=Mat() );
 
-    virtual void match( const Mat& image, vector<KeyPoint>& points, vector<vector<DMatch> >& matches, float threshold );
+    virtual void matchMany2Many( const Mat& image, vector<KeyPoint>& points, vector<vector<DMatch> >& matches,
+                                 float distThreshold=-1.f, const Mat& mask=Mat() );
 
     // Clears keypoints storing in collection
     virtual void clear();
@@ -1923,9 +2017,9 @@ protected:
 };
 
 /*
- *  OneWayDescriptorMatch
+ *  OneWayDescriptorMatcher
  */
-class CV_EXPORTS OneWayDescriptorMatch : public GenericDescriptorMatch
+class CV_EXPORTS OneWayDescriptorMatcher : public GenericDescriptorMatcher
 {
 public:
     class Params
@@ -1958,11 +2052,11 @@ public:
         float minScale, maxScale, stepScale;
     };
 
-    OneWayDescriptorMatch();
+    OneWayDescriptorMatcher();
 
     // Equivalent to calling PointMatchOneWay() followed by Initialize(_params)
-    OneWayDescriptorMatch( const Params& _params );
-    virtual ~OneWayDescriptorMatch();
+    OneWayDescriptorMatcher( const Params& _params );
+    virtual ~OneWayDescriptorMatcher();
 
     // Sets one way descriptor parameters
     void initialize( const Params& _params, OneWayDescriptorBase *_base = 0 );
@@ -1979,11 +2073,10 @@ public:
     // The minimum distance to each training patch with all its affine poses is found over all scales.
     // The class ID of a match is returned for each keypoint. The distance is calculated over PCA components
     // loaded with DescriptorOneWay::Initialize, kd tree is used for finding minimum distances.
-    virtual void match( const Mat& image, vector<KeyPoint>& points, vector<int>& indices );
+    virtual void match( const Mat& image, vector<KeyPoint>& points, vector<DMatch>& matches, const Mat& maks=Mat() );
 
-    virtual void match( const Mat& image, vector<KeyPoint>& points, vector<DMatch>& matches );
-
-    virtual void match( const Mat& image, vector<KeyPoint>& points, vector<vector<DMatch> >& matches, float threshold);
+    virtual void matchMany2Many( const Mat& image, vector<KeyPoint>& points, vector<vector<DMatch> >& matches,
+                                 float distThreshold=-1.f, const Mat& mask=Mat() );
 
     // Classify a set of keypoints. The same as match, but returns point classes rather than indices
     virtual void classify( const Mat& image, vector<KeyPoint>& points );
@@ -2003,9 +2096,9 @@ protected:
 };
 
 /*
- *  FernDescriptorMatch
+ *  FernDescriptorMatcher
  */
-class CV_EXPORTS FernDescriptorMatch : public GenericDescriptorMatch
+class CV_EXPORTS FernDescriptorMatcher : public GenericDescriptorMatcher
 {
 public:
     class Params
@@ -2034,20 +2127,19 @@ public:
         string filename;
     };
 
-    FernDescriptorMatch();
+    FernDescriptorMatcher();
 
-    FernDescriptorMatch( const Params& _params );
-    virtual ~FernDescriptorMatch();
+    FernDescriptorMatcher( const Params& _params );
+    virtual ~FernDescriptorMatcher();
 
     void initialize( const Params& _params );
 
     virtual void add( const Mat& image, vector<KeyPoint>& keypoints );
 
-    virtual void match( const Mat& image, vector<KeyPoint>& keypoints, vector<int>& indices );
+    virtual void match( const Mat& image, vector<KeyPoint>& points, vector<DMatch>& matches, const Mat& mask=Mat() );
 
-    virtual void match( const Mat& image, vector<KeyPoint>& points, vector<DMatch>& matches);
-
-    virtual void match( const Mat& image, vector<KeyPoint>& points, vector<vector<DMatch> >& matches, float threshold);
+    virtual void matchMany2Many( const Mat& image, vector<KeyPoint>& points, vector<vector<DMatch> >& matches,
+                                 float distThreshold=-1.f, const Mat& mask=Mat() );
 
     virtual void classify( const Mat& image, vector<KeyPoint>& keypoints );
 
@@ -2065,24 +2157,24 @@ protected:
     Params params;
 };
 
-CV_EXPORTS Ptr<GenericDescriptorMatch> createGenericDescriptorMatch( const string& genericDescritptorMatchType, const string &paramsFilename = string () );
+CV_EXPORTS Ptr<GenericDescriptorMatcher> createGenericDescriptorMatcher( const string& genericDescritptorMatchType, const string &paramsFilename = string () );
 
 /****************************************************************************************\
-*                                VectorDescriptorMatch                                   *
+*                                VectorDescriptorMatcher                                 *
 \****************************************************************************************/
 
 /*
  *  A class used for matching descriptors that can be described as vectors in a finite-dimensional space
  */
-class CV_EXPORTS VectorDescriptorMatch : public GenericDescriptorMatch
+class CV_EXPORTS VectorDescriptorMatcher : public GenericDescriptorMatcher
 {
 public:
-    using GenericDescriptorMatch::add;
+    using GenericDescriptorMatcher::add;
 
-    VectorDescriptorMatch( const Ptr<DescriptorExtractor>& _extractor, const Ptr<DescriptorMatcher>& _matcher )
+    VectorDescriptorMatcher( const Ptr<DescriptorExtractor>& _extractor, const Ptr<DescriptorMatcher>& _matcher )
                         : extractor( _extractor ), matcher( _matcher ) {}
 
-    virtual ~VectorDescriptorMatch() {}
+    virtual ~VectorDescriptorMatcher() {}
 
     // Builds flann index
     void index();
@@ -2091,12 +2183,10 @@ public:
     virtual void add( const Mat& image, vector<KeyPoint>& keypoints );
 
     // Matches a set of keypoints with the training set
-    virtual void match( const Mat& image, vector<KeyPoint>& points, vector<int>& keypointIndices );
+    virtual void match( const Mat& image, vector<KeyPoint>& points, vector<DMatch>& matches, const Mat& mask=Mat() );
 
-    virtual void match( const Mat& image, vector<KeyPoint>& points, vector<DMatch>& matches );
-
-    virtual void match( const Mat& image, vector<KeyPoint>& points,
-                        vector<vector<DMatch> >& matches, float threshold );
+    virtual void matchMany2Many( const Mat& image, vector<KeyPoint>& points, vector<vector<DMatch> >& matches,
+                                 float distThreshold=-1.f, const Mat& mask=Mat() );
 
     virtual void clear();
     virtual void read( const FileNode& fn );
@@ -2132,12 +2222,6 @@ CV_EXPORTS void drawKeypoints( const Mat& image, const vector<KeyPoint>& keypoin
 
 // Draws matches of keypints from two images on output image.
 CV_EXPORTS void drawMatches( const Mat& img1, const vector<KeyPoint>& keypoints1,
-							 const Mat& img2, const vector<KeyPoint>& keypoints2,
-                             const vector<int>& matches1to2, Mat& outImg,
-                             const Scalar& matchColor=Scalar::all(-1), const Scalar& singlePointColor=Scalar::all(-1),
-                             const vector<char>& matchesMask=vector<char>(), int flags=DrawMatchesFlags::DEFAULT );
-
-CV_EXPORTS void drawMatches( const Mat& img1, const vector<KeyPoint>& keypoints1,
                              const Mat& img2, const vector<KeyPoint>& keypoints2,
                              const vector<DMatch>& matches1to2, Mat& outImg,
                              const Scalar& matchColor=Scalar::all(-1), const Scalar& singlePointColor=Scalar::all(-1),
@@ -2163,11 +2247,11 @@ CV_EXPORTS void computeRecallPrecisionCurve( const vector<vector<DMatch> >& matc
                                              vector<Point2f>& recallPrecisionCurve );
 CV_EXPORTS float getRecall( const vector<Point2f>& recallPrecisionCurve, float l_precision );
 
-CV_EXPORTS void evaluateDescriptorMatch( const Mat& img1, const Mat& img2, const Mat& H1to2,
-                                         vector<KeyPoint>& keypoints1, vector<KeyPoint>& keypoints2,
-                                         vector<vector<DMatch> >* matches1to2, vector<vector<uchar> >* correctMatches1to2Mask,
-                                         vector<Point2f>& recallPrecisionCurve,
-                                         const Ptr<GenericDescriptorMatch>& dmatch=Ptr<GenericDescriptorMatch>() );
+CV_EXPORTS void evaluateDescriptorMatcher( const Mat& img1, const Mat& img2, const Mat& H1to2,
+                                           vector<KeyPoint>& keypoints1, vector<KeyPoint>& keypoints2,
+                                           vector<vector<DMatch> >* matches1to2, vector<vector<uchar> >* correctMatches1to2Mask,
+                                           vector<Point2f>& recallPrecisionCurve,
+                                           const Ptr<GenericDescriptorMatcher>& dmatcher=Ptr<GenericDescriptorMatcher>() );
 
 
 } /* namespace cv */

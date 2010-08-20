@@ -127,6 +127,7 @@ public slots:
     void destroyWindow(QString name);
     void destroyAllWindow();
     void addSlider(QString trackbar_name, QString window_name, void* value, int count, void* on_change);
+	void addSlider2(QString trackbar_name, QString window_name, void* value, int count, void* on_change, void *userdata);
     void moveWindow(QString name, int x, int y);
     void resizeWindow(QString name, int width, int height);
     void showImage(QString name, void* arr);
@@ -144,6 +145,7 @@ public slots:
     void setOpenGLCallback(QString window_name, void* callbackOpenGL, void* userdata, double angle, double zmin, double zmax);
     void putText(void* arg1, QString text, QPoint org, void* font);
     void addButton(QString button_name, int button_type, int initial_button_state , void* on_change, void* userdata);
+	void enablePropertiesButtonEachWindow();
 };
 
 enum typeBar{type_CvTrackbar = 0, type_CvButtonbar = 1};
@@ -228,7 +230,8 @@ class CvTrackbar :  public CvBar
 {
     Q_OBJECT
 public:
-    CvTrackbar(CvWindow* parent, QString name, int* value, int count, CvTrackbarCallback on_change = NULL);
+    CvTrackbar(CvWindow* parent, QString name, int* value, int count, CvTrackbarCallback on_change);
+	CvTrackbar(CvWindow* parent, QString name, int* value, int count, CvTrackbarCallback2 on_change, void* data);
     ~CvTrackbar();
 
     //QString trackbar_name;
@@ -240,18 +243,33 @@ private slots:
 
 private:
     void setLabel(int myvalue);
+	void construc_trackbar(CvWindow* arg, QString name, int* value, int count);
     QString createLabel();
     QPointer<QPushButton > label;
     CvTrackbarCallback callback;
+	CvTrackbarCallback2 callback2;//look like it is use by python binding
     int* dataSlider;
+	void* userdata;
 
 };
 
-class CvWinProperties : public QWidget
+//Both are top level window, so that a way to differenciate them.
+//if (obj->metaObject ()->className () == "CvWindow") does not give me robust result
+
+enum typeWindow{type_CvWindow = 1, type_CvWinProperties = 2};
+
+class CvWinModel : public QWidget
+{
+public:
+typeWindow type;
+};
+
+
+class CvWinProperties : public CvWinModel
 {
     Q_OBJECT
 public:
-    CvWinProperties(QString name,QWidget* parent);
+    CvWinProperties(QString name,QObject* parent);
     ~CvWinProperties();
     QPointer<QBoxLayout> myLayout;
 
@@ -262,24 +280,14 @@ private:
 };
 
 
-
-class GlobalLayout : public QBoxLayout
-{
-    Q_OBJECT
-public:
-	GlobalLayout(QWidget* parent) : QBoxLayout(QBoxLayout::TopToBottom,parent){};
-	bool hasHeightForWidth () {return true;};
-	int heightForWidth( int w ) {qDebug()<<"yopyopypp";return w;};
-};
-
-
-class CvWindow : public QWidget
+class CvWindow : public CvWinModel
 {
     Q_OBJECT
 public:
     CvWindow(QString arg2, int flag = CV_WINDOW_NORMAL);
     ~CvWindow();
     static void addSlider(CvWindow* w,QString name, int* value, int count, CvTrackbarCallback on_change CV_DEFAULT(NULL));
+	static void addSlider2(CvWindow* w,QString name, int* value, int count, CvTrackbarCallback2 on_change CV_DEFAULT(NULL), void* userdata CV_DEFAULT(0));
     void setMouseCallBack(CvMouseCallback m, void* param);
     void updateImage(void* arr);
     void displayInfo(QString text, int delayms );
@@ -303,7 +311,6 @@ public:
 
     //parameters (will be save/load)
     QString param_name;
-    CvWinProperties* parameters_window ;
     int param_flags;
     int param_gui_mode;
 	int param_ratio_mode;
@@ -324,8 +331,8 @@ private:
 	void icvLoadButtonbar(CvButtonbar* t,QSettings *settings);
 	void icvSaveButtonbar(CvButtonbar* t,QSettings *settings);
 
-    void createShortcuts();
-    void createActions();
+	void createActions();
+	void createShortcuts();
     void createToolBar();
     void createView(int display_mode, int ratio_mode);
     void createStatusBar();
@@ -359,21 +366,20 @@ class ViewPort : public QGraphicsView
 public:
     ViewPort(CvWindow* centralWidget, int mode = CV_MODE_NORMAL, int keepRatio = CV_WINDOW_KEEPRATIO);
     ~ViewPort();
-    void updateImage(void* arr);
+    void updateImage(const CvArr *arr);
     void startDisplayInfo(QString text, int delayms);
     void setMouseCallBack(CvMouseCallback m, void* param);
     void setOpenGLCallback(CvOpenGLCallback func,void* userdata, double arg3, double arg4, double arg5);
     int getRatio();
     void setRatio(int arg);
-	int heightForWidth( int w );// {qDebug()<<"yopyopypp";return w;};
-	bool hasHeightForWidth (){qDebug()<<"ask";return true;};
 
     //parameters (will be save/load)
     QTransform param_matrixWorld;
 
     int param_keepRatio;
 
-    IplImage* image2Draw_ipl;
+    //IplImage* image2Draw_ipl;
+	CvMat* image2Draw_mat;
     QImage image2Draw_qt;
     QImage image2Draw_qt_resized;
     int mode_display;//opengl or native

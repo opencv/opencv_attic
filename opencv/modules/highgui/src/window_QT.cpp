@@ -343,21 +343,28 @@ CvWindow* icvFindWindowByName( const char* arg )
 
 	QString name(arg);
 	CvWindow* w;
+	CvWinModel* temp;
 
+	//This is not a very clean way to do the stuff. Indeed, QAction automatically generate toolTil (QLabel)
+	//that can be grabbed here and crash the code at 'w->param_name==name'.
 	foreach (QWidget *widget, QApplication::topLevelWidgets())
 	{
 
 		if (widget->isWindow() && !widget->parentWidget ())//is a window without parent
 		{
-			w = (CvWindow*) widget;
-			if (w->param_name==name)
+			temp = (CvWinModel*) widget;
+			if (temp->type == type_CvWindow)
+			{
+			w = (CvWindow*) temp;
+			if (name.compare(w->param_name)==0)
 			{
 				window = w;
 				break;
 			}
+			}
 		}
 	}
-
+	
 
 	return window;
 }
@@ -407,7 +414,7 @@ CvTrackbar* icvFindTrackbarByName( const char* name_trackbar, const char* name_w
 			if (result)
 				return (CvTrackbar*) result;
 
-			return (CvTrackbar*) icvFindBarbyName(w->parameters_window->myLayout, nameQt, type_CvTrackbar);
+			return (CvTrackbar*) icvFindBarbyName(global_control_panel->myLayout, nameQt, type_CvTrackbar);
 		}
 
 		return NULL;
@@ -436,7 +443,7 @@ int icvInitSystem(int *c, char** v)
 		wasInitialized = 1;
 		qDebug()<<"init done";
 
-#if defined( HAVE_QT_OPENGL )//OK tested !
+#if defined( HAVE_QT_OPENGL )
 		qDebug()<<"opengl support available";
 #endif
 	}
@@ -460,10 +467,7 @@ CV_IMPL int cvNamedWindow( const char* name, int flags )
 	if (multiThreads)
 		QMetaObject::invokeMethod(guiMainThread,
 		"createWindow",
-		//Qt::AutoConnection,
 		Qt::BlockingQueuedConnection,
-		//TypeConnection,
-		//Qt::AutoConnection,
 		Q_ARG(QString, QString(name)),
 		Q_ARG(int, flags));
 	else
@@ -550,10 +554,23 @@ CV_IMPL void cvResizeWindow(const char* name, int width, int height )
 
 }
 
-//TODO: implement the real one, not a wrapper
 CV_IMPL int cvCreateTrackbar2( const char* name_bar, const char* window_name, int* val, int count, CvTrackbarCallback2 on_notify, void* userdata )
 {
-	return cvCreateTrackbar( name_bar, window_name, val, count, (CvTrackbarCallback)on_notify );
+	if (!guiMainThread) 
+ 		CV_Error( CV_StsNullPtr, "NULL guiReceiver (please create a window)" ); 
+
+ 	QMetaObject::invokeMethod(guiMainThread, 
+ 								"addSlider2", 
+ 								Qt::AutoConnection, 
+ 								Q_ARG(QString, QString(name_bar)), 
+ 								Q_ARG(QString, QString(window_name)), 
+ 								Q_ARG(void*, (void*)val), 
+ 								Q_ARG(int, count), 
+ 								Q_ARG(void*, (void*)on_notify), 
+ 								Q_ARG(void*, (void*)userdata) 
+ 	); 
+
+ 	return 1;//dummy value 
 }
 
 CV_IMPL int cvStartWindowThread()
@@ -583,6 +600,7 @@ CV_IMPL int cvCreateTrackbar( const char* name_bar, const char* window_name, int
 
 CV_IMPL int cvCreateButton(const char* button_name,CvButtonCallback on_change, void* userdata , int button_type, int initial_button_state )
 {
+
 	if (!guiMainThread)
 		CV_Error( CV_StsNullPtr, "NULL guiReceiver (please create a window)" );
 
@@ -685,7 +703,7 @@ void GuiReceiver::isLastWindow()
 {
 	if (--nb_windows <= 0)
 	{
-		delete guiMainThread;
+		delete guiMainThread;//delete global_control_panel too
 		guiMainThread = NULL;
 		qApp->quit();
 	}
@@ -693,8 +711,12 @@ void GuiReceiver::isLastWindow()
 
 GuiReceiver::~GuiReceiver()
 {
+	
 	if (global_control_panel)
+	{
 		delete global_control_panel;
+		global_control_panel = NULL;
+	}
 
 	delete timer;
 }
@@ -892,7 +914,6 @@ void GuiReceiver::displayStatusBar( QString name, QString text, int delayms )
 
 void GuiReceiver::showImage(QString name, void* arr)
 {
-	//qDebug()<<"inshowimage"<<endl;
 	QPointer<CvWindow> w = icvFindWindowByName( name.toLatin1().data() );
 
 	if (!w)//as observed in the previous implementation (W32, GTK or Carbon), create a new window is the pointer returned is null
@@ -904,6 +925,9 @@ void GuiReceiver::showImage(QString name, void* arr)
 	if( w && arr )
 	{
 		w->updateImage(arr);
+
+		if (w->isHidden())
+			w->show();
 	}
 	else
 	{
@@ -973,20 +997,44 @@ void GuiReceiver::resizeWindow(QString name, int width, int height)
 		w->resize(width, height);
 }
 
+void GuiReceiver::enablePropertiesButtonEachWindow()
+{
+	CvWindow* w;
+	CvWinModel* temp;
+
+	//For each window, enable window property button
+	foreach (QWidget *widget, QApplication::topLevelWidgets())
+	{
+
+		if (widget->isWindow() && !widget->parentWidget ())//is a window without parent
+		{
+			temp = (CvWinModel*) widget;
+			if (temp->type == type_CvWindow)
+			{
+				w = (CvWindow*) widget;
+				//active window properties button
+				w->vect_QActions[9]->setDisabled(false);
+			}
+		}
+	}
+}
+
 void GuiReceiver::addButton(QString button_name, int button_type, int initial_button_state , void* on_change, void* userdata)
 {
 
 	if (!global_control_panel)
 		return;
-
 	QPointer<CvButtonbar> b;// = icvFindButtonbarByName(  button_name.toLatin1().data(), global_control_panel->myLayout );
 
 	//if (b)//button with this name already exist
 	//    return;
 
+
 	if (global_control_panel->myLayout->count() == 0)//if that is the first button attach to the control panel, create a new button bar
 	{
+
 		b = CvWindow::createButtonbar(button_name);//the bar has the name of the first button attached to it
+		enablePropertiesButtonEachWindow();
 
 	}else{
 		CvBar* lastbar = (CvBar*) global_control_panel->myLayout->itemAt(global_control_panel->myLayout->count()-1);
@@ -1001,6 +1049,34 @@ void GuiReceiver::addButton(QString button_name, int button_type, int initial_bu
 	b->addButton( button_name,(CvButtonCallback) on_change, userdata, button_type, initial_button_state);
 }
 
+void GuiReceiver::addSlider2(QString bar_name, QString window_name, void* value, int count, void* on_change, void *userdata)
+{
+	QBoxLayout *layout = NULL;
+	QPointer<CvWindow> w;
+	if (window_name != "")
+	{
+		w = icvFindWindowByName( window_name.toLatin1().data()  );
+
+		if (!w)
+			return;
+	}else{
+		if (global_control_panel)
+			layout = global_control_panel->myLayout;
+	}
+
+	QPointer<CvTrackbar> t = icvFindTrackbarByName( bar_name.toLatin1().data() , window_name.toLatin1().data(), layout );
+
+	if (t)//trackbar exists
+		return;
+
+	if (!value)
+		CV_Error(CV_StsNullPtr, "NULL value pointer" );
+
+	if (count<= 0)//count is the max value of the slider, so must be bigger than 0
+		CV_Error(CV_StsNullPtr, "Max value of the slider must be bigger than 0" );
+
+	CvWindow::addSlider2(w,bar_name,(int*)value,count,(CvTrackbarCallback2) on_change, userdata);
+}
 
 void GuiReceiver::addSlider(QString bar_name, QString window_name, void* value, int count, void* on_change)
 {
@@ -1036,8 +1112,25 @@ int GuiReceiver::start()
 	return qApp->exec();
 }
 
+CvTrackbar::CvTrackbar(CvWindow* arg, QString name, int* value, int count, CvTrackbarCallback2 on_change, void* data )
+{
+	callback = NULL;
+	callback2 = on_change;
+	userdata = data;
+
+	construc_trackbar(arg,name, value, count);
+}
 
 CvTrackbar::CvTrackbar(CvWindow* arg, QString name, int* value, int count, CvTrackbarCallback on_change )
+{
+	callback = on_change;
+	callback2 = NULL;
+	userdata = NULL;
+
+	construc_trackbar(arg,name, value, count);
+}
+
+void CvTrackbar::construc_trackbar(CvWindow* arg, QString name, int* value, int count)
 {
 	type=type_CvTrackbar;
 	myparent = arg;
@@ -1045,7 +1138,6 @@ CvTrackbar::CvTrackbar(CvWindow* arg, QString name, int* value, int count, CvTra
 	setObjectName(name_bar);
 	dataSlider = value;
 
-	callback = on_change;
 	slider = new QSlider(Qt::Horizontal);
 	slider->setFocusPolicy(Qt::StrongFocus);
 	slider->setMinimum(0);
@@ -1120,7 +1212,16 @@ void CvTrackbar::update(int myvalue)
 
 	*dataSlider = myvalue;
 	if (callback)
+	{
 		callback(myvalue);
+		return;
+	}
+
+	if (callback2)
+	{
+		callback2(myvalue,userdata);
+		return;
+	}
 }
 
 void CvTrackbar::setLabel(int myvalue)
@@ -1272,14 +1373,14 @@ void CvRadioButton::callCallBack(bool checked)
 
 
 //here CvWinProperties class
-CvWinProperties::CvWinProperties(QString name_paraWindow, QWidget* parent)
+CvWinProperties::CvWinProperties(QString name_paraWindow, QObject* parent)
 {
-	setParent(parent);
+	//setParent(parent);
+	type = type_CvWinProperties;
 	setWindowFlags(Qt::Tool);
 	setContentsMargins(0,0,0,0);
 	setWindowTitle(name_paraWindow);
 	setObjectName(name_paraWindow);
-	//parameters_window->setSizePolicy(QSizePolicy::Fixed,QSizePolicy::Fixed);
 	resize(100,50);
 
 	myLayout = new QBoxLayout(QBoxLayout::TopToBottom);
@@ -1331,7 +1432,6 @@ CvWinProperties::~CvWinProperties()
 	QSettings settings("OpenCV2", this->windowTitle());
 	settings.remove("pos");
 
-
 	QLayoutItem *child;
 	if (myLayout)
 	{
@@ -1350,6 +1450,7 @@ CvWinProperties::~CvWinProperties()
 //Here CvWindow class
 CvWindow::CvWindow(QString arg, int arg2)
 {
+	type = type_CvWindow;
 	moveToThread(qApp->instance()->thread());
 	param_name = arg;
 
@@ -1357,40 +1458,39 @@ CvWindow::CvWindow(QString arg, int arg2)
 	param_gui_mode = arg2 & 0x000000F0;
 	param_ratio_mode =  arg2 & 0x00000F00;
 
-	setAttribute(Qt::WA_DeleteOnClose);//in other case, does not release memory
+	//setAttribute(Qt::WA_DeleteOnClose);//in other case, does not release memory
 	setContentsMargins(0,0,0,0);
 	setWindowTitle(param_name);
 	setObjectName(param_name);
 
 	resize(400,300);
 
-	//1: Layouts
+	//1: create control panel
+	if (!global_control_panel)
+		global_control_panel = createParameterWindow();
+
+	//2: Layouts
 	createBarLayout();
 	createGlobalLayout();
 
-	//2: my view
+	//3: my view
 	int mode_display = CV_MODE_NORMAL;
 #if defined( HAVE_QT_OPENGL )
 	mode_display = CV_MODE_OPENGL;
 #endif
 	createView(mode_display, param_ratio_mode);
 
-	//3: shortcuts and actions
+	//4: shortcuts and actions
 	createActions();
 	createShortcuts();
+	//createActionsandShortcuts();
 
-	//4: toolBar and statusbar
+	//5: toolBar and statusbar
 	if (param_gui_mode == CV_GUI_EXPANDED)
 	{
 		createToolBar();
 		createStatusBar();
 	}
-
-	//5: create control panel
-	if (!global_control_panel)
-		global_control_panel = createParameterWindow();
-
-	parameters_window = global_control_panel;
 
 
 	//Now attach everything
@@ -1406,11 +1506,11 @@ CvWindow::CvWindow(QString arg, int arg2)
 
 	setLayout(myGlobalLayout);
 	show();
+
 }
 
 CvWindow::~CvWindow()
 {
-	printf("delete w\n");
 
 	QLayoutItem *child;
 
@@ -1429,7 +1529,6 @@ CvWindow::~CvWindow()
 
 		delete myBarLayout;
 	}
-
 
 	if (myStatusBar)
 	{
@@ -1475,8 +1574,8 @@ void CvWindow::hideTools()
 	if (myStatusBar)
 		myStatusBar->hide();
 
-	if (parameters_window)
-		parameters_window->hide();
+	if (global_control_panel)
+		global_control_panel->hide();
 }
 
 void CvWindow::showTools()
@@ -1487,24 +1586,22 @@ void CvWindow::showTools()
 	if (myStatusBar)
 		myStatusBar->show();
 
-	//if (parameters_window)
-	//	parameters_window->show();
 }
 
 CvWinProperties* CvWindow::createParameterWindow()
 {
 	QString name_paraWindow =QFileInfo(QApplication::applicationFilePath()).fileName()+" settings";
 
-	CvWinProperties *result =  new CvWinProperties(name_paraWindow,this);
+	CvWinProperties *result =  new CvWinProperties(name_paraWindow,guiMainThread);
 	return result;
 }
 
 void CvWindow::displayPropertiesWin()
 {
-	if (parameters_window->isHidden())
-		parameters_window->show();
+	if (global_control_panel->isHidden())
+		global_control_panel->show();
 	else
-		parameters_window->hide();
+		global_control_panel->hide();
 }
 
 void CvWindow::createActions()
@@ -1553,12 +1650,44 @@ void CvWindow::createActions()
 	vect_QActions[9] = new QAction(QIcon(":/properties-icon"),tr("Display properties window (CTRL+P)"),this);
 	vect_QActions[9]->setIconVisibleInMenu(true);
 	QObject::connect( vect_QActions[9],SIGNAL(triggered()),this, SLOT( displayPropertiesWin() ));
+
+	if (global_control_panel->myLayout->count() == 0)
+		vect_QActions[9]->setDisabled(true);
+}
+
+
+void CvWindow::createShortcuts()
+{
+	vect_QShortcuts.resize(10);
+
+	vect_QShortcuts[0] = new QShortcut(shortcut_panning_left, this);
+	QObject::connect( vect_QShortcuts[0], SIGNAL( activated ()),myview, SLOT( siftWindowOnLeft() ));
+	vect_QShortcuts[1] = new QShortcut(shortcut_panning_right, this);
+	QObject::connect( vect_QShortcuts[1], SIGNAL( activated ()),myview, SLOT( siftWindowOnRight() ));
+	vect_QShortcuts[2] = new QShortcut(shortcut_panning_up, this);
+	QObject::connect(vect_QShortcuts[2], SIGNAL( activated ()),myview, SLOT( siftWindowOnUp() ));
+	vect_QShortcuts[3] = new QShortcut(shortcut_panning_down, this);
+	QObject::connect(vect_QShortcuts[3], SIGNAL( activated ()),myview, SLOT( siftWindowOnDown() ));
+
+	vect_QShortcuts[4] = new QShortcut(shortcut_zoom_normal, this);
+	QObject::connect( vect_QShortcuts[4], SIGNAL( activated ()),myview, SLOT( resetZoom( ) ));
+	vect_QShortcuts[5] = new QShortcut(shortcut_zoom_imgRegion, this);
+	QObject::connect( vect_QShortcuts[5], SIGNAL( activated ()),myview, SLOT( imgRegion( ) ));
+	vect_QShortcuts[6] = new QShortcut(shortcut_zoom_in, this);
+	QObject::connect( vect_QShortcuts[6], SIGNAL( activated ()),myview, SLOT( ZoomIn() ));
+	vect_QShortcuts[7] = new QShortcut(shortcut_zoom_out, this);
+	QObject::connect(vect_QShortcuts[7], SIGNAL( activated ()),myview, SLOT( ZoomOut() ));
+	vect_QShortcuts[8] = new QShortcut(shortcut_save_img, this);
+	QObject::connect( vect_QShortcuts[8], SIGNAL( activated ()),myview, SLOT( saveView( ) ));
+	vect_QShortcuts[9] = new QShortcut(shortcut_properties_win, this);
+	QObject::connect( vect_QShortcuts[9], SIGNAL( activated ()),this, SLOT( displayPropertiesWin() ));
 }
 
 void CvWindow::createToolBar()
 {
 	myToolBar = new QToolBar(this);
-	myToolBar->setFloatable(false);//is not a window
+	myToolBar->blockSignals(true);
+	//myToolBar->setFloatable(false);//is not a window
 	myToolBar->setMaximumHeight(28);
 
 	foreach (QAction *a, vect_QActions)
@@ -1600,32 +1729,6 @@ void CvWindow::createBarLayout()
 	myBarLayout->setMargin(0);
 }
 
-void CvWindow::createShortcuts()
-{
-	vect_QShortcuts.resize(10);
-
-	vect_QShortcuts[0] = new QShortcut(shortcut_panning_left, this);
-	QObject::connect( vect_QShortcuts[0], SIGNAL( activated ()),myview, SLOT( siftWindowOnLeft() ));
-	vect_QShortcuts[1] = new QShortcut(shortcut_panning_right, this);
-	QObject::connect( vect_QShortcuts[1], SIGNAL( activated ()),myview, SLOT( siftWindowOnRight() ));
-	vect_QShortcuts[2] = new QShortcut(shortcut_panning_up, this);
-	QObject::connect(vect_QShortcuts[2], SIGNAL( activated ()),myview, SLOT( siftWindowOnUp() ));
-	vect_QShortcuts[3] = new QShortcut(shortcut_panning_down, this);
-	QObject::connect(vect_QShortcuts[3], SIGNAL( activated ()),myview, SLOT( siftWindowOnDown() ));
-
-	vect_QShortcuts[4] = new QShortcut(shortcut_zoom_normal, this);
-	QObject::connect( vect_QShortcuts[4], SIGNAL( activated ()),myview, SLOT( resetZoom( ) ));
-	vect_QShortcuts[5] = new QShortcut(shortcut_zoom_imgRegion, this);
-	QObject::connect( vect_QShortcuts[5], SIGNAL( activated ()),myview, SLOT( imgRegion( ) ));
-	vect_QShortcuts[6] = new QShortcut(shortcut_zoom_in, this);
-	QObject::connect( vect_QShortcuts[6], SIGNAL( activated ()),myview, SLOT( ZoomIn() ));
-	vect_QShortcuts[7] = new QShortcut(shortcut_zoom_out, this);
-	QObject::connect(vect_QShortcuts[7], SIGNAL( activated ()),myview, SLOT( ZoomOut() ));
-	vect_QShortcuts[8] = new QShortcut(shortcut_save_img, this);
-	QObject::connect( vect_QShortcuts[8], SIGNAL( activated ()),myview, SLOT( saveView( ) ));
-	vect_QShortcuts[9] = new QShortcut(shortcut_properties_win, this);
-	QObject::connect( vect_QShortcuts[9], SIGNAL( activated ()),this, SLOT( displayPropertiesWin() ));
-}
 
 void CvWindow::createView(int mode, int ratio)
 {
@@ -1665,6 +1768,32 @@ void CvWindow::setMouseCallBack(CvMouseCallback m, void* param)
 	myview->setMouseCallBack(m,param);
 }
 
+//addSlider2 is static
+void CvWindow::addSlider2(CvWindow* w,QString name, int* value, int count,CvTrackbarCallback2 on_change, void* userdata)
+{
+	QPointer<CvTrackbar> t = new CvTrackbar(w,name,value, count, on_change, userdata);
+	t->setAlignment(Qt::AlignHCenter);
+
+	QPointer<QBoxLayout> myLayout;
+
+	if (w)
+	{
+		myLayout = w->myBarLayout;
+	}
+	else
+	{
+		myLayout = global_control_panel->myLayout;
+
+		//if first one, enable control panel
+		if (myLayout->count() == 0)
+			guiMainThread->enablePropertiesButtonEachWindow();
+	}
+
+	myLayout->insertLayout( myLayout->count(),t);
+
+
+}
+
 //addSlider is static
 void CvWindow::addSlider(CvWindow* w,QString name, int* value, int count,CvTrackbarCallback on_change)
 {
@@ -1674,9 +1803,17 @@ void CvWindow::addSlider(CvWindow* w,QString name, int* value, int count,CvTrack
 	QPointer<QBoxLayout> myLayout;
 
 	if (w)
+	{
 		myLayout = w->myBarLayout;
+	}
 	else
+	{
 		myLayout = global_control_panel->myLayout;
+
+		//if first one, enable control panel
+		if (myLayout->count() == 0)
+			guiMainThread->enablePropertiesButtonEachWindow();
+	}
 
 	myLayout->insertLayout( myLayout->count(),t);
 
@@ -2003,19 +2140,13 @@ ViewPort::ViewPort(CvWindow* arg, int arg2, int arg3)
 		zmax = DEFAULT_ZMAX;
 		initGL();
 	}
-#else
-	setViewport(centralWidget);
+
 #endif
 
-	image2Draw_ipl=cvCreateImage(cvSize(viewport()->width(),viewport()->height()),IPL_DEPTH_8U,3);
-	//image2Draw_qt = QImage((uchar*) image2Draw_ipl->imageData, image2Draw_ipl->width, image2Draw_ipl->height,QImage::Format_RGB888);
-	//image2Draw_qt_resized = image2Draw_qt.scaled(this->width(),this->height(),Qt::IgnoreAspectRatio,Qt::SmoothTransformation);
-	
-	//setupViewport(viewport());//centralWidget
-	//setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
+	image2Draw_mat = cvCreateMat( viewport()->width(),viewport()->height(), CV_8UC3 );
 
 	nbChannelOriginImage = 0;
-	cvZero(image2Draw_ipl);
+	cvZero(image2Draw_mat);
 
 	setInteractive(false);
 	setMouseTracking (true);//receive mouse event everytime
@@ -2024,16 +2155,15 @@ ViewPort::ViewPort(CvWindow* arg, int arg2, int arg3)
 
 ViewPort::~ViewPort()
 {
-	if (image2Draw_ipl)
-		cvReleaseImage(&image2Draw_ipl);
+	if (image2Draw_mat)
+		
+		cvReleaseMat(&image2Draw_mat);
 
 	
-#if defined( HAVE_QT_OPENGL )
-	if (myGL)
-		delete myGL;
-#endif;
-		
-	qDebug()<<"kill vieport";
+//#if defined( HAVE_QT_OPENGL )
+//	if (myGL)
+//		delete myGL;
+//#endif;
 
 	delete timerDisplay;
 }
@@ -2188,34 +2318,37 @@ inline bool ViewPort::isSameSize(IplImage* img1,IplImage* img2)
 	return img1->width == img2->width && img1->height == img2->height;
 }
 
-void ViewPort::updateImage(void* arr)
+void ViewPort::updateImage(const CvArr *arr)
 {
 	//if (!arr)
 	//CV_Error(CV_StsNullPtr, "NULL arr pointer (in showImage)" );
 	CV_Assert(arr)
 
-	IplImage* tempImage = (IplImage*)arr;
+	CvMat * mat, stub;
+	int origin=0;
 
-	if (!isSameSize(image2Draw_ipl,tempImage))
+	if( CV_IS_IMAGE_HDR( arr ))
+		origin = ((IplImage*)arr)->origin;
+
+	mat = cvGetMat(arr, &stub);
+
+	//IplImage* tempImage = (IplImage*)arr;
+
+	if( CV_IS_IMAGE_HDR( arr ))
+		origin = ((IplImage*)arr)->origin;
+
+	if (!CV_ARE_SIZES_EQ(image2Draw_mat,mat))
 	{
-		cvReleaseImage(&image2Draw_ipl);
-
+		cvReleaseMat(&image2Draw_mat);
 		//the image in ipl (to do a deep copy with cvCvtColor)
-		image2Draw_ipl=cvCreateImage(cvGetSize(tempImage),IPL_DEPTH_8U,3);
-
-		//the ipl image in qt format (with shared memory)
-		//image2Draw_qt = QImage((uchar*) image2Draw_ipl->imageData, image2Draw_ipl->width, image2Draw_ipl->height,QImage::Format_RGB888);
-
-		//nbChannelOriginImage = tempImage->nChannels;
+		image2Draw_mat = cvCreateMat( mat->rows, mat->cols, CV_8UC3 );
 
 		updateGeometry();
 	}
 
-	nbChannelOriginImage = tempImage->nChannels;
+	nbChannelOriginImage = cvGetElemType(mat);
 
-
-	//cvCvtColor(tempImage,image2Draw_ipl,CV_BGR2RGB);//will not work if tempImage is 1 channel !!
-	cvConvertImage(tempImage,image2Draw_ipl,CV_CVTIMG_SWAP_RB );
+	cvConvertImage(mat,image2Draw_mat,(origin != 0 ? CV_CVTIMG_FLIP : 0) + CV_CVTIMG_SWAP_RB );
 
 	viewport()->update();
 }
@@ -2463,8 +2596,6 @@ void ViewPort::icvmouseProcessing(QPointF pt, int cv_event, int flags)
 {
 	//to convert mouse coordinate
 	qreal pfx, pfy;
-	//qreal ratioX = float(image2Draw_qt.width())/image2Draw_qt_resized.width();
-	//qreal ratioY = float(image2Draw_qt.height())/image2Draw_qt_resized.height();
 	matrixWorld_inv.map(pt.x(),pt.y(),&pfx,&pfy);
 	
 	mouseCoordinate.rx()=floor(pfx/ratioX);
@@ -2477,26 +2608,23 @@ void ViewPort::icvmouseProcessing(QPointF pt, int cv_event, int flags)
 
 QSize ViewPort::sizeHint() const
 {
-	if(image2Draw_ipl)
-	{
-		//qDebug()<<centralWidget->param_name<<" "<<image2Draw_ipl->width<<" "<<image2Draw_ipl->height;
-		return QSize(image2Draw_ipl->width,image2Draw_ipl->height);
-	} else {
+	if(image2Draw_mat)
+		return QSize(image2Draw_mat->cols,image2Draw_mat->rows);
+	else
 		return QGraphicsView::sizeHint();
-	}
 }
 
 void ViewPort::resizeEvent ( QResizeEvent *event)
 {
 
 	controlImagePosition();
-	ratioX=width()/float(image2Draw_ipl->width);
-	ratioY=height()/float(image2Draw_ipl->height);
+	ratioX=width()/float(image2Draw_mat->cols);
+	ratioY=height()/float(image2Draw_mat->rows);
 
 	
 	if(param_keepRatio == CV_WINDOW_KEEPRATIO)//to keep the same aspect ratio
 	{
-		QSize newSize = QSize(image2Draw_ipl->width,image2Draw_ipl->height);
+		QSize newSize = QSize(image2Draw_mat->cols,image2Draw_mat->rows);
 		newSize.scale(event->size(),Qt::KeepAspectRatio);
 
 		//imageWidth/imageHeight = newWidth/newHeight +/- epsilon
@@ -2576,22 +2704,23 @@ void ViewPort::paintEvent(QPaintEvent* event)
 
 void ViewPort::draw2D(QPainter *painter)
 {
-	image2Draw_qt = QImage((uchar*) image2Draw_ipl->imageData, image2Draw_ipl->width, image2Draw_ipl->height,QImage::Format_RGB888);
+	image2Draw_qt = QImage((uchar*) image2Draw_mat->data.ptr, image2Draw_mat->cols, image2Draw_mat->rows,QImage::Format_RGB888);
 	image2Draw_qt_resized = image2Draw_qt.scaled(viewport()->width(),viewport()->height(),Qt::IgnoreAspectRatio,Qt::SmoothTransformation);
 	painter->drawImage(0,0,image2Draw_qt_resized);
 	//painter->drawImage(0,0,image2Draw_qt_resized);
 }
 
+//only if CV_8UC1 or CV_8UC3
 void ViewPort::drawStatusBar()
 {
 	if (mouseCoordinate.x()>=0 &&
 		mouseCoordinate.y()>=0 &&
-		mouseCoordinate.x()<image2Draw_ipl->width &&
-		mouseCoordinate.y()<image2Draw_ipl->height)
+		mouseCoordinate.x()<image2Draw_mat->cols &&
+		mouseCoordinate.y()<image2Draw_mat->rows)
 	{
 		QRgb rgbValue = image2Draw_qt.pixel(mouseCoordinate);
 
-		if (nbChannelOriginImage==3)
+		if (nbChannelOriginImage==CV_8UC3 )
 		{
 			centralWidget->myStatusBar_msg->setText(tr("<font color='black'>Coordinate: %1x%2 ~ </font>")
 				.arg(mouseCoordinate.x())
@@ -2600,7 +2729,10 @@ void ViewPort::drawStatusBar()
 				tr("<font color='green'>G:%4 </font>").arg(qGreen(rgbValue))+//.arg(value.val[1])+
 				tr("<font color='blue'>B:%5</font>").arg(qBlue(rgbValue))//.arg(value.val[2])
 				);
-		}else{
+		}
+
+		if (nbChannelOriginImage==CV_8UC1)
+		{
 			//all the channel have the same value (because of cvconvertimage), so only the r channel is dsplayed
 			centralWidget->myStatusBar_msg->setText(tr("<font color='black'>Coordinate: %1x%2 ~ </font>")
 				.arg(mouseCoordinate.x())
@@ -2640,9 +2772,6 @@ void ViewPort::drawImgRegion(QPainter *painter)
 
 	QPointF point1;//sorry, I do not know how to name it
 	QPointF point2;//idem
-
-	//qreal ratioX = float(image2Draw_qt.width())/image2Draw_qt_resized.width();
-	//qreal ratioY = float(image2Draw_qt.height())/image2Draw_qt_resized.height();
 
 	for (int j=-1;j<height()/param_matrixWorld.m11();j++)//-1 because display the pixels top rows left colums
 		for (int i=-1;i<width()/param_matrixWorld.m11();i++)//-1
