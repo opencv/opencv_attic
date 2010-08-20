@@ -456,9 +456,9 @@ void cv::evaluateDescriptorMatch( const Mat& img1, const Mat& img2, const Mat& H
                                   vector<KeyPoint>& keypoints1, vector<KeyPoint>& keypoints2,
                                   vector<vector<DMatch> >* _matches1to2, vector<vector<uchar> >* _correctMatches1to2Mask,
                                   vector<Point2f>& recallPrecisionCurve,
-                                  const Ptr<GenericDescriptorMatch>& _dmatch )
+                                  const Ptr<GenericDescriptorMatcher>& _dmatch )
 {
-    Ptr<GenericDescriptorMatch> dmatch = _dmatch;
+    Ptr<GenericDescriptorMatcher> dmatch = _dmatch;
     dmatch->clear();
 
     vector<vector<DMatch> > *matches1to2, buf1;
@@ -501,8 +501,8 @@ void cv::evaluateDescriptorMatch( const Mat& img1, const Mat& img2, const Mat& H
         (*correctMatches1to2Mask)[i].resize((*matches1to2)[i].size());
         for( size_t j = 0;j < (*matches1to2)[i].size(); j++ )
         {
-            int indexQuery = (*matches1to2)[i][j].indexQuery;
-            int indexTrain = (*matches1to2)[i][j].indexTrain;
+            int indexQuery = (*matches1to2)[i][j].queryPointIdx;
+            int indexTrain = (*matches1to2)[i][j].trainPointIdx;
             (*correctMatches1to2Mask)[i][j] = thresholdedOverlapMask( indexQuery, indexTrain );
             ddd += thresholdedOverlapMask( indexQuery, indexTrain ) != 0 ? 1 : 0;
         }

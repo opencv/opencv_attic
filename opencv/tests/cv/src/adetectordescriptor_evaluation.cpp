@@ -842,8 +842,8 @@ protected:
     };
     vector<CommonRunParams> commRunParams;
 
-    Ptr<GenericDescriptorMatch> specificDescMatch;
-    Ptr<GenericDescriptorMatch> defaultDescMatch;
+    Ptr<GenericDescriptorMatcher> specificDescMatch;
+    Ptr<GenericDescriptorMatcher> defaultDescMatch;
 
     CommonRunParams commRunParamsDefault;
     string matcherName;
@@ -965,15 +965,15 @@ void DescriptorQualityTest::writePlotData( int di ) const
 
 void DescriptorQualityTest::readAlgorithm( )
 {
-    defaultDescMatch = createGenericDescriptorMatch( algName );
-    specificDescMatch = createGenericDescriptorMatch( algName );
+    defaultDescMatch = createGenericDescriptorMatcher( algName );
+    specificDescMatch = createGenericDescriptorMatcher( algName );
 
     if( defaultDescMatch == 0 )
     {
         Ptr<DescriptorExtractor> extractor = createDescriptorExtractor( algName );
         Ptr<DescriptorMatcher> matcher = createDescriptorMatcher( matcherName );
-        defaultDescMatch = new VectorDescriptorMatch( extractor, matcher );
-        specificDescMatch = new VectorDescriptorMatch( extractor, matcher );
+        defaultDescMatch = new VectorDescriptorMatcher( extractor, matcher );
+        specificDescMatch = new VectorDescriptorMatcher( extractor, matcher );
 
         if( extractor == 0 || matcher == 0 )
         {
@@ -1048,7 +1048,7 @@ void DescriptorQualityTest::runDatasetTest (const vector<Mat> &imgs, const vecto
        return;
     }
 
-    Ptr<GenericDescriptorMatch> descMatch = commRunParams[di].isActiveParams ? specificDescMatch : defaultDescMatch;
+    Ptr<GenericDescriptorMatcher> descMatch = commRunParams[di].isActiveParams ? specificDescMatch : defaultDescMatch;
     calcQuality[di].resize(TEST_CASE_COUNT);
 
     vector<KeyPoint> keypoints1;
@@ -1150,8 +1150,8 @@ void OneWayDescriptorQualityTest::processRunParamsFile ()
     OneWayDescriptorBase *base = new OneWayDescriptorBase(patchSize, poseCount, pcaFilename,
                                                trainPath, trainImagesList);
 
-    OneWayDescriptorMatch *match = new OneWayDescriptorMatch ();
-    match->initialize( OneWayDescriptorMatch::Params (), base );
+    OneWayDescriptorMatcher *match = new OneWayDescriptorMatcher ();
+    match->initialize( OneWayDescriptorMatcher::Params (), base );
     defaultDescMatch = match;
     writeAllDatasetsRunParams();
 }

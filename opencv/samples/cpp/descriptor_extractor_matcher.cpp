@@ -35,93 +35,93 @@ void doIteration( const Mat& img1, Mat& img2, bool isWarpPerspective,
                   Ptr<DescriptorMatcher>& descriptorMatcher,
                   double ransacReprojThreshold, RNG& rng )
 {
-    assert( !img1.empty() );
-    Mat H12;
-    if( isWarpPerspective )
-        warpPerspectiveRand(img1, img2, H12, rng );
-    else
-        assert( !img2.empty()/* && img2.cols==img1.cols && img2.rows==img1.rows*/ );
+//    assert( !img1.empty() );
+//    Mat H12;
+//    if( isWarpPerspective )
+//        warpPerspectiveRand(img1, img2, H12, rng );
+//    else
+//        assert( !img2.empty()/* && img2.cols==img1.cols && img2.rows==img1.rows*/ );
 
-    cout << endl << "< Extracting keypoints from second image..." << endl;
-    vector<KeyPoint> keypoints2;
-    detector->detect( img2, keypoints2 );
-    cout << keypoints2.size() << " points" << endl << ">" << endl;
+//    cout << endl << "< Extracting keypoints from second image..." << endl;
+//    vector<KeyPoint> keypoints2;
+//    detector->detect( img2, keypoints2 );
+//    cout << keypoints2.size() << " points" << endl << ">" << endl;
 
-    if( !H12.empty() )
-    {
-        cout << "< Evaluate feature detector..." << endl;
-        float repeatability;
-        int correspCount;
-        evaluateFeatureDetector( img1, img2, H12, &keypoints1, &keypoints2, repeatability, correspCount );
-        cout << "repeatability = " << repeatability << endl;
-        cout << "correspCount = " << correspCount << endl;
-        cout << ">" << endl;
-    }
+//    if( !H12.empty() )
+//    {
+//        cout << "< Evaluate feature detector..." << endl;
+//        float repeatability;
+//        int correspCount;
+//        evaluateFeatureDetector( img1, img2, H12, &keypoints1, &keypoints2, repeatability, correspCount );
+//        cout << "repeatability = " << repeatability << endl;
+//        cout << "correspCount = " << correspCount << endl;
+//        cout << ">" << endl;
+//    }
 
-    cout << "< Computing descriptors for keypoints from second image..." << endl;
-    Mat descriptors2;
-    descriptorExtractor->compute( img2, keypoints2, descriptors2 );
-    cout << ">" << endl;
+//    cout << "< Computing descriptors for keypoints from second image..." << endl;
+//    Mat descriptors2;
+//    descriptorExtractor->compute( img2, keypoints2, descriptors2 );
+//    cout << ">" << endl;
 
-    cout << "< Matching descriptors..." << endl;
-    vector<int> matches;
-    descriptorMatcher->clear();
-    descriptorMatcher->add( descriptors2 );
-    descriptorMatcher->match( descriptors1, matches );
-    cout << ">" << endl;
+//    cout << "< Matching descriptors..." << endl;
+//    vector<DMatch> matches;
+//    descriptorMatcher->clear();
+//    descriptorMatcher->add( descriptors2 );
+//    descriptorMatcher->match( descriptors1, matches );
+//    cout << ">" << endl;
 
-    if( !H12.empty() )
-    {
-        cout << "< Evaluate descriptor match..." << endl;
-        vector<Point2f> curve;
-        Ptr<GenericDescriptorMatch> gdm = new VectorDescriptorMatch( descriptorExtractor, descriptorMatcher );
-        evaluateDescriptorMatch( img1, img2, H12, keypoints1, keypoints2, 0, 0, curve, gdm );
-        for( float l_p = 0; l_p < 1 - FLT_EPSILON; l_p+=0.1 )
-            cout << "1-precision = " << l_p << "; recall = " << getRecall( curve, l_p ) << endl;
-        cout << ">" << endl;
-    }
+//    if( !H12.empty() )
+//    {
+//        cout << "< Evaluate descriptor match..." << endl;
+//        vector<Point2f> curve;
+//        Ptr<GenericDescriptorMatcher> gdm = new VectorDescriptorMatcher( descriptorExtractor, descriptorMatcher );
+//        evaluateDescriptorMatch( img1, img2, H12, keypoints1, keypoints2, 0, 0, curve, gdm );
+//        for( float l_p = 0; l_p < 1 - FLT_EPSILON; l_p+=0.1 )
+//            cout << "1-precision = " << l_p << "; recall = " << getRecall( curve, l_p ) << endl;
+//        cout << ">" << endl;
+//    }
 
-    if( !isWarpPerspective && ransacReprojThreshold >= 0 )
-    {
-        cout << "< Computing homography (RANSAC)..." << endl;
-        vector<Point2f> points1; KeyPoint::convert(keypoints1, points1);
-        vector<Point2f> points2; KeyPoint::convert(keypoints2, points2, matches);
-        H12 = findHomography( Mat(points1), Mat(points2), CV_RANSAC, ransacReprojThreshold );
-        cout << ">" << endl;
-    }
+//    if( !isWarpPerspective && ransacReprojThreshold >= 0 )
+//    {
+//        cout << "< Computing homography (RANSAC)..." << endl;
+//        vector<Point2f> points1; KeyPoint::convert(keypoints1, points1);
+//        vector<Point2f> points2; KeyPoint::convert(keypoints2, points2, matches);
+//        H12 = findHomography( Mat(points1), Mat(points2), CV_RANSAC, ransacReprojThreshold );
+//        cout << ">" << endl;
+//    }
 
-    Mat drawImg;
-    if( !H12.empty() ) // filter outliers
-    {
-        vector<char> matchesMask( matches.size(), 0 );
-        vector<Point2f> points1; KeyPoint::convert(keypoints1, points1);
-        vector<Point2f> points2; KeyPoint::convert(keypoints2, points2, matches);
-        Mat points1t; perspectiveTransform(Mat(points1), points1t, H12);
-        vector<int>::const_iterator mit = matches.begin();
-        for( size_t i1 = 0; i1 < points1.size(); i1++ )
-        {
-            if( norm(points2[i1] - points1t.at<Point2f>(i1,0)) < 4 ) // inlier
-                matchesMask[i1] = 1;
-        }
-        // draw inliers
-        drawMatches( img1, keypoints1, img2, keypoints2, matches, drawImg, CV_RGB(0, 255, 0), CV_RGB(0, 0, 255), matchesMask
-#if DRAW_RICH_KEYPOINTS_MODE
-                     , DrawMatchesFlags::DRAW_RICH_KEYPOINTS
-#endif
-                   );
+//    Mat drawImg;
+//    if( !H12.empty() ) // filter outliers
+//    {
+//        vector<char> matchesMask( matches.size(), 0 );
+//        vector<Point2f> points1; KeyPoint::convert(keypoints1, points1);
+//        vector<Point2f> points2; KeyPoint::convert(keypoints2, points2, matches);
+//        Mat points1t; perspectiveTransform(Mat(points1), points1t, H12);
+//        vector<int>::const_iterator mit = matches.begin();
+//        for( size_t i1 = 0; i1 < points1.size(); i1++ )
+//        {
+//            if( norm(points2[i1] - points1t.at<Point2f>(i1,0)) < 4 ) // inlier
+//                matchesMask[i1] = 1;
+//        }
+//        // draw inliers
+//        drawMatches( img1, keypoints1, img2, keypoints2, matches, drawImg, CV_RGB(0, 255, 0), CV_RGB(0, 0, 255), matchesMask
+//#if DRAW_RICH_KEYPOINTS_MODE
+//                     , DrawMatchesFlags::DRAW_RICH_KEYPOINTS
+//#endif
+//                   );
 
-#if DRAW_OUTLIERS_MODE
-        // draw outliers
-        for( size_t i1 = 0; i1 < matchesMask.size(); i1++ )
-            matchesMask[i1] = !matchesMask[i1];
-        drawMatches( img1, keypoints1, img2, keypoints2, matches, drawImg, CV_RGB(0, 0, 255), CV_RGB(255, 0, 0), matchesMask,
-                     DrawMatchesFlags::DRAW_OVER_OUTIMG | DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS );
-#endif
-    }
-    else
-        drawMatches( img1, keypoints1, img2, keypoints2, matches, drawImg );
+//#if DRAW_OUTLIERS_MODE
+//        // draw outliers
+//        for( size_t i1 = 0; i1 < matchesMask.size(); i1++ )
+//            matchesMask[i1] = !matchesMask[i1];
+//        drawMatches( img1, keypoints1, img2, keypoints2, matches, drawImg, CV_RGB(0, 0, 255), CV_RGB(255, 0, 0), matchesMask,
+//                     DrawMatchesFlags::DRAW_OVER_OUTIMG | DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS );
+//#endif
+//    }
+//    else
+//        drawMatches( img1, keypoints1, img2, keypoints2, matches, drawImg );
 
-    imshow( winName, drawImg );
+//    imshow( winName, drawImg );
 }
 
 int main(int argc, char** argv)
@@ -150,7 +150,7 @@ int main(int argc, char** argv)
     {
         cout << "Can not create detector or descriptor exstractor or descriptor matcher of given types" << endl;
         return -1;
-	}
+    }
 		
     cout << "< Reading the images..." << endl;
     Mat img1 = imread( argv[3], CV_LOAD_IMAGE_GRAYSCALE), img2;

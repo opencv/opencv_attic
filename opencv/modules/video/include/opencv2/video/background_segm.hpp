@@ -375,7 +375,7 @@ public:
  The class implements the following algorithm:
  "An improved adaptive background mixture model for real-time tracking with shadow detection"
  P. KadewTraKuPong and R. Bowden,
- Proc. 2nd European Workshp on Advanced Video-Based Surveillance Systems, 2001."
+ Proc. 2nd European Workshp on Advanced Video-Based Surveillance Systems, 2001.
  http://personal.ee.surrey.ac.uk/Personal/R.Bowden/publications/avbs01/avbs01.pdf
  
 */
