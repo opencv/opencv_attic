@@ -483,7 +483,7 @@ void BruteForceMatcher<L2<float> >::matchImpl( const Mat& query, const Mat& mask
         Mat distances = (-2)*query.row(i)*desc_2t;
         distances += norms;
         DMatch match;
-        match.indexTrain = -1;
+        match.trainPointIdx = -1;
         double minVal;
         Point minLoc;
         if( mask.empty() )
@@ -494,11 +494,11 @@ void BruteForceMatcher<L2<float> >::matchImpl( const Mat& query, const Mat& mask
         {
             minMaxLoc ( distances, &minVal, 0, &minLoc, 0, mask.row( i ) );
         }
-        match.indexTrain = minLoc.x;
+        match.trainPointIdx = minLoc.x;
 
-        if( match.indexTrain != -1 )
+        if( match.trainPointIdx != -1 )
         {
-            match.indexQuery = i;
+            match.queryPointIdx = i;
             double queryNorm = norm( query.row(i) );
             match.distance = (float)sqrt( minVal + queryNorm*queryNorm );
             matches.push_back( match );
@@ -778,8 +778,8 @@ void OneWayDescriptorMatcher::match( const Mat& image, vector<KeyPoint>& points,
         //int poseIdx = -1;
 
         DMatch match;
-        match.indexQuery = i;
-        match.indexTrain = -1;
+        match.queryPointIdx = i;
+        match.trainPointIdx = -1;
 
 
         CvPoint pt = points[i].pt;
@@ -799,7 +799,7 @@ void OneWayDescriptorMatcher::match( const Mat& image, vector<KeyPoint>& points,
 
         for( int j=0;j<n;j++ )
         {
-            match.indexTrain = desc_idxs[j];
+            match.trainPointIdx = desc_idxs[j];
             match.distance = distances[j];
             matches[i].push_back( match );
         }
@@ -807,13 +807,13 @@ void OneWayDescriptorMatcher::match( const Mat& image, vector<KeyPoint>& points,
         //sort( matches[i].begin(), matches[i].end(), compareIndexTrain );
         //for( int j=0;j<n;j++ )
         //{
-            //printf( "%d %f;  ",matches[i][j].indexTrain, matches[i][j].distance);
+            //printf( "%d %f;  ",matches[i][j].trainPointIdx, matches[i][j].distance);
         //}
         //printf("\n\n\n");
 
 
 
-        //base->FindDescriptor( &_image, 100, points[i].pt, match.indexTrain, poseIdx, match.distance );
+        //base->FindDescriptor( &_image, 100, points[i].pt, match.trainPointIdx, poseIdx, match.distance );
         //matches[i].push_back( match );
     }
     */
