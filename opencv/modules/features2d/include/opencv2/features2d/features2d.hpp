@@ -1585,8 +1585,13 @@ struct CV_EXPORTS L1
  */
 struct CV_EXPORTS DMatch
 {
-    int indexTrain;
-    int indexQuery;
+    DMatch() : queryIdx(-1), trainIdx(-1), distance(std::numeric_limits<float>::max()) {}
+    DMatch( int _queryIdx, int _trainIdx, float _distance ) :
+            queryIdx(_queryIdx), trainIdx(_trainIdx), distance(_distance) {}
+
+    int queryIdx;
+    int trainIdx;
+
     float distance;
 
     //less is better
@@ -1745,7 +1750,7 @@ void BruteForceMatcher<Distance>::matchImpl( const Mat& query, const Mat& train,
     matches.resize( fullMatches.size() );
     for( size_t i=0;i<fullMatches.size();i++)
     {
-        matches[i] = fullMatches[i].indexTrain;
+        matches[i] = fullMatches[i].trainIdx;
     }
 }
 
@@ -1786,13 +1791,7 @@ void BruteForceMatcher<Distance>::matchImpl( const Mat& query, const Mat& train,
         }
 
         if( matchIndex != -1 )
-        {
-            DMatch match;
-            match.indexTrain = matchIndex;
-            match.indexQuery = i;
-            match.distance = matchDistance;
-            matches.push_back( match );
-        }
+            matches.push_back( DMatch( i, matchIndex, matchDistance) );
     }
 }
 
@@ -1824,13 +1823,7 @@ void BruteForceMatcher<Distance>::matchImpl( const Mat& query, const Mat& train,
                 const ValueType* d2 = (const ValueType*)(train.data + train.step*j);
                 DistanceType curDistance = distance(d1, d2, dimension);
                 if( curDistance < threshold )
-                {
-                    DMatch match;
-                    match.distance = curDistance;
-                    match.indexQuery = i;
-                    match.indexTrain = j;
-                    matches[i].push_back( match );
-                }
+                    matches[i].push_back( DMatch( i, j, curDistance) );
             }
         }
     }

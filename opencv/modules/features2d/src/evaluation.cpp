@@ -501,8 +501,8 @@ void cv::evaluateDescriptorMatch( const Mat& img1, const Mat& img2, const Mat& H
         (*correctMatches1to2Mask)[i].resize((*matches1to2)[i].size());
         for( size_t j = 0;j < (*matches1to2)[i].size(); j++ )
         {
-            int indexQuery = (*matches1to2)[i][j].indexQuery;
-            int indexTrain = (*matches1to2)[i][j].indexTrain;
+            int indexQuery = (*matches1to2)[i][j].queryIdx;
+            int indexTrain = (*matches1to2)[i][j].trainIdx;
             (*correctMatches1to2Mask)[i][j] = thresholdedOverlapMask( indexQuery, indexTrain );
             ddd += thresholdedOverlapMask( indexQuery, indexTrain ) != 0 ? 1 : 0;
         }

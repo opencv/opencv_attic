@@ -81,7 +81,7 @@ void doIteration( const Mat& img1, Mat& img2, bool isWarpPerspective,
 
     vector<int> trainIdxs( matches.size() );
     for( size_t i = 0; i < matches.size(); i++ )
-        trainIdxs[i] = matches[i].indexTrain;
+        trainIdxs[i] = matches[i].trainIdx;
 
     if( !isWarpPerspective && ransacReprojThreshold >= 0 )
     {
