@@ -1210,11 +1210,40 @@ protected:
 
 };
 
+/****************************************************************************************\
+*                                  Keypoints collection                                  *
+\****************************************************************************************/
+/*
+ * A storage for sets of keypoints together with corresponding images and class IDs
+ */
+class CV_EXPORTS KeyPointCollection
+{
+public:
+    // Adds keypoints from a single image to the storage
+    // image    Source image
+    // points   A vector of keypoints
+    void add( const Mat& _image, const vector<KeyPoint>& _points );
+
+    // Returns the total number of keypoints in the collection
+    size_t calcKeypointCount() const;
+
+    // Returns the keypoint by its global index
+    KeyPoint getKeyPoint( int index ) const;
+
+    // Clears images, keypoints and startIndices
+    void clear();
+
+    vector<Mat> images;
+    vector<vector<KeyPoint> > points;
+
+    // global indices of the first points in each image,
+    // startIndices.size() = points.size()
+    vector<int> startIndices;
+};
 
 /****************************************************************************************\
 *                                    FeatureDetector                                     *
 \****************************************************************************************/
-
 /*
  * Abstract base class for 2D image feature detectors.
  */
@@ -1233,9 +1262,17 @@ public:
      */
     void detect( const Mat& image, vector<KeyPoint>& keypoints, const Mat& mask=Mat() ) const
     {
-        detectImpl( image, mask, keypoints );
+        detectImpl( image, keypoints, mask );
     }
-    
+
+    /*
+     * Detect keypoints in an image set.
+     * images           Images.
+     * pointCollection  Collection of keypoints detected in an input images.
+     * masks            Masks for each input image.
+     */
+    void detect( const vector<Mat>& images, KeyPointCollection& pointCollection, const vector<Mat>& masks=vector<Mat>() ) const;
+
     virtual void read(const FileNode&) {}
     virtual void write(FileStorage&) const {}
 
@@ -1243,7 +1280,7 @@ protected:
     /*
      * Detect keypoints; detect() calls this. Must be implemented by the subclass.
      */
-    virtual void detectImpl( const Mat& image, const Mat& mask, vector<KeyPoint>& keypoints ) const = 0;
+    virtual void detectImpl( const Mat& image, vector<KeyPoint>& keypoints, const Mat& mask ) const = 0;
 
     /*
      * Remove keypoints that are not in the mask.
@@ -1263,7 +1300,7 @@ public:
     virtual void write (FileStorage& fs) const;
 
 protected:
-    virtual void detectImpl( const Mat& image, const Mat& mask, vector<KeyPoint>& keypoints ) const;
+    virtual void detectImpl( const Mat& image, vector<KeyPoint>& keypoints, const Mat& mask ) const;
 
     int threshold;
     bool nonmaxSuppression;
@@ -1280,7 +1317,7 @@ public:
     virtual void write (FileStorage& fs) const;
 
 protected:
-    virtual void detectImpl( const Mat& image, const Mat& mask, vector<KeyPoint>& keypoints ) const;
+    virtual void detectImpl( const Mat& image, vector<KeyPoint>& keypoints, const Mat& mask ) const;
 
     int maxCorners;
     double qualityLevel;
@@ -1301,7 +1338,7 @@ public:
     virtual void write (FileStorage& fs) const;
 
 protected:
-    virtual void detectImpl( const Mat& image, const Mat& mask, vector<KeyPoint>& keypoints ) const;
+    virtual void detectImpl( const Mat& image, vector<KeyPoint>& keypoints, const Mat& mask ) const;
 
     MSER mser;
 };
@@ -1316,7 +1353,7 @@ public:
     virtual void write (FileStorage& fs) const;
 
 protected:
-    virtual void detectImpl( const Mat& image, const Mat& mask, vector<KeyPoint>& keypoints ) const;
+    virtual void detectImpl( const Mat& image, vector<KeyPoint>& keypoints, const Mat& mask ) const;
 
     StarDetector star;
 };
@@ -1335,7 +1372,7 @@ public:
     virtual void write (FileStorage& fs) const;
 
 protected:
-    virtual void detectImpl( const Mat& image, const Mat& mask, vector<KeyPoint>& keypoints ) const;
+    virtual void detectImpl( const Mat& image, vector<KeyPoint>& keypoints, const Mat& mask ) const;
 
     SIFT sift;
 };
@@ -1349,7 +1386,7 @@ public:
     virtual void write (FileStorage& fs) const;
 
 protected:
-    virtual void detectImpl( const Mat& image, const Mat& mask, vector<KeyPoint>& keypoints ) const;
+    virtual void detectImpl( const Mat& image, vector<KeyPoint>& keypoints, const Mat& mask ) const;
 
     SURF surf;
 };
@@ -1373,7 +1410,7 @@ protected:
     int gridRows;
     int gridCols;
 
-    virtual void detectImpl( const Mat& image, const Mat& mask, vector<KeyPoint>& keypoints ) const;
+    virtual void detectImpl( const Mat& image, vector<KeyPoint>& keypoints, const Mat& mask ) const;
 };
 
 /*
@@ -1391,7 +1428,7 @@ protected:
     Ptr<FeatureDetector> detector;
     int levels;
 
-    virtual void detectImpl( const Mat& image, const Mat& mask, vector<KeyPoint>& keypoints ) const;
+    virtual void detectImpl( const Mat& image, vector<KeyPoint>& keypoints, const Mat& mask ) const;
 };
 
 
@@ -1837,34 +1874,6 @@ CV_EXPORTS Ptr<DescriptorMatcher> createDescriptorMatcher( const string& descrip
 /****************************************************************************************\
 *                                GenericDescriptorMatch                                  *
 \****************************************************************************************/
-/*
- * A storage for sets of keypoints together with corresponding images and class IDs
- */
-class CV_EXPORTS KeyPointCollection
-{
-public:
-    // Adds keypoints from a single image to the storage
-    // image    Source image
-    // points   A vector of keypoints
-    void add( const Mat& _image, const vector<KeyPoint>& _points );
-
-    // Returns the total number of keypoints in the collection
-    size_t calcKeypointCount() const;
-
-    // Returns the keypoint by its global index
-    KeyPoint getKeyPoint( int index ) const;
-
-    // Clears images, keypoints and startIndices
-    void clear();
-
-    vector<Mat> images;
-    vector<vector<KeyPoint> > points;
-
-    // global indices of the first points in each image,
-    // startIndices.size() = points.size()
-    vector<int> startIndices;
-};
-
 /*
  *   Abstract interface for a keypoint descriptor
  */

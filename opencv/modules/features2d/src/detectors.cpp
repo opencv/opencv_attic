@@ -61,6 +61,17 @@ struct MaskPredicate
     const Mat& mask;
 };
 
+void FeatureDetector::detect(const vector<Mat>& images, KeyPointCollection& pointCollection, const vector<Mat>& masks ) const
+{
+    pointCollection.clear();
+    for( size_t i = 0; i < images.size(); i++ )
+    {
+        vector<KeyPoint> keypoints;
+        detect( images[i], keypoints, masks.empty() ? Mat() : masks[i] );
+        pointCollection.add( images[i], keypoints );
+    }
+}
+
 void FeatureDetector::removeInvalidPoints( const Mat& mask, vector<KeyPoint>& keypoints )
 {
     if( mask.empty() )
@@ -88,7 +99,7 @@ void FastFeatureDetector::write (FileStorage& fs) const
     fs << "nonmaxSuppression" << nonmaxSuppression;
 }
 
-void FastFeatureDetector::detectImpl( const Mat& image, const Mat& mask, vector<KeyPoint>& keypoints) const
+void FastFeatureDetector::detectImpl( const Mat& image, vector<KeyPoint>& keypoints, const Mat& mask ) const
 {
     FAST( image, keypoints, threshold, nonmaxSuppression );
     removeInvalidPoints( mask, keypoints );
@@ -124,8 +135,7 @@ void GoodFeaturesToTrackDetector::write (FileStorage& fs) const
     fs << "k" << k;
 }
 
-void GoodFeaturesToTrackDetector::detectImpl( const Mat& image, const Mat& mask,
-                                              vector<KeyPoint>& keypoints ) const
+void GoodFeaturesToTrackDetector::detectImpl( const Mat& image, vector<KeyPoint>& keypoints, const Mat& mask ) const
 {
     vector<Point2f> corners;
     goodFeaturesToTrack( image, corners, maxCorners, qualityLevel, minDistance, mask,
@@ -187,7 +197,7 @@ void MserFeatureDetector::write (FileStorage& fs) const
 }
 
 
-void MserFeatureDetector::detectImpl( const Mat& image, const Mat& mask, vector<KeyPoint>& keypoints ) const
+void MserFeatureDetector::detectImpl( const Mat& image, vector<KeyPoint>& keypoints, const Mat& mask ) const
 {
     vector<vector<Point> > msers;
     mser(image, msers, mask);
@@ -237,7 +247,7 @@ void StarFeatureDetector::write (FileStorage& fs) const
     fs << "suppressNonmaxSize" << star.suppressNonmaxSize;
 }
 
-void StarFeatureDetector::detectImpl( const Mat& image, const Mat& mask, vector<KeyPoint>& keypoints) const
+void StarFeatureDetector::detectImpl( const Mat& image, vector<KeyPoint>& keypoints, const Mat& mask ) const
 {
     star(image, keypoints);
     removeInvalidPoints(mask, keypoints);
@@ -279,8 +289,7 @@ void SiftFeatureDetector::write (FileStorage& fs) const
 }
 
 
-void SiftFeatureDetector::detectImpl( const Mat& image, const Mat& mask,
-                                      vector<KeyPoint>& keypoints) const
+void SiftFeatureDetector::detectImpl( const Mat& image, vector<KeyPoint>& keypoints, const Mat& mask ) const
 {
     sift(image, mask, keypoints);
 }
@@ -310,8 +319,7 @@ void SurfFeatureDetector::write (FileStorage& fs) const
     fs << "octaveLayers" << surf.nOctaveLayers;
 }
 
-void SurfFeatureDetector::detectImpl( const Mat& image, const Mat& mask,
-                                      vector<KeyPoint>& keypoints) const
+void SurfFeatureDetector::detectImpl( const Mat& image, vector<KeyPoint>& keypoints, const Mat& mask ) const
 {
     surf(image, mask, keypoints);
 }
@@ -386,8 +394,7 @@ void keepStrongest( int N, vector<KeyPoint>& keypoints )
     }
 }
 
-void GridAdaptedFeatureDetector::detectImpl( const Mat &image, const Mat &mask,
-                                             vector<KeyPoint> &keypoints ) const
+void GridAdaptedFeatureDetector::detectImpl( const Mat &image, vector<KeyPoint> &keypoints, const Mat &mask ) const
 {
     keypoints.clear();
     keypoints.reserve(maxTotalKeypoints);
@@ -426,7 +433,7 @@ PyramidAdaptedFeatureDetector::PyramidAdaptedFeatureDetector( const Ptr<FeatureD
     : detector(_detector), levels(_levels)
 {}
 
-void PyramidAdaptedFeatureDetector::detectImpl( const Mat& image, const Mat& mask, vector<KeyPoint>& keypoints ) const
+void PyramidAdaptedFeatureDetector::detectImpl( const Mat& image, vector<KeyPoint>& keypoints, const Mat& mask ) const
 {
     Mat src = image;
     for( int l = 0, multiplier = 1; l <= levels; ++l, multiplier *= 2 )
