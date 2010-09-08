@@ -61,15 +61,11 @@ struct MaskPredicate
     const Mat& mask;
 };
 
-void FeatureDetector::detect(const vector<Mat>& images, KeyPointCollection& pointCollection, const vector<Mat>& masks ) const
+void FeatureDetector::detect(const vector<Mat>& imageCollection, vector<vector<KeyPoint> >& pointCollection, const vector<Mat>& masks ) const
 {
-    pointCollection.clear();
-    for( size_t i = 0; i < images.size(); i++ )
-    {
-        vector<KeyPoint> keypoints;
-        detect( images[i], keypoints, masks.empty() ? Mat() : masks[i] );
-        pointCollection.add( images[i], keypoints );
-    }
+    pointCollection.resize( imageCollection.size() );
+    for( size_t i = 0; i < imageCollection.size(); i++ )
+        detectImpl( imageCollection[i], pointCollection[i], masks.empty() ? Mat() : masks[i] );
 }
 
 void FeatureDetector::removeInvalidPoints( const Mat& mask, vector<KeyPoint>& keypoints )

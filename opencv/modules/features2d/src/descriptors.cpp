@@ -225,8 +225,8 @@ void drawMatches( const Mat& img1, const vector<KeyPoint>& keypoints1,
     // draw matches
     for( size_t m = 0; m < matches1to2.size(); m++ )
     {
-        int i1 = matches1to2[m].queryIdx;
-        int i2 = matches1to2[m].trainIdx;
+        int i1 = matches1to2[m].queryDescIdx;
+        int i2 = matches1to2[m].trainDescIdx;
         if( matchesMask.empty() || matchesMask[m] )
         {
             const KeyPoint &kp1 = keypoints1[i1], &kp2 = keypoints2[i2];
@@ -253,8 +253,8 @@ void drawMatches( const Mat& img1, const vector<KeyPoint>& keypoints1,
     {
         for( size_t j = 0; j < matches1to2[i].size(); j++ )
         {
-            int i1 = matches1to2[i][j].queryIdx;
-            int i2 = matches1to2[i][j].trainIdx;
+            int i1 = matches1to2[i][j].queryDescIdx;
+            int i2 = matches1to2[i][j].trainDescIdx;
             if( matchesMask.empty() || matchesMask[i][j] )
             {
                 const KeyPoint &kp1 = keypoints1[i1], &kp2 = keypoints2[i2];
@@ -285,6 +285,13 @@ struct RoiPredicate
     float minX, minY, maxX, maxY;
 };
 
+void DescriptorExtractor::compute( const vector<Mat>& imageCollection, vector<vector<KeyPoint> >& pointCollection, vector<Mat>& descCollection ) const
+{
+    descCollection.resize( imageCollection.size() );
+    for( size_t i = 0; i < imageCollection.size(); i++ )
+        computeImpl( imageCollection[i], pointCollection[i], descCollection[i]);
+}
+
 void DescriptorExtractor::removeBorderKeypoints( vector<KeyPoint>& keypoints,
                                                  Size imageSize, int borderPixels )
 {
@@ -303,9 +310,7 @@ SiftDescriptorExtractor::SiftDescriptorExtractor( double magnification, bool isN
     : sift( magnification, isNormalize, recalculateAngles, nOctaves, nOctaveLayers, firstOctave, angleMode )
 {}
 
-void SiftDescriptorExtractor::compute( const Mat& image,
-                                       vector<KeyPoint>& keypoints,
-                                       Mat& descriptors) const
+void SiftDescriptorExtractor::computeImpl( const Mat& image, vector<KeyPoint>& keypoints, Mat& descriptors) const
 {
     bool useProvidedKeypoints = true;
     sift(image, Mat(), keypoints, descriptors, useProvidedKeypoints);
@@ -347,9 +352,7 @@ SurfDescriptorExtractor::SurfDescriptorExtractor( int nOctaves,
     : surf( 0.0, nOctaves, nOctaveLayers, extended )
 {}
 
-void SurfDescriptorExtractor::compute( const Mat& image,
-                                       vector<KeyPoint>& keypoints,
-                                       Mat& descriptors) const
+void SurfDescriptorExtractor::computeImpl( const Mat& image, vector<KeyPoint>& keypoints, Mat& descriptors ) const
 {
     // Compute descriptors for given keypoints
     vector<float> _descriptors;
@@ -511,7 +514,7 @@ void BruteForceMatcher<L2<float> >::matchImpl( const Mat& query, const Mat& trai
         Mat distances = (-2)*query.row(i)*desc_2t;
         distances += norms;
         DMatch match;
-        match.trainIdx = -1;
+        match.trainDescIdx = -1;
         double minVal;
         Point minLoc;
         if( mask.empty() )
@@ -522,11 +525,11 @@ void BruteForceMatcher<L2<float> >::matchImpl( const Mat& query, const Mat& trai
         {
             minMaxLoc ( distances, &minVal, 0, &minLoc, 0, mask.row( i ) );
         }
-        match.trainIdx = minLoc.x;
+        match.trainDescIdx = minLoc.x;
 
-        if( match.trainIdx != -1 )
+        if( match.trainDescIdx != -1 )
         {
-            match.queryIdx = i;
+            match.queryDescIdx = i;
             double queryNorm = norm( query.row(i) );
             match.distance = (float)sqrt( minVal + queryNorm*queryNorm );
             matches.push_back( match );
@@ -548,8 +551,8 @@ void BruteForceMatcher<L2<float> >::matchImpl( const Mat& query, const Mat& trai
             Eigen::Matrix<float, Eigen::Dynamic, 1> distances = desc2*desc1t.col(i);
             distances -= norms;
             DMatch match;
-            match.queryIdx = i;
-            match.distance = sqrt( (-2)*distances.maxCoeff( &match.trainIdx ) + desc1t.col(i).squaredNorm() );
+            match.queryDescIdx = i;
+            match.distance = sqrt( (-2)*distances.maxCoeff( &match.trainDescIdx ) + desc1t.col(i).squaredNorm() );
             matches.push_back( match );
         }
     }
@@ -562,19 +565,19 @@ void BruteForceMatcher<L2<float> >::matchImpl( const Mat& query, const Mat& trai
 
             float maxCoeff = -std::numeric_limits<float>::max();
             DMatch match;
-            match.trainIdx = -1;
+            match.trainDescIdx = -1;
             for( int j=0;j<train.rows;j++ )
             {
                 if( possibleMatch( mask, i, j ) && distances( j, 0 ) > maxCoeff )
                 {
                     maxCoeff = distances( j, 0 );
-                    match.trainIdx = j;
+                    match.trainDescIdx = j;
                 }
             }
 
-            if( match.trainIdx != -1 )
+            if( match.trainDescIdx != -1 )
             {
-                match.queryIdx = i;
+                match.queryDescIdx = i;
                 match.distance = sqrt( (-2)*maxCoeff + desc1t.col(i).squaredNorm() );
                 matches.push_back( match );
             }
@@ -773,7 +776,7 @@ void OneWayDescriptorMatch::match( const Mat& image, vector<KeyPoint>& points, v
     match( image, points, matchings );
 
     for( size_t i = 0; i < points.size(); i++ )
-        indices[i] = matchings[i].trainIdx;
+        indices[i] = matchings[i].trainDescIdx;
 }
 
 void OneWayDescriptorMatch::match( const Mat& image, vector<KeyPoint>& points, vector<DMatch>& matches )
@@ -785,9 +788,9 @@ void OneWayDescriptorMatch::match( const Mat& image, vector<KeyPoint>& points, v
         int poseIdx = -1;
 
         DMatch match;
-        match.queryIdx = (int)i;
-        match.trainIdx = -1;
-        base->FindDescriptor( &_image, points[i].pt, match.trainIdx, poseIdx, match.distance );
+        match.queryDescIdx = (int)i;
+        match.trainDescIdx = -1;
+        base->FindDescriptor( &_image, points[i].pt, match.trainDescIdx, poseIdx, match.distance );
         matches[i] = match;
     }
 }
@@ -994,8 +997,8 @@ void FernDescriptorMatch::match( const Mat& image, vector<KeyPoint>& keypoints, 
 
     for( int pi = 0; pi < (int)keypoints.size(); pi++ )
     {
-        matches[pi].queryIdx = pi;
-        calcBestProbAndMatchIdx( image, keypoints[pi].pt, matches[pi].distance, matches[pi].trainIdx, signature );
+        matches[pi].queryDescIdx = pi;
+        calcBestProbAndMatchIdx( image, keypoints[pi].pt, matches[pi].distance, matches[pi].trainDescIdx, signature );
         //matching[pi].distance is log of probability so we need to transform it
         matches[pi].distance = -matches[pi].distance;
     }
@@ -1013,14 +1016,14 @@ void FernDescriptorMatch::match( const Mat& image, vector<KeyPoint>& keypoints, 
         (*classifier)( image, keypoints[pi].pt, signature);
 
         DMatch match;
-        match.queryIdx = pi;
+        match.queryDescIdx = pi;
 
         for( int ci = 0; ci < classifier->getClassCount(); ci++ )
         {
             if( -signature[ci] < threshold )
             {
                 match.distance = -signature[ci];
-                match.trainIdx = ci;
+                match.trainDescIdx = ci;
                 matches[pi].push_back( match );
             }
         }

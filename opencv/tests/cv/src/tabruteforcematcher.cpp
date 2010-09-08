@@ -73,9 +73,9 @@ void BruteForceMatcherTest::run( int )
     {
         float epsilon = 1e-2;
         bool isEquiv = fabs( specMatches[i].distance - genericMatches[i].distance ) < epsilon &&
-                       specMatches[i].queryIdx == genericMatches[i].queryIdx &&
-                       specMatches[i].trainIdx == genericMatches[i].trainIdx;
-        if( !isEquiv || specMatches[i].trainIdx != permutation.at<int>( 0, i ) )
+                       specMatches[i].queryDescIdx == genericMatches[i].queryDescIdx &&
+                       specMatches[i].trainDescIdx == genericMatches[i].trainDescIdx;
+        if( !isEquiv || specMatches[i].trainDescIdx != permutation.at<int>( 0, i ) )
         {
             ts->set_failed_test_info( CvTS::FAIL_MISMATCH );
             break;
@@ -111,8 +111,8 @@ void BruteForceMatcherTest::run( int )
         //float epsilon = 1e-2;
         float epsilon = 10000000;
         bool isEquiv = fabs( specMatches[i].distance - genericMatches[i].distance ) < epsilon &&
-                       specMatches[i].queryIdx == genericMatches[i].queryIdx &&
-                       specMatches[i].trainIdx == genericMatches[i].trainIdx;
+                       specMatches[i].queryDescIdx == genericMatches[i].queryDescIdx &&
+                       specMatches[i].trainDescIdx == genericMatches[i].trainDescIdx;
         if( !isEquiv )
         {
             ts->set_failed_test_info( CvTS::FAIL_MISMATCH );

@@ -1267,11 +1267,11 @@ public:
 
     /*
      * Detect keypoints in an image set.
-     * images           Images.
+     * images           Image collection.
      * pointCollection  Collection of keypoints detected in an input images.
      * masks            Masks for each input image.
      */
-    void detect( const vector<Mat>& images, KeyPointCollection& pointCollection, const vector<Mat>& masks=vector<Mat>() ) const;
+    void detect( const vector<Mat>& imageCollection, vector<vector<KeyPoint> >& pointCollection, const vector<Mat>& masks=vector<Mat>() ) const;
 
     virtual void read(const FileNode&) {}
     virtual void write(FileStorage&) const {}
@@ -1454,19 +1454,30 @@ public:
     virtual ~DescriptorExtractor() {}
     /*
      * Compute the descriptors for a set of keypoints in an image.
-     *
-     * Must be implemented by the subclass.
-     *
      * image        The image.
      * keypoints    The keypoints. Keypoints for which a descriptor cannot be computed are removed.
      * descriptors  The descriptors. Row i is the descriptor for keypoint i.
      */
-    virtual void compute( const Mat& image, vector<KeyPoint>& keypoints, Mat& descriptors ) const = 0;
+    void compute( const Mat& image, vector<KeyPoint>& keypoints, Mat& descriptors ) const
+    {
+        computeImpl( image, keypoints, descriptors );
+    }
+    /*
+     * Compute the descriptors for a keypoints collection detected in image collection.
+     * imageCollection      Image collection.
+     * pointCollection      Keypoints collection. pointCollection[i] is keypoints detected in imageCollection[i].
+     * descCollection       Descriptor collection. descCollection[i] is descriptors computed for pointCollection[i].
+     */
+    void compute( const vector<Mat>& imageCollection, vector<vector<KeyPoint> >& pointCollection, vector<Mat>& descCollection ) const;
 
     virtual void read( const FileNode& ) {};
     virtual void write( FileStorage& ) const {};
 
 protected:
+    /*
+     * Compute the descriptors; compute() calls this. Must be implemented by the subclass.
+     */
+    virtual void computeImpl( const Mat& image, vector<KeyPoint>& keypoints, Mat& descriptors ) const = 0;
     /*
      * Remove keypoints within border_pixels of an image edge.
      */
@@ -1484,11 +1495,12 @@ public:
                              int firstOctave=SIFT::CommonParams::DEFAULT_FIRST_OCTAVE,
                              int angleMode=SIFT::CommonParams::FIRST_ANGLE );
 
-    virtual void compute( const Mat& image, vector<KeyPoint>& keypoints, Mat& descriptors ) const;
     virtual void read( const FileNode &fn );
     virtual void write( FileStorage &fs ) const;
 
 protected:
+    virtual void computeImpl( const Mat& image, vector<KeyPoint>& keypoints, Mat& descriptors ) const;
+
     SIFT sift;
 };
 
@@ -1498,11 +1510,12 @@ public:
     SurfDescriptorExtractor( int nOctaves=4,
                              int nOctaveLayers=2, bool extended=false );
 
-    virtual void compute( const Mat& image, vector<KeyPoint>& keypoints, Mat& descriptors ) const;
     virtual void read( const FileNode &fn );
     virtual void write( FileStorage &fs ) const;
 
 protected:
+    virtual void computeImpl( const Mat& image, vector<KeyPoint>& keypoints, Mat& descriptors ) const;
+
     SURF surf;
 };
 
@@ -1512,11 +1525,12 @@ class CV_EXPORTS CalonderDescriptorExtractor : public DescriptorExtractor
 public:
     CalonderDescriptorExtractor( const string& classifierFile );
 
-    virtual void compute( const Mat& image, vector<KeyPoint>& keypoints, Mat& descriptors ) const;
     virtual void read( const FileNode &fn );
     virtual void write( FileStorage &fs ) const;
 
 protected:
+    virtual void computeImpl( const Mat& image, vector<KeyPoint>& keypoints, Mat& descriptors ) const;
+
     RTreeClassifier classifier_;
     static const int BORDER_SIZE = 16;
 };
@@ -1528,9 +1542,7 @@ CalonderDescriptorExtractor<T>::CalonderDescriptorExtractor(const std::string& c
 }
 
 template<typename T>
-void CalonderDescriptorExtractor<T>::compute( const cv::Mat& image,
-                                              std::vector<cv::KeyPoint>& keypoints,
-                                              cv::Mat& descriptors) const
+void CalonderDescriptorExtractor<T>::computeImpl( const cv::Mat& image, vector<KeyPoint>& keypoints, Mat& descriptors) const
 {
   // Cannot compute descriptors for keypoints on the image border.
   removeBorderKeypoints(keypoints, image.size(), BORDER_SIZE);
@@ -1622,12 +1634,16 @@ struct CV_EXPORTS L1
  */
 struct CV_EXPORTS DMatch
 {
-    DMatch() : queryIdx(-1), trainIdx(-1), distance(std::numeric_limits<float>::max()) {}
-    DMatch( int _queryIdx, int _trainIdx, float _distance ) :
-            queryIdx(_queryIdx), trainIdx(_trainIdx), distance(_distance) {}
+    DMatch() : queryDescIdx(-1), trainDescIdx(-1), trainImgIdx(-1), distance(std::numeric_limits<float>::max()) {}
+    DMatch( int _queryDescIdx, int _trainDescIdx, float _distance ) :
+            queryDescIdx(_queryDescIdx), trainDescIdx(_trainDescIdx), trainImgIdx(-1), distance(_distance) {}
+    DMatch( int _queryDescIdx, int _trainDescIdx, int _trainImgIdx, float _distance ) :
+            queryDescIdx(_queryDescIdx), trainDescIdx(_trainDescIdx), trainImgIdx(_trainImgIdx), distance(_distance) {}
 
-    int queryIdx;
-    int trainIdx;
+    int queryDescIdx;
+    int trainDescIdx;
+
+    int trainImgIdx;
 
     float distance;
 
@@ -1787,7 +1803,7 @@ void BruteForceMatcher<Distance>::matchImpl( const Mat& query, const Mat& train,
     matches.resize( fullMatches.size() );
     for( size_t i=0;i<fullMatches.size();i++)
     {
-        matches[i] = fullMatches[i].trainIdx;
+        matches[i] = fullMatches[i].trainDescIdx;
     }
 }
 
