@@ -2005,7 +2005,7 @@ CV_EXPORTS Ptr<DescriptorMatcher> createDescriptorMatcher( const string& descrip
 /*
  *   Abstract interface for a keypoint descriptor
  */
-class CV_EXPORTS GenericDescriptorMatch
+class CV_EXPORTS GenericDescriptorMatcher
 {
 public:
     enum IndexType
@@ -2014,8 +2014,8 @@ public:
         KDTreeIndex
     };
 
-    GenericDescriptorMatch() {}
-    virtual ~GenericDescriptorMatch() {}
+    GenericDescriptorMatcher() {}
+    virtual ~GenericDescriptorMatcher() {}
 
     // Adds keypoints to the training set (descriptors are supposed to be calculated here)
     virtual void add( KeyPointCollection& keypoints );
@@ -2058,7 +2058,7 @@ protected:
 /*
  *  OneWayDescriptorMatch
  */
-class CV_EXPORTS OneWayDescriptorMatch : public GenericDescriptorMatch
+class CV_EXPORTS OneWayDescriptorMatcher : public GenericDescriptorMatcher
 {
 public:
     class Params
@@ -2091,11 +2091,11 @@ public:
         float minScale, maxScale, stepScale;
     };
 
-    OneWayDescriptorMatch();
+    OneWayDescriptorMatcher();
 
     // Equivalent to calling PointMatchOneWay() followed by Initialize(_params)
-    OneWayDescriptorMatch( const Params& _params );
-    virtual ~OneWayDescriptorMatch();
+    OneWayDescriptorMatcher( const Params& _params );
+    virtual ~OneWayDescriptorMatcher();
 
     // Sets one way descriptor parameters
     void initialize( const Params& _params, OneWayDescriptorBase *_base = 0 );
@@ -2138,7 +2138,7 @@ protected:
 /*
  *  FernDescriptorMatch
  */
-class CV_EXPORTS FernDescriptorMatch : public GenericDescriptorMatch
+class CV_EXPORTS FernDescriptorMatcher : public GenericDescriptorMatcher
 {
 public:
     class Params
@@ -2167,10 +2167,10 @@ public:
         string filename;
     };
 
-    FernDescriptorMatch();
+    FernDescriptorMatcher();
 
-    FernDescriptorMatch( const Params& _params );
-    virtual ~FernDescriptorMatch();
+    FernDescriptorMatcher( const Params& _params );
+    virtual ~FernDescriptorMatcher();
 
     void initialize( const Params& _params );
 
@@ -2198,7 +2198,8 @@ protected:
     Params params;
 };
 
-CV_EXPORTS Ptr<GenericDescriptorMatch> createGenericDescriptorMatch( const string& genericDescritptorMatchType, const string &paramsFilename = string () );
+CV_EXPORTS Ptr<GenericDescriptorMatcher> createGenericDescriptorMatcher( const string& genericDescritptorMatcherType,
+                                                                         const string &paramsFilename = string () );
 
 /****************************************************************************************\
 *                                VectorDescriptorMatch                                   *
@@ -2207,15 +2208,15 @@ CV_EXPORTS Ptr<GenericDescriptorMatch> createGenericDescriptorMatch( const strin
 /*
  *  A class used for matching descriptors that can be described as vectors in a finite-dimensional space
  */
-class CV_EXPORTS VectorDescriptorMatch : public GenericDescriptorMatch
+class CV_EXPORTS VectorDescriptorMatcher : public GenericDescriptorMatcher
 {
 public:
-    using GenericDescriptorMatch::add;
+    using GenericDescriptorMatcher::add;
 
-    VectorDescriptorMatch( const Ptr<DescriptorExtractor>& _extractor, const Ptr<DescriptorMatcher>& _matcher )
+    VectorDescriptorMatcher( const Ptr<DescriptorExtractor>& _extractor, const Ptr<DescriptorMatcher>& _matcher )
                         : extractor( _extractor ), matcher( _matcher ) {}
 
-    virtual ~VectorDescriptorMatch() {}
+    virtual ~VectorDescriptorMatcher() {}
 
     // Builds flann index
     void index();
@@ -2290,11 +2291,11 @@ CV_EXPORTS void computeRecallPrecisionCurve( const vector<vector<DMatch> >& matc
                                              vector<Point2f>& recallPrecisionCurve );
 CV_EXPORTS float getRecall( const vector<Point2f>& recallPrecisionCurve, float l_precision );
 
-CV_EXPORTS void evaluateDescriptorMatch( const Mat& img1, const Mat& img2, const Mat& H1to2,
-                                         vector<KeyPoint>& keypoints1, vector<KeyPoint>& keypoints2,
-                                         vector<vector<DMatch> >* matches1to2, vector<vector<uchar> >* correctMatches1to2Mask,
-                                         vector<Point2f>& recallPrecisionCurve,
-                                         const Ptr<GenericDescriptorMatch>& dmatch=Ptr<GenericDescriptorMatch>() );
+CV_EXPORTS void evaluateDescriptorMatcher( const Mat& img1, const Mat& img2, const Mat& H1to2,
+                                           vector<KeyPoint>& keypoints1, vector<KeyPoint>& keypoints2,
+                                           vector<vector<DMatch> >* matches1to2, vector<vector<uchar> >* correctMatches1to2Mask,
+                                           vector<Point2f>& recallPrecisionCurve,
+                                           const Ptr<GenericDescriptorMatcher>& dmatch=Ptr<GenericDescriptorMatcher>() );
 
 
 

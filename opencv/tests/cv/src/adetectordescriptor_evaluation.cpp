@@ -842,8 +842,8 @@ protected:
     };
     vector<CommonRunParams> commRunParams;
 
-    Ptr<GenericDescriptorMatch> specificDescMatch;
-    Ptr<GenericDescriptorMatch> defaultDescMatch;
+    Ptr<GenericDescriptorMatcher> specificDescMatcher;
+    Ptr<GenericDescriptorMatcher> defaultDescMatcher;
 
     CommonRunParams commRunParamsDefault;
     string matcherName;
@@ -907,7 +907,7 @@ void DescriptorQualityTest::readDefaultRunParams (FileNode &fn)
     {
         commRunParamsDefault.projectKeypointsFrom1Image = (int)fn[PROJECT_KEYPOINTS_FROM_1IMAGE] != 0;
         commRunParamsDefault.matchFilter = (int)fn[MATCH_FILTER];
-        defaultDescMatch->read (fn);
+        defaultDescMatcher->read (fn);
     }
 }
 
@@ -915,7 +915,7 @@ void DescriptorQualityTest::writeDefaultRunParams (FileStorage &fs) const
 {
     fs << PROJECT_KEYPOINTS_FROM_1IMAGE << commRunParamsDefault.projectKeypointsFrom1Image;
     fs << MATCH_FILTER << commRunParamsDefault.matchFilter;
-    defaultDescMatch->write (fs);
+    defaultDescMatcher->write (fs);
 }
 
 void DescriptorQualityTest::readDatasetRunParams( FileNode& fn, int datasetIdx )
@@ -926,7 +926,7 @@ void DescriptorQualityTest::readDatasetRunParams( FileNode& fn, int datasetIdx )
         commRunParams[datasetIdx].keypontsFilename = (string)fn[KEYPOINTS_FILENAME];
         commRunParams[datasetIdx].projectKeypointsFrom1Image = (int)fn[PROJECT_KEYPOINTS_FROM_1IMAGE] != 0;
         commRunParams[datasetIdx].matchFilter = (int)fn[MATCH_FILTER];
-        specificDescMatch->read (fn);
+        specificDescMatcher->read (fn);
     }
     else
     {
@@ -941,7 +941,7 @@ void DescriptorQualityTest::writeDatasetRunParams( FileStorage& fs, int datasetI
     fs << PROJECT_KEYPOINTS_FROM_1IMAGE << commRunParams[datasetIdx].projectKeypointsFrom1Image;
     fs << MATCH_FILTER << commRunParams[datasetIdx].matchFilter;
 
-    defaultDescMatch->write (fs);
+    defaultDescMatcher->write (fs);
 }
 
 void DescriptorQualityTest::setDefaultDatasetRunParams( int datasetIdx )
@@ -965,15 +965,15 @@ void DescriptorQualityTest::writePlotData( int di ) const
 
 void DescriptorQualityTest::readAlgorithm( )
 {
-    defaultDescMatch = createGenericDescriptorMatch( algName );
-    specificDescMatch = createGenericDescriptorMatch( algName );
+    defaultDescMatcher = createGenericDescriptorMatcher( algName );
+    specificDescMatcher = createGenericDescriptorMatcher( algName );
 
-    if( defaultDescMatch == 0 )
+    if( defaultDescMatcher == 0 )
     {
         Ptr<DescriptorExtractor> extractor = createDescriptorExtractor( algName );
         Ptr<DescriptorMatcher> matcher = createDescriptorMatcher( matcherName );
-        defaultDescMatch = new VectorDescriptorMatch( extractor, matcher );
-        specificDescMatch = new VectorDescriptorMatch( extractor, matcher );
+        defaultDescMatcher = new VectorDescriptorMatcher( extractor, matcher );
+        specificDescMatcher = new VectorDescriptorMatcher( extractor, matcher );
 
         if( extractor == 0 || matcher == 0 )
         {
@@ -1048,7 +1048,7 @@ void DescriptorQualityTest::runDatasetTest (const vector<Mat> &imgs, const vecto
        return;
     }
 
-    Ptr<GenericDescriptorMatch> descMatch = commRunParams[di].isActiveParams ? specificDescMatch : defaultDescMatch;
+    Ptr<GenericDescriptorMatcher> descMatcher = commRunParams[di].isActiveParams ? specificDescMatcher : defaultDescMatcher;
     calcQuality[di].resize(TEST_CASE_COUNT);
 
     vector<KeyPoint> keypoints1;
@@ -1077,9 +1077,9 @@ void DescriptorQualityTest::runDatasetTest (const vector<Mat> &imgs, const vecto
         vector<vector<uchar> > correctMatchesMask;
         vector<Point2f> recallPrecisionCurve; // not used because we need recallPrecisionCurve for
                                               // all images in dataset
-        evaluateDescriptorMatch( imgs[0], imgs[ci+1], Hs[ci], keypoints1, keypoints2,
-                                 &matches1to2, &correctMatchesMask, recallPrecisionCurve,
-                                 descMatch );
+        evaluateDescriptorMatcher( imgs[0], imgs[ci+1], Hs[ci], keypoints1, keypoints2,
+                                   &matches1to2, &correctMatchesMask, recallPrecisionCurve,
+                                   descMatcher );
         allMatches1to2.insert( allMatches1to2.end(), matches1to2.begin(), matches1to2.end() );
         allCorrectMatchesMask.insert( allCorrectMatchesMask.end(), correctMatchesMask.begin(), correctMatchesMask.end() );
     }
@@ -1150,9 +1150,9 @@ void OneWayDescriptorQualityTest::processRunParamsFile ()
     OneWayDescriptorBase *base = new OneWayDescriptorBase(patchSize, poseCount, pcaFilename,
                                                trainPath, trainImagesList);
 
-    OneWayDescriptorMatch *match = new OneWayDescriptorMatch ();
-    match->initialize( OneWayDescriptorMatch::Params (), base );
-    defaultDescMatch = match;
+    OneWayDescriptorMatcher *matcher = new OneWayDescriptorMatcher();
+    matcher->initialize( OneWayDescriptorMatcher::Params (), base );
+    defaultDescMatcher = matcher;
     writeAllDatasetsRunParams();
 }
 
