@@ -183,33 +183,6 @@ static inline void _drawMatch( Mat& outImg, Mat& outImg1, Mat& outImg2 ,
 }
 
 void drawMatches( const Mat& img1, const vector<KeyPoint>& keypoints1,
-                  const Mat& img2,const vector<KeyPoint>& keypoints2,
-                  const vector<int>& matches1to2, Mat& outImg,
-                  const Scalar& matchColor, const Scalar& singlePointColor,
-                  const vector<char>& matchesMask, int flags )
-{
-    if( matches1to2.size() != keypoints1.size() )
-        CV_Error( CV_StsBadSize, "matches1to2 must have the same size as keypoints1" );
-    if( !matchesMask.empty() && matchesMask.size() != matches1to2.size() )
-        CV_Error( CV_StsBadSize, "matchesMask must have the same size as matches1to2" );
-
-    Mat outImg1, outImg2;
-    _prepareImgAndDrawKeypoints( img1, keypoints1, img2, keypoints2,
-                                 outImg, outImg1, outImg2, singlePointColor, flags );
-
-    // draw matches
-    for( size_t i1 = 0; i1 < keypoints1.size(); i1++ )
-    {
-        int i2 = matches1to2[i1];
-        if( (matchesMask.empty() || matchesMask[i1] ) && i2 >= 0 )
-        {
-            const KeyPoint &kp1 = keypoints1[i1], &kp2 = keypoints2[i2];
-            _drawMatch( outImg, outImg1, outImg2, kp1, kp2, matchColor, flags );
-        }
-    }
-}
-
-void drawMatches( const Mat& img1, const vector<KeyPoint>& keypoints1,
                   const Mat& img2, const vector<KeyPoint>& keypoints2,
                   const vector<DMatch>& matches1to2, Mat& outImg,
                   const Scalar& matchColor, const Scalar& singlePointColor,
@@ -421,6 +394,10 @@ Ptr<DescriptorMatcher> createDescriptorMatcher( const string& descriptorMatcherT
     {
         dm = new BruteForceMatcher<L1<float> >();
     }
+    else if ( !descriptorMatcherType.compare( "FlannBased" ) )
+    {
+        dm = new FlannBasedMatcher();
+    }
     else
     {
         //CV_Error( CV_StsBadArg, "unsupported descriptor matcher type");
@@ -432,158 +409,323 @@ Ptr<DescriptorMatcher> createDescriptorMatcher( const string& descriptorMatcherT
 /****************************************************************************************\
 *                                      DescriptorMatcher                                 *
 \****************************************************************************************/
-void DescriptorMatcher::add( const Mat& descriptors )
+void DescriptorMatcher::DescriptorCollection::set( const vector<Mat>& descCollection )
 {
-    if( m_train.empty() )
+    clear();
+
+    int imageCount = descCollection.size();
+    CV_Assert( imageCount > 0 );
+
+    startIdxs.resize( imageCount );
+
+    int dim;
+    int type;
+    startIdxs[0] = 0;
+    for( size_t i = 1; i < imageCount; i++ )
     {
-        m_train = descriptors;
+        int s = 0;
+        if( !descCollection[i-1].empty() )
+        {
+            dim = descCollection[i-1].cols;
+            type = descCollection[i-1].type();
+            s = descCollection[i-1].rows;
+        }
+        startIdxs[i] = startIdxs[i-1] + s;
     }
-    else
+    int count = startIdxs[imageCount-1] + descCollection[imageCount-1].rows;
+
+    if( count > 0 )
     {
-        // merge train and descriptors
-        Mat m( m_train.rows + descriptors.rows, m_train.cols, CV_32F );
-        Mat m1 = m.rowRange( 0, m_train.rows );
-        m_train.copyTo( m1 );
-        Mat m2 = m.rowRange( m_train.rows + 1, m.rows );
-        descriptors.copyTo( m2 );
-        m_train = m;
+        dmatrix.create( count, dim, type );
+        for( size_t i = 0; i < imageCount; i++ )
+        {
+            if( !descCollection[i].empty() )
+            {
+                CV_Assert( descCollection[i].cols == dim && descCollection[i].type() == type );
+                Mat m = dmatrix.rowRange( startIdxs[i], startIdxs[i] + descCollection[i].rows );
+                descCollection[i].copyTo(m);
+            }
+        }
     }
 }
 
-void DescriptorMatcher::match( const Mat& query, vector<int>& matches ) const
+void DescriptorMatcher::DescriptorCollection::clear()
 {
-    matchImpl( query, m_train, matches, Mat() );
+    startIdxs.clear();
+    dmatrix.release();
 }
 
-void DescriptorMatcher::match( const Mat& query, const Mat& mask,
-                               vector<int>& matches ) const
+const Mat DescriptorMatcher::DescriptorCollection::getDescriptor( int imgIdx, int localDescIdx ) const
 {
-    matchImpl( query, m_train, matches, mask );
+    CV_Assert( imgIdx < startIdxs.size() );
+    int globalIdx = startIdxs[imgIdx] + localDescIdx;
+    CV_Assert( globalIdx < size() );
+
+    return getDescriptor( globalIdx );
 }
 
-void DescriptorMatcher::match( const Mat& query, vector<DMatch>& matches ) const
+const Mat DescriptorMatcher::DescriptorCollection::getDescriptor( int globalDescIdx ) const
 {
-    matchImpl( query, m_train, matches, Mat() );
+    CV_Assert( globalDescIdx < size() );
+    return dmatrix.row( globalDescIdx );
 }
 
-void DescriptorMatcher::match( const Mat& query, const Mat& mask,
-                               vector<DMatch>& matches ) const
+void DescriptorMatcher::DescriptorCollection::getLocalIdx( int globalDescIdx, int& imgIdx, int& localDescIdx ) const
 {
-    matchImpl( query, m_train, matches, mask );
+    imgIdx = -1;
+    CV_Assert( globalDescIdx < size() );
+    for( size_t i = 1; i < startIdxs.size(); i++ )
+    {
+        if( globalDescIdx < startIdxs[i] )
+        {
+            imgIdx = i - 1;
+            break;
+        }
+    }
+    imgIdx = imgIdx == -1 ? startIdxs.size() -1 : imgIdx;
+    localDescIdx = globalDescIdx - startIdxs[imgIdx];
 }
 
-void DescriptorMatcher::match( const Mat& query, const Mat& train, vector<DMatch>& matches, const Mat& mask ) const
+/*
+ * DescriptorMatcher
+ */
+void convertMatches( const vector<vector<DMatch> >& knnMatches, vector<DMatch>& matches )
 {
-    matchImpl( query, train, matches, mask );
+    matches.clear();
+    matches.reserve( knnMatches.size() );
+    for( size_t i = 0; i < knnMatches.size(); i++ )
+    {
+        CV_Assert( knnMatches[i].size() <= 1 );
+        if( !knnMatches.empty() )
+            matches.push_back( knnMatches[i][0] );
+    }
 }
 
-void DescriptorMatcher::match( const Mat& query, vector<vector<DMatch> >& matches, float threshold ) const
+void DescriptorMatcher::match( const Mat& queryDescs, const Mat& trainDescs, vector<DMatch>& matches, const Mat& mask ) const
 {
-    matchImpl( query, m_train, matches, threshold, Mat() );
+    vector<vector<DMatch> > knnMatches;
+    knnMatchImpl( queryDescs, trainDescs, knnMatches, 1, mask, false );
+    convertMatches( knnMatches, matches );
 }
 
-void DescriptorMatcher::match( const Mat& query, const Mat& mask,
-                               vector<vector<DMatch> >& matches, float threshold ) const
+void DescriptorMatcher::knnMatch( const Mat& queryDescs, const Mat& trainDescs, vector<vector<DMatch> >& matches, int knn,
+                                  const Mat& mask, bool equalSizes ) const
 {
-    matchImpl( query, m_train, matches, threshold, mask );
+    knnMatchImpl( queryDescs, trainDescs, matches, knn, mask, equalSizes );
 }
 
-void DescriptorMatcher::clear()
+void DescriptorMatcher::radiusMatch( const Mat& queryDescs, const Mat& trainDescs, vector<vector<DMatch> >& matches, float maxDistance,
+                                     const Mat& mask, bool equalSizes ) const
 {
-    m_train.release();
+    radiusMatchImpl( queryDescs, trainDescs, matches, maxDistance, mask, equalSizes );
+}
+
+void DescriptorMatcher::match( const Mat& queryDescs, vector<DMatch>& matches, const vector<Mat>& masks )
+{
+    vector<vector<DMatch> > knnMatches;
+    knnMatchImpl( queryDescs, knnMatches, 1, masks, false );
+    convertMatches( knnMatches, matches );
+}
+
+void DescriptorMatcher::knnMatch( const Mat& queryDescs, vector<vector<DMatch> >& matches, int knn,
+                                  const vector<Mat>& masks, bool equalSizes )
+{
+    knnMatchImpl( queryDescs, matches, knn, masks, equalSizes );
+}
+
+void DescriptorMatcher::radiusMatch( const Mat& queryDescs, vector<vector<DMatch> >& matches, float maxDistance,
+                                     const vector<Mat>& masks, bool equalSizes )
+{
+    radiusMatchImpl( queryDescs, matches, maxDistance, masks, equalSizes );
 }
 
 /*
  * BruteForceMatcher L2 specialization
  */
-template<>
-void BruteForceMatcher<L2<float> >::matchImpl( const Mat& query, const Mat& train, vector<DMatch>& matches, const Mat& mask ) const
+//template<>
+//void BruteForceMatcher<L2<float> >::matchImpl( const Mat& query, const Mat& train, vector<DMatch>& matches, const Mat& mask ) const
+//{
+//    assert( mask.empty() || (mask.rows == query.rows && mask.cols == train.rows) );
+//    assert( query.cols == train.cols ||  query.empty() ||  train.empty() );
+
+//    matches.clear();
+//    matches.reserve( query.rows );
+//#if (!defined HAVE_EIGEN2)
+//    Mat norms;
+//    cv::reduce( train.mul( train ), norms, 1, 0);
+//    norms = norms.t();
+//    Mat desc_2t = train.t();
+//    for( int i=0;i<query.rows;i++ )
+//    {
+//        Mat distances = (-2)*query.row(i)*desc_2t;
+//        distances += norms;
+//        DMatch match;
+//        match.trainDescIdx = -1;
+//        double minVal;
+//        Point minLoc;
+//        if( mask.empty() )
+//        {
+//            minMaxLoc ( distances, &minVal, 0, &minLoc );
+//        }
+//        else
+//        {
+//            minMaxLoc ( distances, &minVal, 0, &minLoc, 0, mask.row( i ) );
+//        }
+//        match.trainDescIdx = minLoc.x;
+
+//        if( match.trainDescIdx != -1 )
+//        {
+//            match.queryDescIdx = i;
+//            double queryNorm = norm( query.row(i) );
+//            match.distance = (float)sqrt( minVal + queryNorm*queryNorm );
+//            matches.push_back( match );
+//        }
+//    }
+
+//#else
+//    Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic> desc1t;
+//    Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic> desc2;
+//    cv2eigen( query.t(), desc1t);
+//    cv2eigen( train, desc2 );
+
+//    Eigen::Matrix<float, Eigen::Dynamic, 1> norms = desc2.rowwise().squaredNorm() / 2;
+
+//    if( mask.empty() )
+//    {
+//        for( int i=0;i<query.rows;i++ )
+//        {
+//            Eigen::Matrix<float, Eigen::Dynamic, 1> distances = desc2*desc1t.col(i);
+//            distances -= norms;
+//            DMatch match;
+//            match.queryDescIdx = i;
+//            match.distance = sqrt( (-2)*distances.maxCoeff( &match.trainDescIdx ) + desc1t.col(i).squaredNorm() );
+//            matches.push_back( match );
+//        }
+//    }
+//    else
+//    {
+//        for( int i=0;i<query.rows;i++ )
+//        {
+//            Eigen::Matrix<float, Eigen::Dynamic, 1> distances = desc2*desc1t.col(i);
+//            distances -= norms;
+
+//            float maxCoeff = -std::numeric_limits<float>::max();
+//            DMatch match;
+//            match.trainDescIdx = -1;
+//            for( int j=0;j<train.rows;j++ )
+//            {
+//                if( possibleMatch( mask, i, j ) && distances( j, 0 ) > maxCoeff )
+//                {
+//                    maxCoeff = distances( j, 0 );
+//                    match.trainDescIdx = j;
+//                }
+//            }
+
+//            if( match.trainDescIdx != -1 )
+//            {
+//                match.queryDescIdx = i;
+//                match.distance = sqrt( (-2)*maxCoeff + desc1t.col(i).squaredNorm() );
+//                matches.push_back( match );
+//            }
+//        }
+//    }
+//#endif
+//}
+
+/*
+ * Flann based matcher
+ */
+FlannBasedMatcher::FlannBasedMatcher( const Ptr<flann::IndexParams>& _indexParams, const Ptr<flann::SearchParams>& _searchParams )
+    : indexParams(_indexParams), searchParams(_searchParams)
 {
-    assert( mask.empty() || (mask.rows == query.rows && mask.cols == train.rows) );
-    assert( query.cols == train.cols ||  query.empty() ||  train.empty() );
+    CV_Assert( !_indexParams.empty() );
+    CV_Assert( !_searchParams.empty() );
+}
 
-    matches.clear();
-    matches.reserve( query.rows );
-#if (!defined HAVE_EIGEN2)
-    Mat norms;
-    cv::reduce( train.mul( train ), norms, 1, 0);
-    norms = norms.t();
-    Mat desc_2t = train.t();
-    for( int i=0;i<query.rows;i++ )
+void FlannBasedMatcher::setTrainCollection( const vector<Mat>& descCollection )
+{
+    trainDescCollection.set( descCollection );
+    flannIndex = new flann::Index( trainDescCollection.getDescriptors(), *indexParams );
+}
+
+void FlannBasedMatcher::clear()
+{
+    trainDescCollection.clear();
+    flannIndex.release();
+}
+
+void FlannBasedMatcher::convertToDMatches( const DescriptorCollection* collection, const Mat& indices, const Mat& dists,
+                                           vector<vector<DMatch> >& matches )
+{
+    matches.resize( indices.rows );
+    for( int i = 0; i < indices.rows; i++ )
     {
-        Mat distances = (-2)*query.row(i)*desc_2t;
-        distances += norms;
-        DMatch match;
-        match.trainDescIdx = -1;
-        double minVal;
-        Point minLoc;
-        if( mask.empty() )
+        for( int j = 0; j < indices.cols; j++ )
         {
-            minMaxLoc ( distances, &minVal, 0, &minLoc );
-        }
-        else
-        {
-            minMaxLoc ( distances, &minVal, 0, &minLoc, 0, mask.row( i ) );
-        }
-        match.trainDescIdx = minLoc.x;
-
-        if( match.trainDescIdx != -1 )
-        {
-            match.queryDescIdx = i;
-            double queryNorm = norm( query.row(i) );
-            match.distance = (float)sqrt( minVal + queryNorm*queryNorm );
-            matches.push_back( match );
-        }
-    }
-
-#else
-    Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic> desc1t;
-    Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic> desc2;
-    cv2eigen( query.t(), desc1t);
-    cv2eigen( train, desc2 );
-
-    Eigen::Matrix<float, Eigen::Dynamic, 1> norms = desc2.rowwise().squaredNorm() / 2;
-
-    if( mask.empty() )
-    {
-        for( int i=0;i<query.rows;i++ )
-        {
-            Eigen::Matrix<float, Eigen::Dynamic, 1> distances = desc2*desc1t.col(i);
-            distances -= norms;
-            DMatch match;
-            match.queryDescIdx = i;
-            match.distance = sqrt( (-2)*distances.maxCoeff( &match.trainDescIdx ) + desc1t.col(i).squaredNorm() );
-            matches.push_back( match );
-        }
-    }
-    else
-    {
-        for( int i=0;i<query.rows;i++ )
-        {
-            Eigen::Matrix<float, Eigen::Dynamic, 1> distances = desc2*desc1t.col(i);
-            distances -= norms;
-
-            float maxCoeff = -std::numeric_limits<float>::max();
-            DMatch match;
-            match.trainDescIdx = -1;
-            for( int j=0;j<train.rows;j++ )
+            int idx = indices.at<int>(i, j);
+            assert( idx >= 0 ); // TODO check
+            if( idx >= 0 )
             {
-                if( possibleMatch( mask, i, j ) && distances( j, 0 ) > maxCoeff )
-                {
-                    maxCoeff = distances( j, 0 );
-                    match.trainDescIdx = j;
-                }
-            }
-
-            if( match.trainDescIdx != -1 )
-            {
-                match.queryDescIdx = i;
-                match.distance = sqrt( (-2)*maxCoeff + desc1t.col(i).squaredNorm() );
-                matches.push_back( match );
+                int imgIdx = -1;
+                int trainIdx = idx;
+                if( collection )
+                    collection->getLocalIdx( idx, imgIdx, trainIdx );
+                matches[i].push_back( DMatch( i, trainIdx, imgIdx, dists.at<float>(i,j)) );
             }
         }
     }
-#endif
+}
+
+void FlannBasedMatcher::knnMatchImpl( const Mat& queryDescs, const Mat& trainDescs, vector<vector<DMatch> >& matches, int knn,
+                                      const Mat& mask, bool /*equalSizes*/ ) const
+{
+    CV_Assert( mask.empty() ); // unsupported
+
+    Ptr<flann::Index> tempFlannIndex = new flann::Index( trainDescs, *indexParams );
+
+    Mat indices( queryDescs.rows, knn, CV_32SC1 );
+    Mat dists( queryDescs.rows, knn, CV_32FC1);
+    tempFlannIndex->knnSearch( queryDescs, indices, dists, knn, *searchParams );
+
+    convertToDMatches( 0, indices, dists, matches );
+}
+
+void FlannBasedMatcher::radiusMatchImpl( const Mat& queryDescs, const Mat& trainDescs, vector<vector<DMatch> >& matches, float maxDistance,
+                                         const Mat& mask, bool /*equalSizes*/ ) const
+{
+    CV_Assert( mask.empty() ); // unsupported
+
+    Ptr<flann::Index> tempFlannIndex = new flann::Index( trainDescs, *indexParams );
+
+    const int count = trainDescs.rows; // TODO do count as param?
+    Mat indices( queryDescs.rows, count, CV_32SC1 );
+    Mat dists( queryDescs.rows, count, CV_32FC1);
+    tempFlannIndex->radiusSearch( queryDescs, indices, dists, maxDistance, *searchParams );
+
+    convertToDMatches( 0, indices, dists, matches );
+}
+
+void FlannBasedMatcher::knnMatchImpl( const Mat& queryDescs, vector<vector<DMatch> >& matches, int knn,
+                                      const vector<Mat>& masks, bool /*equalSizes*/ )
+{
+    CV_Assert( masks.empty() );
+    Mat indices( queryDescs.rows, knn, CV_32SC1 );
+    Mat dists( queryDescs.rows, knn, CV_32FC1);
+    flannIndex->knnSearch( queryDescs, indices, dists, knn, *searchParams );
+
+    convertToDMatches( &trainDescCollection, indices, dists, matches );
+}
+
+void FlannBasedMatcher::radiusMatchImpl( const Mat& queryDescs, vector<vector<DMatch> >& matches, float maxDistance,
+                                         const vector<Mat>& masks, bool /*equalSizes*/ )
+{
+    CV_Assert( masks.empty() );
+    const int count = trainDescCollection.size(); // TODO do count as param?
+    Mat indices( queryDescs.rows, count, CV_32SC1 );
+    Mat dists( queryDescs.rows, count, CV_32FC1);
+    flannIndex->radiusSearch( queryDescs, indices, dists, maxDistance, *searchParams );
+
+    convertToDMatches( &trainDescCollection, indices, dists, matches );
 }
 
 /****************************************************************************************\
@@ -1081,54 +1223,54 @@ void FernDescriptorMatch::clear ()
 \****************************************************************************************/
 void VectorDescriptorMatch::add( const Mat& image, vector<KeyPoint>& keypoints )
 {
-    Mat descriptors;
-    extractor->compute( image, keypoints, descriptors );
-    matcher->add( descriptors );
+//    Mat descriptors;
+//    extractor->compute( image, keypoints, descriptors );
+//    matcher->add( descriptors );
 
-    collection.add( Mat(), keypoints );
+//    collection.add( Mat(), keypoints );
 };
 
 void VectorDescriptorMatch::match( const Mat& image, vector<KeyPoint>& points, vector<int>& keypointIndices )
 {
-    Mat descriptors;
-    extractor->compute( image, points, descriptors );
+//    Mat descriptors;
+//    extractor->compute( image, points, descriptors );
 
-    matcher->match( descriptors, keypointIndices );
+//    matcher->match( descriptors, keypointIndices );
 };
 
 void VectorDescriptorMatch::match( const Mat& image, vector<KeyPoint>& points, vector<DMatch>& matches )
 {
-    Mat descriptors;
-    extractor->compute( image, points, descriptors );
+//    Mat descriptors;
+//    extractor->compute( image, points, descriptors );
 
-    matcher->match( descriptors, matches );
+//    matcher->match( descriptors, matches );
 }
 
 void VectorDescriptorMatch::match( const Mat& image, vector<KeyPoint>& points,
                                    vector<vector<DMatch> >& matches, float threshold )
 {
-    Mat descriptors;
-    extractor->compute( image, points, descriptors );
+//    Mat descriptors;
+//    extractor->compute( image, points, descriptors );
 
-    matcher->match( descriptors, matches, threshold );
+//    matcher->match( descriptors, matches, threshold );
 }
 
 void VectorDescriptorMatch::clear()
 {
-    GenericDescriptorMatch::clear();
-    matcher->clear();
+//    GenericDescriptorMatch::clear();
+//    matcher->clear();
 }
 
 void VectorDescriptorMatch::read( const FileNode& fn )
 {
-    GenericDescriptorMatch::read(fn);
-    extractor->read (fn);
+//    GenericDescriptorMatch::read(fn);
+//    extractor->read (fn);
 }
 
 void VectorDescriptorMatch::write (FileStorage& fs) const
 {
-    GenericDescriptorMatch::write(fs);
-    extractor->write (fs);
+//    GenericDescriptorMatch::write(fs);
+//    extractor->write (fs);
 }
 
 }

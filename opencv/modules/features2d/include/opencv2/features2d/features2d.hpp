@@ -1391,7 +1391,7 @@ protected:
     SURF surf;
 };
 
-CV_EXPORTS Ptr<FeatureDetector> createDetector( const string& detectorType );
+CV_EXPORTS Ptr<FeatureDetector> createFeatureDetector( const string& detectorType );
 
 /*
  * Adapts a detector to partition the source image into a grid and detect
@@ -1630,7 +1630,7 @@ struct CV_EXPORTS L1
 *                                      DMatch                                            *
 \****************************************************************************************/
 /*
- * Struct for matching: match index and distance between descriptors
+ * Struct for matching: query descriptor index, train descriptor index, train image index and distance between descriptors.
  */
 struct CV_EXPORTS DMatch
 {
@@ -1663,109 +1663,93 @@ struct CV_EXPORTS DMatch
 class CV_EXPORTS DescriptorMatcher
 {
 public:
-    virtual ~DescriptorMatcher() {}
     /*
-     * Add descriptors to the training set
-     * descriptors Descriptors to add to the training set
+     * Sets train descriptor collection.
+     * Inheritors of DescriptorMatcher must convert vector<Mat> descCollection to own convenient representation here:
+     * BruteForceMatcher copies descCollection without changes (vector of matrix headers),
+     * FlannBasedMatcher convert vector<Mat> descCollection to total Mat (rather to DescriptorMatcher::DescriptorCollection)
      */
-    void add( const Mat& descriptors );
+    virtual void setTrainCollection( const vector<Mat>& descCollection ) = 0;
+    virtual void clear() = 0;
 
     /*
-     * Index the descriptors training set
+     * Group of methods to match descriptors from image pair.
      */
-    virtual void index() = 0;
-
+    // Find one best match for each query descriptor (if mask is empty).
+    void match( const Mat& queryDescs, const Mat& trainDescs, vector<DMatch>& matches,
+                const Mat& mask=Mat() ) const;
+    // Find knn best matches for each query descriptor (in increasing order of distances).
+    // equalSizes is used when mask is not empty. If equalSizes is true matches vector will have the same size as queryDescs rows.
+    // If equalSizes is false matches vector will not contain matches for fully masked out query descriptors.
+    void knnMatch( const Mat& queryDescs, const Mat& trainDescs, vector<vector<DMatch> >& matches, int knn,
+                   const Mat& mask=Mat(), bool equalSizes=true ) const;
+    // Find best matches for each query descriptor which have distance less than maxDistance (in increasing order of distances).
+    void radiusMatch( const Mat& queryDescs, const Mat& trainDescs, vector<vector<DMatch> >& matches, float maxDistance,
+                      const Mat& mask=Mat(), bool equalSizes=true ) const;
     /*
-     * Find the best match for each descriptor from a query set
-     *
-     * query         The query set of descriptors
-     * matches       Indices of the closest matches from the training set
+     * Group of methods to match descriptors from one image to image set.
+     * See description of similar methods for matching image pair.
      */
-    void match( const Mat& query, vector<int>& matches ) const;
-
-    /*
-     * Find the best matches between two descriptor sets, with constraints
-     * on which pairs of descriptors can be matched.
-     *
-     * The mask describes which descriptors can be matched. descriptors_1[i]
-     * can be matched with descriptors_2[j] only if mask.at<char>(i,j) is non-zero.
-     *
-     * query         The query set of descriptors
-     * mask          Mask specifying permissible matches.
-     * matches       Indices of the closest matches from the training set
-     */
-    void match( const Mat& query, const Mat& mask, vector<int>& matches ) const;
-
-    /*
-     * Find the best match for each descriptor from a query set
-     *
-     * query         The query set of descriptors
-     * matches       DMatches of the closest matches from the training set
-     */
-    void match( const Mat& query, vector<DMatch>& matches ) const;
-
-    /*
-     * Find the best matches between two descriptor sets, with constraints
-     * on which pairs of descriptors can be matched.
-     *
-     * The mask describes which descriptors can be matched. descriptors_1[i]
-     * can be matched with descriptors_2[j] only if mask.at<char>(i,j) is non-zero.
-     *
-     * query         The query set of descriptors
-     * mask          Mask specifying permissible matches.
-     * matches       DMatches of the closest matches from the training set
-     */
-    void match( const Mat& query, const Mat& mask, vector<DMatch>& matches ) const;
-
-    void match( const Mat& query, const Mat& train, vector<DMatch>& matches, const Mat& mask ) const;
-
-    /*
-     * Find many matches for each descriptor from a query set
-     *
-     * query         The query set of descriptors
-     * matches       DMatches of the closest matches from the training set
-     * threshold     Distance threshold for descriptors matching
-     */
-    void match( const Mat& query, vector<vector<DMatch> >& matches, float threshold ) const;
-
-    /*
-      * Find many matches for each descriptor from a query set, with constraints
-      * on which pairs of descriptors can be matched.
-      *
-      * The mask describes which descriptors can be matched. descriptors_1[i]
-      * can be matched with descriptors_2[j] only if mask.at<char>(i,j) is non-zero.
-      *
-      * query         The query set of descriptors
-      * mask          Mask specifying permissible matches.
-      * matches       DMatches of the closest matches from the training set
-      * threshold     Distance threshold for descriptors matching
-      */
-    void match( const Mat& query, const Mat& mask,
-                vector<vector<DMatch> >&  matches, float threshold ) const;
-
-    virtual void clear();
+    void match( const Mat& queryDescs, vector<DMatch>& matches,
+                const vector<Mat>& masks=vector<Mat>() );
+    void knnMatch( const Mat& queryDescs, vector<vector<DMatch> >& matches, int knn,
+                   const vector<Mat>& masks=Mat(), bool equalSizes=true );
+    void radiusMatch( const Mat& queryDescs, vector<vector<DMatch> >& matches, float maxDistance,
+                      const vector<Mat>& masks=Mat(), bool equalSizes=true );
 
 protected:
-    Mat m_train;
-
     /*
-     * Find matches; match() calls this. Must be implemented by the subclass.
-     * The mask may be empty.
+     * Class to work with descriptors from several images as with one merged matrix.
+     * It is used e.g. in FlannBasedMatcher
      */
-    virtual void matchImpl( const Mat& query, const Mat& train, vector<int>& matches, const Mat& mask ) const = 0;
+    class DescriptorCollection
+    {
+    public:
+        DescriptorCollection() {}
+        virtual ~DescriptorCollection() {}
 
-    /*
-     * Find matches; match() calls this. Must be implemented by the subclass.
-     * The mask may be empty.
-     */
-    virtual void matchImpl( const Mat& query, const Mat& train, vector<DMatch>& matches, const Mat& mask ) const = 0;
+        // descCollection will be merged to dmatrix here
+        void set( const vector<Mat>& descCollection );
+        virtual void clear();
 
-    virtual void matchImpl( const Mat& query, const Mat& train, vector<vector<DMatch> >& matches, float threshold, const Mat& mask ) const = 0;
+        const Mat& getDescriptors() const { return dmatrix; }
+        const Mat getDescriptor( int imgIdx, int localDescIdx ) const;
+        const Mat getDescriptor( int globalDescIdx ) const;
+        void getLocalIdx( int globalDescIdx, int& imgIdx, int& localDescIdx ) const;
+
+        int size() const { return dmatrix.rows; }
+
+    protected:
+        Mat dmatrix;
+        vector<int> startIdxs;
+    };
+
+    virtual void knnMatchImpl( const Mat& queryDescs, const Mat& trainDescs, vector<vector<DMatch> >& matches, int knn,
+                               const Mat& mask, bool equalSizes=true ) const = 0;
+    virtual void radiusMatchImpl( const Mat& queryDescs, const Mat& trainDescs, vector<vector<DMatch> >& matches, float maxDistance,
+                                  const Mat& mask, bool equalSizes=true ) const = 0;
+
+    virtual void knnMatchImpl( const Mat& queryDescs, vector<vector<DMatch> >& matches, int knn,
+                               const vector<Mat>& masks, bool equalSizes=true ) = 0;
+    virtual void radiusMatchImpl( const Mat& queryDescs, vector<vector<DMatch> >& matches, float maxDistance,
+                                  const vector<Mat>& masks, bool equalSizes=true ) = 0;
 
 
     static bool possibleMatch( const Mat& mask, int index_1, int index_2 )
     {
         return mask.empty() || mask.at<char>(index_1, index_2);
+    }
+
+    static bool maskedOut( const vector<Mat>& masks, int queryDescIdx )
+    {
+        size_t outCount = 0;
+        for( size_t i = 0; i < masks.size(); i++ )
+        {
+            if( !masks[i].empty() && (countNonZero(masks[i].row(queryDescIdx)) == 0) )
+                outCount++;
+        }
+
+        return !masks.empty() && outCount == masks.size() ;
     }
 };
 
@@ -1783,107 +1767,235 @@ class CV_EXPORTS BruteForceMatcher : public DescriptorMatcher
 {
 public:
     BruteForceMatcher( Distance d = Distance() ) : distance(d) {}
-    virtual void index() {}
+    virtual ~BruteForceMatcher() {}
+
+    virtual void setTrainCollection( const vector<Mat>& descCollection );
+    virtual void clear();
+
 protected:
-   virtual void matchImpl( const Mat& query, const Mat& train, vector<int>& matches, const Mat& mask ) const;
+    virtual void knnMatchImpl( const Mat& queryDescs, const Mat& trainDescs, vector<vector<DMatch> >& matches, int knn,
+                               const Mat& mask, bool equalSizes=true ) const;
+    virtual void radiusMatchImpl( const Mat& queryDescs, const Mat& trainDescs, vector<vector<DMatch> >& matches, float maxDistance,
+                                  const Mat& mask, bool equalSizes=true ) const;
 
-   virtual void matchImpl( const Mat& query, const Mat& train, vector<DMatch>& matches, const Mat& mask ) const;
+    virtual void knnMatchImpl( const Mat& queryDescs, vector<vector<DMatch> >& matches, int knn,
+                               const vector<Mat>& masks, bool equalSizes=true );
+    virtual void radiusMatchImpl( const Mat& queryDescs, vector<vector<DMatch> >& matches, float maxDistance,
+                                  const vector<Mat>& masks, bool equalSizes=true );
 
-   virtual void matchImpl( const Mat& query, const Mat& train, vector<vector<DMatch> >& matches, float threshold, const Mat& mask ) const;
+    void _knnMatchImpl( const Mat& queryDescs, const vector<Mat>& trainDescs, vector<vector<DMatch> >& matches, int knn,
+                        const vector<Mat>& masks, bool equalSizes=true ) const;
+    void _radiusMatchImpl( const Mat& queryDescs, const vector<Mat>& trainDescs, vector<vector<DMatch> >& matches, float maxDistance,
+                           const vector<Mat>& masks, bool equalSizes=true ) const;
 
-   Distance distance;
+    Distance distance;
+    vector<Mat> trainDescCollection;
 };
 
 template<class Distance> inline
-void BruteForceMatcher<Distance>::matchImpl( const Mat& query, const Mat& train, vector<int>& matches, const Mat& mask ) const
+void BruteForceMatcher<Distance>::setTrainCollection( const vector<Mat>& descCollection )
 {
-    vector<DMatch> fullMatches;
-    matchImpl( query, train, fullMatches, mask );
-    matches.clear();
-    matches.resize( fullMatches.size() );
-    for( size_t i=0;i<fullMatches.size();i++)
-    {
-        matches[i] = fullMatches[i].trainDescIdx;
-    }
+    trainDescCollection.resize( descCollection.size() );
+    copy( descCollection.begin(), descCollection.end(), trainDescCollection.begin() );
 }
 
 template<class Distance> inline
-void BruteForceMatcher<Distance>::matchImpl( const Mat& query, const Mat& train, vector<DMatch>& matches, const Mat& mask ) const
+void BruteForceMatcher<Distance>::clear()
+{
+    trainDescCollection.clear();
+}
+
+template<class Distance> inline
+void BruteForceMatcher<Distance>::_knnMatchImpl( const Mat& queryDescs, const vector<Mat>& trainDescs, vector<vector<DMatch> >& matches, int knn,
+                                                 const vector<Mat>& masks, bool equalSizes ) const
 {
     typedef typename Distance::ValueType ValueType;
     typedef typename Distance::ResultType DistanceType;
+    CV_Assert( DataType<ValueType>::type == queryDescs.type() ||  queryDescs.empty() );
 
-    assert( mask.empty() || (mask.rows == query.rows && mask.cols == train.rows) );
+    int dimension = queryDescs.cols;
+    matches.reserve(queryDescs.rows);
 
-    assert( query.cols == train.cols ||  query.empty() ||  train.empty() );
-    assert( DataType<ValueType>::type == query.type() ||  query.empty() );
-    assert( DataType<ValueType>::type == train.type() ||  train.empty() );
+    size_t imgCount = trainDescs.size();
+    vector<vector<DistanceType> > allDists( imgCount ); // distances between one query descriptor and all train descriptors
+    for( size_t i = 0; i < imgCount; i++ )
+        allDists[i].resize( trainDescs[i].rows );
 
-    int dimension = query.cols;
-    matches.clear();
-    matches.reserve(query.rows);
-
-    for( int i = 0; i < query.rows; i++ )
+    for( int qIdx = 0; qIdx < queryDescs.rows; qIdx++ )
     {
-        const ValueType* d1 = (const ValueType*)(query.data + query.step*i);
-        int matchIndex = -1;
-        DistanceType matchDistance = std::numeric_limits<DistanceType>::max();
-
-        for( int j = 0; j < train.rows; j++ )
+        if( maskedOut( masks, qIdx ) )
         {
-            if( possibleMatch(mask, i, j) )
+            if( equalSizes ) // push empty vector
+                matches.push_back( vector<DMatch>() );
+        }
+        else
+        {
+            // 1. compute distances between i-th query descriptor and all train descriptors
+            for( size_t iIdx = 0; iIdx < imgCount; iIdx++ )
             {
-                const ValueType* d2 = (const ValueType*)(train.data + train.step*j);
-                DistanceType curDistance = distance(d1, d2, dimension);
-                if( curDistance < matchDistance )
+                CV_Assert( masks.empty() || masks[iIdx].empty() ||
+                           ( masks[iIdx].rows == queryDescs.rows && masks[iIdx].cols == trainDescs[iIdx].rows &&
+                             (masks[iIdx].type() == CV_8SC1 || masks[iIdx].type() == CV_8UC1) ) );
+                CV_Assert( DataType<ValueType>::type == trainDescs[iIdx].type() ||  trainDescs[iIdx].empty() );
+                CV_Assert( queryDescs.cols == trainDescs[iIdx].cols );
+
+               const ValueType* d1 = (const ValueType*)(queryDescs.data + queryDescs.step*qIdx);
+                Mat(allDists[iIdx]).setTo( Scalar::all(std::numeric_limits<DistanceType>::max()) );
+                for( int tIdx = 0; tIdx < trainDescs[iIdx].rows; tIdx++ )
                 {
-                    matchDistance = curDistance;
-                    matchIndex = j;
+                    if( masks.empty() || possibleMatch(masks[iIdx], qIdx, tIdx) )
+                    {
+                        const ValueType* d2 = (const ValueType*)(trainDescs[iIdx].data + trainDescs[iIdx].step*tIdx);
+                        allDists[iIdx][tIdx] = distance(d1, d2, dimension);
+                    }
                 }
             }
-        }
 
-        if( matchIndex != -1 )
-            matches.push_back( DMatch( i, matchIndex, matchDistance) );
+            // 2. choose knn nearest matches for query[i]
+            matches.push_back( vector<DMatch>() );
+            vector<vector<DMatch> >::reverse_iterator curMatches = matches.rbegin();
+            for( int k = 0; k < knn; k++ )
+            {
+                DMatch bestMatch;
+                for( size_t iIdx = 0; iIdx < imgCount; iIdx++ )
+                {
+                    for( size_t tIdx = 0; tIdx < allDists[iIdx].size(); tIdx++ )
+                    {
+                        if( allDists[iIdx][tIdx] < bestMatch.distance )
+                            bestMatch = DMatch( qIdx, tIdx, iIdx, allDists[iIdx][tIdx] );
+                    }
+                }
+                if( bestMatch.trainDescIdx == -1 )
+                    break;
+
+                allDists[bestMatch.trainImgIdx][bestMatch.trainDescIdx] = std::numeric_limits<DistanceType>::max();
+                curMatches->push_back( bestMatch );
+            }
+            std::sort( curMatches->begin(), curMatches->end() );
+        }
     }
 }
 
-template<class Distance> inline
-void BruteForceMatcher<Distance>::matchImpl( const Mat& query, const Mat& train, vector<vector<DMatch> >& matches,
-                                             float threshold, const Mat& mask ) const
+template<class Distance>
+void BruteForceMatcher<Distance>::_radiusMatchImpl( const Mat& queryDescs, const vector<Mat>& trainDescs, vector<vector<DMatch> >& matches, float maxDistance,
+                                                    const vector<Mat>& masks, bool equalSizes ) const
 {
     typedef typename Distance::ValueType ValueType;
     typedef typename Distance::ResultType DistanceType;
+    CV_Assert( DataType<ValueType>::type == queryDescs.type() ||  queryDescs.empty() );
 
-    assert( mask.empty() || (mask.rows == query.rows && mask.cols == train.rows) );
+    int dimension = queryDescs.cols;
+    matches.reserve(queryDescs.rows);
 
-    assert( query.cols == train.cols ||  query.empty() ||  train.empty() );
-    assert( DataType<ValueType>::type == query.type() ||  query.empty() );
-    assert( DataType<ValueType>::type == train.type() || train.empty() );
+    int imgCount = trainDescs.size();
+    vector<vector<DistanceType> > allDists( imgCount ); // distances between one query descriptor and all train descriptors
+    for( size_t i = 0; i < imgCount; i++ )
+        allDists[i].resize( trainDescs[i].rows );
 
-    int dimension = query.cols;
-    matches.clear();
-    matches.resize( query.rows );
-
-    for( int i = 0; i < query.rows; i++ )
+    for( int qIdx = 0; qIdx < queryDescs.rows; qIdx++ )
     {
-        const ValueType* d1 = (const ValueType*)(query.data + query.step*i);
-
-        for( int j = 0; j < train.rows; j++ )
+        if( maskedOut( masks, qIdx ) )
         {
-            if( possibleMatch(mask, i, j) )
+            if( equalSizes ) // push empty vector
+                matches.push_back( vector<DMatch>() );
+        }
+        else
+        {
+            matches.push_back( vector<DMatch>() );
+            vector<vector<DMatch> >::reverse_iterator curMatches = matches.rbegin();
+            for( size_t iIdx = 0; iIdx < imgCount; iIdx++ )
             {
-                const ValueType* d2 = (const ValueType*)(train.data + train.step*j);
-                DistanceType curDistance = distance(d1, d2, dimension);
-                if( curDistance < threshold )
-                    matches[i].push_back( DMatch( i, j, curDistance) );
+                CV_Assert( masks.empty() || masks[iIdx].empty() ||
+                           ( masks[iIdx].rows == queryDescs.rows && masks[iIdx].cols == trainDescs[iIdx].rows &&
+                             (masks[iIdx].type() == CV_8SC1 || masks[iIdx].type() == CV_8UC1) ) );
+                CV_Assert( DataType<ValueType>::type == trainDescs[iIdx].type() ||  trainDescs[iIdx].empty() );
+                CV_Assert( queryDescs.cols == trainDescs[iIdx].cols );
+
+                const ValueType* d1 = (const ValueType*)(queryDescs.data + queryDescs.step*qIdx);
+                for( int tIdx = 0; tIdx < trainDescs[iIdx].rows; tIdx++ )
+                {
+                    if( masks.empty() || possibleMatch(masks[iIdx], qIdx, tIdx) )
+                    {
+                        const ValueType* d2 = (const ValueType*)(trainDescs[iIdx].data + trainDescs[iIdx].step*tIdx);
+                        DistanceType d = distance(d1, d2, dimension);
+                        if( d < maxDistance )
+                            curMatches->push_back( DMatch( qIdx, tIdx, iIdx, d ) );
+                    }
+                }
             }
+            std::sort( curMatches->begin(), curMatches->end() );
         }
     }
 }
 
-template<>
-void BruteForceMatcher<L2<float> >::matchImpl( const Mat& query, const Mat& train, vector<DMatch>& matches, const Mat& mask) const;
+template<class Distance>
+void BruteForceMatcher<Distance>::knnMatchImpl( const Mat& queryDescs, const Mat& _trainDescs, vector<vector<DMatch> >& matches, int knn,
+                                                const Mat& mask, bool equalSizes ) const
+{
+    vector<Mat> trainDescs(1, _trainDescs);
+    vector<Mat> masks(1, mask);
+    _knnMatchImpl( queryDescs, trainDescs, matches, knn, masks, equalSizes );
+}
+
+template<class Distance>
+void BruteForceMatcher<Distance>::radiusMatchImpl( const Mat& queryDescs, const Mat& trainDescs, vector<vector<DMatch> >& matches, float maxDistance,
+                                                   const Mat& mask, bool equalSizes ) const
+{
+    _radiusMatchImpl( queryDescs, vector<Mat>(1, trainDescs), matches, maxDistance,
+                      vector<Mat>(1, mask), equalSizes );
+}
+
+template<class Distance>
+void BruteForceMatcher<Distance>::knnMatchImpl( const Mat& queryDescs, vector<vector<DMatch> >& matches, int knn,
+                                                const vector<Mat>& masks, bool equalSizes )
+{
+    _knnMatchImpl( queryDescs, trainDescCollection, matches, knn, masks, equalSizes );
+}
+
+template<class Distance>
+void BruteForceMatcher<Distance>::radiusMatchImpl( const Mat& queryDescs, vector<vector<DMatch> >& matches, float maxDistance,
+                                                   const vector<Mat>& masks, bool equalSizes )
+{
+    _radiusMatchImpl( queryDescs, trainDescCollection, matches, maxDistance, masks, equalSizes );
+}
+
+//template<>
+//void BruteForceMatcher<L2<float> >::matchImpl( const Mat& query, const Mat& train, vector<DMatch>& matches, const Mat& mask) const;
+
+/*
+ * Flann based matcher
+ */
+class FlannBasedMatcher : public DescriptorMatcher
+{
+public:
+    FlannBasedMatcher( const Ptr<flann::IndexParams>& _indexParams=new flann::KDTreeIndexParams(),
+                       const Ptr<flann::SearchParams>& _searchParams=new flann::SearchParams() );
+
+    virtual void setTrainCollection( const vector<Mat>& descCollection );
+    virtual void clear();
+
+protected:
+    // in these two methods temporary flann index will be trained
+    virtual void knnMatchImpl( const Mat& queryDescs, const Mat& trainDescs, vector<vector<DMatch> >& matches, int knn,
+                               const Mat& mask, bool equalSizes=true ) const;
+    virtual void radiusMatchImpl( const Mat& queryDescs, const Mat& trainDescs, vector<vector<DMatch> >& matches, float maxDistance,
+                                  const Mat& mask, bool equalSizes=true ) const;
+
+    virtual void knnMatchImpl( const Mat& queryDescs, vector<vector<DMatch> >& matches, int knn,
+                               const vector<Mat>& masks, bool equalSizes=true );
+    virtual void radiusMatchImpl( const Mat& queryDescs, vector<vector<DMatch> >& matches, float maxDistance,
+                                  const vector<Mat>& masks, bool equalSizes=true );
+
+    static void convertToDMatches( const DescriptorCollection* collection, const Mat& indices, const Mat& dists,
+                                   vector<vector<DMatch> >& matches );
+
+    Ptr<flann::IndexParams> indexParams;
+    Ptr<flann::SearchParams> searchParams;
+    Ptr<flann::Index> flannIndex;
+
+    DescriptorCollection trainDescCollection;
+};
+
 
 CV_EXPORTS Ptr<DescriptorMatcher> createDescriptorMatcher( const string& descriptorMatcherType );
 
@@ -2153,12 +2265,6 @@ CV_EXPORTS void drawKeypoints( const Mat& image, const vector<KeyPoint>& keypoin
 
 // Draws matches of keypints from two images on output image.
 CV_EXPORTS void drawMatches( const Mat& img1, const vector<KeyPoint>& keypoints1,
-							 const Mat& img2, const vector<KeyPoint>& keypoints2,
-                             const vector<int>& matches1to2, Mat& outImg,
-                             const Scalar& matchColor=Scalar::all(-1), const Scalar& singlePointColor=Scalar::all(-1),
-                             const vector<char>& matchesMask=vector<char>(), int flags=DrawMatchesFlags::DEFAULT );
-
-CV_EXPORTS void drawMatches( const Mat& img1, const vector<KeyPoint>& keypoints1,
                              const Mat& img2, const vector<KeyPoint>& keypoints2,
                              const vector<DMatch>& matches1to2, Mat& outImg,
                              const Scalar& matchColor=Scalar::all(-1), const Scalar& singlePointColor=Scalar::all(-1),
@@ -2189,6 +2295,7 @@ CV_EXPORTS void evaluateDescriptorMatch( const Mat& img1, const Mat& img2, const
                                          vector<vector<DMatch> >* matches1to2, vector<vector<uchar> >* correctMatches1to2Mask,
                                          vector<Point2f>& recallPrecisionCurve,
                                          const Ptr<GenericDescriptorMatch>& dmatch=Ptr<GenericDescriptorMatch>() );
+
 
 
 } /* namespace cv */

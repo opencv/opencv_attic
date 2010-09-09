@@ -49,14 +49,11 @@ void BruteForceMatcherTest::run( int )
     vector<DMatch> specMatches, genericMatches;
     BruteForceMatcher<L2<float> > specMatcher;
     BruteForceMatcher<L2Fake > genericMatcher;
-    specMatcher.add( train );
-    genericMatcher.add( train );
-
 
     int64 time0 = cvGetTickCount();
-    specMatcher.match( query, specMatches );
+    specMatcher.match( query, train, specMatches );
     int64 time1 = cvGetTickCount();
-    genericMatcher.match( query, genericMatches );
+    genericMatcher.match( query, train, genericMatches );
     int64 time2 = cvGetTickCount();
 
     float specMatcherTime = float(time1 - time0)/(float)cvGetTickFrequency();
