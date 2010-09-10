@@ -481,10 +481,8 @@ void cv::evaluateDescriptorMatcher( const Mat& img1, const Mat& img2, const Mat&
 
     if( matches1to2->empty() || computeKeypoints2ByPrj )
     {
-        dmatch->clear();
-        dmatch->add( img2, keypoints2 );
         // TODO: use more sophisticated strategy to choose threshold
-        dmatch->match( img1, keypoints1, *matches1to2, std::numeric_limits<float>::max() );
+        dmatch->radiusMatch( img1, keypoints1, img2, keypoints2, *matches1to2, std::numeric_limits<float>::max() );
     }
     float repeatability;
     int correspCount;
