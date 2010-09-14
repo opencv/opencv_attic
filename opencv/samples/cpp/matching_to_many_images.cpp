@@ -67,7 +67,7 @@ int main(int argc, char** argv)
     cout << ">" << endl;
 
     cout << "< Set train descriptors collection in the matcher and match query descriptors to them..." << endl;
-    descriptorMatcher->setTrainCollection( trainDescCollection );
+    descriptorMatcher->add( trainDescCollection );
     descriptorMatcher->match( queryDescs, matches );
     cout << ">" << endl;
 

@@ -56,6 +56,7 @@ protected:
     void run(int);
 };
 
+#if WRITE_DESCRIPTORS
 static void writeMatInBin( const Mat& mat, const string& filename )
 {
     FILE* f = fopen( filename.c_str(), "wb");
@@ -67,6 +68,7 @@ static void writeMatInBin( const Mat& mat, const string& filename )
     fwrite( (void*)mat.data, 1, mat.step*mat.rows, f );
     fclose(f);
 }
+#endif
 
 static Mat readMatFromBin( const string& filename )
 {
