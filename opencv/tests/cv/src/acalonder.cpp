@@ -56,7 +56,7 @@ protected:
     void run(int);
 };
 
-void writeMatInBin( const Mat& mat, const string& filename )
+static void writeMatInBin( const Mat& mat, const string& filename )
 {
     FILE* f = fopen( filename.c_str(), "wb");
     int type = mat.type();
@@ -68,7 +68,7 @@ void writeMatInBin( const Mat& mat, const string& filename )
     fclose(f);
 }
 
-Mat readMatFromBin( const string& filename )
+static Mat readMatFromBin( const string& filename )
 {
     FILE* f = fopen( filename.c_str(), "rb" );
     int rows, cols, type, step;

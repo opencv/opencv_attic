@@ -44,15 +44,19 @@
 using namespace std;
 using namespace cv;
 
-/*
- * Regression tests for feature detectors comparing keypoints.
- */
+const string FEATURES2D_DIR = "/features2d";
+const string DETECTOR_DIR = FEATURES2D_DIR + "/feature_detectors";
+const string DESCRIPTOR_DIR = FEATURES2D_DIR + "/descriptor_extractors";
+
+/****************************************************************************************\
+*            Regression tests for feature detectors comparing keypoints.                 *
+\****************************************************************************************/
 
 class CV_FeatureDetectorTest : public CvTest
 {
 public:
-    CV_FeatureDetectorTest( const char* test_name, const Ptr<FeatureDetector>& _fdetector ) :
-        CvTest( test_name, "cv::FeatureDetector::detect"), fdetector(_fdetector) {}
+    CV_FeatureDetectorTest( const char* testName, const Ptr<FeatureDetector>& _fdetector ) :
+        CvTest( testName, "cv::FeatureDetector::detect"), fdetector(_fdetector) {}
 
 protected:
     virtual void run( int start_from )
@@ -62,15 +66,20 @@ protected:
         const float angleDif = 2.f;
         const float responseDif = 0.1f;
 
-        int code = CvTS::OK;
-        string imgFilename = string(ts->get_data_path()) + "/features2d/img.png";
-        string resFilename = string(ts->get_data_path()) + "/features2d/" + string(name) + ".xml";
+        string imgFilename = string(ts->get_data_path()) + FEATURES2D_DIR + "/boat.png";
+        string resFilename = string(ts->get_data_path()) + DETECTOR_DIR + string(name) + "_res.xml.gz";
 
-        Mat image = imread( imgFilename );
+        if( fdetector.empty() )
+        {
+            ts->printf( CvTS::LOG, "Feature detector is empty" );
+            ts->set_failed_test_info( CvTS::FAIL_INVALID_TEST_DATA );
+            return;
+        }
+
+        Mat image = imread( imgFilename, 0 );
         if( image.empty() )
         {
-            stringstream ss; ss << "image " << imgFilename << "can not be read" << endl;
-            ts->printf( CvTS::LOG, ss.str().c_str() );
+            ts->printf( CvTS::LOG, "image %s can not be read \n", imgFilename.c_str() );
             ts->set_failed_test_info( CvTS::FAIL_INVALID_TEST_DATA );
             return;
         }
@@ -87,8 +96,7 @@ protected:
             read( fs.getFirstTopLevelNode(), validKeypoints );
             if( validKeypoints.empty() )
             {
-                stringstream ss; ss <<"image " << imgFilename << "can not be read" << endl;
-                ts->printf( CvTS::LOG, ss.str().c_str() );
+                ts->printf( CvTS::LOG, "Keypoints can nod be read\n" );
                 ts->set_failed_test_info( CvTS::FAIL_INVALID_TEST_DATA );
                 return;
             }
@@ -115,8 +123,7 @@ protected:
             }
             if( badPointCount > 0.9 * commonPointCount )
             {
-                stringstream ss; ss <<"Bad accuracy: badPointCount = " << badPointCount << endl;
-                ts->printf( CvTS::LOG, ss.str().c_str() );
+                ts->printf( CvTS::LOG, "Bad accuracy: badPointCount = &f", badPointCount  );
                 ts->set_failed_test_info( CvTS::FAIL_BAD_ACCURACY );
                 return;
             }
@@ -143,14 +150,179 @@ protected:
     Ptr<FeatureDetector> fdetector;
 };
 
-CV_FeatureDetectorTest fastTest( "fast", createFeatureDetector("FAST") );
-CV_FeatureDetectorTest gfttTest( "gftt", createFeatureDetector("GFTT") );
-CV_FeatureDetectorTest harrisTest( "harris", createFeatureDetector("HARRIS") );
-CV_FeatureDetectorTest mserTest( "mser", createFeatureDetector("MSER") );
-CV_FeatureDetectorTest siftTest( "sift", createFeatureDetector("SIFT") );
-CV_FeatureDetectorTest starTest( "star", createFeatureDetector("STAR") );
-CV_FeatureDetectorTest surfTest( "surf", createFeatureDetector("SURF") );
+CV_FeatureDetectorTest fastTest( "detector_fast", createFeatureDetector("FAST") );
+CV_FeatureDetectorTest gfttTest( "detector_gftt", createFeatureDetector("GFTT") );
+CV_FeatureDetectorTest harrisTest( "detector_harris", createFeatureDetector("HARRIS") );
+CV_FeatureDetectorTest mserTest( "detector_mser", createFeatureDetector("MSER") );
+CV_FeatureDetectorTest siftTest( "detector_sift", createFeatureDetector("SIFT") );
+CV_FeatureDetectorTest starTest( "detector_star", createFeatureDetector("STAR") );
+CV_FeatureDetectorTest surfTest( "detector_surf", createFeatureDetector("SURF") );
 
-/*
- * Regression tests for descriptor extractor
- */
+/****************************************************************************************\
+*                     Regression tests for descriptor extractors.                        *
+\****************************************************************************************/
+
+#define WRITE_KEYPOINTS     0
+class CV_DescriptorExtractorTest : public CvTest
+{
+public:
+    CV_DescriptorExtractorTest( const char* testName, float _normDif, const Ptr<DescriptorExtractor>& _dextractor  ) :
+            CvTest( testName, "DescriptorExtractor::compute" ), normDif(_normDif), dextractor(_dextractor) {}
+protected:
+    const float normDif;
+
+    void run(int)
+    {
+        if( dextractor.empty() )
+        {
+            ts->printf(CvTS::LOG, "Descriptor extractor is empty\n");
+            ts->set_failed_test_info( CvTS::FAIL_INVALID_TEST_DATA );
+            return;
+        }
+
+        string imgFilename =  string(ts->get_data_path()) + FEATURES2D_DIR +"/boat.png";
+        Mat img = imread( imgFilename, 0 );
+        if( img.empty() )
+        {
+            stringstream ss; ss << "image " << imgFilename << "can not be read" << endl;
+            ts->printf( CvTS::LOG, ss.str().c_str() );
+            ts->set_failed_test_info( CvTS::FAIL_INVALID_TEST_DATA );
+            return;
+        }
+
+        vector<KeyPoint> keypoints;
+    #if WRITE_KEYPOINTS
+        FastFeatureDetector fd;
+        fd.detect(img, keypoints);
+
+        FileStorage fs( dir + "/keypoints.xml.gz", FileStorage::WRITE );
+        if( fs.isOpened() )
+            write( fs, "keypoints", keypoints );
+        else
+        {
+            ts->printf(CvTS::LOG, "File for writting keypoints can not be opened\n");
+            ts->set_failed_test_info( CvTS::FAIL_INVALID_TEST_DATA );
+            return;
+        }
+
+    #else
+        FileStorage fs( string(ts->get_data_path()) + FEATURES2D_DIR + "/keypoints.xml.gz", FileStorage::READ);
+        if( fs.isOpened() )
+            read( fs.getFirstTopLevelNode(), keypoints );
+        else
+        {
+            ts->printf(CvTS::LOG, "File for reading keypoints can not be opened\n");
+            ts->set_failed_test_info( CvTS::FAIL_INVALID_TEST_DATA );
+            return;
+        }
+    #endif //WRITE_KEYPOINTS
+
+        Mat calcDescriptors;
+        double t = (double)getTickCount();
+        dextractor->compute( img, keypoints, calcDescriptors );
+        t = getTickCount() - t;
+        ts->printf(CvTS::LOG, "\nAverage time of computiting one descriptor = %g ms\n", t/((double)cvGetTickFrequency()*1000.)/calcDescriptors.rows );
+
+        // TODO read and write descriptor extractor parameters and check them
+        Mat validDescriptors = readDescriptors();
+        if( !validDescriptors.empty() )
+        {
+            double normVal = norm( calcDescriptors, validDescriptors, NORM_INF );
+            ts->printf( CvTS::LOG, "nofm (inf) BTW valid and calculated float descriptors = %f\n", normVal );
+            if( normVal > normDif )
+                ts->set_failed_test_info( CvTS::FAIL_BAD_ACCURACY );
+        }
+        else
+        {
+            if( !writeDescriptors( calcDescriptors ) )
+            {
+                ts->printf( CvTS::LOG, "Descriptors can not be written\n" );
+                ts->set_failed_test_info( CvTS::FAIL_INVALID_TEST_DATA );
+                return;
+            }
+        }
+    }
+
+    virtual Mat readDescriptors()
+    {
+        FileStorage fs( string(ts->get_data_path()) + DESCRIPTOR_DIR + "/" + string("name") + "_res.xml.gz", FileStorage::READ );
+        Mat res; fs["descriptors"] >> res;
+        return res;
+    }
+
+    virtual bool writeDescriptors( Mat& descs )
+    {
+        FileStorage fs( string(ts->get_data_path()) + DESCRIPTOR_DIR + "/" + string("name") + "_res.xml.gz", FileStorage::WRITE );
+        if( !fs.isOpened() )
+            return false;
+        fs << "descriptors" << descs;
+        return true;
+    }
+
+    Ptr<DescriptorExtractor> dextractor;
+};
+
+
+static void writeMatInBin( const Mat& mat, const string& filename )
+{
+    FILE* f = fopen( filename.c_str(), "wb");
+    int type = mat.type();
+    fwrite( (void*)&mat.rows, sizeof(int), 1, f );
+    fwrite( (void*)&mat.cols, sizeof(int), 1, f );
+    fwrite( (void*)&type, sizeof(int), 1, f );
+    fwrite( (void*)&mat.step, sizeof(int), 1, f );
+    fwrite( (void*)mat.data, 1, mat.step*mat.rows, f );
+    fclose(f);
+}
+
+static Mat readMatFromBin( const string& filename )
+{
+    FILE* f = fopen( filename.c_str(), "rb" );
+    int rows, cols, type, step;
+    fread( (void*)&rows, sizeof(int), 1, f );
+    fread( (void*)&cols, sizeof(int), 1, f );
+    fread( (void*)&type, sizeof(int), 1, f );
+    fread( (void*)&step, sizeof(int), 1, f );
+
+    uchar* data = (uchar*)cvAlloc(step*rows);
+    fread( (void*)data, 1, step*rows, f );
+    fclose(f);
+
+    return Mat( rows, cols, type, data );
+}
+
+template<typename T>
+class CV_CalonderDescriptorExtractorTest : public CV_DescriptorExtractorTest
+{
+public:
+    CV_CalonderDescriptorExtractorTest( const char* testName, float _normDif, const char* _resFilename) :
+            CV_DescriptorExtractorTest( testName, _normDif, Ptr<DescriptorExtractor>() ), resFilename(_resFilename)
+    {
+        dextractor = new CalonderDescriptorExtractor<T>( string(ts->get_data_path()) + DESCRIPTOR_DIR + "/classifier.rtc");
+    }
+
+    virtual Mat readDescriptors()
+    {
+        Mat res = readMatFromBin( string(ts->get_data_path()) + DESCRIPTOR_DIR + "/" + resFilename);
+        return res;
+    }
+
+    virtual bool writeDescriptors( Mat& descs )
+    {
+        writeMatInBin( descs,  string(ts->get_data_path()) + DESCRIPTOR_DIR + "/" + resFilename );
+        return true;
+    }
+
+    string resFilename;
+};
+
+CV_DescriptorExtractorTest siftDescriptorTest( "descriptor_sift", std::numeric_limits<float>::epsilon(),
+                                               createDescriptorExtractor("SIFT") );
+CV_DescriptorExtractorTest surfDescriptorTest( "descriptor_surf", std::numeric_limits<float>::epsilon(),
+                                               createDescriptorExtractor("SURF") );
+#if CV_SSE2
+CV_CalonderDescriptorExtractorTest<uchar> ucharCalonderTest( "calonder_uchar", std::numeric_limits<float>::epsilon() + 1,
+                                                             "calonder_uchar_ros" );
+CV_CalonderDescriptorExtractorTest<float> floatCalonderTest( "calonder_float", std::numeric_limits<float>::epsilon(),
+                                                             "calonder_float_ros");
+#endif // CV_SSE2
