@@ -1646,7 +1646,7 @@ public:
 
 
     /*
-     * Train matcher (e.g train flann index)
+     * Train matcher (e.g. train flann index)
      */
     virtual void train() = 0;
     /*

@@ -489,9 +489,9 @@ void DescriptorMatcher::clear()
 
 void DescriptorMatcher::match( const Mat& queryDescs, const Mat& trainDescs, vector<DMatch>& matches, const Mat& mask ) const
 {
-    vector<vector<DMatch> > knnMatches;
-    knnMatch( queryDescs, trainDescs, knnMatches, 1, mask, true /*compactResult*/ );
-    convertMatches( knnMatches, matches );
+    Ptr<DescriptorMatcher> tempMatcher = createEmptyMatcherCopy();
+    tempMatcher->add( vector<Mat>(1, trainDescs) );
+    tempMatcher->match( queryDescs, matches, vector<Mat>(1, mask) );
 }
 
 void DescriptorMatcher::knnMatch( const Mat& queryDescs, const Mat& trainDescs, vector<vector<DMatch> >& matches, int knn,
@@ -837,9 +837,11 @@ void GenericDescriptorMatcher::match( const Mat& queryImg, vector<KeyPoint>& que
                                       const Mat& trainImg, vector<KeyPoint>& trainPoints,
                                       vector<DMatch>& matches, const Mat& mask ) const
 {
-    vector<vector<DMatch> > knnMatches;
-    knnMatch( queryImg, queryPoints, trainImg, trainPoints, knnMatches, 1, mask, false );
-    convertMatches( knnMatches, matches );
+    Ptr<GenericDescriptorMatcher> tempMatcher = createEmptyMatcherCopy();
+    vector<vector<KeyPoint> > vecTrainPoints(1, trainPoints);
+    tempMatcher->add( vector<Mat>(1, trainImg), vecTrainPoints );
+    tempMatcher->match( queryImg, queryPoints, matches, vector<Mat>(1, mask) );
+    vecTrainPoints[0].swap( trainPoints );
 }
 
 void GenericDescriptorMatcher::knnMatch( const Mat& queryImg, vector<KeyPoint>& queryPoints,
@@ -849,7 +851,7 @@ void GenericDescriptorMatcher::knnMatch( const Mat& queryImg, vector<KeyPoint>& 
     Ptr<GenericDescriptorMatcher> tempMatcher = createEmptyMatcherCopy();
     vector<vector<KeyPoint> > vecTrainPoints(1, trainPoints);
     tempMatcher->add( vector<Mat>(1, trainImg), vecTrainPoints );
-    tempMatcher->knnMatch( queryImg, queryPoints, matches, knn, mask, compactResult );
+    tempMatcher->knnMatch( queryImg, queryPoints, matches, knn, vector<Mat>(1, mask), compactResult );
     vecTrainPoints[0].swap( trainPoints );
 }
 
@@ -861,7 +863,7 @@ void GenericDescriptorMatcher::radiusMatch( const Mat& queryImg, vector<KeyPoint
     Ptr<GenericDescriptorMatcher> tempMatcher = createEmptyMatcherCopy();
     vector<vector<KeyPoint> > vecTrainPoints(1, trainPoints);
     tempMatcher->add( vector<Mat>(1, trainImg), vecTrainPoints );
-    tempMatcher->radiusMatch( queryImg, queryPoints, matches, maxDistance, mask, compactResult );
+    tempMatcher->radiusMatch( queryImg, queryPoints, matches, maxDistance, vector<Mat>(1, mask), compactResult );
     vecTrainPoints[0].swap( trainPoints );
 }
 
@@ -869,7 +871,7 @@ void GenericDescriptorMatcher::match( const Mat& queryImg, vector<KeyPoint>& que
                                       vector<DMatch>& matches, const vector<Mat>& masks )
 {
     vector<vector<DMatch> > knnMatches;
-    knnMatchImpl( queryImg, queryPoints, knnMatches, 1, masks, false );
+    knnMatch( queryImg, queryPoints, knnMatches, 1, masks, false );
     convertMatches( knnMatches, matches );
 }
 

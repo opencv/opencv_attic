@@ -44,7 +44,7 @@
 using namespace std;
 using namespace cv;
 
-const string FEATURES2D_DIR = "/features2d";
+const string FEATURES2D_DIR = "features2d";
 const string DETECTOR_DIR = FEATURES2D_DIR + "/feature_detectors";
 const string DESCRIPTOR_DIR = FEATURES2D_DIR + "/descriptor_extractors";
 
@@ -61,13 +61,13 @@ public:
 protected:
     virtual void run( int start_from )
     {
-        const float ptDif = 1.f;
-        const float sizeDif = 1.f;
-        const float angleDif = 2.f;
-        const float responseDif = 0.1f;
+        const float maxPtDif = 1.f;
+        const float maxSizeDif = 1.f;
+        const float maxAngleDif = 2.f;
+        const float maxResponseDif = 0.1f;
 
         string imgFilename = string(ts->get_data_path()) + FEATURES2D_DIR + "/boat.png";
-        string resFilename = string(ts->get_data_path()) + DETECTOR_DIR + string(name) + "_res.xml.gz";
+        string resFilename = string(ts->get_data_path()) + DETECTOR_DIR + "/" + string(name) + "_res.xml.gz";
 
         if( fdetector.empty() )
         {
@@ -93,7 +93,7 @@ protected:
         {
             // TODO compare saved feature detector params with current ones
             vector<KeyPoint> validKeypoints;
-            read( fs.getFirstTopLevelNode(), validKeypoints );
+            read( fs["keypoints"], validKeypoints );
             if( validKeypoints.empty() )
             {
                 ts->printf( CvTS::LOG, "Keypoints can nod be read\n" );
@@ -101,29 +101,39 @@ protected:
                 return;
             }
 
+            int progress = 0, progressCount = validKeypoints.size() * calcKeypoints.size();
             int badPointCount = 0, commonPointCount = max(validKeypoints.size(), calcKeypoints.size());
             for( size_t v = 0; v < validKeypoints.size(); v++ )
             {
+                int nearestIdx = -1;
+                float minDist = std::numeric_limits<float>::max();
+
                 for( size_t c = 0; c < calcKeypoints.size(); c++ )
                 {
-                    if( norm( calcKeypoints[c].pt - validKeypoints[v].pt ) < ptDif )
+                    progress = update_progress( progress, v*calcKeypoints.size() + c, progressCount, 0 );
+                    float curDist = norm( calcKeypoints[c].pt - validKeypoints[v].pt );
+                    if( curDist < minDist )
                     {
-                        if( abs(calcKeypoints[c].size - validKeypoints[v].size) > sizeDif ||
-                            abs(calcKeypoints[c].angle - validKeypoints[v].angle) > angleDif ||
-                            abs(calcKeypoints[c].response - validKeypoints[v].response) > responseDif ||
-                            calcKeypoints[c].octave != validKeypoints[v].octave ||
-                            calcKeypoints[c].class_id != validKeypoints[v].class_id )
-                        {
-                            badPointCount++;
-                        }
+                        minDist = curDist;
+                        nearestIdx = c;
                     }
-                    else
-                        badPointCount++;
+                }
+
+                if( minDist > maxPtDif ||
+                    fabs(calcKeypoints[nearestIdx].size - validKeypoints[v].size) > maxSizeDif ||
+                    abs(calcKeypoints[nearestIdx].angle - validKeypoints[v].angle) > maxAngleDif ||
+                    abs(calcKeypoints[nearestIdx].response - validKeypoints[v].response) > maxResponseDif ||
+                    calcKeypoints[nearestIdx].octave != validKeypoints[v].octave ||
+                    calcKeypoints[nearestIdx].class_id != validKeypoints[v].class_id )
+                {
+                    badPointCount++;
                 }
             }
+            ts->printf( CvTS::LOG, "badPointCount = %d; validPointCount = %d; calcPointCount = %d\n",
+                        badPointCount, validKeypoints.size(), calcKeypoints.size() );
             if( badPointCount > 0.9 * commonPointCount )
             {
-                ts->printf( CvTS::LOG, "Bad accuracy: badPointCount = &f", badPointCount  );
+                ts->printf( CvTS::LOG, "Bad accuracy!\n" );
                 ts->set_failed_test_info( CvTS::FAIL_BAD_ACCURACY );
                 return;
             }
@@ -140,7 +150,10 @@ protected:
             }
             else
             {
+                fs << "detector_params" << "{";
                 fdetector->write( fs );
+                fs << "}";
+
                 write( fs, "keypoints", calcKeypoints );
             }
         }
@@ -321,8 +334,8 @@ CV_DescriptorExtractorTest siftDescriptorTest( "descriptor_sift", std::numeric_l
 CV_DescriptorExtractorTest surfDescriptorTest( "descriptor_surf", std::numeric_limits<float>::epsilon(),
                                                createDescriptorExtractor("SURF") );
 #if CV_SSE2
-CV_CalonderDescriptorExtractorTest<uchar> ucharCalonderTest( "calonder_uchar", std::numeric_limits<float>::epsilon() + 1,
-                                                             "calonder_uchar_ros" );
-CV_CalonderDescriptorExtractorTest<float> floatCalonderTest( "calonder_float", std::numeric_limits<float>::epsilon(),
-                                                             "calonder_float_ros");
+//CV_CalonderDescriptorExtractorTest<uchar> ucharCalonderTest( "calonder_uchar", std::numeric_limits<float>::epsilon() + 1,
+//                                                             "calonder_uchar_ros" );
+//CV_CalonderDescriptorExtractorTest<float> floatCalonderTest( "calonder_float", std::numeric_limits<float>::epsilon(),
+//                                                             "calonder_float_ros");
 #endif // CV_SSE2
