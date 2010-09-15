@@ -472,7 +472,7 @@ void convertMatches( const vector<vector<DMatch> >& knnMatches, vector<DMatch>& 
     for( size_t i = 0; i < knnMatches.size(); i++ )
     {
         CV_Assert( knnMatches[i].size() <= 1 );
-        if( !knnMatches.empty() )
+        if( !knnMatches[i].empty() )
             matches.push_back( knnMatches[i][0] );
     }
 }
@@ -513,7 +513,7 @@ void DescriptorMatcher::radiusMatch( const Mat& queryDescs, const Mat& trainDesc
 void DescriptorMatcher::match( const Mat& queryDescs, vector<DMatch>& matches, const vector<Mat>& masks )
 {
     vector<vector<DMatch> > knnMatches;
-    knnMatchImpl( queryDescs, knnMatches, 1, masks, true /*compactResult*/ );
+    knnMatch( queryDescs, knnMatches, 1, masks, true /*compactResult*/ );
     convertMatches( knnMatches, matches );
 }
 

@@ -1762,7 +1762,6 @@ protected:
     virtual void radiusMatchImpl( const Mat& queryDescs, vector<vector<DMatch> >& matches, float maxDistance,
                                   const vector<Mat>& masks, bool compactResult );
     Distance distance;
-    vector<Mat> trainDescCollection;
 };
 
 template<class Distance>
