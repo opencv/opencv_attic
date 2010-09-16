@@ -216,7 +216,7 @@ class CV_DescriptorExtractorTest : public CvTest
 {
 public:
     CV_DescriptorExtractorTest( const char* testName, float _normDif, const Ptr<DescriptorExtractor>& _dextractor  ) :
-            CvTest( testName, "DescriptorExtractor::compute" ), normDif(_normDif), dextractor(_dextractor) {}
+            CvTest( testName, "cv::DescriptorExtractor::compute" ), normDif(_normDif), dextractor(_dextractor) {}
 protected:
     virtual void createDescriptorExtractor() {}
 
