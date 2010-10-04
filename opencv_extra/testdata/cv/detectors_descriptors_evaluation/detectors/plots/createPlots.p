@@ -9,13 +9,13 @@ set ylabel "repeatability, %"
 set output 'bark_repeatability.png'
 set xr[2:6]
 set yr[0:100]
-plot "fast_bark_repeatability.csv" title 'fast' with linespoints, "gftt_bark_repeatability.csv" title 'gftt' with linespoints, "harris_bark_repeatability.csv" title 'harris' with linespoints,  "mser_bark_repeatability.csv" title 'mser' with linespoints, "star_bark_repeatability.csv" title 'star' with linespoints, "sift_bark_repeatability.csv" title 'sift' with linespoints, "surf_bark_repeatability.csv" title 'surf' with linespoints
+plot "FAST_bark_repeatability.csv" title 'FAST' with linespoints, "GFTT_bark_repeatability.csv" title 'GFTT' with linespoints, "HARRIS_bark_repeatability.csv" title 'HARRIS' with linespoints,  "MSER_bark_repeatability.csv" title 'MSER' with linespoints, "STAR_bark_repeatability.csv" title 'STAR' with linespoints, "SIFT_bark_repeatability.csv" title 'SIFT' with linespoints, "SURF_bark_repeatability.csv" title 'SURF' with linespoints
 
 set size 1, 1
 set ylabel "correspondences count"
 set output 'bark_correspondenceCount.png'
 set yr[0:2000]
-plot "fast_bark_correspondenceCount.csv" title 'fast' with linespoints,  "gftt_bark_correspondenceCount.csv" title 'gftt' with linespoints, "harris_bark_correspondenceCount.csv" title 'harris' with linespoints,  "mser_bark_correspondenceCount.csv" title 'mser' with linespoints, "star_bark_correspondenceCount.csv" title 'star' with linespoints, "sift_bark_correspondenceCount.csv" title 'sift' with linespoints, "surf_bark_correspondenceCount.csv" title 'surf' with linespoints
+plot "FAST_bark_correspondenceCount.csv" title 'FAST' with linespoints,  "GFTT_bark_correspondenceCount.csv" title 'GFTT' with linespoints, "HARRIS_bark_correspondenceCount.csv" title 'HARRIS' with linespoints,  "MSER_bark_correspondenceCount.csv" title 'MSER' with linespoints, "STAR_bark_correspondenceCount.csv" title 'STAR' with linespoints, "SIFT_bark_correspondenceCount.csv" title 'SIFT' with linespoints, "SURF_bark_correspondenceCount.csv" title 'SURF' with linespoints
 
 set size 1, 0.7
 set title "Detectors evaluation under blur changes (bike dataset)"
@@ -24,13 +24,13 @@ set ylabel "repeatability, %"
 set output 'bikes_repeatability.png'
 set xr[2:6]
 set yr[0:100]
-plot "fast_bikes_repeatability.csv" title 'fast' with linespoints, "gftt_bikes_repeatability.csv" title 'gftt' with linespoints, "harris_bikes_repeatability.csv" title 'harris' with linespoints,  "mser_bikes_repeatability.csv" title 'mser' with linespoints, "star_bikes_repeatability.csv" title 'star' with linespoints, "sift_bikes_repeatability.csv" title 'sift' with linespoints, "surf_bikes_repeatability.csv" title 'surf' with linespoints
+plot "FAST_bikes_repeatability.csv" title 'FAST' with linespoints, "GFTT_bikes_repeatability.csv" title 'GFTT' with linespoints, "HARRIS_bikes_repeatability.csv" title 'HARRIS' with linespoints,  "MSER_bikes_repeatability.csv" title 'MSER' with linespoints, "STAR_bikes_repeatability.csv" title 'STAR' with linespoints, "SIFT_bikes_repeatability.csv" title 'SIFT' with linespoints, "SURF_bikes_repeatability.csv" title 'SURF' with linespoints
 
 set size 1, 1
 set ylabel "correspondences count"
 set output 'bikes_correspondenceCount.png'
 set yr[0:1200]
-plot "fast_bikes_correspondenceCount.csv" title 'fast' with linespoints,  "gftt_bikes_correspondenceCount.csv" title 'gftt' with linespoints, "harris_bikes_correspondenceCount.csv" title 'harris' with linespoints,  "mser_bikes_correspondenceCount.csv" title 'mser' with linespoints, "star_bikes_correspondenceCount.csv" title 'star' with linespoints, "sift_bikes_correspondenceCount.csv" title 'sift' with linespoints, "surf_bikes_correspondenceCount.csv" title 'surf' with linespoints
+plot "FAST_bikes_correspondenceCount.csv" title 'FAST' with linespoints,  "GFTT_bikes_correspondenceCount.csv" title 'GFTT' with linespoints, "HARRIS_bikes_correspondenceCount.csv" title 'HARRIS' with linespoints,  "MSER_bikes_correspondenceCount.csv" title 'MSER' with linespoints, "STAR_bikes_correspondenceCount.csv" title 'STAR' with linespoints, "SIFT_bikes_correspondenceCount.csv" title 'SIFT' with linespoints, "SURF_bikes_correspondenceCount.csv" title 'SURF' with linespoints
 
 set size 1, 0.7
 set title "Detectors evaluation under size changes (boat dataset)"
@@ -39,13 +39,13 @@ set ylabel "repeatability, %"
 set output 'boat_repeatability.png'
 set xr[2:6]
 set yr[0:100]
-plot "fast_boat_repeatability.csv" title 'fast' with linespoints, "gftt_boat_repeatability.csv" title 'gftt' with linespoints, "harris_boat_repeatability.csv" title 'harris' with linespoints,  "mser_boat_repeatability.csv" title 'mser' with linespoints, "star_boat_repeatability.csv" title 'star' with linespoints, "sift_boat_repeatability.csv" title 'sift' with linespoints, "surf_boat_repeatability.csv" title 'surf' with linespoints
+plot "FAST_boat_repeatability.csv" title 'FAST' with linespoints, "GFTT_boat_repeatability.csv" title 'GFTT' with linespoints, "HARRIS_boat_repeatability.csv" title 'HARRIS' with linespoints,  "MSER_boat_repeatability.csv" title 'MSER' with linespoints, "STAR_boat_repeatability.csv" title 'STAR' with linespoints, "SIFT_boat_repeatability.csv" title 'SIFT' with linespoints, "SURF_boat_repeatability.csv" title 'SURF' with linespoints
 
 set size 1, 1
 set ylabel "correspondences count"
 set output 'boat_correspondenceCount.png'
 set yr[0:3500]
-plot "fast_boat_correspondenceCount.csv" title 'fast' with linespoints,  "gftt_boat_correspondenceCount.csv" title 'gftt' with linespoints, "harris_boat_correspondenceCount.csv" title 'harris' with linespoints,  "mser_boat_correspondenceCount.csv" title 'mser' with linespoints, "star_boat_correspondenceCount.csv" title 'star' with linespoints, "sift_boat_correspondenceCount.csv" title 'sift' with linespoints, "surf_boat_correspondenceCount.csv" title 'surf' with linespoints
+plot "FAST_boat_correspondenceCount.csv" title 'FAST' with linespoints,  "GFTT_boat_correspondenceCount.csv" title 'GFTT' with linespoints, "HARRIS_boat_correspondenceCount.csv" title 'HARRIS' with linespoints,  "MSER_boat_correspondenceCount.csv" title 'MSER' with linespoints, "STAR_boat_correspondenceCount.csv" title 'STAR' with linespoints, "SIFT_boat_correspondenceCount.csv" title 'SIFT' with linespoints, "SURF_boat_correspondenceCount.csv" title 'SURF' with linespoints
 
 set size 1, 0.7
 set title "Detectors evaluation under viewpoint changes (graf dataset)"
@@ -54,13 +54,13 @@ set ylabel "repeatability, %"
 set output 'graf_repeatability.png'
 set xr[20:60]
 set yr[0:100]
-plot "fast_graf_repeatability.csv" title 'fast' with linespoints, "gftt_graf_repeatability.csv" title 'gftt' with linespoints, "harris_graf_repeatability.csv" title 'harris' with linespoints,  "mser_graf_repeatability.csv" title 'mser' with linespoints, "star_graf_repeatability.csv" title 'star' with linespoints, "sift_graf_repeatability.csv" title 'sift' with linespoints, "surf_graf_repeatability.csv" title 'surf' with linespoints
+plot "FAST_graf_repeatability.csv" title 'FAST' with linespoints, "GFTT_graf_repeatability.csv" title 'GFTT' with linespoints, "HARRIS_graf_repeatability.csv" title 'HARRIS' with linespoints,  "MSER_graf_repeatability.csv" title 'MSER' with linespoints, "STAR_graf_repeatability.csv" title 'STAR' with linespoints, "SIFT_graf_repeatability.csv" title 'SIFT' with linespoints, "SURF_graf_repeatability.csv" title 'SURF' with linespoints
 
 set size 1, 1
 set ylabel "correspondences count"
 set output 'graf_correspondenceCount.png'
 set yr[0:2000]
-plot "fast_graf_correspondenceCount.csv" title 'fast' with linespoints,  "gftt_graf_correspondenceCount.csv" title 'gftt' with linespoints, "harris_graf_correspondenceCount.csv" title 'harris' with linespoints,  "mser_graf_correspondenceCount.csv" title 'mser' with linespoints, "star_graf_correspondenceCount.csv" title 'star' with linespoints, "sift_graf_correspondenceCount.csv" title 'sift' with linespoints, "surf_graf_correspondenceCount.csv" title 'surf' with linespoints
+plot "FAST_graf_correspondenceCount.csv" title 'FAST' with linespoints,  "GFTT_graf_correspondenceCount.csv" title 'GFTT' with linespoints, "HARRIS_graf_correspondenceCount.csv" title 'HARRIS' with linespoints,  "MSER_graf_correspondenceCount.csv" title 'MSER' with linespoints, "STAR_graf_correspondenceCount.csv" title 'STAR' with linespoints, "SIFT_graf_correspondenceCount.csv" title 'SIFT' with linespoints, "SURF_graf_correspondenceCount.csv" title 'SURF' with linespoints
 
 set size 1, 0.7
 set title "Detectors evaluation under light changes (leuven dataset)"
@@ -69,13 +69,13 @@ set ylabel "repeatability, %"
 set output 'leuven_repeatability.png'
 set xr[2:6]
 set yr[0:100]
-plot "fast_leuven_repeatability.csv" title 'fast' with linespoints, "gftt_leuven_repeatability.csv" title 'gftt' with linespoints, "harris_leuven_repeatability.csv" title 'harris' with linespoints,  "mser_leuven_repeatability.csv" title 'mser' with linespoints, "star_leuven_repeatability.csv" title 'star' with linespoints, "sift_leuven_repeatability.csv" title 'sift' with linespoints, "surf_leuven_repeatability.csv" title 'surf' with linespoints
+plot "FAST_leuven_repeatability.csv" title 'FAST' with linespoints, "GFTT_leuven_repeatability.csv" title 'GFTT' with linespoints, "HARRIS_leuven_repeatability.csv" title 'HARRIS' with linespoints,  "MSER_leuven_repeatability.csv" title 'MSER' with linespoints, "STAR_leuven_repeatability.csv" title 'STAR' with linespoints, "SIFT_leuven_repeatability.csv" title 'SIFT' with linespoints, "SURF_leuven_repeatability.csv" title 'SURF' with linespoints
 
 set size 1, 1
 set ylabel "correspondences count"
 set output 'leuven_correspondenceCount.png'
 set yr[0:1500]
-plot "fast_leuven_correspondenceCount.csv" title 'fast' with linespoints,  "gftt_leuven_correspondenceCount.csv" title 'gftt' with linespoints, "harris_leuven_correspondenceCount.csv" title 'harris' with linespoints,  "mser_leuven_correspondenceCount.csv" title 'mser' with linespoints, "star_leuven_correspondenceCount.csv" title 'star' with linespoints, "sift_leuven_correspondenceCount.csv" title 'sift' with linespoints, "surf_leuven_correspondenceCount.csv" title 'surf' with linespoints
+plot "FAST_leuven_correspondenceCount.csv" title 'FAST' with linespoints,  "GFTT_leuven_correspondenceCount.csv" title 'GFTT' with linespoints, "HARRIS_leuven_correspondenceCount.csv" title 'HARRIS' with linespoints,  "MSER_leuven_correspondenceCount.csv" title 'MSER' with linespoints, "STAR_leuven_correspondenceCount.csv" title 'STAR' with linespoints, "SIFT_leuven_correspondenceCount.csv" title 'SIFT' with linespoints, "SURF_leuven_correspondenceCount.csv" title 'SURF' with linespoints
 
 set size 1, 0.7
 set title "Detectors evaluation under blur changes (trees)"
@@ -84,13 +84,13 @@ set ylabel "repeatability, %"
 set output 'trees_repeatability.png'
 set xr[2:6]
 set yr[0:100]
-plot "fast_trees_repeatability.csv" title 'fast' with linespoints, "gftt_trees_repeatability.csv" title 'gftt' with linespoints, "harris_trees_repeatability.csv" title 'harris' with linespoints,  "mser_trees_repeatability.csv" title 'mser' with linespoints, "star_trees_repeatability.csv" title 'star' with linespoints, "sift_trees_repeatability.csv" title 'sift' with linespoints, "surf_trees_repeatability.csv" title 'surf' with linespoints
+plot "FAST_trees_repeatability.csv" title 'FAST' with linespoints, "GFTT_trees_repeatability.csv" title 'GFTT' with linespoints, "HARRIS_trees_repeatability.csv" title 'HARRIS' with linespoints,  "MSER_trees_repeatability.csv" title 'MSER' with linespoints, "STAR_trees_repeatability.csv" title 'STAR' with linespoints, "SIFT_trees_repeatability.csv" title 'SIFT' with linespoints, "SURF_trees_repeatability.csv" title 'SURF' with linespoints
 
 set size 1, 1
 set ylabel "correspondences count"
 set output 'trees_correspondenceCount.png'
 set yr[0:6000]
-plot "fast_trees_correspondenceCount.csv" title 'fast' with linespoints,  "gftt_trees_correspondenceCount.csv" title 'gftt' with linespoints, "harris_trees_correspondenceCount.csv" title 'harris' with linespoints,  "mser_trees_correspondenceCount.csv" title 'mser' with linespoints, "star_trees_correspondenceCount.csv" title 'star' with linespoints, "sift_trees_correspondenceCount.csv" title 'sift' with linespoints, "surf_trees_correspondenceCount.csv" title 'surf' with linespoints
+plot "FAST_trees_correspondenceCount.csv" title 'FAST' with linespoints,  "GFTT_trees_correspondenceCount.csv" title 'GFTT' with linespoints, "HARRIS_trees_correspondenceCount.csv" title 'HARRIS' with linespoints,  "MSER_trees_correspondenceCount.csv" title 'MSER' with linespoints, "STAR_trees_correspondenceCount.csv" title 'STAR' with linespoints, "SIFT_trees_correspondenceCount.csv" title 'SIFT' with linespoints, "SURF_trees_correspondenceCount.csv" title 'SURF' with linespoints
 
 set size 1, 0.7
 set title "Detectors evaluation under JPEG compression (ubc dataset)"
@@ -99,13 +99,13 @@ set ylabel "repeatability, %"
 set output 'ubc_repeatability.png'
 set xr[60:98]
 set yr[0:100]
-plot "fast_ubc_repeatability.csv" title 'fast' with linespoints, "gftt_ubc_repeatability.csv" title 'gftt' with linespoints, "harris_ubc_repeatability.csv" title 'harris' with linespoints,  "mser_ubc_repeatability.csv" title 'mser' with linespoints, "star_ubc_repeatability.csv" title 'star' with linespoints, "sift_ubc_repeatability.csv" title 'sift' with linespoints, "surf_ubc_repeatability.csv" title 'surf' with linespoints
+plot "FAST_ubc_repeatability.csv" title 'FAST' with linespoints, "GFTT_ubc_repeatability.csv" title 'GFTT' with linespoints, "HARRIS_ubc_repeatability.csv" title 'HARRIS' with linespoints,  "MSER_ubc_repeatability.csv" title 'MSER' with linespoints, "STAR_ubc_repeatability.csv" title 'STAR' with linespoints, "SIFT_ubc_repeatability.csv" title 'SIFT' with linespoints, "SURF_ubc_repeatability.csv" title 'SURF' with linespoints
 
 set size 1, 1
 set ylabel "correspondences count"
 set output 'ubc_correspondenceCount.png'
 set yr[0:3000]
-plot "fast_ubc_correspondenceCount.csv" title 'fast' with linespoints,  "gftt_ubc_correspondenceCount.csv" title 'gftt' with linespoints, "harris_ubc_correspondenceCount.csv" title 'harris' with linespoints,  "mser_ubc_correspondenceCount.csv" title 'mser' with linespoints, "star_ubc_correspondenceCount.csv" title 'star' with linespoints, "sift_ubc_correspondenceCount.csv" title 'sift' with linespoints, "surf_ubc_correspondenceCount.csv" title 'surf' with linespoints
+plot "FAST_ubc_correspondenceCount.csv" title 'FAST' with linespoints,  "GFTT_ubc_correspondenceCount.csv" title 'GFTT' with linespoints, "HARRIS_ubc_correspondenceCount.csv" title 'HARRIS' with linespoints,  "MSER_ubc_correspondenceCount.csv" title 'MSER' with linespoints, "STAR_ubc_correspondenceCount.csv" title 'STAR' with linespoints, "SIFT_ubc_correspondenceCount.csv" title 'SIFT' with linespoints, "SURF_ubc_correspondenceCount.csv" title 'SURF' with linespoints
 
 set size 1, 0.7
 set title "Detectors evaluation under viewpoint changes (wall dataset)"
@@ -114,11 +114,11 @@ set ylabel "repeatability, %"
 set output 'wall_repeatability.png'
 set xr[20:60]
 set yr[0:100]
-plot "fast_wall_repeatability.csv" title 'fast' with linespoints, "gftt_wall_repeatability.csv" title 'gftt' with linespoints, "harris_wall_repeatability.csv" title 'harris' with linespoints,  "mser_wall_repeatability.csv" title 'mser' with linespoints, "star_wall_repeatability.csv" title 'star' with linespoints, "sift_wall_repeatability.csv" title 'sift' with linespoints, "surf_wall_repeatability.csv" title 'surf' with linespoints
+plot "FAST_wall_repeatability.csv" title 'FAST' with linespoints, "GFTT_wall_repeatability.csv" title 'GFTT' with linespoints, "HARRIS_wall_repeatability.csv" title 'HARRIS' with linespoints,  "MSER_wall_repeatability.csv" title 'MSER' with linespoints, "STAR_wall_repeatability.csv" title 'STAR' with linespoints, "SIFT_wall_repeatability.csv" title 'SIFT' with linespoints, "SURF_wall_repeatability.csv" title 'SURF' with linespoints
 
 set size 1, 1
 set ylabel "correspondences count"
 set output 'wall_correspondenceCount.png'
 set yr[0:5000]
-plot "fast_wall_correspondenceCount.csv" title 'fast' with linespoints,  "gftt_wall_correspondenceCount.csv" title 'gftt' with linespoints, "harris_wall_correspondenceCount.csv" title 'harris' with linespoints,  "mser_wall_correspondenceCount.csv" title 'mser' with linespoints, "star_wall_correspondenceCount.csv" title 'star' with linespoints, "sift_wall_correspondenceCount.csv" title 'sift' with linespoints, "surf_wall_correspondenceCount.csv" title 'surf' with linespoints
+plot "FAST_wall_correspondenceCount.csv" title 'FAST' with linespoints,  "GFTT_wall_correspondenceCount.csv" title 'GFTT' with linespoints, "HARRIS_wall_correspondenceCount.csv" title 'HARRIS' with linespoints,  "MSER_wall_correspondenceCount.csv" title 'MSER' with linespoints, "STAR_wall_correspondenceCount.csv" title 'STAR' with linespoints, "SIFT_wall_correspondenceCount.csv" title 'SIFT' with linespoints, "SURF_wall_correspondenceCount.csv" title 'SURF' with linespoints
 
