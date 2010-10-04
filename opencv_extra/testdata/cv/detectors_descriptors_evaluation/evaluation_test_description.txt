@@ -19,7 +19,7 @@ In this directory there is a data of tests evaluating detectors and descriptors.
 ------------------------------------------------------------------------
           1. Detector evaluation tests
 ------------------------------------------------------------------------
-These tests are regression tests of cvtest system. 
+These tests are regression tests of opencv_test system. 
 The criterions of the detector repeatability implemented in these tests are described in "Scale & Affine 
 Invariant Interest Point Detectors" and "A Comparison of Affine Region Detectors", Mikolajczyk et al.
 
@@ -54,7 +54,7 @@ Testdata:
     Keypoints sets are saved in [keypoints_datasets].
 
 To run these tests:
-1. specify the test names in configure file of cvtest system. The test names:
+1. specify the test names in configure file of opencv_test system or using -tn parameter (see opencv_test --help). The test names:
     "quality-detector-fast"
     "quality-detector-gftt" (GFTT with useHarrisDetector == false)
     "quality-detector-harris" (GFTT with useHarrisDetector == false)
@@ -62,7 +62,7 @@ To run these tests:
     "quality-detector-star"
     "quality-detector-sift"
     "quality-detector-surf"
-2. run cvtest with -d and -f parameters, for example ./cvtest -d /home/opencv_extra/testdata/cv -f /home/cvcfg.xml
+2. run opencv_test with spesified test names. There are two ways for this: using -f or -tn parameter of test system. The command line examples: 1st way) ./opencv_test -d /home/opencv_extra/testdata/cv -f /home/cvcfg.xml; 2nd way) ./opencv_test -d /home/opencv_extra/testdata/cv -tn  "quality-detector-fast, quality-detector-gftt"
 
 If there is not the file with run parameters for some detector in the directory [detectors], the default values of 
 these parameters will be used and written in such file.
@@ -87,7 +87,7 @@ To add new detector evaluation in graphics modify createPlots.p.
 ------------------------------------------------------------------------
           2. Description evaluation tests
 ------------------------------------------------------------------------
-These tests are regression tests of cvtest system. 
+These tests are regression tests of opencv_test system. 
 The criterion of the descriptor quality implemented in these tests are described in "A Performance Evaluation of Local
 Dedcriptors", Mikolajczyk et al.
 
@@ -116,10 +116,12 @@ Testdata:
     Keypoints file must be in [keypoints_datasets].
    
 To run these tests:
-1. specify the test names in configure file of cvtest system. The test names:
+1. specify the test names in configure file of opencv_test system or using -tn parameter (see opencv_test --help). The test names:
     "quality-descriptor-sift"
     "quality-descriptor-surf"
-2. run cvtest with -d and -f parameters, for example ./cvtest -d /home/opencv_extra/testdata/cv -f /home/cvcfg.xml
+    "quality-descriptor-calonder"
+    "quality-descriptor-fern"
+2. run opencv_test with spesified test names. There are two ways for this: using -f or -tn parameter of test system. The command line examples: 1st way) ./opencv_test -d /home/opencv_extra/testdata/cv -f /home/cvcfg.xml; 2nd way) ./opencv_test -d /home/opencv_extra/testdata/cv -tn  "quality-descriptor-surf, quality-descriptor-calonder"
 
 If there is not the file with run parameters for some descriptor in the directory [descriptors], the default values of 
 these parameters will be used and written in such file.
@@ -127,7 +129,7 @@ If there is not the file with quality results for some descriptor in the directo
 test will not be validate the results, but simply save them in such file.
 
 To add test for new descriptor:
-1. if new descriptor class is not an inheritor of GenericDescriptorMatch, wrap this class as inheritor of GenericDescriptorMatch,
-2. add object creation in factory function createDescriptorMatch,
-3. create instance of DescriptorQualityTest passing descriptor name and test name as parameters  
+1. if new descriptor class is not an inheritor of DescriptorExtractor or GenericDescriptorMatch, wrap this class as inheritor of DescriptorExtractor or GenericDescriptorMatch,
+2. add object creation in factory function createDescriptorExtractor or createDescriptorMatcher,
+3. create instance of DescriptorQualityTest passing descriptor name and test name as parameters. 
 See existing descriptor test classes.
