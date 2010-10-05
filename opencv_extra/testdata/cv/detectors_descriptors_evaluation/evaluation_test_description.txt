@@ -133,3 +133,6 @@ To add test for new descriptor:
 2. add object creation in factory function createDescriptorExtractor or createDescriptorMatcher,
 3. create instance of DescriptorQualityTest passing descriptor name and test name as parameters. 
 See existing descriptor test classes.
+
+To plot graphics of descriptor quality:
+1. Run createPlots.sh. All evaluated descriptors are being added automatically.
