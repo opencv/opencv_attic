@@ -67,6 +67,13 @@ struct RoiPredicate
     float minX, minY, maxX, maxY;
 };
 
+void DescriptorExtractor::compute( const vector<Mat>& imageCollection, vector<vector<KeyPoint> >& pointCollection, vector<Mat>& descCollection ) const
+{
+    descCollection.resize( imageCollection.size() );
+    for( size_t i = 0; i < imageCollection.size(); i++ )
+        compute( imageCollection[i], pointCollection[i], descCollection[i] );
+}
+
 void DescriptorExtractor::removeBorderKeypoints( vector<KeyPoint>& keypoints,
                                                  Size imageSize, int borderPixels )
 {
@@ -250,7 +257,7 @@ void OpponentColorDescriptorExtractor::compute( const Mat& bgrImage, vector<KeyP
     descriptors.create( static_cast<int>(keypoints.size()), 3*descriptorSize, CV_32FC1 );
     for( int i = 0; i < 3/*channel count*/; i++ )
     {
-        CV_Assert( opponentChannels[i].type() == CV_8UC1 );
+        CV_Assert( opponentChannels[i].type() == CV_8UC1 )
         Mat opponentDescriptors = descriptors.colRange( i*descriptorSize, (i+1)*descriptorSize );
         dextractor->compute( opponentChannels[i], keypoints, opponentDescriptors );
     }
