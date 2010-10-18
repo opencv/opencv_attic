@@ -49,6 +49,7 @@ using namespace cv::gpu;
 
 void cv::gpu::remap(const GpuMat&, GpuMat&, const GpuMat&, const GpuMat&){ throw_nogpu(); }
 void cv::gpu::meanShiftFiltering(const GpuMat&, GpuMat&, int, int, TermCriteria) { throw_nogpu(); }
+void cv::gpu::meanShiftProc(const GpuMat&, GpuMat&, GpuMat&, int, int, TermCriteria) { throw_nogpu(); }
 void cv::gpu::drawColorDisp(const GpuMat&, GpuMat&, int) { throw_nogpu(); }
 void cv::gpu::drawColorDisp(const GpuMat&, GpuMat&, int, const Stream&) { throw_nogpu(); }
 void cv::gpu::reprojectImageTo3D(const GpuMat&, GpuMat&, const Mat&) { throw_nogpu(); }
@@ -62,7 +63,13 @@ void cv::gpu::warpAffine(const GpuMat&, GpuMat&, const Mat&, Size, int) { throw_
 void cv::gpu::warpPerspective(const GpuMat&, GpuMat&, const Mat&, Size, int) { throw_nogpu(); }
 void cv::gpu::rotate(const GpuMat&, GpuMat&, Size, double, double, double, int) { throw_nogpu(); }
 void cv::gpu::integral(GpuMat&, GpuMat&, GpuMat&) { throw_nogpu(); }
-void cv::gpu::boxFilter(const GpuMat&, GpuMat&, Size, Point) { throw_nogpu(); }
+void cv::gpu::rectStdDev(const GpuMat&, const GpuMat&, GpuMat&, const Rect&) { throw_nogpu(); }
+void cv::gpu::Canny(const GpuMat&, GpuMat&, double, double, int) { throw_nogpu(); }
+void cv::gpu::evenLevels(GpuMat&, int, int, int) { throw_nogpu(); }
+void cv::gpu::histEven(const GpuMat&, GpuMat&, int, int, int) { throw_nogpu(); }
+void cv::gpu::histEven(const GpuMat&, GpuMat*, int*, int*, int*) { throw_nogpu(); }
+void cv::gpu::histRange(const GpuMat&, GpuMat&, const GpuMat&) { throw_nogpu(); }
+void cv::gpu::histRange(const GpuMat&, GpuMat*, const GpuMat*) { throw_nogpu(); }
 
 #else /* !defined (HAVE_CUDA) */
 
@@ -74,6 +81,7 @@ namespace cv { namespace gpu
         void remap_gpu_3c(const DevMem2D& src, const DevMem2Df& xmap, const DevMem2Df& ymap, DevMem2D dst);
 
         extern "C" void meanShiftFiltering_gpu(const DevMem2D& src, DevMem2D dst, int sp, int sr, int maxIter, float eps);
+        extern "C" void meanShiftProc_gpu(const DevMem2D& src, DevMem2D dstr, DevMem2D dstsp, int sp, int sr, int maxIter, float eps);
 
         void drawColorDisp_gpu(const DevMem2D& src, const DevMem2D& dst, int ndisp, const cudaStream_t& stream);
         void drawColorDisp_gpu(const DevMem2D_<short>& src, const DevMem2D& dst, int ndisp, const cudaStream_t& stream);
@@ -88,23 +96,43 @@ namespace cv { namespace gpu
         void RGB5x52RGB_gpu(const DevMem2D& src, int green_bits, const DevMem2D& dst, int dstcn, int bidx, cudaStream_t stream);
         void RGB2RGB5x5_gpu(const DevMem2D& src, int srccn, const DevMem2D& dst, int green_bits, int bidx, cudaStream_t stream);
 
-        void Gray2RGB_gpu(const DevMem2D& src, const DevMem2D& dst, int dstcn, cudaStream_t stream);
-        void Gray2RGB_gpu(const DevMem2D_<ushort>& src, const DevMem2D_<ushort>& dst, int dstcn, cudaStream_t stream);
-        void Gray2RGB_gpu(const DevMem2Df& src, const DevMem2Df& dst, int dstcn, cudaStream_t stream);
+        void Gray2RGB_gpu_8u(const DevMem2D& src, const DevMem2D& dst, int dstcn, cudaStream_t stream);
+        void Gray2RGB_gpu_16u(const DevMem2D& src, const DevMem2D& dst, int dstcn, cudaStream_t stream);
+        void Gray2RGB_gpu_32f(const DevMem2D& src, const DevMem2D& dst, int dstcn, cudaStream_t stream);
         void Gray2RGB5x5_gpu(const DevMem2D& src, const DevMem2D& dst, int green_bits, cudaStream_t stream);
 
-        void RGB2Gray_gpu(const DevMem2D& src, int srccn, const DevMem2D& dst, int bidx, cudaStream_t stream);
-        void RGB2Gray_gpu(const DevMem2D_<ushort>& src, int srccn, const DevMem2D_<ushort>& dst, int bidx, cudaStream_t stream);
-        void RGB2Gray_gpu(const DevMem2Df& src, int srccn, const DevMem2Df& dst, int bidx, cudaStream_t stream);
+        void RGB2Gray_gpu_8u(const DevMem2D& src, int srccn, const DevMem2D& dst, int bidx, cudaStream_t stream);
+        void RGB2Gray_gpu_16u(const DevMem2D& src, int srccn, const DevMem2D& dst, int bidx, cudaStream_t stream);
+        void RGB2Gray_gpu_32f(const DevMem2D& src, int srccn, const DevMem2D& dst, int bidx, cudaStream_t stream);
         void RGB5x52Gray_gpu(const DevMem2D& src, int green_bits, const DevMem2D& dst, cudaStream_t stream);
 
-        void RGB2YCrCb_gpu_8u(const DevMem2D& src, int srccn, const DevMem2D& dst, int bidx, const int* coeffs, cudaStream_t stream);
-        void RGB2YCrCb_gpu_16u(const DevMem2D& src, int srccn, const DevMem2D& dst, int bidx, const int* coeffs, cudaStream_t stream);
-        void RGB2YCrCb_gpu_32f(const DevMem2D& src, int srccn, const DevMem2D& dst, int bidx, const float* coeffs, cudaStream_t stream);
+        void RGB2YCrCb_gpu_8u(const DevMem2D& src, int srccn, const DevMem2D& dst, int dstcn, int bidx, const void* coeffs, cudaStream_t stream);
+        void RGB2YCrCb_gpu_16u(const DevMem2D& src, int srccn, const DevMem2D& dst, int dstcn, int bidx, const void* coeffs, cudaStream_t stream);
+        void RGB2YCrCb_gpu_32f(const DevMem2D& src, int srccn, const DevMem2D& dst, int dstcn, int bidx, const void* coeffs, cudaStream_t stream);
 
-        void YCrCb2RGB_gpu_8u(const DevMem2D& src, const DevMem2D& dst, int dstcn, int bidx, const int* coeffs, cudaStream_t stream);
-        void YCrCb2RGB_gpu_16u(const DevMem2D& src, const DevMem2D& dst, int dstcn, int bidx, const int* coeffs, cudaStream_t stream);
-        void YCrCb2RGB_gpu_32f(const DevMem2D& src, const DevMem2D& dst, int dstcn, int bidx, const float* coeffs, cudaStream_t stream);
+        void YCrCb2RGB_gpu_8u(const DevMem2D& src, int srccn, const DevMem2D& dst, int dstcn, int bidx, const void* coeffs, cudaStream_t stream);
+        void YCrCb2RGB_gpu_16u(const DevMem2D& src, int srccn, const DevMem2D& dst, int dstcn, int bidx, const void* coeffs, cudaStream_t stream);
+        void YCrCb2RGB_gpu_32f(const DevMem2D& src, int srccn, const DevMem2D& dst, int dstcn, int bidx, const void* coeffs, cudaStream_t stream);
+
+        void RGB2XYZ_gpu_8u(const DevMem2D& src, int srccn, const DevMem2D& dst, int dstcn, const void* coeffs, cudaStream_t stream);
+        void RGB2XYZ_gpu_16u(const DevMem2D& src, int srccn, const DevMem2D& dst, int dstcn, const void* coeffs, cudaStream_t stream);
+        void RGB2XYZ_gpu_32f(const DevMem2D& src, int srccn, const DevMem2D& dst, int dstcn, const void* coeffs, cudaStream_t stream);
+
+        void XYZ2RGB_gpu_8u(const DevMem2D& src, int srccn, const DevMem2D& dst, int dstcn, const void* coeffs, cudaStream_t stream);
+        void XYZ2RGB_gpu_16u(const DevMem2D& src, int srccn, const DevMem2D& dst, int dstcn, const void* coeffs, cudaStream_t stream);
+        void XYZ2RGB_gpu_32f(const DevMem2D& src, int srccn, const DevMem2D& dst, int dstcn, const void* coeffs, cudaStream_t stream);
+
+        void RGB2HSV_gpu_8u(const DevMem2D& src, int srccn, const DevMem2D& dst, int dstcn, int bidx, int hrange, cudaStream_t stream);
+        void RGB2HSV_gpu_32f(const DevMem2D& src, int srccn, const DevMem2D& dst, int dstcn, int bidx, int hrange, cudaStream_t stream);
+
+        void HSV2RGB_gpu_8u(const DevMem2D& src, int srccn, const DevMem2D& dst, int dstcn, int bidx, int hrange, cudaStream_t stream);
+        void HSV2RGB_gpu_32f(const DevMem2D& src, int srccn, const DevMem2D& dst, int dstcn, int bidx, int hrange, cudaStream_t stream);
+
+        void RGB2HLS_gpu_8u(const DevMem2D& src, int srccn, const DevMem2D& dst, int dstcn, int bidx, int hrange, cudaStream_t stream);
+        void RGB2HLS_gpu_32f(const DevMem2D& src, int srccn, const DevMem2D& dst, int dstcn, int bidx, int hrange, cudaStream_t stream);
+
+        void HLS2RGB_gpu_8u(const DevMem2D& src, int srccn, const DevMem2D& dst, int dstcn, int bidx, int hrange, cudaStream_t stream);
+        void HLS2RGB_gpu_32f(const DevMem2D& src, int srccn, const DevMem2D& dst, int dstcn, int bidx, int hrange, cudaStream_t stream);
     }
 }}
 
@@ -153,6 +181,33 @@ void cv::gpu::meanShiftFiltering(const GpuMat& src, GpuMat& dst, int sp, int sr,
     eps = (float)std::max(criteria.epsilon, 0.0);        
 
     improc::meanShiftFiltering_gpu(src, dst, sp, sr, maxIter, eps);    
+}
+
+////////////////////////////////////////////////////////////////////////
+// meanShiftProc_GPU
+
+void cv::gpu::meanShiftProc(const GpuMat& src, GpuMat& dstr, GpuMat& dstsp, int sp, int sr, TermCriteria criteria)
+{       
+    if( src.empty() )
+        CV_Error( CV_StsBadArg, "The input image is empty" );
+
+    if( src.depth() != CV_8U || src.channels() != 4 )
+        CV_Error( CV_StsUnsupportedFormat, "Only 8-bit, 4-channel images are supported" );
+
+    dstr.create( src.size(), CV_8UC4 );
+    dstsp.create( src.size(), CV_16SC2 );
+    
+    if( !(criteria.type & TermCriteria::MAX_ITER) )
+        criteria.maxCount = 5;
+    
+    int maxIter = std::min(std::max(criteria.maxCount, 1), 100);
+    
+    float eps;
+    if( !(criteria.type & TermCriteria::EPS) )
+        eps = 1.f;
+    eps = (float)std::max(criteria.epsilon, 0.0);        
+
+    improc::meanShiftProc_gpu(src, dstr, dstsp, sp, sr, maxIter, eps);    
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -252,108 +307,122 @@ namespace
         
         CV_Assert(depth == CV_8U || depth == CV_16U || depth == CV_32F);
 
-        GpuMat out;
-        if (dst.data != src.data)
-            out = dst;
-
-        NppiSize nppsz;
-        nppsz.height = src.rows;
-        nppsz.width = src.cols;
-
         switch (code)
         {
             case CV_BGR2BGRA: case CV_RGB2BGRA: case CV_BGRA2BGR:
-            case CV_RGBA2BGR: case CV_RGB2BGR: case CV_BGRA2RGBA:
-                CV_Assert(scn == 3 || scn == 4);
+            case CV_RGBA2BGR: case CV_RGB2BGR: case CV_BGRA2RGBA:                
+                {
+                    typedef void (*func_t)(const DevMem2D& src, int srccn, const DevMem2D& dst, int dstcn, int bidx, cudaStream_t stream);
+                    static const func_t funcs[] = {improc::RGB2RGB_gpu_8u, 0, improc::RGB2RGB_gpu_16u, 0, 0, improc::RGB2RGB_gpu_32f};
 
-                dcn = code == CV_BGR2BGRA || code == CV_RGB2BGRA || code == CV_BGRA2RGBA ? 4 : 3;
-                bidx = code == CV_BGR2BGRA || code == CV_BGRA2BGR ? 0 : 2;
-                
-                out.create(sz, CV_MAKETYPE(depth, dcn));
-                if( depth == CV_8U )
-                    improc::RGB2RGB_gpu_8u(src, scn, out, dcn, bidx, stream);
-                else if( depth == CV_16U )
-                    improc::RGB2RGB_gpu_16u(src, scn, out, dcn, bidx, stream);
-                else
-                    improc::RGB2RGB_gpu_32f(src, scn, out, dcn, bidx, stream);
-                break;
+                    CV_Assert(scn == 3 || scn == 4);
+
+                    dcn = code == CV_BGR2BGRA || code == CV_RGB2BGRA || code == CV_BGRA2RGBA ? 4 : 3;
+                    bidx = code == CV_BGR2BGRA || code == CV_BGRA2BGR ? 0 : 2;
+                    
+                    dst.create(sz, CV_MAKETYPE(depth, dcn));
+
+                    funcs[depth](src, scn, dst, dcn, bidx, stream);
+                    break;
+                }
                 
             case CV_BGR2BGR565: case CV_BGR2BGR555: case CV_RGB2BGR565: case CV_RGB2BGR555:
             case CV_BGRA2BGR565: case CV_BGRA2BGR555: case CV_RGBA2BGR565: case CV_RGBA2BGR555:
-                CV_Assert( (scn == 3 || scn == 4) && depth == CV_8U );
-                out.create(sz, CV_8UC2);
+                {
+                    CV_Assert((scn == 3 || scn == 4) && depth == CV_8U);
 
-                improc::RGB2RGB5x5_gpu(src, scn, out, code == CV_BGR2BGR565 || code == CV_RGB2BGR565 ||
-                          code == CV_BGRA2BGR565 || code == CV_RGBA2BGR565 ? 6 : 5,
-                          code == CV_BGR2BGR565 || code == CV_BGR2BGR555 ||
-                          code == CV_BGRA2BGR565 || code == CV_BGRA2BGR555 ? 0 : 2,
-                          stream);
-                break;
+                    int green_bits = code == CV_BGR2BGR565 || code == CV_RGB2BGR565 
+                        || code == CV_BGRA2BGR565 || code == CV_RGBA2BGR565 ? 6 : 5;
+                    bidx = code == CV_BGR2BGR565 || code == CV_BGR2BGR555 
+                        || code == CV_BGRA2BGR565 || code == CV_BGRA2BGR555 ? 0 : 2;
+
+                    dst.create(sz, CV_8UC2);
+
+                    improc::RGB2RGB5x5_gpu(src, scn, dst, green_bits, bidx, stream);
+                    break;
+                }
             
             case CV_BGR5652BGR: case CV_BGR5552BGR: case CV_BGR5652RGB: case CV_BGR5552RGB:
             case CV_BGR5652BGRA: case CV_BGR5552BGRA: case CV_BGR5652RGBA: case CV_BGR5552RGBA:
-                if(dcn <= 0) dcn = 3;
-                CV_Assert( (dcn == 3 || dcn == 4) && scn == 2 && depth == CV_8U );
-                out.create(sz, CV_MAKETYPE(depth, dcn));
+                {
+                    if (dcn <= 0) dcn = 3;
 
-                improc::RGB5x52RGB_gpu(src, 
-                          code == CV_BGR5652BGR || code == CV_BGR5652RGB ||
-                          code == CV_BGR5652BGRA || code == CV_BGR5652RGBA ? 6 : 5, 
-                          out, dcn,
-                          code == CV_BGR5652BGR || code == CV_BGR5552BGR ||
-                          code == CV_BGR5652BGRA || code == CV_BGR5552BGRA ? 0 : 2,
-                          stream);
-                break;
+                    CV_Assert((dcn == 3 || dcn == 4) && scn == 2 && depth == CV_8U);
+
+                    int green_bits = code == CV_BGR5652BGR || code == CV_BGR5652RGB 
+                        || code == CV_BGR5652BGRA || code == CV_BGR5652RGBA ? 6 : 5;
+                    bidx = code == CV_BGR5652BGR || code == CV_BGR5552BGR 
+                        || code == CV_BGR5652BGRA || code == CV_BGR5552BGRA ? 0 : 2;
+
+                    dst.create(sz, CV_MAKETYPE(depth, dcn));
+
+                    improc::RGB5x52RGB_gpu(src, green_bits, dst, dcn, bidx, stream);
+                    break;
+                }
                         
             case CV_BGR2GRAY: case CV_BGRA2GRAY: case CV_RGB2GRAY: case CV_RGBA2GRAY:
-                CV_Assert(scn == 3 || scn == 4);
+                {
+                    typedef void (*func_t)(const DevMem2D& src, int srccn, const DevMem2D& dst, int bidx, cudaStream_t stream);
+                    static const func_t funcs[] = {improc::RGB2Gray_gpu_8u, 0, improc::RGB2Gray_gpu_16u, 0, 0, improc::RGB2Gray_gpu_32f};
 
-                out.create(sz, CV_MAKETYPE(depth, 1));
-                bidx = code == CV_BGR2GRAY || code == CV_BGRA2GRAY ? 0 : 2;
-                
-                if( depth == CV_8U )
-                    improc::RGB2Gray_gpu((DevMem2D)src, scn, (DevMem2D)out, bidx, stream);
-                else if( depth == CV_16U )
-                    improc::RGB2Gray_gpu((DevMem2D_<unsigned short>)src, scn, (DevMem2D_<unsigned short>)out, bidx, stream);
-                else
-                    improc::RGB2Gray_gpu((DevMem2Df)src, scn, (DevMem2Df)out, bidx, stream);
-                break;
+                    CV_Assert(scn == 3 || scn == 4);
+                    
+                    bidx = code == CV_BGR2GRAY || code == CV_BGRA2GRAY ? 0 : 2;
+
+                    dst.create(sz, CV_MAKETYPE(depth, 1));
+
+                    funcs[depth](src, scn, dst, bidx, stream);
+                    break;
+                }
             
             case CV_BGR5652GRAY: case CV_BGR5552GRAY:
-                CV_Assert( scn == 2 && depth == CV_8U );
+                {
+                    CV_Assert(scn == 2 && depth == CV_8U);
 
-                out.create(sz, CV_8UC1);
+                    int green_bits = code == CV_BGR5652GRAY ? 6 : 5;
 
-                improc::RGB5x52Gray_gpu(src, code == CV_BGR5652GRAY ? 6 : 5, out, stream);
-                break;
+                    dst.create(sz, CV_8UC1);
+
+                    improc::RGB5x52Gray_gpu(src, green_bits, dst, stream);
+                    break;
+                }
             
             case CV_GRAY2BGR: case CV_GRAY2BGRA:
-                if (dcn <= 0) 
-                    dcn = 3;
-                CV_Assert(scn == 1 && (dcn == 3 || dcn == 4));
+                {
+                    typedef void (*func_t)(const DevMem2D& src, const DevMem2D& dst, int dstcn, cudaStream_t stream);
+                    static const func_t funcs[] = {improc::Gray2RGB_gpu_8u, 0, improc::Gray2RGB_gpu_16u, 0, 0, improc::Gray2RGB_gpu_32f};
 
-                out.create(sz, CV_MAKETYPE(depth, dcn));
-                
-                if( depth == CV_8U )
-                    improc::Gray2RGB_gpu((DevMem2D)src, (DevMem2D)out, dcn, stream);
-                else if( depth == CV_16U )
-                    improc::Gray2RGB_gpu((DevMem2D_<unsigned short>)src, (DevMem2D_<unsigned short>)out, dcn, stream);
-                else
-                    improc::Gray2RGB_gpu((DevMem2Df)src, (DevMem2Df)out, dcn, stream);
-                break;
+                    if (dcn <= 0) dcn = 3;
+
+                    CV_Assert(scn == 1 && (dcn == 3 || dcn == 4));
+
+                    dst.create(sz, CV_MAKETYPE(depth, dcn));
+
+                    funcs[depth](src, dst, dcn, stream);
+                    break;
+                }
                 
             case CV_GRAY2BGR565: case CV_GRAY2BGR555:
-                CV_Assert( scn == 1 && depth == CV_8U );
+                {
+                    CV_Assert(scn == 1 && depth == CV_8U);
 
-                out.create(sz, CV_8UC2);
-                
-                improc::Gray2RGB5x5_gpu(src, out, code == CV_GRAY2BGR565 ? 6 : 5, stream);
-                break;
+                    int green_bits =  code == CV_GRAY2BGR565 ? 6 : 5;
+
+                    dst.create(sz, CV_8UC2);
+                    
+                    improc::Gray2RGB5x5_gpu(src, dst, green_bits, stream);
+                    break;
+                }
 
             case CV_BGR2YCrCb: case CV_RGB2YCrCb:
             case CV_BGR2YUV: case CV_RGB2YUV:
                 {
-                    CV_Assert( scn == 3 || scn == 4 );
+                    typedef void (*func_t)(const DevMem2D& src, int srccn, const DevMem2D& dst, int dstcn, int bidx, 
+                        const void* coeffs, cudaStream_t stream);
+                    static const func_t funcs[] = {improc::RGB2YCrCb_gpu_8u, 0, improc::RGB2YCrCb_gpu_16u, 0, 0, improc::RGB2YCrCb_gpu_32f};
+
+                    if (dcn <= 0) dcn = 3;
+                    CV_Assert((scn == 3 || scn == 4) && (dcn == 3 || dcn == 4));
 
                     bidx = code == CV_BGR2YCrCb || code == CV_RGB2YUV ? 0 : 2;
 
@@ -365,32 +434,33 @@ namespace
 
                     float coeffs_f[5];
                     int coeffs_i[5];
-                    ::memcpy(coeffs_f, code == CV_BGR2YCrCb || code == CV_RGB2YCrCb ? YCrCb_f : yuv_f, 5 * sizeof(float));
-                    ::memcpy(coeffs_i, code == CV_BGR2YCrCb || code == CV_RGB2YCrCb ? YCrCb_i : yuv_i, 5 * sizeof(int));
+                    ::memcpy(coeffs_f, code == CV_BGR2YCrCb || code == CV_RGB2YCrCb ? YCrCb_f : yuv_f, sizeof(yuv_f));
+                    ::memcpy(coeffs_i, code == CV_BGR2YCrCb || code == CV_RGB2YCrCb ? YCrCb_i : yuv_i, sizeof(yuv_i));
 
-                    if (bidx==0) 
+                    if (bidx == 0) 
                     {
                         std::swap(coeffs_f[0], coeffs_f[2]);
                         std::swap(coeffs_i[0], coeffs_i[2]);
                     }
                         
-                    out.create(sz, CV_MAKETYPE(depth, 3));
-                    
-                    if( depth == CV_8U )
-                        improc::RGB2YCrCb_gpu_8u(src, scn, out, bidx, coeffs_i, stream);
-                    else if( depth == CV_16U )
-                        improc::RGB2YCrCb_gpu_16u(src, scn, out, bidx, coeffs_i, stream);
-                    else
-                        improc::RGB2YCrCb_gpu_32f(src, scn, out, bidx, coeffs_f, stream);
+                    dst.create(sz, CV_MAKETYPE(depth, dcn));
+
+                    const void* coeffs = depth == CV_32F ? (void*)coeffs_f : (void*)coeffs_i;
+
+                    funcs[depth](src, scn, dst, dcn, bidx, coeffs, stream);
+                    break;
                 }
-                break;
                 
             case CV_YCrCb2BGR: case CV_YCrCb2RGB:
             case CV_YUV2BGR: case CV_YUV2RGB:
                 {
+                    typedef void (*func_t)(const DevMem2D& src, int srccn, const DevMem2D& dst, int dstcn, int bidx, 
+                        const void* coeffs, cudaStream_t stream);
+                    static const func_t funcs[] = {improc::YCrCb2RGB_gpu_8u, 0, improc::YCrCb2RGB_gpu_16u, 0, 0, improc::YCrCb2RGB_gpu_32f};
+
                     if (dcn <= 0) dcn = 3;
 
-                    CV_Assert( scn == 3 && (dcn == 3 || dcn == 4) );
+                    CV_Assert((scn == 3 || scn == 4) && (dcn == 3 || dcn == 4));
 
                     bidx = code == CV_YCrCb2BGR || code == CV_YUV2RGB ? 0 : 2;
 
@@ -403,182 +473,167 @@ namespace
                     const float* coeffs_f = code == CV_YCrCb2BGR || code == CV_YCrCb2RGB ? YCrCb_f : yuv_f;
                     const int* coeffs_i = code == CV_YCrCb2BGR || code == CV_YCrCb2RGB ? YCrCb_i : yuv_i;
                     
-                    out.create(sz, CV_MAKETYPE(depth, dcn));
+                    dst.create(sz, CV_MAKETYPE(depth, dcn));
                     
-                    if( depth == CV_8U )
-                        improc::YCrCb2RGB_gpu_8u(src, out, dcn, bidx, coeffs_i, stream);
-                    else if( depth == CV_16U )
-                        improc::YCrCb2RGB_gpu_16u(src, out, dcn, bidx, coeffs_i, stream);
-                    else
-                        improc::YCrCb2RGB_gpu_32f(src, out, dcn, bidx, coeffs_f, stream);
+                    const void* coeffs = depth == CV_32F ? (void*)coeffs_f : (void*)coeffs_i;
+
+                    funcs[depth](src, scn, dst, dcn, bidx, coeffs, stream);
+                    break;
                 }
-                break;
             
-            //case CV_BGR2XYZ: case CV_RGB2XYZ:
-            //    CV_Assert( scn == 3 || scn == 4 );
-            //    bidx = code == CV_BGR2XYZ ? 0 : 2;
-            //    
-            //    dst.create(sz, CV_MAKETYPE(depth, 3));
-            //    
-            //    if( depth == CV_8U )
-            //        CvtColorLoop(src, dst, RGB2XYZ_i<uchar>(scn, bidx, 0));
-            //    else if( depth == CV_16U )
-            //        CvtColorLoop(src, dst, RGB2XYZ_i<ushort>(scn, bidx, 0));
-            //    else
-            //        CvtColorLoop(src, dst, RGB2XYZ_f<float>(scn, bidx, 0));
-            //    break;
+            case CV_BGR2XYZ: case CV_RGB2XYZ:
+                {
+                    typedef void (*func_t)(const DevMem2D& src, int srccn, const DevMem2D& dst, int dstcn, 
+                        const void* coeffs, cudaStream_t stream);
+                    static const func_t funcs[] = {improc::RGB2XYZ_gpu_8u, 0, improc::RGB2XYZ_gpu_16u, 0, 0, improc::RGB2XYZ_gpu_32f};
+
+                    if (dcn <= 0) dcn = 3;
+
+                    CV_Assert((scn == 3 || scn == 4) && (dcn == 3 || dcn == 4));
+
+                    bidx = code == CV_BGR2XYZ ? 0 : 2;
+
+                    static const float RGB2XYZ_D65f[] =
+                    {
+                        0.412453f, 0.357580f, 0.180423f,
+                        0.212671f, 0.715160f, 0.072169f,
+                        0.019334f, 0.119193f, 0.950227f
+                    };
+                    static const int RGB2XYZ_D65i[] =
+                    {
+                        1689,    1465,    739,
+                        871,     2929,    296,
+                        79,      488,     3892
+                    };
+
+                    float coeffs_f[9];
+                    int coeffs_i[9];
+                    ::memcpy(coeffs_f, RGB2XYZ_D65f, sizeof(RGB2XYZ_D65f));
+                    ::memcpy(coeffs_i, RGB2XYZ_D65i, sizeof(RGB2XYZ_D65i));
+
+                    if (bidx == 0) 
+                    {
+                        std::swap(coeffs_f[0], coeffs_f[2]);
+                        std::swap(coeffs_f[3], coeffs_f[5]);
+                        std::swap(coeffs_f[6], coeffs_f[8]);
+                        
+                        std::swap(coeffs_i[0], coeffs_i[2]);
+                        std::swap(coeffs_i[3], coeffs_i[5]);
+                        std::swap(coeffs_i[6], coeffs_i[8]);
+                    }
+                        
+                    dst.create(sz, CV_MAKETYPE(depth, dcn));
+                    
+                    const void* coeffs = depth == CV_32F ? (void*)coeffs_f : (void*)coeffs_i;
+                    
+                    funcs[depth](src, scn, dst, dcn, coeffs, stream);
+                    break;
+                }
             
-            //case CV_XYZ2BGR: case CV_XYZ2RGB:
-            //    if( dcn <= 0 ) dcn = 3;
-            //    CV_Assert( scn == 3 && (dcn == 3 || dcn == 4) );
-            //    bidx = code == CV_XYZ2BGR ? 0 : 2;
-            //    
-            //    dst.create(sz, CV_MAKETYPE(depth, dcn));
-            //    
-            //    if( depth == CV_8U )
-            //        CvtColorLoop(src, dst, XYZ2RGB_i<uchar>(dcn, bidx, 0));
-            //    else if( depth == CV_16U )
-            //        CvtColorLoop(src, dst, XYZ2RGB_i<ushort>(dcn, bidx, 0));
-            //    else
-            //        CvtColorLoop(src, dst, XYZ2RGB_f<float>(dcn, bidx, 0));
-            //    break;
+            case CV_XYZ2BGR: case CV_XYZ2RGB:
+                {
+                    typedef void (*func_t)(const DevMem2D& src, int srccn, const DevMem2D& dst, int dstcn, 
+                        const void* coeffs, cudaStream_t stream);
+                    static const func_t funcs[] = {improc::XYZ2RGB_gpu_8u, 0, improc::XYZ2RGB_gpu_16u, 0, 0, improc::XYZ2RGB_gpu_32f};
+
+                    if (dcn <= 0) dcn = 3;
+
+                    CV_Assert((scn == 3 || scn == 4) && (dcn == 3 || dcn == 4));
+
+                    bidx = code == CV_XYZ2BGR ? 0 : 2;
+
+                    static const float XYZ2sRGB_D65f[] =
+                    {
+                        3.240479f, -1.53715f, -0.498535f,
+                        -0.969256f, 1.875991f, 0.041556f,
+                        0.055648f, -0.204043f, 1.057311f
+                    };
+                    static const int XYZ2sRGB_D65i[] =
+                    {
+                        13273,  -6296,  -2042,
+                        -3970,   7684,    170,
+                          228,   -836,   4331
+                    };
+
+                    float coeffs_f[9];
+                    int coeffs_i[9];
+                    ::memcpy(coeffs_f, XYZ2sRGB_D65f, sizeof(XYZ2sRGB_D65f));
+                    ::memcpy(coeffs_i, XYZ2sRGB_D65i, sizeof(XYZ2sRGB_D65i));
+
+                    if (bidx == 0) 
+                    {
+                        std::swap(coeffs_f[0], coeffs_f[6]);
+                        std::swap(coeffs_f[1], coeffs_f[7]);
+                        std::swap(coeffs_f[2], coeffs_f[8]);
+                        
+                        std::swap(coeffs_i[0], coeffs_i[6]);
+                        std::swap(coeffs_i[1], coeffs_i[7]);
+                        std::swap(coeffs_i[2], coeffs_i[8]);
+                    }
+                        
+                    dst.create(sz, CV_MAKETYPE(depth, dcn));
+                    
+                    const void* coeffs = depth == CV_32F ? (void*)coeffs_f : (void*)coeffs_i;
+
+                    funcs[depth](src, scn, dst, dcn, coeffs_i, stream);
+                    break;
+                }
+
+            case CV_BGR2HSV: case CV_RGB2HSV: case CV_BGR2HSV_FULL: case CV_RGB2HSV_FULL:
+            case CV_BGR2HLS: case CV_RGB2HLS: case CV_BGR2HLS_FULL: case CV_RGB2HLS_FULL:
+                {
+                    typedef void (*func_t)(const DevMem2D& src, int srccn, const DevMem2D& dst, int dstcn, int bidx, 
+                        int hrange, cudaStream_t stream);
+                    static const func_t funcs_hsv[] = {improc::RGB2HSV_gpu_8u, 0, 0, 0, 0, improc::RGB2HSV_gpu_32f};
+                    static const func_t funcs_hls[] = {improc::RGB2HLS_gpu_8u, 0, 0, 0, 0, improc::RGB2HLS_gpu_32f};
+
+                    if (dcn <= 0) dcn = 3;
+
+                    CV_Assert((scn == 3 || scn == 4) && (dcn == 3 || dcn == 4) && (depth == CV_8U || depth == CV_32F));
+
+                    bidx = code == CV_BGR2HSV || code == CV_BGR2HLS ||
+                        code == CV_BGR2HSV_FULL || code == CV_BGR2HLS_FULL ? 0 : 2;
+                    int hrange = depth == CV_32F ? 360 : code == CV_BGR2HSV || code == CV_RGB2HSV ||
+                        code == CV_BGR2HLS || code == CV_RGB2HLS ? 180 : 255;
                 
-            //case CV_BGR2HSV: case CV_RGB2HSV: case CV_BGR2HSV_FULL: case CV_RGB2HSV_FULL:
-            //case CV_BGR2HLS: case CV_RGB2HLS: case CV_BGR2HLS_FULL: case CV_RGB2HLS_FULL:
-            //    {
-            //    CV_Assert( (scn == 3 || scn == 4) && (depth == CV_8U || depth == CV_32F) );
-            //    bidx = code == CV_BGR2HSV || code == CV_BGR2HLS ||
-            //        code == CV_BGR2HSV_FULL || code == CV_BGR2HLS_FULL ? 0 : 2;
-            //    int hrange = depth == CV_32F ? 360 : code == CV_BGR2HSV || code == CV_RGB2HSV ||
-            //        code == CV_BGR2HLS || code == CV_RGB2HLS ? 180 : 255;
-            //    
-            //    dst.create(sz, CV_MAKETYPE(depth, 3));
-            //    
-            //    if( code == CV_BGR2HSV || code == CV_RGB2HSV ||
-            //        code == CV_BGR2HSV_FULL || code == CV_RGB2HSV_FULL )
-            //    {
-            //        if( depth == CV_8U )
-            //            CvtColorLoop(src, dst, RGB2HSV_b(scn, bidx, hrange));
-            //        else
-            //            CvtColorLoop(src, dst, RGB2HSV_f(scn, bidx, (float)hrange));
-            //    }
-            //    else
-            //    {
-            //        if( depth == CV_8U )
-            //            CvtColorLoop(src, dst, RGB2HLS_b(scn, bidx, hrange));
-            //        else
-            //            CvtColorLoop(src, dst, RGB2HLS_f(scn, bidx, (float)hrange));
-            //    }
-            //    }
-            //    break;
-            
-            //case CV_HSV2BGR: case CV_HSV2RGB: case CV_HSV2BGR_FULL: case CV_HSV2RGB_FULL:
-            //case CV_HLS2BGR: case CV_HLS2RGB: case CV_HLS2BGR_FULL: case CV_HLS2RGB_FULL:
-            //    {
-            //    if( dcn <= 0 ) dcn = 3;
-            //    CV_Assert( scn == 3 && (dcn == 3 || dcn == 4) && (depth == CV_8U || depth == CV_32F) );
-            //    bidx = code == CV_HSV2BGR || code == CV_HLS2BGR ||
-            //        code == CV_HSV2BGR_FULL || code == CV_HLS2BGR_FULL ? 0 : 2;
-            //    int hrange = depth == CV_32F ? 360 : code == CV_HSV2BGR || code == CV_HSV2RGB ||
-            //        code == CV_HLS2BGR || code == CV_HLS2RGB ? 180 : 255;
-            //    
-            //    dst.create(sz, CV_MAKETYPE(depth, dcn));
-            //    
-            //    if( code == CV_HSV2BGR || code == CV_HSV2RGB ||
-            //        code == CV_HSV2BGR_FULL || code == CV_HSV2RGB_FULL )
-            //    {
-            //        if( depth == CV_8U )
-            //            CvtColorLoop(src, dst, HSV2RGB_b(dcn, bidx, hrange));
-            //        else
-            //            CvtColorLoop(src, dst, HSV2RGB_f(dcn, bidx, (float)hrange));
-            //    }
-            //    else
-            //    {
-            //        if( depth == CV_8U )
-            //            CvtColorLoop(src, dst, HLS2RGB_b(dcn, bidx, hrange));
-            //        else
-            //            CvtColorLoop(src, dst, HLS2RGB_f(dcn, bidx, (float)hrange));
-            //    }
-            //    }
-            //    break;
-                
-            //case CV_BGR2Lab: case CV_RGB2Lab: case CV_LBGR2Lab: case CV_LRGB2Lab:
-            //case CV_BGR2Luv: case CV_RGB2Luv: case CV_LBGR2Luv: case CV_LRGB2Luv:
-            //    {
-            //    CV_Assert( (scn == 3 || scn == 4) && (depth == CV_8U || depth == CV_32F) );
-            //    bidx = code == CV_BGR2Lab || code == CV_BGR2Luv ||
-            //           code == CV_LBGR2Lab || code == CV_LBGR2Luv ? 0 : 2;
-            //    bool srgb = code == CV_BGR2Lab || code == CV_RGB2Lab ||
-            //                code == CV_BGR2Luv || code == CV_RGB2Luv;
-            //    
-            //    dst.create(sz, CV_MAKETYPE(depth, 3));
-            //    
-            //    if( code == CV_BGR2Lab || code == CV_RGB2Lab ||
-            //        code == CV_LBGR2Lab || code == CV_LRGB2Lab )
-            //    {
-            //        if( depth == CV_8U )
-            //            CvtColorLoop(src, dst, RGB2Lab_b(scn, bidx, 0, 0, srgb));
-            //        else
-            //            CvtColorLoop(src, dst, RGB2Lab_f(scn, bidx, 0, 0, srgb));
-            //    }
-            //    else
-            //    {
-            //        if( depth == CV_8U )
-            //            CvtColorLoop(src, dst, RGB2Luv_b(scn, bidx, 0, 0, srgb));
-            //        else
-            //            CvtColorLoop(src, dst, RGB2Luv_f(scn, bidx, 0, 0, srgb));
-            //    }
-            //    }
-            //    break;
-            
-            //case CV_Lab2BGR: case CV_Lab2RGB: case CV_Lab2LBGR: case CV_Lab2LRGB:
-            //case CV_Luv2BGR: case CV_Luv2RGB: case CV_Luv2LBGR: case CV_Luv2LRGB:
-            //    {
-            //    if( dcn <= 0 ) dcn = 3;
-            //    CV_Assert( scn == 3 && (dcn == 3 || dcn == 4) && (depth == CV_8U || depth == CV_32F) );
-            //    bidx = code == CV_Lab2BGR || code == CV_Luv2BGR ||
-            //           code == CV_Lab2LBGR || code == CV_Luv2LBGR ? 0 : 2;
-            //    bool srgb = code == CV_Lab2BGR || code == CV_Lab2RGB ||
-            //            code == CV_Luv2BGR || code == CV_Luv2RGB;
-            //    
-            //    dst.create(sz, CV_MAKETYPE(depth, dcn));
-            //    
-            //    if( code == CV_Lab2BGR || code == CV_Lab2RGB ||
-            //        code == CV_Lab2LBGR || code == CV_Lab2LRGB )
-            //    {
-            //        if( depth == CV_8U )
-            //            CvtColorLoop(src, dst, Lab2RGB_b(dcn, bidx, 0, 0, srgb));
-            //        else
-            //            CvtColorLoop(src, dst, Lab2RGB_f(dcn, bidx, 0, 0, srgb));
-            //    }
-            //    else
-            //    {
-            //        if( depth == CV_8U )
-            //            CvtColorLoop(src, dst, Luv2RGB_b(dcn, bidx, 0, 0, srgb));
-            //        else
-            //            CvtColorLoop(src, dst, Luv2RGB_f(dcn, bidx, 0, 0, srgb));
-            //    }
-            //    }
-            //    break;
-                
-            //case CV_BayerBG2BGR: case CV_BayerGB2BGR: case CV_BayerRG2BGR: case CV_BayerGR2BGR:
-            //case CV_BayerBG2BGR_VNG: case CV_BayerGB2BGR_VNG: case CV_BayerRG2BGR_VNG: case CV_BayerGR2BGR_VNG:
-            //    if(dcn <= 0) dcn = 3;
-            //    CV_Assert( scn == 1 && dcn == 3 && depth == CV_8U );
-            //    dst.create(sz, CV_8UC3);
-            //    
-            //    if( code == CV_BayerBG2BGR || code == CV_BayerGB2BGR ||
-            //        code == CV_BayerRG2BGR || code == CV_BayerGR2BGR )
-            //        Bayer2RGB_8u(src, dst, code);
-            //    else
-            //        Bayer2RGB_VNG_8u(src, dst, code);
-            //    break;
+                    dst.create(sz, CV_MAKETYPE(depth, dcn));
+
+                    if (code == CV_BGR2HSV || code == CV_RGB2HSV || code == CV_BGR2HSV_FULL || code == CV_RGB2HSV_FULL) 
+                        funcs_hsv[depth](src, scn, dst, dcn, bidx, hrange, stream);
+                    else
+                        funcs_hls[depth](src, scn, dst, dcn, bidx, hrange, stream);
+                    break;
+                }
+
+            case CV_HSV2BGR: case CV_HSV2RGB: case CV_HSV2BGR_FULL: case CV_HSV2RGB_FULL:
+            case CV_HLS2BGR: case CV_HLS2RGB: case CV_HLS2BGR_FULL: case CV_HLS2RGB_FULL:
+                {
+                    typedef void (*func_t)(const DevMem2D& src, int srccn, const DevMem2D& dst, int dstcn, int bidx, 
+                        int hrange, cudaStream_t stream);
+                    static const func_t funcs_hsv[] = {improc::HSV2RGB_gpu_8u, 0, 0, 0, 0, improc::HSV2RGB_gpu_32f};
+                    static const func_t funcs_hls[] = {improc::HLS2RGB_gpu_8u, 0, 0, 0, 0, improc::HLS2RGB_gpu_32f};
+
+                    if (dcn <= 0) dcn = 3;
+
+                    CV_Assert((scn == 3 || scn == 4) && (dcn == 3 || dcn == 4) && (depth == CV_8U || depth == CV_32F));
+
+                    bidx = code == CV_HSV2BGR || code == CV_HLS2BGR ||
+                        code == CV_HSV2BGR_FULL || code == CV_HLS2BGR_FULL ? 0 : 2;
+                    int hrange = depth == CV_32F ? 360 : code == CV_HSV2BGR || code == CV_HSV2RGB ||
+                        code == CV_HLS2BGR || code == CV_HLS2RGB ? 180 : 255;
+                    
+                    dst.create(sz, CV_MAKETYPE(depth, dcn));
+
+                    if (code == CV_HSV2BGR || code == CV_HSV2RGB || code == CV_HSV2BGR_FULL || code == CV_HSV2RGB_FULL)
+                        funcs_hsv[depth](src, scn, dst, dcn, bidx, hrange, stream);
+                    else
+                        funcs_hls[depth](src, scn, dst, dcn, bidx, hrange, stream);
+                    break;
+                }
 
             default:
                 CV_Error( CV_StsBadFlag, "Unknown/unsupported color conversion code" );
         }
-
-        dst = out;
     }
 }
 
@@ -916,42 +971,308 @@ void cv::gpu::integral(GpuMat& src, GpuMat& sum, GpuMat& sqsum)
         sum.step, sqsum.ptr<Npp32f>(), sqsum.step, sz, 0, 0.0f, h) );
 }
 
-////////////////////////////////////////////////////////////////////////
-// boxFilter
-
-void cv::gpu::boxFilter(const GpuMat& src, GpuMat& dst, Size ksize, Point anchor)
+void cv::gpu::rectStdDev(const GpuMat& src, const GpuMat& sqr, GpuMat& dst, const Rect& rect)
 {
-    CV_Assert(src.type() == CV_8UC1 || src.type() == CV_8UC4);
-    CV_Assert(ksize.height == 3 || ksize.height == 5 || ksize.height == 7);
-    CV_Assert(ksize.height == ksize.width);
+    CV_Assert(src.type() == CV_32SC1 && sqr.type() == CV_32FC1);
 
-    if (anchor.x == -1)
-        anchor.x = 0;
-    if (anchor.y == -1)
-        anchor.y = 0;
+    dst.create(src.size(), CV_32FC1);
 
-    CV_Assert(anchor.x == 0 && anchor.y == 0);
+    NppiSize sz;
+    sz.width = src.cols;
+    sz.height = src.rows;
 
-    dst.create(src.size(), src.type());
+    NppiRect nppRect;
+    nppRect.height = rect.height;
+    nppRect.width = rect.width;
+    nppRect.x = rect.x;
+    nppRect.y = rect.y;
 
-    NppiSize srcsz;
-    srcsz.height = src.rows;
-    srcsz.width = src.cols;
-    NppiSize masksz;
-    masksz.height = ksize.height;
-    masksz.width = ksize.width;
-    NppiPoint anc;
-    anc.x = anchor.x;
-    anc.y = anchor.y;
+    nppSafeCall( nppiRectStdDev_32s32f_C1R(src.ptr<Npp32s>(), src.step, sqr.ptr<Npp32f>(), sqr.step,
+		dst.ptr<Npp32f>(), dst.step, sz, nppRect) );
+}
 
-    if (src.type() == CV_8UC1)
+////////////////////////////////////////////////////////////////////////
+// Canny
+
+void cv::gpu::Canny(const GpuMat& image, GpuMat& edges, double threshold1, double threshold2, int apertureSize)
+{
+    CV_Assert(!"disabled until fix crash");
+    CV_Assert(image.type() == CV_8UC1);
+
+    GpuMat srcDx, srcDy;
+
+    Sobel(image, srcDx, -1, 1, 0, apertureSize);
+    Sobel(image, srcDy, -1, 0, 1, apertureSize);
+
+    srcDx.convertTo(srcDx, CV_32F);
+    srcDy.convertTo(srcDy, CV_32F);
+
+    edges.create(image.size(), CV_8UC1);
+
+    NppiSize sz;
+    sz.height = image.rows;
+    sz.width = image.cols;
+
+    int bufsz;
+    nppSafeCall( nppiCannyGetBufferSize(sz, &bufsz) );
+    GpuMat buf(1, bufsz, CV_8UC1);
+
+    nppSafeCall( nppiCanny_32f8u_C1R(srcDx.ptr<Npp32f>(), srcDx.step, srcDy.ptr<Npp32f>(), srcDy.step, 
+        edges.ptr<Npp8u>(), edges.step, sz, (Npp32f)threshold1, (Npp32f)threshold2, buf.ptr<Npp8u>()) );
+}
+
+////////////////////////////////////////////////////////////////////////
+// Histogram
+
+namespace
+{
+    template<int n> struct NPPTypeTraits;
+    template<> struct NPPTypeTraits<CV_8U>  { typedef Npp8u npp_type; };
+    template<> struct NPPTypeTraits<CV_16U> { typedef Npp16u npp_type; };
+    template<> struct NPPTypeTraits<CV_16S> { typedef Npp16s npp_type; };
+    template<> struct NPPTypeTraits<CV_32F> { typedef Npp32f npp_type; };
+    
+    typedef NppStatus (*get_buf_size_c1_t)(NppiSize oSizeROI, int nLevels, int* hpBufferSize);
+    typedef NppStatus (*get_buf_size_c4_t)(NppiSize oSizeROI, int nLevels[], int* hpBufferSize);
+
+    template<int SDEPTH> struct NppHistogramEvenFuncC1
     {
-        nppSafeCall( nppiFilterBox_8u_C1R(src.ptr<Npp8u>(), src.step, dst.ptr<Npp8u>(), dst.step, srcsz, masksz, anc) );
-    }
-    else
+        typedef typename NPPTypeTraits<SDEPTH>::npp_type src_t;
+
+        typedef NppStatus (*func_ptr)(const src_t* pSrc, int nSrcStep, NppiSize oSizeROI, Npp32s * pHist, 
+		    int nLevels, Npp32s nLowerLevel, Npp32s nUpperLevel, Npp8u * pBuffer);
+    };
+    template<int SDEPTH> struct NppHistogramEvenFuncC4
     {
-        nppSafeCall( nppiFilterBox_8u_C4R(src.ptr<Npp8u>(), src.step, dst.ptr<Npp8u>(), dst.step, srcsz, masksz, anc) );
-    }
+        typedef typename NPPTypeTraits<SDEPTH>::npp_type src_t;
+
+        typedef NppStatus (*func_ptr)(const src_t* pSrc, int nSrcStep, NppiSize oSizeROI, 
+            Npp32s * pHist[4], int nLevels[4], Npp32s nLowerLevel[4], Npp32s nUpperLevel[4], Npp8u * pBuffer);
+    };
+    
+    template<int SDEPTH, typename NppHistogramEvenFuncC1<SDEPTH>::func_ptr func, get_buf_size_c1_t get_buf_size> 
+    struct NppHistogramEvenC1
+    { 
+        typedef typename NppHistogramEvenFuncC1<SDEPTH>::src_t src_t;
+
+        static void hist(const GpuMat& src, GpuMat& hist, int histSize, int lowerLevel, int upperLevel)
+        {
+            int levels = histSize + 1;
+            hist.create(1, histSize, CV_32S);
+
+            NppiSize sz;
+            sz.width = src.cols;
+            sz.height = src.rows;
+
+            GpuMat buffer;
+            int buf_size;
+
+            get_buf_size(sz, levels, &buf_size);
+            buffer.create(1, buf_size, CV_8U);
+            nppSafeCall( func(src.ptr<src_t>(), src.step, sz, hist.ptr<Npp32s>(), levels, 
+                lowerLevel, upperLevel, buffer.ptr<Npp8u>()) );
+        }
+    };    
+    template<int SDEPTH, typename NppHistogramEvenFuncC4<SDEPTH>::func_ptr func, get_buf_size_c4_t get_buf_size> 
+    struct NppHistogramEvenC4
+    { 
+        typedef typename NppHistogramEvenFuncC4<SDEPTH>::src_t src_t;
+
+        static void hist(const GpuMat& src, GpuMat hist[4], int histSize[4], int lowerLevel[4], int upperLevel[4])
+        {
+            int levels[] = {histSize[0] + 1, histSize[1] + 1, histSize[2] + 1, histSize[3] + 1};
+            hist[0].create(1, histSize[0], CV_32S);
+            hist[1].create(1, histSize[1], CV_32S);
+            hist[2].create(1, histSize[2], CV_32S);
+            hist[3].create(1, histSize[3], CV_32S);
+
+            NppiSize sz;
+            sz.width = src.cols;
+            sz.height = src.rows;
+
+            Npp32s* pHist[] = {hist[0].ptr<Npp32s>(), hist[1].ptr<Npp32s>(), hist[2].ptr<Npp32s>(), hist[3].ptr<Npp32s>()};
+
+            GpuMat buffer;
+            int buf_size;
+
+            get_buf_size(sz, levels, &buf_size);
+            buffer.create(1, buf_size, CV_8U);
+            nppSafeCall( func(src.ptr<src_t>(), src.step, sz, pHist, levels, lowerLevel, upperLevel, buffer.ptr<Npp8u>()) );
+        }
+    };
+
+    template<int SDEPTH> struct NppHistogramRangeFuncC1
+    {
+        typedef typename NPPTypeTraits<SDEPTH>::npp_type src_t;
+        typedef Npp32s level_t;
+        enum {LEVEL_TYPE_CODE=CV_32SC1};
+
+        typedef NppStatus (*func_ptr)(const src_t* pSrc, int nSrcStep, NppiSize oSizeROI, Npp32s* pHist, 
+            const Npp32s* pLevels, int nLevels, Npp8u* pBuffer);
+    };
+    template<> struct NppHistogramRangeFuncC1<CV_32F>
+    {
+        typedef Npp32f src_t;
+        typedef Npp32f level_t;
+        enum {LEVEL_TYPE_CODE=CV_32FC1};
+
+        typedef NppStatus (*func_ptr)(const Npp32f* pSrc, int nSrcStep, NppiSize oSizeROI, Npp32s* pHist, 
+            const Npp32f* pLevels, int nLevels, Npp8u* pBuffer);
+    };
+    template<int SDEPTH> struct NppHistogramRangeFuncC4
+    {
+        typedef typename NPPTypeTraits<SDEPTH>::npp_type src_t;
+        typedef Npp32s level_t;
+        enum {LEVEL_TYPE_CODE=CV_32SC1};
+
+        typedef NppStatus (*func_ptr)(const src_t* pSrc, int nSrcStep, NppiSize oSizeROI, Npp32s* pHist[4], 
+            const Npp32s* pLevels[4], int nLevels[4], Npp8u* pBuffer);
+    };
+    template<> struct NppHistogramRangeFuncC4<CV_32F>
+    {
+        typedef Npp32f src_t;
+        typedef Npp32f level_t;
+        enum {LEVEL_TYPE_CODE=CV_32FC1};
+
+        typedef NppStatus (*func_ptr)(const Npp32f* pSrc, int nSrcStep, NppiSize oSizeROI, Npp32s* pHist[4], 
+            const Npp32f* pLevels[4], int nLevels[4], Npp8u* pBuffer);
+    };
+        
+    template<int SDEPTH, typename NppHistogramRangeFuncC1<SDEPTH>::func_ptr func, get_buf_size_c1_t get_buf_size> 
+    struct NppHistogramRangeC1
+    { 
+        typedef typename NppHistogramRangeFuncC1<SDEPTH>::src_t src_t;
+        typedef typename NppHistogramRangeFuncC1<SDEPTH>::level_t level_t;
+        enum {LEVEL_TYPE_CODE=NppHistogramRangeFuncC1<SDEPTH>::LEVEL_TYPE_CODE};
+
+        static void hist(const GpuMat& src, GpuMat& hist, const GpuMat& levels)
+        {            
+            CV_Assert(levels.type() == LEVEL_TYPE_CODE && levels.rows == 1);
+
+            hist.create(1, levels.cols - 1, CV_32S);
+
+            NppiSize sz;
+            sz.width = src.cols;
+            sz.height = src.rows;
+
+            GpuMat buffer;
+            int buf_size;
+
+            get_buf_size(sz, levels.cols, &buf_size);
+            buffer.create(1, buf_size, CV_8U);
+            nppSafeCall( func(src.ptr<src_t>(), src.step, sz, hist.ptr<Npp32s>(), levels.ptr<level_t>(), levels.cols, buffer.ptr<Npp8u>()) );
+        }
+    }; 
+    template<int SDEPTH, typename NppHistogramRangeFuncC4<SDEPTH>::func_ptr func, get_buf_size_c4_t get_buf_size> 
+    struct NppHistogramRangeC4
+    { 
+        typedef typename NppHistogramRangeFuncC4<SDEPTH>::src_t src_t;
+        typedef typename NppHistogramRangeFuncC1<SDEPTH>::level_t level_t;
+        enum {LEVEL_TYPE_CODE=NppHistogramRangeFuncC1<SDEPTH>::LEVEL_TYPE_CODE};
+
+        static void hist(const GpuMat& src, GpuMat hist[4], const GpuMat levels[4])
+        {
+            CV_Assert(levels[0].type() == LEVEL_TYPE_CODE && levels[0].rows == 1);
+            CV_Assert(levels[1].type() == LEVEL_TYPE_CODE && levels[1].rows == 1);
+            CV_Assert(levels[2].type() == LEVEL_TYPE_CODE && levels[2].rows == 1);
+            CV_Assert(levels[3].type() == LEVEL_TYPE_CODE && levels[3].rows == 1);
+
+            hist[0].create(1, levels[0].cols - 1, CV_32S);
+            hist[1].create(1, levels[1].cols - 1, CV_32S);
+            hist[2].create(1, levels[2].cols - 1, CV_32S);
+            hist[3].create(1, levels[3].cols - 1, CV_32S);
+
+            Npp32s* pHist[] = {hist[0].ptr<Npp32s>(), hist[1].ptr<Npp32s>(), hist[2].ptr<Npp32s>(), hist[3].ptr<Npp32s>()};
+            int nLevels[] = {levels[0].cols, levels[1].cols, levels[2].cols, levels[3].cols};
+            const level_t* pLevels[] = {levels[0].ptr<level_t>(), levels[1].ptr<level_t>(), levels[2].ptr<level_t>(), levels[3].ptr<level_t>()};
+
+            NppiSize sz;
+            sz.width = src.cols;
+            sz.height = src.rows;
+
+            GpuMat buffer;
+            int buf_size;
+
+            get_buf_size(sz, nLevels, &buf_size);
+            buffer.create(1, buf_size, CV_8U);
+            nppSafeCall( func(src.ptr<src_t>(), src.step, sz, pHist, pLevels, nLevels, buffer.ptr<Npp8u>()) );
+        }
+    };    
+}
+
+void cv::gpu::evenLevels(GpuMat& levels, int nLevels, int lowerLevel, int upperLevel)
+{
+    Mat host_levels(1, nLevels, CV_32SC1);
+    nppSafeCall( nppiEvenLevelsHost_32s(host_levels.ptr<Npp32s>(), nLevels, lowerLevel, upperLevel) );
+    levels.upload(host_levels);
+}
+
+void cv::gpu::histEven(const GpuMat& src, GpuMat& hist, int histSize, int lowerLevel, int upperLevel)
+{
+    CV_Assert(src.type() == CV_8UC1 || src.type() == CV_16UC1 || src.type() == CV_16SC1 );
+
+    typedef void (*hist_t)(const GpuMat& src, GpuMat& hist, int levels, int lowerLevel, int upperLevel);
+    static const hist_t hist_callers[] = 
+    {
+        NppHistogramEvenC1<CV_8U , nppiHistogramEven_8u_C1R , nppiHistogramEvenGetBufferSize_8u_C1R >::hist,
+        0,
+        NppHistogramEvenC1<CV_16U, nppiHistogramEven_16u_C1R, nppiHistogramEvenGetBufferSize_16u_C1R>::hist,
+        NppHistogramEvenC1<CV_16S, nppiHistogramEven_16s_C1R, nppiHistogramEvenGetBufferSize_16s_C1R>::hist
+    };
+
+    hist_callers[src.depth()](src, hist, histSize, lowerLevel, upperLevel);
+}
+
+void cv::gpu::histEven(const GpuMat& src, GpuMat hist[4], int histSize[4], int lowerLevel[4], int upperLevel[4])
+{
+    CV_Assert(src.type() == CV_8UC4 || src.type() == CV_16UC4 || src.type() == CV_16SC4 );
+    
+    typedef void (*hist_t)(const GpuMat& src, GpuMat hist[4], int levels[4], int lowerLevel[4], int upperLevel[4]);
+    static const hist_t hist_callers[] = 
+    {
+        NppHistogramEvenC4<CV_8U , nppiHistogramEven_8u_C4R , nppiHistogramEvenGetBufferSize_8u_C4R >::hist,
+        0,
+        NppHistogramEvenC4<CV_16U, nppiHistogramEven_16u_C4R, nppiHistogramEvenGetBufferSize_16u_C4R>::hist,
+        NppHistogramEvenC4<CV_16S, nppiHistogramEven_16s_C4R, nppiHistogramEvenGetBufferSize_16s_C4R>::hist
+    };
+
+    hist_callers[src.depth()](src, hist, histSize, lowerLevel, upperLevel);
+}
+
+void cv::gpu::histRange(const GpuMat& src, GpuMat& hist, const GpuMat& levels)
+{
+    CV_Assert(src.type() == CV_8UC1 || src.type() == CV_16UC1 || src.type() == CV_16SC1 || src.type() == CV_32FC1);
+
+    typedef void (*hist_t)(const GpuMat& src, GpuMat& hist, const GpuMat& levels);
+    static const hist_t hist_callers[] = 
+    {
+        NppHistogramRangeC1<CV_8U , nppiHistogramRange_8u_C1R , nppiHistogramRangeGetBufferSize_8u_C1R >::hist,
+        0,
+        NppHistogramRangeC1<CV_16U, nppiHistogramRange_16u_C1R, nppiHistogramRangeGetBufferSize_16u_C1R>::hist,
+        NppHistogramRangeC1<CV_16S, nppiHistogramRange_16s_C1R, nppiHistogramRangeGetBufferSize_16s_C1R>::hist,
+        0,
+        NppHistogramRangeC1<CV_32F, nppiHistogramRange_32f_C1R, nppiHistogramRangeGetBufferSize_32f_C1R>::hist
+    };
+
+    hist_callers[src.depth()](src, hist, levels);
+}
+
+void cv::gpu::histRange(const GpuMat& src, GpuMat hist[4], const GpuMat levels[4])
+{
+    CV_Assert(src.type() == CV_8UC4 || src.type() == CV_16UC4 || src.type() == CV_16SC4 || src.type() == CV_32FC4);
+
+    typedef void (*hist_t)(const GpuMat& src, GpuMat hist[4], const GpuMat levels[4]);
+    static const hist_t hist_callers[] = 
+    {
+        NppHistogramRangeC4<CV_8U , nppiHistogramRange_8u_C4R , nppiHistogramRangeGetBufferSize_8u_C4R >::hist,
+        0,
+        NppHistogramRangeC4<CV_16U, nppiHistogramRange_16u_C4R, nppiHistogramRangeGetBufferSize_16u_C4R>::hist,
+        NppHistogramRangeC4<CV_16S, nppiHistogramRange_16s_C4R, nppiHistogramRangeGetBufferSize_16s_C4R>::hist,
+        0,
+        NppHistogramRangeC4<CV_32F, nppiHistogramRange_32f_C4R, nppiHistogramRangeGetBufferSize_32f_C4R>::hist
+    };
+
+    hist_callers[src.depth()](src, hist, levels);
 }
 
 #endif /* !defined (HAVE_CUDA) */

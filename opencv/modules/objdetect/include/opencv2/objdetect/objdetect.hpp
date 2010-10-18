@@ -139,6 +139,129 @@ CVAPI(void) cvSetImagesForHaarClassifierCascade( CvHaarClassifierCascade* cascad
 CVAPI(int) cvRunHaarClassifierCascade( const CvHaarClassifierCascade* cascade,
                                        CvPoint pt, int start_stage CV_DEFAULT(0));
 
+
+/****************************************************************************************\
+*                         Latent SVM Object Detection functions                          *
+\****************************************************************************************/
+
+// DataType: STRUCT position
+// Structure describes the position of the filter in the feature pyramid
+// l - level in the feature pyramid
+// (x, y) - coordinate in level l
+typedef struct
+{
+    unsigned int x;
+    unsigned int y;
+    unsigned int l;
+} CvLSVMFilterPosition;
+
+// DataType: STRUCT filterObject
+// Description of the filter, which corresponds to the part of the object
+// V               - ideal (penalty = 0) position of the partial filter
+//                   from the root filter position (V_i in the paper)
+// penaltyFunction - vector describes penalty function (d_i in the paper)
+//                   pf[0] * x + pf[1] * y + pf[2] * x^2 + pf[3] * y^2
+// FILTER DESCRIPTION
+//   Rectangular map (sizeX x sizeY), 
+//   every cell stores feature vector (dimension = p)
+// H               - matrix of feature vectors
+//                   to set and get feature vectors (i,j) 
+//                   used formula H[(j * sizeX + i) * p + k], where
+//                   k - component of feature vector in cell (i, j)
+// END OF FILTER DESCRIPTION
+// xp              - auxillary parameter for internal use
+//                   size of row in feature vectors 
+//                   (yp = (int) (p / xp); p = xp * yp)
+typedef struct{
+    CvLSVMFilterPosition V;
+    float fineFunction[4];
+    unsigned int sizeX;
+    unsigned int sizeY;
+    unsigned int p;
+    unsigned int xp;
+    float *H;
+} CvLSVMFilterObject;
+
+// data type: STRUCT CvLatentSvmDetector
+// structure contains internal representation of trained Latent SVM detector
+// num_filters			- total number of filters (root plus part) in model 
+// num_components		- number of components in model
+// num_part_filters		- array containing number of part filters for each component
+// filters				- root and part filters for all model components
+// b					- biases for all model components
+// score_threshold		- confidence level threshold
+typedef struct CvLatentSvmDetector
+{
+	int num_filters;
+	int num_components;
+	int* num_part_filters;
+	CvLSVMFilterObject** filters;
+	float* b;
+	float score_threshold;
+}
+CvLatentSvmDetector;
+
+// data type: STRUCT CvObjectDetection
+// structure contains the bounding box and confidence level for detected object 
+// rect					- bounding box for a detected object
+// score				- confidence level 
+typedef struct CvObjectDetection
+{
+	CvRect rect;
+	float score;
+} CvObjectDetection;
+
+//////////////// Object Detection using Latent SVM //////////////
+
+
+/*
+// load trained detector from a file
+//
+// API
+// CvLatentSvmDetector* cvLoadLatentSvmDetector(const char* filename);
+// INPUT
+// filename				- path to the file containing the parameters of
+						- trained Latent SVM detector
+// OUTPUT
+// trained Latent SVM detector in internal representation
+*/
+CVAPI(CvLatentSvmDetector*) cvLoadLatentSvmDetector(const char* filename);
+
+/*
+// release memory allocated for CvLatentSvmDetector structure
+//
+// API
+// void cvReleaseLatentSvmDetector(CvLatentSvmDetector** detector);
+// INPUT
+// detector				- CvLatentSvmDetector structure to be released
+// OUTPUT
+*/
+CVAPI(void) cvReleaseLatentSvmDetector(CvLatentSvmDetector** detector);
+
+/*
+// find rectangular regions in the given image that are likely 
+// to contain objects and corresponding confidence levels
+//
+// API
+// CvSeq* cvLatentSvmDetectObjects(const IplImage* image, 
+//									CvLatentSvmDetector* detector, 
+//									CvMemStorage* storage, 
+//									float overlap_threshold = 0.5f);
+// INPUT
+// image				- image to detect objects in
+// detector				- Latent SVM detector in internal representation
+// storage				- memory storage to store the resultant sequence 
+//							of the object candidate rectangles
+// overlap_threshold	- threshold for the non-maximum suppression algorithm 
+                           = 0.5f [here will be the reference to original paper]
+// OUTPUT
+// sequence of detected objects (bounding boxes and confidence levels stored in CvObjectDetection structures)
+*/
+CVAPI(CvSeq*) cvLatentSvmDetectObjects(IplImage* image, 
+								CvLatentSvmDetector* detector, 
+								CvMemStorage* storage, 
+								float overlap_threshold CV_DEFAULT(0.5f));
+
 #ifdef __cplusplus
 }
 
@@ -148,7 +271,7 @@ namespace cv
 ///////////////////////////// Object Detection ////////////////////////////
 
 CV_EXPORTS void groupRectangles(vector<Rect>& rectList, int groupThreshold, double eps=0.2);
-CV_EXPORTS void groupRectangles(vector<Rect>& rectList, vector<int>& weights, int groupThreshold, double eps=0.2);
+CV_EXPORTS void groupRectangles(vector<Rect>& rectList, CV_OUT vector<int>& weights, int groupThreshold, double eps=0.2);
         
 class CV_EXPORTS FeatureEvaluator
 {
@@ -205,7 +328,7 @@ public:
     bool load(const string& filename);
     bool read(const FileNode& node);
     void detectMultiScale( const Mat& image,
-                           vector<Rect>& objects,
+                           CV_OUT vector<Rect>& objects,
                            double scaleFactor=1.1,
                            int minNeighbors=3, int flags=0,
                            Size minSize=Size());
@@ -278,18 +401,18 @@ public:
     virtual void copyTo(HOGDescriptor& c) const;
     
     virtual void compute(const Mat& img,
-                         vector<float>& descriptors,
+                         CV_OUT vector<float>& descriptors,
                          Size winStride=Size(), Size padding=Size(),
                          const vector<Point>& locations=vector<Point>()) const;
-    virtual void detect(const Mat& img, vector<Point>& foundLocations,
+    virtual void detect(const Mat& img, CV_OUT vector<Point>& foundLocations,
                         double hitThreshold=0, Size winStride=Size(),
                         Size padding=Size(),
                         const vector<Point>& searchLocations=vector<Point>()) const;
-    virtual void detectMultiScale(const Mat& img, vector<Rect>& foundLocations,
+    virtual void detectMultiScale(const Mat& img, CV_OUT vector<Rect>& foundLocations,
                                   double hitThreshold=0, Size winStride=Size(),
                                   Size padding=Size(), double scale=1.05,
                                   int groupThreshold=2) const;
-    virtual void computeGradient(const Mat& img, Mat& grad, Mat& angleOfs,
+    virtual void computeGradient(const Mat& img, CV_OUT Mat& grad, CV_OUT Mat& angleOfs,
                                  Size paddingTL=Size(), Size paddingBR=Size()) const;
     
     static vector<float> getDefaultPeopleDetector();

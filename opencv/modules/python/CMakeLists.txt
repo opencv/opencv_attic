@@ -12,6 +12,7 @@ include_directories(
     "${CMAKE_SOURCE_DIR}/modules/highgui/include"
     "${CMAKE_SOURCE_DIR}/modules/ml/include"
     "${CMAKE_SOURCE_DIR}/modules/features2d/include"
+    "${CMAKE_SOURCE_DIR}/modules/flann/include"
     "${CMAKE_SOURCE_DIR}/modules/calib3d/include"
     "${CMAKE_SOURCE_DIR}/modules/objdetect/include"
     "${CMAKE_SOURCE_DIR}/modules/legacy/include"
@@ -57,5 +58,9 @@ if(WIN32)
             ARCHIVE DESTINATION "Python${PYTHON_VERSION_MAJOR_MINOR}/Lib/site-packages" COMPONENT main
             )
 else()
-    install(FILES ${LIBRARY_OUTPUT_PATH}/cv${CVPY_SUFFIX} DESTINATION ${PYTHON_PACKAGES_PATH})
+    #install(FILES ${LIBRARY_OUTPUT_PATH}/cv${CVPY_SUFFIX} DESTINATION ${PYTHON_PACKAGES_PATH})
+    install(TARGETS ${the_target} 
+            RUNTIME DESTINATION ${PYTHON_PACKAGES_PATH} COMPONENT main
+            LIBRARY DESTINATION ${PYTHON_PACKAGES_PATH} COMPONENT main
+            ARCHIVE DESTINATION ${PYTHON_PACKAGES_PATH} COMPONENT main)
 endif()

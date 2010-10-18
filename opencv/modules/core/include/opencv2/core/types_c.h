@@ -157,6 +157,14 @@ typedef unsigned short ushort;
 
 typedef signed char schar;
 
+/* special informative macros for wrapper generators */
+#define CV_CARRAY(counter)
+#define CV_CUSTOM_CARRAY(args)
+#define CV_METHOD
+#define CV_NO_WRAP
+#define CV_OUT
+#define CV_WRAP_AS(synonym)
+
 /* CvArr* is used to pass arbitrary
  * array-like data structures
  * into functions where the particular
@@ -593,9 +601,9 @@ IplConvKernelFP;
 #define CV_MAT_CONT_FLAG        (1 << CV_MAT_CONT_FLAG_SHIFT)
 #define CV_IS_MAT_CONT(flags)   ((flags) & CV_MAT_CONT_FLAG)
 #define CV_IS_CONT_MAT          CV_IS_MAT_CONT
-#define CV_MAT_TEMP_FLAG_SHIFT  15
-#define CV_MAT_TEMP_FLAG        (1 << CV_MAT_TEMP_FLAG_SHIFT)
-#define CV_IS_TEMP_MAT(flags)   ((flags) & CV_MAT_TEMP_FLAG)
+#define CV_SUBMAT_FLAG_SHIFT    15
+#define CV_SUBMAT_FLAG          (1 << CV_SUBMAT_FLAG_SHIFT)
+#define CV_IS_SUBMAT(flags)     ((flags) & CV_MAT_SUBMAT_FLAG)
 
 #define CV_MAGIC_MASK       0xFFFF0000
 #define CV_MAT_MAGIC_VAL    0x42420000
@@ -644,6 +652,11 @@ CvMat;
     ((mat) != NULL && \
     (((const CvMat*)(mat))->type & CV_MAGIC_MASK) == CV_MAT_MAGIC_VAL && \
     ((const CvMat*)(mat))->cols > 0 && ((const CvMat*)(mat))->rows > 0)
+
+#define CV_IS_MAT_HDR_Z(mat) \
+    ((mat) != NULL && \
+    (((const CvMat*)(mat))->type & CV_MAGIC_MASK) == CV_MAT_MAGIC_VAL && \
+    ((const CvMat*)(mat))->cols >= 0 && ((const CvMat*)(mat))->rows >= 0)
 
 #define CV_IS_MAT(mat) \
     (CV_IS_MAT_HDR(mat) && ((const CvMat*)(mat))->data.ptr != NULL)

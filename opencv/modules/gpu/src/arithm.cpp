@@ -69,8 +69,18 @@ void cv::gpu::minMax(const GpuMat&, double*, double*) { throw_nogpu(); }
 void cv::gpu::LUT(const GpuMat&, const Mat&, GpuMat&) { throw_nogpu(); }
 void cv::gpu::exp(const GpuMat&, GpuMat&) { throw_nogpu(); }
 void cv::gpu::log(const GpuMat&, GpuMat&) { throw_nogpu(); }
-void cv::gpu::magnitude(const GpuMat&, const GpuMat&, GpuMat&) { throw_nogpu(); }
 void cv::gpu::magnitude(const GpuMat&, GpuMat&) { throw_nogpu(); }
+void cv::gpu::magnitudeSqr(const GpuMat&, GpuMat&) { throw_nogpu(); }
+void cv::gpu::magnitude(const GpuMat&, const GpuMat&, GpuMat&) { throw_nogpu(); }
+void cv::gpu::magnitude(const GpuMat&, const GpuMat&, GpuMat&, const Stream&) { throw_nogpu(); }
+void cv::gpu::magnitudeSqr(const GpuMat&, const GpuMat&, GpuMat&) { throw_nogpu(); }
+void cv::gpu::magnitudeSqr(const GpuMat&, const GpuMat&, GpuMat&, const Stream&) { throw_nogpu(); }
+void cv::gpu::phase(const GpuMat&, const GpuMat&, GpuMat&, bool) { throw_nogpu(); }
+void cv::gpu::phase(const GpuMat&, const GpuMat&, GpuMat&, bool, const Stream&) { throw_nogpu(); }
+void cv::gpu::cartToPolar(const GpuMat&, const GpuMat&, GpuMat&, GpuMat&, bool) { throw_nogpu(); }
+void cv::gpu::cartToPolar(const GpuMat&, const GpuMat&, GpuMat&, GpuMat&, bool, const Stream&) { throw_nogpu(); }
+void cv::gpu::polarToCart(const GpuMat&, const GpuMat&, GpuMat&, GpuMat&, bool) { throw_nogpu(); }
+void cv::gpu::polarToCart(const GpuMat&, const GpuMat&, GpuMat&, GpuMat&, bool, const Stream&) { throw_nogpu(); }
 
 #else /* !defined (HAVE_CUDA) */
 
@@ -127,22 +137,49 @@ namespace
         }
 	}
 
-    typedef NppStatus (*npp_arithm_scalar_32f_t)(const Npp32f *pSrc, int nSrcStep, Npp32f nValue, Npp32f *pDst, 
-                                                 int nDstStep, NppiSize oSizeROI);
+    template<int SCN> struct NppArithmScalarFunc;
+    template<> struct NppArithmScalarFunc<1>
+    {
+        typedef NppStatus (*func_ptr)(const Npp32f *pSrc, int nSrcStep, Npp32f nValue, Npp32f *pDst, 
+                                      int nDstStep, NppiSize oSizeROI);
+    };
+    template<> struct NppArithmScalarFunc<2>
+    {        
+        typedef NppStatus (*func_ptr)(const Npp32fc *pSrc, int nSrcStep, Npp32fc nValue, Npp32fc *pDst,
+                                      int nDstStep, NppiSize oSizeROI);
+    };
 
-    void nppArithmCaller(const GpuMat& src1, const Scalar& sc, GpuMat& dst, 
-					     npp_arithm_scalar_32f_t npp_func)
-	{
-        CV_Assert(src1.type() == CV_32FC1);
+    template<int SCN, typename NppArithmScalarFunc<SCN>::func_ptr func> struct NppArithmScalar;
+    template<typename NppArithmScalarFunc<1>::func_ptr func> struct NppArithmScalar<1, func>
+    {
+        static void calc(const GpuMat& src, const Scalar& sc, GpuMat& dst)
+	    {
+            dst.create(src.size(), src.type());
 
-        dst.create(src1.size(), src1.type());
+		    NppiSize sz;
+		    sz.width  = src.cols;
+		    sz.height = src.rows;
 
-		NppiSize sz;
-		sz.width  = src1.cols;
-		sz.height = src1.rows;
+		    nppSafeCall( func(src.ptr<Npp32f>(), src.step, (Npp32f)sc[0], dst.ptr<Npp32f>(), dst.step, sz) );
+	    }
+    };
+    template<typename NppArithmScalarFunc<2>::func_ptr func> struct NppArithmScalar<2, func>
+    {
+        static void calc(const GpuMat& src, const Scalar& sc, GpuMat& dst)
+	    {
+            dst.create(src.size(), src.type());
 
-		nppSafeCall( npp_func(src1.ptr<Npp32f>(), src1.step, (Npp32f)sc[0], dst.ptr<Npp32f>(), dst.step, sz) );
-	}
+		    NppiSize sz;
+		    sz.width  = src.cols;
+		    sz.height = src.rows;
+
+            Npp32fc nValue;
+            nValue.re = (Npp32f)sc[0];
+            nValue.im = (Npp32f)sc[1];
+
+		    nppSafeCall( func(src.ptr<Npp32fc>(), src.step, nValue, dst.ptr<Npp32fc>(), dst.step, sz) );
+	    }
+    };
 }
 
 void cv::gpu::add(const GpuMat& src1, const GpuMat& src2, GpuMat& dst)
@@ -167,22 +204,42 @@ void cv::gpu::divide(const GpuMat& src1, const GpuMat& src2, GpuMat& dst)
 
 void cv::gpu::add(const GpuMat& src, const Scalar& sc, GpuMat& dst)
 {
-    nppArithmCaller(src, sc, dst, nppiAddC_32f_C1R);
+    typedef void (*caller_t)(const GpuMat& src, const Scalar& sc, GpuMat& dst);
+    static const caller_t callers[] = {NppArithmScalar<1, nppiAddC_32f_C1R>::calc, NppArithmScalar<2, nppiAddC_32fc_C1R>::calc};
+
+    CV_Assert(src.type() == CV_32FC1 || src.type() == CV_32FC2);
+
+    callers[src.channels()](src, sc, dst);
 }
 
 void cv::gpu::subtract(const GpuMat& src, const Scalar& sc, GpuMat& dst)
 {
-    nppArithmCaller(src, sc, dst, nppiSubC_32f_C1R);
+    typedef void (*caller_t)(const GpuMat& src, const Scalar& sc, GpuMat& dst);
+    static const caller_t callers[] = {NppArithmScalar<1, nppiSubC_32f_C1R>::calc, NppArithmScalar<2, nppiSubC_32fc_C1R>::calc};
+
+    CV_Assert(src.type() == CV_32FC1 || src.type() == CV_32FC2);
+
+    callers[src.channels()](src, sc, dst);
 }
 
 void cv::gpu::multiply(const GpuMat& src, const Scalar& sc, GpuMat& dst)
 {
-    nppArithmCaller(src, sc, dst, nppiMulC_32f_C1R);
+    typedef void (*caller_t)(const GpuMat& src, const Scalar& sc, GpuMat& dst);
+    static const caller_t callers[] = {NppArithmScalar<1, nppiMulC_32f_C1R>::calc, NppArithmScalar<2, nppiMulC_32fc_C1R>::calc};
+
+    CV_Assert(src.type() == CV_32FC1 || src.type() == CV_32FC2);
+
+    callers[src.channels()](src, sc, dst);
 }
 
 void cv::gpu::divide(const GpuMat& src, const Scalar& sc, GpuMat& dst)
 {
-    nppArithmCaller(src, sc, dst, nppiDivC_32f_C1R);
+    typedef void (*caller_t)(const GpuMat& src, const Scalar& sc, GpuMat& dst);
+    static const caller_t callers[] = {NppArithmScalar<1, nppiDivC_32f_C1R>::calc, NppArithmScalar<2, nppiDivC_32fc_C1R>::calc};
+
+    CV_Assert(src.type() == CV_32FC1 || src.type() == CV_32FC2);
+
+    callers[src.channels()](src, sc, dst);
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -387,6 +444,7 @@ void cv::gpu::flip(const GpuMat& src, GpuMat& dst, int flipCode)
 
 Scalar cv::gpu::sum(const GpuMat& src)
 {
+    CV_Assert(!"disabled until fix crash");
     CV_Assert(src.type() == CV_8UC1 || src.type() == CV_8UC4);    
 
     NppiSize sz;
@@ -418,23 +476,55 @@ Scalar cv::gpu::sum(const GpuMat& src)
 ////////////////////////////////////////////////////////////////////////
 // minMax
 
+namespace
+{
+    void minMax_c1(const GpuMat& src, double* minVal, double* maxVal)
+    {
+        NppiSize sz;
+        sz.width  = src.cols;
+        sz.height = src.rows;
+
+        Npp8u min_res, max_res;
+
+        nppSafeCall( nppiMinMax_8u_C1R(src.ptr<Npp8u>(), src.step, sz, &min_res, &max_res) );
+
+        if (minVal)
+            *minVal = min_res;
+
+        if (maxVal)
+            *maxVal = max_res;
+    }
+
+    void minMax_c4(const GpuMat& src, double* minVal, double* maxVal)
+    {
+        NppiSize sz;
+        sz.width  = src.cols;
+        sz.height = src.rows;
+
+        Npp8u* cuMin = nppsMalloc_8u(4);
+        Npp8u* cuMax = nppsMalloc_8u(4);
+
+        nppSafeCall( nppiMinMax_8u_C4R(src.ptr<Npp8u>(), src.step, sz, cuMin, cuMax) );
+
+        if (minVal)
+            cudaMemcpy(minVal, cuMin, 4 * sizeof(Npp8u), cudaMemcpyDeviceToHost);        
+        if (maxVal)
+            cudaMemcpy(maxVal, cuMax, 4 * sizeof(Npp8u), cudaMemcpyDeviceToHost);
+
+        nppsFree(cuMin);
+        nppsFree(cuMax);
+    }
+}
+
 void cv::gpu::minMax(const GpuMat& src, double* minVal, double* maxVal) 
 {
-    CV_Assert(src.type() == CV_8UC1);
+    typedef void (*minMax_t)(const GpuMat& src, double* minVal, double* maxVal);
+    static const minMax_t minMax_callers[] = {0, minMax_c1, 0, 0, minMax_c4};
 
-    NppiSize sz;
-    sz.width  = src.cols;
-    sz.height = src.rows;
+    CV_Assert(!"disabled until fix npp bug");
+    CV_Assert(src.type() == CV_8UC1 || src.type() == CV_8UC4);
 
-    Npp8u min_res, max_res;
-
-    nppSafeCall( nppiMinMax_8u_C1R(src.ptr<Npp8u>(), src.step, sz, &min_res, &max_res) );
-
-    if (minVal)
-        *minVal = min_res;
-
-    if (maxVal)
-        *maxVal = max_res;
+    minMax_callers[src.channels()](src, minVal, maxVal);
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -529,31 +619,128 @@ void cv::gpu::log(const GpuMat& src, GpuMat& dst)
 }
 
 ////////////////////////////////////////////////////////////////////////
-// magnitude
+// NPP magnitide
+
+namespace
+{
+    typedef NppStatus (*nppMagnitude_t)(const Npp32fc* pSrc, int nSrcStep, Npp32f* pDst, int nDstStep, NppiSize oSizeROI);
+
+    inline void npp_magnitude(const GpuMat& src, GpuMat& dst, nppMagnitude_t func)
+    {
+        CV_Assert(src.type() == CV_32FC2);
+
+        dst.create(src.size(), CV_32FC1);
+
+        NppiSize sz;
+        sz.width = src.cols;
+        sz.height = src.rows;
+
+        nppSafeCall( func(src.ptr<Npp32fc>(), src.step, dst.ptr<Npp32f>(), dst.step, sz) );
+    }
+}
 
 void cv::gpu::magnitude(const GpuMat& src, GpuMat& dst)
 {
-    CV_Assert(src.type() == CV_32FC2);
-
-    dst.create(src.size(), CV_32FC1);
-
-    NppiSize sz;
-    sz.width = src.cols;
-    sz.height = src.rows;
-
-    nppSafeCall( nppiMagnitude_32fc32f_C1R(src.ptr<Npp32fc>(), src.step, dst.ptr<Npp32f>(), dst.step, sz) );
+    ::npp_magnitude(src, dst, nppiMagnitude_32fc32f_C1R);
 }
 
-void cv::gpu::magnitude(const GpuMat& src1, const GpuMat& src2, GpuMat& dst)
+void cv::gpu::magnitudeSqr(const GpuMat& src, GpuMat& dst)
 {
-    CV_DbgAssert(src1.type() == src2.type() && src1.size() == src2.size());
-    CV_Assert(src1.type() == CV_32FC1);
+    ::npp_magnitude(src, dst, nppiMagnitudeSqr_32fc32f_C1R);
+}
 
-    GpuMat src(src1.size(), CV_32FC2);
-    GpuMat srcs[] = {src1, src2};
-    cv::gpu::merge(srcs, 2, src);
+////////////////////////////////////////////////////////////////////////
+// Polar <-> Cart
 
-    cv::gpu::magnitude(src, dst);
+namespace cv { namespace gpu { namespace mathfunc 
+{
+    void cartToPolar_gpu(const DevMem2Df& x, const DevMem2Df& y, const DevMem2Df& mag, bool magSqr, const DevMem2Df& angle, bool angleInDegrees, cudaStream_t stream);
+    void polarToCart_gpu(const DevMem2Df& mag, const DevMem2Df& angle, const DevMem2Df& x, const DevMem2Df& y, bool angleInDegrees, cudaStream_t stream);
+}}}
+
+namespace
+{
+    inline void cartToPolar_caller(const GpuMat& x, const GpuMat& y, GpuMat& mag, bool magSqr, GpuMat& angle, bool angleInDegrees, cudaStream_t stream)
+    {
+        CV_DbgAssert(x.size() == y.size() && x.type() == y.type());
+        CV_Assert(x.depth() == CV_32F);
+
+        mag.create(x.size(), x.type());
+        angle.create(x.size(), x.type());
+
+        GpuMat x1cn = x.reshape(1);
+        GpuMat y1cn = y.reshape(1);
+        GpuMat mag1cn = mag.reshape(1);
+        GpuMat angle1cn = angle.reshape(1);
+
+        mathfunc::cartToPolar_gpu(x1cn, y1cn, mag1cn, magSqr, angle1cn, angleInDegrees, stream);
+    }
+
+    inline void polarToCart_caller(const GpuMat& mag, const GpuMat& angle, GpuMat& x, GpuMat& y, bool angleInDegrees, cudaStream_t stream)
+    {
+        CV_DbgAssert((mag.empty() || mag.size() == angle.size()) && mag.type() == angle.type());
+        CV_Assert(mag.depth() == CV_32F);
+
+        x.create(mag.size(), mag.type());
+        y.create(mag.size(), mag.type());
+
+        GpuMat mag1cn = mag.reshape(1);
+        GpuMat angle1cn = angle.reshape(1);
+        GpuMat x1cn = x.reshape(1);
+        GpuMat y1cn = y.reshape(1);
+
+        mathfunc::polarToCart_gpu(mag1cn, angle1cn, x1cn, y1cn, angleInDegrees, stream);
+    }
+}
+
+void cv::gpu::magnitude(const GpuMat& x, const GpuMat& y, GpuMat& dst)
+{
+    ::cartToPolar_caller(x, y, dst, false, GpuMat(), false, 0);
+}
+
+void cv::gpu::magnitude(const GpuMat& x, const GpuMat& y, GpuMat& dst, const Stream& stream)
+{
+    ::cartToPolar_caller(x, y, dst, false, GpuMat(), false, StreamAccessor::getStream(stream));
+}
+
+void cv::gpu::magnitudeSqr(const GpuMat& x, const GpuMat& y, GpuMat& dst)
+{
+    ::cartToPolar_caller(x, y, dst, true, GpuMat(), false, 0);
+}
+
+void cv::gpu::magnitudeSqr(const GpuMat& x, const GpuMat& y, GpuMat& dst, const Stream& stream)
+{
+    ::cartToPolar_caller(x, y, dst, true, GpuMat(), false, StreamAccessor::getStream(stream));
+}
+
+void cv::gpu::phase(const GpuMat& x, const GpuMat& y, GpuMat& angle, bool angleInDegrees)
+{
+    ::cartToPolar_caller(x, y, GpuMat(), false, angle, angleInDegrees, 0);
+}
+
+void cv::gpu::phase(const GpuMat& x, const GpuMat& y, GpuMat& angle, bool angleInDegrees, const Stream& stream)
+{   
+    ::cartToPolar_caller(x, y, GpuMat(), false, angle, angleInDegrees, StreamAccessor::getStream(stream));
+}
+
+void cv::gpu::cartToPolar(const GpuMat& x, const GpuMat& y, GpuMat& mag, GpuMat& angle, bool angleInDegrees)
+{
+    ::cartToPolar_caller(x, y, mag, false, angle, angleInDegrees, 0);
+}
+
+void cv::gpu::cartToPolar(const GpuMat& x, const GpuMat& y, GpuMat& mag, GpuMat& angle, bool angleInDegrees, const Stream& stream)
+{
+    ::cartToPolar_caller(x, y, mag, false, angle, angleInDegrees, StreamAccessor::getStream(stream));
+}
+
+void cv::gpu::polarToCart(const GpuMat& magnitude, const GpuMat& angle, GpuMat& x, GpuMat& y, bool angleInDegrees)
+{
+    ::polarToCart_caller(magnitude, angle, x, y, angleInDegrees, 0);
+}
+
+void cv::gpu::polarToCart(const GpuMat& magnitude, const GpuMat& angle, GpuMat& x, GpuMat& y, bool angleInDegrees, const Stream& stream)
+{
+    ::polarToCart_caller(magnitude, angle, x, y, angleInDegrees, StreamAccessor::getStream(stream));
 }
 
 #endif /* !defined (HAVE_CUDA) */

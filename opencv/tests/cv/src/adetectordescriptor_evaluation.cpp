@@ -712,9 +712,11 @@ void DetectorQualityTest::runDatasetTest (const vector<Mat> &imgs, const vector<
     {
         progress = update_progress( progress, di*TEST_CASE_COUNT + ci, progressCount, 0 );
         vector<KeyPoint> keypoints2;
+        float rep;
         evaluateFeatureDetector( imgs[0], imgs[ci+1], Hs[ci], &keypoints1, &keypoints2,
-                                 calcQuality[di][ci].repeatability, calcQuality[di][ci].correspondenceCount,
+                                 rep, calcQuality[di][ci].correspondenceCount,
                                  detector );
+        calcQuality[di][ci].repeatability = rep == -1 ? rep : 100.f*rep;
         writeKeypoints( keypontsFS, keypoints2, ci+1);
     }
 }
@@ -730,31 +732,24 @@ void testLog( CvTS* ts, bool isBadAccuracy )
 int DetectorQualityTest::processResults( int datasetIdx, int caseIdx )
 {
     int res = CvTS::OK;
+    bool isBadAccuracy;
 
     Quality valid = validQuality[datasetIdx][caseIdx], calc = calcQuality[datasetIdx][caseIdx];
 
-    bool isBadAccuracy;
-    int countEps = 1;
-    const float rltvEps = 0.001;
+    const int countEps = 1 + cvRound( 0.005f*(float)valid.correspondenceCount );
+    const float rltvEps = 0.5f;
+
     ts->printf(CvTS::LOG, "%s: calc=%f, valid=%f", REPEAT.c_str(), calc.repeatability, valid.repeatability );
-    isBadAccuracy = valid.repeatability - calc.repeatability > rltvEps;
+    isBadAccuracy = (valid.repeatability - calc.repeatability) > rltvEps;
     testLog( ts, isBadAccuracy );
     res = isBadAccuracy ? CvTS::FAIL_BAD_ACCURACY : res;
 
     ts->printf(CvTS::LOG, "%s: calc=%d, valid=%d", CORRESP_COUNT.c_str(), calc.correspondenceCount, valid.correspondenceCount );
-    isBadAccuracy = valid.correspondenceCount - calc.correspondenceCount > countEps;
+    isBadAccuracy = (valid.correspondenceCount - calc.correspondenceCount) > countEps;
     testLog( ts, isBadAccuracy );
     res = isBadAccuracy ? CvTS::FAIL_BAD_ACCURACY : res;
     return res;
 }
-
-//DetectorQualityTest fastDetectorQuality = DetectorQualityTest( "FAST", "quality-detector-fast" );
-//DetectorQualityTest gfttDetectorQuality = DetectorQualityTest( "GFTT", "quality-detector-gftt" );
-//DetectorQualityTest harrisDetectorQuality = DetectorQualityTest( "HARRIS", "quality-detector-harris" );
-//DetectorQualityTest mserDetectorQuality = DetectorQualityTest( "MSER", "quality-detector-mser" );
-//DetectorQualityTest starDetectorQuality = DetectorQualityTest( "STAR", "quality-detector-star" );
-//DetectorQualityTest siftDetectorQuality = DetectorQualityTest( "SIFT", "quality-detector-sift" );
-//DetectorQualityTest surfDetectorQuality = DetectorQualityTest( "SURF", "quality-detector-surf" );
 
 /****************************************************************************************\
 *                                  Descriptors evaluation                                 *
@@ -842,8 +837,8 @@ protected:
     };
     vector<CommonRunParams> commRunParams;
 
-    Ptr<GenericDescriptorMatch> specificDescMatch;
-    Ptr<GenericDescriptorMatch> defaultDescMatch;
+    Ptr<GenericDescriptorMatcher> specificDescMatcher;
+    Ptr<GenericDescriptorMatcher> defaultDescMatcher;
 
     CommonRunParams commRunParamsDefault;
     string matcherName;
@@ -907,7 +902,7 @@ void DescriptorQualityTest::readDefaultRunParams (FileNode &fn)
     {
         commRunParamsDefault.projectKeypointsFrom1Image = (int)fn[PROJECT_KEYPOINTS_FROM_1IMAGE] != 0;
         commRunParamsDefault.matchFilter = (int)fn[MATCH_FILTER];
-        defaultDescMatch->read (fn);
+        defaultDescMatcher->read(fn);
     }
 }
 
@@ -915,7 +910,7 @@ void DescriptorQualityTest::writeDefaultRunParams (FileStorage &fs) const
 {
     fs << PROJECT_KEYPOINTS_FROM_1IMAGE << commRunParamsDefault.projectKeypointsFrom1Image;
     fs << MATCH_FILTER << commRunParamsDefault.matchFilter;
-    defaultDescMatch->write (fs);
+    defaultDescMatcher->write(fs);
 }
 
 void DescriptorQualityTest::readDatasetRunParams( FileNode& fn, int datasetIdx )
@@ -926,7 +921,7 @@ void DescriptorQualityTest::readDatasetRunParams( FileNode& fn, int datasetIdx )
         commRunParams[datasetIdx].keypontsFilename = (string)fn[KEYPOINTS_FILENAME];
         commRunParams[datasetIdx].projectKeypointsFrom1Image = (int)fn[PROJECT_KEYPOINTS_FROM_1IMAGE] != 0;
         commRunParams[datasetIdx].matchFilter = (int)fn[MATCH_FILTER];
-        specificDescMatch->read (fn);
+        specificDescMatcher->read (fn);
     }
     else
     {
@@ -941,13 +936,13 @@ void DescriptorQualityTest::writeDatasetRunParams( FileStorage& fs, int datasetI
     fs << PROJECT_KEYPOINTS_FROM_1IMAGE << commRunParams[datasetIdx].projectKeypointsFrom1Image;
     fs << MATCH_FILTER << commRunParams[datasetIdx].matchFilter;
 
-    defaultDescMatch->write (fs);
+    defaultDescMatcher->write (fs);
 }
 
 void DescriptorQualityTest::setDefaultDatasetRunParams( int datasetIdx )
 {
     commRunParams[datasetIdx] = commRunParamsDefault;
-    commRunParams[datasetIdx].keypontsFilename = "surf_" + DATASET_NAMES[datasetIdx] + ".xml.gz";
+    commRunParams[datasetIdx].keypontsFilename = "SURF_" + DATASET_NAMES[datasetIdx] + ".xml.gz";
 }
 
 void DescriptorQualityTest::writePlotData( int di ) const
@@ -965,15 +960,15 @@ void DescriptorQualityTest::writePlotData( int di ) const
 
 void DescriptorQualityTest::readAlgorithm( )
 {
-    defaultDescMatch = createGenericDescriptorMatch( algName );
-    specificDescMatch = createGenericDescriptorMatch( algName );
+    defaultDescMatcher = createGenericDescriptorMatcher( algName );
+    specificDescMatcher = createGenericDescriptorMatcher( algName );
 
-    if( defaultDescMatch == 0 )
+    if( defaultDescMatcher == 0 )
     {
         Ptr<DescriptorExtractor> extractor = createDescriptorExtractor( algName );
         Ptr<DescriptorMatcher> matcher = createDescriptorMatcher( matcherName );
-        defaultDescMatch = new VectorDescriptorMatch( extractor, matcher );
-        specificDescMatch = new VectorDescriptorMatch( extractor, matcher );
+        defaultDescMatcher = new VectorDescriptorMatcher( extractor, matcher );
+        specificDescMatcher = new VectorDescriptorMatcher( extractor, matcher );
 
         if( extractor == 0 || matcher == 0 )
         {
@@ -991,41 +986,41 @@ void DescriptorQualityTest::calculatePlotData( vector<vector<DMatch> > &allMatch
     // size of recallPrecisionCurve == total matches count
 #if 0
 
-    std::sort( allMatches.begin(), allMatches.end() );
-    //calcDatasetQuality[di].resize( allMatches.size() );
     calcDatasetQuality[di].clear();
-    int correctMatchCount = 0, falseMatchCount = 0;
-    const float sparsePlotBound = 0.1;
-    const int npoints = 10000;
-    int step = 1 + allMatches.size() / npoints;
     const float resultPrecision = 0.5;
     bool isResultCalculated = false;
+    const double eps = 1e-2;
 
     for( size_t i=0;i<allMatches.size();i++)
     {
         if( allMatches[i].isCorrect )
-            correctMatchCount++;
-        else
-            falseMatchCount++;
+    Quality initQuality;
+    initQuality.recall = 0;
+    initQuality.precision = 0;
+    calcDatasetQuality[di].push_back( initQuality );
 
-        if( precision( correctMatchCount, falseMatchCount ) >= sparsePlotBound || (i % step == 0) )
+    for( size_t i=0;i<recallPrecisionCurve.size();i++ )
+    {
+        Quality quality;
+        quality.recall = recallPrecisionCurve[i].y;
+        quality.precision = 1 - recallPrecisionCurve[i].x;
+        Quality back = calcDatasetQuality[di].back();
+
+        if( fabs( quality.recall - back.recall ) < eps && fabs( quality.precision - back.precision ) < eps )
+            continue;
+
+        calcDatasetQuality[di].push_back( quality );
+
+        if( !isResultCalculated && quality.precision < resultPrecision )
         {
-            Quality quality;
-            quality.recall = recall( correctMatchCount, allCorrespCount );
-            quality.precision = precision( correctMatchCount, falseMatchCount );
-
-            calcDatasetQuality[di].push_back( quality );
-
-            if( !isResultCalculated && quality.precision < resultPrecision )
+            for(int ci=0;ci<TEST_CASE_COUNT;ci++)
             {
-                for(int ci=0;ci<TEST_CASE_COUNT;ci++)
-                {
-                    calcQuality[di][ci].recall = quality.recall;
-                    calcQuality[di][ci].precision = quality.precision;
-                }
-                isResultCalculated = true;
+                calcQuality[di][ci].recall = quality.recall;
+                calcQuality[di][ci].precision = quality.precision;
             }
+            isResultCalculated = true;
         }
+    }
     }
 
     Quality quality;
@@ -1048,7 +1043,7 @@ void DescriptorQualityTest::runDatasetTest (const vector<Mat> &imgs, const vecto
        return;
     }
 
-    Ptr<GenericDescriptorMatch> descMatch = commRunParams[di].isActiveParams ? specificDescMatch : defaultDescMatch;
+    Ptr<GenericDescriptorMatcher> descMatch = commRunParams[di].isActiveParams ? specificDescMatcher : defaultDescMatcher;
     calcQuality[di].resize(TEST_CASE_COUNT);
 
     vector<KeyPoint> keypoints1;
@@ -1089,28 +1084,40 @@ void DescriptorQualityTest::runDatasetTest (const vector<Mat> &imgs, const vecto
 
 int DescriptorQualityTest::processResults( int datasetIdx, int caseIdx )
 {
+    const float rltvEps = 0.005f;
+
     int res = CvTS::OK;
+    bool isBadAccuracy;
+
     Quality valid = validQuality[datasetIdx][caseIdx], calc = calcQuality[datasetIdx][caseIdx];
 
-    bool isBadAccuracy;
-    const float rltvEps = 0.001f;
     ts->printf(CvTS::LOG, "%s: calc=%f, valid=%f", RECALL.c_str(), calc.recall, valid.recall );
-    isBadAccuracy = valid.recall - calc.recall > rltvEps;
+    isBadAccuracy = fabs(valid.recall - calc.recall) > rltvEps;
     testLog( ts, isBadAccuracy );
     res = isBadAccuracy ? CvTS::FAIL_BAD_ACCURACY : res;
 
     ts->printf(CvTS::LOG, "%s: calc=%f, valid=%f", PRECISION.c_str(), calc.precision, valid.precision );
-    isBadAccuracy = valid.precision - calc.precision > rltvEps;
+    isBadAccuracy = fabs(valid.precision - calc.precision) > rltvEps;
     testLog( ts, isBadAccuracy );
     res = isBadAccuracy ? CvTS::FAIL_BAD_ACCURACY : res;
 
     return res;
 }
 
-//DescriptorQualityTest siftDescriptorQuality = DescriptorQualityTest( "SIFT", "quality-descriptor-sift", "BruteForce" );
-//DescriptorQualityTest surfDescriptorQuality = DescriptorQualityTest( "SURF", "quality-descriptor-surf", "BruteForce" );
-//DescriptorQualityTest siftL1DescriptorQuality = DescriptorQualityTest( "SIFT", "quality-descriptor-sift-L1", "BruteForce-L1" );
-//DescriptorQualityTest surfL1DescriptorQuality = DescriptorQualityTest( "SURF", "quality-descriptor-surf-L1", "BruteForce-L1" );
+//--------------------------------- Calonder descriptor test --------------------------------------------
+class CalonderDescriptorQualityTest : public DescriptorQualityTest
+{
+public:
+    CalonderDescriptorQualityTest() :
+            DescriptorQualityTest( "Calonder", "quality-descriptor-calonder") {}
+    virtual void readAlgorithm( )
+    {
+        string classifierFile = string(ts->get_data_path()) + "/features2d/calonder_classifier.rtc";
+        defaultDescMatcher = new VectorDescriptorMatcher( new CalonderDescriptorExtractor<float>( classifierFile ),
+                                                          new BruteForceMatcher<L2<float> > );
+        specificDescMatcher = defaultDescMatcher;
+    }
+};
 
 //--------------------------------- One Way descriptor test --------------------------------------------
 class OneWayDescriptorQualityTest : public DescriptorQualityTest
@@ -1150,9 +1157,9 @@ void OneWayDescriptorQualityTest::processRunParamsFile ()
     OneWayDescriptorBase *base = new OneWayDescriptorBase(patchSize, poseCount, pcaFilename,
                                                trainPath, trainImagesList);
 
-    OneWayDescriptorMatch *match = new OneWayDescriptorMatch ();
-    match->initialize( OneWayDescriptorMatch::Params (), base );
-    defaultDescMatch = match;
+    OneWayDescriptorMatcher *match = new OneWayDescriptorMatcher();
+    match->initialize( OneWayDescriptorMatcher::Params (), base );
+    defaultDescMatcher = match;
     writeAllDatasetsRunParams();
 }
 
@@ -1164,7 +1171,30 @@ void OneWayDescriptorQualityTest::writeDatasetRunParams( FileStorage& fs, int da
     fs << MATCH_FILTER << commRunParams[datasetIdx].matchFilter;
 }
 
+// Detectors
+//DetectorQualityTest fastDetectorQuality = DetectorQualityTest( "FAST", "quality-detector-fast" );
+//DetectorQualityTest gfttDetectorQuality = DetectorQualityTest( "GFTT", "quality-detector-gftt" );
+//DetectorQualityTest harrisDetectorQuality = DetectorQualityTest( "HARRIS", "quality-detector-harris" );
+//DetectorQualityTest mserDetectorQuality = DetectorQualityTest( "MSER", "quality-detector-mser" );
+//DetectorQualityTest starDetectorQuality = DetectorQualityTest( "STAR", "quality-detector-star" );
+//DetectorQualityTest siftDetectorQuality = DetectorQualityTest( "SIFT", "quality-detector-sift" );
+//DetectorQualityTest surfDetectorQuality = DetectorQualityTest( "SURF", "quality-detector-surf" );
 
+// Descriptors
+DescriptorQualityTest siftDescriptorQuality = DescriptorQualityTest( "SIFT", "quality-descriptor-sift", "BruteForce" );
+DescriptorQualityTest surfDescriptorQuality = DescriptorQualityTest( "SURF", "quality-descriptor-surf", "BruteForce" );
+DescriptorQualityTest fernDescriptorQualityTest( "FERN", "quality-descriptor-fern");
+CalonderDescriptorQualityTest calonderDescriptorQualityTest;
+
+
+
+// Don't run them because of bug in OneWayDescriptorBase many to many matching. TODO: fix this bug.
 //OneWayDescriptorQualityTest oneWayDescriptorQuality;
-//DescriptorQualityTest fernDescriptorQualityTest( "FERN", "quality-descriptor-fern");
-//DescriptorQualityTest calonderDescriptorQualityTest( "CALONDER", "quality-descriptor-calonder");
+
+// Don't run them (will validate and save results as "quality-descriptor-sift" and "quality-descriptor-surf" test data).
+// TODO: differ result filenames.
+//DescriptorQualityTest siftL1DescriptorQuality = DescriptorQualityTest( "SIFT", "quality-descriptor-sift-L1", "BruteForce-L1" );
+//DescriptorQualityTest surfL1DescriptorQuality = DescriptorQualityTest( "SURF", "quality-descriptor-surf-L1", "BruteForce-L1" );
+//DescriptorQualityTest oppSiftL1DescriptorQuality = DescriptorQualityTest( "SIFT", "quality-descriptor-opponent-sift-L1", "BruteForce-L1" );
+//DescriptorQualityTest oppSurfL1DescriptorQuality = DescriptorQualityTest( "SURF", "quality-descriptor-opponent-surf-L1", "BruteForce-L1" );
+

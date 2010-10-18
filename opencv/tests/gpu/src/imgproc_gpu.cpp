@@ -43,9 +43,6 @@
 #include <cmath>
 #include <limits>
 #include "gputest.hpp"
-#include "opencv2/core/core.hpp"
-#include "opencv2/imgproc/imgproc.hpp"
-#include "opencv2/highgui/highgui.hpp"
 
 using namespace cv;
 using namespace std;
@@ -414,40 +411,29 @@ struct CV_GpuNppImageIntegralTest : public CV_GpuImageProcTest
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-// blur
-struct CV_GpuNppImageBlurTest : public CV_GpuImageProcTest
+// Canny
+struct CV_GpuNppImageCannyTest : public CV_GpuImageProcTest
 {
-    CV_GpuNppImageBlurTest() : CV_GpuImageProcTest( "GPU-NppImageBlur", "blur" ) {}
+    CV_GpuNppImageCannyTest() : CV_GpuImageProcTest( "GPU-NppImageCanny", "Canny" ) {}
 
     int test(const Mat& img)
     {
-        if (img.type() != CV_8UC1 && img.type() != CV_8UC4)
+        if (img.type() != CV_8UC1)
         {
             ts->printf(CvTS::LOG, "\nUnsupported type\n");
             return CvTS::OK;
         }
 
-        int ksizes[] = {3, 5, 7};
-        int ksizes_num = sizeof(ksizes) / sizeof(int);
+        const double threshold1 = 1.0, threshold2 = 10.0;
 
-        int test_res = CvTS::OK;
+        Mat cpudst;
+        cv::Canny(img, cpudst, threshold1, threshold2);
 
-        for (int i = 0; i < ksizes_num; ++i)
-        {
-            ts->printf(CvTS::LOG, "\nksize = %d\n", ksizes[i]);
+        GpuMat gpu1(img);
+        GpuMat gpudst;
+        cv::gpu::Canny(gpu1, gpudst, threshold1, threshold2);
 
-            Mat cpudst;
-            cv::blur(img, cpudst, Size(ksizes[i], ksizes[i]));
-
-            GpuMat gpu1(img);
-            GpuMat gpudst;
-            cv::gpu::blur(gpu1, gpudst, Size(ksizes[i], ksizes[i]));
-
-            if (CheckNorm(cpudst, gpudst) != CvTS::OK)
-                test_res = CvTS::FAIL_GENERIC;
-        }
-
-        return test_res;
+        return CheckNorm(cpudst, gpudst);
     }
 };
 
@@ -470,7 +456,7 @@ int CV_GpuCvtColorTest::CheckNorm(const Mat& m1, const Mat& m2)
 {
     double ret = norm(m1, m2, NORM_INF);
 
-    if (ret < std::numeric_limits<double>::epsilon())
+    if (ret <= 2)
     {
         return CvTS::OK;
     }
@@ -483,7 +469,6 @@ int CV_GpuCvtColorTest::CheckNorm(const Mat& m1, const Mat& m2)
 
 void CV_GpuCvtColorTest::run( int )
 {
-    //load image
     cv::Mat img = cv::imread(std::string(ts->get_data_path()) + "stereobp/aloe-L.png");
 
     if (img.empty())
@@ -497,15 +482,20 @@ void CV_GpuCvtColorTest::run( int )
     cv::gpu::GpuMat gpuImg(img), gpuRes;
     try
     {
-        //run tests
         int codes[] = { CV_BGR2RGB, CV_RGB2BGRA, CV_BGRA2RGB,
                         CV_RGB2BGR555, CV_BGR5552BGR, CV_BGR2BGR565, CV_BGR5652RGB, 
                         CV_RGB2YCrCb, CV_YCrCb2BGR, CV_BGR2YUV, CV_YUV2RGB,
+                        CV_RGB2XYZ, CV_XYZ2BGR, CV_BGR2XYZ, CV_XYZ2RGB,
+                        CV_RGB2HSV, CV_HSV2BGR, CV_BGR2HSV_FULL, CV_HSV2RGB_FULL,
+                        CV_RGB2HLS, CV_HLS2BGR, CV_BGR2HLS_FULL, CV_HLS2RGB_FULL,
                         CV_RGB2GRAY, CV_GRAY2BGRA, CV_BGRA2GRAY,
                         CV_GRAY2BGR555, CV_BGR5552GRAY, CV_GRAY2BGR565, CV_BGR5652GRAY};
         const char* codes_str[] = { "CV_BGR2RGB", "CV_RGB2BGRA", "CV_BGRA2RGB",
                                     "CV_RGB2BGR555", "CV_BGR5552BGR", "CV_BGR2BGR565", "CV_BGR5652RGB", 
                                     "CV_RGB2YCrCb", "CV_YCrCb2BGR", "CV_BGR2YUV", "CV_YUV2RGB",
+                                    "CV_RGB2XYZ", "CV_XYZ2BGR", "CV_BGR2XYZ", "CV_XYZ2RGB",
+                                    "CV_RGB2HSV", "CV_HSV2RGB", "CV_BGR2HSV_FULL", "CV_HSV2RGB_FULL",
+                                    "CV_RGB2HLS", "CV_HLS2RGB", "CV_BGR2HLS_FULL", "CV_HLS2RGB_FULL",
                                     "CV_RGB2GRAY", "CV_GRAY2BGRA", "CV_BGRA2GRAY",
                                     "CV_GRAY2BGR555", "CV_BGR5552GRAY", "CV_GRAY2BGR565", "CV_BGR5652GRAY"};
         int codes_num = sizeof(codes) / sizeof(int);
@@ -539,6 +529,80 @@ void CV_GpuCvtColorTest::run( int )
     ts->set_failed_test_info(testResult);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// Histograms
+class CV_GpuHistogramsTest : public CvTest
+{
+public:
+    CV_GpuHistogramsTest() : CvTest("GPU-Histograms", "histEven") {}
+    ~CV_GpuHistogramsTest() {};
+
+protected:
+    void run(int);
+
+    int CheckNorm(const Mat& m1, const Mat& m2)
+    {
+        double ret = norm(m1, m2, NORM_INF);
+
+        if (ret < std::numeric_limits<double>::epsilon())
+        {
+            return CvTS::OK;
+        }
+        else
+        {
+            ts->printf(CvTS::LOG, "\nNorm: %f\n", ret);
+            return CvTS::FAIL_GENERIC;
+        }
+    }
+};
+
+void CV_GpuHistogramsTest::run( int )
+{
+    //load image
+    cv::Mat img = cv::imread(std::string(ts->get_data_path()) + "stereobp/aloe-L.png");
+
+    if (img.empty())
+    {
+        ts->set_failed_test_info(CvTS::FAIL_MISSING_TEST_DATA);
+        return;
+    }
+
+    try
+    {
+        Mat hsv;
+        cv::cvtColor(img, hsv, CV_BGR2HSV);
+
+        int hbins = 30;
+        int histSize[] = {hbins};
+
+        float hranges[] = {0, 180};
+        const float* ranges[] = {hranges};
+
+        MatND hist;
+        
+        int channels[] = {0};
+        calcHist(&hsv, 1, channels, Mat(), hist, 1, histSize, ranges);
+
+        GpuMat gpuHsv(hsv);
+        std::vector<GpuMat> srcs;
+        cv::gpu::split(gpuHsv, srcs);
+        GpuMat gpuHist;
+        histEven(srcs[0], gpuHist, hbins, (int)hranges[0], (int)hranges[1]);
+
+        Mat cpuHist = hist;
+        cpuHist = cpuHist.t();
+        cpuHist.convertTo(cpuHist, CV_32S);
+
+        ts->set_failed_test_info(CheckNorm(cpuHist, gpuHist));
+    }
+    catch(const cv::Exception& e)
+    {
+        if (!check_and_treat_gpu_exception(e, ts))
+            throw;
+        return;
+    }
+}
+
 /////////////////////////////////////////////////////////////////////////////
 /////////////////// tests registration  /////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////
@@ -553,5 +617,6 @@ CV_GpuNppImageCopyMakeBorderTest CV_GpuNppImageCopyMakeBorder_test;
 CV_GpuNppImageWarpAffineTest CV_GpuNppImageWarpAffine_test;
 CV_GpuNppImageWarpPerspectiveTest CV_GpuNppImageWarpPerspective_test;
 CV_GpuNppImageIntegralTest CV_GpuNppImageIntegral_test;
-CV_GpuNppImageBlurTest CV_GpuNppImageBlur_test;
+CV_GpuNppImageCannyTest CV_GpuNppImageCanny_test;
 CV_GpuCvtColorTest CV_GpuCvtColor_test;
+CV_GpuHistogramsTest CV_GpuHistograms_test;

@@ -166,23 +166,45 @@ static SetMaskFunc setMaskFuncTab[] =
 /* dst = src */
 void Mat::copyTo( Mat& dst ) const
 {
-    if( data == dst.data )
+    if( data == dst.data && data != 0 )
         return;
-
+    
+    if( dims > 2 )
+    {
+        dst.create( dims, size, type() );
+        if( total() != 0 )
+        {
+            const Mat* arrays[] = { this, &dst, 0 };
+            Mat planes[2];
+            NAryMatIterator it(arrays, planes);
+            CV_DbgAssert(it.planes[0].isContinuous() &&
+                         it.planes[1].isContinuous());
+            size_t planeSize = it.planes[0].elemSize()*it.planes[0].rows*it.planes[0].cols;
+        
+            for( int i = 0; i < it.nplanes; i++, ++it )
+                memcpy(it.planes[1].data, it.planes[0].data, planeSize);
+        }
+        return;
+    }
+    
     dst.create( rows, cols, type() );
     Size sz = size();
-    const uchar* sptr = data;
-    uchar* dptr = dst.data;
-
-    sz.width *= (int)elemSize();
-    if( isContinuous() && dst.isContinuous() )
+    
+    if( rows > 0 && cols > 0 )
     {
-        sz.width *= sz.height;
-        sz.height = 1;
-    }
+        const uchar* sptr = data;
+        uchar* dptr = dst.data;
 
-    for( ; sz.height--; sptr += step, dptr += dst.step )
-        memcpy( dptr, sptr, sz.width );
+        size_t width = sz.width*elemSize();
+        if( isContinuous() && dst.isContinuous() )
+        {
+            width *= sz.height;
+            sz.height = 1;
+        }
+
+        for( ; sz.height--; sptr += step, dptr += dst.step )
+            memcpy( dptr, sptr, width );
+    }
 }
 
 void Mat::copyTo( Mat& dst, const Mat& mask ) const
@@ -190,6 +212,18 @@ void Mat::copyTo( Mat& dst, const Mat& mask ) const
     if( !mask.data )
     {
         copyTo(dst);
+        return;
+    }
+    
+    if( dims > 2 )
+    {
+        dst.create( dims, size, type() );
+        const Mat* arrays[] = { this, &dst, &mask, 0 };
+        Mat planes[3];
+        NAryMatIterator it(arrays, planes);
+        
+        for( int i = 0; i < it.nplanes; i++, ++it )
+            it.planes[0].copyTo(it.planes[1], it.planes[2]);
         return;
     }
 
@@ -202,6 +236,17 @@ void Mat::copyTo( Mat& dst, const Mat& mask ) const
 
 Mat& Mat::operator = (const Scalar& s)
 {
+    if( dims > 2 )
+    {
+        const Mat* arrays[] = { this, 0 };
+        Mat planes[1];
+        NAryMatIterator it(arrays, planes);
+        
+        for( int i = 0; i < it.nplanes; i++, ++it )
+            it.planes[0] = s;
+        return *this;
+    }
+    
     Size sz = size();
     uchar* dst = data;
 
@@ -256,7 +301,18 @@ Mat& Mat::setTo(const Scalar& s, const Mat& mask)
         CV_Assert( func != 0 );
         double buf[4];
         scalarToRawData(s, buf, type(), 0);
-        func(buf, *this, mask);
+        
+        if( dims > 2 )
+        {
+            const Mat* arrays[] = { this, &mask, 0 };
+            Mat planes[2];
+            NAryMatIterator it(arrays, planes);
+            
+            for( int i = 0; i < it.nplanes; i++, ++it )
+                func(buf, it.planes[0], it.planes[1]);
+        }
+        else
+            func(buf, *this, mask);
     }
     return *this;
 }
@@ -379,6 +435,7 @@ void flip( const Mat& src, Mat& dst, int flip_mode )
         flipHoriz_<Vec<int64,4> > // 32
     };
     
+    CV_Assert( src.dims <= 2 );
     dst.create( src.size(), src.type() );
 
     if( flip_mode == 0 )
@@ -405,6 +462,8 @@ void flip( const Mat& src, Mat& dst, int flip_mode )
 
 void repeat(const Mat& src, int ny, int nx, Mat& dst)
 {
+    CV_Assert( src.dims <= 2 );
+    
     dst.create(src.rows*ny, src.cols*nx, src.type());
     Size ssize = src.size(), dsize = dst.size();
     int esz = (int)src.elemSize();

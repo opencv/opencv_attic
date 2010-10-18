@@ -24,6 +24,9 @@ if (NOT CMAKE_INSTALL_PREFIX)
     endif()
 endif()
 
+SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+
 set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "Configs" FORCE)
 set(CMAKE_C_FLAGS_MINSIZEREL "" CACHE INTERNAL "" FORCE)
 set(CMAKE_C_FLAGS_RELWITHDEBINFO "" CACHE INTERNAL "" FORCE)
@@ -296,7 +299,7 @@ if(APPLE)
 endif()
 
 set(WITH_TBB OFF CACHE BOOL "Include TBB support")
-set(WITH_EIGEN2 ON CACHE BOOL "Include Eigen2 support")
+set(WITH_EIGEN2 ON CACHE BOOL "Include Eigen2/Eigen3 support")
 set(WITH_CUDA OFF CACHE BOOL "Include NVidia Cuda Runtime support")
 
 if(WIN32)
@@ -689,7 +692,8 @@ endif()
 if(WITH_EIGEN2)
         find_path(EIGEN2_INCLUDE_PATH "Eigen/Core"
             PATHS "/usr/local/include/eigen2" "/opt/include/eigen2" "/usr/include/eigen2"
-            DOC "The path to Eigen2 headers")
+            "/usr/local/include/eigen3" "/opt/include/eigen3" "/usr/include/eigen3"
+            DOC "The path to Eigen2/Eigen3 headers")
     if(EIGEN2_INCLUDE_PATH)
         include_directories(${EIGEN2_INCLUDE_PATH})
         set(HAVE_EIGEN2 1)

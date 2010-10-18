@@ -1279,10 +1279,10 @@ CV_IMPL void cvFindExtrinsicCameraParams2( const CvMat* objectPoints,
             _RRt = cvMat( 3, 4, CV_64F, LV + 11*12 );
             cvGetCols( &_RRt, &_RR, 0, 3 );
             cvGetCol( &_RRt, &_tt, 3 );
-            if( cvDet(&_RR) < 0 )
-                cvScale( &_RRt, &_RRt, -1 );
             sc = cvNorm(&_RR);
             cvSVD( &_RR, &matW, &matU, &matV, CV_SVD_MODIFY_A + CV_SVD_U_T + CV_SVD_V_T );
+            if( W[0]*W[1]*W[2] < 0 )
+                sc = -sc;
             cvGEMM( &matU, &matV, 1, 0, 0, &matR, CV_GEMM_A_T );
             cvScale( &_tt, &_t, cvNorm(&matR)/sc );
             cvRodrigues2( &matR, &_r );
@@ -3533,6 +3533,8 @@ static void adjust3rdMatrix(const vector<vector<Point2f> >& imgpt1_0,
     P3.at<double>(1,1) *= a;
     P3.at<double>(0,2) = P3.at<double>(0,2)*a;
     P3.at<double>(1,2) = P3.at<double>(1,2)*a + b;
+    P3.at<double>(0,3) *= a;
+    P3.at<double>(1,3) *= a;
 }
 
 }
@@ -3587,6 +3589,8 @@ float cv::rectify3( const Mat& cameraMatrix1, const Mat& distCoeffs1,
     P2.copyTo(P3);
     Mat t = P3.col(3);
     t13.copyTo(t);
+    P3.at<double>(0,3) *= P3.at<double>(0,0);
+    P3.at<double>(1,3) *= P3.at<double>(1,1);
     
     if( !imgpt1.empty() && imgpt3.empty() )
         adjust3rdMatrix(imgpt1, imgpt3, cameraMatrix1, distCoeffs1, cameraMatrix3, distCoeffs3, R1, R3, P1, P3);
