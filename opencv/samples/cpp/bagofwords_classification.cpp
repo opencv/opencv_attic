@@ -439,11 +439,11 @@ int VocData::getDetectorGroundTruth(const string& obj_class, const ObdDatasetTyp
     {
         /* first count how many objects to allow preallocation */
         int obj_count = 0;
-        CV_Assert(images.size() == bounding_boxes.size())
-        CV_Assert(scores.size() == bounding_boxes.size())
+        CV_Assert(images.size() == bounding_boxes.size());
+        CV_Assert(scores.size() == bounding_boxes.size());
         for (size_t im_idx = 0; im_idx < scores.size(); ++im_idx)
         {
-            CV_Assert(scores[im_idx].size() == bounding_boxes[im_idx].size())
+            CV_Assert(scores[im_idx].size() == bounding_boxes[im_idx].size());
             obj_count += scores[im_idx].size();
         }
         /* preallocate id vector */
@@ -560,7 +560,7 @@ int VocData::getDetectorGroundTruth(const string& obj_class, const ObdDatasetTyp
         //-- if a match was found, set the ground truth of the current object to true --
         if (maxov != -1.0)
         {
-            CV_Assert(max_gt_obj_idx != -1)
+            CV_Assert(max_gt_obj_idx != -1);
             ground_truth[im_idx][ob_idx] = true;
             //store whether the maximum detection was marked as 'difficult' or not
             detection_difficult[im_idx][ob_idx] = max_is_difficult;
@@ -604,7 +604,7 @@ int VocData::getDetectorGroundTruth(const string& obj_class, const ObdDatasetTyp
 // The result file path and filename are determined automatically using m_results_directory as a base
 void VocData::writeClassifierResultsFile( const string& out_dir, const string& obj_class, const ObdDatasetType dataset, const vector<ObdImage>& images, const vector<float>& scores, const int competition, const bool overwrite_ifexists)
 {
-    CV_Assert(images.size() == scores.size())
+    CV_Assert(images.size() == scores.size());
 
     string output_file_base, output_file;
     if (dataset == CV_OBD_TRAIN)
@@ -794,7 +794,7 @@ void VocData::calcClassifierPrecRecall(const string& input_file, vector<float>& 
 
 void VocData::calcPrecRecall_impl(const vector<char>& ground_truth, const vector<float>& scores, vector<float>& precision, vector<float>& recall, float& ap, vector<size_t>& ranking, int recall_normalization)
 {
-    CV_Assert(ground_truth.size() == scores.size())
+    CV_Assert(ground_truth.size() == scores.size());
 
     //add extra element for p-r at 0 recall (in case that first retrieved is positive)
     vector<float>(scores.size()+1).swap(precision);
@@ -921,7 +921,7 @@ void VocData::calcPrecRecall_impl(const vector<char>& ground_truth, const vector
 // present in the image.
 void VocData::calcClassifierConfMatRow(const string& obj_class, const vector<ObdImage>& images, const vector<float>& scores, const VocConfCond cond, const float threshold, vector<string>& output_headers, vector<float>& output_values)
 {
-    CV_Assert(images.size() == scores.size())
+    CV_Assert(images.size() == scores.size());
 
     // SORT RESULTS BY THEIR SCORE
     /* 1. store sorting order in 'ranking' */
@@ -948,7 +948,7 @@ void VocData::calcClassifierConfMatRow(const string& obj_class, const vector<Obd
 
     /* prepare variables related to calculating recall if using the recall threshold */
     int retrieved_hits = 0;
-    int total_relevant;
+    int total_relevant = 0;
     if (cond == CV_VOC_CCOND_RECALL)
     {
         vector<char> ground_truth;
@@ -1027,8 +1027,8 @@ void VocData::calcClassifierConfMatRow(const string& obj_class, const vector<Obd
 // NOTE: doesn't ignore repeated detections
 void VocData::calcDetectorConfMatRow(const string& obj_class, const ObdDatasetType dataset, const vector<ObdImage>& images, const vector<vector<float> >& scores, const vector<vector<Rect> >& bounding_boxes, const VocConfCond cond, const float threshold, vector<string>& output_headers, vector<float>& output_values, bool ignore_difficult)
 {
-    CV_Assert(images.size() == scores.size())
-    CV_Assert(images.size() == bounding_boxes.size())
+    CV_Assert(images.size() == scores.size());
+    CV_Assert(images.size() == bounding_boxes.size());
 
     //collapse scores and ground_truth vectors into 1D vectors to allow ranking
     /* define final flat vectors */
@@ -1038,10 +1038,10 @@ void VocData::calcDetectorConfMatRow(const string& obj_class, const ObdDatasetTy
     {
         /* first count how many objects to allow preallocation */
         int obj_count = 0;
-        CV_Assert(scores.size() == bounding_boxes.size())
+        CV_Assert(scores.size() == bounding_boxes.size());
         for (size_t img_idx = 0; img_idx < scores.size(); ++img_idx)
         {
-            CV_Assert(scores[img_idx].size() == bounding_boxes[img_idx].size())
+            CV_Assert(scores[img_idx].size() == bounding_boxes[img_idx].size());
             for (size_t obj_idx = 0; obj_idx < scores[img_idx].size(); ++obj_idx)
             {
                 ++obj_count;
@@ -1235,7 +1235,7 @@ void VocData::savePrecRecallToGnuplot(const string& output_file, const vector<fl
         }
         plot_file << "plot \"-\" using 1:2" << endl;
         plot_file << "# X Y" << endl;
-        CV_Assert(precision.size() == recall.size())
+        CV_Assert(precision.size() == recall.size());
         for (size_t i = 0; i < precision.size(); ++i)
         {
             plot_file << "  " << recall[i] << " " << precision[i] << endl;
@@ -1347,7 +1347,7 @@ void VocData::initVoc2007to2010( const string& vocPath, const bool useTestDatase
     m_vocName = getVocName( vocPath );
 
     CV_Assert( !m_vocName.compare("VOC2007") || !m_vocName.compare("VOC2008") ||
-               !m_vocName.compare("VOC2009") || !m_vocName.compare("VOC2010") )
+               !m_vocName.compare("VOC2009") || !m_vocName.compare("VOC2010") );
 
     m_vocPath = checkFilenamePathsep( vocPath, true );
 
@@ -1585,10 +1585,10 @@ void VocData::extractVocObjects(const string filename, vector<ObdObject>& object
             object.boundingBox.y = ymin-1;
             object.boundingBox.height = ymax - ymin;
 
-            CV_Assert(xmin != 0)
-            CV_Assert(xmax > xmin)
-            CV_Assert(ymin != 0)
-            CV_Assert(ymax > ymin)
+            CV_Assert(xmin != 0);
+            CV_Assert(xmax > xmin);
+            CV_Assert(ymin != 0);
+            CV_Assert(ymax > ymin);
 
 
             //object tags -------------
@@ -1734,7 +1734,7 @@ bool VocData::getClassifierGroundTruthImage(const string& obj_class, const strin
             m_classifier_gt_all_ids.insert(m_classifier_gt_all_ids.end(),image_codes.begin(),image_codes.end());
             m_classifier_gt_all_present.insert(m_classifier_gt_all_present.end(),object_present.begin(),object_present.end());
 
-            CV_Assert(m_classifier_gt_all_ids.size() == m_classifier_gt_all_present.size())
+            CV_Assert(m_classifier_gt_all_ids.size() == m_classifier_gt_all_present.size());
         }
     }
 
@@ -2092,7 +2092,7 @@ Mat trainVocabulary( const string& filename, VocData& vocData, const VocabTrainP
     Mat vocabulary;
     if( !readVocabulary( filename, vocabulary) )
     {
-        CV_Assert( dextractor->descriptorType() == CV_32FC1 )
+        CV_Assert( dextractor->descriptorType() == CV_32FC1 );
         const int descByteSize = dextractor->descriptorSize()*4;
         const int maxDescCount = (trainParams.memoryUse * 1048576) / descByteSize; // Total number of descs to use for training.
 
@@ -2203,7 +2203,7 @@ void calculateImageDescriptors( const vector<ObdImage>& images, vector<Mat>& ima
                                 Ptr<BOWImgDescriptorExtractor>& bowExtractor, const Ptr<FeatureDetector>& fdetector,
                                 const string& resPath )
 {
-    CV_Assert( !bowExtractor->getVocabulary().empty() )
+    CV_Assert( !bowExtractor->getVocabulary().empty() );
     imageDescriptors.resize( images.size() );
 
     for( size_t i = 0; i < images.size(); i++ )
@@ -2246,7 +2246,7 @@ void calculateImageDescriptors( const vector<ObdImage>& images, vector<Mat>& ima
 void removeEmptyBowImageDescriptors( vector<ObdImage>& images, vector<Mat>& bowImageDescriptors,
                                      vector<char>& objectPresent )
 {
-    CV_Assert( !images.empty() )
+    CV_Assert( !images.empty() );
     for( int i = (int)images.size() - 1; i >= 0; i-- )
     {
         bool res = bowImageDescriptors[i].empty();
@@ -2289,7 +2289,7 @@ void removeBowImageDescriptorsByCount( vector<ObdImage>& images, vector<Mat> bow
 
         descsToDelete--;
     }
-    CV_Assert( bowImageDescriptors.size() == objectPresent.size() )
+    CV_Assert( bowImageDescriptors.size() == objectPresent.size() );
 }
 
 void setSVMParams( CvSVMParams& svmParams, CvMat& class_wts_cv, const Mat& responses, bool balanceClasses )
@@ -2372,7 +2372,7 @@ void trainSVMClassifier( CvSVM& svm, const SVMTrainParamsExt& svmParamsExt, cons
         // Remove any images for which descriptors could not be calculated
         removeEmptyBowImageDescriptors( images, bowImageDescriptors, objectPresent );
 
-        CV_Assert( svmParamsExt.descPercent > 0.f && svmParamsExt.descPercent <= 1.f )
+        CV_Assert( svmParamsExt.descPercent > 0.f && svmParamsExt.descPercent <= 1.f );
         if( svmParamsExt.descPercent < 1.f )
         {
             int descsToDelete = static_cast<int>(static_cast<float>(images.size())*(1.0-svmParamsExt.descPercent));
@@ -2437,7 +2437,7 @@ void computeConfidences( CvSVM& svm, const string& objClassName, VocData& vocDat
     // Use the bag of words vectors to calculate classifier output for each image in test set
     cout << "CALCULATING CONFIDENCE SCORES FOR CLASS " << objClassName << "..." << endl;
     vector<float> confidences( images.size() );
-    float signMul;
+    float signMul = 1.f;
     for( size_t imageIdx = 0; imageIdx < images.size(); imageIdx++ )
     {
         if( imageIdx == 0 )
@@ -2507,7 +2507,7 @@ int main(int argc, char** argv)
     if( paramsFS.isOpened() )
     {
        readUsedParams( paramsFS.root(), vocName, ddmParams, vocabTrainParams, svmTrainParamsExt );
-       CV_Assert( vocName == getVocName(vocPath) )
+       CV_Assert( vocName == getVocName(vocPath) );
     }
     else
     {
