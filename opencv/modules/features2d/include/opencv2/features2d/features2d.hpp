@@ -1800,8 +1800,8 @@ inline void bfKnnMatchImpl( BruteForceMatcher<Distance>& matcher,
  {
      typedef typename Distance::ValueType ValueType;
      typedef typename Distance::ResultType DistanceType;
-     CV_Assert( DataType<ValueType>::type == queryDescs.type() ||  queryDescs.empty() )
-     CV_Assert( masks.empty() || masks.size() == matcher.trainDescCollection.size() )
+     CV_Assert( DataType<ValueType>::type == queryDescs.type() ||  queryDescs.empty() );
+     CV_Assert( masks.empty() || masks.size() == matcher.trainDescCollection.size() );
      int dimension = queryDescs.cols;
      matches.reserve(queryDescs.rows);
 
@@ -1825,8 +1825,8 @@ inline void bfKnnMatchImpl( BruteForceMatcher<Distance>& matcher,
                  CV_Assert( masks.empty() || masks[iIdx].empty() ||
                             ( masks[iIdx].rows == queryDescs.rows && masks[iIdx].cols == matcher.trainDescCollection[iIdx].rows &&
                               masks[iIdx].type() == CV_8UC1 ) );
-                 CV_Assert( DataType<ValueType>::type == matcher.trainDescCollection[iIdx].type() ||  matcher.trainDescCollection[iIdx].empty() )
-                 CV_Assert( queryDescs.cols == matcher.trainDescCollection[iIdx].cols )
+                 CV_Assert( DataType<ValueType>::type == matcher.trainDescCollection[iIdx].type() ||  matcher.trainDescCollection[iIdx].empty() );
+                 CV_Assert( queryDescs.cols == matcher.trainDescCollection[iIdx].cols );
 
                  const ValueType* d1 = (const ValueType*)(queryDescs.data + queryDescs.step*qIdx);
                  allDists[iIdx].setTo( Scalar::all(std::numeric_limits<DistanceType>::max()) );
@@ -1873,8 +1873,8 @@ inline void bfRadiusMatchImpl( BruteForceMatcher<Distance>& matcher,
 {
     typedef typename Distance::ValueType ValueType;
     typedef typename Distance::ResultType DistanceType;
-    CV_Assert( DataType<ValueType>::type == queryDescs.type() ||  queryDescs.empty() )
-    CV_Assert( masks.empty() || masks.size() == matcher.trainDescCollection.size() )
+    CV_Assert( DataType<ValueType>::type == queryDescs.type() ||  queryDescs.empty() );
+    CV_Assert( masks.empty() || masks.size() == matcher.trainDescCollection.size() );
 
     int dimension = queryDescs.cols;
     matches.reserve(queryDescs.rows);
@@ -2298,7 +2298,7 @@ class CV_EXPORTS VectorDescriptorMatcher : public GenericDescriptorMatcher
 {
 public:
     VectorDescriptorMatcher( const Ptr<DescriptorExtractor>& _extractor, const Ptr<DescriptorMatcher>& _matcher )
-                        : extractor( _extractor ), matcher( _matcher ) { CV_Assert( !extractor.empty() && !matcher.empty() )}
+                        : extractor( _extractor ), matcher( _matcher ) { CV_Assert( !extractor.empty() && !matcher.empty() ); }
     virtual ~VectorDescriptorMatcher() {}
 
     virtual void add( const vector<Mat>& imgCollection,

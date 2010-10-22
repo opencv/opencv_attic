@@ -172,8 +172,7 @@ inline Mat::Mat(Size _sz, int _type, void* _data, size_t _step)
 inline Mat::Mat(const CvMat* m, bool copyData)
     : flags(MAGIC_VAL + (m->type & (CV_MAT_TYPE_MASK|CV_MAT_CONT_FLAG))),
     dims(2), rows(m->rows), cols(m->cols), data(m->data.ptr), refcount(0),
-    datastart(0), dataend(0),
-    allocator(0), size(&rows)
+    datastart(m->data.ptr), allocator(0), size(&rows)
 {
     if( !copyData )
     {
@@ -544,17 +543,41 @@ template<typename _Tp> inline const _Tp& Mat::at(Point pt) const
 }
 
 template<typename _Tp> inline _Tp& Mat::at(int i0)
-{ return *(_Tp*)ptr(i0); }
+{
+    CV_DbgAssert( dims <= 2 && data && (size.p[0] == 1 || size.p[1] == 1) &&
+                 (unsigned)i0 < (unsigned)(size.p[0] + size.p[1] - 1) &&
+                 elemSize() == CV_ELEM_SIZE(DataType<_Tp>::type) );
+    return *(_Tp*)(data + step.p[size.p[0]==1]*i0);
+}
+    
 template<typename _Tp> inline const _Tp& Mat::at(int i0) const
-{ return *(const _Tp*)ptr(i0); }
+{
+    CV_DbgAssert( dims <= 2 && data && (size.p[0] == 1 || size.p[1] == 1) &&
+                 (unsigned)i0 < (unsigned)(size.p[0] + size.p[1] - 1) &&
+                 elemSize() == CV_ELEM_SIZE(DataType<_Tp>::type) );
+    return *(_Tp*)(data + step.p[size.p[0]==1]*i0);
+}
+    
 template<typename _Tp> inline _Tp& Mat::at(int i0, int i1, int i2)
-{ return *(_Tp*)ptr(i0, i1, i2); }
+{
+    CV_DbgAssert( elemSize() == CV_ELEM_SIZE(DataType<_Tp>::type) );
+    return *(_Tp*)ptr(i0, i1, i2);
+}
 template<typename _Tp> inline const _Tp& Mat::at(int i0, int i1, int i2) const
-{ return *(const _Tp*)ptr(i0, i1, i2); }
+{
+    CV_DbgAssert( elemSize() == CV_ELEM_SIZE(DataType<_Tp>::type) );
+    return *(const _Tp*)ptr(i0, i1, i2);
+}
 template<typename _Tp> inline _Tp& Mat::at(const int* idx)
-{ return *(_Tp*)ptr(idx); }
+{
+    CV_DbgAssert( elemSize() == CV_ELEM_SIZE(DataType<_Tp>::type) );
+    return *(_Tp*)ptr(idx);
+}
 template<typename _Tp> inline const _Tp& Mat::at(const int* idx) const
-{ return *(const _Tp*)ptr(idx); }
+{
+    CV_DbgAssert( elemSize() == CV_ELEM_SIZE(DataType<_Tp>::type) );
+    return *(const _Tp*)ptr(idx);
+}
     
     
 template<typename _Tp> inline MatConstIterator_<_Tp> Mat::begin() const
@@ -688,7 +711,9 @@ static inline Mat cvarrToMatND(const CvArr* arr, bool copyData=false, int coiMod
 {
     return cvarrToMat(arr, copyData, true, coiMode);
 }
-    
+
+///////////////////////////////////////////// SVD //////////////////////////////////////////////////////
+
 inline SVD::SVD() {}
 inline SVD::SVD( const Mat& m, int flags ) { operator ()(m, flags); }
 inline void SVD::solveZ( const Mat& m, Mat& dst )
@@ -768,18 +793,38 @@ template<typename _Tp> inline Mat_<_Tp>::Mat_(const Mat_& m, const Rect& roi)
     : Mat(m, roi) {}
 
 template<typename _Tp> template<int n> inline
-    Mat_<_Tp>::Mat_(const Vec<_Tp, n>& vec, bool copyData)
-    : Mat(vec, copyData) {}
+    Mat_<_Tp>::Mat_(const Vec<typename DataType<_Tp>::channel_type, n>& vec, bool copyData)
+    : Mat(n/DataType<_Tp>::channels, 1, DataType<_Tp>::type, &vec)
+{
+    CV_Assert(n%DataType<_Tp>::channels == 0);
+    if( copyData )
+        *this = clone();
+}
 
 template<typename _Tp> template<int m, int n> inline
-    Mat_<_Tp>::Mat_(const Matx<_Tp,m,n>& M, bool copyData)
-    : Mat(M, copyData) {}    
+    Mat_<_Tp>::Mat_(const Matx<typename DataType<_Tp>::channel_type,m,n>& M, bool copyData)
+    : Mat(m, n/DataType<_Tp>::channels, DataType<_Tp>::type, &M)
+{
+    CV_Assert(n % DataType<_Tp>::channels == 0);
+    if( copyData )
+        *this = clone();
+}
     
-template<typename _Tp> inline Mat_<_Tp>::Mat_(const Point_<_Tp>& pt, bool copyData)
-    : Mat(pt, copyData) {}
+template<typename _Tp> inline Mat_<_Tp>::Mat_(const Point_<typename DataType<_Tp>::channel_type>& pt, bool copyData)
+    : Mat(2/DataType<_Tp>::channels, 1, DataType<_Tp>::type, &pt)
+{
+    CV_Assert(2 % DataType<_Tp>::channels == 0);
+    if( copyData )
+        *this = clone();
+}
 
-template<typename _Tp> inline Mat_<_Tp>::Mat_(const Point3_<_Tp>& pt, bool copyData)
-    : Mat(pt, copyData) {}
+template<typename _Tp> inline Mat_<_Tp>::Mat_(const Point3_<typename DataType<_Tp>::channel_type>& pt, bool copyData)
+    : Mat(3/DataType<_Tp>::channels, 1, DataType<_Tp>::type, &pt)
+{
+    CV_Assert(3 % DataType<_Tp>::channels == 0);
+    if( copyData )
+        *this = clone();
+}
 
 template<typename _Tp> inline Mat_<_Tp>::Mat_(const MatCommaInitializer_<_Tp>& commaInitializer)
     : Mat(commaInitializer) {}
@@ -969,14 +1014,16 @@ template<typename _Tp> inline Mat_<_Tp>::operator vector<_Tp>() const
     return this->Mat::operator vector<_Tp>();
 }
 
-template<typename _Tp> template<int n> inline Mat_<_Tp>::operator Vec<_Tp, n>() const
+template<typename _Tp> template<int n> inline Mat_<_Tp>::operator Vec<typename DataType<_Tp>::channel_type, n>() const
 {
-    return this->Mat::operator Vec<_Tp, n>();
+    CV_Assert(n % DataType<_Tp>::channels == 0);
+    return this->Mat::operator Vec<typename DataType<_Tp>::channel_type, n>();
 }
 
-template<typename _Tp> template<int m, int n> inline Mat_<_Tp>::operator Matx<_Tp, m, n>() const
+template<typename _Tp> template<int m, int n> inline Mat_<_Tp>::operator Matx<typename DataType<_Tp>::channel_type, m, n>() const
 {
-    return this->Mat::operator Matx<_Tp, m, n>();
+    CV_Assert(n % DataType<_Tp>::channels == 0);
+    return this->Mat::operator Matx<typename DataType<_Tp>::channel_type, m, n>();
 }    
     
 template<typename T1, typename T2, typename Op> inline void
@@ -1015,6 +1062,7 @@ process( const Mat_<T1>& m1, const Mat_<T2>& m2, Mat_<T3>& m3, Op op )
     }
 }
 
+//////////////////////////////////// Matrix Expressions /////////////////////////////////////////
 
 class CV_EXPORTS MatOp
 {    
@@ -1526,7 +1574,7 @@ template<typename _Tp> inline MatExpr Mat_<_Tp>::eye(Size sz)
     return Mat::eye(sz, DataType<_Tp>::type);
 }    
     
-//////////// Iterators & Comma initializers //////////////////
+//////////////////////////////// Iterators & Comma initializers //////////////////////////////////
 
 inline MatConstIterator::MatConstIterator()
     : m(0), elemSize(0), ptr(0), sliceStart(0), sliceEnd(0) {}
@@ -1754,6 +1802,25 @@ template<typename _Tp> inline MatIterator_<_Tp> MatIterator_<_Tp>::operator ++(i
     MatIterator_ b = *this;
     MatConstIterator::operator ++();
     return b;
+}
+
+template<typename _Tp> inline Point MatConstIterator_<_Tp>::pos() const
+{
+    if( !m )
+        return Point();
+    CV_DbgAssert( m->dims <= 2 );
+    if( m->isContinuous() )
+    {
+        ptrdiff_t ofs = ptr - (_Tp*)m->data;
+        int y = (int)(ofs / m->cols), x = (int)(ofs - (ptrdiff_t)y*m->cols);
+        return Point(x, y);
+    }
+    else
+    {
+        ptrdiff_t ofs = (uchar*)ptr - m->data;
+        int y = (int)(ofs / m->step), x = (int)((ofs - y*m->step)/sizeof(_Tp));
+        return Point(x, y);
+    }
 }
 
 static inline bool

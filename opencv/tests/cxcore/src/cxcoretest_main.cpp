@@ -41,11 +41,14 @@
 
 #include "cxcoretest.h"
 
-CvTS test_system;
+CvTS test_system("core");
 
 const char* blacklist[] =
 {
-    //"matrix-invert",
+    //"matrix-dotproduct",          //ticket 447
+    //"ds-graphscan",               //ticket 504
+    //"matrix-invert",              //ticket 536
+    //"pca",                        //ticket 566
     0
 };
 

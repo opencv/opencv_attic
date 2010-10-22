@@ -90,7 +90,6 @@ typedef Mat MatND;
 
 class CV_EXPORTS MatExpr;
 class CV_EXPORTS MatOp_Base;
-class CV_EXPORTS VectorArg;
 class CV_EXPORTS MatArg;
 class CV_EXPORTS MatConstIterator;
 
@@ -200,11 +199,11 @@ CV_EXPORTS ErrorCallback redirectError( ErrorCallback errCallback,
 #ifdef __GNUC__
 #define CV_Error( code, msg ) cv::error( cv::Exception(code, msg, __func__, __FILE__, __LINE__) )
 #define CV_Error_( code, args ) cv::error( cv::Exception(code, cv::format args, __func__, __FILE__, __LINE__) )
-#define CV_Assert( expr ) { if(!(expr)) cv::error( cv::Exception(CV_StsAssert, #expr, __func__, __FILE__, __LINE__) ); }
+#define CV_Assert( expr ) if((expr)) ; else cv::error( cv::Exception(CV_StsAssert, #expr, __func__, __FILE__, __LINE__) )
 #else
 #define CV_Error( code, msg ) cv::error( cv::Exception(code, msg, "", __FILE__, __LINE__) )
 #define CV_Error_( code, args ) cv::error( cv::Exception(code, cv::format args, "", __FILE__, __LINE__) )
-#define CV_Assert( expr ) { if(!(expr)) cv::error( cv::Exception(CV_StsAssert, #expr, "", __FILE__, __LINE__) ); }
+#define CV_Assert( expr ) if((expr)) ; else cv::error( cv::Exception(CV_StsAssert, #expr, "", __FILE__, __LINE__) )
 #endif
     
 #ifdef _DEBUG
@@ -385,7 +384,7 @@ public:
   The class is specialized for each fundamental numerical data type supported by OpenCV.
   It provides DataDepth<T>::value constant.
 */  
-template<typename _Tp> class CV_EXPORTS DataDepth { public: enum { value = -1, fmt=(int)'\0' }; };
+template<typename _Tp> class CV_EXPORTS DataDepth {};
 
 template<> class DataDepth<bool> { public: enum { value = CV_8U, fmt=(int)'u' }; };
 template<> class DataDepth<uchar> { public: enum { value = CV_8U, fmt=(int)'u' }; };
@@ -394,6 +393,8 @@ template<> class DataDepth<char> { public: enum { value = CV_8S, fmt=(int)'c' };
 template<> class DataDepth<ushort> { public: enum { value = CV_16U, fmt=(int)'w' }; };
 template<> class DataDepth<short> { public: enum { value = CV_16S, fmt=(int)'s' }; };
 template<> class DataDepth<int> { public: enum { value = CV_32S, fmt=(int)'i' }; };
+// this is temporary solution to support 32-bit unsigned integers
+template<> class DataDepth<unsigned> { public: enum { value = CV_32S, fmt=(int)'i' }; };
 template<> class DataDepth<float> { public: enum { value = CV_32F, fmt=(int)'f' }; };
 template<> class DataDepth<double> { public: enum { value = CV_64F, fmt=(int)'d' }; };
 template<typename _Tp> class DataDepth<_Tp*> { public: enum { value = CV_USRTYPE1, fmt=(int)'r' }; };
@@ -970,6 +971,10 @@ public:
     typedef value_type work_type;
     typedef value_type channel_type;
     typedef value_type vec_type;
+    
+    enum { depth = DataDepth<channel_type>::value, channels = 1,
+        fmt=DataDepth<channel_type>::fmt,
+        type = CV_MAKETYPE(depth, channels) };
 };
 
 template<> class DataType<bool>
@@ -1257,11 +1262,11 @@ static inline size_t getElemSize(int type) { return CV_ELEM_SIZE(type); }
    Custom array allocator
  
 */
-class CV_EXPORTS ArrayAllocator
+class CV_EXPORTS MatAllocator
 {
 public:
-    ArrayAllocator() {}
-    virtual ~ArrayAllocator() {}
+    MatAllocator() {}
+    virtual ~MatAllocator() {}
     virtual void allocate(int dims, const int* sizes, int type, int*& refcount,
                           uchar*& datastart, uchar*& data, size_t* step) = 0;
     virtual void deallocate(int* refcount, uchar* datastart, uchar* data) = 0;
@@ -1763,7 +1768,7 @@ public:
     uchar* datalimit;
     
     //! custom allocator
-    ArrayAllocator* allocator;
+    MatAllocator* allocator;
     
     struct CV_EXPORTS MSize
     {
@@ -1797,7 +1802,7 @@ public:
     MStep step;
 };
 
-
+ 
 /*!
    Random Number Generator
  
@@ -1836,6 +1841,9 @@ public:
 
     uint64 state;
 };
+    
+    
+
 
 /*!
  Termination criteria in iterative algorithms
@@ -2331,7 +2339,8 @@ public:
 
 //! converts elliptic arc to a polygonal curve
 CV_EXPORTS void ellipse2Poly( Point center, Size axes, int angle,
-                              int arcStart, int arcEnd, int delta, CV_OUT vector<Point>& pts );
+                              int arcStart, int arcEnd, int delta,
+                              CV_OUT vector<Point>& pts );
 
 enum
 {
@@ -2442,10 +2451,10 @@ public:
     Mat_(const Mat_& m, const Range* ranges);
     //! makes a matrix out of Vec, std::vector, Point_ or Point3_. The matrix will have a single column
     explicit Mat_(const vector<_Tp>& vec, bool copyData=false);
-    template<int n> explicit Mat_(const Vec<_Tp, n>& vec, bool copyData=true);
-    template<int m, int n> explicit Mat_(const Matx<_Tp, m, n>& mtx, bool copyData=true);
-    explicit Mat_(const Point_<_Tp>& pt, bool copyData=true);
-    explicit Mat_(const Point3_<_Tp>& pt, bool copyData=true);
+    template<int n> explicit Mat_(const Vec<typename DataType<_Tp>::channel_type, n>& vec, bool copyData=true);
+    template<int m, int n> explicit Mat_(const Matx<typename DataType<_Tp>::channel_type, m, n>& mtx, bool copyData=true);
+    explicit Mat_(const Point_<typename DataType<_Tp>::channel_type>& pt, bool copyData=true);
+    explicit Mat_(const Point3_<typename DataType<_Tp>::channel_type>& pt, bool copyData=true);
     explicit Mat_(const MatCommaInitializer_<_Tp>& commaInitializer);
 
     Mat_& operator = (const Mat& m);
@@ -2537,9 +2546,9 @@ public:
     //! conversion to vector.
     operator vector<_Tp>() const;
     //! conversion to Vec
-    template<int n> operator Vec<_Tp, n>() const;
+    template<int n> operator Vec<typename DataType<_Tp>::channel_type, n>() const;
     //! conversion to Matx
-    template<int m, int n> operator Matx<_Tp, m, n>() const;
+    template<int m, int n> operator Matx<typename DataType<_Tp>::channel_type, m, n>() const;
 };
 
 typedef Mat_<uchar> Mat1b;

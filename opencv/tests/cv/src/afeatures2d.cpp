@@ -320,8 +320,8 @@ class CV_DescriptorMatcherTest : public CvTest
 public:
     CV_DescriptorMatcherTest( const char* testName, const Ptr<DescriptorMatcher>& _dmatcher, float _badPart ) :
         CvTest( testName, "cv::DescritorMatcher::[,knn,radius]match()"), badPart(_badPart), dmatcher(_dmatcher)
-        { CV_Assert( queryDescCount % 2 == 0 ) // because we split train data in same cases in two
-          CV_Assert( countFactor == 4) }
+        { CV_Assert( queryDescCount % 2 == 0 ); // because we split train data in same cases in two
+          CV_Assert( countFactor == 4); }
 protected:
     static const int dim = 500;
     static const int queryDescCount = 300;

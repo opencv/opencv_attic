@@ -28,11 +28,12 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *************************************************************************/
 
-#ifndef LOGGER_H
-#define LOGGER_H
+#ifndef _OPENCV_LOGGER_H_
+#define _OPENCV_LOGGER_H_
 
 
 #include <cstdio>
+#include <stdarg.h>
 #include "opencv2/flann/general.h"
 
 using namespace std;
@@ -88,4 +89,4 @@ CV_EXPORTS Logger& logger();
 
 } // namespace cvflann
 
-#endif //LOGGER_H
+#endif //_OPENCV_LOGGER_H_

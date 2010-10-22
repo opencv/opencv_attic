@@ -174,7 +174,7 @@ void CV_BaseHistTest::get_hist_params( int /*test_case_idx*/ )
     
     for( i = 0; i < cdims; i++ )
     {
-        dims[i] = cvTsRandInt(rng) % (max_dim_size + 1) + 1;
+        dims[i] = cvTsRandInt(rng) % (max_dim_size + 2) + 2;
         if( !uniform )
             dims[i] = MIN(dims[i], max_ni_dim_size);    
         total_size *= dims[i];
@@ -1569,7 +1569,7 @@ int CV_CalcBackProjectTest::validate_test_results( int /*test_case_idx*/ )
 }
 
 
-//CV_CalcBackProjectTest hist_backproj_test;
+CV_CalcBackProjectTest hist_backproj_test;
 
 
 ////////////// cvCalcBackProjectPatch //////////////

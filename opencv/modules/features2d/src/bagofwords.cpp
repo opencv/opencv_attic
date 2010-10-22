@@ -142,7 +142,7 @@ void BOWImgDescriptorExtractor::compute( const Mat& image, vector<KeyPoint>& key
     {
         int queryIdx = matches[i].queryIdx;
         int trainIdx = matches[i].trainIdx; // cluster index
-        CV_Assert( queryIdx == (int)i )
+        CV_Assert( queryIdx == (int)i );
 
         dptr[trainIdx] = dptr[trainIdx] + 1.f;
         if( pointIdxsOfClusters )

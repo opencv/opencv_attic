@@ -99,7 +99,7 @@ static inline void setSize( Mat& m, int _dims, const int* _sz,
     for( i = _dims-1; i >= 0; i-- )
     {
         int s = _sz[i];
-        CV_Assert( s >= (i == 0 ? 0 : 1) );
+        CV_Assert( s >= 0 );
         m.size.p[i] = s;
         
         if( _steps )
@@ -147,15 +147,16 @@ static void updateContinuityFlag(Mat& m)
 static void finalizeHdr(Mat& m)
 {
     updateContinuityFlag(m);
-    if( m.dims > 2 )
+    int d = m.dims;
+    if( d > 2 )
         m.rows = m.cols = -1;
     if( m.data )
     {
         m.datalimit = m.datastart + m.size[0]*m.step[0];
         if( m.size[0] > 0 )
         {
-            m.dataend = m.data;
-            for( int i = 0; i < m.dims; i++ )
+            m.dataend = m.data + m.size[d-1]*m.step[d-1];
+            for( int i = 0; i < d-1; i++ )
                 m.dataend += (m.size[i] - 1)*m.step[i];
         }
         else
@@ -511,6 +512,10 @@ void Mat::reserve(size_t nelems)
         return;
     
     int r = size.p[0];
+    
+    if( (size_t)r >= nelems )
+        return;
+    
     size.p[0] = std::max((int)nelems, 1);
     size_t newsize = total()*elemSize();
     
@@ -534,6 +539,8 @@ void Mat::reserve(size_t nelems)
 void Mat::resize(size_t nelems)
 {
     int saveRows = size.p[0];
+    if( saveRows == (int)nelems )
+        return;
     CV_Assert( (int)nelems >= 0 );
     
     if( isSubmatrix() || data + step.p[0]*nelems > datalimit )
@@ -593,7 +600,7 @@ void Mat::push_back(const Mat& elems)
 
     
 Mat cvarrToMat(const CvArr* arr, bool copyData,
-               bool allowND, int coiMode)
+               bool /*allowND*/, int coiMode)
 {
     if( !arr )
         return Mat();
@@ -725,12 +732,17 @@ Mat Mat::reshape(int new_cn, int new_rows) const
 
     hdr.cols = new_width;
     hdr.flags = (hdr.flags & ~CV_MAT_CN_MASK) | ((new_cn-1) << CV_CN_SHIFT);
+    hdr.step[1] = CV_ELEM_SIZE(hdr.flags);
     return hdr;
 }
 
+    
+/*************************************************************************************************\
+                                        Matrix Operations
+\*************************************************************************************************/
 
-void
-setIdentity( Mat& m, const Scalar& s )
+//////////////////////////////////////// set identity ////////////////////////////////////////////
+void setIdentity( Mat& m, const Scalar& s )
 {
     CV_Assert( m.dims <= 2 );
     int i, j, rows = m.rows, cols = m.cols, type = m.type();
@@ -768,6 +780,8 @@ setIdentity( Mat& m, const Scalar& s )
     }
 }
 
+//////////////////////////////////////////// trace ///////////////////////////////////////////    
+    
 Scalar trace( const Mat& m )
 {
     CV_Assert( m.dims <= 2 );
@@ -797,10 +811,8 @@ Scalar trace( const Mat& m )
     return cv::sum(m.diag());
 }
 
-/****************************************************************************************\
-*                                       transpose                                        *
-\****************************************************************************************/
-
+////////////////////////////////////// transpose /////////////////////////////////////////
+    
 template<typename T> static void
 transposeI_( Mat& mat )
 {
@@ -848,15 +860,15 @@ void transpose( const Mat& src, Mat& dst )
         0,
         transposeI_<Vec<ushort,3> >, // 6
         0,
-        transposeI_<int64>, // 8
+        transposeI_<Vec<int,2> >, // 8
         0, 0, 0,
         transposeI_<Vec<int,3> >, // 12
         0, 0, 0,
-        transposeI_<Vec<int64,2> >, // 16
+        transposeI_<Vec<int,4> >, // 16
         0, 0, 0, 0, 0, 0, 0,
-        transposeI_<Vec<int64,3> >, // 24
+        transposeI_<Vec<int,6> >, // 24
         0, 0, 0, 0, 0, 0, 0,
-        transposeI_<Vec<int64,4> > // 32
+        transposeI_<Vec<int,8> > // 32
     };
 
     TransposeFunc tab[] =
@@ -869,15 +881,15 @@ void transpose( const Mat& src, Mat& dst )
         0,
         transpose_<Vec<ushort,3> >, // 6
         0,
-        transpose_<int64>, // 8
+        transpose_<Vec<int,2> >, // 8
         0, 0, 0,
         transpose_<Vec<int,3> >, // 12
         0, 0, 0,
-        transpose_<Vec<int64,2> >, // 16
+        transpose_<Vec<int,4> >, // 16
         0, 0, 0, 0, 0, 0, 0,
-        transpose_<Vec<int64,3> >, // 24
+        transpose_<Vec<int,6> >, // 24
         0, 0, 0, 0, 0, 0, 0,
-        transpose_<Vec<int64,4> > // 32
+        transpose_<Vec<int,8> > // 32
     };
 
     size_t esz = src.elemSize();
@@ -968,9 +980,7 @@ Mat Mat::cross(const Mat& m) const
 }
 
 
-/****************************************************************************************\
-*                                Reduce Mat to vector                                 *
-\****************************************************************************************/
+////////////////////////////////////////// reduce ////////////////////////////////////////////
 
 template<typename T, typename ST, class Op> static void
 reduceR_( const Mat& srcmat, Mat& dstmat )
@@ -1178,6 +1188,8 @@ void reduce(const Mat& src, Mat& dst, int dim, int op, int dtype)
         temp.convertTo(dst, dst.type(), 1./(dim == 0 ? src.rows : src.cols));
 }
 
+    
+//////////////////////////////////////// sort ///////////////////////////////////////////
 
 template<typename T> static void sort_( const Mat& src, Mat& dst, int flags )
 {
@@ -1307,6 +1319,10 @@ void sortIdx( const Mat& src, Mat& dst, int flags )
     func( src, dst, flags );
 }
 
+    
+    
+////////////////////////////////////////// kmeans ////////////////////////////////////////////
+    
 static void generateRandomCenter(const vector<Vec2f>& box, float* center, RNG& rng)
 {
     size_t j, dims = box.size();
@@ -2850,7 +2866,6 @@ void normalize( const SparseMat& src, SparseMat& dst, double a, int norm_type )
     src.convertTo( dst, -1, scale );
 }
     
-    
 }
-
+ 
 /* End of file. */

@@ -1048,7 +1048,7 @@ double CxCore_MatrixTestImpl::get_success_error_level( int test_case_idx, int i,
 {
     int input_depth = CV_MAT_DEPTH(cvGetElemType( test_array[INPUT][0] ));
     double input_precision = input_depth < CV_32F ? 0 : input_depth == CV_32F ?
-                            5e-5 : 1e-10;
+                            5e-5 : 5e-10;
     double output_precision = CvArrTest::get_success_error_level( test_case_idx, i, j );
     return MAX(input_precision, output_precision);
 }
@@ -2618,7 +2618,7 @@ void CxCore_InvertTest::prepare_to_validation( int )
     cvTsSetIdentity( &test_mat[REF_OUTPUT][0], cvScalarAll(1.) );
 }
 
-//CxCore_InvertTest invert_test;
+CxCore_InvertTest invert_test;
 
 
 ///////////////// solve /////////////////////

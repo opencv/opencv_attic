@@ -69,6 +69,22 @@ void cv::gpu::Stream::enqueueConvert(const GpuMat& /*src*/, GpuMat& /*dst*/, int
 
 #include "opencv2/gpu/stream_accessor.hpp"
 
+namespace cv 
+{
+    namespace gpu
+    {
+        namespace matrix_operations
+        {            
+            void copy_to_with_mask(const DevMem2D& src, DevMem2D dst, int depth, const DevMem2D& mask, int channels, const cudaStream_t & stream = 0);
+
+            void set_to_without_mask (DevMem2D dst, int depth, const double *scalar, int channels, const cudaStream_t & stream = 0);
+            void set_to_with_mask    (DevMem2D dst, int depth, const double *scalar, const DevMem2D& mask, int channels, const cudaStream_t & stream = 0);
+
+            void convert_to(const DevMem2D& src, int sdepth, DevMem2D dst, int ddepth, int channels, double alpha, double beta, const cudaStream_t & stream = 0);
+        }
+    }
+}
+
 struct Stream::Impl
 {
     cudaStream_t stream;
@@ -147,7 +163,7 @@ void cv::gpu::Stream::waitForCompletion() { cudaSafeCall( cudaStreamSynchronize(
 void cv::gpu::Stream::enqueueDownload(const GpuMat& src, Mat& dst)
 {
     // if not -> allocation will be done, but after that dst will not point to page locked memory
-    CV_Assert(src.cols == dst.cols && src.rows == dst.rows && src.type() == dst.type() )
+    CV_Assert(src.cols == dst.cols && src.rows == dst.rows && src.type() == dst.type() );
     devcopy(src, dst, impl->stream, cudaMemcpyDeviceToHost);
 }
 void cv::gpu::Stream::enqueueDownload(const GpuMat& src, CudaMem& dst) { devcopy(src, dst, impl->stream, cudaMemcpyDeviceToHost); }

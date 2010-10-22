@@ -232,8 +232,8 @@ void BruteForceMatcher<L2<float> >::knnMatchImpl( const Mat& queryDescs, vector<
 #ifndef HAVE_EIGEN2
     bfKnnMatchImpl<L2<float> >( *this, queryDescs, matches, knn, masks, compactResult );
 #else
-    CV_Assert( queryDescs.type() == CV_32FC1 ||  queryDescs.empty() )
-    CV_Assert( masks.empty() || masks.size() == trainDescCollection.size() )
+    CV_Assert( queryDescs.type() == CV_32FC1 ||  queryDescs.empty() );
+    CV_Assert( masks.empty() || masks.size() == trainDescCollection.size() );
 
     matches.reserve(queryDescs.rows);
     size_t imgCount = trainDescCollection.size();
@@ -266,8 +266,8 @@ void BruteForceMatcher<L2<float> >::knnMatchImpl( const Mat& queryDescs, vector<
                 CV_Assert( masks.empty() || masks[iIdx].empty() ||
                            ( masks[iIdx].rows == queryDescs.rows && masks[iIdx].cols == trainDescCollection[iIdx].rows &&
                              masks[iIdx].type() == CV_8UC1 ) );
-                CV_Assert( trainDescCollection[iIdx].type() == CV_32FC1 ||  trainDescCollection[iIdx].empty() )
-                CV_Assert( queryDescs.cols == trainDescCollection[iIdx].cols )
+                CV_Assert( trainDescCollection[iIdx].type() == CV_32FC1 ||  trainDescCollection[iIdx].empty() );
+                CV_Assert( queryDescs.cols == trainDescCollection[iIdx].cols );
 
                 e_allDists[iIdx] = e_trainCollection[iIdx] *e_query_t.col(qIdx);
                 e_allDists[iIdx] -= e_trainNorms2[iIdx];
@@ -320,8 +320,8 @@ void BruteForceMatcher<L2<float> >::radiusMatchImpl( const Mat& queryDescs, vect
 #ifndef HAVE_EIGEN2
     bfRadiusMatchImpl<L2<float> >( *this, queryDescs, matches, maxDistance, masks, compactResult );
 #else
-    CV_Assert( queryDescs.type() == CV_32FC1 ||  queryDescs.empty() )
-    CV_Assert( masks.empty() || masks.size() == trainDescCollection.size() )
+    CV_Assert( queryDescs.type() == CV_32FC1 ||  queryDescs.empty() );
+    CV_Assert( masks.empty() || masks.size() == trainDescCollection.size() );
 
     matches.reserve(queryDescs.rows);
     size_t imgCount = trainDescCollection.size();
@@ -354,8 +354,8 @@ void BruteForceMatcher<L2<float> >::radiusMatchImpl( const Mat& queryDescs, vect
                 CV_Assert( masks.empty() || masks[iIdx].empty() ||
                            ( masks[iIdx].rows == queryDescs.rows && masks[iIdx].cols == trainDescCollection[iIdx].rows &&
                              masks[iIdx].type() == CV_8UC1 ) );
-                CV_Assert( trainDescCollection[iIdx].type() == CV_32FC1 ||  trainDescCollection[iIdx].empty() )
-                CV_Assert( queryDescs.cols == trainDescCollection[iIdx].cols )
+                CV_Assert( trainDescCollection[iIdx].type() == CV_32FC1 ||  trainDescCollection[iIdx].empty() );
+                CV_Assert( queryDescs.cols == trainDescCollection[iIdx].cols );
 
                 e_allDists[iIdx] = e_trainCollection[iIdx] *e_query_t.col(qIdx);
                 e_allDists[iIdx] -= e_trainNorms2[iIdx];
