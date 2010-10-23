@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <opencv_storage>
 <hog>
-  <distE>0.005</distE>
-  <sE>0.005</sE>
+   <distE>0.005</distE>
+  <sE>0.008</sE>
   <noPairE>0.2</noPairE>
   <detector_names>
     default</detector_names>

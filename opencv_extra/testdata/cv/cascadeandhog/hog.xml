@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <opencv_storage>
 <hog>
-  <distE>4.9999998882412910e-003</distE>
-  <sE>4.9999998882412910e-003</sE>
-  <noPairE>0.2000000029802322</noPairE>
+  <distE>0.005</distE>
+  <sE>0.008</sE>
+  <noPairE>0.2</noPairE>
   <detector_names>
     default</detector_names>
   <detectors>
