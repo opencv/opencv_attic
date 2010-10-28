@@ -68,7 +68,7 @@ protected:
         const float maxResponseDif = 0.1f;
 
         string imgFilename = string(ts->get_data_path()) + FEATURES2D_DIR + "/" + IMAGE_FILENAME;
-        string resFilename = string(ts->get_data_path()) + DETECTOR_DIR + "/" + string(name) + "_res.xml.gz";
+        string resFilename = string(ts->get_data_path()) + DETECTOR_DIR + "/" + string(name) + ".xml.gz";
 
         if( fdetector.empty() )
         {
@@ -207,8 +207,8 @@ static Mat readMatFromBin( const string& filename )
 class CV_DescriptorExtractorTest : public CvTest
 {
 public:
-    CV_DescriptorExtractorTest( const char* testName, float _normDif, const Ptr<DescriptorExtractor>& _dextractor, float _prevTime  ) :
-            CvTest( testName, "cv::DescriptorExtractor::compute" ), normDif(_normDif), prevTime(_prevTime), dextractor(_dextractor) {}
+    CV_DescriptorExtractorTest( const char* testName, float _maxNormDif, const Ptr<DescriptorExtractor>& _dextractor, float _prevTime  ) :
+            CvTest( testName, "cv::DescriptorExtractor::compute" ), maxNormDif(_maxNormDif), prevTime(_prevTime), dextractor(_dextractor) {}
 protected:
     virtual void createDescriptorExtractor() {}
 
@@ -264,9 +264,9 @@ protected:
         Mat validDescriptors = readDescriptors();
         if( !validDescriptors.empty() )
         {
-            double normVal = norm( calcDescriptors, validDescriptors, NORM_INF );
-            ts->printf( CvTS::LOG, "nofm (inf) BTW valid and calculated float descriptors = %f\n", normVal );
-            if( normVal > normDif )
+            double normValue = norm( calcDescriptors, validDescriptors, NORM_INF );
+            ts->printf( CvTS::LOG, "nofm (inf) BTW valid and calculated float descriptors = %f\n", normValue );
+            if( normValue > maxNormDif )
                 ts->set_failed_test_info( CvTS::FAIL_BAD_ACCURACY );
         }
         else
@@ -292,7 +292,7 @@ protected:
         return true;
     }
 
-    const float normDif;
+    const float maxNormDif;
     const float prevTime;
 
     Ptr<DescriptorExtractor> dextractor;
@@ -708,31 +708,31 @@ void CV_DescriptorMatcherTest::run( int )
 /*
  * Detectors
  */
-CV_FeatureDetectorTest fastTest( "detector_fast", createFeatureDetector("FAST") );
-CV_FeatureDetectorTest gfttTest( "detector_gftt", createFeatureDetector("GFTT") );
-CV_FeatureDetectorTest harrisTest( "detector_harris", createFeatureDetector("HARRIS") );
-CV_FeatureDetectorTest mserTest( "detector_mser", createFeatureDetector("MSER") );
-CV_FeatureDetectorTest siftTest( "detector_sift", createFeatureDetector("SIFT") );
-CV_FeatureDetectorTest starTest( "detector_star", createFeatureDetector("STAR") );
-//CV_FeatureDetectorTest surfTest( "detector_surf", createFeatureDetector("SURF") );
+CV_FeatureDetectorTest fastTest( "detector-fast", createFeatureDetector("FAST") );
+CV_FeatureDetectorTest gfttTest( "detector-gftt", createFeatureDetector("GFTT") );
+CV_FeatureDetectorTest harrisTest( "detector-harris", createFeatureDetector("HARRIS") );
+CV_FeatureDetectorTest mserTest( "detector-mser", createFeatureDetector("MSER") );
+CV_FeatureDetectorTest siftTest( "detector-sift", createFeatureDetector("SIFT") );
+CV_FeatureDetectorTest starTest( "detector-star", createFeatureDetector("STAR") );
+CV_FeatureDetectorTest surfTest( "detector-surf", createFeatureDetector("SURF") );
 
 /*
  * Descriptors
  */
-//CV_DescriptorExtractorTest siftDescriptorTest( "descriptor_sift", 0.001f,
-//                                                createDescriptorExtractor("SIFT"), 8.06652f  );
-//CV_DescriptorExtractorTest surfDescriptorTest( "descriptor_surf",  0.004f,
-//                                                createDescriptorExtractor("SURF"), 0.147372f );
-//CV_DescriptorExtractorTest siftDescriptorTest( "descriptor_opponent_sift", 0.001f,
+CV_DescriptorExtractorTest siftDescriptorTest( "descriptor-sift", 0.03f,
+                                                createDescriptorExtractor("SIFT"), 8.06652f  );
+CV_DescriptorExtractorTest surfDescriptorTest( "descriptor-surf",  0.035f,
+                                                createDescriptorExtractor("SURF"), 0.147372f );
+//CV_DescriptorExtractorTest oppSiftDescriptorTest( "descriptor-opponent-sift", 0.008f,
 //                                                createDescriptorExtractor("OpponentSIFT"), 8.06652f  );
-//CV_DescriptorExtractorTest surfDescriptorTest( "descriptor_opponent_surf",  0.004f,
+//CV_DescriptorExtractorTest oppurfDescriptorTest( "descriptor-opponent-surf",  0.02f,
 //                                                createDescriptorExtractor("OpponentSURF"), 0.147372f );
 
 #if CV_SSE2
-CV_CalonderDescriptorExtractorTest<uchar> ucharCalonderTest( "descriptor_calonder_uchar",
+CV_CalonderDescriptorExtractorTest<uchar> ucharCalonderTest( "descriptor-calonder-uchar",
                                                              std::numeric_limits<float>::epsilon() + 1,
                                                              0.0132175f );
-CV_CalonderDescriptorExtractorTest<float> floatCalonderTest( "descriptor_calonder_float",
+CV_CalonderDescriptorExtractorTest<float> floatCalonderTest( "descriptor-calonder-float",
                                                              std::numeric_limits<float>::epsilon(),
                                                              0.0221308f );
 #endif // CV_SSE2

@@ -347,18 +347,18 @@ int CV_DetectorTest::validate( int detectorIdx, vector<vector<Rect> >& objects )
         }
         noPair += (int)count_if( map.begin(), map.end(), isZero );
         totalNoPair += noPair;
-        if( noPair > valRects.size()*eps.noPair+1 )
+        if( noPair > cvRound(valRects.size()*eps.noPair)+1 )
             break;
     }
     if( imageIdx < (int)imageFilenames.size() )
     {
         char msg[500];
-        sprintf( msg, "detector %s has overrated count of rectangles without pair on %s-image",
+        sprintf( msg, "detector %s has overrated count of rectangles without pair on %s-image\n",
             detectorNames[detectorIdx].c_str(), imageFilenames[imageIdx].c_str() );
         ts->printf( CvTS::LOG, msg );
         return CvTS::FAIL_BAD_ACCURACY;
     }
-    if ( totalNoPair > totalValRectCount*eps./*total*/noPair+1 )
+    if ( totalNoPair > cvRound(totalValRectCount*eps./*total*/noPair)+1 )
     {
         ts->printf( CvTS::LOG, "overrated count of rectangles without pair on all images set" );
         return CvTS::FAIL_BAD_ACCURACY;

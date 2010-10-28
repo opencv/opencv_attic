@@ -57,7 +57,7 @@ Carsten Rother, Vladimir Kolmogorov, Andrew Blake.
 class GMM
 {
 public:
-    static const int componentsCount = 5;
+    static const int componentsCount = 1;
 
     GMM( Mat& _model );
     float operator()( Vec3f color ) const;

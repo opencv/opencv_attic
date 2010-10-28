@@ -80,8 +80,8 @@ void DescriptorMatcher::DescriptorCollection::set( const vector<Mat>& descCollec
 
     startIdxs.resize( imageCount );
 
-    int dim;
-    int type;
+    int dim = -1;
+    int type = -1;
     startIdxs[0] = 0;
     for( size_t i = 1; i < imageCount; i++ )
     {
@@ -101,6 +101,7 @@ void DescriptorMatcher::DescriptorCollection::set( const vector<Mat>& descCollec
         dim = descCollection[0].cols;
         type = descCollection[0].type();
     }
+    assert( dim > 0 );
 
     int count = startIdxs[imageCount-1] + descCollection[imageCount-1].rows;
 

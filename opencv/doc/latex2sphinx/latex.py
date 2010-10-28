@@ -7,6 +7,8 @@ import pyparsing as pp
 import StringIO
 from qfile import QOpen
 from string import Template
+from random import random
+import urllib
 
 # useful things for pyparsing
 def returnList(x):
@@ -152,8 +154,8 @@ class SphinxWriter:
 		self.cur_module = self.render(c.params[1].str)
 
     def wikiLink(self, name):
-        return '*Comments on* `wiki <http://opencv.willowgarage.com/wiki/documentation/%s/%s/%s>`__' % (self.language, self.cur_module, name)
-	
+        return '`id=%s Comments from the Wiki <http://opencv.willowgarage.com/wiki/documentation/%s/%s/%s>`__' % (random(), self.language, self.cur_module, urllib.quote(name) )
+
     def cmd_cvCppCross(self, c):
         self.write(":func:`%s`" % str(c.params[0]))
 

@@ -946,7 +946,7 @@ if(CMAKE_COMPILER_IS_GNUCXX)
     #endif()
 
     set(EXTRA_C_FLAGS_RELEASE "${EXTRA_C_FLAGS_RELEASE} -DNDEBUG")
-    set(EXTRA_C_FLAGS_DEBUG "${EXTRA_C_FLAGS_DEBUG} -O0 -DDEBUG -D_DEBUG")
+    set(EXTRA_C_FLAGS_DEBUG "${EXTRA_C_FLAGS_DEBUG} -O0 -ggdb3 -DDEBUG -D_DEBUG")
 endif()
 
 # Extra link libs if the user selects building static libs:
@@ -955,7 +955,7 @@ IF(NOT BUILD_SHARED_LIBS)
         set(OPENCV_LINKER_LIBS ${OPENCV_LINKER_LIBS} stdc++)
     endif()
 
-    set(OPENCV_LINKER_LIBS ${OPENCV_LINKER_LIBS} flann zlib opencv_lapack)
+    set(OPENCV_LINKER_LIBS ${OPENCV_LINKER_LIBS} opencv_flann zlib opencv_lapack)
 endif()
 
 
