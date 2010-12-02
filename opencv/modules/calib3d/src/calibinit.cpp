@@ -81,6 +81,7 @@ static int PRINTF( const char*, ... )
 }
 #endif
 
+#include "camera_calibration_with_circles/FindCirclesGrid.hpp"
 
 //=====================================================================================
 // Implementation for the enhanced calibration object detection
@@ -1899,14 +1900,15 @@ namespace cv
 bool findChessboardCorners( const Mat& image, Size patternSize,
                             vector<Point2f>& corners, int flags )
 {
-    int count = patternSize.area()*2;
-    corners.resize(count);
-    CvMat _image = image;
-    bool ok = cvFindChessboardCorners(&_image, patternSize,
-        (CvPoint2D32f*)&corners[0], &count, flags ) > 0;
-    if(count >= 0)
-        corners.resize(count);
-    return ok;
+     return findCirclesGrid( image, patternSize, corners, flags);
+//    int count = patternSize.area()*2;
+//    corners.resize(count);
+//    CvMat _image = image;
+//    bool ok = cvFindChessboardCorners(&_image, patternSize,
+//        (CvPoint2D32f*)&corners[0], &count, flags ) > 0;
+//    if(count >= 0)
+//        corners.resize(count);
+//    return ok;
 }
 
 void drawChessboardCorners( Mat& image, Size patternSize,

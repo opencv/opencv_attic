@@ -428,8 +428,8 @@ int main( int argc, char** argv )
             CV_CALIB_CB_ADAPTIVE_THRESH & CV_CALIB_CB_FAST_CHECK & CV_CALIB_CB_NORMALIZE_IMAGE);
 
        // improve the found corners' coordinate accuracy
-        if(found) cornerSubPix( viewGray, pointbuf, Size(11,11),
-            Size(-1,-1), TermCriteria( CV_TERMCRIT_EPS+CV_TERMCRIT_ITER, 30, 0.1 ));
+//        if(found) cornerSubPix( viewGray, pointbuf, Size(11,11),
+//            Size(-1,-1), TermCriteria( CV_TERMCRIT_EPS+CV_TERMCRIT_ITER, 30, 0.1 ));
 
         if( mode == CAPTURING && found &&
            (!capture.isOpened() || clock() - prevTimestamp > delay*1e-3*CLOCKS_PER_SEC) )
