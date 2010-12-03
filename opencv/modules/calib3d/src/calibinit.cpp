@@ -221,6 +221,26 @@ int cvFindChessboardCorners( const void* arr, CvSize pattern_size,
                              CvPoint2D32f* out_corners, int* out_corner_count,
                              int flags )
 {
+#if 1
+    CvMat stub, *img = (CvMat*)arr;
+    img = cvGetMat( img, &stub );  
+    Mat _img = img;
+    Size patternSize = pattern_size;
+    vector<Point2f> corners;
+    bool ret = findCirclesGrid( _img, patternSize, corners, flags);
+
+    if(!ret)
+    {
+        return 0;
+    }
+    else
+    {
+        for(size_t i = 0; i < corners.size(); i++) out_corners[i] = cvPoint2D32f(corners[i].x, corners[i].y);
+        *out_corner_count = patternSize.width*patternSize.height;
+        return patternSize.width*patternSize.height;
+    }
+#else
+
     int found = 0;
     CvCBQuad *quads = 0, **quad_group = 0;
     CvCBCorner *corners = 0, **corner_group = 0;
@@ -559,6 +579,7 @@ int cvFindChessboardCorners( const void* arr, CvSize pattern_size,
     cvFree(&quad_group);
     cvFree(&corner_group);
     return found;
+#endif
 }
 
 //
@@ -1900,6 +1921,7 @@ namespace cv
 bool findChessboardCorners( const Mat& image, Size patternSize,
                             vector<Point2f>& corners, int flags )
 {
+     printf("Called findChessboardCorners\n");
      return findCirclesGrid( image, patternSize, corners, flags);
 //    int count = patternSize.area()*2;
 //    corners.resize(count);
