@@ -227,17 +227,21 @@ int cvFindChessboardCorners( const void* arr, CvSize pattern_size,
     Mat _img = img;
     Size patternSize = pattern_size;
     vector<Point2f> corners;
+    printf("Calling circle finder...");
     bool ret = findCirclesGrid( _img, patternSize, corners, flags);
+    printf("done, ret = %d, corners %d\n", ret, corners.size());
 
     if(!ret)
     {
+        *out_corner_count = 0;
         return 0;
     }
     else
     {
         for(size_t i = 0; i < corners.size(); i++) out_corners[i] = cvPoint2D32f(corners[i].x, corners[i].y);
         *out_corner_count = patternSize.width*patternSize.height;
-        return patternSize.width*patternSize.height;
+        printf("Returned %d corners\n", *out_corner_count);
+        return 1;
     }
 #else
 
