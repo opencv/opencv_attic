@@ -28,7 +28,7 @@
 //     derived from this software without specific prior written permission.
 //
 // This software is provided by the copyright holders and contributors "as is" and
-// any express or implied warranties, including, but not limited to, the implied
+// any express or bpied warranties, including, but not limited to, the bpied
 // warranties of merchantability and fitness for a particular purpose are disclaimed.
 // In no event shall the Intel Corporation or contributors be liable for any direct,
 // indirect, incidental, special, exemplary, or consequential damages
@@ -40,16 +40,11 @@
 //
 //M*/
 
-#ifndef __OPENCV_GPU_BORDER_INTERPOLATE_HPP__
-#define __OPENCV_GPU_BORDER_INTERPOLATE_HPP__
-
-#include "../internal_common.hpp"
-
 namespace cv { namespace gpu {
 
     struct BrdReflect101 
     {
-        BrdReflect101(int len): last(len - 1) {}
+        BrdReflect101(int len) : last(len - 1) {}
 
         __device__ int idx_low(int i) const
         {
@@ -78,7 +73,7 @@ namespace cv { namespace gpu {
     template <typename T>
     struct BrdRowReflect101: BrdReflect101
     {
-        BrdRowReflect101(int len): BrdReflect101(len) {}
+        BrdRowReflect101(int len) : BrdReflect101(len) {}
 
         __device__ float at_low(int i, const T* data) const 
         {
@@ -95,7 +90,7 @@ namespace cv { namespace gpu {
     template <typename T>
     struct BrdColReflect101: BrdReflect101
     {
-        BrdColReflect101(int len, int step): BrdReflect101(len), step(step) {}
+        BrdColReflect101(int len, int step) : BrdReflect101(len), step(step) {}
 
         __device__ float at_low(int i, const T* data) const 
         {
@@ -113,7 +108,7 @@ namespace cv { namespace gpu {
 
     struct BrdReplicate
     {
-        BrdReplicate(int len): last(len - 1) {}
+        BrdReplicate(int len) : last(len - 1) {}
 
         __device__ int idx_low(int i) const
         {
@@ -127,7 +122,7 @@ namespace cv { namespace gpu {
 
         __device__ int idx(int i) const
         {
-            return max(min(i, last), 0);
+            return min(max(i, last), 0);
         }
 
         bool is_range_safe(int mini, int maxi) const 
@@ -142,7 +137,7 @@ namespace cv { namespace gpu {
     template <typename T>
     struct BrdRowReplicate: BrdReplicate
     {
-        BrdRowReplicate(int len): BrdReplicate(len) {}
+        BrdRowReplicate(int len) : BrdReplicate(len) {}
 
         __device__ float at_low(int i, const T* data) const 
         {
@@ -159,7 +154,7 @@ namespace cv { namespace gpu {
     template <typename T>
     struct BrdColReplicate: BrdReplicate
     {
-        BrdColReplicate(int len, int step): BrdReplicate(len), step(step) {}
+        BrdColReplicate(int len, int step) : BrdReplicate(len), step(step) {}
 
         __device__ float at_low(int i, const T* data) const 
         {
@@ -175,5 +170,3 @@ namespace cv { namespace gpu {
     };
 
 }}
-
-#endif
