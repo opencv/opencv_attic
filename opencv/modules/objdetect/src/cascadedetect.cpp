@@ -63,7 +63,7 @@ public:
 };    
     
 
-static void groupRectangles(vector<Rect>& rectList, int groupThreshold, double eps, vector<int>* weights)
+static void groupRectangles(vector<Rect>& rectList, int groupThreshold, double eps, vector<int>* weights, vector<double>* foundWeights)
 {
     if( groupThreshold <= 0 || rectList.empty() )
     {
@@ -82,6 +82,7 @@ static void groupRectangles(vector<Rect>& rectList, int groupThreshold, double e
     
     vector<Rect> rrects(nclasses);
     vector<int> rweights(nclasses, 0);
+	vector<double> outWeights(nclasses, 0.0);
     int i, j, nlabels = (int)labels.size();
     for( i = 0; i < nlabels; i++ )
     {
@@ -92,6 +93,14 @@ static void groupRectangles(vector<Rect>& rectList, int groupThreshold, double e
         rrects[cls].height += rectList[i].height;
         rweights[cls]++;
     }
+	if ( foundWeights && !foundWeights->empty() )
+	{
+		for( i = 0; i < nlabels; i++ )
+		{
+			int cls = labels[i];
+			outWeights[cls] = outWeights[cls] + (*foundWeights)[i];
+		}
+	}
     
     for( i = 0; i < nclasses; i++ )
     {
@@ -106,11 +115,14 @@ static void groupRectangles(vector<Rect>& rectList, int groupThreshold, double e
     rectList.clear();
     if( weights )
         weights->clear();
+	if( foundWeights )
+		foundWeights->clear();
     
     for( i = 0; i < nclasses; i++ )
     {
         Rect r1 = rrects[i];
         int n1 = rweights[i];
+		double w1 = outWeights[i];
         if( n1 <= groupThreshold )
             continue;
         // filter out small face rectangles inside large rectangles
@@ -139,19 +151,76 @@ static void groupRectangles(vector<Rect>& rectList, int groupThreshold, double e
             rectList.push_back(r1);
             if( weights )
                 weights->push_back(n1);
+			if( foundWeights )
+				foundWeights->push_back(w1);
         }
     }
 }
 
+//new grouping function with using meanshift
+static void groupRectangles_meanshift(vector<Rect>& rectList, double detectThreshold, vector<double>* foundWeights, 
+									  vector<double>& scales, Size winDetSize)
+{
+    int detectionCount = rectList.size();
+    vector<Point3d> hits(detectionCount), resultHits;
+    vector<double> hitWeights(detectionCount), resultWeights;
+    Point2d hitCenter;
+
+    for (int i=0; i < detectionCount; i++) 
+    {
+        hitWeights[i] = (*foundWeights)[i];
+        hitCenter = (rectList[i].tl() + rectList[i].br())*(0.5); //center of rectangles
+        hits[i] = Point3d(hitCenter.x, hitCenter.y, std::log(scales[i]));
+    }
+
+    rectList.clear();
+    if (foundWeights)
+        foundWeights->clear();
+
+    double logZ = std::log(1.3);
+    Point3d smothing(8, 16, logZ);
+
+    MeanshiftGrouping msGrouping(smothing, hits, hitWeights, 1e-5, 100);
+
+    msGrouping.getModes(resultHits, resultWeights, 1);
+
+    for (unsigned i=0; i < resultHits.size(); ++i) 
+    {
+
+        double scale = exp(resultHits[i].z);
+        hitCenter.x = resultHits[i].x;
+        hitCenter.y = resultHits[i].y;
+        Size s( int(winDetSize.width * scale), int(winDetSize.height * scale) );
+        Rect resultRect( int(hitCenter.x-s.width/2), int(hitCenter.y-s.height/2), 
+            int(s.width), int(s.height) ); 
+
+        if (resultWeights[i] > detectThreshold) 
+        {
+            rectList.push_back(resultRect);
+            foundWeights->push_back(resultWeights[i]);
+        }
+    }
+}
 
 void groupRectangles(vector<Rect>& rectList, int groupThreshold, double eps)
 {
-    groupRectangles(rectList, groupThreshold, eps, 0);
+    groupRectangles(rectList, groupThreshold, eps, 0, 0);
 }
-    
+
 void groupRectangles(vector<Rect>& rectList, vector<int>& weights, int groupThreshold, double eps)
 {
-    groupRectangles(rectList, groupThreshold, eps, &weights);
+    groupRectangles(rectList, groupThreshold, eps, &weights, 0);
+}
+
+void groupRectangles(vector<Rect>& rectList, vector<double>& foundWeights, int groupThreshold, double eps)
+{
+    groupRectangles(rectList, groupThreshold, eps, 0, &foundWeights);
+}
+
+void groupRectangles_meanshift(vector<Rect>& rectList, vector<double>& foundWeights, 
+							   vector<double>& foundScales, double detectThreshold, Size winDetSize)
+{
+	groupRectangles_meanshift(rectList, detectThreshold, &foundWeights, foundScales, winDetSize);
 }
 
     

@@ -52,7 +52,9 @@ bool CvFeatureParams::read( const FileNode &node )
 Ptr<CvFeatureParams> CvFeatureParams::create( int featureType )
 {
     return featureType == HAAR ? Ptr<CvFeatureParams>(new CvHaarFeatureParams) :
-        featureType == LBP ? Ptr<CvFeatureParams>(new CvLBPFeatureParams) : Ptr<CvFeatureParams>();
+        featureType == LBP ? Ptr<CvFeatureParams>(new CvLBPFeatureParams) : 
+        featureType == HOG ? Ptr<CvFeatureParams>(new CvHOGFeatureParams) :
+        Ptr<CvFeatureParams>();
 }
 
 //------------------------------------- FeatureEvaluator ---------------------------------------
@@ -79,5 +81,7 @@ void CvFeatureEvaluator::setImage(const Mat &img, uchar clsLabel, int idx)
 Ptr<CvFeatureEvaluator> CvFeatureEvaluator::create(int type)
 {
     return type == CvFeatureParams::HAAR ? Ptr<CvFeatureEvaluator>(new CvHaarEvaluator) :
-        type == CvFeatureParams::LBP ? Ptr<CvFeatureEvaluator>(new CvLBPEvaluator) : Ptr<CvFeatureEvaluator>();
+        type == CvFeatureParams::LBP ? Ptr<CvFeatureEvaluator>(new CvLBPEvaluator) : 
+        type == CvFeatureParams::HOG ? Ptr<CvFeatureEvaluator>(new CvHOGEvaluator) :
+        Ptr<CvFeatureEvaluator>();
 }

@@ -65,7 +65,7 @@ public:
 class CvFeatureParams : public CvParams
 {
 public:
-    enum { HAAR = 0, LBP = 1 };
+    enum { HAAR = 0, LBP = 1, HOG = 2 };
     CvFeatureParams();
     virtual void init( const CvFeatureParams& fp );
     virtual void write( FileStorage &fs ) const;

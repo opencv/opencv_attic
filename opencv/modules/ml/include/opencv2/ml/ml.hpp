@@ -1226,6 +1226,7 @@ struct CV_EXPORTS_W_MAP CvBoostParams : public CvDTreeParams
     CV_PROP_RW double weight_trim_rate;
 
     CvBoostParams();
+
     CvBoostParams( int boost_type, int weak_count, double weight_trim_rate,
                    int max_depth, bool use_surrogates, const float* priors );
 };
@@ -1375,6 +1376,27 @@ protected:
     bool have_subsample;
 };
 
+
+
+/****************************************************************************************\
+*                               Boosted linear SVM classifier                            *
+\****************************************************************************************/
+
+struct CvBoostSVMParams : public CvSVMParams
+{
+    int boost_type;
+    int weak_count;
+    double weight_trim_rate;
+
+    CvBoostSVMParams();
+
+    CvBoostSVMParams( int boostType, int weakCount, double weightTrimRate,
+                   double cost, CvMat* classWeights, CvTermCriteria termCrit );
+};
+
+//class CvBoostNew;
+
+//class CvBoostSVM : CvSVM
 
 /****************************************************************************************\
 *                                   Gradient Boosted Trees                               *
