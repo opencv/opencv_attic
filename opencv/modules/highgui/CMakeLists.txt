@@ -257,7 +257,7 @@ set_target_properties(${the_target} PROPERTIES
 	)
 
 if(MSVC)
-	set_target_properties(${the_target} PROPERTIES LINK_FLAGS "/NODEFAULTLIB:atlthunk.lib /NODEFAULTLIB:atlsd.lib")
+	set_target_properties(${the_target} PROPERTIES LINK_FLAGS "/NODEFAULTLIB:atlthunk.lib /NODEFAULTLIB:atlsd.lib /DEBUG")
 endif(MSVC)
 
 # Dependencies of this target:
