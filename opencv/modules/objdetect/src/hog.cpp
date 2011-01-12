@@ -943,6 +943,7 @@ void HOGDescriptor::detectMultiScale(const Mat& img, vector<Rect>& foundLocation
                                      double scale0, double finalThreshold, bool useMeanshiftGrouping) const  
 {
     vector<double> foundWeights;
+    //
     detectMultiScale(img, foundLocations, foundWeights, hitThreshold, winStride, 
                      padding, scale0, finalThreshold, useMeanshiftGrouping);
 }
