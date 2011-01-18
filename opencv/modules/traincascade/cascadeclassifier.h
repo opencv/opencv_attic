@@ -5,8 +5,9 @@
 #include "traincascade_features.h"
 #include "haarfeatures.h"
 #include "lbpfeatures.h"
-#include "HOGfeatures.h"//
+#include "HOGfeatures.h" //new
 #include "boost.h"
+#include "boostSVM.h" //new
 #include "cv.h"
 #include "cxcore.h"
 
@@ -38,6 +39,8 @@
 #define CC_WEAK_CLASSIFIERS "weakClassifiers"
 #define CC_INTERNAL_NODES   "internalNodes"
 #define CC_LEAF_VALUES      "leafValues"
+
+#define CC_SVMCOST_FACTOR   "SVMcostFactor"
 
 #define CC_FEATURES       FEATURES
 #define CC_FEATURE_PARAMS "featureParams"

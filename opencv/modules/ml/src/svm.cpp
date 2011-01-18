@@ -1171,6 +1171,7 @@ void CvSVM::clear()
     var_all = 0;
     sv = 0;
     sv_total = 0;
+    sample_count = 0;
 }
 
 
@@ -1540,7 +1541,7 @@ bool CvSVM::train( const CvMat* _train_data, const CvMat* _responses,
 
     __BEGIN__;
 
-    int svm_type, sample_count, var_count, sample_size;
+    int svm_type, var_count, sample_size;
     int block_size = 1 << 16;
     double* alpha;
 

@@ -98,7 +98,7 @@ bool CvDTreeTrainData::set_params( const CvDTreeParams& _params )
         CV_ERROR( CV_StsOutOfRange, "params.max_depth should be >= 0" );
     params.max_depth = MIN( params.max_depth, 25 );
 
-    params.min_sample_count = MAX(params.min_sample_count,1);
+    params.min_sample_count = MAX(params.min_sample_count, 1);
 
     if( params.cv_folds < 0 )
         CV_ERROR( CV_StsOutOfRange,

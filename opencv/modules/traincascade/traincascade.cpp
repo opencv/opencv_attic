@@ -16,6 +16,11 @@ int main( int argc, char* argv[] )
     
     CvCascadeParams cascadeParams;
     CvCascadeBoostParams stageParams;
+
+    //
+    CvCascadeBoostSVMParams SVMStageParams;//new
+    //
+
     Ptr<CvFeatureParams> featureParams[] = { Ptr<CvFeatureParams>(new CvHaarFeatureParams),
                                              Ptr<CvFeatureParams>(new CvLBPFeatureParams), 
                                              Ptr<CvFeatureParams>(new CvHOGFeatureParams)
@@ -35,6 +40,9 @@ int main( int argc, char* argv[] )
         cout << "  [-baseFormatSave]" << endl;
         cascadeParams.printDefaults();
         stageParams.printDefaults();
+        //
+        SVMStageParams.printDefaults();//new
+        //
         for( int fi = 0; fi < fc; fi++ )
             featureParams[fi]->printDefaults();
         return 0;

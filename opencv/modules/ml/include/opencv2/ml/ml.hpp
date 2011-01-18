@@ -577,6 +577,7 @@ public:
     virtual void write( CvFileStorage* storage, const char* name ) const;
     virtual void read( CvFileStorage* storage, CvFileNode* node );
     CV_WRAP int get_var_count() const { return var_idx ? var_idx->cols : var_all; }
+    CV_WRAP int get_sample_count() const { return sample_count; }
 
 protected:
 
@@ -599,6 +600,7 @@ protected:
     int var_all;
     float** sv;
     int sv_total;
+    int sample_count;
     CvMat* var_idx;
     CvMat* class_weights;
     CvSVMDecisionFunc* decision_func;
@@ -1382,11 +1384,11 @@ protected:
 *                               Boosted linear SVM classifier                            *
 \****************************************************************************************/
 
-struct CvBoostSVMParams : public CvSVMParams
+struct CV_EXPORTS_W_MAP CvBoostSVMParams : public CvSVMParams
 {
-    int boost_type;
-    int weak_count;
-    double weight_trim_rate;
+    CV_PROP_RW int boost_type;
+    CV_PROP_RW int weak_count;
+    CV_PROP_RW double weight_trim_rate;
 
     CvBoostSVMParams();
 
@@ -1396,7 +1398,95 @@ struct CvBoostSVMParams : public CvSVMParams
 
 //class CvBoostNew;
 
-//class CvBoostSVM : CvSVM
+class CvBoostSVM : public CvStatModel
+{
+public:
+    // Boosting type
+    //enum { DISCRETE=0, REAL=1, LOGIT=2, GENTLE=3 };
+
+    CV_WRAP CvBoostSVM();
+    virtual ~CvBoostSVM();
+
+    CvBoostSVM( const CvMat* trainData, int tflag,
+             const CvMat* responses, const CvMat* varIdx=0,
+             const CvMat* sampleIdx=0, const CvMat* varType=0,
+             const CvMat* missingDataMask=0,
+             CvBoostSVMParams params=CvBoostSVMParams() );
+    
+    virtual bool train( const CvMat* trainData, int tflag,
+             const CvMat* responses, const CvMat* varIdx=0,
+             const CvMat* sampleIdx=0, const CvMat* varType=0,
+             const CvMat* missingDataMask=0,
+             CvBoostSVMParams params=CvBoostSVMParams(),
+             bool update=false );
+    
+    virtual bool train( CvMLData* data,
+             CvBoostSVMParams params=CvBoostSVMParams(),
+             bool update=false );
+
+    virtual float predict( const CvMat* sample, const CvMat* missing=0,
+                           CvMat* weak_responses=0, CvSlice slice=CV_WHOLE_SEQ,
+                           bool raw_mode=false, bool return_sum=false ) const {return 0.0f;}
+
+#ifndef SWIG
+    CV_WRAP CvBoostSVM( const cv::Mat& trainData, int tflag,
+            const cv::Mat& responses, const cv::Mat& varIdx=cv::Mat(),
+            const cv::Mat& sampleIdx=cv::Mat(), const cv::Mat& varType=cv::Mat(),
+            const cv::Mat& missingDataMask=cv::Mat(),
+            CvBoostSVMParams params=CvBoostSVMParams() ) {}
+    
+    CV_WRAP virtual bool train( const cv::Mat& trainData, int tflag,
+                       const cv::Mat& responses, const cv::Mat& varIdx=cv::Mat(),
+                       const cv::Mat& sampleIdx=cv::Mat(), const cv::Mat& varType=cv::Mat(),
+                       const cv::Mat& missingDataMask=cv::Mat(),
+                       CvBoostSVMParams params=CvBoostSVMParams(),
+                       bool update=false ) {return false;}
+    
+    CV_WRAP virtual float predict( const cv::Mat& sample, const cv::Mat& missing=cv::Mat(),
+                                   const cv::Range& slice=cv::Range::all(), bool rawMode=false,
+                                   bool returnSum=false ) const {return 0.0f;}
+#endif
+    
+    virtual float calc_error( CvMLData* _data, int type , std::vector<float> *resp = 0 ) {return 0.0f;} // type in {CV_TRAIN_ERROR, CV_TEST_ERROR}
+
+    CV_WRAP virtual void prune( CvSlice slice );
+
+    CV_WRAP virtual void clear();
+
+    virtual void write( CvFileStorage* storage, const char* name ) const {}
+    virtual void read( CvFileStorage* storage, CvFileNode* node ) {}
+
+    CvSeq* get_weak_predictors() {}
+
+    CvMat* get_weights() {}
+    CvMat* get_weak_response() {}
+    //const CvBoostSVMParams& get_params() const { return CvBoostSVMParams; }
+
+protected:
+
+    virtual bool set_params( const CvBoostSVMParams& params );
+    virtual void update_weights( CvSVM* tree ) {}
+    virtual void trim_weights() {}
+    virtual void write_params( CvFileStorage* fs ) const {}
+    virtual void read_params( CvFileStorage* fs, CvFileNode* node ) {}
+
+    //CvDTreeTrainData* data;
+    CvBoostSVMParams params;
+    CvSeq* weak;
+
+    //CvMat* active_vars;
+    //CvMat* active_vars_abs;
+    bool have_active_cat_vars;
+
+    CvMat* orig_response;
+    CvMat* sum_response;
+    CvMat* weak_eval;
+    CvMat* subsample_mask;
+    CvMat* weights;
+    CvMat* subtree_weights;
+    bool have_subsample;
+};
+
 
 /****************************************************************************************\
 *                                   Gradient Boosted Trees                               *
