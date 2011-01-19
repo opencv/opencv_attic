@@ -1231,6 +1231,8 @@ struct CV_EXPORTS_W_MAP CvBoostParams : public CvDTreeParams
 
     CvBoostParams( int boost_type, int weak_count, double weight_trim_rate,
                    int max_depth, bool use_surrogates, const float* priors );
+
+    virtual ~CvBoostParams() {}
 };
 
 
@@ -1355,6 +1357,7 @@ public:
 
 protected:
 
+    virtual void set_data();
     virtual bool set_params( const CvBoostParams& params );
     virtual void update_weights( CvBoostTree* tree );
     virtual void trim_weights();
@@ -1377,6 +1380,60 @@ protected:
     CvMat* subtree_weights;
     bool have_subsample;
 };
+
+/****************************************************************************************\
+*                    Boosted tree classifier with vector feature                         *
+\****************************************************************************************/
+
+//struct CV_EXPORTS_W_MAP CvVecBoostParams : public CvBoostParams
+//{
+//    CV_PROP_RW int vector_size;
+//
+//    CvVecBoostParams();
+//
+//    CvVecBoostParams( int boost_type, int weak_count, double weight_trim_rate,
+//                   int max_depth, bool use_surrogates, const float* priors, int vec_size );
+//};
+
+class CV_EXPORTS_W CvVecBoost : public CvBoost
+{
+public:
+
+    CV_WRAP CvVecBoost() : CvBoost() {}
+
+    CvVecBoost( const CvMat* trainData, int tflag,
+        const CvMat* responses, const CvMat* varIdx=0,
+        const CvMat* sampleIdx=0, const CvMat* varType=0,
+        const CvMat* missingDataMask=0,
+        CvBoostParams params=CvBoostParams() );
+
+    virtual bool train( const CvMat* trainData, int tflag,
+        const CvMat* responses, const CvMat* varIdx=0,
+        const CvMat* sampleIdx=0, const CvMat* varType=0,
+        const CvMat* missingDataMask=0,
+        CvBoostParams params = CvBoostParams(),
+        bool update = false );
+
+
+    CV_WRAP CvVecBoost( const cv::Mat& trainData, int tflag,
+        const cv::Mat& responses, const cv::Mat& varIdx=cv::Mat(),
+        const cv::Mat& sampleIdx=cv::Mat(), const cv::Mat& varType=cv::Mat(),
+        const cv::Mat& missingDataMask=cv::Mat(),
+        CvBoostParams params=CvBoostParams() );
+    
+    CV_WRAP virtual bool train( const cv::Mat& trainData, int tflag,
+        const cv::Mat& responses, const cv::Mat& varIdx=cv::Mat(),
+        const cv::Mat& sampleIdx=cv::Mat(), const cv::Mat& varType=cv::Mat(),
+        const cv::Mat& missingDataMask=cv::Mat(),
+        CvBoostParams params=CvBoostParams(), bool update=false );
+
+protected:
+
+};
+
+
+
+
 
 
 
