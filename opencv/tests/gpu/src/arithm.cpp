@@ -49,7 +49,7 @@ using namespace std;
 using namespace gpu;
 
 #define CHECK(pred, err) if (!(pred)) { \
-    ts->printf(CvTS::LOG, "Fail: \"%s\" at line: %d\n", #pred, __LINE__); \
+    ts->printf(CvTS::CONSOLE, "Fail: \"%s\" at line: %d\n", #pred, __LINE__); \
     ts->set_failed_test_info(err); \
     return; }
 
@@ -659,11 +659,10 @@ struct CV_GpuMinMaxTest: public CvTest
     {
         try
         {
-            int depth_end;
-            if (cv::gpu::hasNativeDoubleSupport(cv::gpu::getDevice())) 
-                depth_end = CV_64F; 
-            else 
-                depth_end = CV_32F;
+            bool double_ok = gpu::TargetArchs::builtWith(gpu::NATIVE_DOUBLE) && 
+                             gpu::DeviceInfo().has(gpu::NATIVE_DOUBLE);
+            int depth_end = double_ok ? CV_64F : CV_32F;
+
             for (int depth = CV_8U; depth <= depth_end; ++depth)
             {
                 for (int i = 0; i < 3; ++i)
@@ -794,11 +793,10 @@ struct CV_GpuMinMaxLocTest: public CvTest
     {
         try 
         {
-            int depth_end;
-            if (cv::gpu::hasNativeDoubleSupport(cv::gpu::getDevice())) 
-                depth_end = CV_64F; 
-            else 
-                depth_end = CV_32F;
+            bool double_ok = gpu::TargetArchs::builtWith(gpu::NATIVE_DOUBLE) && 
+                             gpu::DeviceInfo().has(gpu::NATIVE_DOUBLE);
+            int depth_end = double_ok ? CV_64F : CV_32F;
+
             for (int depth = CV_8U; depth <= depth_end; ++depth)
             {
                 int rows = 1, cols = 3;
@@ -877,7 +875,7 @@ struct CV_GpuCountNonZeroTest: CvTest
         try
         {
             int depth_end;
-            if (cv::gpu::hasNativeDoubleSupport(cv::gpu::getDevice())) 
+            if (cv::gpu::DeviceInfo().has(cv::gpu::NATIVE_DOUBLE)) 
                 depth_end = CV_64F; 
             else 
                 depth_end = CV_32F;
@@ -918,7 +916,7 @@ struct CV_GpuCountNonZeroTest: CvTest
 
         if (n != n_gold)
         {
-            ts->printf(CvTS::CONSOLE, "%d %d %d %d %d\n", n, n_gold, depth, cols, rows);
+            ts->printf(CvTS::LOG, "%d %d %d %d %d\n", n, n_gold, depth, cols, rows);
             n_gold = cv::countNonZero(src);
         }
 

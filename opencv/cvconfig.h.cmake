@@ -112,6 +112,9 @@
 /* Xine video library */
 #cmakedefine  HAVE_XINE
 
+/* OpenNI library */
+#cmakedefine  HAVE_OPENNI
+
 /* LZ77 compression/decompression library (used for PNG) */
 #cmakedefine  HAVE_ZLIB
 
@@ -162,6 +165,15 @@
 
 /* NVidia Cuda Runtime API*/
 #cmakedefine HAVE_CUDA
+
+/* Compile for 'real' NVIDIA GPU architectures */
+#define CUDA_ARCH_BIN "${OPENCV_CUDA_ARCH_BIN}"
+
+/* Compile for 'virtual' NVIDIA PTX architectures */
+#define CUDA_ARCH_PTX "${OPENCV_CUDA_ARCH_PTX}"
+
+/* Create PTX or BIN for 1.0 compute capability */
+#cmakedefine CUDA_ARCH_BIN_OR_PTX_10
 
 /* VideoInput library */
 #cmakedefine HAVE_VIDEOINPUT

@@ -2075,8 +2075,8 @@ Ptr<DescriptorMatcher> BruteForceMatcher<Distance>::clone( bool emptyTrainData )
     BruteForceMatcher* matcher = new BruteForceMatcher(distance);
     if( !emptyTrainData )
     {
-        transform( trainDescCollection.begin(), trainDescCollection.end(),
-                   matcher->trainDescCollection.begin(), clone_op );
+        std::transform( trainDescCollection.begin(), trainDescCollection.end(),
+                        matcher->trainDescCollection.begin(), clone_op );
     }
     return matcher;
 }
@@ -2151,14 +2151,14 @@ inline void BruteForceMatcher<Distance>::commonKnnMatchImpl( BruteForceMatcher<D
                  bestMatch.distance = std::numeric_limits<float>::max();
                  for( size_t iIdx = 0; iIdx < imgCount; iIdx++ )
                  {
-					 if( !allDists[iIdx].empty() )
-					 {
-						 double minVal;
-						 Point minLoc;
-						 minMaxLoc( allDists[iIdx], &minVal, 0, &minLoc, 0 );
-						 if( minVal < bestMatch.distance )
-							 bestMatch = DMatch( qIdx, minLoc.x, (int)iIdx, (float)minVal );
-					 }
+                     if( !allDists[iIdx].empty() )
+                     {
+                         double minVal;
+                         Point minLoc;
+                         minMaxLoc( allDists[iIdx], &minVal, 0, &minLoc, 0 );
+                         if( minVal < bestMatch.distance )
+                                 bestMatch = DMatch( qIdx, minLoc.x, (int)iIdx, (float)minVal );
+                     }
                  }
                  if( bestMatch.trainIdx == -1 )
                      break;

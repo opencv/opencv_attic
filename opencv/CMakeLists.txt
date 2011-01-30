@@ -323,6 +323,7 @@ if(WIN32)
     set(WITH_VIDEOINPUT ON CACHE BOOL "Enable VideoInput support")
 endif()
 
+set(WITH_OPENNI OFF CACHE BOOL "Include OpenNI support")
 
 # ===================================================
 # Macros that checks if module have been installed.
@@ -700,35 +701,59 @@ endif()
 
 ############################### CUDA ################################
 
-if (WITH_CUDA)
+if(WITH_CUDA)
     find_package(CUDA 3.2)
-    if (CUDA_FOUND)
+    
+    if(CUDA_FOUND)
         set(HAVE_CUDA 1)
         message(STATUS "CUDA detected: " ${CUDA_VERSION})
 
-		set(CUDA_COMPUTE_CAPABILITIES " 1.1 1.2 1.3 2.0 " CACHE STRING "Add or remove compute capability")
-    set(CUDA_NVCC_FLAGS_ARCH ${CUDA_COMPUTE_CAPABILITIES})
-
-    set(CUDA_NVCC_FLAGS_NUM "")
-
-    while(NOT ${CUDA_NVCC_FLAGS_ARCH} STREQUAL "")
-        string(REGEX MATCH "[0-9]+.[0-9]+" RESULT_NUM ${CUDA_NVCC_FLAGS_ARCH})
-        string(REGEX MATCHALL "[0-9]" RESULT_STR ${RESULT_NUM})
-        string(REGEX REPLACE ";" "\ " RESULT ${RESULT_STR})
-        list(APPEND CUDA_NVCC_FLAGS_NUM ${RESULT})
-        string(REGEX REPLACE "${RESULT_NUM}" "\ " CUDA_NVCC_FLAGS_ARCH_STR ${CUDA_NVCC_FLAGS_ARCH})
-        string(STRIP ${CUDA_NVCC_FLAGS_ARCH_STR} CUDA_NVCC_FLAGS_ARCH)
-    endwhile()
-
-    set (OpenCV_CUDA_CC "")
-    set (loop_var "")
-    foreach( loop_var IN LISTS CUDA_NVCC_FLAGS_NUM)
-        set (CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} -gencode arch=compute_${loop_var},code=sm_${loop_var})
-        set (OpenCV_CUDA_CC  ${OpenCV_CUDA_CC}  -gencode arch=compute_${loop_var},code=sm_${loop_var})
-    endforeach()
-
-    ### set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} ${OpenCV_COMPUTE_CAPABILITIES})
-  endif()
+        set(CUDA_ARCH_BIN "1.3 2.0" CACHE STRING "Specify 'real' GPU architectures to build binaries for, BIN(PTX) format is supported")
+        set(CUDA_ARCH_PTX "1.1 1.3" CACHE STRING "Specify 'virtual' PTX architectures to build PTX intermediate code for")              
+        
+        # These variables are used in config templates
+        string(REGEX REPLACE "\\." "" ARCH_BIN_NO_POINTS "${CUDA_ARCH_BIN}")
+        string(REGEX REPLACE "\\." "" ARCH_PTX_NO_POINTS "${CUDA_ARCH_PTX}")
+        
+        # Ckeck if user specified 1.0 compute capability
+        string(REGEX MATCH "1.0" HAS_ARCH_10 "${CUDA_ARCH_BIN} ${CUDA_ARCH_PTX}")
+        set(CUDA_ARCH_BIN_OR_PTX_10 0)
+        if(NOT ${HAS_ARCH_10} STREQUAL "")
+            set(CUDA_ARCH_BIN_OR_PTX_10 1)
+        endif()
+        
+        # Flags to be set
+        set(NVCC_FLAGS_EXTRA "")      
+        
+        # These variables are passed into the template
+        set(OPENCV_CUDA_ARCH_BIN "") 
+        set(OPENCV_CUDA_ARCH_PTX "") 
+        
+        # Tell nvcc to add binaries for the specified GPUs
+        string(REGEX MATCHALL "[0-9()]+" ARCH_LIST "${ARCH_BIN_NO_POINTS}")
+        foreach(ARCH IN LISTS ARCH_LIST)
+            if (ARCH MATCHES "([0-9]+)\\(([0-9]+)\\)")
+                set(NVCC_FLAGS_EXTRA ${NVCC_FLAGS_EXTRA} -gencode arch=compute_${CMAKE_MATCH_2},code=sm_${CMAKE_MATCH_1})
+                set(OPENCV_CUDA_ARCH_BIN "${OPENCV_CUDA_ARCH_BIN} ${CMAKE_MATCH_1}")
+            else()
+                set(NVCC_FLAGS_EXTRA ${NVCC_FLAGS_EXTRA} -gencode arch=compute_${ARCH},code=sm_${ARCH})
+                set(OPENCV_CUDA_ARCH_BIN "${OPENCV_CUDA_ARCH_BIN} ${ARCH}")
+            endif()
+        endforeach()
+        
+        # Tell nvcc to add PTX intermediate code for the specified architectures
+        string(REGEX MATCHALL "[0-9]+" ARCH_LIST "${ARCH_PTX_NO_POINTS}")
+        foreach(ARCH IN LISTS ARCH_LIST)
+            set(NVCC_FLAGS_EXTRA ${NVCC_FLAGS_EXTRA} -gencode arch=compute_${ARCH},code=compute_${ARCH})
+            set(OPENCV_CUDA_ARCH_PTX "${OPENCV_CUDA_ARCH_PTX} ${ARCH}")
+        endforeach()               
+        
+        # Wil; be processed in other scripts
+        set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} ${NVCC_FLAGS_EXTRA})        
+        set(OpenCV_CUDA_CC "${NVCC_FLAGS_EXTRA}")
+        
+        message(STATUS "CUDA NVCC flags: ${CUDA_NVCC_FLAGS}")
+    endif()
 endif()
 
 
@@ -743,6 +768,28 @@ if (WIN32 AND WITH_VIDEOINPUT)
   endif()
 endif()
 
+############################### OpenNI ################################
+set(HAVE_OPENNI FALSE)
+set(HAVE_PRIME_SENSOR_FOR_OPENNI FALSE)
+
+if(WITH_OPENNI)
+    # find OpenNI library
+    unset(OPENNI_LIBRARY CACHE)
+    unset(PRIME_SENSOR_MODULES_FOR_OPENNI CACHE)
+    find_library(OPENNI_LIBRARY "OpenNI" PATHS "/usr/lib" "c:/Program Files/OpenNI/Lib" DOC "OpenNI library")
+    if(OPENNI_LIBRARY)
+        set(HAVE_OPENNI TRUE)
+        # the check: are PrimeSensor Modules for OpenNI installed?
+		if(WIN32)
+			find_file(PRIME_SENSOR_MODULES_FOR_OPENNI "XnCore.dll" PATHS "c:/Program Files/Prime Sense/Sensor/Bin" DOC "Core library of PrimeSensor Modules for OpenNI")
+		elseif(UNIX OR APPLE)
+			find_library(PRIME_SENSOR_MODULES_FOR_OPENNI "XnCore" PATHS "/usr/lib" DOC "Core library of PrimeSensor Modules for OpenNI")
+		endif()
+		if(PRIME_SENSOR_MODULES_FOR_OPENNI)
+            set(HAVE_PRIME_SENSOR_FOR_OPENNI TRUE)
+        endif()
+    endif()
+endif() #if(WITH_OPENNI)
 
 ############################## Eigen2 ##############################
 
@@ -1320,6 +1367,12 @@ else()
 message(STATUS "    OpenEXR:                   NO")
 endif()
 
+if(NOT HAVE_OPENNI OR HAVE_PRIME_SENSOR_FOR_OPENNI)
+message(STATUS "    OpenNI:                    ${HAVE_OPENNI}")
+else()
+message(STATUS "    OpenNI:                    ${HAVE_OPENNI} (WARNING: PrimeSensor Modules for OpenNI are not installed.)")
+endif() #if(NOT HAVE_OPENNI OR HAVE_PRIME_SENSOR_FOR_OPENNI)
+
 if(UNIX AND NOT APPLE)
 message(STATUS "")
 message(STATUS "  Video I/O: ")
@@ -1340,7 +1393,7 @@ else()
 message(STATUS "    V4L/V4L2:                  ${HAVE_CAMV4L}/${HAVE_CAMV4L2}")
 endif()
 message(STATUS "    Xine:                      ${HAVE_XINE}")
-endif()
+endif() #if(UNIX AND NOT APPLE)
 
 if(APPLE)
 message(STATUS "")

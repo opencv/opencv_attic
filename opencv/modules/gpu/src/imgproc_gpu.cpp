@@ -55,7 +55,6 @@ void cv::gpu::drawColorDisp(const GpuMat&, GpuMat&, int) { throw_nogpu(); }
 void cv::gpu::drawColorDisp(const GpuMat&, GpuMat&, int, const Stream&) { throw_nogpu(); }
 void cv::gpu::reprojectImageTo3D(const GpuMat&, GpuMat&, const Mat&) { throw_nogpu(); }
 void cv::gpu::reprojectImageTo3D(const GpuMat&, GpuMat&, const Mat&, const Stream&) { throw_nogpu(); }
-double cv::gpu::threshold(const GpuMat&, GpuMat&, double) { throw_nogpu(); return 0.0; }
 void cv::gpu::resize(const GpuMat&, GpuMat&, Size, double, double, int) { throw_nogpu(); }
 void cv::gpu::copyMakeBorder(const GpuMat&, GpuMat&, int, int, int, int, const Scalar&) { throw_nogpu(); }
 void cv::gpu::warpAffine(const GpuMat&, GpuMat&, const Mat&, Size, int) { throw_nogpu(); }
@@ -242,25 +241,6 @@ void cv::gpu::reprojectImageTo3D(const GpuMat& disp, GpuMat& xyzw, const Mat& Q,
 }
 
 ////////////////////////////////////////////////////////////////////////
-// threshold
-
-double cv::gpu::threshold(const GpuMat& src, GpuMat& dst, double thresh)
-{
-    CV_Assert(src.type() == CV_32FC1);
-
-    dst.create( src.size(), src.type() );
-
-    NppiSize sz;
-    sz.width  = src.cols;
-    sz.height = src.rows;
-
-    nppSafeCall( nppiThreshold_32f_C1R(src.ptr<Npp32f>(), src.step,
-        dst.ptr<Npp32f>(), dst.step, sz, static_cast<Npp32f>(thresh), NPP_CMP_GREATER) );
-
-    return thresh;
-}
-
-////////////////////////////////////////////////////////////////////////
 // resize
 
 void cv::gpu::resize(const GpuMat& src, GpuMat& dst, Size dsize, double fx, double fy, int interpolation)
@@ -306,6 +286,8 @@ void cv::gpu::resize(const GpuMat& src, GpuMat& dst, Size dsize, double fx, doub
         nppSafeCall( nppiResize_8u_C4R(src.ptr<Npp8u>(), srcsz, src.step, srcrect,
             dst.ptr<Npp8u>(), dst.step, dstsz, fx, fy, npp_inter[interpolation]) );
     }
+
+    cudaSafeCall( cudaThreadSynchronize() );
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -358,6 +340,8 @@ void cv::gpu::copyMakeBorder(const GpuMat& src, GpuMat& dst, int top, int bottom
     default:
         CV_Assert(!"Unsupported source type");
     }
+
+    cudaSafeCall( cudaThreadSynchronize() );
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -426,6 +410,8 @@ namespace
         default:
             CV_Assert(!"Unsupported source type");
         }
+
+        cudaSafeCall( cudaThreadSynchronize() );
     }
 }
 
@@ -551,6 +537,8 @@ void cv::gpu::rotate(const GpuMat& src, GpuMat& dst, Size dsize, double angle, d
         nppSafeCall( nppiRotate_8u_C4R(src.ptr<Npp8u>(), srcsz, src.step, srcroi,
             dst.ptr<Npp8u>(), dst.step, dstroi, angle, xShift, yShift, npp_inter[interpolation]) );
     }
+
+    cudaSafeCall( cudaThreadSynchronize() );
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -574,6 +562,8 @@ void cv::gpu::integral(const GpuMat& src, GpuMat& sum)
 
     nppSafeCall( nppiStIntegral_8u32u_C1R(const_cast<NppSt8u*>(src.ptr<NppSt8u>()), src.step, 
         sum.ptr<NppSt32u>(), sum.step, roiSize, buffer.ptr<NppSt8u>(), bufSize) );
+
+    cudaSafeCall( cudaThreadSynchronize() );
 }
 
 void cv::gpu::integral(const GpuMat& src, GpuMat& sum, GpuMat& sqsum)
@@ -591,6 +581,8 @@ void cv::gpu::integral(const GpuMat& src, GpuMat& sum, GpuMat& sqsum)
 
     nppSafeCall( nppiSqrIntegral_8u32s32f_C1R(const_cast<Npp8u*>(src.ptr<Npp8u>()), src.step, sum.ptr<Npp32s>(),
         sum.step, sqsum.ptr<Npp32f>(), sqsum.step, sz, 0, 0.0f, h) );
+
+    cudaSafeCall( cudaThreadSynchronize() );
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -613,6 +605,8 @@ void cv::gpu::sqrIntegral(const GpuMat& src, GpuMat& sqsum)
             const_cast<NppSt8u*>(src.ptr<NppSt8u>(0)), src.step, 
             sqsum.ptr<NppSt64u>(0), sqsum.step, roiSize, 
             buf.ptr<NppSt8u>(0), bufSize));
+
+    cudaSafeCall( cudaThreadSynchronize() );
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -649,6 +643,8 @@ void cv::gpu::rectStdDev(const GpuMat& src, const GpuMat& sqr, GpuMat& dst, cons
 
     nppSafeCall( nppiRectStdDev_32s32f_C1R(src.ptr<Npp32s>(), src.step, sqr.ptr<Npp32f>(), sqr.step,
                 dst.ptr<Npp32f>(), dst.step, sz, nppRect) );
+
+    cudaSafeCall( cudaThreadSynchronize() );
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -679,6 +675,8 @@ void cv::gpu::Canny(const GpuMat& image, GpuMat& edges, double threshold1, doubl
 
     nppSafeCall( nppiCanny_32f8u_C1R(srcDx.ptr<Npp32f>(), srcDx.step, srcDy.ptr<Npp32f>(), srcDy.step,
         edges.ptr<Npp8u>(), edges.step, sz, (Npp32f)threshold1, (Npp32f)threshold2, buf.ptr<Npp8u>()) );
+
+    cudaSafeCall( cudaThreadSynchronize() );
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -731,6 +729,8 @@ namespace
             buffer.create(1, buf_size, CV_8U);
             nppSafeCall( func(src.ptr<src_t>(), src.step, sz, hist.ptr<Npp32s>(), levels,
                 lowerLevel, upperLevel, buffer.ptr<Npp8u>()) );
+
+            cudaSafeCall( cudaThreadSynchronize() );
         }
     };
     template<int SDEPTH, typename NppHistogramEvenFuncC4<SDEPTH>::func_ptr func, get_buf_size_c4_t get_buf_size>
@@ -758,6 +758,8 @@ namespace
             get_buf_size(sz, levels, &buf_size);
             buffer.create(1, buf_size, CV_8U);
             nppSafeCall( func(src.ptr<src_t>(), src.step, sz, pHist, levels, lowerLevel, upperLevel, buffer.ptr<Npp8u>()) );
+
+            cudaSafeCall( cudaThreadSynchronize() );
         }
     };
 
@@ -821,6 +823,8 @@ namespace
             get_buf_size(sz, levels.cols, &buf_size);
             buffer.create(1, buf_size, CV_8U);
             nppSafeCall( func(src.ptr<src_t>(), src.step, sz, hist.ptr<Npp32s>(), levels.ptr<level_t>(), levels.cols, buffer.ptr<Npp8u>()) );
+
+            cudaSafeCall( cudaThreadSynchronize() );
         }
     };
     template<int SDEPTH, typename NppHistogramRangeFuncC4<SDEPTH>::func_ptr func, get_buf_size_c4_t get_buf_size>
@@ -856,6 +860,8 @@ namespace
             get_buf_size(sz, nLevels, &buf_size);
             buffer.create(1, buf_size, CV_8U);
             nppSafeCall( func(src.ptr<src_t>(), src.step, sz, pHist, pLevels, nLevels, buffer.ptr<Npp8u>()) );
+
+            cudaSafeCall( cudaThreadSynchronize() );
         }
     };
 }
@@ -1240,14 +1246,11 @@ void cv::gpu::ConvolveBuf::create(Size image_size, Size templ_size)
 
 Size cv::gpu::ConvolveBuf::estimateBlockSize(Size result_size, Size templ_size)
 {
-    int major, minor;
-    getComputeCapability(getDevice(), major, minor);
-
     int scale = 40;
     Size bsize_min(1024, 1024);
 
     // Check whether we use Fermi generation or newer GPU
-    if (major >= 2) 
+    if (DeviceInfo().major() >= 2) 
     {
         bsize_min.width = 2048;
         bsize_min.height = 2048;

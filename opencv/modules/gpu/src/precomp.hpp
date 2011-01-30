@@ -57,6 +57,7 @@
 #include <sstream>
 #include <exception>
 #include <iterator>
+#include <functional>
 
 #include "opencv2/gpu/gpu.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
@@ -69,7 +70,9 @@
     #include "opencv2/gpu/stream_accessor.hpp"
     #include "npp.h"    
     #include "npp_staging.h"
-    #include "surf_key_point.h"
+
+	#include "nvidia/NCV.hpp"
+	#include "nvidia/NCVHaarObjectDetection.hpp"
 
 #define CUDART_MINIMUM_REQUIRED_VERSION 3020
 #define NPP_MINIMUM_REQUIRED_VERSION 3216
@@ -80,6 +83,10 @@
 
 #if (NPP_VERSION_MAJOR*1000+NPP_VERSION_MINOR*100+NPP_VERSION_BUILD < NPP_MINIMUM_REQUIRED_VERSION)
     #error "Insufficient NPP version, please update it."
+#endif
+
+#if defined(CUDA_ARCH_BIN_OR_PTX_10)
+    #error "OpenCV GPU module doesn't support NVIDIA compute capability 1.0"
 #endif
 
     static inline void throw_nogpu() { CV_Error(CV_GpuNotSupported, "The called functionality is disabled for current build or platform"); }

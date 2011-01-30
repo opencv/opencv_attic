@@ -55,8 +55,8 @@ void cv::gpu::HOGDescriptor::detectMultiScale(const GpuMat&, vector<Rect>&, doub
 void cv::gpu::HOGDescriptor::computeBlockHistograms(const GpuMat&) { throw_nogpu(); }
 void cv::gpu::HOGDescriptor::getDescriptors(const GpuMat&, Size, GpuMat&, int) { throw_nogpu(); }
 std::vector<float> cv::gpu::HOGDescriptor::getDefaultPeopleDetector() { throw_nogpu(); return std::vector<float>(); }
-std::vector<float> cv::gpu::HOGDescriptor::getPeopleDetector_48x96() { throw_nogpu(); return std::vector<float>(); }
-std::vector<float> cv::gpu::HOGDescriptor::getPeopleDetector_64x128() { throw_nogpu(); return std::vector<float>(); }
+std::vector<float> cv::gpu::HOGDescriptor::getPeopleDetector48x96() { throw_nogpu(); return std::vector<float>(); }
+std::vector<float> cv::gpu::HOGDescriptor::getPeopleDetector64x128() { throw_nogpu(); return std::vector<float>(); }
 
 #else
 
@@ -252,6 +252,7 @@ void cv::gpu::HOGDescriptor::getDescriptors(const GpuMat& img, Size win_stride, 
 void cv::gpu::HOGDescriptor::detect(const GpuMat& img, vector<Point>& hits, double hit_threshold, 
                                     Size win_stride, Size padding)
 {
+    CV_Assert(img.type() == CV_8UC1 || img.type() == CV_8UC4);
     CV_Assert(padding == Size(0, 0));
 
     hits.clear();
@@ -352,11 +353,11 @@ cv::Size cv::gpu::HOGDescriptor::numPartsWithin(cv::Size size, cv::Size part_siz
 
 std::vector<float> cv::gpu::HOGDescriptor::getDefaultPeopleDetector()
 {
-    return getPeopleDetector_64x128();
+    return getPeopleDetector64x128();
 }
 
 
-std::vector<float> cv::gpu::HOGDescriptor::getPeopleDetector_48x96()
+std::vector<float> cv::gpu::HOGDescriptor::getPeopleDetector48x96()
 {
     static const float detector[] = {
         0.294350f, -0.098796f, -0.129522f, 0.078753f, 0.387527f, 0.261529f, 
@@ -696,7 +697,7 @@ std::vector<float> cv::gpu::HOGDescriptor::getPeopleDetector_48x96()
 
 
 
-std::vector<float> cv::gpu::HOGDescriptor::getPeopleDetector_64x128()
+std::vector<float> cv::gpu::HOGDescriptor::getPeopleDetector64x128()
 {
     static const float detector[] = {
        0.05359386f, -0.14721455f, -0.05532170f, 0.05077307f,

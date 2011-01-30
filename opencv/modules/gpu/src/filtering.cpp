@@ -48,7 +48,7 @@ using namespace cv::gpu;
 
 #if !defined (HAVE_CUDA)
 
-Ptr<FilterEngine_GPU> cv::gpu::createFilter2D_GPU(const Ptr<BaseFilter_GPU>, int, int) { throw_nogpu(); return Ptr<FilterEngine_GPU>(0); }
+Ptr<FilterEngine_GPU> cv::gpu::createFilter2D_GPU(const Ptr<BaseFilter_GPU>&, int, int) { throw_nogpu(); return Ptr<FilterEngine_GPU>(0); }
 Ptr<FilterEngine_GPU> cv::gpu::createSeparableFilter_GPU(const Ptr<BaseRowFilter_GPU>&, const Ptr<BaseColumnFilter_GPU>&, int, int, int) { throw_nogpu(); return Ptr<FilterEngine_GPU>(0); }
 Ptr<BaseRowFilter_GPU> cv::gpu::getRowSumFilter_GPU(int, int, int, int) { throw_nogpu(); return Ptr<BaseRowFilter_GPU>(0); }
 Ptr<BaseColumnFilter_GPU> cv::gpu::getColumnSumFilter_GPU(int, int, int, int) { throw_nogpu(); return Ptr<BaseColumnFilter_GPU>(0); }
@@ -159,7 +159,7 @@ namespace
     };
 }
 
-Ptr<FilterEngine_GPU> cv::gpu::createFilter2D_GPU(const Ptr<BaseFilter_GPU> filter2D, int srcType, int dstType)
+Ptr<FilterEngine_GPU> cv::gpu::createFilter2D_GPU(const Ptr<BaseFilter_GPU>& filter2D, int srcType, int dstType)
 {
     return Ptr<FilterEngine_GPU>(new Filter2DEngine_GPU(filter2D, srcType, dstType));
 }
@@ -236,6 +236,8 @@ namespace
             sz.height = src.rows;
 
             nppSafeCall( nppiSumWindowRow_8u32f_C1R(src.ptr<Npp8u>(), src.step, dst.ptr<Npp32f>(), dst.step, sz, ksize, anchor) );
+
+            cudaSafeCall( cudaThreadSynchronize() );
         }
     };
 }
@@ -263,6 +265,8 @@ namespace
             sz.height = src.rows;
 
             nppSafeCall( nppiSumWindowColumn_8u32f_C1R(src.ptr<Npp8u>(), src.step, dst.ptr<Npp32f>(), dst.step, sz, ksize, anchor) );
+
+            cudaSafeCall( cudaThreadSynchronize() );
         }
     };
 }
@@ -302,6 +306,8 @@ namespace
             oAnchor.y = anchor.y;
             
             nppSafeCall( func(src.ptr<Npp8u>(), src.step, dst.ptr<Npp8u>(), dst.step, sz, oKernelSize, oAnchor) );
+
+            cudaSafeCall( cudaThreadSynchronize() );
         }
 
         nppFilterBox_t func;
@@ -363,6 +369,8 @@ namespace
             oAnchor.y = anchor.y;
 
             nppSafeCall( func(src.ptr<Npp8u>(), src.step, dst.ptr<Npp8u>(), dst.step, sz, kernel.ptr<Npp8u>(), oKernelSize, oAnchor) );
+
+            cudaSafeCall( cudaThreadSynchronize() );
         }
 
         GpuMat kernel;
@@ -537,6 +545,8 @@ namespace
                                   
             nppSafeCall( func(src.ptr<Npp8u>(), src.step, dst.ptr<Npp8u>(), dst.step, sz, 
                 kernel.ptr<Npp32s>(), oKernelSize, oAnchor, nDivisor) );
+
+            cudaSafeCall( cudaThreadSynchronize() );
         }
 
         GpuMat kernel;
@@ -611,6 +621,8 @@ namespace
             sz.height = src.rows;
 
             nppSafeCall( func(src.ptr<Npp8u>(), src.step, dst.ptr<Npp8u>(), dst.step, sz, kernel.ptr<Npp32s>(), ksize, anchor, nDivisor) );
+
+            cudaSafeCall( cudaThreadSynchronize() );
         }
 
         GpuMat kernel;
@@ -715,6 +727,8 @@ namespace
             sz.height = src.rows;
 
             nppSafeCall( func(src.ptr<Npp8u>(), src.step, dst.ptr<Npp8u>(), dst.step, sz, kernel.ptr<Npp32s>(), ksize, anchor, nDivisor) );
+
+            cudaSafeCall( cudaThreadSynchronize() );
         }
 
         GpuMat kernel;
@@ -964,6 +978,8 @@ namespace
             oAnchor.y = anchor.y;
             
             nppSafeCall( func(src.ptr<Npp8u>(), src.step, dst.ptr<Npp8u>(), dst.step, sz, oKernelSize, oAnchor) );
+
+            cudaSafeCall( cudaThreadSynchronize() );
         }
 
         nppFilterRank_t func;

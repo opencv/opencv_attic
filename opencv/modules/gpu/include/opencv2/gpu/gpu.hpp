@@ -60,17 +60,60 @@ namespace cv
         CV_EXPORTS int getCudaEnabledDeviceCount();
 
         //! Functions below throw cv::Expception if the library is compiled without Cuda.
-        CV_EXPORTS string getDeviceName(int device);
+
         CV_EXPORTS void setDevice(int device);
         CV_EXPORTS int getDevice();
 
-        CV_EXPORTS void getComputeCapability(int device, int& major, int& minor);
-        CV_EXPORTS int getNumberOfSMs(int device);
+        enum GpuFeature
+        {
+            NATIVE_DOUBLE,
+            ATOMICS
+        };
 
-        CV_EXPORTS void getGpuMemInfo(size_t& free, size_t& total);
+        class CV_EXPORTS TargetArchs
+        {
+        public:
+            static bool builtWith(GpuFeature feature);
+            static bool has(int major, int minor);
+            static bool hasPtx(int major, int minor);
+            static bool hasBin(int major, int minor);
+            static bool hasEqualOrLessPtx(int major, int minor);
+            static bool hasEqualOrGreater(int major, int minor);
+            static bool hasEqualOrGreaterPtx(int major, int minor);
+            static bool hasEqualOrGreaterBin(int major, int minor);
+        private:
+            TargetArchs();
+        };
 
-        CV_EXPORTS bool hasNativeDoubleSupport(int device);
-        CV_EXPORTS bool hasAtomicsSupport(int device);
+        class CV_EXPORTS DeviceInfo
+        {
+        public:
+            DeviceInfo() : device_id_(getDevice()) { query(); }
+            DeviceInfo(int device_id) : device_id_(device_id) { query(); }
+
+            string name() const { return name_; }
+
+            int major() const { return major_; }
+            int minor() const { return minor_; }
+
+            int multiProcessorCount() const { return multi_processor_count_; }
+
+            size_t freeMemory() const;
+            size_t totalMemory() const;
+
+            bool has(GpuFeature feature) const;
+            bool isCompatible() const;
+
+        private:
+            void query();
+            void queryMemory(size_t& free_memory, size_t& total_memory) const;
+
+            int device_id_;
+
+            string name_;
+            int multi_processor_count_;
+            int major_, minor_;
+        };
 
         //////////////////////////////// Error handling ////////////////////////
 
@@ -246,8 +289,12 @@ namespace cv
     #include "GpuMat_BetaDeprecated.hpp"
 #endif
 
-        //! creates continuous GPU matrix
+        //! Creates continuous GPU matrix
         CV_EXPORTS void createContinuous(int rows, int cols, int type, GpuMat& m);
+
+        //! Ensures that size of the given matrix is not less than (rows, cols) size
+        //! and matrix type is match specified one too
+        CV_EXPORTS void ensureSizeIsEnough(int rows, int cols, int type, GpuMat& m);
 
         //////////////////////////////// CudaMem ////////////////////////////////
         // CudaMem is limited cv::Mat with page locked memory allocation.
@@ -546,7 +593,7 @@ namespace cv
         CV_EXPORTS void meanShiftProc(const GpuMat& src, GpuMat& dstr, GpuMat& dstsp, int sp, int sr,
             TermCriteria criteria = TermCriteria(TermCriteria::MAX_ITER + TermCriteria::EPS, 5, 1));
 
-        //! Does mean shift segmentation with elimiation of small regions.
+        //! Does mean shift segmentation with elimination of small regions.
         CV_EXPORTS void meanShiftSegmentation(const GpuMat& src, Mat& dst, int sp, int sr, int minsize,
             TermCriteria criteria = TermCriteria(TermCriteria::MAX_ITER + TermCriteria::EPS, 5, 1));
 
@@ -571,9 +618,10 @@ namespace cv
         //! async version
         CV_EXPORTS void cvtColor(const GpuMat& src, GpuMat& dst, int code, int dcn, const Stream& stream);
 
-        //! applies fixed threshold to the image.
-        //! Now supports only THRESH_TRUNC threshold type and one channels float source.
-        CV_EXPORTS double threshold(const GpuMat& src, GpuMat& dst, double thresh);
+        //! applies fixed threshold to the image
+        CV_EXPORTS double threshold(const GpuMat& src, GpuMat& dst, double thresh, double maxval, int type);
+        //! async version
+        CV_EXPORTS double threshold(const GpuMat& src, GpuMat& dst, double thresh, double maxval, int type, const Stream& stream);
 
         //! resizes the image
         //! Supports INTER_NEAREST, INTER_LINEAR
@@ -804,7 +852,7 @@ namespace cv
         };
 
         //! returns the non-separable filter engine with the specified filter
-        CV_EXPORTS Ptr<FilterEngine_GPU> createFilter2D_GPU(const Ptr<BaseFilter_GPU> filter2D, int srcType, int dstType);
+        CV_EXPORTS Ptr<FilterEngine_GPU> createFilter2D_GPU(const Ptr<BaseFilter_GPU>& filter2D, int srcType, int dstType);
 
         //! returns the separable filter engine with the specified filters
         CV_EXPORTS Ptr<FilterEngine_GPU> createSeparableFilter_GPU(const Ptr<BaseRowFilter_GPU>& rowFilter,
@@ -1165,7 +1213,6 @@ namespace cv
 
         struct CV_EXPORTS HOGDescriptor
         {
-        public:
             enum { DEFAULT_WIN_SIGMA = -1 };
             enum { DEFAULT_NLEVELS = 64 };
             enum { DESCR_FORMAT_ROW_BY_ROW, DESCR_FORMAT_COL_BY_COL };
@@ -1180,11 +1227,10 @@ namespace cv
             size_t getBlockHistogramSize() const;
 
             void setSVMDetector(const vector<float>& detector);
-            bool checkDetectorSize() const;
 
             static vector<float> getDefaultPeopleDetector();
-            static vector<float> getPeopleDetector_48x96();
-            static vector<float> getPeopleDetector_64x128();
+            static vector<float> getPeopleDetector48x96();
+            static vector<float> getPeopleDetector64x128();
 
             void detect(const GpuMat& img, vector<Point>& found_locations, 
                         double hit_threshold=0, Size win_stride=Size(), 
@@ -1212,7 +1258,9 @@ namespace cv
         protected:
             void computeBlockHistograms(const GpuMat& img);
             void computeGradient(const GpuMat& img, GpuMat& grad, GpuMat& qangle);
+
             double getWinSigma() const;
+            bool checkDetectorSize() const;
 
             static int numPartsWithin(int size, int part_size, int stride);
             static Size numPartsWithin(Size size, Size part_size, Size stride);
@@ -1284,7 +1332,7 @@ namespace cv
                 const GpuMat& maskCollection);
 
             // Download trainIdx, imgIdx and distance to CPU vector with DMatch
-            static void matchDownload(const GpuMat& trainIdx, GpuMat& imgIdx, const GpuMat& distance,
+            static void matchDownload(const GpuMat& trainIdx, const GpuMat& imgIdx, const GpuMat& distance,
                 std::vector<DMatch>& matches);
 
             // Find one best match from train collection for each query descriptor.
@@ -1379,87 +1427,39 @@ namespace cv
             explicit BruteForceMatcher_GPU(L2<T> /*d*/) : BruteForceMatcher_GPU_base(L2Dist) {}
         };
 
-        ////////////////////////////////// CascadeClassifier //////////////////////////////////////////
+        ////////////////////////////////// CascadeClassifier_GPU //////////////////////////////////////////
         // The cascade classifier class for object detection.
-        class CV_EXPORTS CascadeClassifier
+        class CV_EXPORTS CascadeClassifier_GPU
         {
-        public:
-            struct CV_EXPORTS DTreeNode
-            {
-                int featureIdx;
-                float threshold; // for ordered features only
-                int left;
-                int right;
-            };
-
-            struct CV_EXPORTS DTree
-            {
-                int nodeCount;
-            };
-
-            struct CV_EXPORTS Stage
-            {
-                int first;
-                int ntrees;
-                float threshold;
-            };
-
-            enum { BOOST = 0 };
-            enum { DO_CANNY_PRUNING = 1, SCALE_IMAGE = 2,FIND_BIGGEST_OBJECT = 4, DO_ROUGH_SEARCH = 8 };
-
-            CascadeClassifier();
-            CascadeClassifier(const string& filename);
-            ~CascadeClassifier();
+        public:            
+            CascadeClassifier_GPU();
+            CascadeClassifier_GPU(const string& filename);
+            ~CascadeClassifier_GPU();
 
             bool empty() const;
             bool load(const string& filename);
-            bool read(const FileNode& node);
+            void release();
+            
+            /* returns number of detected objects */
+            int detectMultiScale( const GpuMat& image, GpuMat& objectsBuf, double scaleFactor=1.2, int minNeighbors=4, Size minSize=Size());
+                                    
+            bool findLargestObject;
+            bool visualizeInPlace;
 
-            void detectMultiScale( const Mat& image, vector<Rect>& objects, double scaleFactor=1.1,
-                int minNeighbors=3, int flags=0, Size minSize=Size(), Size maxSize=Size());
-
-            bool setImage( Ptr<FeatureEvaluator>&, const Mat& );
-            int runAt( Ptr<FeatureEvaluator>&, Point );
-
-            bool isStumpBased;
-
-            int stageType;
-            int featureType;
-            int ncategories;
-            Size origWinSize;
-
-            vector<Stage> stages;
-            vector<DTree> classifiers;
-            vector<DTreeNode> nodes;
-            vector<float> leaves;
-            vector<int> subsets;
-
-            Ptr<FeatureEvaluator> feval;
-            Ptr<CvHaarClassifierCascade> oldCascade;
+            Size getClassifierSize() const;
+        private:
+            
+            struct CascadeClassifierImpl;                        
+            CascadeClassifierImpl* impl;            
         };
-
+        
         ////////////////////////////////// SURF //////////////////////////////////////////
         
         struct CV_EXPORTS SURFParams_GPU 
         {
-            SURFParams_GPU() :
-                threshold(0.1f), 
-                nOctaves(4),
-                nIntervals(4),
-                initialScale(2.f),
-
-                l1(3.f/1.5f),
-                l2(5.f/1.5f),
-                l3(3.f/1.5f),
-                l4(1.f/1.5f),
-                edgeScale(0.81f),
-                initialStep(1),
-
-                extended(true),
-
-                featuresRatio(0.01f)
-            {
-            }
+            SURFParams_GPU() : threshold(0.1f), nOctaves(4), nIntervals(4), initialScale(2.f), 
+                l1(3.f/1.5f), l2(5.f/1.5f), l3(3.f/1.5f), l4(1.f/1.5f),
+                edgeScale(0.81f), initialStep(1), extended(true), featuresRatio(0.01f) {}
 
             //! The interest operator threshold
             float threshold;

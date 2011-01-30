@@ -64,23 +64,33 @@ struct CV_GpuMatchTemplateTest: CvTest
     {
         try
         {
+            bool double_ok = gpu::TargetArchs::builtWith(gpu::NATIVE_DOUBLE) && 
+                             gpu::DeviceInfo().has(gpu::NATIVE_DOUBLE);
+            if (!double_ok)
+            {
+                // For sqrIntegral
+                ts->printf(CvTS::CONSOLE, "\nCode and device double support is required (CC >= 1.3)");
+                ts->set_failed_test_info(CvTS::FAIL_GENERIC);
+                return;
+            }
+
             Mat image, templ;
             Mat dst_gold;
             gpu::GpuMat dst;
             int n, m, h, w;
             F(clock_t t;)
 
+            RNG rng(*ts->get_rng());
+
             for (int cn = 1; cn <= 4; ++cn)
             {
                 F(ts->printf(CvTS::CONSOLE, "cn: %d\n", cn);)
                 for (int i = 0; i <= 0; ++i)
                 {
-                    n = 1 + rand() % 1000;
-                    m = 1 + rand() % 1000;
-                    do h = 1 + rand() % 100; while (h > n);
-                    do w = 1 + rand() % 100; while (w > m);
-
-                    //cout << "w: " << w << " h: " << h << endl;
+                    n = rng.uniform(30, 100);
+                    m = rng.uniform(30, 100);
+                    h = rng.uniform(5, n - 1);
+                    w = rng.uniform(5, m - 1);
 
                     gen(image, n, m, CV_8U, cn);
                     gen(templ, h, w, CV_8U, cn);
@@ -91,7 +101,7 @@ struct CV_GpuMatchTemplateTest: CvTest
                     F(t = clock();)
                     gpu::matchTemplate(gpu::GpuMat(image), gpu::GpuMat(templ), dst, CV_TM_SQDIFF);
                     F(cout << "gpu_block: " << clock() - t << endl;)
-                    if (!check(dst_gold, Mat(dst), 5 * h * w * 1e-4f)) return;
+                    if (!check(dst_gold, Mat(dst), 5 * h * w * 1e-4f, "SQDIFF 8U")) return;
 
                     gen(image, n, m, CV_8U, cn);
                     gen(templ, h, w, CV_8U, cn);
@@ -102,7 +112,7 @@ struct CV_GpuMatchTemplateTest: CvTest
                     F(t = clock();)
                     gpu::matchTemplate(gpu::GpuMat(image), gpu::GpuMat(templ), dst, CV_TM_SQDIFF_NORMED);
                     F(cout << "gpu_block: " << clock() - t << endl;)
-                    if (!check(dst_gold, Mat(dst), h * w * 1e-5f)) return;
+                    if (!check(dst_gold, Mat(dst), h * w * 1e-5f, "SQDIFF_NOREMD 8U")) return;
 
                     gen(image, n, m, CV_8U, cn);
                     gen(templ, h, w, CV_8U, cn);
@@ -113,7 +123,7 @@ struct CV_GpuMatchTemplateTest: CvTest
                     F(t = clock();)
                     gpu::matchTemplate(gpu::GpuMat(image), gpu::GpuMat(templ), dst, CV_TM_CCORR);
                     F(cout << "gpu_block: " << clock() - t << endl;)
-                    if (!check(dst_gold, Mat(dst), 5 * h * w * cn * cn * 1e-5f)) return;
+                    if (!check(dst_gold, Mat(dst), 5 * h * w * cn * cn * 1e-5f, "CCORR 8U")) return;
 
                     gen(image, n, m, CV_8U, cn);
                     gen(templ, h, w, CV_8U, cn);
@@ -124,7 +134,7 @@ struct CV_GpuMatchTemplateTest: CvTest
                     F(t = clock();)
                     gpu::matchTemplate(gpu::GpuMat(image), gpu::GpuMat(templ), dst, CV_TM_CCORR_NORMED);
                     F(cout << "gpu_block: " << clock() - t << endl;)
-                    if (!check(dst_gold, Mat(dst), h * w * 1e-5f)) return;
+                    if (!check(dst_gold, Mat(dst), h * w * 1e-6f, "CCORR_NORMED 8U")) return;
 
                     gen(image, n, m, CV_8U, cn);
                     gen(templ, h, w, CV_8U, cn);
@@ -135,7 +145,7 @@ struct CV_GpuMatchTemplateTest: CvTest
                     F(t = clock();)
                     gpu::matchTemplate(gpu::GpuMat(image), gpu::GpuMat(templ), dst, CV_TM_CCOEFF);
                     F(cout << "gpu_block: " << clock() - t << endl;)
-                    if (!check(dst_gold, Mat(dst), 5 * h * w * cn * cn * 1e-5f)) return;
+                    if (!check(dst_gold, Mat(dst), 5 * h * w * cn * cn * 1e-5f, "CCOEFF 8U")) return;
 
                     gen(image, n, m, CV_8U, cn);
                     gen(templ, h, w, CV_8U, cn);
@@ -146,7 +156,7 @@ struct CV_GpuMatchTemplateTest: CvTest
                     F(t = clock();)
                     gpu::matchTemplate(gpu::GpuMat(image), gpu::GpuMat(templ), dst, CV_TM_CCOEFF_NORMED);
                     F(cout << "gpu_block: " << clock() - t << endl;)
-                    if (!check(dst_gold, Mat(dst), h * w * 1e-6f)) return;
+                    if (!check(dst_gold, Mat(dst), h * w * 1e-6f, "CCOEFF_NORMED 8U")) return;
 
                     gen(image, n, m, CV_32F, cn);
                     gen(templ, h, w, CV_32F, cn);
@@ -157,7 +167,7 @@ struct CV_GpuMatchTemplateTest: CvTest
                     F(t = clock();)
                     gpu::matchTemplate(gpu::GpuMat(image), gpu::GpuMat(templ), dst, CV_TM_SQDIFF);
                     F(cout << "gpu_block: " << clock() - t << endl;)
-                    if (!check(dst_gold, Mat(dst), 0.25f * h * w * 1e-5f)) return;
+                    if (!check(dst_gold, Mat(dst), 0.25f * h * w * 1e-5f, "SQDIFF 32F")) return;
 
                     gen(image, n, m, CV_32F, cn);
                     gen(templ, h, w, CV_32F, cn);
@@ -168,7 +178,7 @@ struct CV_GpuMatchTemplateTest: CvTest
                     F(t = clock();)
                     gpu::matchTemplate(gpu::GpuMat(image), gpu::GpuMat(templ), dst, CV_TM_CCORR);
                     F(cout << "gpu_block: " << clock() - t << endl;)
-                    if (!check(dst_gold, Mat(dst), 0.25f * h * w * 1e-5f)) return;
+                    if (!check(dst_gold, Mat(dst), 0.25f * h * w * 1e-5f, "CCORR 32F")) return;
                 }
             }
         }
@@ -190,83 +200,111 @@ struct CV_GpuMatchTemplateTest: CvTest
             rng.fill(a, RNG::UNIFORM, Scalar::all(0.001f), Scalar::all(1.f));
     }
 
-    bool check(const Mat& a, const Mat& b, float max_err)
+    bool check(const Mat& a, const Mat& b, float max_err, const string& method="")
     {
         if (a.size() != b.size())
         {
-            ts->printf(CvTS::CONSOLE, "bad size");
+            ts->printf(CvTS::CONSOLE, "bad size, method=%s\n", method.c_str());
             ts->set_failed_test_info(CvTS::FAIL_INVALID_OUTPUT);
             return false;
         }
 
-        float err = (float)norm(a, b, NORM_INF);
-        if (err > max_err)
-        {
-            ts->printf(CvTS::CONSOLE, "bad accuracy: %f\n", err);
-            ts->set_failed_test_info(CvTS::FAIL_INVALID_OUTPUT);
-            return false;
-        }
-
-        //// Debug check
         //for (int i = 0; i < a.rows; ++i)
         //{
         //    for (int j = 0; j < a.cols; ++j)
         //    {
-        //        float v1 = a.at<float>(i, j);
-        //        float v2 = b.at<float>(i, j);
-        //        if (fabs(v1 - v2) > max_err)
+        //        float a_ = a.at<float>(i, j);
+        //        float b_ = b.at<float>(i, j);
+        //        if (fabs(a_ - b_) > max_err)
         //        {
-        //            ts->printf(CvTS::CONSOLE, "%d %d %f %f\n", i, j, v1, v2);
+        //            ts->printf(CvTS::CONSOLE, "a=%f, b=%f, i=%d, j=%d\n", a_, b_, i, j);
         //            cin.get();
         //        }
         //    }
         //}
 
+        float err = (float)norm(a, b, NORM_INF);
+        if (err > max_err)
+        {
+            ts->printf(CvTS::CONSOLE, "bad accuracy: %f, method=%s\n", err, method.c_str());
+            ts->set_failed_test_info(CvTS::FAIL_INVALID_OUTPUT);
+            return false;
+        }
+
         return true;
     }
-
-    //void match_template_naive_SQDIFF(const Mat& a, const Mat& b, Mat& c)
-    //{
-    //    c.create(a.rows - b.rows + 1, a.cols - b.cols + 1, CV_32F);         
-    //    for (int i = 0; i < c.rows; ++i)
-    //    {
-    //        for (int j = 0; j < c.cols; ++j)
-    //        {
-    //            float delta;
-    //            float sum = 0.f;
-    //            for (int y = 0; y < b.rows; ++y)
-    //            {
-    //                const unsigned char* arow = a.ptr(i + y);
-    //                const unsigned char* brow = b.ptr(y);
-    //                for (int x = 0; x < b.cols; ++x)
-    //                {
-    //                    delta = (float)(arow[j + x] - brow[x]);
-    //                    sum += delta * delta;
-    //                }
-    //            }
-    //            c.at<float>(i, j) = sum;
-    //        }
-    //    }
-    //}
-
-    //void match_template_naive_CCORR(const Mat& a, const Mat& b, Mat& c)
-    //{
-    //    c.create(a.rows - b.rows + 1, a.cols - b.cols + 1, CV_32F);         
-    //    for (int i = 0; i < c.rows; ++i)
-    //    {
-    //        for (int j = 0; j < c.cols; ++j)
-    //        {
-    //            float sum = 0.f;
-    //            for (int y = 0; y < b.rows; ++y)
-    //            {
-    //                const float* arow = a.ptr<float>(i + y);
-    //                const float* brow = b.ptr<float>(y);
-    //                for (int x = 0; x < b.cols; ++x)
-    //                    sum += arow[j + x] * brow[x];
-    //            }
-    //            c.at<float>(i, j) = sum;
-    //        }
-    //    }
-    //}
 } match_template_test;
 
+struct CV_GpuMatchTemplateFindPatternInBlackTest: CvTest 
+{
+    CV_GpuMatchTemplateFindPatternInBlackTest()
+            : CvTest("GPU-MatchTemplateFindPatternInBlackTest", "matchTemplate") {}
+
+    void run(int)
+    {
+        try
+        {
+            bool double_ok = gpu::TargetArchs::builtWith(gpu::NATIVE_DOUBLE) && 
+                             gpu::DeviceInfo().has(gpu::NATIVE_DOUBLE);
+            if (!double_ok)
+            {
+                // For sqrIntegral
+                ts->printf(CvTS::CONSOLE, "\nCode and device double support is required (CC >= 1.3)");
+                ts->set_failed_test_info(CvTS::FAIL_GENERIC);
+                return;
+            }
+
+            Mat image = imread(std::string(ts->get_data_path()) + "matchtemplate/black.png");
+            if (image.empty())
+            {
+                ts->printf(CvTS::CONSOLE, "can't open file '%s'", (std::string(ts->get_data_path()) 
+                                                                   + "matchtemplate/black.png").c_str());
+                ts->set_failed_test_info(CvTS::FAIL_MISSING_TEST_DATA);
+                return;
+            }
+
+            Mat pattern = imread(std::string(ts->get_data_path()) + "matchtemplate/cat.png");
+            if (pattern.empty())
+            {
+                ts->printf(CvTS::CONSOLE, "can't open file '%s'", (std::string(ts->get_data_path()) 
+                                                                   + "matchtemplate/cat.png").c_str());
+                ts->set_failed_test_info(CvTS::FAIL_MISSING_TEST_DATA);
+                return;
+            }
+
+            gpu::GpuMat d_image(image);
+            gpu::GpuMat d_pattern(pattern);
+            gpu::GpuMat d_result;
+
+            double maxValue;
+            Point maxLoc;
+            Point maxLocGold(284, 12);
+
+            gpu::matchTemplate(d_image, d_pattern, d_result, CV_TM_CCOEFF_NORMED);
+            gpu::minMaxLoc(d_result, NULL, &maxValue, NULL, &maxLoc );
+            if (maxLoc != maxLocGold)
+            {
+                ts->printf(CvTS::CONSOLE, "bad match (CV_TM_CCOEFF_NORMED): %d %d, must be at: %d %d", 
+                           maxLoc.x, maxLoc.y, maxLocGold.x, maxLocGold.y);
+                ts->set_failed_test_info(CvTS::FAIL_INVALID_OUTPUT);
+                return;
+            }
+
+            gpu::matchTemplate(d_image, d_pattern, d_result, CV_TM_CCORR_NORMED);
+            gpu::minMaxLoc(d_result, NULL, &maxValue, NULL, &maxLoc );
+            if (maxLoc != maxLocGold)
+            {
+                ts->printf(CvTS::CONSOLE, "bad match (CV_TM_CCORR_NORMED): %d %d, must be at: %d %d", 
+                           maxLoc.x, maxLoc.y, maxLocGold.x, maxLocGold.y);
+                ts->set_failed_test_info(CvTS::FAIL_INVALID_OUTPUT);
+                return;
+            }
+        }
+        catch (const Exception& e)
+        {
+            ts->printf(CvTS::CONSOLE, e.what());
+            if (!check_and_treat_gpu_exception(e, ts)) throw;
+            return;
+        }
+    }
+} match_templet_find_bordered_pattern_test;

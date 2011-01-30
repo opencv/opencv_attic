@@ -627,7 +627,7 @@ class FunctionTests(OpenCVTests):
             self.assertEqual(aslist(m2), range(5, 9))
             self.assertEqual(aslist(m3), range(6, 8))
 
-    def test_grabCut(self):
+    def xtest_grabCut(self):
         image = self.get_sample("samples/c/lena.jpg", cv.CV_LOAD_IMAGE_COLOR)
         tmp1 = cv.CreateMat(1, 13 * 5, cv.CV_32FC1)
         tmp2 = cv.CreateMat(1, 13 * 5, cv.CV_32FC1)
@@ -968,6 +968,43 @@ class AreaTests(OpenCVTests):
         else:
             print "SKIPPING test_numpy - numpy support not built"
 
+    def test_boundscatch(self):
+        l2 = cv.CreateMat(256, 1, cv.CV_8U)
+        l2[0,0]     # should be OK
+        self.assertRaises(cv.error, lambda: l2[1,1])
+        l2[0]       # should be OK
+        self.assertRaises(cv.error, lambda: l2[299])
+        for n in range(1, 8):
+            l = cv.CreateMatND([2] * n, cv.CV_8U)
+            l[0] # should be OK
+            self.assertRaises(cv.error, lambda: l[999])
+
+            tup0 = (0,) * n
+            l[tup0] # should be OK
+            tup2 = (2,) * n
+            self.assertRaises(cv.error, lambda: l[tup2])
+
+    def test_stereo(self):
+        bm = cv.CreateStereoBMState()
+        def illegal_delete():
+            bm = cv.CreateStereoBMState()
+            del bm.preFilterType
+        def illegal_assign():
+            bm = cv.CreateStereoBMState()
+            bm.preFilterType = "foo"
+
+        self.assertRaises(TypeError, illegal_delete)
+        self.assertRaises(TypeError, illegal_assign)
+
+        left = self.get_sample("samples/c/lena.jpg", 0)
+        right = self.get_sample("samples/c/lena.jpg", 0)
+        disparity = cv.CreateMat(512, 512, cv.CV_16SC1)
+        cv.FindStereoCorrespondenceBM(left, right, disparity, bm)
+
+        gc = cv.CreateStereoGCState(16, 2)
+        left_disparity = cv.CreateMat(512, 512, cv.CV_16SC1)
+        right_disparity = cv.CreateMat(512, 512, cv.CV_16SC1)
+
     def test_stereo(self):
         bm = cv.CreateStereoBMState()
         def illegal_delete():
@@ -1007,9 +1044,9 @@ class AreaTests(OpenCVTests):
 
     def test_leak(self):
         """ If CreateImage is not releasing image storage, then the loop below should use ~4GB of memory. """
-        for i in range(4000):
+        for i in range(64000):
             a = cv.CreateImage((1024,1024), cv.IPL_DEPTH_8U, 1)
-        for i in range(4000):
+        for i in range(64000):
             a = cv.CreateMat(1024, 1024, cv.CV_8UC1)
 
     def test_histograms(self):

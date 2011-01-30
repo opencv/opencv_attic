@@ -90,7 +90,7 @@ namespace cv
             void set_to_without_mask (DevMem2D dst, int depth, const double *scalar, int channels, const cudaStream_t & stream = 0);
             void set_to_with_mask    (DevMem2D dst, int depth, const double *scalar, const DevMem2D& mask, int channels, const cudaStream_t & stream = 0);
 
-            void convert_to(const DevMem2D& src, int sdepth, DevMem2D dst, int ddepth, int channels, double alpha, double beta, const cudaStream_t & stream = 0);
+            void convert_gpu(const DevMem2D& src, int sdepth, const DevMem2D& dst, int ddepth, double alpha, double beta, cudaStream_t stream = 0);
         }
     }
 }
@@ -176,6 +176,8 @@ namespace
             sz.width = src.cols;
             sz.height = src.rows;
             nppSafeCall( func(src.ptr<src_t>(), src.step, dst.ptr<dst_t>(), dst.step, sz) );
+
+            cudaSafeCall( cudaThreadSynchronize() );
         }
     };
     template<int DDEPTH, typename NppConvertFunc<CV_32F, DDEPTH>::func_ptr func> struct NppCvt<CV_32F, DDEPTH, func>
@@ -188,12 +190,14 @@ namespace
             sz.width = src.cols;
             sz.height = src.rows;
             nppSafeCall( func(src.ptr<Npp32f>(), src.step, dst.ptr<dst_t>(), dst.step, sz, NPP_RND_NEAR) );
+
+            cudaSafeCall( cudaThreadSynchronize() );
         }
     };
 
     void convertToKernelCaller(const GpuMat& src, GpuMat& dst)
     {
-        matrix_operations::convert_to(src, src.depth(), dst, dst.depth(), src.channels(), 1.0, 0.0);
+        matrix_operations::convert_gpu(src.reshape(1), src.depth(), dst.reshape(1), dst.depth(), 1.0, 0.0);
     }
 }
 
@@ -222,7 +226,7 @@ void cv::gpu::GpuMat::convertTo( GpuMat& dst, int rtype, double alpha, double be
     dst.create( size(), rtype );
 
     if (!noScale)
-        matrix_operations::convert_to(*psrc, sdepth, dst, ddepth, psrc->channels(), alpha, beta);
+        matrix_operations::convert_gpu(psrc->reshape(1), sdepth, dst.reshape(1), ddepth, alpha, beta);
     else
     {
         typedef void (*convert_caller_t)(const GpuMat& src, GpuMat& dst);
@@ -339,6 +343,8 @@ namespace
             sz.height = src.rows;
             Scalar_<src_t> nppS = s;
             nppSafeCall( func(nppS.val, src.ptr<src_t>(), src.step, sz) );
+
+            cudaSafeCall( cudaThreadSynchronize() );
         }
     };
     template<int SDEPTH, typename NppSetFunc<SDEPTH, 1>::func_ptr func> struct NppSet<SDEPTH, 1, func>
@@ -352,6 +358,8 @@ namespace
             sz.height = src.rows;
             Scalar_<src_t> nppS = s;
             nppSafeCall( func(nppS[0], src.ptr<src_t>(), src.step, sz) );
+
+            cudaSafeCall( cudaThreadSynchronize() );
         }
     };
 
@@ -384,6 +392,8 @@ namespace
             sz.height = src.rows;
             Scalar_<src_t> nppS = s;
             nppSafeCall( func(nppS.val, src.ptr<src_t>(), src.step, sz, mask.ptr<Npp8u>(), mask.step) );
+
+            cudaSafeCall( cudaThreadSynchronize() );
         }
     };
     template<int SDEPTH, typename NppSetMaskFunc<SDEPTH, 1>::func_ptr func> struct NppSetMask<SDEPTH, 1, func>
@@ -397,6 +407,8 @@ namespace
             sz.height = src.rows;
             Scalar_<src_t> nppS = s;
             nppSafeCall( func(nppS[0], src.ptr<src_t>(), src.step, sz, mask.ptr<Npp8u>(), mask.step) );
+
+            cudaSafeCall( cudaThreadSynchronize() );
         }
     };
 
@@ -549,6 +561,13 @@ void cv::gpu::createContinuous(int rows, int cols, int type, GpuMat& m)
     if (!m.isContinuous() || m.type() != type || m.size().area() != area)
         m.create(1, area, type);
     m = m.reshape(0, rows);
+}
+
+void cv::gpu::ensureSizeIsEnough(int rows, int cols, int type, GpuMat& m)
+{
+    if (m.type() == type && m.rows >= rows && m.cols >= cols)
+        return;
+    m.create(rows, cols, type);
 }
 
 

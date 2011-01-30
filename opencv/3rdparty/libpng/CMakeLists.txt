@@ -1,6 +1,6 @@
-if(ANDROID)
-define_3rdparty_module(png)
-else()
+#if(ANDROID)
+#define_3rdparty_module(png)
+#else()
 # ----------------------------------------------------------------------------
 #  CMake file for libpng. See root CMakeLists.txt
 #
@@ -47,4 +47,4 @@ if(NOT BUILD_SHARED_LIBS)
 	    ARCHIVE DESTINATION share/opencv/3rdparty/lib COMPONENT main)
 endif()
     
-endif()#android
+#endif()#android

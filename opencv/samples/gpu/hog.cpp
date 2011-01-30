@@ -239,9 +239,9 @@ void App::run()
     // Create HOG descriptors and detectors here
     vector<float> detector;
     if (win_size == Size(64, 128)) 
-        detector = cv::gpu::HOGDescriptor::getPeopleDetector_64x128();
+        detector = cv::gpu::HOGDescriptor::getPeopleDetector64x128();
     else
-        detector = cv::gpu::HOGDescriptor::getPeopleDetector_48x96();
+        detector = cv::gpu::HOGDescriptor::getPeopleDetector48x96();
 
     cv::gpu::HOGDescriptor gpu_hog(win_size, Size(16, 16), Size(8, 8), Size(8, 8), 9, 
                                    cv::gpu::HOGDescriptor::DEFAULT_WIN_SIGMA, 0.2, gamma_corr, 
@@ -288,7 +288,7 @@ void App::run()
             // Change format of the image
             if (make_gray) cvtColor(frame, img_aux, CV_BGR2GRAY);
             else if (use_gpu) cvtColor(frame, img_aux, CV_BGR2BGRA);
-            else img_aux = frame;
+            else frame.copyTo(img_aux);
 
             // Resize image
             if (args.resize_src) resize(img_aux, img, Size(args.width, args.height));
@@ -326,7 +326,6 @@ void App::run()
             putText(img_to_show, "FPS (HOG only): " + hogWorkFps(), Point(5, 65), FONT_HERSHEY_SIMPLEX, 1., Scalar(255, 100, 0), 2);
             putText(img_to_show, "FPS (total): " + workFps(), Point(5, 105), FONT_HERSHEY_SIMPLEX, 1., Scalar(255, 100, 0), 2);
             imshow("opencv_gpu_hog", img_to_show);
-            handleKey((char)waitKey(3));
 
             if (args.src_is_video || args.src_is_camera) vc >> frame;
 
@@ -341,9 +340,14 @@ void App::run()
                     if (!video_writer.isOpened())
                         throw std::runtime_error("can't create video writer");
                 }
-                cvtColor(img_to_show, img, CV_BGRA2BGR);
+
+                if (make_gray) cvtColor(img_to_show, img, CV_GRAY2BGR);
+                else cvtColor(img_to_show, img, CV_BGRA2BGR);
+
                 video_writer << img;
             }
+
+            handleKey((char)waitKey(3));
         }
     }
 }

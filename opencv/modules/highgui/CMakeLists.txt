@@ -3,7 +3,7 @@
 #   Some parts taken from version of Hartmut Seichter, HIT Lab NZ.
 #   Jose Luis Blanco, 2008
 # ----------------------------------------------------------------------------
-if(NOT ANDROID)
+#if(NOT ANDROID)
 project(opencv_highgui)
 
 if(WITH_JPEG)
@@ -174,6 +174,18 @@ if(UNIX)
     endforeach()
 endif()
 
+#OpenNI
+if(WITH_OPENNI AND HAVE_OPENNI)
+    set(highgui_srcs ${highgui_srcs} src/cap_openni.cpp)
+    if(WIN32)
+            set(OPENNI_INCLUDE_DIR "c:/Program Files/OpenNI/Include")
+    elseif(UNIX OR APPLE)
+            set(OPENNI_INCLUDE_DIR "/usr/include/ni")
+    endif()
+
+    include_directories(${OPENNI_INCLUDE_DIR})
+endif()
+
 #YV
 if(APPLE)
     add_definitions(-DHAVE_QUICKTIME=1)
@@ -286,6 +298,10 @@ if(WITH_TIFF AND NOT TIFF_FOUND)
 endif()
 
 target_link_libraries(${the_target} ${OPENCV_LINKER_LIBS} opencv_core opencv_imgproc zlib ${JPEG_LIBRARIES} ${PNG_LIBRARIES} ${TIFF_LIBRARIES} ${JASPER_LIBRARIES} ${HIGHGUI_LIBRARIES} ${OPENEXR_LIBRARIES})
+if( OPENNI_LIBRARY )
+    target_link_libraries(${the_target} ${OPENNI_LIBRARY})
+endif()
+
 
 if(APPLE)
 	target_link_libraries(${the_target} "-lbz2 -framework Cocoa -framework QuartzCore")
@@ -309,9 +325,9 @@ install(FILES ${highgui_ext_hdrs}
         DESTINATION include/opencv2/highgui
         COMPONENT main)
         
-endif()
+#endif()
 
-if(ANDROID)
+if(WACKY_ANDROID)
 set(high_gui_android_srcs src/bitstrm.cpp
     src/cap.cpp 
     src/grfmt_base.cpp 
@@ -326,5 +342,6 @@ set(high_gui_android_srcs src/bitstrm.cpp
     src/grfmt_sunras.cpp 
     src/grfmt_pxm.cpp 
     src/window.cpp )
-define_android_manual(opencv_highgui "${high_gui_android_srcs}" "$(LOCAL_PATH)/src  $(OPENCV_INCLUDES)")	
+#if(define_android_manual)
+define_android_manual(opencv_highgui "${high_gui_android_srcs}" "$(LOCAL_PATH)/src  $(OPENCV_INCLUDES)")
 endif()

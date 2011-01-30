@@ -2,9 +2,9 @@
 #  CMake file for opencv_lapack. See root CMakeLists.txt
 #
 # ----------------------------------------------------------------------------
-if(ANDROID)
-define_3rdparty_module(opencv_lapack)
-else()
+#if(ANDROID)
+#define_3rdparty_module(opencv_lapack)
+#else()
 
 project(opencv_lapack)
 
@@ -66,4 +66,4 @@ if(NOT BUILD_SHARED_LIBS)
 	    ARCHIVE DESTINATION share/opencv/3rdparty/lib COMPONENT main)
 endif()
     
-endif() #android
+#endif() #android

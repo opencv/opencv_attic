@@ -1,0 +1,111 @@
+\section{Initalization and Information}
+
+
+\cvCppFunc{gpu::getCudaEnabledDeviceCount}
+Returns number of CUDA-enabled devices installed. It is to be used before any other GPU functions calls. If OpenCV is compiled without GPU support this function returns 0. 
+
+\cvdefCpp{int getCudaEnabledDeviceCount();}
+
+
+\cvCppFunc{gpu::setDevice}
+Sets device and initializes it for the current thread. Call of this function can be omitted, but in this case a default device will be initialized on fist GPU usage.
+
+\cvdefCpp{void setDevice(int device);}
+\begin{description}
+\cvarg{device}{index of GPU device in system starting with 0.}
+\end{description}
+
+
+\cvCppFunc{gpu::getDevice}
+Returns the current device index, which was set by \cvCppCross{gpu::getDevice} or initialized by default.
+
+\cvdefCpp{int getDevice();}
+
+
+\cvCppFunc{gpu::getComputeCapability}
+Returns compute capability version for the given device.
+
+\cvdefCpp{void getComputeCapability(int device, int\& major, int\& minor);}
+\begin{description}
+\cvarg{device}{GPU index. Can be obtained via \cvCppCross{gpu::getDevice}.}
+\cvarg{major}{Major CC version.}
+\cvarg{minor}{Minor CC version.}
+\end{description}
+
+\cvCppFunc{gpu::getNumberOfSMs}
+Returns number of Streaming Multiprocessors for given device.
+
+\cvdefCpp{int getNumberOfSMs(int device);}
+\begin{description}
+\cvarg{device}{GPU index. Can be obtained via \cvCppCross{gpu::getDevice}.}
+\end{description}
+
+
+\cvCppFunc{gpu::getGpuMemInfo}
+Returns free and total memory size for the current device.
+
+\cvdefCpp{void getGpuMemInfo(size\_t\& free, size\_t\& total);}
+\begin{description}
+\cvarg{free}{Reference to free GPU memory counter.}
+\cvarg{total}{Reference to total GPU memory counter.}
+\end{description}
+
+
+\cvCppFunc{gpu::hasNativeDoubleSupport}
+Returns true, if the specified GPU has native double support, otherwise false.
+
+\cvdefCpp{bool hasNativeDoubleSupport(int device);}
+\begin{description}
+\cvarg{device}{GPU index. Can be obtained via \cvCppCross{gpu::getDevice}.}
+\end{description}
+
+
+\cvCppFunc{gpu::hasAtomicsSupport}
+Returns true, if the specified GPU has atomics support, otherwise false.
+
+\cvdefCpp{bool hasAtomicsSupport(int device);}
+\begin{description}
+\cvarg{device}{GPU index. Can be obtained via \cvCppCross{gpu::getDevice}.}
+\end{description} 
+
+\cvclass{gpu::TargetArchs}
+This class provides functionality (as set of static methods) for checking which NVIDIA card architectures the GPU module was built for.
+
+\bigskip
+
+The following method checks whether the module was built with the support of the given feature:
+\cvdefCpp{static bool builtWith(GpuFeature feature);}
+\begin{description}
+\cvarg{feature}{Feature to be checked. Available alternatives:
+\begin{itemize}
+\item NATIVE\_DOUBLE Native double operations support
+\item ATOMICS Atomic operations support
+\end{itemize}}
+\end{description}
+
+There are a set of methods for checking whether the module contains intermediate (PTX) or binary GPU code for the given architecture:
+\cvdefCpp{
+static bool has(int major, int minor);\newline
+static bool hasPtx(int major, int minor);\newline
+static bool hasBin(int major, int minor);\newline
+static bool hasEqualOrLessPtx(int major, int minor);\newline
+static bool hasEqualOrGreater(int major, int minor);\newline
+static bool hasEqualOrGreaterPtx(int major, int minor);\newline
+static bool hasEqualOrGreaterBin(int major, int minor);}
+\begin{description}
+\cvarg{major}{Major compute capability version.}
+\cvarg{minor}{Minor compute capability version.}
+\end{description}
+
+\cvCppFunc{gpu::isCompatibleWith}
+Returns true, if the GPU module is built with PTX or CUBIN compatible with the given GPU device, otherwise false.
+
+\cvdefCpp{bool isCompatibleWith(int device);}
+\begin{description}
+\cvarg{device}{GPU index. Can be obtained via \cvCppCross{gpu::getDevice}.}
+\end{description}
+
+% By default GPU module is no compiled for devices with compute capability equal to 1.0. So if you run
+
+According to the CUDA C Programming Guide Version 3.2: "PTX code produced for some specific compute capability can always be compiled to binary code of greater or equal compute capability". 
+
