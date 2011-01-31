@@ -3274,7 +3274,6 @@ float CvDTree::calc_error( CvMLData* _data, int type, vector<float> *resp )
         resp->resize( sample_count );
         pred_resp = &((*resp)[0]);
     }
-
     if ( is_classifier )
     {
         for( int i = 0; i < sample_count; i++ )
@@ -4102,4 +4101,26 @@ Mat CvDTree::getVarImportance()
     return Mat(get_var_importance());
 }
 
-/* End of file. */
+void CvDTree::calc_tree_quality(const CvDTreeNode* currNode, float& quality)
+{
+    if (currNode->left)
+    {
+        calc_tree_quality(currNode->left, quality);
+    }
+    if (currNode->right)
+    {
+        calc_tree_quality(currNode->right, quality);
+    }
+    if (currNode->depth == 1)
+    {
+        quality += currNode->split->quality;
+    }
+}
+
+float CvDTree::get_tree_quality()
+{
+    float quality = 0.0;
+    calc_tree_quality(root, quality);
+    return quality;
+}
+

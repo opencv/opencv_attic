@@ -62,8 +62,8 @@ CvBoostParams::CvBoostParams()
 
 
 CvBoostParams::CvBoostParams( int _boost_type, int _weak_count,
-                                        double _weight_trim_rate, int _max_depth,
-                                        bool _use_surrogates, const float* _priors )
+                             double _weight_trim_rate, int _max_depth,
+                             bool _use_surrogates, const float* _priors, int _feat_size )
 {
     boost_type = _boost_type;
     weak_count = _weak_count;
@@ -73,6 +73,7 @@ CvBoostParams::CvBoostParams( int _boost_type, int _weak_count,
     max_depth = _max_depth;
     use_surrogates = _use_surrogates;
     priors = _priors;
+    feat_size = _feat_size;
 }
 
 
@@ -907,8 +908,6 @@ void CvBoost::set_data()
 CvBoost::CvBoost()
 {
     set_data();
-
-    clear();
 }
 
 
@@ -1871,7 +1870,7 @@ float CvBoost::calc_error( CvMLData* _data, int type, std::vector<float> *resp )
                 pred_resp[i] = r;
             int d = fabs((double)r - response->data.fl[si*r_step]) <= FLT_EPSILON ? 0 : 1;
             err += d;
-        }
+        }   
         err = sample_count ? err / (float)sample_count * 100 : -FLT_MAX;
     }
     else

@@ -782,6 +782,7 @@ inline int predictCategorical( CascadeClassifier& cascade, Ptr<FeatureEvaluator>
         if( sum < stage.threshold )
             return -si;            
     }
+
     return 1;
 }
 

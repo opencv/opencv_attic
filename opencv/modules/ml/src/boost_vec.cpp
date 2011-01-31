@@ -55,17 +55,46 @@
 //}
 
 //------------------------------------------CvVecBoost-------------------------------------------------//
+void CvVecBoost::set_data()
+{
+    CvBoost::set_data();
+    data_all = 0;
+}
+
+void CvVecBoost::clear()
+{
+    CvBoost::clear();
+    if (data_all)
+    {
+        int feat_count = data_all[0] ? data_all[0]->var_all / params.feat_size : 0;
+        for( int i = 0; i < feat_count; i++ )
+        {
+            if (data_all[i])
+                delete data_all[i];
+            data_all[i] = 0;
+        }
+        delete data_all;
+    }
+    data_all = 0;
+}
+
+CvVecBoost::~CvVecBoost()
+{
+    clear();
+}
+
 CvVecBoost::CvVecBoost(const CvMat* _train_data, int _tflag,
                        const CvMat* _responses, const CvMat* _var_idx,
                        const CvMat* _sample_idx, const CvMat* _var_type,
                        const CvMat* _missing_mask, CvBoostParams _params )
 {
-    set_data();
     default_model_name = "my_vec_boost_tree";
+    data_all = 0;
 
     train(_train_data, _tflag, _responses, _var_idx,
                        _sample_idx, _var_type, _missing_mask, _params);
 }
+
 
 bool CvVecBoost::train(const CvMat* _train_data, int _tflag, 
                        const CvMat* _responses, const CvMat* _var_idx,
@@ -79,65 +108,74 @@ bool CvVecBoost::train(const CvMat* _train_data, int _tflag,
 
     __BEGIN__;
 
-    int i, featIdx;
-    int feat_count;
-    float weak_error, weak_quality;
+    int i, j, featIdx;
+    int feat_count, bestTreeIdx;
+    float weak_quality, best_weak_quality;
+    CvMat* varIdx;
     
     set_params( _params );
 
-    cvReleaseMat( &active_vars );
-    cvReleaseMat( &active_vars_abs );
+    varIdx = cvCreateMat(1, params.feat_size, CV_32S);
 
-    if( !_update || !data )
-    {
-        clear();
-        data = new CvDTreeTrainData( _train_data, _tflag, _responses, _var_idx,
-            _sample_idx, _var_type, _missing_mask, _params, true, true );
+    data = new CvDTreeTrainData( _train_data, _tflag, _responses, _var_idx,
+        _sample_idx, _var_type, _missing_mask, _params, true, true );
 
-        if( data->get_num_classes() != 2 )
-            CV_ERROR( CV_StsNotImplemented,
-            "Boosted trees can only be used for 2-class classification." );
-        CV_CALL( storage = cvCreateMemStorage() );
-        weak = cvCreateSeq( 0, sizeof(CvSeq), sizeof(CvBoostTree*), storage );
-        storage = 0;
-    }
-    else
-    {
-        data->set_data( _train_data, _tflag, _responses, _var_idx,
-            _sample_idx, _var_type, _missing_mask, _params, true, true, true );
-    }
+    if( data->get_num_classes() != 2 )
+        CV_ERROR( CV_StsNotImplemented, "Boosted trees can only be used for 2-class classification." );
+
+    CV_Assert( !(data->var_all % params.feat_size) ) ;
+    feat_count = data->var_all / params.feat_size;
+
+    CV_CALL( storage = cvCreateMemStorage() );
+    weak = cvCreateSeq( 0, sizeof(CvSeq), sizeof(CvBoostTree*), storage );
+    storage = 0;     
 
     if ( (_params.boost_type == LOGIT) || (_params.boost_type == GENTLE) )
         data->do_responses_copy();
     
     update_weights( 0 );
 
-    //CV_Assert( data->var_all % params.vector_size ) ;
-    //feat_count = data->var_all / params.vector_size;
+    data_all = new CvDTreeTrainData*[feat_count];
+
     for( i = 0; i < params.weak_count; i++ )
     {
         CvBoostTree **boostTree;
         boostTree = new CvBoostTree*[feat_count];
         for( featIdx = 0; featIdx < feat_count; i++ )
         {
-            boostTree[i] = new CvBoostTree;
-            if( !boostTree[i]->train(data, subsample_mask,/* var_idx,*/this) )
+            for( j = 0; j < params.feat_size; j++)
+            {
+                varIdx->data.i[i] = featIdx * params.feat_size + i;
+            }
+            data_all[featIdx] = new CvDTreeTrainData( _train_data, _tflag, _responses, 
+                varIdx, _sample_idx, _var_type, _missing_mask,_params, true, true );
+
+            boostTree[featIdx] = new CvBoostTree;
+
+            if( !boostTree[featIdx]->train(data_all[featIdx], subsample_mask, this) )
             {
                 continue;
             }
-            //weak_error = boostTree[i]->calc_error( _train_data, CV_TRAIN_ERROR, _responses );
+            weak_quality = boostTree[featIdx]->get_tree_quality();
+            if( weak_quality > best_weak_quality )
+            {
+                best_weak_quality = weak_quality;
+                bestTreeIdx = featIdx;
+            }
         }
-
-        cvSeqPush( weak, &boostTree[i] );
-        update_weights( boostTree[i] );
+        cvSeqPush( weak, &boostTree[bestTreeIdx] );
+        update_weights( boostTree[bestTreeIdx] );
         trim_weights();
     }
+    cvReleaseMat( &varIdx );
 
     get_active_vars(); // recompute active_vars* maps and condensed_idx's in the splits.
     data->is_classifier = true;
     ok = true;
 
     data->free_train_data();
+    for( featIdx = 0; featIdx < feat_count; featIdx++)
+        data_all[featIdx]->free_train_data();
 
     __END__;
 
@@ -154,8 +192,8 @@ CvVecBoost::CvVecBoost( const Mat& _train_data, int _tflag,
                        const Mat& _missing_mask,
                        CvBoostParams _params )
 {
-    set_data();
     default_model_name = "my_vec_boost_tree";
+    data_all = 0;
  
     train( _train_data, _tflag, _responses, _var_idx, _sample_idx,
           _var_type, _missing_mask, _params );

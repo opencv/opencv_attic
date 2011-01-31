@@ -797,23 +797,24 @@ struct CV_EXPORTS_W_MAP CvDTreeParams
     CV_PROP_RW bool  truncate_pruned_tree;
     CV_PROP_RW float regression_accuracy;
     const float* priors;
+    CV_PROP_RW int   feat_size; //size for vector features. Now it's supported only for CvVecBoost.
 
     CvDTreeParams() : max_categories(10), max_depth(INT_MAX), min_sample_count(10),
         cv_folds(10), use_surrogates(true), use_1se_rule(true),
-        truncate_pruned_tree(true), regression_accuracy(0.01f), priors(0)
+        truncate_pruned_tree(true), regression_accuracy(0.01f), priors(0), feat_size(1)
     {}
 
     CvDTreeParams( int _max_depth, int _min_sample_count,
                    float _regression_accuracy, bool _use_surrogates,
                    int _max_categories, int _cv_folds,
                    bool _use_1se_rule, bool _truncate_pruned_tree,
-                   const float* _priors ) :
+                   const float* _priors, int _feat_size = 1 ) :
         max_categories(_max_categories), max_depth(_max_depth),
         min_sample_count(_min_sample_count), cv_folds (_cv_folds),
         use_surrogates(_use_surrogates), use_1se_rule(_use_1se_rule),
         truncate_pruned_tree(_truncate_pruned_tree),
         regression_accuracy(_regression_accuracy),
-        priors(_priors)
+        priors(_priors), feat_size(_feat_size)
     {}
 };
 
@@ -978,6 +979,8 @@ public:
     int get_pruned_tree_idx() const;
     CvDTreeTrainData* get_data();
 
+    virtual float get_tree_quality(); //split->quality sum of the deepest splits. It's used for CvVecBoost
+
 protected:
     friend struct cv::DTreeBestSplitFinder;
 
@@ -1015,6 +1018,8 @@ protected:
     virtual CvDTreeSplit* read_split( CvFileStorage* fs, CvFileNode* node );
     virtual void write_tree_nodes( CvFileStorage* fs ) const;
     virtual void read_tree_nodes( CvFileStorage* fs, CvFileNode* node );
+
+    virtual void calc_tree_quality(const CvDTreeNode* currNode, float& quality);
 
     CvDTreeNode* root;
     CvMat* var_importance;
@@ -1230,7 +1235,7 @@ struct CV_EXPORTS_W_MAP CvBoostParams : public CvDTreeParams
     CvBoostParams();
 
     CvBoostParams( int boost_type, int weak_count, double weight_trim_rate,
-                   int max_depth, bool use_surrogates, const float* priors );
+                   int max_depth, bool use_surrogates, const float* priors, int feat_size = 1 );
 
     virtual ~CvBoostParams() {}
 };
@@ -1407,6 +1412,8 @@ public:
         const CvMat* missingDataMask=0,
         CvBoostParams params=CvBoostParams() );
 
+    virtual ~CvVecBoost();
+
     virtual bool train( const CvMat* trainData, int tflag,
         const CvMat* responses, const CvMat* varIdx=0,
         const CvMat* sampleIdx=0, const CvMat* varType=0,
@@ -1428,6 +1435,11 @@ public:
         CvBoostParams params=CvBoostParams(), bool update=false );
 
 protected:
+
+    virtual void set_data();
+    virtual void clear();
+
+    CvDTreeTrainData** data_all; //tree data for each feature or for each CvBoostTree
 
 };
 
@@ -2276,6 +2288,12 @@ class CV_EXPORTS CvMLData
 {
 public:
     CvMLData();
+
+    CvMLData( CvMat* data, CvMat* responses, CvMat* missingMask, 
+        CvMat* varType, CvMat* sampleIdx, CvMat* varIdx );
+
+    CvMLData( const CvDTreeTrainData* treeData );
+
     virtual ~CvMLData();
 
     // returns:
