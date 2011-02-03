@@ -1203,7 +1203,7 @@ const int* CvDTreeTrainData::get_sample_indices( CvDTreeNode* n, int* indices_bu
     return get_cat_var_data( n, get_work_var_count(), indices_buf );
 }
 
-const float* CvDTreeTrainData::get_ord_responses( CvDTreeNode* n, float* values_buf, int*sample_indices_buf )
+const float* CvDTreeTrainData::get_ord_responses( CvDTreeNode* n, float* values_buf, int* sample_indices_buf )
 {
     int sample_count = n->sample_count;
     int r_step = CV_IS_MAT_CONT(responses->type) ? 1 : responses->step/CV_ELEM_SIZE(responses->type);
@@ -4111,9 +4111,9 @@ void CvDTree::calc_tree_quality(const CvDTreeNode* currNode, float& quality)
     {
         calc_tree_quality(currNode->right, quality);
     }
-    if (currNode->depth == 1)
+    if ( !currNode->left || !currNode->right ) //currNose is leaf
     {
-        quality += currNode->split->quality;
+        quality += currNode->parent->split->quality;
     }
 }
 
@@ -4121,6 +4121,6 @@ float CvDTree::get_tree_quality()
 {
     float quality = 0.0;
     calc_tree_quality(root, quality);
-    return quality;
+    return quality/2;
 }
 

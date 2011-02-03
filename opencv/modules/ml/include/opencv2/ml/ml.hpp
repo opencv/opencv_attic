@@ -1438,6 +1438,8 @@ protected:
 
     virtual void set_data();
     virtual void clear();
+    virtual void update_weights( CvBoostTree* tree, int treeIdx );
+    virtual void init_data(int treeIdx);
 
     CvDTreeTrainData** data_all; //tree data for each feature or for each CvBoostTree
 
@@ -2288,11 +2290,6 @@ class CV_EXPORTS CvMLData
 {
 public:
     CvMLData();
-
-    CvMLData( CvMat* data, CvMat* responses, CvMat* missingMask, 
-        CvMat* varType, CvMat* sampleIdx, CvMat* varIdx );
-
-    CvMLData( const CvDTreeTrainData* treeData );
 
     virtual ~CvMLData();
 

@@ -87,41 +87,6 @@ CvMLData :: CvMLData()
     rng = &cv::theRNG();
 }
 
-CvMLData::CvMLData(CvMat *data, CvMat *responses, CvMat* missingMask,
-                   CvMat* varType, CvMat* sampleIdx, CvMat *varIdx)
-{
-    values = data;
-    response_out = responses;
-    missing = missingMask;
-    var_types = varType;
-    train_sample_idx = sampleIdx;
-    var_idx_out = varIdx;
-
-    train_sample_count = data->rows;
-    train_sample_idx = cvCreateMat(1, train_sample_count, CV_32S);
-    for( int i = 0; i < train_sample_count; i++ )
-    {
-        train_sample_idx->data.i[i] = i;
-    }
-}
-
-CvMLData::CvMLData(const CvDTreeTrainData *treeData)
-{
-    values = (CvMat*)treeData->train_data;
-    //response_out = (CvMat*)treeData->responses;
-    //missing = treeData->m;
-    //var_types = treeData->var_type;
-    //train_sample_idx = treeData->s;
-    var_idx_out = treeData->var_idx;
-
-    //train_sample_count = data->rows;
-    //train_sample_idx = cvCreateMat(1, train_sample_count, CV_32S);
-    //for( int i = 0; i < train_sample_count; i++ )
-    //{
-    //    train_sample_idx->data.i[i] = i;
-    //}
-}
-
 CvMLData :: ~CvMLData()
 {
     clear();
