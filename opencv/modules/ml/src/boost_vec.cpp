@@ -214,7 +214,7 @@ bool CvVecBoost::train(const CvMat* _train_data, int _tflag,
     }
     cvReleaseMat( &varIdx );
 
-    get_active_vars(); // recompute active_vars* maps and condensed_idx's in the splits.
+    get_active_vars(false); // recompute active_vars* maps and condensed_idx's in the splits.
     data->is_classifier = true;
     ok = true;
 
