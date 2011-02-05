@@ -20,8 +20,8 @@
  */
 
 #ifndef max
-#define max(a,b) ({typeof(a) _a = (a); typeof(b) _b = (b); _a > _b ? _a : _b; })
-#define min(a,b) ({typeof(a) _a = (a); typeof(b) _b = (b); _a < _b ? _a : _b; })
+#define max(a,b) (a > b ? a : b )
+#define min(a,b) (a < b ? a : b )
 #endif
 
 const int bytes_per_pixel = 2;
@@ -39,7 +39,7 @@ void color_convert_common(const unsigned char *pY, const unsigned char *pUV, int
     memcpy(out,pY,width*height*sizeof(unsigned char));
   }
   else
-    // YUV 4:2:0
+    /* YUV 4:2:0 */
     for (i = 0; i < height; i++)
     {
       for (j = 0; j < width; j++)
@@ -48,7 +48,7 @@ void color_convert_common(const unsigned char *pY, const unsigned char *pUV, int
         nV = *(pUV + (i / 2) * width + bytes_per_pixel * (j / 2));
         nU = *(pUV + (i / 2) * width + bytes_per_pixel * (j / 2) + 1);
 
-        // Yuv Convert
+        /* Yuv Convert */
         nY -= 16;
         nU -= 128;
         nV -= 128;

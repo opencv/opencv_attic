@@ -3,27 +3,8 @@
 #include <opencv2/core/core.hpp>
 #include <map>
 
-#if ANDROID
-#include <jni.h>
-
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-
-JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved);
-//
-//JNIEXPORT jobject JNICALL Java_com_opencv_jni_opencvJNI_getBitmapBuffer(
-//		JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_);
 
 
-JNIEXPORT void JNICALL Java_com_opencv_jni_opencvJNI_addYUVtoPool(JNIEnv *, jclass, jlong, jobject, jbyteArray, jint,
-                                                                  jint, jint, jboolean);
-
-#ifdef __cplusplus
-}
-#endif
-#endif
 class image_pool
 {
 

@@ -17,13 +17,17 @@
 // OpenGL ES 2.0 code
 
 #include <jni.h>
-
-#include <android/log.h>
-#include <opencv2/core/core.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-
+#if __ANDROID__
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
+#else
+#include <GL/gl.h>
+#endif
+
+#include "android_logger.h"
+
+#include <opencv2/core/core.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -33,9 +37,7 @@
 #include "glcamera.h"
 #include "image_pool.h"
 using namespace cv;
-#define  LOG_TAG    "libandroid-opencv"
-#define  LOGI(...)  __android_log_print(ANDROID_LOG_INFO,LOG_TAG,__VA_ARGS__)
-#define  LOGE(...)  __android_log_print(ANDROID_LOG_ERROR,LOG_TAG,__VA_ARGS__)
+
 
 static void printGLString(const char *name, GLenum s)
 {
@@ -89,7 +91,12 @@ GLuint glcamera::createSimpleTexture2D(GLuint _textureid, GLubyte* pixels, int w
   switch (channels)
   {
     case 3:
+    #if ANDROID
       format = GL_RGB;
+    #else
+      format = GL_BGR;
+    #endif
+    //  format = GL_RGB;
       break;
     case 1:
       format = GL_LUMINANCE;
@@ -103,8 +110,18 @@ GLuint glcamera::createSimpleTexture2D(GLuint _textureid, GLubyte* pixels, int w
 
   checkGlError("glTexImage2D");
   // Set the filtering mode
+  //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  
+#if ANDROID
+  // Set the filtering mode
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+#else
+  /* Linear Filtering */
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+#endif
 
   return _textureid;
 
@@ -112,7 +129,9 @@ GLuint glcamera::createSimpleTexture2D(GLuint _textureid, GLubyte* pixels, int w
 
 GLuint glcamera::loadShader(GLenum shaderType, const char* pSource)
 {
-  GLuint shader = glCreateShader(shaderType);
+  GLuint shader = 0;
+#if __ANDROID__
+  shader = glCreateShader(shaderType);
   if (shader)
   {
     glShaderSource(shader, 1, &pSource, NULL);
@@ -138,11 +157,13 @@ GLuint glcamera::loadShader(GLenum shaderType, const char* pSource)
       }
     }
   }
+#endif
   return shader;
 }
 
 GLuint glcamera::createProgram(const char* pVertexSource, const char* pFragmentSource)
 {
+#if __ANDROID__
   GLuint vertexShader = loadShader(GL_VERTEX_SHADER, pVertexSource);
   if (!vertexShader)
   {
@@ -184,6 +205,9 @@ GLuint glcamera::createProgram(const char* pVertexSource, const char* pFragmentS
     }
   }
   return program;
+#else
+  return 0;
+#endif
 }
 
 //GLuint textureID;
@@ -194,6 +218,8 @@ bool glcamera::setupGraphics(int w, int h)
   printGLString("Vendor", GL_VENDOR);
   printGLString("Renderer", GL_RENDERER);
   printGLString("Extensions", GL_EXTENSIONS);
+  
+#if __ANDROID__
 
   LOGI("setupGraphics(%d, %d)", w, h);
   gProgram = createProgram(gVertexShader, gFragmentShader);
@@ -220,12 +246,14 @@ bool glcamera::setupGraphics(int w, int h)
 
   glViewport(0, 0, w, h);
   checkGlError("glViewport");
+#endif
   return true;
 }
 
 void glcamera::renderFrame()
 {
 
+#if __ANDROID__
   GLfloat vVertices[] = {-1.0f, 1.0f, 0.0f, // Position 0
                          0.0f, 0.0f, // TexCoord 0
                          -1.0f, -1.0f, 0.0f, // Position 1
@@ -263,7 +291,7 @@ void glcamera::renderFrame()
   glUniform1i(gvSamplerHandle, 0);
 
   glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
-
+#endif
   //checkGlError("glVertexAttribPointer");
   //glEnableVertexAttribArray(gvPositionHandle);
   //checkGlError("glEnableVertexAttribArray");

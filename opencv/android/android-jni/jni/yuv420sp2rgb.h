@@ -1,4 +1,3 @@
-//yuv420sp2rgb.h
 #ifndef YUV420SP2RGB_H
 #define YUV420SP2RGB_H
 

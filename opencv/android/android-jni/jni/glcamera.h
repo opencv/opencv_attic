@@ -2,8 +2,13 @@
 #define GLCAMERA_H_
 #include <opencv2/core/core.hpp>
 
+#ifdef __ANDROID__
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
+#else
+#include <GL/gl.h>
+#include <GL/glu.h>
+#endif
 
 #include "image_pool.h"
 

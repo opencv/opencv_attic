@@ -2,14 +2,32 @@
 
 #include "yuv420sp2rgb.h"
 
-#include <android/log.h>
-#include <opencv2/imgproc/imgproc.hpp>
-#include <jni.h>
-using namespace cv;
 
-#define  LOG_TAG    "libandroid-opencv"
-#define  LOGI(...)  __android_log_print(ANDROID_LOG_INFO,LOG_TAG,__VA_ARGS__)
-#define  LOGE(...)  __android_log_print(ANDROID_LOG_ERROR,LOG_TAG,__VA_ARGS__)
+#include "android_logger.h"
+
+#include <opencv2/imgproc/imgproc.hpp>
+
+
+#include <jni.h>
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
+JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved);
+//
+//JNIEXPORT jobject JNICALL Java_com_opencv_jni_opencvJNI_getBitmapBuffer(
+//		JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_);
+
+
+JNIEXPORT void JNICALL Java_com_opencv_jni_opencvJNI_addYUVtoPool(JNIEnv *, jclass, jlong, jobject, jbyteArray, jint,
+                                                                  jint, jint, jboolean);
+
+#ifdef __cplusplus
+}
+#endif
+
+using namespace cv;
 
 JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved)
 {
@@ -71,7 +89,7 @@ image_pool::image_pool()
 
 image_pool::~image_pool()
 {
-  __android_log_print(ANDROID_LOG_INFO, "image_pool", "destructor called");
+
 }
 
 Mat image_pool::getImage(int i)
