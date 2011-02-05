@@ -1,12 +1,7 @@
-#if(ANDROID)
-# configure_file("${CMAKE_SOURCE_DIR}/Android.mk.modules.in" "${CMAKE_CURRENT_BINARY_DIR}/Android.mk")
-#endif()
-
 add_subdirectory(calib3d)
 add_subdirectory(core)
 add_subdirectory(features2d)
 add_subdirectory(flann)
-
 if(MSVC OR MINGW)
    if(NOT CMAKE_CL_64)
       add_subdirectory(ffmpeg)

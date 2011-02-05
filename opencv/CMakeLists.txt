@@ -482,8 +482,10 @@ if(UNIX)
             endif()
         endif()
 
-        if(${CMAKE_SYSTEM_NAME} MATCHES "FreeBSD" OR ${CMAKE_SYSTEM_NAME} MATCHES "NetBSD")
+        if(${CMAKE_SYSTEM_NAME} MATCHES "FreeBSD" OR ${CMAKE_SYSTEM_NAME} MATCHES "NetBSD" AND NOT ANDROID)
             set(OPENCV_LINKER_LIBS m pthread)
+        elseif(ANDROID)
+            set(OPENCV_LINKER_LIBS dl m)
         else()
             set(OPENCV_LINKER_LIBS dl m pthread rt)
         endif()
@@ -921,7 +923,9 @@ if(CMAKE_COMPILER_IS_GNUCXX)
 
     # We need pthread's
     if(UNIX)
+      if(!ANDROID)
         set(EXTRA_C_FLAGS "${EXTRA_C_FLAGS} -pthread")
+      endif()
     endif()
 
     if(OPENCV_WARNINGS_ARE_ERRORS)
