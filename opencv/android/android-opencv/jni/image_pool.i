@@ -40,17 +40,9 @@ references them by an index.  It allows one to get a pointer to an underlying ma
 
 %feature("director") image_pool;
 class image_pool {
-	
 public:
-	image_pool();
-	~image_pool();
-	
-	
+	Mat getGrey(int i);
 	Mat getImage(int i);
 	void addImage(int i, Mat mat);
-
-	
-
-
 };
 

@@ -104,16 +104,17 @@ public abstract class CameraActivity extends Activity {
 
 	protected void setCallbackStack() {
 		LinkedList<NativeProcessor.PoolCallback> callbackstack = getCallBackStack();
-		if (callbackstack == null)
+		if (callbackstack == null){
 			callbackstack = new LinkedList<NativeProcessor.PoolCallback>();
-		callbackstack.add(glview.getDrawCallback());
+			callbackstack.add(glview.getDrawCallback());
+		}
 		mPreview.addCallbackStack(callbackstack);
 	}
 
 	/**
 	 * Overide this and provide your processors to the camera
 	 * 
-	 * @return
+	 * @return null for default drawing
 	 */
 	protected abstract LinkedList<NativeProcessor.PoolCallback> getCallBackStack();
 
