@@ -107,7 +107,7 @@ public class OpenCV extends Activity {
 		FrameLayout frame = new FrameLayout(getApplication());
 
 		// Create our Preview view and set it as the content of our activity.
-		mPreview = new NativePreviewer(getApplication(), 400, 300);
+		mPreview = new NativePreviewer(getApplication(), 640, 480);
 
 		LayoutParams params = new LayoutParams(LayoutParams.WRAP_CONTENT,
 				LayoutParams.WRAP_CONTENT);

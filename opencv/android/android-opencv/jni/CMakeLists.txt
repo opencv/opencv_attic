@@ -21,8 +21,8 @@ if(ANDROID)
 set( LIBRARY_DEPS ${LIBRARY_DEPS} GLESv2 log)
 endif()
 
-#this is compiled staticly
-add_library(android-jni STATIC
+#this is compiled staticly, and linked into the swig module
+add_library(androidcv STATIC
 Calibration.cpp
 gl_code.cpp
 image_pool.cpp
@@ -37,4 +37,4 @@ endif(ANDROID)
 
 SET_SOURCE_FILES_PROPERTIES(android-cv.i PROPERTIES CPLUSPLUS ON)
 SWIG_ADD_MODULE(android-opencv java android-cv.i)
-target_link_libraries(android-opencv android-jni ${LIBRARY_DEPS} )
+target_link_libraries(android-opencv androidcv ${LIBRARY_DEPS} )
