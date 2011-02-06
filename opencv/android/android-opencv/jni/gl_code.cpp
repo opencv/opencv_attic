@@ -38,7 +38,6 @@
 #include "image_pool.h"
 using namespace cv;
 
-
 static void printGLString(const char *name, GLenum s)
 {
   const char *v = (const char *)glGetString(s);
@@ -70,18 +69,12 @@ static const char gFragmentShader[] = "precision mediump float;                 
   "  gl_FragColor = texture2D( s_texture, v_texCoord );\n"
   "}                                                   \n";
 
-const GLfloat gTriangleVertices[] = {0.0f, 0.5f, -0.5f, -0.5f, 0.5f, -0.5f};
-GLubyte testpixels[4 * 3] = {255, 0, 0, // Red
-                             0, 255, 0, // Green
-                             0, 0, 255, // Blue
-                             255, 255, 0 // Yellow
-    };
 
 GLuint glcamera::createSimpleTexture2D(GLuint _textureid, GLubyte* pixels, int width, int height, int channels)
 {
 
   // Bind the texture
-  glActiveTexture( GL_TEXTURE0);
+  glActiveTexture(GL_TEXTURE0);
   checkGlError("glActiveTexture");
   // Bind the texture object
   glBindTexture(GL_TEXTURE_2D, _textureid);
@@ -91,12 +84,11 @@ GLuint glcamera::createSimpleTexture2D(GLuint _textureid, GLubyte* pixels, int w
   switch (channels)
   {
     case 3:
-    #if ANDROID
+#if ANDROID
       format = GL_RGB;
-    #else
+#else
       format = GL_BGR;
-    #endif
-    //  format = GL_RGB;
+#endif
       break;
     case 1:
       format = GL_LUMINANCE;
@@ -109,10 +101,6 @@ GLuint glcamera::createSimpleTexture2D(GLuint _textureid, GLubyte* pixels, int w
   glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, pixels);
 
   checkGlError("glTexImage2D");
-  // Set the filtering mode
-  //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  
 #if ANDROID
   // Set the filtering mode
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -214,23 +202,21 @@ GLuint glcamera::createProgram(const char* pVertexSource, const char* pFragmentS
 
 bool glcamera::setupGraphics(int w, int h)
 {
-  printGLString("Version", GL_VERSION);
-  printGLString("Vendor", GL_VENDOR);
-  printGLString("Renderer", GL_RENDERER);
-  printGLString("Extensions", GL_EXTENSIONS);
-  
-#if __ANDROID__
+//  printGLString("Version", GL_VERSION);
+//  printGLString("Vendor", GL_VENDOR);
+//  printGLString("Renderer", GL_RENDERER);
+//  printGLString("Extensions", GL_EXTENSIONS);
 
-  LOGI("setupGraphics(%d, %d)", w, h);
+#if __ANDROID__
   gProgram = createProgram(gVertexShader, gFragmentShader);
   if (!gProgram)
   {
     LOGE("Could not create program.");
     return false;
   }
+
   gvPositionHandle = glGetAttribLocation(gProgram, "a_position");
   gvTexCoordHandle = glGetAttribLocation(gProgram, "a_texCoord");
-
   gvSamplerHandle = glGetAttribLocation(gProgram, "s_texture");
 
   // Use tightly packed data
@@ -238,14 +224,8 @@ bool glcamera::setupGraphics(int w, int h)
 
   // Generate a texture object
   glGenTextures(1, &textureID);
-  textureID = createSimpleTexture2D(textureID, testpixels, 2, 2, 3);
-
-  checkGlError("glGetAttribLocation");
-  LOGI("glGetAttribLocation(\"vPosition\") = %d\n",
-      gvPositionHandle);
 
   glViewport(0, 0, w, h);
-  checkGlError("glViewport");
 #endif
   return true;
 }
@@ -257,11 +237,11 @@ void glcamera::renderFrame()
   GLfloat vVertices[] = {-1.0f, 1.0f, 0.0f, // Position 0
                          0.0f, 0.0f, // TexCoord 0
                          -1.0f, -1.0f, 0.0f, // Position 1
-                         0.0f, 1.0f, // TexCoord 1
+                         0.0f, img_h, // TexCoord 1
                          1.0f, -1.0f, 0.0f, // Position 2
-                         1.0f, 1.0f, // TexCoord 2
+                         img_w, img_h, // TexCoord 2
                          1.0f, 1.0f, 0.0f, // Position 3
-                         1.0f, 0.0f // TexCoord 3
+                         img_w, 0.0f // TexCoord 3
       };
   GLushort indices[] = {0, 1, 2, 0, 2, 3};
   GLsizei stride = 5 * sizeof(GLfloat); // 3 for position, 2 for texture
@@ -271,6 +251,8 @@ void glcamera::renderFrame()
 
   glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
   checkGlError("glClear");
+
+  if(nimg.empty())return;
 
   glUseProgram(gProgram);
   checkGlError("glUseProgram");
@@ -284,7 +266,7 @@ void glcamera::renderFrame()
   glEnableVertexAttribArray(gvTexCoordHandle);
 
   // Bind the texture
-  glActiveTexture( GL_TEXTURE0);
+  glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, textureID);
 
   // Set the sampler texture unit to 0
@@ -312,17 +294,35 @@ void glcamera::step()
   if (newimage && !nimg.empty())
   {
 
-    textureID = createSimpleTexture2D(textureID, nimg.ptr<unsigned char> (0), nimg.rows, nimg.cols, nimg.channels());
+    textureID = createSimpleTexture2D(textureID, nimg.ptr<unsigned char> (0), nimg.cols, nimg.rows, nimg.channels());
     newimage = false;
   }
   renderFrame();
 
 }
-#define NEAREST_POW2(x)((int)(0.5 + std::log(x)/0.69315) )
+#define NEAREST_POW2(x)( std::ceil(std::log(x)/0.69315) )
 void glcamera::setTextureImage(const Mat& img)
 {
+  int p = NEAREST_POW2(img.cols/2); //subsample by 2
+  //int sz = std::pow(2, p);
+
+  // Size size(sz, sz);
   Size size(256, 256);
-  resize(img, nimg, size, cv::INTER_NEAREST);
+  img_w = 1;
+  img_h = 1;
+  if (nimg.cols != size.width)
+    LOGI_STREAM( "using texture of size: (" << size.width << " , " << size.height << ") image size is: (" << img.cols << " , " << img.rows << ")");
+  nimg.create(size, img.type());
+#if SUBREGION_NPO2
+  cv::Rect roi(0, 0, img.cols/2, img.rows/2);
+  cv::Mat nimg_sub = nimg(roi);
+  //img.copyTo(nimg_sub);
+  img_w = (img.cols/2)/float(sz);
+  img_h = (img.rows/2)/float(sz);
+  cv::resize(img,nimg_sub,nimg_sub.size(),0,0,CV_INTER_NN);
+#else
+  cv::resize(img, nimg, nimg.size(), 0, 0, CV_INTER_NN);
+#endif
   newimage = true;
 }
 

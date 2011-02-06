@@ -8,7 +8,6 @@ before loading any lib that depends on this.
 %{
 #include "image_pool.h"
 #include "glcamera.h"
-
 using namespace cv;
 %}
 #ifndef SWIGIMPORTED

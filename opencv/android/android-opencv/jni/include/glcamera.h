@@ -40,5 +40,6 @@ private:
 
   GLuint gvTexCoordHandle;
   GLuint gvSamplerHandle;
+  float img_w, img_h;
 };
 #endif

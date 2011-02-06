@@ -159,10 +159,10 @@ public class NativePreviewer extends SurfaceView implements
 		if (parameters.getSupportedWhiteBalance().contains(whitebalance_mode)) {
 			parameters.setWhiteBalance(whitebalance_mode);
 		}
-		if (parameters.getSupportedAntibanding().contains(
-				Camera.Parameters.ANTIBANDING_OFF)) {
-			parameters.setAntibanding(Camera.Parameters.ANTIBANDING_OFF);
-		}
+//		if (parameters.getSupportedAntibanding().contains(
+//				Camera.Parameters.ANTIBANDING_OFF)) {
+//			parameters.setAntibanding(Camera.Parameters.ANTIBANDING_OFF);
+//		}
 
 		List<String> fmodes = mCamera.getParameters().getSupportedFocusModes();
 		// for(String x: fmodes){

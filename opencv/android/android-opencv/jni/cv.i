@@ -8,6 +8,8 @@
 
 class Mat {
 public:
+	Mat();
+	~Mat();
  %immutable;
 	int rows;
 	int cols;
@@ -15,7 +17,9 @@ public:
 
 class Size{
 public:
+	Size();
 	Size(int width,int height);
+	~Size();
 	int width;
 	int height;
 	

@@ -2,11 +2,9 @@
 
 #include "yuv420sp2rgb.h"
 
-
 #include "android_logger.h"
 
 #include <opencv2/imgproc/imgproc.hpp>
-
 
 #include <jni.h>
 #ifdef __cplusplus
@@ -45,41 +43,28 @@ JNIEXPORT void JNICALL Java_com_opencv_jni_opencvJNI_addYUVtoPool(JNIEnv * env, 
   image_pool *pool = (image_pool *)ppool;
 
   Mat mat = pool->getYUV(jidx);
-
-  if (mat.empty() || mat.size() != buff_size)
+  //create is smart and only copies if the buffer size is different
+  mat.create(buff_size, CV_8UC1);
   {
-    mat.create(buff_size, CV_8UC1);
+    uchar* buff = mat.ptr<uchar> (0);
+    jsize sz = env->GetArrayLength(jbuffer);
+    //http://elliotth.blogspot.com/2007/03/optimizing-jni-array-access.html
+    env->GetByteArrayRegion(jbuffer, 0, sz, (jbyte*)buff);
   }
-
-  jsize sz = env->GetArrayLength(jbuffer);
-  uchar* buff = mat.ptr<uchar> (0);
-
-  env->GetByteArrayRegion(jbuffer, 0, sz, (jbyte*)buff);
-
   pool->addYUVMat(jidx, mat);
 
-  Mat color = pool->getImage(jidx);
-
-  if (!jgrey)
-  {
-
-    if (color.cols != jwidth || color.rows != jheight || color.channels() != 3)
-    {
-      color.create(jheight, jwidth, CV_8UC3);
-    }
-    //doesn't work unfortunately..
-    //TODO cvtColor(mat,color, CV_YCrCb2RGB);
-    color_convert_common(buff, buff + jwidth * jheight, jwidth, jheight, color.ptr<uchar> (0), false);
-  }
-
+  Mat color;
   if (jgrey)
   {
     Mat grey = pool->getGrey(jidx);
     color = grey;
   }
-
+  else
+  {
+    color = pool->getImage(jidx);
+    pool->convertYUVtoColor(jidx, color);
+  }
   pool->addImage(jidx, color);
-
 }
 
 image_pool::image_pool()
@@ -118,9 +103,7 @@ void image_pool::addImage(int i, Mat mat)
 
 void image_pool::convertYUVtoColor(int i, cv::Mat& out)
 {
-
   Mat yuv = getYUV(i);
-
   if (yuv.empty())
     return;
   int width = yuv.cols;
@@ -128,7 +111,5 @@ void image_pool::convertYUVtoColor(int i, cv::Mat& out)
   out.create(height, width, CV_8UC3);
   const unsigned char* buff = yuv.ptr<unsigned char> (0);
   unsigned char* out_buff = out.ptr<unsigned char> (0);
-  //doesn't work unfortunately..
-  //TODO cvtColor(mat,color, CV_YCrCb2RGB);
   color_convert_common(buff, buff + width * height, width, height, out_buff, false);
 }
