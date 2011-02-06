@@ -19,7 +19,7 @@ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 set( LIBRARY_DEPS ${AndroidOpenCV_LIBS} ${OpenCV_LIBS} )
 
 if(ANDROID)
-set( LIBRARY_DEPS ${LIBRARY_DEPS} log)
+set( LIBRARY_DEPS ${LIBRARY_DEPS} log dl)
 #this will set the output path for the java package
 #and properly create the package declarations in generated java sources
 SET_SWIG_JAVA_PACKAGE( com.OpenCV_SAMPLE.jni ) #defined in the android toolchain
