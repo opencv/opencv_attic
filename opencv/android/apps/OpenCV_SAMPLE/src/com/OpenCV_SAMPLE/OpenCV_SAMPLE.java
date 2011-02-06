@@ -3,13 +3,14 @@ package com.OpenCV_SAMPLE;
 import java.util.LinkedList;
 
 import android.os.Bundle;
+import android.util.Log;
 
 import com.OpenCV_SAMPLE.jni.CVSample;
 import com.opencv.camera.CameraActivity;
 import com.opencv.camera.NativeProcessor;
 import com.opencv.camera.NativeProcessor.PoolCallback;
-import com.opencv.jni.Mat;
-import com.opencv.jni.image_pool;
+import com.opencv.jni.*;
+
 
 public class OpenCV_SAMPLE extends CameraActivity {
 
@@ -27,13 +28,19 @@ public class OpenCV_SAMPLE extends CameraActivity {
 	}
 	
 	CVSample cvsample = new CVSample();
-	Mat canny = new Mat();
+	Mat canny; 
 	PoolCallback samplePoolCallback = new PoolCallback() {
 		
 		@Override
 		public void process(int idx, image_pool pool, long timestamp,
 				NativeProcessor nativeProcessor) {
-			cvsample.canny(pool.getGrey(idx),canny,10);
+			Mat grey = pool.getImage(idx);
+			canny = pool.getImage(idx+1);
+			//if(canny == null) canny = new Mat();
+			if(Mat.getCPtr(canny) == 0) Log.e("opencv","bad ptr");
+//			if(grey == null || canny == null) return;
+			//cvsample.invert(grey);
+			cvsample.canny(grey, canny, 10);
 			pool.addImage(idx+1,canny);
 			glview.getDrawCallback().process(idx+1, pool, timestamp, nativeProcessor);
 		}

@@ -14,3 +14,7 @@ void CVSample::canny(const cv::Mat& input, cv::Mat& output, int edgeThresh)
     gray = input;
   cv::Canny(gray, output, edgeThresh, edgeThresh * 3, 3);
 }
+
+void CVSample::invert(cv::Mat& inout){
+  cv::bitwise_not(inout,inout);
+}
