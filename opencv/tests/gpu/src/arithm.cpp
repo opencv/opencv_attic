@@ -66,45 +66,58 @@ protected:
 
     virtual int test(const Mat& mat1, const Mat& mat2) = 0;
 
-    int CheckNorm(const Mat& m1, const Mat& m2);
-    int CheckNorm(const Scalar& s1, const Scalar& s2);
-    int CheckNorm(double d1, double d2);
+    int CheckNorm(const Mat& m1, const Mat& m2, double eps = 1e-5);
+    int CheckNorm(const Scalar& s1, const Scalar& s2, double eps = 1e-5);
+    int CheckNorm(double d1, double d2, double eps = 1e-5);
 };
 
 int CV_GpuArithmTest::test(int type)
 {
     cv::Size sz(200, 200);
     cv::Mat mat1(sz, type), mat2(sz, type);
+    
     cv::RNG rng(*ts->get_rng());
-    rng.fill(mat1, cv::RNG::UNIFORM, cv::Scalar::all(1), cv::Scalar::all(20));
-    rng.fill(mat2, cv::RNG::UNIFORM, cv::Scalar::all(1), cv::Scalar::all(20));
+
+    if (type != CV_32FC1)
+    {
+        rng.fill(mat1, cv::RNG::UNIFORM, cv::Scalar::all(1), cv::Scalar::all(20));
+        rng.fill(mat2, cv::RNG::UNIFORM, cv::Scalar::all(1), cv::Scalar::all(20));
+    }
+    else
+    {
+        rng.fill(mat1, cv::RNG::UNIFORM, cv::Scalar::all(0.1), cv::Scalar::all(1.0));
+        rng.fill(mat2, cv::RNG::UNIFORM, cv::Scalar::all(0.1), cv::Scalar::all(1.0));
+    }
 
     return test(mat1, mat2);
 }
 
-int CV_GpuArithmTest::CheckNorm(const Mat& m1, const Mat& m2)
+int CV_GpuArithmTest::CheckNorm(const Mat& m1, const Mat& m2, double eps)
 {
     double ret = norm(m1, m2, NORM_INF);
 
-    if (ret < 1e-5)
+    if (ret < eps)
         return CvTS::OK;
 
     ts->printf(CvTS::LOG, "\nNorm: %f\n", ret);
     return CvTS::FAIL_GENERIC;
 }
 
-int CV_GpuArithmTest::CheckNorm(const Scalar& s1, const Scalar& s2)
+int CV_GpuArithmTest::CheckNorm(const Scalar& s1, const Scalar& s2, double eps)
 {
-    double ret0 = CheckNorm(s1[0], s2[0]), ret1 = CheckNorm(s1[1], s2[1]), ret2 = CheckNorm(s1[2], s2[2]), ret3 = CheckNorm(s1[3], s2[3]);
+    int ret0 = CheckNorm(s1[0], s2[0], eps), 
+        ret1 = CheckNorm(s1[1], s2[1], eps), 
+        ret2 = CheckNorm(s1[2], s2[2], eps), 
+        ret3 = CheckNorm(s1[3], s2[3], eps);
 
     return (ret0 == CvTS::OK && ret1 == CvTS::OK && ret2 == CvTS::OK && ret3 == CvTS::OK) ? CvTS::OK : CvTS::FAIL_GENERIC;
 }
 
-int CV_GpuArithmTest::CheckNorm(double d1, double d2)
+int CV_GpuArithmTest::CheckNorm(double d1, double d2, double eps)
 {
     double ret = ::fabs(d1 - d2);
 
-    if (ret < 1e-5)
+    if (ret < eps)
         return CvTS::OK;
 
     ts->printf(CvTS::LOG, "\nNorm: %f\n", ret);
@@ -245,7 +258,7 @@ struct CV_GpuNppImageDivideTest : public CV_GpuArithmTest
 	    GpuMat gpuRes;
 	    cv::gpu::divide(gpu1, gpu2, gpuRes);
 
-            return CheckNorm(cpuRes, gpuRes);
+        return CheckNorm(cpuRes, gpuRes, 1.01f);
     }
 };
 
@@ -584,7 +597,7 @@ struct CV_GpuNppImagePhaseTest : public CV_GpuArithmTest
         GpuMat gpuRes;
         cv::gpu::phase(gpu1, gpu2, gpuRes, true);
 
-        return CheckNorm(cpuRes, gpuRes);
+        return CheckNorm(cpuRes, gpuRes, 0.3f);
     }
 };
 
@@ -611,7 +624,7 @@ struct CV_GpuNppImageCartToPolarTest : public CV_GpuArithmTest
         cv::gpu::cartToPolar(gpu1, gpu2, gpuMag, gpuAngle);
 
         int magRes = CheckNorm(cpuMag, gpuMag);
-        int angleRes = CheckNorm(cpuAngle, gpuAngle);
+        int angleRes = CheckNorm(cpuAngle, gpuAngle, 0.005f);
 
         return magRes == CvTS::OK && angleRes == CvTS::OK ? CvTS::OK : CvTS::FAIL_GENERIC;
     }
@@ -684,12 +697,8 @@ struct CV_GpuMinMaxTest: public CvTest
     void test(int rows, int cols, int cn, int depth)
     {
         cv::Mat src(rows, cols, CV_MAKE_TYPE(depth, cn));
-        cv::RNG rng;
-        for (int i = 0; i < src.rows; ++i)
-        { 
-            Mat row(1, src.cols * src.elemSize(), CV_8U, src.ptr(i));
-            rng.fill(row, RNG::UNIFORM, Scalar(0), Scalar(256));
-        }
+        cv::RNG rng(*ts->get_rng());
+        rng.fill(src, RNG::UNIFORM, Scalar(0), Scalar(255));
 
         double minVal, maxVal;
         cv::Point minLoc, maxLoc;
@@ -712,7 +721,6 @@ struct CV_GpuMinMaxTest: public CvTest
         }
 
         double minVal_, maxVal_;
-        cv::Point minLoc_, maxLoc_;        
         cv::gpu::minMax(cv::gpu::GpuMat(src), &minVal_, &maxVal_, cv::gpu::GpuMat(), buf);
        
         if (abs(minVal - minVal_) > 1e-3f)
@@ -730,12 +738,8 @@ struct CV_GpuMinMaxTest: public CvTest
     void test_masked(int rows, int cols, int cn, int depth)
     {
         cv::Mat src(rows, cols, CV_MAKE_TYPE(depth, cn));
-        cv::RNG rng;
-        for (int i = 0; i < src.rows; ++i)
-        { 
-            Mat row(1, src.cols * src.elemSize(), CV_8U, src.ptr(i));
-            rng.fill(row, RNG::UNIFORM, Scalar(0), Scalar(256));
-        }
+        cv::RNG rng(*ts->get_rng());
+        rng.fill(src, RNG::UNIFORM, Scalar(0), Scalar(255));
 
         cv::Mat mask(src.size(), CV_8U);
         rng.fill(mask, RNG::UNIFORM, Scalar(0), Scalar(2));
@@ -819,12 +823,8 @@ struct CV_GpuMinMaxLocTest: public CvTest
     void test(int rows, int cols, int depth)
     {
         cv::Mat src(rows, cols, depth);
-        cv::RNG rng;
-        for (int i = 0; i < src.rows; ++i)
-        { 
-            Mat row(1, src.cols * src.elemSize(), CV_8U, src.ptr(i));
-            rng.fill(row, RNG::UNIFORM, Scalar(0), Scalar(256));
-        }
+        cv::RNG rng(*ts->get_rng());
+        rng.fill(src, RNG::UNIFORM, Scalar(0), Scalar(255));
 
         cv::Mat mask(src.size(), CV_8U);
         rng.fill(mask, RNG::UNIFORM, Scalar(0), Scalar(2));
@@ -854,7 +854,7 @@ struct CV_GpuMinMaxLocTest: public CvTest
         double minVal_, maxVal_;
         cv::Point minLoc_, maxLoc_;        
         cv::gpu::minMaxLoc(cv::gpu::GpuMat(src), &minVal_, &maxVal_, &minLoc_, &maxLoc_, cv::gpu::GpuMat(mask), valbuf, locbuf);
-       
+
         CHECK(minVal == minVal_, CvTS::FAIL_INVALID_OUTPUT);
         CHECK(maxVal == maxVal_, CvTS::FAIL_INVALID_OUTPUT);
         CHECK(0 == memcmp(src.ptr(minLoc.y) + minLoc.x * src.elemSize(), src.ptr(minLoc_.y) + minLoc_.x * src.elemSize(), src.elemSize()),  
@@ -943,6 +943,20 @@ struct CV_GpuSumTest: CvTest
             int typemax = CV_32F;
             for (int type = CV_8U; type <= typemax; ++type) 
             {
+                //
+                // sum
+                //
+
+                gen(1 + rand() % 500, 1 + rand() % 500, CV_MAKETYPE(type, 1), src);
+                a = sum(src);
+                b = sum(GpuMat(src));
+                if (abs(a[0] - b[0]) > src.size().area() * max_err)
+                {
+                    ts->printf(CvTS::CONSOLE, "1 cols: %d, rows: %d, expected: %f, actual: %f\n", src.cols, src.rows, a[0], b[0]);
+                    ts->set_failed_test_info(CvTS::FAIL_INVALID_OUTPUT);
+                    return;
+                }
+
                 gen(1 + rand() % 500, 1 + rand() % 500, CV_MAKETYPE(type, 2), src);
                 a = sum(src);
                 b = sum(GpuMat(src));
@@ -952,6 +966,7 @@ struct CV_GpuSumTest: CvTest
                     ts->set_failed_test_info(CvTS::FAIL_INVALID_OUTPUT);
                     return;
                 }
+
                 gen(1 + rand() % 500, 1 + rand() % 500, CV_MAKETYPE(type, 3), src);
                 a = sum(src);
                 b = sum(GpuMat(src));
@@ -961,6 +976,7 @@ struct CV_GpuSumTest: CvTest
                     ts->set_failed_test_info(CvTS::FAIL_INVALID_OUTPUT);
                     return;
                 }
+
                 gen(1 + rand() % 500, 1 + rand() % 500, CV_MAKETYPE(type, 4), src);
                 a = sum(src);
                 b = sum(GpuMat(src));
@@ -970,6 +986,7 @@ struct CV_GpuSumTest: CvTest
                     ts->set_failed_test_info(CvTS::FAIL_INVALID_OUTPUT);
                     return;
                 }
+
                 gen(1 + rand() % 500, 1 + rand() % 500, type, src);
                 a = sum(src);
                 b = sum(GpuMat(src));
@@ -979,6 +996,25 @@ struct CV_GpuSumTest: CvTest
                     ts->set_failed_test_info(CvTS::FAIL_INVALID_OUTPUT);
                     return;
                 }
+
+                //
+                // absSum
+                //
+
+                gen(1 + rand() % 200, 1 + rand() % 200, CV_MAKETYPE(type, 1), src);
+                b = absSum(GpuMat(src));
+                a = norm(src, NORM_L1);
+                if (abs(a[0] - b[0]) > src.size().area() * max_err)
+                {
+                    ts->printf(CvTS::CONSOLE, "type: %d, cols: %d, rows: %d, expected: %f, actual: %f\n", type, src.cols, src.rows, a[0], b[0]);
+                    ts->set_failed_test_info(CvTS::FAIL_INVALID_OUTPUT);
+                    return;
+                }
+
+                //
+                // sqrSum
+                //
+
                 if (type != CV_8S)
                 {
                     gen(1 + rand() % 200, 1 + rand() % 200, CV_MAKETYPE(type, 1), src);
