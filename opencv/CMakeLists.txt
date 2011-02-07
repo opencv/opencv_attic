@@ -913,7 +913,7 @@ if(CMAKE_COMPILER_IS_GNUCXX)
 
     # We need pthread's
     if(UNIX)
-      if(!ANDROID)
+      if(NOT ANDROID)
         set(EXTRA_C_FLAGS "${EXTRA_C_FLAGS} -pthread")
       endif()
     endif()
