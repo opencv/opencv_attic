@@ -46,7 +46,7 @@ INCLUDE_DIRECTORIES(${OpenCV_INCLUDE_DIRS})
 # ======================================================
 
 # Provide the libs directory anyway, it may be needed in some cases.
-SET(OpenCV_LIB_DIR @CMAKE_LIB_DIRS_CONFIGCMAKE@ @CMAKE_BINARY_DIR@/lib)
+SET(OpenCV_LIB_DIR @CMAKE_LIB_DIRS_CONFIGCMAKE@)
 
 LINK_DIRECTORIES(${OpenCV_LIB_DIR})
 
@@ -55,12 +55,9 @@ LINK_DIRECTORIES(${OpenCV_LIB_DIR})
 # ====================================================================
 
 if(!ANDROID)
-set(OPENCV_GPU_COMPONENT opencv_gpu)
-set(OPENCV_LIB_COMPONENTS opencv_core opencv_imgproc opencv_features2d ${OPENCV_GPU_COMPONENT} opencv_calib3d opencv_objdetect opencv_video opencv_highgui opencv_ml opencv_legacy opencv_contrib opencv_flann)
+	set(OPENCV_LIB_COMPONENTS opencv_core opencv_imgproc opencv_features2d opencv_gpu opencv_calib3d opencv_objdetect opencv_video opencv_highgui opencv_ml opencv_legacy opencv_contrib opencv_flann)
 else()
-set(OPENCV_LIB_COMPONENTS
-opencv_calib3d opencv_features2d opencv_objdetect opencv_imgproc
-     opencv_video  opencv_highgui opencv_ml opencv_legacy  opencv_flann opencv_core opencv_lapack )
+	set(OPENCV_LIB_COMPONENTS opencv_calib3d opencv_features2d opencv_objdetect opencv_imgproc opencv_video  opencv_highgui opencv_ml opencv_legacy  opencv_flann opencv_core opencv_lapack )
 endif()
 
 SET(OpenCV_LIBS "")
