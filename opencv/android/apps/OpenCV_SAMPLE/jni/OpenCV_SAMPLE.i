@@ -44,4 +44,5 @@ class CVSample
 public:
   void canny(const Mat& input, Mat& output, int edgeThresh);
   void invert(Mat& inout);
+  void blur(Mat& inout, int half_kernel_size);
 };

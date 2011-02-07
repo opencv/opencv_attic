@@ -4,6 +4,9 @@ import java.util.LinkedList;
 
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 
 import com.OpenCV_SAMPLE.jni.CVSample;
 import com.opencv.camera.CameraActivity;
@@ -11,8 +14,32 @@ import com.opencv.camera.NativeProcessor;
 import com.opencv.camera.NativeProcessor.PoolCallback;
 import com.opencv.jni.*;
 
-
 public class OpenCV_SAMPLE extends CameraActivity {
+
+	private int do_what = R.id.cv_menu_nothing;
+
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		MenuInflater menu_flater = new MenuInflater(this);
+		menu_flater.inflate(R.menu.sample_menu, menu);
+		return true;
+	}
+
+	@Override
+	public boolean onMenuItemSelected(int featureId, MenuItem item) {
+		switch (item.getItemId()) {
+		case R.id.cv_menu_blur:
+		case R.id.cv_menu_canny:
+		case R.id.cv_menu_invert:
+		case R.id.cv_menu_nothing:
+			do_what = item.getItemId();
+			break;
+		default:
+			return false;
+
+		}
+		return true;
+	}
 
 	/** Called when the activity is first created. */
 	@Override
@@ -26,23 +53,34 @@ public class OpenCV_SAMPLE extends CameraActivity {
 		list.add(samplePoolCallback);
 		return list;
 	}
-	
+
 	CVSample cvsample = new CVSample();
-	Mat canny; 
+	Mat canny = new Mat();
 	PoolCallback samplePoolCallback = new PoolCallback() {
-		
+
 		@Override
 		public void process(int idx, image_pool pool, long timestamp,
 				NativeProcessor nativeProcessor) {
-			Mat grey = pool.getImage(idx);
-			canny = pool.getImage(idx+1);
-			//if(canny == null) canny = new Mat();
-			if(Mat.getCPtr(canny) == 0) Log.e("opencv","bad ptr");
-//			if(grey == null || canny == null) return;
-			//cvsample.invert(grey);
-			cvsample.canny(grey, canny, 10);
-			pool.addImage(idx+1,canny);
-			glview.getDrawCallback().process(idx+1, pool, timestamp, nativeProcessor);
+			Mat grey = pool.getGrey(idx);
+			Mat color = pool.getImage(idx);
+			Mat draw_img = color;
+			switch (do_what) {
+			case R.id.cv_menu_blur:
+				cvsample.blur(draw_img, 5);
+				break;
+			case R.id.cv_menu_canny:
+				cvsample.canny(grey, canny, 15);
+				draw_img = canny;
+				break;
+			case R.id.cv_menu_invert:
+				cvsample.invert(draw_img);
+				break;
+			case R.id.cv_menu_nothing:
+				break;
+			}
+			pool.addImage(idx + 1, draw_img);
+			glview.getDrawCallback().process(idx + 1, pool, timestamp,
+					nativeProcessor);
 		}
 	};
 

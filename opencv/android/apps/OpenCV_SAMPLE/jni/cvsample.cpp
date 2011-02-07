@@ -15,6 +15,13 @@ void CVSample::canny(const cv::Mat& input, cv::Mat& output, int edgeThresh)
   cv::Canny(gray, output, edgeThresh, edgeThresh * 3, 3);
 }
 
-void CVSample::invert(cv::Mat& inout){
-  cv::bitwise_not(inout,inout);
+void CVSample::invert(cv::Mat& inout)
+{
+  cv::bitwise_not(inout, inout);
+}
+void CVSample::blur(cv::Mat& inout, int half_kernel_size)
+{
+  int ksz = half_kernel_size*2 + 1;
+  cv::Size kernel(ksz,ksz);
+  cv::blur(inout,inout,kernel);
 }
