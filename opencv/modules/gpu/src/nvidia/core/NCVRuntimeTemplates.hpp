@@ -1,3 +1,51 @@
+/*M///////////////////////////////////////////////////////////////////////////////////////
+//
+// IMPORTANT: READ BEFORE DOWNLOADING, COPYING, INSTALLING OR USING. 
+// 
+//  By downloading, copying, installing or using the software you agree to this license.
+//  If you do not agree to this license, do not download, install,
+//  copy or use the software.
+//
+//
+//                           License Agreement
+//                For Open Source Computer Vision Library
+//
+// Copyright (C) 2009-2010, NVIDIA Corporation, all rights reserved.
+// Third party copyrights are property of their respective owners.
+//
+// Redistribution and use in source and binary forms, with or without modification,
+// are permitted provided that the following conditions are met:
+//
+//   * Redistribution's of source code must retain the above copyright notice,
+//     this list of conditions and the following disclaimer.
+//
+//   * Redistribution's in binary form must reproduce the above copyright notice,
+//     this list of conditions and the following disclaimer in the documentation
+//     and/or other materials provided with the distribution.
+//
+//   * The name of the copyright holders may not be used to endorse or promote products
+//     derived from this software without specific prior written permission.
+//
+// This software is provided by the copyright holders and contributors "as is" and
+// any express or implied warranties, including, but not limited to, the implied
+// warranties of merchantability and fitness for a particular purpose are disclaimed.
+// In no event shall the Intel Corporation or contributors be liable for any direct,
+// indirect, incidental, special, exemplary, or consequential damages
+// (including, but not limited to, procurement of substitute goods or services;
+// loss of use, data, or profits; or business interruption) however caused
+// and on any theory of liability, whether in contract, strict liability,
+// or tort (including negligence or otherwise) arising in any way out of
+// the use of this software, even if advised of the possibility of such damage.
+//
+//M*/
+
+#ifndef _ncvruntimetemplates_hpp_
+#define _ncvruntimetemplates_hpp_
+
+#include <stdarg.h>
+#include <vector>
+
+
 ////////////////////////////////////////////////////////////////////////////////
 // The Loki Library
 // Copyright (c) 2001 by Andrei Alexandrescu
@@ -13,13 +61,6 @@
 //     without express or implied warranty.
 // http://loki-lib.sourceforge.net/index.php?n=Main.License
 ////////////////////////////////////////////////////////////////////////////////
-
-#ifndef _ncvruntimetemplates_hpp_
-#define _ncvruntimetemplates_hpp_
-
-#include <stdarg.h>
-#include <vector>
-
 
 namespace Loki
 {
@@ -105,10 +146,10 @@ namespace NCVRuntimeTemplateBool
     {
         //Convenience function used by the user
         //Takes a variable argument list, transforms it into a list
-        static void call(Func &functor, int dummy, ...)
+        static void call(Func &functor, Ncv32u dummy, ...)
         {
             //Vector used to collect arguments
-            std::vector<int> templateParamList;
+            std::vector<NcvBool> templateParamList;
 
             //Variable argument list manipulation
             va_list listPointer;
@@ -116,7 +157,7 @@ namespace NCVRuntimeTemplateBool
             //Collect parameters into the list
             for(int i=0; i<NumArguments; i++)
             {
-                int val = va_arg(listPointer, int);
+                NcvBool val = va_arg(listPointer, NcvBool);
                 templateParamList.push_back(val);
             }
             va_end(listPointer);
@@ -127,26 +168,26 @@ namespace NCVRuntimeTemplateBool
 
         //Actual function called recursively to build a typelist based
         //on a list of values
-        static void call( Func &functor, std::vector<int> &templateParamList)
+        static void call( Func &functor, std::vector<NcvBool> &templateParamList)
         {
             //Get current parameter value in the list
-            int val = templateParamList[templateParamList.size() - 1];
+            NcvBool val = templateParamList[templateParamList.size() - 1];
             templateParamList.pop_back();
 
             //Select the compile time value to add into the typelist
-            //depending on the runtime variable and make recursive call. 
+            //depending on the runtime variable and make recursive call.
             //Both versions are really instantiated
-            if(val)
+            if (val)
             {
                 KernelCaller<
-                    Loki::Typelist<typename Loki::Int2Type<true>, TList >,
+                    Loki::Typelist<typename Loki::Int2Type<1>, TList >,
                     NumArguments-1, Func >
                     ::call(functor, templateParamList);
             }
             else
             {
-                KernelCaller< 
-                    Loki::Typelist<typename Loki::Int2Type<false>, TList >,
+                KernelCaller<
+                    Loki::Typelist<typename Loki::Int2Type<0>, TList >,
                     NumArguments-1, Func >
                     ::call(functor, templateParamList);
             }
@@ -164,7 +205,7 @@ namespace NCVRuntimeTemplateBool
             functor.call(TList()); //TList instantiated to get the method template parameter resolved
         }
 
-        static void call(Func &functor, std::vector<int> &templateParams)
+        static void call(Func &functor, std::vector<NcvBool> &templateParams)
         {
             functor.call(TList());
         }

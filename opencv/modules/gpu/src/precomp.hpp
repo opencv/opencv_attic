@@ -69,10 +69,10 @@
     #include "cufft.h"
     #include "opencv2/gpu/stream_accessor.hpp"
     #include "npp.h"    
-    #include "npp_staging.h"
-
-	#include "nvidia/NCV.hpp"
-	#include "nvidia/NCVHaarObjectDetection.hpp"
+    
+    #include "nvidia/core/NCV.hpp"
+    #include "nvidia/NPP_staging/NPP_staging.hpp"
+    #include "nvidia/NCVHaarObjectDetection.hpp"
 
 #define CUDART_MINIMUM_REQUIRED_VERSION 3020
 #define NPP_MINIMUM_REQUIRED_VERSION 3216

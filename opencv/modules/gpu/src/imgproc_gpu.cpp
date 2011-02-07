@@ -61,11 +61,15 @@ void cv::gpu::warpAffine(const GpuMat&, GpuMat&, const Mat&, Size, int) { throw_
 void cv::gpu::warpPerspective(const GpuMat&, GpuMat&, const Mat&, Size, int) { throw_nogpu(); }
 void cv::gpu::rotate(const GpuMat&, GpuMat&, Size, double, double, double, int) { throw_nogpu(); }
 void cv::gpu::integral(const GpuMat&, GpuMat&) { throw_nogpu(); }
+void cv::gpu::integralBuffered(const GpuMat&, GpuMat&, GpuMat&) { throw_nogpu(); }
 void cv::gpu::integral(const GpuMat&, GpuMat&, GpuMat&) { throw_nogpu(); }
 void cv::gpu::sqrIntegral(const GpuMat&, GpuMat&) { throw_nogpu(); }
 void cv::gpu::columnSum(const GpuMat&, GpuMat&) { throw_nogpu(); }
 void cv::gpu::rectStdDev(const GpuMat&, const GpuMat&, GpuMat&, const Rect&) { throw_nogpu(); }
-void cv::gpu::Canny(const GpuMat&, GpuMat&, double, double, int) { throw_nogpu(); }
+//void cv::gpu::Canny(const GpuMat&, GpuMat&, double, double, int) { throw_nogpu(); }
+//void cv::gpu::Canny(const GpuMat&, GpuMat&, GpuMat&, double, double, int) { throw_nogpu(); }
+//void cv::gpu::Canny(const GpuMat&, const GpuMat&, GpuMat&, GpuMat&, double, double, int) { throw_nogpu(); }
+//void cv::gpu::Canny(const GpuMat&, const GpuMat&, GpuMat&, GpuMat&, GpuMat&, double, double, int) { throw_nogpu(); }
 void cv::gpu::evenLevels(GpuMat&, int, int, int) { throw_nogpu(); }
 void cv::gpu::histEven(const GpuMat&, GpuMat&, int, int, int) { throw_nogpu(); }
 void cv::gpu::histEven(const GpuMat&, GpuMat*, int*, int*, int*) { throw_nogpu(); }
@@ -546,22 +550,29 @@ void cv::gpu::rotate(const GpuMat& src, GpuMat& dst, Size dsize, double angle, d
 
 void cv::gpu::integral(const GpuMat& src, GpuMat& sum)
 {
+    GpuMat buffer;
+    integralBuffered(src, sum, buffer);
+}
+
+void cv::gpu::integralBuffered(const GpuMat& src, GpuMat& sum, GpuMat& buffer)
+{
     CV_Assert(src.type() == CV_8UC1);
 
     sum.create(src.rows + 1, src.cols + 1, CV_32S);
     
-    NppStSize32u roiSize;
+    NcvSize32u roiSize;
     roiSize.width = src.cols;
     roiSize.height = src.rows;
 
-    NppSt32u bufSize;
+	cudaDeviceProp prop;
+	cudaSafeCall( cudaGetDeviceProperties(&prop, cv::gpu::getDevice()) );
 
-    nppSafeCall( nppiStIntegralGetSize_8u32u(roiSize, &bufSize) );
+    Ncv32u bufSize;
+    nppSafeCall( nppiStIntegralGetSize_8u32u(roiSize, &bufSize, prop) );
+    ensureSizeIsEnough(1, bufSize, CV_8UC1, buffer);
 
-    GpuMat buffer(1, bufSize, CV_8UC1);
-
-    nppSafeCall( nppiStIntegral_8u32u_C1R(const_cast<NppSt8u*>(src.ptr<NppSt8u>()), src.step, 
-        sum.ptr<NppSt32u>(), sum.step, roiSize, buffer.ptr<NppSt8u>(), bufSize) );
+    nppSafeCall( nppiStIntegral_8u32u_C1R(const_cast<Ncv8u*>(src.ptr<Ncv8u>()), src.step, 
+        sum.ptr<Ncv32u>(), sum.step, roiSize, buffer.ptr<Ncv8u>(), bufSize, prop) );
 
     cudaSafeCall( cudaThreadSynchronize() );
 }
@@ -592,19 +603,20 @@ void cv::gpu::sqrIntegral(const GpuMat& src, GpuMat& sqsum)
 {
     CV_Assert(src.type() == CV_8U);
 
-    NppStSize32u roiSize;
+    NcvSize32u roiSize;
     roiSize.width = src.cols;
     roiSize.height = src.rows;
 
-    NppSt32u bufSize;
-    nppSafeCall(nppiStSqrIntegralGetSize_8u64u(roiSize, &bufSize));
+	cudaDeviceProp prop;
+	cudaSafeCall( cudaGetDeviceProperties(&prop, cv::gpu::getDevice()) );
+
+    Ncv32u bufSize;
+    nppSafeCall(nppiStSqrIntegralGetSize_8u64u(roiSize, &bufSize, prop));	
     GpuMat buf(1, bufSize, CV_8U);
 
     sqsum.create(src.rows + 1, src.cols + 1, CV_64F);
-    nppSafeCall(nppiStSqrIntegral_8u64u_C1R(
-            const_cast<NppSt8u*>(src.ptr<NppSt8u>(0)), src.step, 
-            sqsum.ptr<NppSt64u>(0), sqsum.step, roiSize, 
-            buf.ptr<NppSt8u>(0), bufSize));
+    nppSafeCall(nppiStSqrIntegral_8u64u_C1R(const_cast<Ncv8u*>(src.ptr<Ncv8u>(0)), src.step, 
+            sqsum.ptr<Ncv64u>(0), sqsum.step, roiSize, buf.ptr<Ncv8u>(0), bufSize, prop));
 
     cudaSafeCall( cudaThreadSynchronize() );
 }
@@ -650,34 +662,60 @@ void cv::gpu::rectStdDev(const GpuMat& src, const GpuMat& sqr, GpuMat& dst, cons
 ////////////////////////////////////////////////////////////////////////
 // Canny
 
-void cv::gpu::Canny(const GpuMat& image, GpuMat& edges, double threshold1, double threshold2, int apertureSize)
-{
-    CV_Assert(!"disabled until fix crash");
-    CV_Assert(image.type() == CV_8UC1);
-
-    GpuMat srcDx, srcDy;
-
-    Sobel(image, srcDx, -1, 1, 0, apertureSize);
-    Sobel(image, srcDy, -1, 0, 1, apertureSize);
-
-    srcDx.convertTo(srcDx, CV_32F);
-    srcDy.convertTo(srcDy, CV_32F);
-
-    edges.create(image.size(), CV_8UC1);
-
-    NppiSize sz;
-    sz.height = image.rows;
-    sz.width = image.cols;
-
-    int bufsz;
-    nppSafeCall( nppiCannyGetBufferSize(sz, &bufsz) );
-    GpuMat buf(1, bufsz, CV_8UC1);
-
-    nppSafeCall( nppiCanny_32f8u_C1R(srcDx.ptr<Npp32f>(), srcDx.step, srcDy.ptr<Npp32f>(), srcDy.step,
-        edges.ptr<Npp8u>(), edges.step, sz, (Npp32f)threshold1, (Npp32f)threshold2, buf.ptr<Npp8u>()) );
-
-    cudaSafeCall( cudaThreadSynchronize() );
-}
+//void cv::gpu::Canny(const GpuMat& image, GpuMat& edges, double threshold1, double threshold2, int apertureSize)
+//{
+//    CV_Assert(!"disabled until fix crash");
+//
+//    GpuMat srcDx, srcDy;
+//
+//    Sobel(image, srcDx, CV_32F, 1, 0, apertureSize);
+//    Sobel(image, srcDy, CV_32F, 0, 1, apertureSize);
+//
+//    GpuMat buf;
+//
+//    Canny(srcDx, srcDy, edges, buf, threshold1, threshold2, apertureSize);
+//}
+//
+//void cv::gpu::Canny(const GpuMat& image, GpuMat& edges, GpuMat& buf, double threshold1, double threshold2, int apertureSize)
+//{
+//    CV_Assert(!"disabled until fix crash");
+//
+//    GpuMat srcDx, srcDy;
+//
+//    Sobel(image, srcDx, CV_32F, 1, 0, apertureSize);
+//    Sobel(image, srcDy, CV_32F, 0, 1, apertureSize);
+//
+//    Canny(srcDx, srcDy, edges, buf, threshold1, threshold2, apertureSize);
+//}
+//
+//void cv::gpu::Canny(const GpuMat& srcDx, const GpuMat& srcDy, GpuMat& edges, double threshold1, double threshold2, int apertureSize)
+//{
+//    CV_Assert(!"disabled until fix crash");
+//
+//    GpuMat buf;
+//    Canny(srcDx, srcDy, edges, buf, threshold1, threshold2, apertureSize);
+//}
+//
+//void cv::gpu::Canny(const GpuMat& srcDx, const GpuMat& srcDy, GpuMat& edges, GpuMat& buf, double threshold1, double threshold2, int apertureSize)
+//{
+//    CV_Assert(!"disabled until fix crash");
+//    CV_Assert(srcDx.type() == CV_32FC1 && srcDy.type() == CV_32FC1 && srcDx.size() == srcDy.size());
+//
+//    edges.create(srcDx.size(), CV_8UC1);
+//
+//    NppiSize sz;
+//    sz.height = srcDx.rows;
+//    sz.width = srcDx.cols;
+//
+//    int bufsz;
+//    nppSafeCall( nppiCannyGetBufferSize(sz, &bufsz) );
+//    ensureSizeIsEnough(1, bufsz, CV_8UC1, buf);
+//
+//    nppSafeCall( nppiCanny_32f8u_C1R(srcDx.ptr<Npp32f>(), srcDx.step, srcDy.ptr<Npp32f>(), srcDy.step,
+//        edges.ptr<Npp8u>(), edges.step, sz, (Npp32f)threshold1, (Npp32f)threshold2, buf.ptr<Npp8u>()) );
+//
+//    cudaSafeCall( cudaThreadSynchronize() );
+//}
 
 ////////////////////////////////////////////////////////////////////////
 // Histogram
@@ -952,22 +990,10 @@ namespace cv { namespace gpu { namespace imgproc {
 
 }}}
 
-namespace cv { namespace gpu { namespace linear_filters {
-
-    template <typename T>
-    void rowFilterCaller(const DevMem2D_<T> src, PtrStepf dst, int anchor, const float* kernel, 
-                         int ksize, int brd_interp);
-
-    template <typename T>
-    void colFilterCaller(const DevMem2D_<T> src, PtrStepf dst, int anchor, const float* kernel, 
-                         int ksize, int brd_interp);
-
-}}}
-
 namespace 
 {
     template <typename T>
-    void extractCovData(const GpuMat& src, GpuMat& Dx, GpuMat& Dy, int blockSize, int ksize, int gpuBorderType)
+    void extractCovData(const GpuMat& src, GpuMat& Dx, GpuMat& Dy, int blockSize, int ksize, int borderType)
     {   
         double scale = (double)(1 << ((ksize > 0 ? ksize : 3) - 1)) * blockSize;
         if (ksize < 0) 
@@ -979,42 +1005,28 @@ namespace
         GpuMat tmp_buf(src.size(), CV_32F);
         Dx.create(src.size(), CV_32F);
         Dy.create(src.size(), CV_32F);
-        Mat kx, ky;
 
-        getDerivKernels(kx, ky, 1, 0, ksize, false, CV_32F);
-        kx = kx.reshape(1, 1) * scale;
-        ky = ky.reshape(1, 1);
-
-        linear_filters::rowFilterCaller<T>(
-                src, tmp_buf, kx.cols >> 1, kx.ptr<float>(0), kx.cols,
-                gpuBorderType);
-
-        linear_filters::colFilterCaller<float>(
-                tmp_buf, Dx, ky.cols >> 1, ky.ptr<float>(0), ky.cols, 
-                gpuBorderType);
-
-        getDerivKernels(kx, ky, 0, 1, ksize, false, CV_32F);
-        kx = kx.reshape(1, 1);
-        ky = ky.reshape(1, 1) * scale;
-
-        linear_filters::rowFilterCaller<T>(
-                src, tmp_buf, kx.cols >> 1, kx.ptr<float>(0), kx.cols, 
-                gpuBorderType);
-
-        linear_filters::colFilterCaller<float>(
-                tmp_buf, Dy, ky.cols >> 1, ky.ptr<float>(0), ky.cols, 
-                gpuBorderType);
+        if (ksize > 0)
+        {
+            Sobel(src, Dx, CV_32F, 1, 0, ksize, scale, borderType);
+            Sobel(src, Dy, CV_32F, 0, 1, ksize, scale, borderType);
+        }
+        else
+        {
+            Scharr(src, Dx, CV_32F, 1, 0, scale, borderType);
+            Scharr(src, Dy, CV_32F, 0, 1, scale, borderType);
+        }
     }
 
-    void extractCovData(const GpuMat& src, GpuMat& Dx, GpuMat& Dy, int blockSize, int ksize, int gpuBorderType)
+    void extractCovData(const GpuMat& src, GpuMat& Dx, GpuMat& Dy, int blockSize, int ksize, int borderType)
     {
         switch (src.type())
         {
         case CV_8U:
-            extractCovData<unsigned char>(src, Dx, Dy, blockSize, ksize, gpuBorderType);
+            extractCovData<unsigned char>(src, Dx, Dy, blockSize, ksize, borderType);
             break;
         case CV_32F:
-            extractCovData<float>(src, Dx, Dy, blockSize, ksize, gpuBorderType);
+            extractCovData<float>(src, Dx, Dy, blockSize, ksize, borderType);
             break;
         default:
             CV_Error(CV_StsBadArg, "extractCovData: unsupported type of the source matrix");
@@ -1056,7 +1068,7 @@ void cv::gpu::cornerHarris(const GpuMat& src, GpuMat& dst, int blockSize, int ks
     CV_Assert(tryConvertToGpuBorderType(borderType, gpuBorderType));
 
     GpuMat Dx, Dy;
-    extractCovData(src, Dx, Dy, blockSize, ksize, gpuBorderType);
+    extractCovData(src, Dx, Dy, blockSize, ksize, borderType);
     dst.create(src.size(), CV_32F);
     imgproc::cornerHarris_caller(blockSize, (float)k, Dx, Dy, dst, gpuBorderType);
 }
@@ -1070,7 +1082,7 @@ void cv::gpu::cornerMinEigenVal(const GpuMat& src, GpuMat& dst, int blockSize, i
     CV_Assert(tryConvertToGpuBorderType(borderType, gpuBorderType));
 
     GpuMat Dx, Dy;
-    extractCovData(src, Dx, Dy, blockSize, ksize, gpuBorderType);    
+    extractCovData(src, Dx, Dy, blockSize, ksize, borderType);    
     dst.create(src.size(), CV_32F);
     imgproc::cornerMinEigenVal_caller(blockSize, Dx, Dy, dst, gpuBorderType);
 }
@@ -1250,7 +1262,7 @@ Size cv::gpu::ConvolveBuf::estimateBlockSize(Size result_size, Size templ_size)
     Size bsize_min(1024, 1024);
 
     // Check whether we use Fermi generation or newer GPU
-    if (DeviceInfo().major() >= 2) 
+    if (DeviceInfo().majorVersion() >= 2)
     {
         bsize_min.width = 2048;
         bsize_min.height = 2048;
@@ -1287,7 +1299,6 @@ void cv::gpu::convolve(const GpuMat& image, const GpuMat& templ, GpuMat& result,
 
     Size& block_size = buf.block_size;
     Size& dft_size = buf.dft_size;
-    int& spect_len = buf.spect_len;
 
     GpuMat& image_block = buf.image_block;
     GpuMat& templ_block = buf.templ_block;

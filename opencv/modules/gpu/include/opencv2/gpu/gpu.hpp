@@ -66,8 +66,14 @@ namespace cv
 
         enum GpuFeature
         {
-            NATIVE_DOUBLE,
-            ATOMICS
+            COMPUTE_10 = 10,
+            COMPUTE_11 = 11,
+            COMPUTE_12 = 12,
+            COMPUTE_13 = 13,
+            COMPUTE_20 = 20,
+            COMPUTE_21 = 21,
+            ATOMICS = COMPUTE_11,
+            NATIVE_DOUBLE = COMPUTE_13
         };
 
         class CV_EXPORTS TargetArchs
@@ -93,8 +99,8 @@ namespace cv
 
             string name() const { return name_; }
 
-            int major() const { return major_; }
-            int minor() const { return minor_; }
+            int majorVersion() const { return majorVersion_; }
+            int minorVersion() const { return minorVersion_; }
 
             int multiProcessorCount() const { return multi_processor_count_; }
 
@@ -112,7 +118,8 @@ namespace cv
 
             string name_;
             int multi_processor_count_;
-            int major_, minor_;
+            int majorVersion_;
+            int minorVersion_;
         };
 
         //////////////////////////////// Error handling ////////////////////////
@@ -650,6 +657,9 @@ namespace cv
         //! supports only CV_8UC1 source type
         CV_EXPORTS void integral(const GpuMat& src, GpuMat& sum);
 
+        //! buffered version
+        CV_EXPORTS void integralBuffered(const GpuMat& src, GpuMat& sum, GpuMat& buffer);
+
         //! computes the integral image and integral for the squared image
         //! sum will have CV_32S type, sqsum - CV32F type
         //! supports only CV_8UC1 source type
@@ -668,10 +678,12 @@ namespace cv
         //! output will have CV_32FC1 type
         CV_EXPORTS void rectStdDev(const GpuMat& src, const GpuMat& sqr, GpuMat& dst, const Rect& rect);
 
-        //! applies Canny edge detector and produces the edge map
-        //! supprots only CV_8UC1 source type
-        //! disabled until fix crash
-        CV_EXPORTS void Canny(const GpuMat& image, GpuMat& edges, double threshold1, double threshold2, int apertureSize = 3);
+        // applies Canny edge detector and produces the edge map
+        // disabled until fix crash
+        //CV_EXPORTS void Canny(const GpuMat& image, GpuMat& edges, double threshold1, double threshold2, int apertureSize = 3);
+        //CV_EXPORTS void Canny(const GpuMat& image, GpuMat& edges, GpuMat& buffer, double threshold1, double threshold2, int apertureSize = 3);
+        //CV_EXPORTS void Canny(const GpuMat& srcDx, const GpuMat& srcDy, GpuMat& edges, double threshold1, double threshold2, int apertureSize = 3);
+        //CV_EXPORTS void Canny(const GpuMat& srcDx, const GpuMat& srcDy, GpuMat& edges, GpuMat& buffer, double threshold1, double threshold2, int apertureSize = 3);
 
         //! computes Harris cornerness criteria at each image pixel
         CV_EXPORTS void cornerHarris(const GpuMat& src, GpuMat& dst, int blockSize, int ksize, double k, int borderType=BORDER_REFLECT101);
@@ -745,8 +757,13 @@ namespace cv
 
         //! computes norm of array
         //! supports NORM_INF, NORM_L1, NORM_L2
-        //! supports only CV_8UC1 type
+        //! supports all matrices except 64F
         CV_EXPORTS double norm(const GpuMat& src1, int normType=NORM_L2);
+
+        //! computes norm of array
+        //! supports NORM_INF, NORM_L1, NORM_L2
+        //! supports all matrices except 64F
+        CV_EXPORTS double norm(const GpuMat& src1, int normType, GpuMat& buf);
 
         //! computes norm of the difference between two arrays
         //! supports NORM_INF, NORM_L1, NORM_L2
@@ -760,6 +777,14 @@ namespace cv
         //! computes sum of array elements
         //! supports only single channel images
         CV_EXPORTS Scalar sum(const GpuMat& src, GpuMat& buf);
+
+        //! computes sum of array elements absolute values
+        //! supports only single channel images
+        CV_EXPORTS Scalar absSum(const GpuMat& src);
+
+        //! computes sum of array elements absolute values
+        //! supports only single channel images
+        CV_EXPORTS Scalar absSum(const GpuMat& src, GpuMat& buf);
 
         //! computes squared sum of array elements
         //! supports only single channel images

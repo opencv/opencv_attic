@@ -49,9 +49,12 @@ using namespace cv::gpu;
 
 void cv::gpu::meanStdDev(const GpuMat&, Scalar&, Scalar&) { throw_nogpu(); }
 double cv::gpu::norm(const GpuMat&, int) { throw_nogpu(); return 0.0; }
+double cv::gpu::norm(const GpuMat&, int, GpuMat&) { throw_nogpu(); return 0.0; }
 double cv::gpu::norm(const GpuMat&, const GpuMat&, int) { throw_nogpu(); return 0.0; }
 Scalar cv::gpu::sum(const GpuMat&) { throw_nogpu(); return Scalar(); }
 Scalar cv::gpu::sum(const GpuMat&, GpuMat&) { throw_nogpu(); return Scalar(); }
+Scalar cv::gpu::absSum(const GpuMat&) { throw_nogpu(); return Scalar(); }
+Scalar cv::gpu::absSum(const GpuMat&, GpuMat&) { throw_nogpu(); return Scalar(); }
 Scalar cv::gpu::sqrSum(const GpuMat&) { throw_nogpu(); return Scalar(); }
 Scalar cv::gpu::sqrSum(const GpuMat&, GpuMat&) { throw_nogpu(); return Scalar(); }
 void cv::gpu::minMax(const GpuMat&, double*, double*, const GpuMat&) { throw_nogpu(); }
@@ -84,9 +87,31 @@ void cv::gpu::meanStdDev(const GpuMat& src, Scalar& mean, Scalar& stddev)
 ////////////////////////////////////////////////////////////////////////
 // norm
 
-double cv::gpu::norm(const GpuMat& src1, int normType)
+double cv::gpu::norm(const GpuMat& src, int normType)
 {
-    return norm(src1, GpuMat(src1.size(), src1.type(), Scalar::all(0.0)), normType);
+    GpuMat buf;
+    return norm(src, normType, buf);
+}
+
+double cv::gpu::norm(const GpuMat& src, int normType, GpuMat& buf)
+{
+    GpuMat src_single_channel = src.reshape(1);
+
+    if (normType == NORM_L1)
+        return absSum(src_single_channel, buf)[0];
+
+    if (normType == NORM_L2)
+        return sqrt(sqrSum(src_single_channel, buf)[0]);
+
+    if (normType == NORM_INF)
+    {
+        double min_val, max_val;
+        minMax(src_single_channel, &min_val, &max_val, GpuMat(), buf);
+        return std::max(std::abs(min_val), std::abs(max_val));
+    }
+
+    CV_Error(CV_StsBadArg, "norm: unsupported norm type");
+    return 0;
 }
 
 double cv::gpu::norm(const GpuMat& src1, const GpuMat& src2, int normType)
@@ -129,6 +154,12 @@ namespace cv { namespace gpu { namespace mathfunc
     void sumMultipassCaller(const DevMem2D src, PtrStep buf, double* sum, int cn);
 
     template <typename T>
+    void absSumCaller(const DevMem2D src, PtrStep buf, double* sum, int cn);
+
+    template <typename T>
+    void absSumMultipassCaller(const DevMem2D src, PtrStep buf, double* sum, int cn);
+
+    template <typename T>
     void sqrSumCaller(const DevMem2D src, PtrStep buf, double* sum, int cn);
 
     template <typename T>
@@ -166,7 +197,7 @@ Scalar cv::gpu::sum(const GpuMat& src, GpuMat& buf)
 
     Size buf_size;
     sums::getBufSizeRequired(src.cols, src.rows, src.channels(), 
-                            buf_size.width, buf_size.height); 
+                             buf_size.width, buf_size.height); 
     ensureSizeIsEnough(buf_size, CV_8U, buf);
 
     Caller* callers = multipass_callers;
@@ -175,6 +206,47 @@ Scalar cv::gpu::sum(const GpuMat& src, GpuMat& buf)
 
     Caller caller = callers[src.depth()];
     if (!caller) CV_Error(CV_StsBadArg, "sum: unsupported type");
+
+    double result[4];
+    caller(src, buf, result, src.channels());
+    return Scalar(result[0], result[1], result[2], result[3]);
+}
+
+
+Scalar cv::gpu::absSum(const GpuMat& src) 
+{
+    GpuMat buf;
+    return absSum(src, buf);
+}
+
+
+Scalar cv::gpu::absSum(const GpuMat& src, GpuMat& buf) 
+{
+    using namespace mathfunc;
+
+    typedef void (*Caller)(const DevMem2D, PtrStep, double*, int);
+
+    static Caller multipass_callers[7] = { 
+            absSumMultipassCaller<unsigned char>, absSumMultipassCaller<char>, 
+            absSumMultipassCaller<unsigned short>, absSumMultipassCaller<short>, 
+            absSumMultipassCaller<int>, absSumMultipassCaller<float>, 0 };
+
+    static Caller singlepass_callers[7] = { 
+            absSumCaller<unsigned char>, absSumCaller<char>, 
+            absSumCaller<unsigned short>, absSumCaller<short>, 
+            absSumCaller<int>, absSumCaller<float>, 0 };
+
+    Size buf_size;
+    sums::getBufSizeRequired(src.cols, src.rows, src.channels(), 
+                             buf_size.width, buf_size.height); 
+    ensureSizeIsEnough(buf_size, CV_8U, buf);
+
+    Caller* callers = multipass_callers;
+    if (TargetArchs::builtWith(ATOMICS) && DeviceInfo().has(ATOMICS))
+        callers = singlepass_callers;
+
+    Caller caller = callers[src.depth()];
+    if (!caller) CV_Error(CV_StsBadArg, "absSum: unsupported type");
 
     double result[4];
     caller(src, buf, result, src.channels());
@@ -221,6 +293,9 @@ Scalar cv::gpu::sqrSum(const GpuMat& src, GpuMat& buf)
     caller(src, buf, result, src.channels());
     return Scalar(result[0], result[1], result[2], result[3]);
 }
+
+
+
 
 ////////////////////////////////////////////////////////////////////////
 // Find min or max
