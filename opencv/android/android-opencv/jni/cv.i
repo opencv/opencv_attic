@@ -21,8 +21,7 @@ public:
 	Size(int width,int height);
 	~Size();
 	int width;
-	int height;
-	
+	int height;	
 };
 
 template<class _Tp> class Ptr
