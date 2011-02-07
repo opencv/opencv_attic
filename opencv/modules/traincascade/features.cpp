@@ -26,7 +26,7 @@ bool CvParams::scanAttr( const String prmName, const String val ) { return false
 
 //---------------------------- FeatureParams --------------------------------------
 
-CvFeatureParams::CvFeatureParams() : maxCatCount( 0 )
+CvFeatureParams::CvFeatureParams() : maxCatCount( 0 ), featSize( 1 )
 {
     name = CC_FEATURE_PARAMS; 
 }
@@ -34,11 +34,13 @@ CvFeatureParams::CvFeatureParams() : maxCatCount( 0 )
 void CvFeatureParams::init( const CvFeatureParams& fp )
 {
     maxCatCount = fp.maxCatCount;
+    featSize = fp.featSize;
 }
 
 void CvFeatureParams::write( FileStorage &fs ) const
 {
     fs << CC_MAX_CAT_COUNT << maxCatCount;
+    fs << CC_FEATURE_SIZE << featSize;
 }
 
 bool CvFeatureParams::read( const FileNode &node )
@@ -46,7 +48,8 @@ bool CvFeatureParams::read( const FileNode &node )
     if ( node.empty() )
         return false;
     maxCatCount = node[CC_MAX_CAT_COUNT];
-    return maxCatCount >= 0;
+    featSize = node[CC_FEATURE_SIZE];
+    return ( maxCatCount >= 0 && featSize >= 1 );
 }
 
 Ptr<CvFeatureParams> CvFeatureParams::create( int featureType )

@@ -6,6 +6,7 @@ CvHOGFeatureParams::CvHOGFeatureParams()
 {
     maxCatCount = 0;
     name = HOGF_NAME;
+    featSize = N_BINS * N_CELLS;
 }
 
 void CvHOGEvaluator::init(const CvFeatureParams *_featureParams, int _maxSampleCount, Size _winSize)

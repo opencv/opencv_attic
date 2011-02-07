@@ -23,7 +23,7 @@ public:
         int _maxSampleCount, Size _winSize );
     virtual void setImage(const Mat& img, uchar clsLabel, int idx);
     virtual void integralHistogram( const Mat& srcImage, vector<Mat> &histogram, int nbins ) const;
-    virtual float operator()(int featureIdx, int sampleIdx) const;
+    virtual float operator()(int varIdx, int sampleIdx) const;
     virtual void writeFeatures( FileStorage &fs, const Mat& featureMap ) const;
 protected:
     virtual void generateFeatures();
@@ -33,7 +33,8 @@ protected:
     public:
         Feature();
         Feature( int offset, int x, int y, int cellW, int cellH ); 
-        float calc( const vector<Mat> & _sum, size_t y ) const;
+        float calc( const vector<Mat> &_hists, size_t y ) const;
+        float calc( const vector<Mat> &_hists, size_t y, int featComponent ) const;
         void write( FileStorage &fs ) const;
 
         Rect rect[N_CELLS]; //cells
@@ -48,9 +49,11 @@ protected:
     vector<Mat> hist;
 };
 
-inline float CvHOGEvaluator::operator()(int featureIdx, int sampleIdx) const
+inline float CvHOGEvaluator::operator()(int varIdx, int sampleIdx) const
 {
-    return features[featureIdx].calc( hist, sampleIdx); 
+    int featureIdx = varIdx / (N_BINS * N_CELLS);
+    int componentIdx = varIdx % (N_BINS * N_CELLS);
+    return features[featureIdx].calc( hist, sampleIdx, componentIdx); 
 }
 
 inline float CvHOGEvaluator::Feature::calc(const vector<Mat> &_hists, size_t y) const
@@ -90,4 +93,31 @@ inline float CvHOGEvaluator::Feature::calc(const vector<Mat> &_hists, size_t y) 
     return tt;
 }
 
-#endif
+inline float CvHOGEvaluator::Feature::calc( const vector<Mat> & _hists, size_t y, int featComponent ) const
+{
+    int vecSize = N_CELLS * N_BINS;
+    float *res = new float[vecSize];
+    float sum = 0.f;
+    float featVal;
+
+    for (int bin = 0; bin < N_BINS; bin++)
+    {
+        const float* hist = _hists[bin].ptr<float>(y);
+        for (int cell = 0; cell < N_CELLS; cell++)
+        {
+            res[9*cell + bin] = hist[fastRect[cell].p0] - hist[fastRect[cell].p1] - hist[fastRect[cell].p2] + hist[fastRect[cell].p3];
+            sum += res[9*cell + bin];
+        }
+    }
+    //L1 - normalization
+    for (int i = 0; i < vecSize; i++)
+    {
+        res[i] /= (sum + 0.001f);
+    }
+
+    featVal = res[featComponent];
+    delete [] res;
+    return featVal;
+}
+
+#endif // _OPENCV_HOGFEATURES_H_

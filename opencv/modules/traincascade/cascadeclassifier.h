@@ -45,6 +45,7 @@
 #define CC_FEATURES       FEATURES
 #define CC_FEATURE_PARAMS "featureParams"
 #define CC_MAX_CAT_COUNT  "maxCatCount"
+#define CC_FEATURE_SIZE   "featSize"
 
 #define CC_HAAR        "HAAR"
 #define CC_MODE        "mode"
