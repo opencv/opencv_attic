@@ -32,9 +32,25 @@ void CvHOGEvaluator::setImage(const Mat &img, uchar clsLabel, int idx)
     integralHistogram(img, integralHist, (int)N_BINS);
 }
 
+//void CvHOGEvaluator::writeFeatures( FileStorage &fs, const Mat& featureMap ) const
+//{
+//    _writeFeatures( features, fs, featureMap );
+//}
+
 void CvHOGEvaluator::writeFeatures( FileStorage &fs, const Mat& featureMap ) const
 {
-    _writeFeatures( features, fs, featureMap );
+    int featIdx;
+    const Mat_<int>& featureMap_ = (const Mat_<int>&)featureMap;
+    fs << FEATURES << "[";
+    for ( int fi = 0; fi < featureMap.cols; fi++ )
+        if ( featureMap_(0, fi) >= 0 )
+        {
+            fs << "{";
+            featIdx = fi / getFeatureSize();
+            features[featIdx].write( fs, fi );
+            fs << "}";
+        }
+    fs << "]";  
 }
 
 void CvHOGEvaluator::generateFeatures()
@@ -117,6 +133,16 @@ void CvHOGEvaluator::Feature::write(FileStorage &fs) const
         fs << "[:" << rect[i].x << rect[i].y << rect[i].width << rect[i].height << "]";
     }
     fs << "]";
+}
+
+void CvHOGEvaluator::Feature::write(FileStorage &fs, int varIdx) const
+{
+    int featComponent = varIdx % (N_CELLS * N_BINS);
+    int cellIdx = featComponent / N_BINS;
+    int binIdx = featComponent % N_BINS;
+
+    fs << CC_RECTS << "[:" << rect[cellIdx].x << rect[cellIdx].y << 
+        rect[cellIdx].width << rect[cellIdx].height << binIdx << "]";
 }
 
 void CvHOGEvaluator::integralHistogram(const Mat &srcImage, vector<Mat> &histogram, int nbins) const

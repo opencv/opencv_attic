@@ -36,6 +36,7 @@ protected:
         float calc( const vector<Mat> &_hists, size_t y ) const;
         float calc( const vector<Mat> &_hists, size_t y, int featComponent ) const;
         void write( FileStorage &fs ) const;
+        void write( FileStorage &fs, int varIdx ) const;
 
         Rect rect[N_CELLS]; //cells
 

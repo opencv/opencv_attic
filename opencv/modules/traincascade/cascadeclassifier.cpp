@@ -511,14 +511,15 @@ bool CvCascadeClassifier::load( const String cascadeDirName )
 
 void CvCascadeClassifier::getUsedFeaturesIdxMap( Mat& featureMap )
 {
-    featureMap.create( 1, featureEvaluator->getNumFeatures(), CV_32SC1 );
+    int varCount = featureEvaluator->getNumFeatures() * featureEvaluator->getFeatureSize();
+    featureMap.create( 1, varCount, CV_32SC1 );
     featureMap.setTo(Scalar(-1));
     
     for( vector< Ptr<CvCascadeBoost> >::const_iterator it = stageClassifiers.begin();
         it != stageClassifiers.end(); it++ )
         ((CvCascadeBoost*)((Ptr<CvCascadeBoost>)(*it)))->markUsedFeaturesInMap( featureMap );
     
-    for( int fi = 0, idx = 0; fi < featureEvaluator->getNumFeatures(); fi++ )
+    for( int fi = 0, idx = 0; fi < varCount; fi++ )
         if ( featureMap.at<int>(0, fi) >= 0 )
             featureMap.ptr<int>(0)[fi] = idx++;
 }
