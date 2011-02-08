@@ -3,7 +3,6 @@ package com.OpenCV_SAMPLE;
 import java.util.LinkedList;
 
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -12,7 +11,8 @@ import com.OpenCV_SAMPLE.jni.CVSample;
 import com.opencv.camera.CameraActivity;
 import com.opencv.camera.NativeProcessor;
 import com.opencv.camera.NativeProcessor.PoolCallback;
-import com.opencv.jni.*;
+import com.opencv.jni.Mat;
+import com.opencv.jni.image_pool;
 
 public class OpenCV_SAMPLE extends CameraActivity {
 
