@@ -47,5 +47,5 @@ private:
 
 void copyMatToBuffer(char* buffer, const cv::Mat& mat);
 void copyBufferToMat(cv::Mat& mat, const char* buffer);
-
+void RGB2BGR(const cv::Mat& in, cv::Mat& out);
 #endif

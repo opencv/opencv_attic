@@ -20,7 +20,7 @@ JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved);
 
 
 JNIEXPORT void JNICALL Java_com_opencv_jni_opencvJNI_addYUVtoPool(JNIEnv *, jclass, jlong, jobject, jbyteArray, jint,
-                                                                  jint, jint, jboolean);
+    jint, jint, jboolean);
 
 #ifdef __cplusplus
 }
@@ -36,8 +36,8 @@ JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved)
 }
 
 JNIEXPORT void JNICALL Java_com_opencv_jni_opencvJNI_addYUVtoPool(JNIEnv * env, jclass thiz, jlong ppool,
-                                                                  jobject _jpool, jbyteArray jbuffer, jint jidx,
-                                                                  jint jwidth, jint jheight, jboolean jgrey)
+    jobject _jpool, jbyteArray jbuffer, jint jidx,
+    jint jwidth, jint jheight, jboolean jgrey)
 {
   int buff_height = jheight + (jheight / 2);
   Size buff_size(jwidth, buff_height);
@@ -115,9 +115,16 @@ void image_pool::convertYUVtoColor(int i, cv::Mat& out)
   color_convert_common(buff, buff + width * height, width, height, out_buff, false);
 }
 
-void copyMatToBuffer(char* buffer, const cv::Mat& mat){
-  memcpy(buffer,mat.data,mat.rows*mat.cols*mat.step1());
+void copyMatToBuffer(char* buffer, const cv::Mat& mat)
+{
+  memcpy(buffer, mat.data, mat.rows * mat.cols * mat.step1());
 }
-void copyBufferToMat(cv::Mat& mat, const char* buffer){
-  memcpy(mat.data,buffer,mat.rows*mat.cols*mat.step1());
+void copyBufferToMat(cv::Mat& mat, const char* buffer)
+{
+  memcpy(mat.data, buffer, mat.rows * mat.cols * mat.step1());
+}
+
+void RGB2BGR(const Mat& in, Mat& out)
+{
+  cvtColor(in, out, CV_RGB2BGR);
 }

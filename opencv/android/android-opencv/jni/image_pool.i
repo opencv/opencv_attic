@@ -47,3 +47,5 @@ public:
 	void convertYUVtoColor(int i, Mat& out);
 };
 
+void RGB2BGR(const Mat& in, Mat& out);
+
