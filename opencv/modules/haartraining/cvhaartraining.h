@@ -110,6 +110,21 @@ int cvCreateTrainingSamplesFromInfo( const char* infoname, const char* vecfilena
                                      int winwidth, int winheight );
 
 /*
+ * cvCreateTrainingSamplesFromInfo
+ *
+ * Create training samples from list of images without changing and store them into .vec file
+ * infoname    - file in which marked up image descriptions are stored
+ * showsamples - if not 0 samples will be shown
+ * winwidth    - sample width
+ * winheight   - sample height
+ * num         - desired number of samples
+ * 
+ * Return number of successfully created samples
+ */
+int cvCreateTrainingSamplesFromInfoAsIs( const char* infoname, const char* vecfilename, 
+                                        int num, int showsamples, int winwidth, int winheight );
+
+/*
  * cvShowVecSamples
  *
  * Shows samples stored in .vec file

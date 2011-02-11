@@ -871,6 +871,109 @@ int cvCreateTrainingSamplesFromInfo( const char* infoname, const char* vecfilena
 }
 
 
+int cvCreateTrainingSamplesFromInfoAsIs( const char* infoname, const char* vecfilename, 
+                                        int num, int showsamples, int winwidth, int winheight )
+{
+    char fullname[PATH_MAX];
+    char* filename;
+
+    FILE* info;
+    FILE* vec;
+    IplImage* src=0;
+    int error;
+    int total;
+
+    assert( infoname != NULL );
+    assert( vecfilename != NULL );
+
+    total = 0;
+    if( !icvMkDir( vecfilename ) )
+    {
+        fprintf( stderr, "Unable to create directory hierarchy: %s\n", vecfilename );
+        return total;
+    }
+
+    info = fopen( infoname, "r" );
+    if( info == NULL )
+    {
+        fprintf( stderr, "Unable to open file: %s\n", infoname );
+        return total;
+    }
+
+    vec = fopen( vecfilename, "wb" );
+    if( vec == NULL )
+    {
+        fprintf( stderr, "Unable to open file: %s\n", vecfilename );
+        fclose( info );
+        return total;
+    }
+
+    src = cvCreateImage( cvSize( winwidth, winheight ), IPL_DEPTH_8U, 1 );
+
+    icvWriteVecHeader( vec, num, src->width, src->height );
+
+    if( showsamples )
+    {
+        cvNamedWindow( "Sample", CV_WINDOW_AUTOSIZE );
+    }
+
+    strcpy( fullname, infoname );
+    filename = strrchr( fullname, '\\' );
+    if( filename == NULL )
+    {
+        filename = strrchr( fullname, '/' );
+    }
+    if( filename == NULL )
+    {
+        filename = fullname;
+    }
+    else
+    {
+        filename++;
+    }
+
+    for(error = 0, total = 0; total < num ; total++ )
+    {
+        error = ( fscanf( info, "%s", filename ) != 1 );
+        if( !error )
+        {
+            src = cvLoadImage( fullname, 0 );
+            error = ( src == NULL );
+            if( error )
+            {
+                fprintf( stderr, "Unable to open image: %s\n", fullname );
+            }
+        }
+        else
+        {
+            fprintf( stderr, "%s(%d) : parse error", infoname, total );
+            break;
+        }
+
+        if( showsamples )
+        {
+            cvShowImage( "Sample", src );
+            if( cvWaitKey( 0 ) == 27 )
+            {
+                showsamples = 0;
+            }
+        }
+        icvWriteVecSample( vec, src );
+
+        if( src )
+        {
+            cvReleaseImage( &src );
+        }
+
+    }
+
+    fclose( vec );
+    fclose( info );
+
+    return total;
+}
+
+
 void cvShowVecSamples( const char* filename, int winwidth, int winheight,
                        double scale )
 {

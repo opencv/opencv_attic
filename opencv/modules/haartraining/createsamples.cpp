@@ -223,7 +223,9 @@ int main( int argc, char* argv[] )
 
         printf( "Create training samples from images collection...\n" );
 
-        total = cvCreateTrainingSamplesFromInfo( infoname, vecname, num, showsamples,
+        //total = cvCreateTrainingSamplesFromInfo( infoname, vecname, num, showsamples,
+        //                                         width, height );
+        total = cvCreateTrainingSamplesFromInfoAsIs( infoname, vecname, num, showsamples,
                                                  width, height );
 
         printf( "Done. Created %d samples\n", total );

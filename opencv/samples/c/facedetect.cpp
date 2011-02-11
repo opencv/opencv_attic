@@ -29,9 +29,6 @@ void detectAndDraw( Mat& img,
 
 String cascadeName = "../../data/haarcascades/haarcascade_frontalface_alt.xml";
 String nestedCascadeName = "../../data/haarcascades/haarcascade_eye_tree_eyeglasses.xml";
-//String nestedCascadeName =
-//"../../data/haarcascades/haarcascade_eye_tree_eyeglasses.xml";
-
 
 int main( int argc, const char** argv )
 {
@@ -43,8 +40,7 @@ int main( int argc, const char** argv )
     size_t cascadeOptLen = cascadeOpt.length();
     const String nestedCascadeOpt = "--nested-cascade";
     size_t nestedCascadeOptLen = nestedCascadeOpt.length();
-    //String inputName;
-    String inputName = "E:/OpenCVs/OpenCV_last(Build)/data/Sfc1971.jpg";
+    String inputName;
 
     help();
 
