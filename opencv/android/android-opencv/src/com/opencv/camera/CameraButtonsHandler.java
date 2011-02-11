@@ -13,6 +13,17 @@ public class CameraButtonsHandler {
 	 * @param a The activity that has inflated the com.opencv.R.layout.camera
 	 * as its layout.
 	 */
+	public CameraButtonsHandler(Activity a, CaptureListener l) {
+		ImageButton capture = (ImageButton) a
+				.findViewById(com.opencv.R.id.button_capture);
+		ImageButton settings = (ImageButton) a
+				.findViewById(com.opencv.R.id.button_camera_settings);
+		capture.setOnClickListener(capture_listener);
+		settings.setOnClickListener(settings_listener);
+		captureListener = l;
+		ctx = a;
+	}
+	
 	public CameraButtonsHandler(Activity a) {
 		ImageButton capture = (ImageButton) a
 				.findViewById(com.opencv.R.id.button_capture);
@@ -22,6 +33,7 @@ public class CameraButtonsHandler {
 		settings.setOnClickListener(settings_listener);
 		ctx = a;
 	}
+	
 	
 	/** Check if the capture button has been pressed
 	 * @return true if the capture button has been pressed
@@ -42,6 +54,9 @@ public class CameraButtonsHandler {
 	 */
 	synchronized public void setIsCapture(boolean isCapture){
 		capture_flag = isCapture;
+		if(capture_flag && captureListener != null){
+			captureListener.onCapture();
+		}
 	}
 	
 	private OnClickListener capture_listener = new View.OnClickListener() {
@@ -58,6 +73,11 @@ public class CameraButtonsHandler {
 			ctx.startActivity(configurer);
 		}
 	};
+
+	interface CaptureListener{
+		public void onCapture();
+	}
+	private CaptureListener captureListener;
 	private Context ctx;		
 	private boolean capture_flag = false;
 }

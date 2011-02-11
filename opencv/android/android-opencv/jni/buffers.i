@@ -51,7 +51,7 @@
     return $jnicall;
 }
 %typemap(in) CTYPE* LABEL {
-  $1 = (*jenv)->GetDirectBufferAddress(jenv, $input);
+  $1 = (CTYPE*)(jenv)->GetDirectBufferAddress( $input);
   if ($1 == NULL) {
     SWIG_JavaThrowException(jenv, SWIG_JavaRuntimeException, "Unable to get address of direct buffer. Buffer must be allocated direct.");
   }
@@ -92,7 +92,7 @@ NIO_BUFFER_TYPEMAP(double, BUFF, java.nio.DoubleBuffer);
     return $jnicall;
 }
 %typemap(in) CTYPE* INBUFF {
-  $1 = (*jenv)->GetDirectBufferAddress(jenv, $input);
+  $1 = (jenv)->GetDirectBufferAddress($input);
   if ($1 == NULL) {
     SWIG_JavaThrowException(jenv, SWIG_JavaRuntimeException, "Unable to get address of direct buffer. Buffer must be allocated direct.");
   }
@@ -116,7 +116,7 @@ NIO_BUFFER_TYPEMAP(double, BUFF, java.nio.DoubleBuffer);
     return $jnicall;
 }
 %typemap(in) CTYPE* OUTBUFF {
-  $1 = (*jenv)->GetDirectBufferAddress(jenv, $input);
+  $1 = (jenv)->GetDirectBufferAddress( $input);
   if ($1 == NULL) {
     SWIG_JavaThrowException(jenv, SWIG_JavaRuntimeException, "Unable to get address of direct buffer. Buffer must be allocated direct.");
   }
@@ -147,7 +147,7 @@ UNSIGNED_NIO_BUFFER_TYPEMAP(unsigned long, 4, java.nio.LongBuffer, permafrost.hd
     return $jnicall;
 }
 %typemap(in) unsigned char* BUFF {
-  $1 = (*jenv)->GetDirectBufferAddress(jenv, $input);
+  $1 = (const char*)(jenv)->GetDirectBufferAddress( $input);
   if ($1 == NULL) {
     SWIG_JavaThrowException(jenv, SWIG_JavaRuntimeException, "Unable to get address of direct buffer. Buffer must be allocated direct.");
   }

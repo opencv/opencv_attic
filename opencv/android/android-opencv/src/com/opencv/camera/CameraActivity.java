@@ -11,9 +11,10 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.LinearLayout;
 
+import com.opencv.camera.CameraButtonsHandler.CaptureListener;
 import com.opencv.opengl.GL2CameraViewer;
 
-public abstract class CameraActivity extends Activity {
+public abstract class CameraActivity extends Activity implements CaptureListener {
 
 	/** Called when the activity is first created. */
 	@Override
@@ -23,10 +24,10 @@ public abstract class CameraActivity extends Activity {
 		setOrientation();
 		disableScreenTurnOff();
 		setContentView(com.opencv.R.layout.camera);
-		cameraButtonHandler = new CameraButtonsHandler(this);
+		cameraButtonHandler = new CameraButtonsHandler(this,this);
 		mPreview = (NativePreviewer) findViewById(com.opencv.R.id.nativepreviewer);
 		LinearLayout glview_layout = (LinearLayout) findViewById(com.opencv.R.id.glview_layout);
-		glview = new GL2CameraViewer(getApplication(), false, 0, 0);
+		glview = new GL2CameraViewer(getApplication(), true, 0, 0);
 		glview_layout.addView(glview);
 	}
 
@@ -117,6 +118,9 @@ public abstract class CameraActivity extends Activity {
 	 * @return null for default drawing
 	 */
 	protected abstract LinkedList<NativeProcessor.PoolCallback> getCallBackStack();
+	public void onCapture(){
+		
+	}
 
 	protected NativePreviewer mPreview;
 	protected GL2CameraViewer glview;

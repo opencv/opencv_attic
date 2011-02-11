@@ -44,5 +44,6 @@ public:
 	Mat getGrey(int i);
 	Mat getImage(int i);
 	void addImage(int i, Mat mat);
+	void convertYUVtoColor(int i, Mat& out);
 };
 

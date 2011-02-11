@@ -44,4 +44,8 @@ private:
   std::map<int, cv::Mat> yuvImagesMap;
 
 };
+
+void copyMatToBuffer(char* buffer, const cv::Mat& mat);
+void copyBufferToMat(cv::Mat& mat, const char* buffer);
+
 #endif

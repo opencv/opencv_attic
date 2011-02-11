@@ -6,6 +6,7 @@
 
 #include <opencv2/imgproc/imgproc.hpp>
 
+#include <cstdlib>
 #include <jni.h>
 #ifdef __cplusplus
 extern "C"
@@ -112,4 +113,11 @@ void image_pool::convertYUVtoColor(int i, cv::Mat& out)
   const unsigned char* buff = yuv.ptr<unsigned char> (0);
   unsigned char* out_buff = out.ptr<unsigned char> (0);
   color_convert_common(buff, buff + width * height, width, height, out_buff, false);
+}
+
+void copyMatToBuffer(char* buffer, const cv::Mat& mat){
+  memcpy(buffer,mat.data,mat.rows*mat.cols*mat.step1());
+}
+void copyBufferToMat(cv::Mat& mat, const char* buffer){
+  memcpy(mat.data,buffer,mat.rows*mat.cols*mat.step1());
 }
