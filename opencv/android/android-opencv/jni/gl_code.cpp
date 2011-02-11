@@ -197,7 +197,9 @@ GLuint glcamera::createProgram(const char* pVertexSource, const char* pFragmentS
   return 0;
 #endif
 }
-
+void  glcamera::clear(){
+  nimg = Mat();
+}
 //GLuint textureID;
 
 bool glcamera::setupGraphics(int w, int h)

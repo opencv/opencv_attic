@@ -22,7 +22,10 @@ public:
   void step();
 
   void drawMatToGL(int idx, image_pool* pool);
+  void drawMatToGL(const cv::Mat& img);
   void setTextureImage(const cv::Mat& img);
+
+  void clear();
 
 private:
   GLuint createSimpleTexture2D(GLuint _textureid, GLubyte* pixels, int width, int height, int channels);

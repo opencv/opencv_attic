@@ -39,5 +39,6 @@ public:
      void init(int width, int height);
      void step();
      void drawMatToGL(int idx, image_pool* pool);
+     void clear();
 };
 

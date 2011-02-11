@@ -361,6 +361,12 @@ public class GL2CameraViewer extends GLSurfaceView{
     	else
     		Log.e("android-opencv", "null glcamera!!!!");
     }
+    public void clear(){
+    	if(mglcamera != null)
+    		mglcamera.clear();
+    	else
+    		Log.e("android-opencv", "null glcamera!!!!");
+    }
     
     private class Renderer implements GLSurfaceView.Renderer {
     	
