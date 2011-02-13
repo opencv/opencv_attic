@@ -57,7 +57,7 @@ LINK_DIRECTORIES(${OpenCV_LIB_DIR})
 if(NOT ANDROID)
   set(OPENCV_LIB_COMPONENTS opencv_core opencv_imgproc opencv_features2d opencv_gpu opencv_calib3d opencv_objdetect opencv_video opencv_highgui opencv_ml opencv_legacy opencv_contrib opencv_flann)
 else()
-  set(OPENCV_LIB_COMPONENTS opencv_calib3d opencv_features2d opencv_objdetect opencv_imgproc opencv_video  opencv_highgui opencv_ml opencv_legacy  opencv_flann opencv_core )
+  set(OPENCV_LIB_COMPONENTS opencv_calib3d opencv_objdetect opencv_features2d opencv_imgproc opencv_video  opencv_highgui opencv_ml opencv_legacy  opencv_flann opencv_core )
 endif()
 
 SET(OpenCV_LIBS "")

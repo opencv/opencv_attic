@@ -20,11 +20,10 @@ if(PYTHONLIBS_FOUND AND BUILD_NEW_PYTHON_SUPPORT)
 endif()
 
 add_subdirectory(video)
-
+add_subdirectory(traincascade)
+add_subdirectory(haartraining)
 if(NOT ANDROID)
 add_subdirectory(gtest)
-add_subdirectory(haartraining)
-add_subdirectory(traincascade)
 add_subdirectory(gpu)
 endif()
 
