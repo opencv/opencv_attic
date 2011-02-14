@@ -253,6 +253,8 @@ void groupRectangles_meanshift(vector<Rect>& rectList, vector<double>& foundWeig
 #define CC_LBP  "LBP"
 #define CC_RECT "rect"
 
+#define CC_HOG  "HOG"
+
 #define CV_SUM_PTRS( p0, p1, p2, p3, sum, rect, step )                    \
     /* (x, y) */                                                          \
     (p0) = sum + (rect).x + (step) * (rect).y,                            \
@@ -527,7 +529,7 @@ public:
         
         int calc( int offset ) const;
         void updatePtrs( const Mat& sum );
-        bool read(const FileNode& node );
+        bool read( const FileNode& node );
         
         Rect rect; // weight and height for block
         const int* p[16]; // fast
@@ -664,11 +666,108 @@ bool LBPEvaluator::setWindow( Point pt )
     return true;
 }
 
-Ptr<FeatureEvaluator> FeatureEvaluator::create(int featureType)
+//---------------------------------------------- HOGEvaluator -------------------------------------------
+
+class HOGEvaluator : public FeatureEvaluator
+{
+public:
+    struct Feature
+    {
+        Feature();
+        float calc( int offset, int featComponent ) const;
+        void updatePtrs( const Mat& sum );
+        bool read( const FileNode& node );  
+
+        enum { CELL_NUM = 4, BIN_NUM = 9 };
+
+        Rect rect[CELL_NUM];
+
+        const int* p[CELL_NUM][4];
+    };
+
+    HOGEvaluator();
+    virtual ~HOGEvaluator();
+
+    virtual bool read( const FileNode& node );
+
+private:
+    Size origWinSize;
+    Ptr<vector<Feature>> features;
+    Feature* featurePtr;
+    Mat sum;
+
+    int offset;
+};
+
+inline HOGEvaluator::Feature :: Feature()
+{
+    rect[0] = rect[1] = rect[2] = rect[3] = Rect();
+    p[0][0] = p[0][1] = p[0][2] = p[0][3] = 
+        p[1][0] = p[1][1] = p[1][2] = p[1][3] = 
+        p[2][0] = p[2][1] = p[2][2] = p[2][3] = 
+        p[3][0] = p[3][1] = p[3][2] = p[3][3] = 0;
+}
+
+float HOGEvaluator::Feature :: calc( int offset, int featComponent ) const
+{
+    int vecSize = CELL_NUM * BIN_NUM;
+    float *res = new float[vecSize];
+    float sum = 0.f;
+    float featVal;
+
+    for (int bin = 0; bin < BIN_NUM; bin++)
+    {
+        for (int cell = 0; cell < CELL_NUM; cell++)
+        {
+            res[9*cell + bin] = CALC_SUM(p[CELL_NUM], offset);
+            sum += res[9*cell + bin];
+        }
+    }
+    //L1 - normalization
+    for (int i = 0; i < vecSize; i++)
+    {
+        res[i] /= (sum + 0.001f);
+    }
+
+    featVal = res[featComponent];
+    delete [] res;
+    return featVal;
+}
+
+void HOGEvaluator::Feature :: updatePtrs( const Mat &sum )
+{
+    ;
+}
+
+bool HOGEvaluator::Feature :: read( const FileNode& node )
+{
+    return true;
+}
+
+HOGEvaluator::HOGEvaluator()
+{
+    features = new vector<Feature>();
+}
+
+HOGEvaluator::~HOGEvaluator()
+{
+}
+
+bool HOGEvaluator::read( const FileNode& node )
+{
+    return true;
+}
+
+
+
+
+Ptr<FeatureEvaluator> FeatureEvaluator::create( int featureType )
 {
     return featureType == HAAR ? Ptr<FeatureEvaluator>(new HaarEvaluator) :
-        featureType == LBP ? Ptr<FeatureEvaluator>(new LBPEvaluator) : Ptr<FeatureEvaluator>();
-}
+        featureType == LBP ? Ptr<FeatureEvaluator>(new LBPEvaluator) : 
+        featureType == HOG ? Ptr<FeatureEvaluator>(new HOGEvaluator) :
+        Ptr<FeatureEvaluator>();
+}            
     
 //---------------------------------------- Classifier Cascade --------------------------------------------
 
@@ -1040,6 +1139,8 @@ bool CascadeClassifier::Data::read(const FileNode &root)
         featureType = FeatureEvaluator::HAAR;
     else if( featureTypeStr == CC_LBP )
         featureType = FeatureEvaluator::LBP;
+    else if( featureTypeStr == CC_HOG )
+        featureType = FeatureEvaluator::HOG;
     else
         return false;
 
@@ -1056,7 +1157,7 @@ bool CascadeClassifier::Data::read(const FileNode &root)
 
     ncategories = fn[CC_MAX_CAT_COUNT];
     int subsetSize = (ncategories + 31)/32,
-        nodeStep = 3 + ( ncategories>0 ? subsetSize : 1 );
+        nodeStep = 3 + ( ncategories > 0 ? subsetSize : 1 );
 
     // load stages
     fn = root[CC_STAGES];

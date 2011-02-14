@@ -311,7 +311,7 @@ protected:
 class CV_EXPORTS FeatureEvaluator
 {
 public:    
-    enum { HAAR = 0, LBP = 1 };
+    enum { HAAR = 0, LBP = 1, HOG = 2 };
     virtual ~FeatureEvaluator();
 
     virtual bool read(const FileNode& node);

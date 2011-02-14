@@ -72,7 +72,7 @@ protected:
 inline float CvHaarEvaluator::operator()(int featureIdx, int sampleIdx) const
 {
     float nf = normfactor.at<float>(0, sampleIdx);
-    return !nf ? 0.0f : (features[featureIdx].calc( sum, tilted, sampleIdx)/nf); 
+    return !nf ? 0.0f : (features[featureIdx].calc( sum, tilted, sampleIdx) / nf); 
 }
 
 inline float CvHaarEvaluator::Feature::calc( const Mat &_sum, const Mat &_tilted, size_t y) const
