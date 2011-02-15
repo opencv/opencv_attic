@@ -174,15 +174,26 @@ void CvHOGEvaluator::Feature::write(FileStorage &fs) const
     fs << "]";
 }
 
+//cell and bin idx writing
+//void CvHOGEvaluator::Feature::write(FileStorage &fs, int varIdx) const
+//{
+//    int featComponent = varIdx % (N_CELLS * N_BINS);
+//    int cellIdx = featComponent / N_BINS;
+//    int binIdx = featComponent % N_BINS;
+//
+//    fs << CC_RECTS << "[:" << rect[cellIdx].x << rect[cellIdx].y << 
+//        rect[cellIdx].width << rect[cellIdx].height << binIdx << "]";
+//}
+
+//cell[0] and featComponent idx writing. By cell[0] it's possible to recover all block
+//All block is nessesary for block normalization
 void CvHOGEvaluator::Feature::write(FileStorage &fs, int varIdx) const
 {
     int featComponent = varIdx % (N_CELLS * N_BINS);
-    int cellIdx = featComponent / N_BINS;
-    int binIdx = featComponent % N_BINS;
-
-    fs << CC_RECTS << "[:" << rect[cellIdx].x << rect[cellIdx].y << 
-        rect[cellIdx].width << rect[cellIdx].height << binIdx << "]";
+    fs << CC_RECTS << "[:" << rect[0].x << rect[0].y << 
+        rect[0].width << rect[0].height << featComponent << "]";
 }
+
 
 void CvHOGEvaluator::integralHistogram(const Mat &srcImage, vector<Mat> &histogram, int nbins) const
 {

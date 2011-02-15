@@ -21,13 +21,12 @@ public:
     virtual ~CvHOGEvaluator() {}
     virtual void init(const CvFeatureParams *_featureParams,
         int _maxSampleCount, Size _winSize );
-    virtual void setImage(const Mat& img, uchar clsLabel, int idx);
-    virtual void integralHistogram( const Mat& srcImage, vector<Mat> &histogram, int nbins ) const;
+    virtual void setImage(const Mat& img, uchar clsLabel, int idx);    
     virtual float operator()(int varIdx, int sampleIdx) const;
     virtual void writeFeatures( FileStorage &fs, const Mat& featureMap ) const;
 protected:
     virtual void generateFeatures();
-
+    virtual void integralHistogram( const Mat& srcImage, vector<Mat> &histogram, int nbins ) const;
     class Feature
     {
     public:
@@ -106,8 +105,8 @@ inline float CvHOGEvaluator::Feature::calc( const vector<Mat> & _hists, size_t y
         const float* hist = _hists[bin].ptr<float>(y);
         for (int cell = 0; cell < N_CELLS; cell++)
         {
-            res[9*cell + bin] = hist[fastRect[cell].p0] - hist[fastRect[cell].p1] - hist[fastRect[cell].p2] + hist[fastRect[cell].p3];
-            sum += res[9*cell + bin];
+            res[N_BINS*cell + bin] = hist[fastRect[cell].p0] - hist[fastRect[cell].p1] - hist[fastRect[cell].p2] + hist[fastRect[cell].p3];
+            sum += res[N_BINS*cell + bin];
         }
     }
     //L1 - normalization

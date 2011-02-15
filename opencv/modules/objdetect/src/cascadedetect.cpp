@@ -674,27 +674,46 @@ public:
     struct Feature
     {
         Feature();
-        float calc( int offset, int featComponent ) const;
-        void updatePtrs( const Mat& sum );
+        //float calc( int offset, int featComponent ) const;
+        float calc( int offset ) const;
+        
+        void updatePtrs( const vector<Mat>& _hist );
         bool read( const FileNode& node );  
 
         enum { CELL_NUM = 4, BIN_NUM = 9 };
 
         Rect rect[CELL_NUM];
+        int featComponent; //component index from 0 to 35
 
-        const int* p[CELL_NUM][4];
+        const float* p[CELL_NUM * BIN_NUM][4];
     };
 
     HOGEvaluator();
     virtual ~HOGEvaluator();
 
     virtual bool read( const FileNode& node );
+    virtual Ptr<FeatureEvaluator> clone() const;
+    virtual int getFeatureType() const { return FeatureEvaluator::HOG; }
+
+    virtual bool setImage( const Mat& image, Size winSize );
+    virtual bool setWindow( Point pt );
+
+    double operator()(int featureIdx) const
+    {
+        return featuresPtr[featureIdx].calc(offset);
+    }
+    virtual double calcOrd( int featureIdx ) const
+    {
+        return (*this)(featureIdx);
+    }
 
 private:
+    virtual void integralHistogram( const Mat& srcImage, vector<Mat> &histogram, int nbins ) const;
+
     Size origWinSize;
     Ptr<vector<Feature>> features;
-    Feature* featurePtr;
-    Mat sum;
+    Feature* featuresPtr;
+    vector<Mat> hist;
 
     int offset;
 };
@@ -702,45 +721,59 @@ private:
 inline HOGEvaluator::Feature :: Feature()
 {
     rect[0] = rect[1] = rect[2] = rect[3] = Rect();
-    p[0][0] = p[0][1] = p[0][2] = p[0][3] = 
-        p[1][0] = p[1][1] = p[1][2] = p[1][3] = 
-        p[2][0] = p[2][1] = p[2][2] = p[2][3] = 
-        p[3][0] = p[3][1] = p[3][2] = p[3][3] = 0;
+    for( int i = 0; i < CELL_NUM * BIN_NUM; i++ )
+        p[i][0] = p[i][1] = p[i][2] = p[i][3] = 0; 
+    featComponent = 0;
 }
 
-float HOGEvaluator::Feature :: calc( int offset, int featComponent ) const
+float HOGEvaluator::Feature :: calc( int offset ) const
 {
     int vecSize = CELL_NUM * BIN_NUM;
     float *res = new float[vecSize];
     float sum = 0.f;
     float featVal;
 
-    for (int bin = 0; bin < BIN_NUM; bin++)
+    for( int i = 0; i < vecSize; i++ )
     {
-        for (int cell = 0; cell < CELL_NUM; cell++)
-        {
-            res[9*cell + bin] = CALC_SUM(p[CELL_NUM], offset);
-            sum += res[9*cell + bin];
-        }
+        res[i] = CALC_SUM(p[i], offset);
+        sum += res[i];
     }
-    //L1 - normalization
-    for (int i = 0; i < vecSize; i++)
-    {
-        res[i] /= (sum + 0.001f);
-    }
+    //L1 - normalization of necessary component
+    featVal = res[featComponent] / (sum + 0.001f);
 
-    featVal = res[featComponent];
     delete [] res;
     return featVal;
 }
 
-void HOGEvaluator::Feature :: updatePtrs( const Mat &sum )
+void HOGEvaluator::Feature :: updatePtrs( const vector<Mat>& _hist )
 {
-    ;
+    const float* ptr;
+    size_t step = _hist[0].step / sizeof(ptr[0]);
+    int idx;
+    for( int bin = 0; bin < BIN_NUM; bin++ )
+    {
+        ptr = (const float*)_hist[bin].data;
+        for( int cell = 0; cell < CELL_NUM; cell++ )
+        {
+            idx = cell * BIN_NUM + bin;
+            CV_SUM_PTRS( p[idx][0], p[idx][1], p[idx][2], p[idx][3], ptr, rect[idx], step );
+        }
+    }
 }
 
 bool HOGEvaluator::Feature :: read( const FileNode& node )
 {
+    FileNode rnode = node[CC_RECT];
+    FileNodeIterator it = rnode.begin();
+    it >> rect[0].x >> rect[0].y >> rect[0].width >> rect[0].height >> featComponent;
+    rect[1].x = rect[0].x + rect[0].width;
+    rect[1].y = rect[0].y;
+    rect[2].x = rect[0].x;
+    rect[2].y = rect[0].y + rect[0].height;
+    rect[3].x = rect[0].x + rect[0].width;
+    rect[3].y = rect[0].y + rect[0].height;
+    rect[1].width = rect[2].width = rect[3].width = rect[0].width;
+    rect[1].height = rect[2].height = rect[3].height = rect[0].height;
     return true;
 }
 
@@ -755,11 +788,146 @@ HOGEvaluator::~HOGEvaluator()
 
 bool HOGEvaluator::read( const FileNode& node )
 {
+    features->resize(node.size());
+    featuresPtr = &(*features)[0];
+    FileNodeIterator it = node.begin(), it_end = node.end();
+    for(int i = 0; it != it_end; ++it, i++)
+    {
+        if(!featuresPtr[i].read(*it))
+            return false;
+    }
     return true;
 }
 
+Ptr<FeatureEvaluator> HOGEvaluator::clone() const
+{
+    HOGEvaluator* ret = new HOGEvaluator;
+    ret->origWinSize = origWinSize;
+    ret->features = features;
+    ret->featuresPtr = &(*ret->features)[0];//??????
+    ret->offset = offset;
+    ret->hist = hist; //??????
+    return ret;
+}
 
+bool HOGEvaluator::setImage( const Mat& image, Size winSize )
+{
+    int rows = image.rows + 1;
+    int cols = image.cols + 1;
+    origWinSize = winSize;
 
+    if( image.cols < origWinSize.width || image.rows < origWinSize.height )
+        return false;
+    for( int bin = 0; bin < Feature::BIN_NUM; bin++ )
+    {
+        hist.push_back( Mat(rows, cols, CV_32FC1) );
+    }
+
+    integralHistogram( image, hist, Feature::BIN_NUM );
+
+    size_t featIdx;
+    size_t featCount = features->size();
+
+    for( featIdx = 0; featIdx < featCount; featIdx++ )
+    {
+        featuresPtr[featIdx].updatePtrs( hist );
+    }
+    return true;
+}
+
+bool HOGEvaluator::setWindow(Point pt)
+{
+    if( pt.x < 0 || pt.y < 0 ||
+        pt.x + origWinSize.width >= hist[0].cols-2 ||
+        pt.y + origWinSize.height >= hist[0].rows-2 )
+        return false;
+    offset = pt.y * ((int)hist[0].step/sizeof(float)) + pt.x;
+    return true;
+}
+
+//double HOGEvaluator::operator()(int featureIdx) const
+//{
+//    int _featComponent = featureIdx % (Feature::CELL_NUM * Feature::BIN_NUM);
+//    return featuresPtr[featureIdx].calc(offset, _featComponent);
+//}
+
+void HOGEvaluator::integralHistogram(const Mat &srcImage, vector<Mat> &histogram, int nbins) const
+{
+    int x, y, ch;
+
+    Mat src;
+
+    Mat Dx(srcImage.rows, srcImage.cols, CV_32F);
+    Mat Dy(srcImage.rows, srcImage.cols, CV_32F);
+    Mat Mag(srcImage.rows, srcImage.cols, CV_32F);
+    Mat Angle(srcImage.rows, srcImage.cols, CV_32F);
+    Mat Bins(srcImage.rows, srcImage.cols, CV_8S);
+
+    //Adding borders for correct gradient computation
+    copyMakeBorder(srcImage, src, 1, 1, 1, 1, BORDER_REPLICATE);
+
+    //Differential computing along both dimensions
+    for (y = 1; y < src.rows - 1; y++)
+    {
+        for (x = 1; x < src.cols - 1; x++)
+        {
+            Dx.at<float>(y-1, x-1) = (float)(src.at<uchar>(y, x+1) - src.at<uchar>(y, x-1));
+            Dy.at<float>(y-1, x-1) = (float)(src.at<uchar>(y+1, x) - src.at<uchar>(y-1, x));
+        }
+    }
+    //Computing of magnitudes and angles for all vectors
+    cartToPolar(Dx, Dy, Mag, Angle);
+
+    //Angles adjusting for 9 bins
+    float angleScale = (float)(nbins / CV_PI);
+    float angle;
+    int bidx;
+    for (y = 0; y < Angle.rows; y++)
+    {
+        for (x = 0; x < Angle.cols; x++)
+        {
+            angle = Angle.at<float>(y,x)*angleScale - 0.5f;
+            bidx = cvFloor(angle);
+
+            angle -= bidx;
+            if (bidx < 0)
+            {
+                bidx += nbins;
+            }
+            else if (bidx >= nbins)
+            {
+                bidx -= nbins;
+            }
+            Bins.at<char>(y,x) = (char)bidx;
+        }
+    }
+
+    //Creating integral HoG
+    int matIdx;
+    for (ch = 0; ch < nbins; ch++)
+    {
+        for (int i = 0; i < histogram[ch].cols; i++)
+        {
+            histogram[ch].at<float>(0, i) = 0.f;
+            histogram[ch].at<float>(i, 0) = 0.f;
+        }
+        
+    }
+    for (y = 1; y <= Bins.rows; y++)
+    {
+        Mat strSums(1, nbins, CV_32F, .0f); //суммы элементов (магнитуд) в y-ой строке для всех 9 матриц
+        for (x = 1; x <= Bins.cols; x++)
+        {
+            matIdx = Bins.at<char>(y-1,x-1); //индекс матрицы в которую надо положить рассматриваемый элемент
+            strSums.at<float>(matIdx) += Mag.at<float>(y-1,x-1);
+            for (ch=0; ch<nbins; ch++)
+            {
+                float elem = histogram[ch].at<float>(y-1,x) + strSums.at<float>(ch);
+                histogram[ch].at<float>(y,x) = elem;
+            }
+        }
+    }
+}
 
 Ptr<FeatureEvaluator> FeatureEvaluator::create( int featureType )
 {
