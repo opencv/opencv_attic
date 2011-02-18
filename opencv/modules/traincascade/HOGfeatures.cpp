@@ -40,6 +40,7 @@ void CvHOGEvaluator::setImage(const Mat &img, uchar clsLabel, int idx)
 void CvHOGEvaluator::writeFeatures( FileStorage &fs, const Mat& featureMap ) const
 {
     int featIdx;
+    int componentIdx;
     const Mat_<int>& featureMap_ = (const Mat_<int>&)featureMap;
     fs << FEATURES << "[";
     for ( int fi = 0; fi < featureMap.cols; fi++ )
@@ -47,7 +48,8 @@ void CvHOGEvaluator::writeFeatures( FileStorage &fs, const Mat& featureMap ) con
         {
             fs << "{";
             featIdx = fi / getFeatureSize();
-            features[featIdx].write( fs, fi );
+            componentIdx = fi % getFeatureSize();
+            features[featIdx].write( fs, componentIdx );
             fs << "}";
         }
     fs << "]";  
@@ -187,11 +189,10 @@ void CvHOGEvaluator::Feature::write(FileStorage &fs) const
 
 //cell[0] and featComponent idx writing. By cell[0] it's possible to recover all block
 //All block is nessesary for block normalization
-void CvHOGEvaluator::Feature::write(FileStorage &fs, int varIdx) const
+void CvHOGEvaluator::Feature::write(FileStorage &fs, int featComponentIdx) const
 {
-    int featComponent = varIdx % (N_CELLS * N_BINS);
-    fs << CC_RECTS << "[:" << rect[0].x << rect[0].y << 
-        rect[0].width << rect[0].height << featComponent << "]";
+    fs << CC_RECT << "[:" << rect[0].x << rect[0].y << 
+        rect[0].width << rect[0].height << featComponentIdx << "]";
 }
 
 
@@ -256,11 +257,9 @@ void CvHOGEvaluator::integralHistogram(const Mat &srcImage, vector<Mat> &histogr
     for (ch = 0; ch < nbins; ch++)
     {
         for (int i = 0; i < histogram[ch].cols; i++)
-        {
-            histogram[ch].at<float>(0, i) = 0.f;
-            histogram[ch].at<float>(i, 0) = 0.f;
-        }
-        
+            histogram[ch].at<float>(0, i) = 0.f; 
+        for (int i = 0; i < histogram[ch].rows; i++)
+            histogram[ch].at<float>(i, 0) = 0.f; 
     }
     for (y = 1; y <= Bins.rows; y++)
     {

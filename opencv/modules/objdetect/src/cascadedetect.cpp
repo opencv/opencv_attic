@@ -756,12 +756,13 @@ void HOGEvaluator::Feature :: updatePtrs( const vector<Mat>& _hist )
         for( int cell = 0; cell < CELL_NUM; cell++ )
         {
             idx = cell * BIN_NUM + bin;
-            CV_SUM_PTRS( p[idx][0], p[idx][1], p[idx][2], p[idx][3], ptr, rect[idx], step );
+            CV_SUM_PTRS( p[idx][0], p[idx][1], p[idx][2], p[idx][3], ptr, rect[cell], step );
         }
     }
 }
 
 bool HOGEvaluator::Feature :: read( const FileNode& node )
+
 {
     FileNode rnode = node[CC_RECT];
     FileNodeIterator it = rnode.begin();
@@ -828,6 +829,8 @@ bool HOGEvaluator::setImage( const Mat& image, Size winSize )
     size_t featIdx;
     size_t featCount = features->size();
 
+    //featuresPtr[93].updatePtrs( hist );
+    //featuresPtr[94].updatePtrs( hist );
     for( featIdx = 0; featIdx < featCount; featIdx++ )
     {
         featuresPtr[featIdx].updatePtrs( hist );
@@ -907,11 +910,9 @@ void HOGEvaluator::integralHistogram(const Mat &srcImage, vector<Mat> &histogram
     for (ch = 0; ch < nbins; ch++)
     {
         for (int i = 0; i < histogram[ch].cols; i++)
-        {
-            histogram[ch].at<float>(0, i) = 0.f;
+            histogram[ch].at<float>(0, i) = 0.f; 
+        for (int i = 0; i < histogram[ch].rows; i++)
             histogram[ch].at<float>(i, 0) = 0.f;
-        }
-        
     }
     for (y = 1; y <= Bins.rows; y++)
     {
@@ -1120,16 +1121,48 @@ int CascadeClassifier::runAt( Ptr<FeatureEvaluator>& featureEvaluator, Point pt 
 {
     CV_Assert( oldCascade.empty() );
         
-    assert(data.featureType == FeatureEvaluator::HAAR ||
-           data.featureType == FeatureEvaluator::LBP);
+    assert( data.featureType == FeatureEvaluator::HAAR ||
+            data.featureType == FeatureEvaluator::LBP ||
+            data.featureType == FeatureEvaluator::HOG );
 
-    return !featureEvaluator->setWindow(pt) ? -1 :
-                data.isStumpBased ? ( data.featureType == FeatureEvaluator::HAAR ?
-                    predictOrderedStump<HaarEvaluator>( *this, featureEvaluator ) :
-                    predictCategoricalStump<LBPEvaluator>( *this, featureEvaluator ) ) :
-                                 ( data.featureType == FeatureEvaluator::HAAR ?
-                    predictOrdered<HaarEvaluator>( *this, featureEvaluator ) :
-                    predictCategorical<LBPEvaluator>( *this, featureEvaluator ) );
+    if( pt == Point(126,364) )
+    {
+        featureEvaluator->setWindow(pt);
+    }
+
+    if( !featureEvaluator->setWindow(pt) )
+        return -1;
+    if( data.isStumpBased )
+    {
+        if( data.featureType == FeatureEvaluator::HAAR )
+            return predictOrderedStump<HaarEvaluator>( *this, featureEvaluator );
+        else if( data.featureType == FeatureEvaluator::LBP )
+            return predictCategoricalStump<LBPEvaluator>( *this, featureEvaluator );
+        else if( data.featureType == FeatureEvaluator::HOG )
+            return predictOrderedStump<HOGEvaluator>( *this, featureEvaluator );
+        else
+            return -2;
+    }
+    else
+    {
+        if( data.featureType == FeatureEvaluator::HAAR )
+            return predictOrdered<HaarEvaluator>( *this, featureEvaluator );
+        else if( data.featureType == FeatureEvaluator::LBP )
+            return predictCategorical<LBPEvaluator>( *this, featureEvaluator );
+        else if( data.featureType == FeatureEvaluator::HOG )
+            return predictOrdered<HOGEvaluator>( *this, featureEvaluator );
+        else
+            return -2;
+    }
+       
+    //return !featureEvaluator->setWindow(pt) ? -1 :
+    //            data.isStumpBased ? ( data.featureType == FeatureEvaluator::HAAR ?
+    //                predictOrderedStump<HaarEvaluator>( *this, featureEvaluator ) :
+    //                predictCategoricalStump<LBPEvaluator>( *this, featureEvaluator ) ) :
+    //                             ( data.featureType == FeatureEvaluator::HAAR ?
+    //                predictOrdered<HaarEvaluator>( *this, featureEvaluator ) :
+    //                predictCategorical<LBPEvaluator>( *this, featureEvaluator ) );
+
 }
     
 bool CascadeClassifier::setImage( Ptr<FeatureEvaluator>& featureEvaluator, const Mat& image )
