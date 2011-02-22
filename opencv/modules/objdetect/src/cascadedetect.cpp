@@ -819,18 +819,24 @@ bool HOGEvaluator::setImage( const Mat& image, Size winSize )
 
     if( image.cols < origWinSize.width || image.rows < origWinSize.height )
         return false;
+
+    hist.clear();
     for( int bin = 0; bin < Feature::BIN_NUM; bin++ )
     {
         hist.push_back( Mat(rows, cols, CV_32FC1) );
     }
+/////////////////////////
+    //double t = (double)getTickCount();
 
     integralHistogram( image, hist, Feature::BIN_NUM );
+
+    //t = (double)getTickCount() - t;
+	//printf("integralHistogram time = %gms\n", t*1000./cv::getTickFrequency());
+/////////////////////////
 
     size_t featIdx;
     size_t featCount = features->size();
 
-    //featuresPtr[93].updatePtrs( hist );
-    //featuresPtr[94].updatePtrs( hist );
     for( featIdx = 0; featIdx < featCount; featIdx++ )
     {
         featuresPtr[featIdx].updatePtrs( hist );
@@ -867,9 +873,21 @@ void HOGEvaluator::integralHistogram(const Mat &srcImage, vector<Mat> &histogram
     Mat Bins(srcImage.rows, srcImage.cols, CV_8S);
 
     //Adding borders for correct gradient computation
+
+///////////////////////////////
+    double t1 = (double)getTickCount();
+
     copyMakeBorder(srcImage, src, 1, 1, 1, 1, BORDER_REPLICATE);
 
+    t1 = (double)getTickCount() - t1;
+	printf("0_copyMakeBorder time =     %gms\n", t1*1000./cv::getTickFrequency());
+///////////////////////////////
+
     //Differential computing along both dimensions
+
+///////////////////////////////
+    double t2 = (double)getTickCount();
+
     for (y = 1; y < src.rows - 1; y++)
     {
         for (x = 1; x < src.cols - 1; x++)
@@ -878,10 +896,27 @@ void HOGEvaluator::integralHistogram(const Mat &srcImage, vector<Mat> &histogram
             Dy.at<float>(y-1, x-1) = (float)(src.at<uchar>(y+1, x) - src.at<uchar>(y-1, x));
         }
     }
+
+    t2 = (double)getTickCount() - t2;
+	printf("1_Differential computing time =     %gms\n", t2*1000./cv::getTickFrequency());
+///////////////////////////////
+
     //Computing of magnitudes and angles for all vectors
+
+///////////////////////////////
+    double t3 = (double)getTickCount();
+
     cartToPolar(Dx, Dy, Mag, Angle);
 
+    t3 = (double)getTickCount() - t3;
+	printf("2_cartToPolar time =    %gms\n", t3*1000./cv::getTickFrequency());
+///////////////////////////////
+
     //Angles adjusting for 9 bins
+
+///////////////////////////////
+    double t4 = (double)getTickCount();
+
     float angleScale = (float)(nbins / CV_PI);
     float angle;
     int bidx;
@@ -905,7 +940,15 @@ void HOGEvaluator::integralHistogram(const Mat &srcImage, vector<Mat> &histogram
         }
     }
 
+    t4 = (double)getTickCount() - t4;
+	printf("3_angles adjusting time =   %gms\n", t4*1000./cv::getTickFrequency());
+///////////////////////////////
+
     //Creating integral HoG
+
+///////////////////////////////
+    double t5 = (double)getTickCount();
+
     int matIdx;
     for (ch = 0; ch < nbins; ch++)
     {
@@ -928,6 +971,11 @@ void HOGEvaluator::integralHistogram(const Mat &srcImage, vector<Mat> &histogram
             }
         }
     }
+
+    t5 = (double)getTickCount() - t5;
+	printf("4_creating integral HOG time =  %gms\n\n", t5*1000./cv::getTickFrequency());
+///////////////////////////////
+
 }
 
 Ptr<FeatureEvaluator> FeatureEvaluator::create( int featureType )
@@ -1125,11 +1173,6 @@ int CascadeClassifier::runAt( Ptr<FeatureEvaluator>& featureEvaluator, Point pt 
             data.featureType == FeatureEvaluator::LBP ||
             data.featureType == FeatureEvaluator::HOG );
 
-    if( pt == Point(126,364) )
-    {
-        featureEvaluator->setWindow(pt);
-    }
-
     if( !featureEvaluator->setWindow(pt) )
         return -1;
     if( data.isStumpBased )
@@ -1154,15 +1197,6 @@ int CascadeClassifier::runAt( Ptr<FeatureEvaluator>& featureEvaluator, Point pt 
         else
             return -2;
     }
-       
-    //return !featureEvaluator->setWindow(pt) ? -1 :
-    //            data.isStumpBased ? ( data.featureType == FeatureEvaluator::HAAR ?
-    //                predictOrderedStump<HaarEvaluator>( *this, featureEvaluator ) :
-    //                predictCategoricalStump<LBPEvaluator>( *this, featureEvaluator ) ) :
-    //                             ( data.featureType == FeatureEvaluator::HAAR ?
-    //                predictOrdered<HaarEvaluator>( *this, featureEvaluator ) :
-    //                predictCategorical<LBPEvaluator>( *this, featureEvaluator ) );
-
 }
     
 bool CascadeClassifier::setImage( Ptr<FeatureEvaluator>& featureEvaluator, const Mat& image )
@@ -1184,7 +1218,7 @@ struct CascadeClassifierInvoker
     
     void operator()(const BlockedRange& range) const
     {
-        Ptr<FeatureEvaluator> evaluator = classifier->featureEvaluator->clone();
+        //Ptr<FeatureEvaluator> evaluator = classifier->featureEvaluator->clone();
         Size winSize(cvRound(classifier->data.origWinSize.width * scalingFactor), cvRound(classifier->data.origWinSize.height * scalingFactor));
 
         int y1 = range.begin() * stripSize;
@@ -1193,7 +1227,7 @@ struct CascadeClassifierInvoker
         {
             for( int x = 0; x < processingRectSize.width; x += yStep )
             {
-                int result = classifier->runAt(evaluator, Point(x, y));
+                int result = classifier->runAt(/*evaluator*/classifier->featureEvaluator, Point(x, y));
                 if( result > 0 )
                     rectangles->push_back(Rect(cvRound(x*scalingFactor), cvRound(y*scalingFactor),
                                                winSize.width, winSize.height));
@@ -1215,8 +1249,13 @@ struct getRect { Rect operator ()(const CvAvgComp& e) const { return e.rect; } }
 bool CascadeClassifier::detectSingleScale( const Mat& image, int stripCount, Size processingRectSize,
                                            int stripSize, int yStep, double factor, vector<Rect>& candidates )
 {
+ //   double t = (double)getTickCount();
+
     if( !featureEvaluator->setImage( image, data.origWinSize ) )
         return false;
+
+ //   t = (double)getTickCount() - t;
+	//printf("SetImage time = %gms\n", t*1000./cv::getTickFrequency());
 
     ConcurrentRectVector concurrentCandidates;
     parallel_for(BlockedRange(0, stripCount), CascadeClassifierInvoker( *this, processingRectSize, stripSize, yStep, factor, concurrentCandidates));
@@ -1303,7 +1342,16 @@ void CascadeClassifier::detectMultiScale( const Mat& image, vector<Rect>& object
         Mat scaledImage( scaledImageSize, CV_8U, imageBuffer.data );
         resize( grayImage, scaledImage, scaledImageSize, 0, 0, CV_INTER_LINEAR );
 
-        int yStep = factor > 2. ? 1 : 2;
+        int yStep;
+        if( getFeatureType() == cv::FeatureEvaluator::HOG )
+        {
+            yStep = 8;
+        }
+        else
+        {
+            yStep = factor > 2. ? 1 : 2;
+        }
+
         int stripCount, stripSize;
 
     #ifdef HAVE_TBB
