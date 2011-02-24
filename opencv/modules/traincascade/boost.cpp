@@ -280,6 +280,7 @@ void CvCascadeBoostTrainData::setData( const CvFeatureEvaluator* _featureEvaluat
     else
         buf = cvCreateMat( buf_count, buf_size, CV_32SC1 );
 
+
     cat_count = cvCreateMat( 1, cat_var_count + 1, CV_32SC1 );
 
     // precalculate valCache and set indices in buf

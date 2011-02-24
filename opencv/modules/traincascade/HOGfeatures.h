@@ -120,4 +120,31 @@ inline float CvHOGEvaluator::Feature::calc( const vector<Mat> & _hists, size_t y
     return featVal;
 }
 
+//inline float CvHOGEvaluator::Feature::calc( const vector<Mat> & _hists, size_t y, int featComponent ) const
+//{
+//    int vecSize = N_CELLS * N_BINS;
+//    float *res = new float[vecSize];
+//    float sum = 0.f;
+//    float featVal;
+//
+//    for (int bin = 0; bin < N_BINS; bin++)
+//    {
+//        const float* hist = _hists[bin].ptr<float>(y);
+//        for (int cell = 0; cell < N_CELLS; cell++)
+//        {
+//            res[N_BINS*cell + bin] = hist[fastRect[cell].p0] - hist[fastRect[cell].p1] - hist[fastRect[cell].p2] + hist[fastRect[cell].p3];
+//            sum += res[N_BINS*cell + bin];
+//        }
+//    }
+//    //L1 - normalization
+//    for (int i = 0; i < vecSize; i++)
+//    {
+//        res[i] /= (sum + 0.001f);
+//    }
+//
+//    featVal = res[featComponent];
+//    delete [] res;
+//    return featVal;
+//}
+
 #endif // _OPENCV_HOGFEATURES_H_

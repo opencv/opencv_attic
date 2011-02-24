@@ -61,58 +61,17 @@ void CvHOGEvaluator::generateFeatures()
     Size blockStep;
     int x, y, t, w, h;
 
-    //for (t = 6; t <= winSize.width/2; t++) //t = size of a cell. blocksize = 4*cellSize
-    //{
-    //    if ( t<=19 )
-    //    {
-    //        blockStep = Size(4,4);
-    //    }
-    //    else if ( t<=38 )
-    //    {
-    //        blockStep = Size(6,6);
-    //    }
-    //    else
-    //    {
-    //        blockStep = Size(8,8);
-    //    }
-    //    w = 2*t; //width of a block
-    //    h = 2*t; //height of a block
-    //    for (x = 0; x <= winSize.width - w; x += blockStep.width)
-    //    {
-    //        for (y = 0; y <= winSize.height - h; y += blockStep.height)
-    //        {
-    //            features.push_back(Feature(offset, x, y, t, t));
-    //        }
-    //    }
-    //    w = 2*t;
-    //    h = 4*t;
-    //    for (x = 0; x <= winSize.width - w; x += blockStep.width)
-    //    {
-    //        for (y = 0; y <= winSize.height - h; y += blockStep.height)
-    //        {
-    //            features.push_back(Feature(offset, x, y, t, 2*t));
-    //        }
-    //    }
-    //    w = 4*t;
-    //    h = 2*t; 
-    //    for (x = 0; x <= winSize.width - w; x += blockStep.width)
-    //    {
-    //        for (y = 0; y <= winSize.height - h; y += blockStep.height)
-    //        {     
-    //            features.push_back(Feature(offset, x, y, 2*t, t));
-    //        }
-    //    }
-    //}
-    for (t = 8; t <= winSize.width/2; t+=8) //t = size of a cell. blocksize = 4*cellSize
+    for (t = 8; t <= winSize.width/2; t+=4) //t = size of a cell. blocksize = 4*cellSize
     {
-        if ( t<=28 )
-        {
-            blockStep = Size(4,4);
-        }
-        else
-        {
-            blockStep = Size(8,8);
-        }
+        //if ( t<=28 )
+        //{
+        //    blockStep = Size(4,4);
+        //}
+        //else
+        //{
+        //    blockStep = Size(8,8);
+        //}
+        blockStep = Size(4,4);
         w = 2*t; //width of a block
         h = 2*t; //height of a block
         for (x = 0; x <= winSize.width - w; x += blockStep.width)
@@ -143,6 +102,7 @@ void CvHOGEvaluator::generateFeatures()
     }
 
     numFeatures = (int)features.size();
+
 }
 
 CvHOGEvaluator::Feature::Feature()

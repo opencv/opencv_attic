@@ -875,18 +875,18 @@ void HOGEvaluator::integralHistogram(const Mat &srcImage, vector<Mat> &histogram
     //Adding borders for correct gradient computation
 
 ///////////////////////////////
-    double t1 = (double)getTickCount();
+    //double t1 = (double)getTickCount();
 
     copyMakeBorder(srcImage, src, 1, 1, 1, 1, BORDER_REPLICATE);
 
-    t1 = (double)getTickCount() - t1;
-	printf("0_copyMakeBorder time =     %gms\n", t1*1000./cv::getTickFrequency());
+    //t1 = (double)getTickCount() - t1;
+	//printf("0_copyMakeBorder time =     %gms\n", t1*1000./cv::getTickFrequency());
 ///////////////////////////////
 
     //Differential computing along both dimensions
 
 ///////////////////////////////
-    double t2 = (double)getTickCount();
+    //double t2 = (double)getTickCount();
 
     for (y = 1; y < src.rows - 1; y++)
     {
@@ -897,25 +897,25 @@ void HOGEvaluator::integralHistogram(const Mat &srcImage, vector<Mat> &histogram
         }
     }
 
-    t2 = (double)getTickCount() - t2;
-	printf("1_Differential computing time =     %gms\n", t2*1000./cv::getTickFrequency());
+    //t2 = (double)getTickCount() - t2;
+	//printf("1_Differential computing time =     %gms\n", t2*1000./cv::getTickFrequency());
 ///////////////////////////////
 
     //Computing of magnitudes and angles for all vectors
 
 ///////////////////////////////
-    double t3 = (double)getTickCount();
+    //double t3 = (double)getTickCount();
 
     cartToPolar(Dx, Dy, Mag, Angle);
 
-    t3 = (double)getTickCount() - t3;
-	printf("2_cartToPolar time =    %gms\n", t3*1000./cv::getTickFrequency());
+    //t3 = (double)getTickCount() - t3;
+	//printf("2_cartToPolar time =    %gms\n", t3*1000./cv::getTickFrequency());
 ///////////////////////////////
 
     //Angles adjusting for 9 bins
 
 ///////////////////////////////
-    double t4 = (double)getTickCount();
+    //double t4 = (double)getTickCount();
 
     float angleScale = (float)(nbins / CV_PI);
     float angle;
@@ -940,16 +940,17 @@ void HOGEvaluator::integralHistogram(const Mat &srcImage, vector<Mat> &histogram
         }
     }
 
-    t4 = (double)getTickCount() - t4;
-	printf("3_angles adjusting time =   %gms\n", t4*1000./cv::getTickFrequency());
+    //t4 = (double)getTickCount() - t4;
+	//printf("3_angles adjusting time =   %gms\n", t4*1000./cv::getTickFrequency());
 ///////////////////////////////
 
     //Creating integral HoG
 
 ///////////////////////////////
-    double t5 = (double)getTickCount();
+    //double t5 = (double)getTickCount();
 
     int matIdx;
+    float elem;
     for (ch = 0; ch < nbins; ch++)
     {
         for (int i = 0; i < histogram[ch].cols; i++)
@@ -966,14 +967,14 @@ void HOGEvaluator::integralHistogram(const Mat &srcImage, vector<Mat> &histogram
             strSums.at<float>(matIdx) += Mag.at<float>(y-1,x-1);
             for (ch=0; ch<nbins; ch++)
             {
-                float elem = histogram[ch].at<float>(y-1,x) + strSums.at<float>(ch);
+                elem = histogram[ch].at<float>(y-1,x) + strSums.at<float>(ch);
                 histogram[ch].at<float>(y,x) = elem;
             }
         }
     }
 
-    t5 = (double)getTickCount() - t5;
-	printf("4_creating integral HOG time =  %gms\n\n", t5*1000./cv::getTickFrequency());
+    //t5 = (double)getTickCount() - t5;
+	//printf("4_creating integral HOG time =  %gms\n\n", t5*1000./cv::getTickFrequency());
 ///////////////////////////////
 
 }
