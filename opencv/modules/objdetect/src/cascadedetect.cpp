@@ -678,6 +678,7 @@ public:
         float calc( int offset ) const;
         
         void updatePtrs( const vector<Mat>& _hist );
+        void updatePtrs( const vector<Mat>& _hist, const Mat &_normSum );
         bool read( const FileNode& node );  
 
         enum { CELL_NUM = 4, BIN_NUM = 9 };
@@ -685,7 +686,9 @@ public:
         Rect rect[CELL_NUM];
         int featComponent; //component index from 0 to 35
 
-        const float* p[CELL_NUM * BIN_NUM][4];
+        //const float* p[CELL_NUM * BIN_NUM][4];
+        const float* pF[4]; //for feature calculation
+        const double* pN[4]; //for normalization calculation
     };
 
     HOGEvaluator();
@@ -699,6 +702,7 @@ public:
     virtual bool setWindow( Point pt );
 
     double operator()(int featureIdx) const
+
     {
         return featuresPtr[featureIdx].calc(offset);
     }
@@ -708,12 +712,13 @@ public:
     }
 
 private:
-    virtual void integralHistogram( const Mat& srcImage, vector<Mat> &histogram, int nbins ) const;
+    virtual void integralHistogram( const Mat& srcImage, vector<Mat> &histogram, Mat &norm, int nbins ) const;
 
     Size origWinSize;
     Ptr<vector<Feature>> features;
     Feature* featuresPtr;
     vector<Mat> hist;
+    Mat normSum;
 
     int offset;
 };
@@ -721,44 +726,71 @@ private:
 inline HOGEvaluator::Feature :: Feature()
 {
     rect[0] = rect[1] = rect[2] = rect[3] = Rect();
-    for( int i = 0; i < CELL_NUM * BIN_NUM; i++ )
-        p[i][0] = p[i][1] = p[i][2] = p[i][3] = 0; 
+    //for( int i = 0; i < CELL_NUM * BIN_NUM; i++ )
+    //    p[i][0] = p[i][1] = p[i][2] = p[i][3] = 0; 
+    pF[0] = pF[1] = pF[2] = pF[3] = 0;
+    pN[0] = pN[1] = pN[2] = pN[3] = 0;
     featComponent = 0;
 }
 
-float HOGEvaluator::Feature :: calc( int offset ) const
+//float HOGEvaluator::Feature :: calc( int offset ) const
+//{
+//    int vecSize = CELL_NUM * BIN_NUM;
+//    float *res = new float[vecSize];
+//    float sum = 0.f;
+//    float featVal;
+//
+//    for( int i = 0; i < vecSize; i++ )
+//    {
+//        res[i] = CALC_SUM(p[i], offset);
+//        sum += res[i];
+//    }
+//    //L1 - normalization of necessary component
+//    featVal = res[featComponent] / (sum + 0.001f);
+//
+//    delete [] res;
+//    return featVal;
+//}
+
+inline float HOGEvaluator::Feature :: calc( int offset ) const
 {
-    int vecSize = CELL_NUM * BIN_NUM;
-    float *res = new float[vecSize];
-    float sum = 0.f;
-    float featVal;
+    float res = CALC_SUM(pF, offset);
+    double normFactor = CALC_SUM(pN, offset);
 
-    for( int i = 0; i < vecSize; i++ )
-    {
-        res[i] = CALC_SUM(p[i], offset);
-        sum += res[i];
-    }
-    //L1 - normalization of necessary component
-    featVal = res[featComponent] / (sum + 0.001f);
-
-    delete [] res;
-    return featVal;
+    res = (res > 0.001f) ? (res / ( (float)normFactor + 0.001f) ) : 0.f;
+    return res;
 }
 
-void HOGEvaluator::Feature :: updatePtrs( const vector<Mat>& _hist )
+//void HOGEvaluator::Feature :: updatePtrs( const vector<Mat>& _hist )
+//{
+//    const float* ptr;
+//    size_t step = _hist[0].step / sizeof(ptr[0]);
+//    int idx;
+//    for( int bin = 0; bin < BIN_NUM; bin++ )
+//    {
+//        ptr = (const float*)_hist[bin].data;
+//        for( int cell = 0; cell < CELL_NUM; cell++ )
+//        {
+//            idx = cell * BIN_NUM + bin;
+//            CV_SUM_PTRS( p[idx][0], p[idx][1], p[idx][2], p[idx][3], ptr, rect[cell], step );
+//        }
+//    }
+//}
+
+void HOGEvaluator::Feature :: updatePtrs( const vector<Mat> &_hist, const Mat &_normSum )
 {
-    const float* ptr;
-    size_t step = _hist[0].step / sizeof(ptr[0]);
-    int idx;
-    for( int bin = 0; bin < BIN_NUM; bin++ )
-    {
-        ptr = (const float*)_hist[bin].data;
-        for( int cell = 0; cell < CELL_NUM; cell++ )
-        {
-            idx = cell * BIN_NUM + bin;
-            CV_SUM_PTRS( p[idx][0], p[idx][1], p[idx][2], p[idx][3], ptr, rect[cell], step );
-        }
-    }
+    int binIdx = featComponent % BIN_NUM;
+    int cellIdx = featComponent / BIN_NUM;
+    Rect normRect = Rect( rect[0].x, rect[0].y, 2*rect[0].width, 2*rect[0].height );
+
+    const float* featBuf = (const float*)_hist[binIdx].data;
+    size_t featStep = _hist[0].step / sizeof(featBuf[0]);
+
+    const double* normBuf = (const double*)_normSum.data;
+    size_t normStep = _normSum.step / sizeof(normBuf[0]);
+
+    CV_SUM_PTRS( pF[0], pF[1], pF[2], pF[3], featBuf, rect[cellIdx], featStep );
+    CV_SUM_PTRS( pN[0], pN[1], pN[2], pN[3], normBuf, normRect, normStep );
 }
 
 bool HOGEvaluator::Feature :: read( const FileNode& node )
@@ -808,6 +840,7 @@ Ptr<FeatureEvaluator> HOGEvaluator::clone() const
     ret->featuresPtr = &(*ret->features)[0];//??????
     ret->offset = offset;
     ret->hist = hist; //??????
+    ret->normSum = normSum;
     return ret;
 }
 
@@ -825,13 +858,14 @@ bool HOGEvaluator::setImage( const Mat& image, Size winSize )
     {
         hist.push_back( Mat(rows, cols, CV_32FC1) );
     }
+    normSum.create( rows, cols, CV_64FC1 );
 /////////////////////////
-    //double t = (double)getTickCount();
+    double t = (double)getTickCount();
 
-    integralHistogram( image, hist, Feature::BIN_NUM );
+    integralHistogram( image, hist, normSum, Feature::BIN_NUM );
 
-    //t = (double)getTickCount() - t;
-	//printf("integralHistogram time = %gms\n", t*1000./cv::getTickFrequency());
+    t = (double)getTickCount() - t;
+	printf("integralHistogram time = %gms\n", t*1000./cv::getTickFrequency());
 /////////////////////////
 
     size_t featIdx;
@@ -839,7 +873,8 @@ bool HOGEvaluator::setImage( const Mat& image, Size winSize )
 
     for( featIdx = 0; featIdx < featCount; featIdx++ )
     {
-        featuresPtr[featIdx].updatePtrs( hist );
+        //featuresPtr[featIdx].updatePtrs( hist );
+        featuresPtr[featIdx].updatePtrs( hist, normSum );
     }
     return true;
 }
@@ -860,9 +895,9 @@ bool HOGEvaluator::setWindow(Point pt)
 //    return featuresPtr[featureIdx].calc(offset, _featComponent);
 //}
 
-void HOGEvaluator::integralHistogram(const Mat &srcImage, vector<Mat> &histogram, int nbins) const
+void HOGEvaluator::integralHistogram(const Mat &srcImage, vector<Mat> &histogram, Mat &norm, int nbins) const
 {
-    int x, y, ch;
+    int x, y;
 
     Mat src;
 
@@ -888,14 +923,37 @@ void HOGEvaluator::integralHistogram(const Mat &srcImage, vector<Mat> &histogram
 ///////////////////////////////
     //double t2 = (double)getTickCount();
 
+    const uchar* prevBuf = src.data;
+    int srcStep = (int)( src.step / sizeof(uchar) );
+    const uchar* currBuf = prevBuf + srcStep;
+    const uchar* nextBuf = currBuf + srcStep;
+
+    float* dxBuf = (float*)Dx.data;
+    float* dyBuf = (float*)Dy.data;
+    int derStep = (int)( Dx.step / sizeof(float) );
+  
     for (y = 1; y < src.rows - 1; y++)
     {
         for (x = 1; x < src.cols - 1; x++)
         {
-            Dx.at<float>(y-1, x-1) = (float)(src.at<uchar>(y, x+1) - src.at<uchar>(y, x-1));
-            Dy.at<float>(y-1, x-1) = (float)(src.at<uchar>(y+1, x) - src.at<uchar>(y-1, x));
+            dxBuf[x] = (float)(currBuf[x+1] - currBuf[x-1]);
+            dyBuf[x] = (float)(nextBuf[x] - prevBuf[x]);
         }
+        prevBuf += srcStep;
+        currBuf += srcStep;
+        nextBuf += srcStep;
+        dxBuf += derStep;
+        dyBuf += derStep;
     }
+
+    //for (y = 1; y < src.rows - 1; y++)
+    //{
+    //    for (x = 1; x < src.cols - 1; x++)
+    //    {
+    //        Dx.at<float>(y-1, x-1) = (float)(src.at<uchar>(y, x+1) - src.at<uchar>(y, x-1));
+    //        Dy.at<float>(y-1, x-1) = (float)(src.at<uchar>(y+1, x) - src.at<uchar>(y-1, x));
+    //    }
+    //}
 
     //t2 = (double)getTickCount() - t2;
 	//printf("1_Differential computing time =     %gms\n", t2*1000./cv::getTickFrequency());
@@ -920,11 +978,18 @@ void HOGEvaluator::integralHistogram(const Mat &srcImage, vector<Mat> &histogram
     float angleScale = (float)(nbins / CV_PI);
     float angle;
     int bidx;
+
+    const float* anglesBuf = (const float*)Angle.data;
+    int angStep = (int)(Angle.step / sizeof(float));
+
+    char* binsBuf = (char*)Bins.data;
+    int binsStep = (int)( Bins.step / sizeof(char) );
+
     for (y = 0; y < Angle.rows; y++)
     {
         for (x = 0; x < Angle.cols; x++)
         {
-            angle = Angle.at<float>(y,x)*angleScale - 0.5f;
+            angle = anglesBuf[x] * angleScale - 0.5f;
             bidx = cvFloor(angle);
 
             angle -= bidx;
@@ -936,9 +1001,31 @@ void HOGEvaluator::integralHistogram(const Mat &srcImage, vector<Mat> &histogram
             {
                 bidx -= nbins;
             }
-            Bins.at<char>(y,x) = (char)bidx;
+            binsBuf[x] = (char)bidx;
         }
+        binsBuf += binsStep;
+        anglesBuf += angStep;
     }
+
+    //for (y = 0; y < Angle.rows; y++)
+    //{
+    //    for (x = 0; x < Angle.cols; x++)
+    //    {
+    //        angle = Angle.at<float>(y,x)*angleScale - 0.5f;
+    //        bidx = cvFloor(angle);
+
+    //        angle -= bidx;
+    //        if (bidx < 0)
+    //        {
+    //            bidx += nbins;
+    //        }
+    //        else if (bidx >= nbins)
+    //        {
+    //            bidx -= nbins;
+    //        }
+    //        Bins.at<char>(y,x) = (char)bidx;
+    //    }
+    //}
 
     //t4 = (double)getTickCount() - t4;
 	//printf("3_angles adjusting time =   %gms\n", t4*1000./cv::getTickFrequency());
@@ -946,35 +1033,49 @@ void HOGEvaluator::integralHistogram(const Mat &srcImage, vector<Mat> &histogram
 
     //Creating integral HoG
 
-///////////////////////////////
+    integral(Mag, norm);
+////////////////////////////////
     //double t5 = (double)getTickCount();
 
-    int matIdx;
-    float elem;
-    for (ch = 0; ch < nbins; ch++)
+    int binIdx;
+
+    Size histSize = histogram[0].size();
+    float* histBuf[9];
+    const float* magBuf = (const float*)Mag.data;
+    //const char* binsBuf = (const char*)Bins.data;
+    binsBuf = (char*)Bins.data;
+  
+    int histStep = (int)( histogram[0].step / sizeof(float) );
+    int magStep = (int)( Mag.step / sizeof(float) );
+    //int binsStep = (int)( Bins.step / sizeof(char) );
+
+    for( binIdx = 0; binIdx < nbins; binIdx++ )
     {
-        for (int i = 0; i < histogram[ch].cols; i++)
-            histogram[ch].at<float>(0, i) = 0.f; 
-        for (int i = 0; i < histogram[ch].rows; i++)
-            histogram[ch].at<float>(i, 0) = 0.f;
-    }
-    for (y = 1; y <= Bins.rows; y++)
-    {
-        Mat strSums(1, nbins, CV_32F, .0f); //суммы элементов (магнитуд) в y-ой строке для всех 9 матриц
-        for (x = 1; x <= Bins.cols; x++)
-        {
-            matIdx = Bins.at<char>(y-1,x-1); //индекс матрицы в которую надо положить рассматриваемый элемент
-            strSums.at<float>(matIdx) += Mag.at<float>(y-1,x-1);
-            for (ch=0; ch<nbins; ch++)
-            {
-                elem = histogram[ch].at<float>(y-1,x) + strSums.at<float>(ch);
-                histogram[ch].at<float>(y,x) = elem;
-            }
-        }
+        histBuf[binIdx] = (float*)histogram[binIdx].data;
+        memset( histBuf[binIdx], 0, histSize.width * sizeof(histBuf[0]) );
+        histBuf[binIdx] += histStep + 1;
     }
 
+    float* strBuf = new float[nbins];
+    
+    for( y = 0; y < Bins.rows; y++ )
+    {   
+        memset( strBuf, 0, nbins * sizeof(float) );
+        for( binIdx = 0; binIdx < nbins; binIdx++ )
+            histBuf[binIdx][-1] = 0.f;       
+        for( x = 0; x < Bins.cols; x++ )
+        {
+            strBuf[binsBuf[x]] += magBuf[x];
+            for( binIdx = 0; binIdx < nbins; binIdx++ )
+                histBuf[binIdx][x] = histBuf[binIdx][-histStep + x] + strBuf[binIdx];
+        }
+        for( binIdx = 0; binIdx < nbins; binIdx++ )
+            histBuf[binIdx] += histStep;
+        binsBuf += binsStep;
+        magBuf += magStep;
+    }
     //t5 = (double)getTickCount() - t5;
-	//printf("4_creating integral HOG time =  %gms\n\n", t5*1000./cv::getTickFrequency());
+	//printf("5_my integral time =  %gms\n", t5*1000./cv::getTickFrequency());
 ///////////////////////////////
 
 }
@@ -1346,7 +1447,7 @@ void CascadeClassifier::detectMultiScale( const Mat& image, vector<Rect>& object
         int yStep;
         if( getFeatureType() == cv::FeatureEvaluator::HOG )
         {
-            yStep = 8;
+            yStep = 4;
         }
         else
         {

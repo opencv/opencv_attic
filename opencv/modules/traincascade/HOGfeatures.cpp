@@ -17,6 +17,8 @@ void CvHOGEvaluator::init(const CvFeatureParams *_featureParams, int _maxSampleC
     {
         hist.push_back(Mat(_maxSampleCount, cols, CV_32FC1));
     }
+    //normSum = Mat( (int)_maxSampleCount, cols, CV_32FC1, 0.f );
+    normSum.create( (int)_maxSampleCount, cols, CV_64FC1 );
     CvFeatureEvaluator::init( _featureParams, _maxSampleCount, _winSize );
 }
 
@@ -29,7 +31,8 @@ void CvHOGEvaluator::setImage(const Mat &img, uchar clsLabel, int idx)
     {
         integralHist.push_back( Mat(winSize.height + 1, winSize.width + 1, hist[bin].type(), hist[bin].ptr<float>((int)idx)) );
     }
-    integralHistogram(img, integralHist, (int)N_BINS);
+    Mat integralNorm(winSize.height + 1, winSize.width + 1, normSum.type(), normSum.ptr<double>((int)idx));
+    integralHistogram(img, integralHist, integralNorm, (int)N_BINS);
 }
 
 //void CvHOGEvaluator::writeFeatures( FileStorage &fs, const Mat& featureMap ) const
@@ -61,16 +64,8 @@ void CvHOGEvaluator::generateFeatures()
     Size blockStep;
     int x, y, t, w, h;
 
-    for (t = 8; t <= winSize.width/2; t+=4) //t = size of a cell. blocksize = 4*cellSize
+    for (t = 8; t <= winSize.width/2; t+=8) //t = size of a cell. blocksize = 4*cellSize
     {
-        //if ( t<=28 )
-        //{
-        //    blockStep = Size(4,4);
-        //}
-        //else
-        //{
-        //    blockStep = Size(8,8);
-        //}
         blockStep = Size(4,4);
         w = 2*t; //width of a block
         h = 2*t; //height of a block
@@ -102,7 +97,6 @@ void CvHOGEvaluator::generateFeatures()
     }
 
     numFeatures = (int)features.size();
-
 }
 
 CvHOGEvaluator::Feature::Feature()
@@ -156,7 +150,7 @@ void CvHOGEvaluator::Feature::write(FileStorage &fs, int featComponentIdx) const
 }
 
 
-void CvHOGEvaluator::integralHistogram(const Mat &srcImage, vector<Mat> &histogram, int nbins) const
+void CvHOGEvaluator::integralHistogram(const Mat &srcImage, vector<Mat> &histogram, Mat& norm, int nbins) const
 {
     int x, y, ch;
 
@@ -211,8 +205,12 @@ void CvHOGEvaluator::integralHistogram(const Mat &srcImage, vector<Mat> &histogr
             Bins.at<char>(y,x) = (char)bidx;
         }
     }
+    //Creating integral for magnitudes (useful for normaliztion calculation)
+    integral(Mag, norm);
+    //for( int i = 0; i <48; i++ )
+    //    float tt = norm.at<double>(i,1);
 
-    //Creating integral HoG
+    //Creating integral HOG
     int matIdx;
     for (ch = 0; ch < nbins; ch++)
     {
@@ -223,7 +221,7 @@ void CvHOGEvaluator::integralHistogram(const Mat &srcImage, vector<Mat> &histogr
     }
     for (y = 1; y <= Bins.rows; y++)
     {
-        Mat strSums(1, nbins, CV_32F, .0f); //суммы элементов (магнитуд) в y-ой строке для всех 9 матриц
+        Mat strSums(1, nbins, CV_32F, 0.f); //суммы элементов (магнитуд) в y-ой строке для всех 9 матриц
         for (x = 1; x <= Bins.cols; x++)
         {
             matIdx = Bins.at<char>(y-1,x-1); //индекс матрицы в которую надо положить рассматриваемый элемент
@@ -232,6 +230,7 @@ void CvHOGEvaluator::integralHistogram(const Mat &srcImage, vector<Mat> &histogr
             {
                 float elem = histogram[ch].at<float>(y-1,x) + strSums.at<float>(ch);
                 histogram[ch].at<float>(y,x) = elem;
+                //norm.at<float>(y,x) += elem; //Creating integral for magnitudes
             }
         }
     }

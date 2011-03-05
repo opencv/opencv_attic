@@ -26,7 +26,7 @@ public:
     virtual void writeFeatures( FileStorage &fs, const Mat& featureMap ) const;
 protected:
     virtual void generateFeatures();
-    virtual void integralHistogram( const Mat& srcImage, vector<Mat> &histogram, int nbins ) const;
+    virtual void integralHistogram( const Mat& srcImage, vector<Mat> &histogram, Mat& norm, int nbins ) const;
     class Feature
     {
     public:
@@ -34,6 +34,7 @@ protected:
         Feature( int offset, int x, int y, int cellW, int cellH ); 
         float calc( const vector<Mat> &_hists, size_t y ) const;
         float calc( const vector<Mat> &_hists, size_t y, int featComponent ) const;
+        float calc( const vector<Mat> &_hists, const Mat &_normSum, size_t y, int featComponent ) const; 
         void write( FileStorage &fs ) const;
         void write( FileStorage &fs, int varIdx ) const;
 
@@ -46,6 +47,7 @@ protected:
     };
     vector<Feature> features;
 
+    Mat normSum; //for nomalization calculation (L1 or L2)
     vector<Mat> hist;
 };
 
@@ -53,7 +55,8 @@ inline float CvHOGEvaluator::operator()(int varIdx, int sampleIdx) const
 {
     int featureIdx = varIdx / (N_BINS * N_CELLS);
     int componentIdx = varIdx % (N_BINS * N_CELLS);
-    return features[featureIdx].calc( hist, sampleIdx, componentIdx); 
+    //return features[featureIdx].calc( hist, sampleIdx, componentIdx); 
+    return features[featureIdx].calc( hist, normSum, sampleIdx, componentIdx); 
 }
 
 inline float CvHOGEvaluator::Feature::calc(const vector<Mat> &_hists, size_t y) const
@@ -120,31 +123,22 @@ inline float CvHOGEvaluator::Feature::calc( const vector<Mat> & _hists, size_t y
     return featVal;
 }
 
-//inline float CvHOGEvaluator::Feature::calc( const vector<Mat> & _hists, size_t y, int featComponent ) const
-//{
-//    int vecSize = N_CELLS * N_BINS;
-//    float *res = new float[vecSize];
-//    float sum = 0.f;
-//    float featVal;
-//
-//    for (int bin = 0; bin < N_BINS; bin++)
-//    {
-//        const float* hist = _hists[bin].ptr<float>(y);
-//        for (int cell = 0; cell < N_CELLS; cell++)
-//        {
-//            res[N_BINS*cell + bin] = hist[fastRect[cell].p0] - hist[fastRect[cell].p1] - hist[fastRect[cell].p2] + hist[fastRect[cell].p3];
-//            sum += res[N_BINS*cell + bin];
-//        }
-//    }
-//    //L1 - normalization
-//    for (int i = 0; i < vecSize; i++)
-//    {
-//        res[i] /= (sum + 0.001f);
-//    }
-//
-//    featVal = res[featComponent];
-//    delete [] res;
-//    return featVal;
-//}
+inline float CvHOGEvaluator::Feature::calc( const vector<Mat>& _hists, const Mat& _normSum, size_t y, int featComponent ) const
+{
+    float normFactor;
+    float res;
+
+    int binIdx = featComponent % N_BINS;
+    int cellIdx = featComponent / N_BINS;
+
+    const float *hist = _hists[binIdx].ptr<float>(y);
+    res = hist[fastRect[cellIdx].p0] - hist[fastRect[cellIdx].p1] - hist[fastRect[cellIdx].p2] + hist[fastRect[cellIdx].p3];
+
+    const double *normSum = _normSum.ptr<double>(y);
+    normFactor = (float)(normSum[fastRect[0].p0] - normSum[fastRect[1].p1] - normSum[fastRect[2].p2] + normSum[fastRect[3].p3]);
+    res = (res > 0.001f) ? ( res / (normFactor + 0.001f) ) : 0.f; //for cutting negative values, which apper due to floating precision
+
+    return res;
+}
 
 #endif // _OPENCV_HOGFEATURES_H_
