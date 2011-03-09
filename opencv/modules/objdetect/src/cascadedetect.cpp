@@ -674,10 +674,7 @@ public:
     struct Feature
     {
         Feature();
-        //float calc( int offset, int featComponent ) const;
         float calc( int offset ) const;
-        
-        void updatePtrs( const vector<Mat>& _hist );
         void updatePtrs( const vector<Mat>& _hist, const Mat &_normSum );
         bool read( const FileNode& node );  
 
@@ -685,24 +682,16 @@ public:
 
         Rect rect[CELL_NUM];
         int featComponent; //component index from 0 to 35
-
-        //const float* p[CELL_NUM * BIN_NUM][4];
         const float* pF[4]; //for feature calculation
         const double* pN[4]; //for normalization calculation
     };
-
     HOGEvaluator();
     virtual ~HOGEvaluator();
-
     virtual bool read( const FileNode& node );
-    virtual Ptr<FeatureEvaluator> clone() const;
     virtual int getFeatureType() const { return FeatureEvaluator::HOG; }
-
     virtual bool setImage( const Mat& image, Size winSize );
     virtual bool setWindow( Point pt );
-
     double operator()(int featureIdx) const
-
     {
         return featuresPtr[featureIdx].calc(offset);
     }
@@ -719,65 +708,26 @@ private:
     Feature* featuresPtr;
     vector<Mat> hist;
     Mat normSum;
-
     int offset;
 };
 
 inline HOGEvaluator::Feature :: Feature()
 {
     rect[0] = rect[1] = rect[2] = rect[3] = Rect();
-    //for( int i = 0; i < CELL_NUM * BIN_NUM; i++ )
-    //    p[i][0] = p[i][1] = p[i][2] = p[i][3] = 0; 
     pF[0] = pF[1] = pF[2] = pF[3] = 0;
     pN[0] = pN[1] = pN[2] = pN[3] = 0;
     featComponent = 0;
 }
 
-//float HOGEvaluator::Feature :: calc( int offset ) const
-//{
-//    int vecSize = CELL_NUM * BIN_NUM;
-//    float *res = new float[vecSize];
-//    float sum = 0.f;
-//    float featVal;
-//
-//    for( int i = 0; i < vecSize; i++ )
-//    {
-//        res[i] = CALC_SUM(p[i], offset);
-//        sum += res[i];
-//    }
-//    //L1 - normalization of necessary component
-//    featVal = res[featComponent] / (sum + 0.001f);
-//
-//    delete [] res;
-//    return featVal;
-//}
-
 inline float HOGEvaluator::Feature :: calc( int offset ) const
 {
     float res = CALC_SUM(pF, offset);
     double normFactor = CALC_SUM(pN, offset);
-
     res = (res > 0.001f) ? (res / ( (float)normFactor + 0.001f) ) : 0.f;
     return res;
 }
 
-//void HOGEvaluator::Feature :: updatePtrs( const vector<Mat>& _hist )
-//{
-//    const float* ptr;
-//    size_t step = _hist[0].step / sizeof(ptr[0]);
-//    int idx;
-//    for( int bin = 0; bin < BIN_NUM; bin++ )
-//    {
-//        ptr = (const float*)_hist[bin].data;
-//        for( int cell = 0; cell < CELL_NUM; cell++ )
-//        {
-//            idx = cell * BIN_NUM + bin;
-//            CV_SUM_PTRS( p[idx][0], p[idx][1], p[idx][2], p[idx][3], ptr, rect[cell], step );
-//        }
-//    }
-//}
-
-void HOGEvaluator::Feature :: updatePtrs( const vector<Mat> &_hist, const Mat &_normSum )
+inline void HOGEvaluator::Feature :: updatePtrs( const vector<Mat> &_hist, const Mat &_normSum )
 {
     int binIdx = featComponent % BIN_NUM;
     int cellIdx = featComponent / BIN_NUM;
@@ -794,7 +744,6 @@ void HOGEvaluator::Feature :: updatePtrs( const vector<Mat> &_hist, const Mat &_
 }
 
 bool HOGEvaluator::Feature :: read( const FileNode& node )
-
 {
     FileNode rnode = node[CC_RECT];
     FileNodeIterator it = rnode.begin();
@@ -832,27 +781,13 @@ bool HOGEvaluator::read( const FileNode& node )
     return true;
 }
 
-Ptr<FeatureEvaluator> HOGEvaluator::clone() const
-{
-    HOGEvaluator* ret = new HOGEvaluator;
-    ret->origWinSize = origWinSize;
-    ret->features = features;
-    ret->featuresPtr = &(*ret->features)[0];//??????
-    ret->offset = offset;
-    ret->hist = hist; //??????
-    ret->normSum = normSum;
-    return ret;
-}
-
 bool HOGEvaluator::setImage( const Mat& image, Size winSize )
 {
     int rows = image.rows + 1;
     int cols = image.cols + 1;
     origWinSize = winSize;
-
     if( image.cols < origWinSize.width || image.rows < origWinSize.height )
         return false;
-
     hist.clear();
     for( int bin = 0; bin < Feature::BIN_NUM; bin++ )
     {
@@ -867,13 +802,9 @@ bool HOGEvaluator::setImage( const Mat& image, Size winSize )
     t = (double)getTickCount() - t;
 	printf("integralHistogram time = %gms\n", t*1000./cv::getTickFrequency());
 /////////////////////////
-
-    size_t featIdx;
-    size_t featCount = features->size();
-
+    size_t featIdx, featCount = features->size();
     for( featIdx = 0; featIdx < featCount; featIdx++ )
     {
-        //featuresPtr[featIdx].updatePtrs( hist );
         featuresPtr[featIdx].updatePtrs( hist, normSum );
     }
     return true;
@@ -888,12 +819,6 @@ bool HOGEvaluator::setWindow(Point pt)
     offset = pt.y * ((int)hist[0].step/sizeof(float)) + pt.x;
     return true;
 }
-
-//double HOGEvaluator::operator()(int featureIdx) const
-//{
-//    int _featComponent = featureIdx % (Feature::CELL_NUM * Feature::BIN_NUM);
-//    return featuresPtr[featureIdx].calc(offset, _featComponent);
-//}
 
 void HOGEvaluator::integralHistogram(const Mat &srcImage, vector<Mat> &histogram, Mat &norm, int nbins) const
 {
@@ -910,19 +835,16 @@ void HOGEvaluator::integralHistogram(const Mat &srcImage, vector<Mat> &histogram
     //Adding borders for correct gradient computation
 
 ///////////////////////////////
-    //double t1 = (double)getTickCount();
-
+    double t1 = (double)getTickCount();
     copyMakeBorder(srcImage, src, 1, 1, 1, 1, BORDER_REPLICATE);
-
-    //t1 = (double)getTickCount() - t1;
-	//printf("0_copyMakeBorder time =     %gms\n", t1*1000./cv::getTickFrequency());
+    t1 = (double)getTickCount() - t1;
+	printf("0_copyMakeBorder time =     %gms\n", t1*1000./cv::getTickFrequency());
 ///////////////////////////////
 
     //Differential computing along both dimensions
 
 ///////////////////////////////
-    //double t2 = (double)getTickCount();
-
+    double t2 = (double)getTickCount();
     const uchar* prevBuf = src.data;
     int srcStep = (int)( src.step / sizeof(uchar) );
     const uchar* currBuf = prevBuf + srcStep;
@@ -930,50 +852,41 @@ void HOGEvaluator::integralHistogram(const Mat &srcImage, vector<Mat> &histogram
 
     float* dxBuf = (float*)Dx.data;
     float* dyBuf = (float*)Dy.data;
-    int derStep = (int)( Dx.step / sizeof(float) );
+    int dxStep = (int)( Dx.step / sizeof(float) );
+    int dyStep = (int)( Dy.step / sizeof(float) );
   
     for (y = 1; y < src.rows - 1; y++)
     {
         for (x = 1; x < src.cols - 1; x++)
         {
-            dxBuf[x] = (float)(currBuf[x+1] - currBuf[x-1]);
-            dyBuf[x] = (float)(nextBuf[x] - prevBuf[x]);
+            dxBuf[x-1] = (float)(currBuf[x+1] - currBuf[x-1]);
+            dyBuf[x-1] = (float)(nextBuf[x] - prevBuf[x]);
         }
         prevBuf += srcStep;
         currBuf += srcStep;
         nextBuf += srcStep;
-        dxBuf += derStep;
-        dyBuf += derStep;
+        dxBuf += dxStep;
+        dyBuf += dyStep;
     }
-
-    //for (y = 1; y < src.rows - 1; y++)
-    //{
-    //    for (x = 1; x < src.cols - 1; x++)
-    //    {
-    //        Dx.at<float>(y-1, x-1) = (float)(src.at<uchar>(y, x+1) - src.at<uchar>(y, x-1));
-    //        Dy.at<float>(y-1, x-1) = (float)(src.at<uchar>(y+1, x) - src.at<uchar>(y-1, x));
-    //    }
-    //}
-
-    //t2 = (double)getTickCount() - t2;
-	//printf("1_Differential computing time =     %gms\n", t2*1000./cv::getTickFrequency());
+    t2 = (double)getTickCount() - t2;
+	printf("1_Differential computing time =     %gms\n", t2*1000./cv::getTickFrequency());
 ///////////////////////////////
 
     //Computing of magnitudes and angles for all vectors
 
 ///////////////////////////////
-    //double t3 = (double)getTickCount();
+    double t3 = (double)getTickCount();
 
     cartToPolar(Dx, Dy, Mag, Angle);
 
-    //t3 = (double)getTickCount() - t3;
-	//printf("2_cartToPolar time =    %gms\n", t3*1000./cv::getTickFrequency());
+    t3 = (double)getTickCount() - t3;
+	printf("2_cartToPolar time =    %gms\n", t3*1000./cv::getTickFrequency());
 ///////////////////////////////
 
     //Angles adjusting for 9 bins
 
 ///////////////////////////////
-    //double t4 = (double)getTickCount();
+    double t4 = (double)getTickCount();
 
     float angleScale = (float)(nbins / CV_PI);
     float angle;
@@ -1002,52 +915,32 @@ void HOGEvaluator::integralHistogram(const Mat &srcImage, vector<Mat> &histogram
                 bidx -= nbins;
             }
             binsBuf[x] = (char)bidx;
+            if( &(binsBuf[x]) != &(Bins.at<char>(y,x)) )
+            {
+                printf("!");
+            }
         }
         binsBuf += binsStep;
         anglesBuf += angStep;
     }
 
-    //for (y = 0; y < Angle.rows; y++)
-    //{
-    //    for (x = 0; x < Angle.cols; x++)
-    //    {
-    //        angle = Angle.at<float>(y,x)*angleScale - 0.5f;
-    //        bidx = cvFloor(angle);
-
-    //        angle -= bidx;
-    //        if (bidx < 0)
-    //        {
-    //            bidx += nbins;
-    //        }
-    //        else if (bidx >= nbins)
-    //        {
-    //            bidx -= nbins;
-    //        }
-    //        Bins.at<char>(y,x) = (char)bidx;
-    //    }
-    //}
-
-    //t4 = (double)getTickCount() - t4;
-	//printf("3_angles adjusting time =   %gms\n", t4*1000./cv::getTickFrequency());
-///////////////////////////////
-
-    //Creating integral HoG
+    t4 = (double)getTickCount() - t4;
+	printf("3_bin adjusting time =  %gms\n", t4*1000./cv::getTickFrequency());
 
     integral(Mag, norm);
+
 ////////////////////////////////
-    //double t5 = (double)getTickCount();
+    double t5 = (double)getTickCount();
 
     int binIdx;
 
     Size histSize = histogram[0].size();
     float* histBuf[9];
     const float* magBuf = (const float*)Mag.data;
-    //const char* binsBuf = (const char*)Bins.data;
     binsBuf = (char*)Bins.data;
   
     int histStep = (int)( histogram[0].step / sizeof(float) );
     int magStep = (int)( Mag.step / sizeof(float) );
-    //int binsStep = (int)( Bins.step / sizeof(char) );
 
     for( binIdx = 0; binIdx < nbins; binIdx++ )
     {
@@ -1067,17 +960,18 @@ void HOGEvaluator::integralHistogram(const Mat &srcImage, vector<Mat> &histogram
         {
             strBuf[binsBuf[x]] += magBuf[x];
             for( binIdx = 0; binIdx < nbins; binIdx++ )
+            {
                 histBuf[binIdx][x] = histBuf[binIdx][-histStep + x] + strBuf[binIdx];
+            }
         }
         for( binIdx = 0; binIdx < nbins; binIdx++ )
             histBuf[binIdx] += histStep;
         binsBuf += binsStep;
         magBuf += magStep;
     }
-    //t5 = (double)getTickCount() - t5;
-	//printf("5_my integral time =  %gms\n", t5*1000./cv::getTickFrequency());
+    t5 = (double)getTickCount() - t5;
+	printf("5_my integral time =  %gms\n", t5*1000./cv::getTickFrequency());
 ///////////////////////////////
-
 }
 
 Ptr<FeatureEvaluator> FeatureEvaluator::create( int featureType )
@@ -1351,13 +1245,8 @@ struct getRect { Rect operator ()(const CvAvgComp& e) const { return e.rect; } }
 bool CascadeClassifier::detectSingleScale( const Mat& image, int stripCount, Size processingRectSize,
                                            int stripSize, int yStep, double factor, vector<Rect>& candidates )
 {
- //   double t = (double)getTickCount();
-
     if( !featureEvaluator->setImage( image, data.origWinSize ) )
         return false;
-
- //   t = (double)getTickCount() - t;
-	//printf("SetImage time = %gms\n", t*1000./cv::getTickFrequency());
 
     ConcurrentRectVector concurrentCandidates;
     parallel_for(BlockedRange(0, stripCount), CascadeClassifierInvoker( *this, processingRectSize, stripSize, yStep, factor, concurrentCandidates));
