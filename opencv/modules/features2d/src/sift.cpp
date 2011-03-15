@@ -48,14 +48,15 @@
 
 #include "precomp.hpp"
 
-#ifdef __arm__
-#define ARM_NO_SIFT
-#endif
+//#ifdef __arm__
+//#define ARM_NO_SIFT
+//#endif
 
-#ifdef ANDROID
-#undef  ARM_NO_SIFT
-#endif //ANDROID
+//#ifdef ANDROID
+//#undef  ARM_NO_SIFT
+//#endif //ANDROID
 
+#undef ARM_NO_SIFT
 #ifndef ARM_NO_SIFT
 
 #include <iostream>
