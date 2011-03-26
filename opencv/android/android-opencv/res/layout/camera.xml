@@ -25,4 +25,4 @@
 			android:id="@+id/button_camera_settings" android:layout_width="60dip"
 			android:layout_height="60dip" android:layout_marginBottom="10dip"></ImageButton>
 	</LinearLayout>
---></RelativeLayout>
+</RelativeLayout>
