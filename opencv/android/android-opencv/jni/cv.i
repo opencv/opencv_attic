@@ -101,6 +101,7 @@ public:
 	Mat();
 	~Mat();
 	void create(Size size, int type);
+	int channels() const;
  %immutable;
 	int rows;
 	int cols;
