@@ -510,6 +510,21 @@ if(WITH_JASPER AND NOT JASPER_FOUND)
     set(JASPER_LIBRARIES libjasper)
 endif()
 
+if (ANDROID)
+  set(NativeCamera_DIR "${CMAKE_SOURCE_DIR}/android/native-camera/build")
+#    CACHE PATH "The path where you built NativeCamera")
+
+  FIND_PACKAGE(NativeCamera QUIET)
+  if(NativeCamera_FOUND)
+    set(HAVE_ANDROID_NATIVE_CAMERA TRUE)
+    set(OPENCV_LINKER_LIBS ${OPENCV_LINKER_LIBS} ${NativeCamera_LIBS} log)
+  else()
+    set(HAVE_ANDROID_NATIVE_CAMERA FALSE)
+    message("-- Could NOT find NativeCamera for Android")
+    #message("${NativeCamera_DIR}")
+  endif()
+endif()
+
 #message(STATUS "Graphic libraries: ${PNG_LIBRARIES} ${JPEG_LIBRARIES} ${TIFF_LIBRARIES} ${JASPER_LIBRARIES}")
 
 if(WITH_OPENEXR)
@@ -1105,6 +1120,10 @@ set(CMAKE_BASE_INCLUDE_DIRS_CONFIGCMAKE "\"${CMAKE_CURRENT_SOURCE_DIR}\"")
 
 set(CMAKE_LIB_DIRS_CONFIGCMAKE "${LIBRARY_OUTPUT_PATH}")
 
+if( HAVE_ANDROID_NATIVE_CAMERA )
+    set(CMAKE_LIB_DIRS_CONFIGCMAKE ${CMAKE_LIB_DIRS_CONFIGCMAKE} ${NativeCamera_LIB_DIR})
+endif()
+
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/OpenCVConfig.cmake.in" "${CMAKE_BINARY_DIR}/OpenCVConfig.cmake" IMMEDIATE @ONLY)
 
 # --------------------------------------------------------------------------------------------
@@ -1387,6 +1406,9 @@ else()
 message(STATUS "    V4L/V4L2:                  ${HAVE_CAMV4L}/${HAVE_CAMV4L2}")
 endif()
 message(STATUS "    Xine:                      ${HAVE_XINE}")
+if(ANDROID)
+message(STATUS "    AndroidNativeCamera:       ${HAVE_ANDROID_NATIVE_CAMERA}")
+endif()
 endif() #if(UNIX AND NOT APPLE)
 
 if(APPLE)

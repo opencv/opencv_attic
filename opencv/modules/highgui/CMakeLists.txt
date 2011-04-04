@@ -204,6 +204,11 @@ if(APPLE)
 	endif()
 endif(APPLE)
 
+if(HAVE_ANDROID_NATIVE_CAMERA)
+  set(highgui_srcs ${highgui_srcs} src/cap_android.cpp)
+  add_definitions(-DHAVE_ANDROID_NATIVE_CAMERA)
+endif()
+
 source_group("Src" FILES ${highgui_srcs} ${highgui_hdrs})
 source_group("Include" FILES ${highgui_ext_hdrs})
 
@@ -295,7 +300,6 @@ target_link_libraries(${the_target} ${OPENCV_LINKER_LIBS} opencv_core opencv_img
 if( OPENNI_LIBRARY )
     target_link_libraries(${the_target} ${OPENNI_LIBRARY})
 endif()
-
 
 if(APPLE)
 	target_link_libraries(${the_target} "-lbz2 -framework Cocoa -framework QuartzCore")
