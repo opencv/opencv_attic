@@ -185,11 +185,24 @@ CV_INLINE IppiSize ippiSize(int width, int height)
             int _begin, _end, _grainsize;
         };
 
+//TODO: leonid: move this define into CMake
+#define HAVE_THREADING_FRAMEWORK 1
+
+#ifdef HAVE_THREADING_FRAMEWORK 
+#include "threading_framework.hpp"
+
+	template<typename Body> 
+	static void parallel_for( const BlockedRange& range, const Body& body )
+	{
+		ThreadManager::run(__parallel_for_function<Body>, (const void*)&body, range);
+	}
+#else
         template<typename Body> static inline
         void parallel_for( const BlockedRange& range, const Body& body )
         {
-            body(range);
+            body(range); 
         }
+#endif
         
         template<typename Iterator, typename Body> static inline
         void parallel_do( Iterator first, Iterator last, const Body& body )
