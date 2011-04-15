@@ -194,7 +194,7 @@ CV_INLINE IppiSize ippiSize(int width, int height)
 	template<typename Body> 
 	static void parallel_for( const BlockedRange& range, const Body& body )
 	{
-		ThreadManager::run(__parallel_for_function<Body>, (const void*)&body, range);
+		tf::parallel_for<Body>(range, body);
 	}
 #else
         template<typename Body> static inline
