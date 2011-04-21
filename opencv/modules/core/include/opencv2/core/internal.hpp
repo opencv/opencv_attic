@@ -143,6 +143,7 @@ CV_INLINE IppiSize ippiSize(int width, int height)
 #ifdef __cplusplus
 
 #ifdef HAVE_TBB
+#warning "building with TBB"
     namespace cv
     {
         typedef tbb::blocked_range<int> BlockedRange;
@@ -170,6 +171,7 @@ CV_INLINE IppiSize ippiSize(int width, int height)
         typedef tbb::concurrent_vector<Rect> ConcurrentRectVector;
     }
 #else
+#warning "building _WITHOUT_ TBB"
     namespace cv
     {
         class BlockedRange
@@ -187,8 +189,10 @@ CV_INLINE IppiSize ippiSize(int width, int height)
 
 //TODO: leonid: move this define into CMake
 #define HAVE_THREADING_FRAMEWORK 1
+//#undef HAVE_THREADING_FRAMEWORK
 
-#ifdef HAVE_THREADING_FRAMEWORK 
+#if HAVE_THREADING_FRAMEWORK 
+#warning "building with THREADING FRAMEWORK"
 #include "threading_framework.hpp"
 
 	template<typename Body> 
@@ -196,12 +200,15 @@ CV_INLINE IppiSize ippiSize(int width, int height)
 	{
 		tf::parallel_for<Body>(range, body);
 	}
+        typedef tf::ConcurrentVector<Rect> ConcurrentRectVector;
 #else
+#warning "building _WITHOUT_ THREADING FRAMEWORK"
         template<typename Body> static inline
         void parallel_for( const BlockedRange& range, const Body& body )
         {
             body(range); 
         }
+        typedef std::vector<Rect> ConcurrentRectVector;
 #endif
         
         template<typename Iterator, typename Body> static inline
@@ -219,7 +226,6 @@ CV_INLINE IppiSize ippiSize(int width, int height)
             body(range);
         }
         
-        typedef std::vector<Rect> ConcurrentRectVector;
     }
 #endif
 #endif
