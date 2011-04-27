@@ -372,7 +372,7 @@ if(UNIX)
       endif()
       if(WITH_GSTREAMER)
         CHECK_MODULE(gstreamer-base-0.10 HAVE_GSTREAMER)
-        CHECK_MODULE(gstreamer-app-0.10 HAVE_GSTREAMER_APP)
+        CHECK_MODULE(gstreamer-app-0.10 HAVE_GSTREAMER)
         CHECK_MODULE(gstreamer-video-0.10 HAVE_GSTREAMER)
       else()
         set(HAVE_GSTREAMER FALSE)
@@ -456,6 +456,7 @@ if(UNIX)
         endif()
 
         if(NOT OPENCV_BUILD_3RDPARTY_LIBS)
+            include(FindZLIB)
             if(WITH_PNG)
                 include(FindPNG)
                 if(PNG_FOUND)
@@ -1005,6 +1006,11 @@ if(CMAKE_COMPILER_IS_GNUCXX)
 
     set(EXTRA_C_FLAGS_RELEASE "${EXTRA_C_FLAGS_RELEASE} -DNDEBUG")
     set(EXTRA_C_FLAGS_DEBUG "${EXTRA_C_FLAGS_DEBUG} -O0 -ggdb3 -DDEBUG -D_DEBUG")
+
+    if(ANDROID)
+      #force compiler to interpret char as signed char
+      set(EXTRA_C_FLAGS "${EXTRA_C_FLAGS} -fsigned-char")
+    endif()
 endif()
 
 # Extra link libs if the user selects building static libs:
@@ -1337,7 +1343,13 @@ else()
 endif()
 
 message(STATUS "")
-message(STATUS "  Image I/O: ")
+message(STATUS "  Media I/O: ")
+if(ZLIB_FOUND)
+message(STATUS "    ZLib:                       ${ZLIB_FOUND}")
+else()
+message(STATUS "    ZLib:                       build")
+endif()
+
 if(NOT WITH_JPEG OR JPEG_FOUND)
 message(STATUS "    JPEG:                       ${JPEG_FOUND}")
 else()

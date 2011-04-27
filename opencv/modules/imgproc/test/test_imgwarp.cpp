@@ -524,7 +524,7 @@ int CV_WarpAffineTest::prepare_test_case( int test_case_idx )
     angle = cvtest::randReal(rng)*360;
     scale = ((double)dst.rows/src.rows + (double)dst.cols/src.cols)*0.5;
     getRotationMatrix2D(center, angle, scale).convertTo(mat, mat.depth());
-    rng.fill( tmp, CV_RAND_NORMAL, cvScalarAll(1.), cvScalarAll(0.01) );
+    rng.fill( tmp, CV_RAND_NORMAL, Scalar::all(1.), Scalar::all(0.01) );
     cv::max(tmp, 0.9, tmp);
     cv::min(tmp, 1.1, tmp);
     cv::multiply(tmp, mat, mat, 1.);
@@ -629,17 +629,17 @@ int CV_WarpPerspectiveTest::prepare_test_case( int test_case_idx )
 
     s[0] = Point2f(0,0);
     d[0] = Point2f(0,0);
-    s[1] = Point2f(src.cols-1,0);
-    d[1] = Point2f(dst.cols-1,0);
-    s[2] = Point2f(src.cols-1,src.rows-1);
-    d[2] = Point2f(dst.cols-1,dst.rows-1);
-    s[3] = Point2f(0,src.rows-1);
-    d[3] = Point2f(0,dst.rows-1);
+    s[1] = Point2f(src.cols-1.f,0);
+    d[1] = Point2f(dst.cols-1.f,0);
+    s[2] = Point2f(src.cols-1.f,src.rows-1.f);
+    d[2] = Point2f(dst.cols-1.f,dst.rows-1.f);
+    s[3] = Point2f(0,src.rows-1.f);
+    d[3] = Point2f(0,dst.rows-1.f);
 
     float buf[16];
     Mat tmp( 1, 16, CV_32FC1, buf );
 
-    rng.fill( tmp, CV_RAND_NORMAL, cvScalarAll(0.), cvScalarAll(0.1) );
+    rng.fill( tmp, CV_RAND_NORMAL, Scalar::all(0.), Scalar::all(0.1) );
 
     for( i = 0; i < 4; i++ )
     {

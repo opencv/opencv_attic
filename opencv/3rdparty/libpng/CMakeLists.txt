@@ -6,14 +6,16 @@ project(libpng)
 
 # List of C++ files:
 
-include_directories(
-	"${CMAKE_CURRENT_SOURCE_DIR}"
-	"${CMAKE_CURRENT_SOURCE_DIR}/../include"
-	)
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}")
+
+if(ZLIB_FOUND)
+    include_directories(${ZLIB_INCLUDE_DIR})
+else()
+    include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../zlib")
+endif()
 
 file(GLOB lib_srcs *.c)
 file(GLOB lib_hdrs *.h)
-set(lib_ext_hdrs "../include/png.h" "../include/pngconf.h")
 
 # ----------------------------------------------------------------------------------
 # 				Define the library target:

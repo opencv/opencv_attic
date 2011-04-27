@@ -125,9 +125,18 @@ CVAPI(void) cvReleaseHaarClassifierCascade( CvHaarClassifierCascade** cascade );
 #define CV_HAAR_FIND_BIGGEST_OBJECT 4
 #define CV_HAAR_DO_ROUGH_SEARCH     8
 
+//CVAPI(CvSeq*) cvHaarDetectObjectsForROC( const CvArr* image,
+//                     CvHaarClassifierCascade* cascade, CvMemStorage* storage,
+//                     CvSeq** rejectLevels, CvSeq** levelWeightds,
+//                     double scale_factor CV_DEFAULT(1.1),
+//                     int min_neighbors CV_DEFAULT(3), int flags CV_DEFAULT(0),
+//                     CvSize min_size CV_DEFAULT(cvSize(0,0)), CvSize max_size CV_DEFAULT(cvSize(0,0)),
+//                     bool outputRejectLevels = false );
+
+
 CVAPI(CvSeq*) cvHaarDetectObjects( const CvArr* image,
-                     CvHaarClassifierCascade* cascade,
-                     CvMemStorage* storage, double scale_factor CV_DEFAULT(1.1),
+                     CvHaarClassifierCascade* cascade, CvMemStorage* storage, 
+                     double scale_factor CV_DEFAULT(1.1),
                      int min_neighbors CV_DEFAULT(3), int flags CV_DEFAULT(0),
                      CvSize min_size CV_DEFAULT(cvSize(0,0)), CvSize max_size CV_DEFAULT(cvSize(0,0)));
 
@@ -268,6 +277,14 @@ CVAPI(CvSeq*) cvLatentSvmDetectObjects(IplImage* image,
 #ifdef __cplusplus
 }
 
+CV_EXPORTS CvSeq* cvHaarDetectObjectsForROC( const CvArr* image,
+                     CvHaarClassifierCascade* cascade, CvMemStorage* storage,
+                     std::vector<int>& rejectLevels, std::vector<double>& levelWeightds,
+                     double scale_factor CV_DEFAULT(1.1),
+                     int min_neighbors CV_DEFAULT(3), int flags CV_DEFAULT(0),
+                     CvSize min_size CV_DEFAULT(cvSize(0,0)), CvSize max_size CV_DEFAULT(cvSize(0,0)),
+                     bool outputRejectLevels = false );
+
 namespace cv
 {
 	
@@ -275,6 +292,11 @@ namespace cv
 
 CV_EXPORTS_W void groupRectangles(vector<Rect>& rectList, int groupThreshold, double eps=0.2);
 CV_EXPORTS_W void groupRectangles(vector<Rect>& rectList, CV_OUT vector<int>& weights, int groupThreshold, double eps=0.2);
+CV_EXPORTS void groupRectangles(vector<Rect>& rectList, vector<int>& rejectLevels, 
+                                vector<double>& levelWeights, int groupThreshold, double eps=0.2);
+CV_EXPORTS void groupRectangles_meanshift(vector<Rect>& rectList, vector<double>& foundWeights, vector<double>& foundScales, 
+										  double detectThreshold = 0.0, Size winDetSize = Size(64, 128));
+
         
 class CV_EXPORTS FeatureEvaluator
 {
@@ -314,14 +336,29 @@ public:
                                    Size minSize=Size(),
                                    Size maxSize=Size() );
 
+    CV_WRAP virtual void detectMultiScale( const Mat& image,
+                                   CV_OUT vector<Rect>& objects,
+                                   vector<int>& rejectLevels,
+                                   vector<double>& levelWeights,
+                                   double scaleFactor=1.1,
+                                   int minNeighbors=3, int flags=0,
+                                   Size minSize=Size(),
+                                   Size maxSize=Size(),
+                                   bool outputRejectLevels=false );
+
+
     bool isOldFormatCascade() const;
     virtual Size getOriginalWindowSize() const;
     int getFeatureType() const;
     bool setImage( const Mat& );
 
 protected:
+    //virtual bool detectSingleScale( const Mat& image, int stripCount, Size processingRectSize,
+    //                                int stripSize, int yStep, double factor, vector<Rect>& candidates );
+
     virtual bool detectSingleScale( const Mat& image, int stripCount, Size processingRectSize,
-                                    int stripSize, int yStep, double factor, vector<Rect>& candidates );
+                                    int stripSize, int yStep, double factor, vector<Rect>& candidates,
+                                    vector<int>& rejectLevels, vector<double>& levelWeights, bool outputRejectLevels=false);
 
 protected:
     enum { BOOST = 0 };
@@ -331,19 +368,19 @@ protected:
     friend struct CascadeClassifierInvoker;
 
     template<class FEval>
-    friend int predictOrdered( CascadeClassifier& cascade, Ptr<FeatureEvaluator> &featureEvaluator);
+    friend int predictOrdered( CascadeClassifier& cascade, Ptr<FeatureEvaluator> &featureEvaluator, double& weight);
 
     template<class FEval>
-    friend int predictCategorical( CascadeClassifier& cascade, Ptr<FeatureEvaluator> &featureEvaluator);
+    friend int predictCategorical( CascadeClassifier& cascade, Ptr<FeatureEvaluator> &featureEvaluator, double& weight);
 
     template<class FEval>
-    friend int predictOrderedStump( CascadeClassifier& cascade, Ptr<FeatureEvaluator> &featureEvaluator);
+    friend int predictOrderedStump( CascadeClassifier& cascade, Ptr<FeatureEvaluator> &featureEvaluator, double& weight);
 
     template<class FEval>
-    friend int predictCategoricalStump( CascadeClassifier& cascade, Ptr<FeatureEvaluator> &featureEvaluator);
+    friend int predictCategoricalStump( CascadeClassifier& cascade, Ptr<FeatureEvaluator> &featureEvaluator, double& weight);
 
     bool setImage( Ptr<FeatureEvaluator>&, const Mat& );
-    virtual int runAt( Ptr<FeatureEvaluator>&, Point );
+    virtual int runAt( Ptr<FeatureEvaluator>&, Point, double& weight );
 
     class Data
     {
@@ -388,6 +425,8 @@ protected:
     Ptr<FeatureEvaluator> featureEvaluator;
     Ptr<CvHaarClassifierCascade> oldCascade;
 };
+
+void CV_EXPORTS_W groupRectangles( vector<Rect>& rectList, int groupThreshold, double eps, vector<int>* weights, vector<double>* levelWeights );
 
 //////////////// HOG (Histogram-of-Oriented-Gradients) Descriptor and Object Detector //////////////
 
@@ -438,23 +477,38 @@ public:
     CV_WRAP virtual bool load(const String& filename, const String& objname=String());
     CV_WRAP virtual void save(const String& filename, const String& objname=String()) const;
     virtual void copyTo(HOGDescriptor& c) const;
-    
+
     CV_WRAP virtual void compute(const Mat& img,
                          CV_OUT vector<float>& descriptors,
                          Size winStride=Size(), Size padding=Size(),
                          const vector<Point>& locations=vector<Point>()) const;
+	//with found weights output
+    CV_WRAP virtual void detect(const Mat& img, CV_OUT vector<Point>& foundLocations, 
+						vector<double>& weights,
+                        double hitThreshold=0, Size winStride=Size(), 
+						Size padding=Size(),
+                        const vector<Point>& searchLocations=vector<Point>()) const;
+	//without found weights output
     CV_WRAP virtual void detect(const Mat& img, CV_OUT vector<Point>& foundLocations,
                         double hitThreshold=0, Size winStride=Size(),
                         Size padding=Size(),
                         const vector<Point>& searchLocations=vector<Point>()) const;
-    CV_WRAP virtual void detectMultiScale(const Mat& img, CV_OUT vector<Rect>& foundLocations,
-                                  double hitThreshold=0, Size winStride=Size(),
-                                  Size padding=Size(), double scale=1.05,
-                                  int groupThreshold=2) const;
+	//with result weights output
+    CV_WRAP virtual void detectMultiScale(const Mat& img, CV_OUT vector<Rect>& foundLocations, 
+								  vector<double>& foundWeights, double hitThreshold=0, 
+								  Size winStride=Size(), Size padding=Size(), double scale=1.05, 
+								  double finalThreshold=2.0,bool useMeanshiftGrouping = false) const;
+	//without found weights output
+	CV_WRAP virtual void detectMultiScale(const Mat& img, CV_OUT vector<Rect>& foundLocations, 
+								  double hitThreshold=0, Size winStride=Size(),
+                                  Size padding=Size(), double scale=1.05, 
+								  double finalThreshold=2.0, bool useMeanshiftGrouping = false) const;
+
     CV_WRAP virtual void computeGradient(const Mat& img, CV_OUT Mat& grad, CV_OUT Mat& angleOfs,
                                  Size paddingTL=Size(), Size paddingBR=Size()) const;
     
     static vector<float> getDefaultPeopleDetector();
+	static vector<float> getDaimlerPeopleDetector();
     
     CV_PROP Size winSize;
     CV_PROP Size blockSize;
@@ -522,7 +576,126 @@ protected:
     FernClassifier fernClassifier;
 };
 
+/****************************************************************************************\
+*                           Dominant Orientation Templates                               *
+\****************************************************************************************/
+
+class CV_EXPORTS DOTDetector
+{
+public:
+    struct TrainParams
+    {
+        enum { BIN_COUNT = 7 };
+        static double BIN_RANGE() { return 180.0 / BIN_COUNT; }
+
+        TrainParams();
+        TrainParams( const Size& winSize, int regionSize=7, int minMagnitude=60,
+                     int maxStrongestCount=7, int maxNonzeroBits=6,
+                     float minRatio=0.85f );
+
+        void read( FileNode& fn );
+        void write( FileStorage& fs ) const;
+
+        void asserts() const;
+
+        Size winSize;
+        int regionSize;
+
+        int minMagnitude;
+        int maxStrongestCount;
+        int maxNonzeroBits;
+
+        float minRatio;
+    };
+
+    struct DetectParams
+    {
+        DetectParams();
+        DetectParams( float minRatio, int minRegionSize, int maxRegionSize, int regionSizeStep,
+                      bool isGroup, int groupThreshold, double groupEps );
+
+        void asserts( float minTrainRatio=1.f) const;
+
+        float minRatio;
+
+        int minRegionSize;
+        int maxRegionSize;
+        int regionSizeStep;
+
+        bool isGroup;
+
+        int groupThreshold;
+        double groupEps;
+    };
+
+    struct DOTTemplate
+    {
+        DOTTemplate();
+        DOTTemplate( const cv::Mat& quantizedImage, int classID,
+                     const cv::Mat& maskedImage=cv::Mat(), const cv::Mat& gradientMask=cv::Mat() );
+        void addClassID( int classID, const cv::Mat& maskedImage=cv::Mat(), const cv::Mat& gradientMask=cv::Mat() );
+
+        static float computeTexturelessRatio( const cv::Mat& quantizedImage );
+
+        void read( FileNode& fn );
+        void write( FileStorage& fs ) const;
+
+        cv::Mat quantizedImage;
+        std::vector<int> classIDs;
+        float texturelessRatio;
+
+        std::vector<cv::Mat> maskedImages;
+        std::vector<cv::Mat> gradientMasks;
+    };
+
+    DOTDetector();
+    DOTDetector( const std::string& filename ); // load from xml-file
+
+    virtual ~DOTDetector();
+    void clear();
+
+    void read( FileNode& fn );
+    void write( FileStorage& fs ) const;
+
+    void load( const std::string& filename );
+    void save( const std::string& filename ) const;
+
+    void train( const string& baseDirName, const TrainParams& trainParams=TrainParams(), bool isAddImageAndGradientMask=false );
+    void detectMultiScale( const Mat& image, vector<vector<Rect> >& rects,
+                           const DetectParams& detectParams=DetectParams(),
+                           vector<vector<float> >*ratios=0, vector<vector<int> >* trainTemplateIndices=0 ) const;
+
+    const vector<DOTTemplate>& getDOTTemplates() const;
+    const vector<string>& getClassNames() const;
+
+    static void groupRectanglesList( std::vector<std::vector<cv::Rect> >& rectList, int groupThreshold, double eps );
+
+protected:
+    void detectQuantized( const Mat& queryQuantizedImage, float minRatio,
+                          vector<vector<Rect> >& rects, vector<vector<float> >& ratios, vector<vector<int> >& trainTemlateIdxs ) const;
+    TrainParams trainParams;
+    bool isAddImageAndGradientMask;
+
+    std::vector<std::string> classNames;
+    std::vector<DOTTemplate> dotTemplates;
+};
+
 }
+
+/****************************************************************************************\
+*                                Datamatrix                                              *
+\****************************************************************************************/
+
+typedef unsigned char uint8;
+
+class CV_EXPORTS DataMatrixCode {
+public:
+  char msg[4];
+  CvMat *original;
+  CvMat *corners;
+};
+#include <deque>
+CV_EXPORTS std::deque<DataMatrixCode> cvFindDataMatrix(CvMat *im);
 
 #endif
 

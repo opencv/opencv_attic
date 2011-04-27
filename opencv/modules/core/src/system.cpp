@@ -172,10 +172,13 @@ IPPInitializer ippInitializer;
 volatile bool useOptimizedFlag = false;
 #endif
 
+volatile bool USE_SSE2 = false;
+
 void setUseOptimized( bool flag )
 {
     useOptimizedFlag = flag;
     currentFeatures = flag ? &featuresEnabled : &featuresDisabled;
+    USE_SSE2 = currentFeatures->have[CV_CPU_SSE2];
 }
 
 bool useOptimized(void)
@@ -361,9 +364,10 @@ string tempfile( const char* suffix )
 #endif
     if (*name == '\\')
         ++name;
+    string n(name);
     if (suffix != 0)
-        return string(buf) + suffix;
-    return buf;
+        n += (n[n.size()-1] == '.' && suffix[0] == '.' ? suffix + 1 : suffix);
+    return n;
 }
 
 static CvErrorCallback customErrorCallback = 0;

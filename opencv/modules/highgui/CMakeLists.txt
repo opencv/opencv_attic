@@ -5,41 +5,67 @@
 # ----------------------------------------------------------------------------
 project(opencv_highgui)
 
+set(GRFMT_LIBS)
+
+if(WITH_PNG OR WITH_TIFF OR WITH_OPENEXR)
+    if(ZLIB_FOUND)
+        include_directories(${ZLIB_INCLUDE_DIR})
+        set(GRFMT_LIBS ${GRFMT_LIBS} ${ZLIB_LIBRARIES})
+    else()
+        include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../../3rdparty/zlib")
+        set(GRFMT_LIBS ${GRFMT_LIBS} zlib)
+    endif()
+endif()
+
 if(WITH_JPEG)
 	add_definitions(-DHAVE_JPEG)
-	if(NOT JPEG_FOUND)
-		set(use_3rdparty TRUE)
+	if(JPEG_FOUND)
+        include_directories(${JPEG_INCLUDE_DIR})
+        set(GRFMT_LIBS ${GRFMT_LIBS} ${JPEG_LIBRARIES})
+    else()
+        include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../../3rdparty/libjpeg")
+        set(GRFMT_LIBS ${GRFMT_LIBS} libjpeg)
 	endif()
 endif()
 
 if(WITH_PNG)
 	add_definitions(-DHAVE_PNG)
-	if(NOT PNG_FOUND)
-		set(use_3rdparty TRUE)
+	if(PNG_FOUND)
+        add_definitions(${PNG_DEFINITIONS})
+        include_directories(${PNG_INCLUDE_DIR})
+        set(GRFMT_LIBS ${GRFMT_LIBS} ${PNG_LIBRARIES})
+    else()
+        include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../../3rdparty/libpng")
+        set(GRFMT_LIBS ${GRFMT_LIBS} libpng)
 	endif()
 endif()
 
 if(WITH_TIFF)
 	add_definitions(-DHAVE_TIFF)
-	if(NOT TIFF_FOUND)
-		set(use_3rdparty TRUE)
+	if(TIFF_FOUND)
+        include_directories(${TIFF_INCLUDE_DIR})
+        set(GRFMT_LIBS ${GRFMT_LIBS} ${TIFF_LIBRARIES})
+    else()
+        include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../../3rdparty/libtiff")
+        set(GRFMT_LIBS ${GRFMT_LIBS} libtiff)
 	endif()
 endif()
 
 if(WITH_JASPER)
 	add_definitions(-DHAVE_JASPER)
-	if(NOT JASPER_FOUND)
-		set(use_3rdparty TRUE)
+	if(JPEG_FOUND)
+        include_directories(${JASPER_INCLUDE_DIR})
+        set(GRFMT_LIBS ${GRFMT_LIBS} ${JASPER_LIBRARIES})
+    else()
+        include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../../3rdparty/libjasper")
+        set(GRFMT_LIBS ${GRFMT_LIBS} libjasper)
 	endif()
 endif()
 
 if(WITH_OPENEXR AND OPENEXR_FOUND)
 	add_definitions(-DHAVE_OPENEXR)
 	include_directories(${OPENEXR_INCLUDE_PATHS})
-endif()
-
-if(use_3rdparty)
-    include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../../3rdparty/include")
+    set(GRFMT_LIBS ${GRFMT_LIBS} ${OPENEXR_LIBRARIES})
 endif()
 
 if(MSVC)
@@ -132,10 +158,6 @@ if(UNIX)
 
     if(HAVE_GSTREAMER)
         set(highgui_srcs ${highgui_srcs} src/cap_gstreamer.cpp)
-        if(NOT HAVE_GSTREAMER_APP)
-            set(highgui_srcs ${highgui_srcs} src/gstappsink.cpp)
-            set(highgui_hdrs ${highgui_hdrs} src/gstappsink.h)
-        endif()
     endif()
 
     if(HAVE_UNICAP)
@@ -148,20 +170,6 @@ if(UNIX)
 		if(HAVE_CAMV4L OR HAVE_CAMV4L2)
 			set(highgui_srcs ${highgui_srcs} src/cap_v4l.cpp)
 		endif()
-	endif()
-
-	if(JPEG_FOUND)
-		include_directories(${JPEG_INCLUDE_DIR})
-	endif()
-    if(PNG_FOUND)
-		add_definitions(${PNG_DEFINITIONS})
-		include_directories(${PNG_INCLUDE_DIR})
-	endif()
-	if(TIFF_FOUND)
-		include_directories(${TIFF_INCLUDE_DIR})
-	endif()
-	if(JASPER_FOUND)
-		include_directories(${JASPER_INCLUDE_DIR})
 	endif()
 
     foreach(P ${HIGHGUI_INCLUDE_DIRS})
@@ -228,13 +236,19 @@ set(lib_srcs ${highgui_srcs} ${grfmt_srcs})
 # ----------------------------------------------------------------------------------
 set(the_target "opencv_highgui")
 
-add_definitions(-DHIGHGUI_EXPORTS -DCVAPI_EXPORTS)
+if (OPENCV_BUILD_SHARED_LIB) 
+    add_definitions(-DHIGHGUI_EXPORTS -DCVAPI_EXPORTS)
+endif()
 
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/include"
 					"${CMAKE_CURRENT_SOURCE_DIR}/../core/include"
 					"${CMAKE_CURRENT_SOURCE_DIR}/../imgproc/include"
                     "${CMAKE_CURRENT_SOURCE_DIR}/src"
                     "${CMAKE_CURRENT_BINARY_DIR}")
+
+if(WIN32)
+    include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../../3rdparty/include")
+endif()
 
 add_library(${the_target} ${lib_srcs} ${highgui_hdrs} ${grfmt_hdrs} ${highgui_ext_hdrs})
 
@@ -267,7 +281,7 @@ set_target_properties(${the_target} PROPERTIES
 	)
 
 if(MSVC)
-	set_target_properties(${the_target} PROPERTIES LINK_FLAGS "/NODEFAULTLIB:atlthunk.lib /NODEFAULTLIB:atlsd.lib")
+	set_target_properties(${the_target} PROPERTIES LINK_FLAGS "/NODEFAULTLIB:atlthunk.lib /NODEFAULTLIB:atlsd.lib /DEBUG")
 endif(MSVC)
 
 # Dependencies of this target:
@@ -277,25 +291,30 @@ add_dependencies(${the_target} opencv_core opencv_imgproc)
 
 if(WITH_JASPER AND NOT JASPER_FOUND)
 	add_dependencies(${the_target} libjasper)
-	#target_link_libraries(${the_target} libjasper)
 endif()
 
 if(WITH_JPEG AND NOT JPEG_FOUND)
 	add_dependencies(${the_target} libjpeg)
-	#target_link_libraries(${the_target} libjpeg)
 endif()
 
 if(WITH_PNG AND NOT PNG_FOUND)
-	add_dependencies(${the_target} libpng zlib)
-	#target_link_libraries(${the_target} libpng zlib)
+	add_dependencies(${the_target} libpng)
 endif()
 
 if(WITH_TIFF AND NOT TIFF_FOUND)
 	add_dependencies(${the_target} libtiff)
-	#target_link_libraries(${the_target} libtiff)
 endif()
 
-target_link_libraries(${the_target} ${OPENCV_LINKER_LIBS} opencv_core opencv_imgproc zlib ${JPEG_LIBRARIES} ${PNG_LIBRARIES} ${TIFF_LIBRARIES} ${JASPER_LIBRARIES} ${HIGHGUI_LIBRARIES} ${OPENEXR_LIBRARIES})
+if(NOT ZLIB_FOUND)
+    add_dependencies(${the_target} zlib)
+endif()
+
+#message(STATUS "GRFMT: ${GRFMT_LIBS}")
+#message(STATUS "HIGHGUI_LIBS: ${HIGHGUI_LIBRARIES}")
+#message(STATUS "OPENCV_LIBS: ${OPENCV_LINKER_LIBS}")
+
+target_link_libraries(${the_target} ${OPENCV_LINKER_LIBS} opencv_core
+                      opencv_imgproc ${GRFMT_LIBS} ${HIGHGUI_LIBRARIES})
 if( OPENNI_LIBRARY )
     target_link_libraries(${the_target} ${OPENNI_LIBRARY})
 endif()

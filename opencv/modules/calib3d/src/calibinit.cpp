@@ -1894,50 +1894,50 @@ cvDrawChessboardCorners( CvArr* _image, CvSize pattern_size,
     }
 }
 
-namespace cv
-{
-
-bool findChessboardCorners( const Mat& image, Size patternSize,
-                            vector<Point2f>& corners, int flags )
+bool cv::findChessboardCorners( const InputArray& _image, Size patternSize,
+                            OutputArray corners, int flags )
 {
     int count = patternSize.area()*2;
-    corners.resize(count);
-    CvMat _image = image;
-    bool ok = cvFindChessboardCorners(&_image, patternSize,
-        (CvPoint2D32f*)&corners[0], &count, flags ) > 0;
-    if(count >= 0)
-        corners.resize(count);
+    vector<Point2f> tmpcorners(count+1);
+    CvMat c_image = _image.getMat();
+    bool ok = cvFindChessboardCorners(&c_image, patternSize,
+        (CvPoint2D32f*)&tmpcorners[0], &count, flags ) > 0;
+    if( count > 0 )
+    {
+        tmpcorners.resize(count);
+        Mat(tmpcorners).copyTo(corners);
+    }
+    else
+        corners.release();
     return ok;
 }
 
-void drawChessboardCorners( Mat& image, Size patternSize,
-                            const Mat& corners,
+void cv::drawChessboardCorners( InputOutputArray _image, Size patternSize,
+                            const InputArray& _corners,
                             bool patternWasFound )
 {
-    if( corners.cols == 0 || corners.rows == 0 )
-        return;
-    CvMat _image = image;
-    int nelems = corners.checkVector(2, CV_32F, true);
-    CV_Assert(nelems >= 0);
-    cvDrawChessboardCorners( &_image, patternSize, (CvPoint2D32f*)corners.data,
-                             nelems, patternWasFound );
-}
-    
-void drawChessboardCorners( Mat& image, Size patternSize,
-                            const vector<Point2f>& corners,
-                            bool patternWasFound )
-{
+    Mat corners = _corners.getMat();
     if( corners.empty() )
         return;
-    CvMat _image = image;
-    cvDrawChessboardCorners( &_image, patternSize, (CvPoint2D32f*)&corners[0],
-                            (int)corners.size(), patternWasFound );
+    CvMat c_image = _image.getMat();
+    int nelems = corners.checkVector(2, CV_32F, true);
+    CV_Assert(nelems >= 0);
+    cvDrawChessboardCorners( &c_image, patternSize, (CvPoint2D32f*)corners.data,
+                             nelems, patternWasFound );
 }
 
-bool findCirclesGrid( const Mat& image, Size patternSize,
-                      vector<Point2f>& centers, int flags )
+bool cv::findCirclesGrid( const InputArray& _image, Size patternSize,
+                          OutputArray _centers, int flags )
 {
-    Ptr<SimpleBlobDetector> detector = new SimpleBlobDetector();
+    Mat image = _image.getMat();
+    vector<Point2f> centers;
+    SimpleBlobDetector::Params params;
+    if(flags & CALIB_CB_WHITE_CIRCLES)
+    {
+      params.filterByColor = true;
+      params.blobColor = 255;
+    }
+    Ptr<SimpleBlobDetector> detector = new SimpleBlobDetector(params);
     //Ptr<FeatureDetector> detector = new MserFeatureDetector();
     vector<KeyPoint> keypoints;
     detector->detect(image, keypoints);
@@ -1945,6 +1945,14 @@ bool findCirclesGrid( const Mat& image, Size patternSize,
     for (size_t i = 0; i < keypoints.size(); i++)
     {
       points.push_back (keypoints[i].pt);
+    }
+
+    if((flags & CALIB_CB_CLUSTERING) && (flags & CALIB_CB_ASYMMETRIC_GRID))
+    {
+      CirclesGridClusterFinder circlesGridClusterFinder;
+      circlesGridClusterFinder.findGrid(points, patternSize, centers);
+      Mat(centers).copyTo(_centers);
+      return !centers.empty();
     }
 
     CirclesGridFinderParameters parameters;
@@ -1992,10 +2000,10 @@ bool findCirclesGrid( const Mat& image, Size patternSize,
         if (i != 0)
         {
           Mat orgPointsMat;
-          transform(Mat(centers), orgPointsMat, H.inv());
-          convertPointsHomogeneous(orgPointsMat, centers);
+          transform(centers, orgPointsMat, H.inv());
+          convertPointsFromHomogeneous(orgPointsMat, centers);
         }
-
+        Mat(centers).copyTo(_centers);
         return true;
       }
       
@@ -2007,10 +2015,8 @@ bool findCirclesGrid( const Mat& image, Size patternSize,
         H = CirclesGridFinder::rectifyGrid(boxFinder.getDetectedGridSize(), centers, points, points);
       }
     }
-
+    Mat(centers).copyTo(_centers);
     return false;
-}
-
 }
 
 /* End of file. */

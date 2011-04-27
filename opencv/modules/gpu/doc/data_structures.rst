@@ -1,6 +1,8 @@
 Data Structures
 ===============
 
+.. highlight:: cpp
+
 .. index:: gpu::DevMem2D\_
 
 gpu::DevMem2D\_
@@ -27,7 +29,7 @@ This lightweight class encapsulates pitched memory on a GPU and is passed to nvc
 
         __CV_GPU_HOST_DEVICE__ size_t elemSize() const;
 
-        /* returns pointer to the beggining of the given image row */
+        /* returns pointer to the beginning of the given image row */
         __CV_GPU_HOST_DEVICE__ T* ptr(int y = 0);
         __CV_GPU_HOST_DEVICE__ const T* ptr(int y = 0) const;
     };
@@ -35,6 +37,7 @@ This lightweight class encapsulates pitched memory on a GPU and is passed to nvc
     typedef DevMem2D_<unsigned char> DevMem2D;
     typedef DevMem2D_<float> DevMem2Df;
     typedef DevMem2D_<int> DevMem2Di;
+..
 
 
 .. index:: gpu::PtrStep\_
@@ -286,7 +289,7 @@ gpu::Stream::waitForCompletion
 ----------------------------------
 .. cpp:function:: void gpu::Stream::waitForCompletion()
 
-    Blocks ?? until all operations in the stream are complete.
+    Blocks the current CPU thread until all operations in the stream are complete.
 
 .. index:: gpu::StreamAccessor
 
@@ -348,9 +351,5 @@ gpu::ensureSizeIsEnough
 
     :param type: Desired matrix type.
 
-    :param m: Destination matrix.
-
-    The following wrapper is also available: ??
-
-    
+    :param m: Destination matrix.    
 

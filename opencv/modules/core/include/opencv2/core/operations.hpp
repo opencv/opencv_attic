@@ -683,10 +683,10 @@ Matx<_Tp, m, n> Matx<_Tp, m, n>::mul(const Matx<_Tp, m, n>& a) const
 }
 
     
-CV_EXPORTS int LU(float* A, int m, float* b, int n);
-CV_EXPORTS int LU(double* A, int m, double* b, int n);
-CV_EXPORTS bool Cholesky(float* A, int m, float* b, int n);
-CV_EXPORTS bool Cholesky(double* A, int m, double* b, int n);    
+CV_EXPORTS int LU(float* A, size_t astep, int m, float* b, size_t bstep, int n);
+CV_EXPORTS int LU(double* A, size_t astep, int m, double* b, size_t bstep, int n);
+CV_EXPORTS bool Cholesky(float* A, size_t astep, int m, float* b, size_t bstep, int n);
+CV_EXPORTS bool Cholesky(double* A, size_t astep, int m, double* b, size_t bstep, int n);    
 
 
 template<typename _Tp, int m> struct CV_EXPORTS Matx_DetOp
@@ -694,7 +694,7 @@ template<typename _Tp, int m> struct CV_EXPORTS Matx_DetOp
     double operator ()(const Matx<_Tp, m, m>& a) const
     {
         Matx<_Tp, m, m> temp = a;
-        double p = LU(temp.val, m, 0, 0);
+        double p = LU(temp.val, m, m, 0, 0, 0);
         if( p == 0 )
             return p;
         for( int i = 0; i < m; i++ )
@@ -767,9 +767,9 @@ template<typename _Tp, int m> struct CV_EXPORTS Matx_FastInvOp
             b(i, i) = (_Tp)1;
         
         if( method == DECOMP_CHOLESKY )
-            return Cholesky(temp.val, m, b.val, m);
+            return Cholesky(temp.val, m*sizeof(_Tp), m, b.val, m*sizeof(_Tp), m);
         
-        return LU(temp.val, m, b.val, m) != 0;
+        return LU(temp.val, m*sizeof(_Tp), m, b.val, m*sizeof(_Tp), m) != 0;
     }
 };
 
@@ -839,9 +839,9 @@ template<typename _Tp, int m, int n> struct CV_EXPORTS Matx_FastSolveOp
         Matx<_Tp, m, m> temp = a;
         x = b;
         if( method == DECOMP_CHOLESKY )
-            return Cholesky(temp.val, m, x.val, n);
+            return Cholesky(temp.val, m*sizeof(_Tp), m, x.val, n*sizeof(_Tp), n);
         
-        return LU(temp.val, m, x.val, n) != 0;
+        return LU(temp.val, m*sizeof(_Tp), m, x.val, n*sizeof(_Tp), n) != 0;
     }
 };
 
@@ -2298,10 +2298,17 @@ inline Point LineIterator::pos() const
 /////////////////////////////// AutoBuffer ////////////////////////////////////////
 
 template<typename _Tp, size_t fixed_size> inline AutoBuffer<_Tp, fixed_size>::AutoBuffer()
-: ptr(buf), size(fixed_size) {}
+{
+    ptr = alignPtr(buf, 16);
+    size = fixed_size;
+}
 
 template<typename _Tp, size_t fixed_size> inline AutoBuffer<_Tp, fixed_size>::AutoBuffer(size_t _size)
-: ptr(buf), size(fixed_size) { allocate(_size); }
+{
+    ptr = alignPtr(buf, 16);
+    size = fixed_size;
+    allocate(_size);
+}
 
 template<typename _Tp, size_t fixed_size> inline AutoBuffer<_Tp, fixed_size>::~AutoBuffer()
 { deallocate(); }
@@ -2320,10 +2327,11 @@ template<typename _Tp, size_t fixed_size> inline void AutoBuffer<_Tp, fixed_size
 
 template<typename _Tp, size_t fixed_size> inline void AutoBuffer<_Tp, fixed_size>::deallocate()
 {
-    if( ptr != buf )
+    _Tp* buf0 = alignPtr(buf, 16);
+    if( ptr != buf0 )
     {
         cv::deallocate<_Tp>(ptr, size);
-        ptr = buf;
+        ptr = buf0;
         size = fixed_size;
     }
 }
@@ -3550,8 +3558,7 @@ template<typename _Tp> static inline std::ostream& operator << (std::ostream& ou
     return out;
 }
     
-#if 0
-template<typename _Tp> struct AlgorithmParamType {};
+/*template<typename _Tp> struct AlgorithmParamType {};
 template<> struct AlgorithmParamType<int> { enum { type = CV_PARAM_TYPE_INT }; };
 template<> struct AlgorithmParamType<double> { enum { type = CV_PARAM_TYPE_REAL }; };
 template<> struct AlgorithmParamType<string> { enum { type = CV_PARAM_TYPE_STRING }; };
@@ -3593,8 +3600,7 @@ template<typename _Tp> void Algorithm::addParam(int propId, _Tp& value, bool rea
 template<typename _Tp> void Algorithm::setParamRange(int propId, const _Tp& minVal, const _Tp& maxVal)
 {
     setParamRange_(propId, AlgorithmParamType<_Tp>::type, &minVal, &maxVal);
-}
-#endif
+}*/
     
 }
 

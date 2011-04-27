@@ -166,6 +166,7 @@ void crossCorr( const Mat& img, const Mat& templ, Mat& corr,
         for( k = 0; k < cn; k++ )
         {
             Mat src = src0;
+            dftImg = Scalar::all(0);
             
             if( cn > 1 )
             {
@@ -180,12 +181,6 @@ void crossCorr( const Mat& img, const Mat& templ, Mat& corr,
             if( x2 - x1 < dsz.width || y2 - y1 < dsz.height )
                 copyMakeBorder(dst1, dst, y1-y0, dst.rows-dst1.rows-(y1-y0),
                                x1-x0, dst.cols-dst1.cols-(x1-x0), borderType);
-
-            if( dftsize.width > dsz.width )
-            {
-                Mat part(dftImg, Range(0, dsz.height), Range(dsz.width, dftsize.width));
-                part = Scalar::all(0);
-            }
 
             dft( dftImg, dftImg, 0, dsz.height );
             Mat dftTempl1(dftTempl, Rect(0, tcn > 1 ? k*dftsize.height : 0,
@@ -233,10 +228,11 @@ cv::crossCorr( const Mat& img, const Mat& templ, Mat& corr,
     icvCrossCorr( &_img, &_templ, &_corr, anchor, delta, borderType );
 }*/
 
+}
 
 /*****************************************************************************************/
 
-void matchTemplate( const Mat& _img, const Mat& _templ, Mat& result, int method )
+void cv::matchTemplate( const InputArray& _img, const InputArray& _templ, OutputArray _result, int method )
 {
     CV_Assert( CV_TM_SQDIFF <= method && method <= CV_TM_CCOEFF_NORMED );
     
@@ -246,17 +242,19 @@ void matchTemplate( const Mat& _img, const Mat& _templ, Mat& result, int method 
                     method == CV_TM_SQDIFF_NORMED ||
                     method == CV_TM_CCOEFF_NORMED;
 
-    Mat img = _img, templ = _templ;
+    Mat img = _img.getMat(), templ = _templ.getMat();
     if( img.rows < templ.rows || img.cols < templ.cols )
         std::swap(img, templ);
     
     CV_Assert( (img.depth() == CV_8U || img.depth() == CV_32F) &&
                img.type() == templ.type() );
 
+    Size corrSize(img.cols - templ.cols + 1, img.rows - templ.rows + 1);
+    _result.create(corrSize, CV_32F);
+    Mat result = _result.getMat();
+    
     int cn = img.channels();
-    crossCorr( img, templ, result,
-               Size(img.cols - templ.cols + 1, img.rows - templ.rows + 1),
-               CV_32F, Point(0,0), 0, 0);
+    crossCorr( img, templ, result, result.size(), result.type(), Point(0,0), 0, 0);
 
     if( method == CV_TM_CCORR )
         return;
@@ -366,8 +364,6 @@ void matchTemplate( const Mat& _img, const Mat& _templ, Mat& result, int method 
             rrow[j] = (float)num;
         }
     }
-}
-
 }
 
 
