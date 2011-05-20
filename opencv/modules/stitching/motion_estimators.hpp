@@ -1,0 +1,91 @@
+#ifndef __OPENCV_MOTION_ESTIMATORS_HPP__
+#define __OPENCV_MOTION_ESTIMATORS_HPP__
+
+#include <vector>
+#include <opencv2/core/core.hpp>
+#include "matchers.hpp"
+#include "util.hpp"
+
+struct CameraParams
+{
+    CameraParams();
+    CameraParams(const CameraParams& other);
+    const CameraParams& operator =(const CameraParams& other);
+
+    double focal; // Focal length
+    cv::Mat R; // Rotation
+    cv::Mat t; // Translation
+};
+
+
+class Estimator
+{
+public:
+    void operator ()(const std::vector<ImageFeatures> &features, const std::vector<MatchesInfo> &pairwise_matches, 
+                     std::vector<CameraParams> &cameras)
+    {
+        estimate(features, pairwise_matches, cameras);
+    }
+
+protected:
+    virtual void estimate(const std::vector<ImageFeatures> &features, const std::vector<MatchesInfo> &pairwise_matches, 
+                          std::vector<CameraParams> &cameras) = 0;
+};
+
+
+class HomographyBasedEstimator : public Estimator
+{
+public:
+    HomographyBasedEstimator() : is_focals_estimated_(false) {}
+    bool isFocalsEstimated() const { return is_focals_estimated_; }
+
+private:   
+    void estimate(const std::vector<ImageFeatures> &features, const std::vector<MatchesInfo> &pairwise_matches, 
+                  std::vector<CameraParams> &cameras);
+
+    bool is_focals_estimated_;
+};
+
+
+class BundleAdjuster : public Estimator
+{
+public:
+    enum { RAY_SPACE, FOCAL_RAY_SPACE };
+
+    BundleAdjuster(int cost_space = FOCAL_RAY_SPACE, float conf_thresh = 1.f) 
+        : cost_space_(cost_space), conf_thresh_(conf_thresh) {}
+
+private:
+    void estimate(const std::vector<ImageFeatures> &features, const std::vector<MatchesInfo> &pairwise_matches, 
+                  std::vector<CameraParams> &cameras);
+
+    void calcError(cv::Mat &err);
+    void calcJacobian();
+
+    int num_images_;
+    int total_num_matches_;
+    const ImageFeatures *features_;
+    const MatchesInfo *pairwise_matches_;
+    cv::Mat cameras_;
+    std::vector<std::pair<int,int> > edges_;
+
+    int cost_space_;
+    float conf_thresh_;
+    cv::Mat err_, err1_, err2_;
+    cv::Mat J_;
+};
+
+
+void waveCorrect(std::vector<cv::Mat> &rmats);
+
+
+//////////////////////////////////////////////////////////////////////////////
+// Auxiliary functions
+
+std::vector<int> leaveBiggestComponent(std::vector<ImageFeatures> &features, std::vector<MatchesInfo> &pairwise_matches, 
+                                       float conf_threshold);
+
+void findMaxSpanningTree(int num_images, const std::vector<MatchesInfo> &pairwise_matches, 
+                         Graph &span_tree, std::vector<int> &centers);
+
+#endif // __OPENCV_MOTION_ESTIMATORS_HPP__
