@@ -800,19 +800,19 @@ bool HOGEvaluator::setImage( const Mat& image, Size winSize )
     integralHistogram( image, hist, normSum, Feature::BIN_NUM );
 
     t = (double)getTickCount() - t;
-	printf("integralHistogram time = %gms\n", t*1000./cv::getTickFrequency());
+	//printf("integralHistogram time = %gms\n", t*1000./cv::getTickFrequency());
 /////////////////////////
     size_t featIdx, featCount = features->size();
 
 /////////////////////////
-    double t1 = (double)getTickCount();
+    //double t1 = (double)getTickCount();
 
     for( featIdx = 0; featIdx < featCount; featIdx++ )
     {
         featuresPtr[featIdx].updatePtrs( hist, normSum );
     }
-    t1 = (double)getTickCount() - t1;
-	printf("pointers updating time = %gms\n", t1*1000./cv::getTickFrequency());
+    //t1 = (double)getTickCount() - t1;
+	//printf("pointers updating time = %gms\n", t1*1000./cv::getTickFrequency());
 /////////////////////////
     return true;
 }
@@ -833,7 +833,7 @@ void HOGEvaluator::integralHistogram(const Mat &img, vector<Mat> &histogram, Mat
     int x, y, binIdx;
 
 ////////////////////////////////
-    double t0 = (double)getTickCount();
+    //double t0 = (double)getTickCount();
 
     Size gradSize(img.size());
     Size histSize(histogram[0].size());
@@ -929,20 +929,20 @@ void HOGEvaluator::integralHistogram(const Mat &img, vector<Mat> &histogram, Mat
     //    res = 0;
     //}
 
-    t0 = (double)getTickCount() - t0;
-	printf("1_Dx, Dy, cartToPolar =  %gms\n", t0*1000./cv::getTickFrequency());
+    //t0 = (double)getTickCount() - t0;
+	//printf("1_Dx, Dy, cartToPolar =  %gms\n", t0*1000./cv::getTickFrequency());
 
 
 ////////////////////////////////
-    double t1 = (double)getTickCount();
+    //double t1 = (double)getTickCount();
     integral(grad, norm, grad.depth());
 
-    t1 = (double)getTickCount() - t1;
-	printf("2_OpenCV integral =  %gms\n", t1*1000./cv::getTickFrequency());
+    //t1 = (double)getTickCount() - t1;
+	//printf("2_OpenCV integral =  %gms\n", t1*1000./cv::getTickFrequency());
 ////////////////////////////////
 
 ////////////////////////////////
-    double t2 = (double)getTickCount();
+    //double t2 = (double)getTickCount();
 
     float* histBuf;
     const float* magBuf;
@@ -993,8 +993,8 @@ void HOGEvaluator::integralHistogram(const Mat &img, vector<Mat> &histogram, Mat
     //    }
     //    integral(hist, histogram[binIdx], hist.depth());
     //}
-    t2 = (double)getTickCount() - t2;
-	printf("2_my integral time =  %gms\n", t2*1000./cv::getTickFrequency());
+    //t2 = (double)getTickCount() - t2;
+	//printf("2_my integral time =  %gms\n", t2*1000./cv::getTickFrequency());
 
 
  //   double t1 = (double)getTickCount();
@@ -1554,10 +1554,10 @@ bool CascadeClassifier::detectSingleScale( const Mat& image, int stripCount, Siz
     ConcurrentRectVector concurrentCandidates;
 
     //////////////////////////////////////////////
-    double t2 = (double)getTickCount();
+    //double t2 = (double)getTickCount();
     parallel_for(BlockedRange(0, stripCount), CascadeClassifierInvoker( *this, processingRectSize, stripSize, yStep, factor, concurrentCandidates));
-    t2 = (double)getTickCount() - t2;
-    printf("features calculation time = %gms\n\n", t2*1000./cv::getTickFrequency());
+    //t2 = (double)getTickCount() - t2;
+    //printf("features calculation time = %gms\n\n", t2*1000./cv::getTickFrequency());
     ///////////////////////////////////////////////
     candidates.insert( candidates.end(), concurrentCandidates.begin(), concurrentCandidates.end() );
 
