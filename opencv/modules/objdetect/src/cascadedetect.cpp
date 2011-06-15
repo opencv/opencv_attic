@@ -517,7 +517,6 @@ bool  HaarEvaluator::setWindow( Point pt )
 }
 
 //----------------------------------------------  LBPEvaluator -------------------------------------
-
 class LBPEvaluator : public FeatureEvaluator
 {
 public:
@@ -558,7 +557,6 @@ private:
 
     int offset;
 };    
-    
     
 inline LBPEvaluator::Feature :: Feature()
 {
@@ -794,26 +792,15 @@ bool HOGEvaluator::setImage( const Mat& image, Size winSize )
         hist.push_back( Mat(rows, cols, CV_32FC1) );
     }
     normSum.create( rows, cols, CV_32FC1 );
-/////////////////////////
-    double t = (double)getTickCount();
 
     integralHistogram( image, hist, normSum, Feature::BIN_NUM );
 
-    t = (double)getTickCount() - t;
-	//printf("integralHistogram time = %gms\n", t*1000./cv::getTickFrequency());
-/////////////////////////
     size_t featIdx, featCount = features->size();
-
-/////////////////////////
-    //double t1 = (double)getTickCount();
 
     for( featIdx = 0; featIdx < featCount; featIdx++ )
     {
         featuresPtr[featIdx].updatePtrs( hist, normSum );
     }
-    //t1 = (double)getTickCount() - t1;
-	//printf("pointers updating time = %gms\n", t1*1000./cv::getTickFrequency());
-/////////////////////////
     return true;
 }
 
@@ -831,9 +818,6 @@ void HOGEvaluator::integralHistogram(const Mat &img, vector<Mat> &histogram, Mat
 {
     CV_Assert( img.type() == CV_8U || img.type() == CV_8UC3 );
     int x, y, binIdx;
-
-////////////////////////////////
-    //double t0 = (double)getTickCount();
 
     Size gradSize(img.size());
     Size histSize(histogram[0].size());
@@ -860,16 +844,6 @@ void HOGEvaluator::integralHistogram(const Mat &img, vector<Mat> &histogram, Mat
     Mat Angle(1, width, CV_32F, dbuf + width*3);
 
     float angleScale = (float)(nbins/CV_PI);
-
-    //float** histPtr = new float*[nbins];
-    //float** histPrevPtr = new float*[nbins];
-    //float* strBuf = new float[nbins];
-
-    //for( binIdx = 0; binIdx < nbins; binIdx++ )
-    //{
-    //    histPrevPtr[binIdx] = (float*)histogram[binIdx].ptr(0); 
-    //    memset( histPrevPtr[binIdx], 0, histWidth * sizeof(float) );
-    //}
 
     for( y = 0; y < gradSize.height; y++ )
     {
@@ -900,49 +874,8 @@ void HOGEvaluator::integralHistogram(const Mat &img, vector<Mat> &histogram, Mat
             qanglePtr[x] = (uchar)bidx;
             gradPtr[x] = mag;
         }
-        //for( binIdx = 0; binIdx < nbins; binIdx++ )
-        //    histPtr[binIdx] = (float*)histogram[binIdx].ptr(y+1);
-        //memset( strBuf, 0, nbins * sizeof(float) );
-        //for( binIdx = 0; binIdx < nbins; binIdx++ )
-        //    histPtr[binIdx][0] = 0.f;
-        //for( x = 0; x < qangle.cols; x++ )
-        //{
-        //    int idx = qanglePtr[x];
-        //    strBuf[idx] += gradPtr[x];
-        //    for( binIdx = 0; binIdx < nbins; binIdx++ )
-        //    {
-        //        //float temp = histPrevPtr[binIdx][x+1] + strBuf[binIdx];
-        //        histPtr[binIdx][x+1] = histPrevPtr[binIdx][x+1] + strBuf[binIdx];
-        //    }
-        //}
-        //for( binIdx = 0; binIdx < nbins; binIdx++ )
-        //    histPrevPtr[binIdx] = histPtr[binIdx];
     }
-    //for( y = 0; y <= gradSize.height; y++ )
-    //{
-    //    float res = 0;
-    //    for( x = 0; x <= width; x++ )
-    //    {
-    //        float tmp = histogram[0].at<float>(y,x);
-    //        res += tmp;
-    //    }
-    //    res = 0;
-    //}
-
-    //t0 = (double)getTickCount() - t0;
-	//printf("1_Dx, Dy, cartToPolar =  %gms\n", t0*1000./cv::getTickFrequency());
-
-
-////////////////////////////////
-    //double t1 = (double)getTickCount();
     integral(grad, norm, grad.depth());
-
-    //t1 = (double)getTickCount() - t1;
-	//printf("2_OpenCV integral =  %gms\n", t1*1000./cv::getTickFrequency());
-////////////////////////////////
-
-////////////////////////////////
-    //double t2 = (double)getTickCount();
 
     float* histBuf;
     const float* magBuf;
@@ -974,308 +907,7 @@ void HOGEvaluator::integralHistogram(const Mat &img, vector<Mat> &histogram, Mat
             magBuf += magStep;
         }
     }
-    //for( binIdx = 0; binIdx < nbins; binIdx++ )
-    //{
-    //    Mat hist(gradSize, CV_32F);
-
-    //    histBuf = (float*)hist.data;
-    //    magBuf = (const float*)grad.data;
-    //    binsBuf = (const uchar*)qangle.data;
-
-    //    histStep = (int)( hist.step / sizeof(float) );
-    //    for( y = 0; y < qangle.rows; y++ )
-    //    {
-    //        for( x = 0; x < qangle.cols; x++ )
-    //            binsBuf[x] == binIdx ? histBuf[x] = magBuf[x] : histBuf[x] = 0.f;
-    //        histBuf += histStep;
-    //        binsBuf += binsStep;
-    //        magBuf += magStep;
-    //    }
-    //    integral(hist, histogram[binIdx], hist.depth());
-    //}
-    //t2 = (double)getTickCount() - t2;
-	//printf("2_my integral time =  %gms\n", t2*1000./cv::getTickFrequency());
-
-
- //   double t1 = (double)getTickCount();
-
- //   float* histBuf[9];
- //   const float* magBuf = (const float*)grad.data;
- //   const uchar* binsBuf = (const uchar*)qangle.data;
-
- //   int binsStep = (int)( qangle.step / sizeof(uchar) );
- //   int histStep = (int)( histogram[0].step / sizeof(float) );
- //   int magStep = (int)( grad.step / sizeof(float) );
-
- //   for( binIdx = 0; binIdx < nbins; binIdx++ )
- //   {
- //       histBuf[binIdx] = (float*)histogram[binIdx].data;
- //       memset( histBuf[binIdx], 0, histSize.width * sizeof(histBuf[0]) );
- //       histBuf[binIdx] += histStep + 1;
- //   }
-
- //   float* strBuf = new float[nbins];
- //   
- //   for( y = 0; y < qangle.rows; y++ )
- //   {   
- //       memset( strBuf, 0, nbins * sizeof(float) );
- //       for( binIdx = 0; binIdx < nbins; binIdx++ )
- //           histBuf[binIdx][-1] = 0.f;       
- //       for( x = 0; x < qangle.cols; x++ )
- //       {
- //           strBuf[binsBuf[x]] += magBuf[x];
- //           for( binIdx = 0; binIdx < nbins; binIdx++ )
- //           {
- //               histBuf[binIdx][x] = histBuf[binIdx][-histStep + x] + strBuf[binIdx];
- //           }
- //       }
- //       for( binIdx = 0; binIdx < nbins; binIdx++ )
- //           histBuf[binIdx] += histStep;
- //       binsBuf += binsStep;
- //       magBuf += magStep;
- //   }
-
- //   t1 = (double)getTickCount() - t1;
-	//printf("2_my integral time =  %gms\n", t1*1000./cv::getTickFrequency());
-///////////////////////////////
 }
-
-//void HOGEvaluator::integralHistogram(const Mat &srcImage, vector<Mat> &histogram, Mat &norm, int nbins) const
-//{
-//    int x, y;
-////
-////    Mat src;
-////
-////    Mat Dx(srcImage.rows, srcImage.cols, CV_32F);
-////    Mat Dy(srcImage.rows, srcImage.cols, CV_32F);
-////    Mat Mag(srcImage.rows, srcImage.cols, CV_32F);
-////    Mat Angle(srcImage.rows, srcImage.cols, CV_32F);
-////    Mat Bins(srcImage.rows, srcImage.cols, CV_8S);
-////
-////    //Adding borders for correct gradient computation
-////
-///////////////////////////////////
-////    double t1 = (double)getTickCount();
-////    copyMakeBorder(srcImage, src, 1, 1, 1, 1, BORDER_REPLICATE);
-////    t1 = (double)getTickCount() - t1;
-////	printf("0_copyMakeBorder time =     %gms\n", t1*1000./cv::getTickFrequency());
-///////////////////////////////////
-////
-////    //Differential computing along both dimensions
-////
-///////////////////////////////////
-////    double t2 = (double)getTickCount();
-////    const uchar* prevBuf = src.data;
-////    int srcStep = (int)( src.step / sizeof(uchar) );
-////    const uchar* currBuf = prevBuf + srcStep;
-////    const uchar* nextBuf = currBuf + srcStep;
-////
-////    float* dxBuf = (float*)Dx.data;
-////    float* dyBuf = (float*)Dy.data;
-////    int dxStep = (int)( Dx.step / sizeof(float) );
-////    int dyStep = (int)( Dy.step / sizeof(float) );
-////  
-////    for (y = 1; y < src.rows - 1; y++)
-////    {
-////        for (x = 1; x < src.cols - 1; x++)
-////        {
-////            dxBuf[x-1] = (float)(currBuf[x+1] - currBuf[x-1]);
-////            dyBuf[x-1] = (float)(nextBuf[x] - prevBuf[x]);
-////        }
-////        prevBuf += srcStep;
-////        currBuf += srcStep;
-////        nextBuf += srcStep;
-////        dxBuf += dxStep;
-////        dyBuf += dyStep;
-////    }
-////    t2 = (double)getTickCount() - t2;
-////	printf("1_Differential computing time =     %gms\n", t2*1000./cv::getTickFrequency());
-///////////////////////////////////
-////
-////    //Computing of magnitudes and angles for all vectors
-////
-///////////////////////////////////
-////    double t3 = (double)getTickCount();
-////
-////    cartToPolar(Dx, Dy, Mag, Angle);
-////
-////    t3 = (double)getTickCount() - t3;
-////	printf("2_cartToPolar time =    %gms\n", t3*1000./cv::getTickFrequency());
-///////////////////////////////////
-////
-////    //Angles adjusting for 9 bins
-////
-///////////////////////////////////
-////    double t4 = (double)getTickCount();
-////
-////    float angleScale = (float)(nbins / CV_PI);
-////    float angle;
-////    int bidx;
-////
-////    const float* anglesBuf = (const float*)Angle.data;
-////    int angStep = (int)(Angle.step / sizeof(float));
-////
-////    char* binsBuf = (char*)Bins.data;
-////    int binsStep = (int)( Bins.step / sizeof(char) );
-////
-////    for (y = 0; y < Angle.rows; y++)
-////    {
-////        for (x = 0; x < Angle.cols; x++)
-////        {
-////            angle = anglesBuf[x] * angleScale - 0.5f;
-////            bidx = cvFloor(angle);
-////
-////            angle -= bidx;
-////            if (bidx < 0)
-////            {
-////                bidx += nbins;
-////            }
-////            else if (bidx >= nbins)
-////            {
-////                bidx -= nbins;
-////            }
-////            binsBuf[x] = (char)bidx;
-////        }
-////        binsBuf += binsStep;
-////        anglesBuf += angStep;
-////    }
-////
-////    t4 = (double)getTickCount() - t4;
-////	printf("3_bin adjusting time =  %gms\n", t4*1000./cv::getTickFrequency());
-//
-//////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////
-///////////////////////////////////////////////////////
-//    Mat img = srcImage;
-//    Size gradSize(img.size());
-//    Mat grad(gradSize, CV_32F);
-//    Mat qangle(gradSize, CV_8U);
-//
-//    AutoBuffer<int> mapbuf(gradSize.width + gradSize.height + 4);
-//    int* xmap = (int*)mapbuf + 1;
-//    int* ymap = xmap + gradSize.width + 2;
-//
-//    const int borderType = (int)BORDER_REPLICATE;
-//
-//    for( x = -1; x < gradSize.width + 1; x++ )
-//        xmap[x] = borderInterpolate(x, gradSize.width, borderType);
-//    for( y = -1; y < gradSize.height + 1; y++ )
-//        ymap[y] = borderInterpolate(y, gradSize.height, borderType);
-//
-//    int width = gradSize.width;
-//    AutoBuffer<float> _dbuf(width*4);
-//    float* dbuf = _dbuf;
-//    Mat DX(1, width, CV_32F, dbuf);
-//    Mat DY(1, width, CV_32F, dbuf + width);
-//    Mat MAG(1, width, CV_32F, dbuf + width*2);
-//    Mat ANGLE(1, width, CV_32F, dbuf + width*3);
-//
-//    float angleScale = (float)(nbins/CV_PI);
-//
-//    for( y = 0; y < gradSize.height; y++ )
-//    {
-//        const uchar* currPtr = img.data + img.step*ymap[y];
-//        const uchar* prevPtr = img.data + img.step*ymap[y-1];
-//        const uchar* nextPtr = img.data + img.step*ymap[y+1];
-//        float* gradPtr = (float*)grad.ptr(y);
-//        uchar* qanglePtr = (uchar*)qangle.ptr(y);
-//        for( x = 0; x < width; x++ )
-//        {
-//            dbuf[x] = (float)(currPtr[xmap[x+1]] - currPtr[xmap[x-1]]);
-//            dbuf[width + x] = (float)(nextPtr[xmap[x]] - prevPtr[xmap[x]]);
-//        }
-//        cartToPolar( DX, DY, MAG, ANGLE, false );
-//        for( x = 0; x < width; x++ )
-//        {
-//            float mag = dbuf[x+width*2];
-//            float angle = dbuf[x+width*3];
-//            angle = angle*angleScale - 0.5f;
-//            int bidx = cvFloor(angle);
-//            angle -= bidx;
-//            if( bidx < 0 )
-//                bidx += nbins;
-//            else if( bidx >= nbins )
-//                bidx -= nbins;
-//
-//            qanglePtr[x] = (uchar)bidx;
-//            gradPtr[x] = mag;
-//        }
-//    }
-//////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////
-///////////////////////////////////////////////////////
-////--------Ï-----ð------î------â-------ð------ê--------à-------
-//    //float res = 0;
-//    //int res1 = 0;
-//    //for( y = 0; y < qangle.rows; y++ )
-//    //{
-//    //    for( x = 0; x < qangle.cols; x++ )
-//    //    {
-//    //        if( grad.at<float>(y,x) != Mag.at<float>(y,x) )
-//    //        {
-//    //            float tB = Mag.at<float>(y,x);
-//    //            float tQ = grad.at<float>(y,x);
-//    //            res = tB + tQ;
-//    //        }
-//    //        if( qangle.at<uchar>(y,x) != Bins.at<uchar>(y,x) )
-//    //        {
-//    //            int tB = (int)Bins.at<uchar>(y,x);
-//    //            int tQ = (int)qangle.at<uchar>(y,x); 
-//    //            res1 = tB + tQ;
-//    //        }
-//    //    }
-//    //}
-//    //printf("%f%d", res, res1);
-//
-////--------Ï-----ð------î------â-------ð------ê--------à-------
-/////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//    integral(grad, norm);
-//////////////////////////////////
-//    double t5 = (double)getTickCount();
-//
-//    int binIdx;
-//
-//    Size histSize = histogram[0].size();
-//    float* histBuf[9];
-//    const float* magBuf = (const float*)grad.data;
-//    char* binsBuf = (char*)qangle.data;
-//    int binsStep = (int)( qangle.step / sizeof(char) );
-//  
-//    int histStep = (int)( histogram[0].step / sizeof(float) );
-//    int magStep = (int)( grad.step / sizeof(float) );
-//
-//    for( binIdx = 0; binIdx < nbins; binIdx++ )
-//    {
-//        histBuf[binIdx] = (float*)histogram[binIdx].data;
-//        memset( histBuf[binIdx], 0, histSize.width * sizeof(histBuf[0]) );
-//        histBuf[binIdx] += histStep + 1;
-//    }
-//
-//    float* strBuf = new float[nbins];
-//    
-//    for( y = 0; y < qangle.rows; y++ )
-//    {   
-//        memset( strBuf, 0, nbins * sizeof(float) );
-//        for( binIdx = 0; binIdx < nbins; binIdx++ )
-//            histBuf[binIdx][-1] = 0.f;       
-//        for( x = 0; x < qangle.cols; x++ )
-//        {
-//            strBuf[binsBuf[x]] += magBuf[x];
-//            for( binIdx = 0; binIdx < nbins; binIdx++ )
-//            {
-//                histBuf[binIdx][x] = histBuf[binIdx][-histStep + x] + strBuf[binIdx];
-//            }
-//        }
-//        for( binIdx = 0; binIdx < nbins; binIdx++ )
-//            histBuf[binIdx] += histStep;
-//        binsBuf += binsStep;
-//        magBuf += magStep;
-//    }
-//    t5 = (double)getTickCount() - t5;
-//	printf("5_my integral time =  %gms\n", t5*1000./cv::getTickFrequency());
-/////////////////////////////////
-//}
 
 Ptr<FeatureEvaluator> FeatureEvaluator::create( int featureType )
 {
@@ -1517,7 +1149,7 @@ struct CascadeClassifierInvoker
     
     void operator()(const BlockedRange& range) const
     {
-        //Ptr<FeatureEvaluator> evaluator = classifier->featureEvaluator->clone();
+        Ptr<FeatureEvaluator> evaluator = classifier->featureEvaluator->clone();
         Size winSize(cvRound(classifier->data.origWinSize.width * scalingFactor), cvRound(classifier->data.origWinSize.height * scalingFactor));
 
         int y1 = range.begin() * stripSize;
@@ -1526,7 +1158,7 @@ struct CascadeClassifierInvoker
         {
             for( int x = 0; x < processingRectSize.width; x += yStep )
             {
-                int result = classifier->runAt(/*evaluator*/classifier->featureEvaluator, Point(x, y));
+                int result = classifier->runAt(evaluator, Point(x, y));
                 if( result > 0 )
                     rectangles->push_back(Rect(cvRound(x*scalingFactor), cvRound(y*scalingFactor),
                                                winSize.width, winSize.height));
@@ -1550,17 +1182,9 @@ bool CascadeClassifier::detectSingleScale( const Mat& image, int stripCount, Siz
 {
     if( !featureEvaluator->setImage( image, data.origWinSize ) )
         return false;
-
     ConcurrentRectVector concurrentCandidates;
-
-    //////////////////////////////////////////////
-    //double t2 = (double)getTickCount();
     parallel_for(BlockedRange(0, stripCount), CascadeClassifierInvoker( *this, processingRectSize, stripSize, yStep, factor, concurrentCandidates));
-    //t2 = (double)getTickCount() - t2;
-    //printf("features calculation time = %gms\n\n", t2*1000./cv::getTickFrequency());
-    ///////////////////////////////////////////////
     candidates.insert( candidates.end(), concurrentCandidates.begin(), concurrentCandidates.end() );
-
     return true;
 }
 

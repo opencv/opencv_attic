@@ -7,7 +7,6 @@
 #include "lbpfeatures.h"
 #include "HOGfeatures.h" //new
 #include "boost.h"
-#include "boostSVM.h" //new
 #include "cv.h"
 #include "cxcore.h"
 
