@@ -126,7 +126,7 @@ public:
         for (int i = 0; i < trees_; i++) {
             /* Randomize the order of vectors to allow for unbiased sampling. */
             std::random_shuffle(vind_.begin(), vind_.end());
-            tree_roots_[i] = divideTree(vind_.data(), int(size_) );
+            tree_roots_[i] = divideTree(&vind_[0], int(size_) );
         }
     }
 
