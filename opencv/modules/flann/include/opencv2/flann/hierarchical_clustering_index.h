@@ -125,7 +125,7 @@ private:
                 centers[index] = indices[rnd];
 
                 for (int j=0; j<index; ++j) {
-                    float sq = distance(dataset[centers[index]], dataset[centers[j]], dataset.cols);
+                    DistanceType sq = distance(dataset[centers[index]], dataset[centers[j]], dataset.cols);
                     if (sq<1e-16) {
                         duplicate = true;
                     }
@@ -160,11 +160,11 @@ private:
         for (index=1; index<k; ++index) {
 
             int best_index = -1;
-            float best_val = 0;
+            DistanceType best_val = 0;
             for (int j=0; j<n; ++j) {
-                float dist = distance(dataset[centers[0]],dataset[indices[j]],dataset.cols);
+            	DistanceType dist = distance(dataset[centers[0]],dataset[indices[j]],dataset.cols);
                 for (int i=1; i<index; ++i) {
-                    float tmp_dist = distance(dataset[centers[i]],dataset[indices[j]],dataset.cols);
+                    DistanceType tmp_dist = distance(dataset[centers[i]],dataset[indices[j]],dataset.cols);
                     if (tmp_dist<dist) {
                         dist = tmp_dist;
                     }
