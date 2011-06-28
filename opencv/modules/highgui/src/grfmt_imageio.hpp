@@ -12,7 +12,8 @@
 #ifdef HAVE_IMAGEIO
 
 #include "grfmt_base.hpp"
-#include <ApplicationServices/ApplicationServices.h>
+#include <MobileCoreServices/MobileCoreServices.h> // for UTCoreTypes.h
+#include <ImageIO/ImageIO.h>
 
 namespace cv
 {

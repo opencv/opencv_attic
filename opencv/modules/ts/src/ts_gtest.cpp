@@ -6079,7 +6079,7 @@ void InitGoogleTest(int* argc, wchar_t** argv) {
 #if GTEST_HAS_DEATH_TEST
 
 #if GTEST_OS_MAC
-#include <crt_externs.h>
+//#include <crt_externs.h>
 #endif  // GTEST_OS_MAC
 
 #include <errno.h>
@@ -6871,6 +6871,7 @@ struct ExecDeathTestArgs {
   int close_fd;       // File descriptor to close; the read end of a pipe
 };
 
+/*
 #if GTEST_OS_MAC
 inline char** GetEnviron() {
   // When Google Test is built as a framework on MacOS X, the environ variable
@@ -6879,11 +6880,12 @@ inline char** GetEnviron() {
   return *_NSGetEnviron();
 }
 #else
+*/
 // Some POSIX platforms expect you to declare environ. extern "C" makes
 // it reside in the global namespace.
 extern "C" char** environ;
 inline char** GetEnviron() { return environ; }
-#endif  // GTEST_OS_MAC
+//#endif  // GTEST_OS_MAC
 
 // The main function for a threadsafe-style death test child process.
 // This function is called in a clone()-ed process and thus must avoid

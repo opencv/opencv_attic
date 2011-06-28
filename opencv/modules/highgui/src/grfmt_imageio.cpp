@@ -113,7 +113,8 @@ bool  ImageIODecoder::readData( Mat& img )
     }
     else if( color == CV_LOAD_IMAGE_COLOR )
     {
-        colorSpace = CGColorSpaceCreateWithName( kCGColorSpaceGenericRGBLinear );
+				colorSpace = CGColorSpaceCreateDeviceRGB();
+        //colorSpace = CGColorSpaceCreateWithName( kCGColorSpaceGenericRGBLinear );
         bpp = 4; /* CG only has 8 and 32 bit color spaces, so we waste a byte */
         alphaInfo = kCGImageAlphaNoneSkipLast;
     }
@@ -273,9 +274,11 @@ bool  ImageIOEncoder::write( const Mat& img, const vector<int>& params )
     uchar* bitmapData = NULL;
 
     if( bpp == 1 )
-        colorSpace = CGColorSpaceCreateWithName( kCGColorSpaceGenericGray );
+        colorSpace = CGColorSpaceCreateDeviceGray();
+        //colorSpace = CGColorSpaceCreateWithName( kCGColorSpaceGenericGray );
     else if( bpp == 4 )
-        colorSpace = CGColorSpaceCreateWithName( kCGColorSpaceGenericRGBLinear );
+        colorSpace = CGColorSpaceCreateDeviceRGB();
+        //colorSpace = CGColorSpaceCreateWithName( kCGColorSpaceGenericRGBLinear );
     if( !colorSpace )
         return false;
 

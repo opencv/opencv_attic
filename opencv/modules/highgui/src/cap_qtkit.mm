@@ -1,8 +1,9 @@
 /*
- *  CvCapture.mm
- *
- *  Created by Nicholas Butko on 11/3/09.
- *  Copyright 2009. All rights reserved.
+ *  cap_avfoundation.mm
+ *  For iOS video I/O
+ *  by Xiaochao Yang on 06/15/11 modified from 
+ *  cap_qtkit.mm for Nicholas Butko for Mac OS version.
+ *  Copyright 2011. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without 
  * modification, are permitted provided that the following conditions are met:
@@ -31,7 +32,11 @@
 #include "precomp.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 #include <iostream>
-#import <QTKit/QTKit.h>
+#import <AVFoundation/AVFoundation.h>
+#import <Foundation/NSException.h>
+
+
+//#import <QTKit/QTKit.h>
 
 using namespace std; 
 
@@ -49,21 +54,12 @@ using namespace std;
  *
  *****************************************************************************/
 
-#ifndef QTKIT_VERSION_7_6_3
-#define QTKIT_VERSION_7_6_3         70603
-#define QTKIT_VERSION_7_0           70000
-#endif
-
-#ifndef QTKIT_VERSION_MAX_ALLOWED
-#define QTKIT_VERSION_MAX_ALLOWED QTKIT_VERSION_7_0
-#endif
-
 #define DISABLE_AUTO_RESTART 999
 
-@interface CaptureDelegate : NSObject
+@interface CaptureDelegate : NSObject <AVCaptureVideoDataOutputSampleBufferDelegate>
 {
 	int newFrame; 
-    CVImageBufferRef  mCurrentImageBuffer;
+	CVImageBufferRef  mCurrentImageBuffer;
 	char* imagedata; 
 	IplImage* image; 
 	char* bgr_imagedata; 
@@ -71,14 +67,10 @@ using namespace std;
 	size_t currSize; 
 }
 
-- (void)captureOutput:(QTCaptureOutput *)captureOutput 
-  didOutputVideoFrame:(CVImageBufferRef)videoFrame 
-	 withSampleBuffer:(QTSampleBuffer *)sampleBuffer 
-	   fromConnection:(QTCaptureConnection *)connection;
+- (void)captureOutput:(AVCaptureOutput *)captureOutput 
+didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer 
+       fromConnection:(AVCaptureConnection *)connection;
 
-- (void)captureOutput:(QTCaptureOutput *)captureOutput 
-didDropVideoFrameWithSampleBuffer:(QTSampleBuffer *)sampleBuffer 
-	   fromConnection:(QTCaptureConnection *)connection;
 
 - (int)updateImage; 
 - (IplImage*)getOutput; 
@@ -95,36 +87,36 @@ didDropVideoFrameWithSampleBuffer:(QTSampleBuffer *)sampleBuffer
 
 class CvCaptureCAM : public CvCapture {
 public:
-	CvCaptureCAM(int cameraNum = -1) ;
-	~CvCaptureCAM(); 
-	virtual bool grabFrame(); 
-	virtual IplImage* retrieveFrame(int);
-	virtual IplImage* queryFrame(); 
-	virtual double getProperty(int property_id); 
-	virtual bool setProperty(int property_id, double value); 
-	virtual int didStart(); 
-	
-	
+    CvCaptureCAM(int cameraNum = -1) ;
+    ~CvCaptureCAM(); 
+    virtual bool grabFrame(); 
+    virtual IplImage* retrieveFrame(int);
+    virtual IplImage* queryFrame(); 
+    virtual double getProperty(int property_id); 
+    virtual bool setProperty(int property_id, double value); 
+    virtual int didStart(); 
+    
+    
 private:
-	QTCaptureSession            *mCaptureSession;
-	QTCaptureDeviceInput        *mCaptureDeviceInput;
-	QTCaptureDecompressedVideoOutput    *mCaptureDecompressedVideoOutput;
-	CaptureDelegate* capture; 
-	
-	int startCaptureDevice(int cameraNum); 
-	void stopCaptureDevice(); 
-	
-	void setWidthHeight(); 
-	bool grabFrame(double timeOut); 
-	
-	int camNum; 
-	int width; 
-	int height; 
-	int settingWidth;
-	int settingHeight;  
-	int started; 
-	int disableAutoRestart; 
-	
+    AVCaptureSession            *mCaptureSession;
+    AVCaptureDeviceInput        *mCaptureDeviceInput;
+    AVCaptureVideoDataOutput    *mCaptureDecompressedVideoOutput;
+    CaptureDelegate* capture; 
+    
+    int startCaptureDevice(int cameraNum); 
+    void stopCaptureDevice(); 
+    
+    void setWidthHeight(); 
+    bool grabFrame(double timeOut); 
+    
+    int camNum; 
+    int width; 
+    int height; 
+    int settingWidth;
+    int settingHeight;  
+    int started; 
+    int disableAutoRestart; 
+    
 }; 
 
 
@@ -138,37 +130,36 @@ private:
 
 class CvCaptureFile : public CvCapture {
 public:
-	CvCaptureFile(const char* filename) ;
-	~CvCaptureFile(); 
-	virtual bool grabFrame(); 
-	virtual IplImage* retrieveFrame(int);
-	virtual IplImage* queryFrame(); 
-	virtual double getProperty(int property_id); 
-	virtual bool setProperty(int property_id, double value); 
-	virtual int didStart(); 
-	
-	
+    
+    CvCaptureFile(const char* filename) ;
+    ~CvCaptureFile(); 
+    virtual bool grabFrame(); 
+    virtual IplImage* retrieveFrame(int);
+    virtual IplImage* queryFrame(); 
+    virtual double getProperty(int property_id); 
+    virtual bool setProperty(int property_id, double value); 
+    virtual int didStart(); 
+    
 private:
-	QTMovie *mCaptureSession;
-	
-	char* imagedata; 
-	IplImage* image; 
-	char* bgr_imagedata; 
-	IplImage* bgr_image; 
-	size_t currSize; 
-	
-	//IplImage* retrieveFrameBitmap(); 
-	IplImage* retrieveFramePixelBuffer(); 
-	double getFPS(); 
-	
-	int movieWidth; 
-	int movieHeight; 
-	double movieFPS; 
-	double currentFPS; 
-	double movieDuration; 
-	int changedPos;
-	
-	int started; 
+    AVAssetReader *mMovieReader;
+    
+    char* imagedata; 
+    IplImage* image; 
+    char* bgr_imagedata; 
+    IplImage* bgr_image; 
+    size_t currSize; 
+    
+    IplImage* retrieveFramePixelBuffer(); 
+    double getFPS(); 
+    
+    int movieWidth; 
+    int movieHeight; 
+    double movieFPS; 
+    double currentFPS; 
+    double movieDuration; 
+    int changedPos;
+    
+    int started; 
 }; 
 
 
@@ -182,21 +173,25 @@ private:
 
 class CvVideoWriter_QT : public CvVideoWriter{
 public:
-	CvVideoWriter_QT(const char* filename, int fourcc, 
-				   double fps, CvSize frame_size, 
-				   int is_color=1);
-	~CvVideoWriter_QT(); 
-	bool writeFrame(const IplImage* image); 
+    CvVideoWriter_QT(const char* filename, int fourcc, 
+                     double fps, CvSize frame_size, 
+                     int is_color=1);
+    ~CvVideoWriter_QT(); 
+    bool writeFrame(const IplImage* image); 
 private:
-	IplImage* argbimage; 
-	QTMovie* mMovie; 
-	unsigned char* imagedata; 
-	
-	NSString* path; 
-	NSString* codec; 
-	double movieFPS; 
-	CvSize movieSize; 
-	int movieColor; 
+    IplImage* argbimage; 
+    
+    AVAssetWriter *mMovieWriter;
+    AVAssetWriterInput* mMovieWriterInput; 
+    AVAssetWriterInputPixelBufferAdaptor* mMovieWriterAdaptor; 
+    
+    unsigned char* imagedata; 
+    NSString* path; 
+    NSString* codec; 
+    double movieFPS; 
+    CvSize movieSize; 
+    int movieColor; 
+    unsigned long frameCount;
 };
 
 
@@ -205,7 +200,7 @@ private:
 
 CvCapture* cvCreateFileCapture_QT(const char* filename) {
 	CvCaptureFile *retval = new CvCaptureFile(filename);
-	
+    
 	if(retval->didStart())
 		return retval;
 	delete retval;
@@ -213,20 +208,21 @@ CvCapture* cvCreateFileCapture_QT(const char* filename) {
 }
 
 CvCapture* cvCreateCameraCapture_QT(int index ) {
+    
 	CvCapture* retval = new CvCaptureCAM(index);
 	if (!((CvCaptureCAM *)retval)->didStart())
 		cvReleaseCapture(&retval); 
 	return retval;
+    
 }
 
 CvVideoWriter* cvCreateVideoWriter_QT(const char* filename, int fourcc, 
-									 double fps, CvSize frame_size, 
-									 int is_color) {
+                                      double fps, CvSize frame_size, 
+                                      int is_color) {
 	return new CvVideoWriter_QT(filename, fourcc, fps, frame_size,is_color); 
 }
 
 /********************** Implementation of Classes ****************************/ 
-
 /*****************************************************************************
  *
  * CvCaptureCAM Implementation. 
@@ -240,28 +236,27 @@ CvCaptureCAM::CvCaptureCAM(int cameraNum) {
 	mCaptureDeviceInput = nil;
 	mCaptureDecompressedVideoOutput = nil;
 	capture = nil; 
-	
+    
 	width = 0; 
 	height = 0; 
 	settingWidth = 0; 
 	settingHeight = 0; 
 	disableAutoRestart = 0; 
-	
+    
 	camNum = cameraNum; 
-	
+    
 	if (!startCaptureDevice(camNum)) {
 		cout << "Warning, camera failed to properly initialize!" << endl; 
 		started = 0; 
 	} else {
 		started = 1; 
 	}
-	
+    
 }
 
 CvCaptureCAM::~CvCaptureCAM() {
 	stopCaptureDevice(); 
-	
-	cout << "Cleaned up camera." << endl; 
+    //cout << "Cleaned up camera." << endl; 
 }
 
 int CvCaptureCAM::didStart() {
@@ -274,19 +269,19 @@ bool CvCaptureCAM::grabFrame() {
 }
 
 bool CvCaptureCAM::grabFrame(double timeOut) {
-	
+    
 	NSAutoreleasePool* localpool = [[NSAutoreleasePool alloc] init];
 	double sleepTime = 0.005; 
 	double total = 0; 
-
+    
 	NSDate *loopUntil = [NSDate dateWithTimeIntervalSinceNow:sleepTime];
 	while (![capture updateImage] && (total += sleepTime)<=timeOut &&
-		   [[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode 
-									beforeDate:loopUntil])
+           [[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode 
+                                    beforeDate:loopUntil])
 		loopUntil = [NSDate dateWithTimeIntervalSinceNow:sleepTime]; 
-
+    
 	[localpool drain];
-
+    
 	return total <= timeOut; 	
 }
 
@@ -298,9 +293,9 @@ IplImage* CvCaptureCAM::queryFrame() {
 	while (!grabFrame()) {
 		cout << "WARNING: Couldn't grab new frame from camera!!!" << endl; 
 		/*
-		cout << "Attempting to restart camera; set capture property DISABLE_AUTO_RESTART to disable." << endl; 		
-		stopCaptureDevice(); 
-		startCaptureDevice(camNum); 
+         cout << "Attempting to restart camera; set capture property DISABLE_AUTO_RESTART to disable." << endl; 		
+         stopCaptureDevice(); 
+         startCaptureDevice(camNum); 
 		 */
 	}
 	return retrieveFrame(0); 
@@ -308,106 +303,96 @@ IplImage* CvCaptureCAM::queryFrame() {
 
 void CvCaptureCAM::stopCaptureDevice() {
 	NSAutoreleasePool* localpool = [[NSAutoreleasePool alloc] init];
-	
+    
 	[mCaptureSession stopRunning];
-	
-	QTCaptureDevice *device = [mCaptureDeviceInput device];
-    if ([device isOpen])  [device close];
-	
+    
 	[mCaptureSession release];
-    [mCaptureDeviceInput release];
+	[mCaptureDeviceInput release];
 	
-	[mCaptureDecompressedVideoOutput setDelegate:mCaptureDecompressedVideoOutput]; 
 	[mCaptureDecompressedVideoOutput release]; 
 	[capture release]; 
 	[localpool drain]; 
-	
+    
 }
 
 int CvCaptureCAM::startCaptureDevice(int cameraNum) {
 	NSAutoreleasePool* localpool = [[NSAutoreleasePool alloc] init];
-	
+    
 	capture = [[CaptureDelegate alloc] init]; 
-	
-	QTCaptureDevice *device; 
-	NSArray* devices = [QTCaptureDevice inputDevicesWithMediaType:QTMediaTypeVideo];
+    
+	AVCaptureDevice *device; 
+	NSArray* devices = [AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo];
 	if ([devices count] == 0) {
-		cout << "QTKit didn't find any attached Video Input Devices!" << endl; 
+		cout << "AV Foundation didn't find any attached Video Input Devices!" << endl; 
 		[localpool drain]; 
 		return 0; 
 	}
-	
+    
 	if (cameraNum >= 0) {
 		camNum = cameraNum % [devices count]; 
 		if (camNum != cameraNum) {
 			cout << "Warning: Max Camera Num is " << [devices count]-1 << "; Using camera " << camNum << endl; 
 		}
-		device = [devices objectAtIndex:camNum] ;
+		device = [devices objectAtIndex:camNum];
 	} else {
-		device = [QTCaptureDevice defaultInputDeviceWithMediaType:QTMediaTypeVideo]  ;
+		device = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo]  ;
 	}
-	int success; 
+	//int success; 
 	NSError* error; 
-	
-    if (device) {
+    
+	if (device) {
+        
+		mCaptureDeviceInput = [[AVCaptureDeviceInput alloc] initWithDevice:device error:&error] ;
+		mCaptureSession = [[AVCaptureSession alloc] init] ;
+        
+		[mCaptureSession addInput:mCaptureDeviceInput];
+        /*
+         success = [mCaptureSession addInput:mCaptureDeviceInput];
+         
+         if (!success) {
+         cout << "AV Foundation failed to start capture session with opened Capture Device" << endl;
+         [localpool drain]; 
+         return 0; 
+         }
+         */
+        
+		mCaptureDecompressedVideoOutput = [[AVCaptureVideoDataOutput alloc] init];
 		
-		success = [device open:&error];
-        if (!success) {
-			cout << "QTKit failed to open a Video Capture Device" << endl; 			
-			[localpool drain]; 
-			return 0; 
-        }
+		dispatch_queue_t queue = dispatch_queue_create("cameraQueue", NULL); 
+		[mCaptureDecompressedVideoOutput setSampleBufferDelegate:capture queue:queue];
+		dispatch_release(queue); // TODO: double check
 		
-		mCaptureDeviceInput = [[QTCaptureDeviceInput alloc] initWithDevice:device] ;
-		mCaptureSession = [[QTCaptureSession alloc] init] ;
-		
-        success = [mCaptureSession addInput:mCaptureDeviceInput error:&error];		
-		
-		if (!success) {
-			cout << "QTKit failed to start capture session with opened Capture Device" << endl;
-			[localpool drain]; 
-			return 0; 
-        }
-		
-		
-		mCaptureDecompressedVideoOutput = [[QTCaptureDecompressedVideoOutput alloc] init];
-		[mCaptureDecompressedVideoOutput setDelegate:capture]; 
+        
 		NSDictionary *pixelBufferOptions ;
 		if (width > 0 && height > 0) {
 			pixelBufferOptions = [NSDictionary dictionaryWithObjectsAndKeys:
-								  [NSNumber numberWithDouble:1.0*width], (id)kCVPixelBufferWidthKey,
-								  [NSNumber numberWithDouble:1.0*height], (id)kCVPixelBufferHeightKey,
-								  //[NSNumber numberWithUnsignedInt:k32BGRAPixelFormat], (id)kCVPixelBufferPixelFormatTypeKey,
-								  [NSNumber numberWithUnsignedInt:kCVPixelFormatType_32BGRA],
-								  (id)kCVPixelBufferPixelFormatTypeKey,
-								  nil]; 
+                                  [NSNumber numberWithDouble:1.0*width], (id)kCVPixelBufferWidthKey,
+                                  [NSNumber numberWithDouble:1.0*height], (id)kCVPixelBufferHeightKey,
+                                  //[NSNumber numberWithUnsignedInt:k32BGRAPixelFormat], (id)kCVPixelBufferPixelFormatTypeKey,
+                                  [NSNumber numberWithUnsignedInt:kCVPixelFormatType_32BGRA],
+                                  (id)kCVPixelBufferPixelFormatTypeKey,
+                                  nil]; 
 		} else {
 			pixelBufferOptions = [NSDictionary dictionaryWithObjectsAndKeys:
-								  [NSNumber numberWithUnsignedInt:kCVPixelFormatType_32BGRA], 
-								  (id)kCVPixelBufferPixelFormatTypeKey,
-								  nil]; 
+                                  [NSNumber numberWithUnsignedInt:kCVPixelFormatType_32BGRA], 
+                                  (id)kCVPixelBufferPixelFormatTypeKey,
+                                  nil]; 
 		}
-		[mCaptureDecompressedVideoOutput setPixelBufferAttributes:pixelBufferOptions]; 
+		[mCaptureDecompressedVideoOutput setVideoSettings:pixelBufferOptions]; 
+		[mCaptureDecompressedVideoOutput setAlwaysDiscardsLateVideoFrames:YES]; 
 		
-#if QTKIT_VERSION_MAX_ALLOWED >= QTKIT_VERSION_7_6_3
-		[mCaptureDecompressedVideoOutput setAutomaticallyDropsLateVideoFrames:YES]; 
-#endif
-		
-		
-        success = [mCaptureSession addOutput:mCaptureDecompressedVideoOutput error:&error];
-        if (!success) {
-            cout << "QTKit failed to add Output to Capture Session" << endl; 
-			[localpool drain]; 
-            return 0;
-        }
-		
+		//TODO: How to deal with camera setting under openCV framework?	
+		//mCaptureSession.sessionPreset = AVCaptureSessionPresetHigh; 
+        
+		[mCaptureSession addOutput:mCaptureDecompressedVideoOutput];
+
 		[mCaptureSession startRunning];
-		
+        
 		grabFrame(60); 
-		
+        
 		return 1; 
 	}
-	
+    
 	[localpool drain]; 
 	return 0; 
 }
@@ -415,13 +400,13 @@ int CvCaptureCAM::startCaptureDevice(int cameraNum) {
 void CvCaptureCAM::setWidthHeight() {	
 	NSAutoreleasePool* localpool = [[NSAutoreleasePool alloc] init]; 
 	NSDictionary* pixelBufferOptions = [NSDictionary dictionaryWithObjectsAndKeys:
-						  [NSNumber numberWithDouble:1.0*width], (id)kCVPixelBufferWidthKey,
-						  [NSNumber numberWithDouble:1.0*height], (id)kCVPixelBufferHeightKey,
-						  [NSNumber numberWithUnsignedInt:kCVPixelFormatType_32BGRA],
-						  (id)kCVPixelBufferPixelFormatTypeKey,
-						  nil]; 
-	
-	[mCaptureDecompressedVideoOutput setPixelBufferAttributes:pixelBufferOptions];
+                                        [NSNumber numberWithDouble:1.0*width], (id)kCVPixelBufferWidthKey,
+                                        [NSNumber numberWithDouble:1.0*height], (id)kCVPixelBufferHeightKey,
+                                        [NSNumber numberWithUnsignedInt:kCVPixelFormatType_32BGRA],
+                                        (id)kCVPixelBufferPixelFormatTypeKey,
+                                        nil]; 
+    
+	[mCaptureDecompressedVideoOutput setVideoSettings:pixelBufferOptions];
 	grabFrame(60); 
 	[localpool drain]; 
 }
@@ -429,12 +414,18 @@ void CvCaptureCAM::setWidthHeight() {
 
 double CvCaptureCAM::getProperty(int property_id){
 	NSAutoreleasePool* localpool = [[NSAutoreleasePool alloc] init]; 
-	
-	NSArray* connections = [mCaptureDeviceInput	connections]; 
-	QTFormatDescription* format = [[connections objectAtIndex:0] formatDescription]; 
-	NSSize s1 = [[format attributeForKey:QTFormatDescriptionVideoCleanApertureDisplaySizeAttribute] sizeValue]; 
-	
-	int width=s1.width, height=s1.height; 
+    
+    /*
+     NSArray* connections = [mCaptureDeviceInput	connections]; 
+     QTFormatDescription* format = [[connections objectAtIndex:0] formatDescription]; 
+     NSSize s1 = [[format attributeForKey:QTFormatDescriptionVideoCleanApertureDisplaySizeAttribute] sizeValue]; 
+     */
+    
+	NSArray* ports = mCaptureDeviceInput.ports; 
+	CMFormatDescriptionRef format = [[ports objectAtIndex:0] formatDescription]; 
+	CGSize s1 = CMVideoFormatDescriptionGetPresentationDimensions(format, YES, YES); 
+    
+	int width=(int)s1.width, height=(int)s1.height;
 	switch (property_id) {
 		case CV_CAP_PROP_FRAME_WIDTH:
 			return width;
@@ -443,9 +434,9 @@ double CvCaptureCAM::getProperty(int property_id){
 		default:
 			return 0; 
 	}
-	
+    
 	[localpool drain]; 
-	
+    
 }
 
 bool CvCaptureCAM::setProperty(int property_id, double value) {
@@ -512,28 +503,28 @@ bool CvCaptureCAM::setProperty(int property_id, double value) {
 	[super dealloc]; 
 }
 
-- (void)captureOutput:(QTCaptureOutput *)captureOutput 
-  didOutputVideoFrame:(CVImageBufferRef)videoFrame 
-	 withSampleBuffer:(QTSampleBuffer *)sampleBuffer 
-	   fromConnection:(QTCaptureConnection *)connection {
+
+
+- (void)captureOutput:(AVCaptureOutput *)captureOutput 
+didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer 
+       fromConnection:(AVCaptureConnection *)connection{ 
+    
+    
+	CVImageBufferRef imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer);
 	
-    CVBufferRetain(videoFrame);
+	CVBufferRetain(imageBuffer);
 	CVImageBufferRef imageBufferToRelease  = mCurrentImageBuffer;
     
-    @synchronized (self) {
-		
-        mCurrentImageBuffer = videoFrame;
+	@synchronized (self) {
+        
+		mCurrentImageBuffer = imageBuffer;
 		newFrame = 1; 
-    }
-	
+	}
+    
 	CVBufferRelease(imageBufferToRelease);
     
 }
-- (void)captureOutput:(QTCaptureOutput *)captureOutput 
-didDropVideoFrameWithSampleBuffer:(QTSampleBuffer *)sampleBuffer 
-	   fromConnection:(QTCaptureConnection *)connection {
-	cout << "Camera dropped frame!" << endl; 
-}
+
 
 -(IplImage*) getOutput {
 	return bgr_image; 
@@ -542,21 +533,21 @@ didDropVideoFrameWithSampleBuffer:(QTSampleBuffer *)sampleBuffer
 -(int) updateImage {
 	if (newFrame==0) return 0; 
 	CVPixelBufferRef pixels; 
-	
+    
 	@synchronized (self){
 		pixels = CVBufferRetain(mCurrentImageBuffer);
 		newFrame = 0; 
 	}
-	
+    
 	CVPixelBufferLockBaseAddress(pixels, 0);		
 	uint32_t* baseaddress = (uint32_t*)CVPixelBufferGetBaseAddress(pixels);
-	
+    
 	size_t width = CVPixelBufferGetWidth(pixels);
 	size_t height = CVPixelBufferGetHeight(pixels);
 	size_t rowBytes = CVPixelBufferGetBytesPerRow(pixels);
-	
+    
 	if (rowBytes != 0) { 
-		
+        
 		if (currSize != rowBytes*height*sizeof(char)) {
 			currSize = rowBytes*height*sizeof(char); 
 			if (imagedata != NULL) free(imagedata); 
@@ -564,9 +555,9 @@ didDropVideoFrameWithSampleBuffer:(QTSampleBuffer *)sampleBuffer
 			imagedata = (char*)malloc(currSize); 
 			bgr_imagedata = (char*)malloc(currSize); 
 		}
-		
+        
 		memcpy(imagedata, baseaddress, currSize);
-		
+        
 		if (image == NULL) {
 			image = cvCreateImageHeader(cvSize(width,height), IPL_DEPTH_8U, 4); 
 		}
@@ -577,7 +568,7 @@ didDropVideoFrameWithSampleBuffer:(QTSampleBuffer *)sampleBuffer
 		image->widthStep = rowBytes; 
 		image->imageData = imagedata; 
 		image->imageSize = currSize; 
-		
+        
 		if (bgr_image == NULL) {
 			bgr_image = cvCreateImageHeader(cvSize(width,height), IPL_DEPTH_8U, 3); 
 		}
@@ -588,14 +579,14 @@ didDropVideoFrameWithSampleBuffer:(QTSampleBuffer *)sampleBuffer
 		bgr_image->widthStep = rowBytes; 
 		bgr_image->imageData = bgr_imagedata; 
 		bgr_image->imageSize = currSize; 
-		
+        
 		cvCvtColor(image, bgr_image, CV_BGRA2BGR); 
-		
+        
 	}
-	
+    
 	CVPixelBufferUnlockBaseAddress(pixels, 0);
 	CVBufferRelease(pixels); 
-	
+    
 	return 1; 
 }
 
@@ -611,68 +602,113 @@ didDropVideoFrameWithSampleBuffer:(QTSampleBuffer *)sampleBuffer
  *****************************************************************************/
 
 CvCaptureFile::CvCaptureFile(const char* filename) {
-	
-	NSAutoreleasePool* localpool = [[NSAutoreleasePool alloc] init];
-	
-	
-	mCaptureSession = nil;
+    
+    NSAutoreleasePool* localpool = [[NSAutoreleasePool alloc] init];
+    
+	mMovieReader = nil;
 	image = NULL; 
 	bgr_image = NULL; 
 	imagedata = NULL; 
 	bgr_imagedata = NULL; 
 	currSize = 0; 
-	
+    
 	movieWidth = 0; 
 	movieHeight = 0; 
 	movieFPS = 0; 
 	currentFPS = 0; 
 	movieDuration = 0; 
 	changedPos = 0; 
-	
-	started = 0; 
-	
-	NSError* error; 
-	
-	
-	mCaptureSession = [[QTMovie movieWithFile:[NSString stringWithCString:filename 
-																 encoding:NSASCIIStringEncoding] 
-										error:&error] retain]; 
-	[mCaptureSession setAttribute:[NSNumber numberWithBool:YES] 
-						   forKey:QTMovieLoopsAttribute]; 
-	
-	if (mCaptureSession == nil) {
-		cout << "WARNING: Couldn't read movie file " << filename << endl; 
-		[localpool drain]; 
-		started = 0; 
-		return; 
-	}
-	
-	
-	[mCaptureSession gotoBeginning]; 
-	
-	NSSize size = [[mCaptureSession attributeForKey:QTMovieNaturalSizeAttribute] sizeValue];
-	
-	movieWidth = size.width; 
-	movieHeight = size.height; 
-	movieFPS = getFPS(); 
-	currentFPS = movieFPS; 
-	
-	QTTime t; 
-	
-	[[mCaptureSession attributeForKey:QTMovieDurationAttribute] getValue:&t]; 
-	movieDuration = (t.timeValue *1000.0 / t.timeScale); 
-	started = 1; 
-	[localpool drain]; 
-	
+    
+	started = 0;
+    
+    AVURLAsset *asset = [AVURLAsset URLAssetWithURL:
+                         [NSURL fileURLWithPath: [NSString stringWithUTF8String:filename]] 
+                                            options:nil];
+    
+    AVAssetTrack* videoTrack = nil;
+    NSArray* tracks = [asset tracksWithMediaType:AVMediaTypeVideo];
+    if ([tracks count] == 1)
+    {
+        videoTrack = [tracks objectAtIndex:0];
+        
+        movieWidth = videoTrack.naturalSize.width;
+        movieHeight = videoTrack.naturalSize.height;
+        movieFPS = videoTrack.nominalFrameRate;
+        
+        currentFPS = movieFPS; //Debugging !! should be getFPS();
+        //Debugging. need to be checked
+        
+        // In ms
+        movieDuration = videoTrack.timeRange.duration.value/videoTrack.timeRange.duration.timescale * 1000;  
+        
+        started = 1; 
+        NSError* error = nil;
+        mMovieReader = [[AVAssetReader alloc] initWithAsset:asset error:&error];
+        if (error)
+            NSLog(@"%@", [error localizedDescription]);		
+        
+        NSDictionary* videoSettings = 
+        [NSDictionary dictionaryWithObject:[NSNumber numberWithUnsignedInt:kCVPixelFormatType_32BGRA] 
+                                    forKey:(NSString*)kCVPixelBufferPixelFormatTypeKey]; 
+        
+        [mMovieReader addOutput:[AVAssetReaderTrackOutput 
+                                 assetReaderTrackOutputWithTrack:videoTrack 
+                                 outputSettings:videoSettings]];
+        [mMovieReader startReading];
+    }
+    
+    /* 
+    // Asynchronously open the video in another thread. Always fail.
+    [asset loadValuesAsynchronouslyForKeys:[NSArray arrayWithObject:@"tracks"] completionHandler:
+     ^{
+         // The completion block goes here.
+         dispatch_async(dispatch_get_main_queue(),
+                        ^{
+                            AVAssetTrack* ::videoTrack = nil;
+                            NSArray* ::tracks = [asset tracksWithMediaType:AVMediaTypeVideo];
+                            if ([tracks count] == 1)
+                            {
+                                videoTrack = [tracks objectAtIndex:0];
+                                
+                                movieWidth = videoTrack.naturalSize.width;
+                                movieHeight = videoTrack.naturalSize.height;
+                                movieFPS = videoTrack.nominalFrameRate;
+                                currentFPS = movieFPS; //Debugging !! should be getFPS();
+																//Debugging. need to be checked
+                                movieDuration = videoTrack.timeRange.duration.value/videoTrack.timeRange.duration.timescale * 1000;
+																started = 1; 
+                                
+                                NSError* ::error = nil;
+                                // mMovieReader is a member variable
+                                mMovieReader = [[AVAssetReader alloc] initWithAsset:asset error:&error];
+                                if (error)
+                                    NSLog(@"%@", [error localizedDescription]);		
+                                
+                                NSDictionary* ::videoSettings = 
+                                [NSDictionary dictionaryWithObject:[NSNumber numberWithUnsignedInt:kCVPixelFormatType_32BGRA] 
+                                                            forKey:(NSString*)kCVPixelBufferPixelFormatTypeKey]; 
+                                
+                                [mMovieReader addOutput:[AVAssetReaderTrackOutput 
+                                                         assetReaderTrackOutputWithTrack:videoTrack 
+                                                         outputSettings:videoSettings]];
+                                [mMovieReader startReading];
+                            }
+                        });
+         
+     }];
+     */
+    
+     [localpool drain]; 
 }
 
 CvCaptureFile::~CvCaptureFile() {
+        
 	NSAutoreleasePool* localpool = [[NSAutoreleasePool alloc] init];
 	if (imagedata != NULL) free(imagedata); 
 	if (bgr_imagedata != NULL) free(bgr_imagedata); 
 	cvReleaseImage(&image);  
 	cvReleaseImage(&bgr_image); 
-	[mCaptureSession release]; 
+	[mMovieReader release]; 
 	[localpool drain]; 
 }
 
@@ -681,45 +717,55 @@ int CvCaptureFile::didStart() {
 }
 
 bool CvCaptureFile::grabFrame() {
-	NSAutoreleasePool* localpool = [[NSAutoreleasePool alloc] init];
-	double t1 = getProperty(CV_CAP_PROP_POS_MSEC); 
-	[mCaptureSession stepForward]; 
-	double t2 = getProperty(CV_CAP_PROP_POS_MSEC); 
-	if (t2>t1 && !changedPos) {
-		currentFPS = 1000.0/(t2-t1); 
-	} else {
-		currentFPS = movieFPS; 
-	}
-	changedPos = 0; 
-	[localpool drain]; 
-	return 1; 
+    
+    
+    currentFPS = movieFPS;
+    return 1;
+    
+    
+    /*  
+     double t1 = getProperty(CV_CAP_PROP_POS_MSEC); 
+     [mCaptureSession stepForward]; 
+     double t2 = getProperty(CV_CAP_PROP_POS_MSEC); 
+     if (t2>t1 && !changedPos) {
+     currentFPS = 1000.0/(t2-t1); 
+     } else {
+     currentFPS = movieFPS; 
+     }
+     changedPos = 0; 
+     
+     */
+    
 }
 
 
 IplImage* CvCaptureFile::retrieveFramePixelBuffer() {
+    
+    if (mMovieReader.status != AVAssetReaderStatusReading){
+        return NULL;
+    }
+    
 	NSAutoreleasePool* localpool = [[NSAutoreleasePool alloc] init];
-	
-	
-	NSDictionary *attributes = [NSDictionary dictionaryWithObjectsAndKeys:
-								QTMovieFrameImageTypeCVPixelBufferRef, QTMovieFrameImageType,
-#ifdef MAC_OS_X_VERSION_10_6
-								[NSNumber numberWithBool:YES], QTMovieFrameImageSessionMode,
-#endif
-								nil];
-	CVPixelBufferRef frame = (CVPixelBufferRef)[mCaptureSession frameImageAtTime:[mCaptureSession currentTime]
-																  withAttributes:attributes 
-																		   error:nil]; 
-	
-	CVPixelBufferRef pixels = CVBufferRetain(frame);
+    
+    AVAssetReaderTrackOutput * output = [mMovieReader.outputs objectAtIndex:0];
+    CMSampleBufferRef sampleBuffer = [output copyNextSampleBuffer];
+    if (!sampleBuffer) {
+        [localpool drain];
+        return NULL;
+    }
+    CVPixelBufferRef frame = CMSampleBufferGetImageBuffer(sampleBuffer);
+    CVPixelBufferRef pixels = CVBufferRetain(frame);
+    
+    //lock
 	CVPixelBufferLockBaseAddress(pixels, 0);		
-	
+    
 	uint32_t* baseaddress = (uint32_t*)CVPixelBufferGetBaseAddress(pixels);
 	size_t width = CVPixelBufferGetWidth(pixels);
 	size_t height = CVPixelBufferGetHeight(pixels);
 	size_t rowBytes = CVPixelBufferGetBytesPerRow(pixels);
-	
+    
 	if (rowBytes != 0) { 
-		
+        
 		if (currSize != rowBytes*height*sizeof(char)) {
 			currSize = rowBytes*height*sizeof(char); 
 			if (imagedata != NULL) free(imagedata); 
@@ -727,23 +773,13 @@ IplImage* CvCaptureFile::retrieveFramePixelBuffer() {
 			imagedata = (char*)malloc(currSize);  
 			bgr_imagedata = (char*)malloc(currSize); 
 		}
-		
+        
 		memcpy(imagedata, baseaddress, currSize);
-		
-		//ARGB -> BGRA
-		for (unsigned int i = 0; i < currSize; i+=4) {
-			char temp = imagedata[i]; 
-			imagedata[i] = imagedata[i+3]; 
-			imagedata[i+3] = temp; 
-			temp = imagedata[i+1]; 
-			imagedata[i+1] = imagedata[i+2]; 
-			imagedata[i+2] = temp; 
-		}
-		
+        
 		if (image == NULL) {
 			image = cvCreateImageHeader(cvSize(width,height), IPL_DEPTH_8U, 4); 
 		}
-		
+        
 		image->width =width; 
 		image->height = height; 
 		image->nChannels = 4; 
@@ -751,12 +787,12 @@ IplImage* CvCaptureFile::retrieveFramePixelBuffer() {
 		image->widthStep = width*4; 
 		image->imageData = imagedata; 
 		image->imageSize = currSize; 
-		
-		
+        
+        
 		if (bgr_image == NULL) {
 			bgr_image = cvCreateImageHeader(cvSize(width,height), IPL_DEPTH_8U, 3); 
 		}
-		
+        
 		bgr_image->width =width; 
 		bgr_image->height = height; 
 		bgr_image->nChannels = 3; 
@@ -764,16 +800,15 @@ IplImage* CvCaptureFile::retrieveFramePixelBuffer() {
 		bgr_image->widthStep = width*4; 
 		bgr_image->imageData = bgr_imagedata; 
 		bgr_image->imageSize = currSize; 
-		
+        
 		cvCvtColor(image, bgr_image,CV_BGRA2BGR); 
-		
+        
 	}
-	
+    
 	CVPixelBufferUnlockBaseAddress(pixels, 0);
 	CVBufferRelease(pixels);
-	
+    
 	[localpool drain]; 
-	
 	return bgr_image; 
 }
 
@@ -788,105 +823,117 @@ IplImage* CvCaptureFile::queryFrame() {
 }	
 
 double CvCaptureFile::getFPS() {
-	if (mCaptureSession == nil) return 0; 
-	NSAutoreleasePool* localpool = [[NSAutoreleasePool alloc] init];
-	double now = getProperty(CV_CAP_PROP_POS_MSEC); 
-	double retval = 0; 
-	if (now == 0) {
-		[mCaptureSession stepForward]; 
-		double t2 =  getProperty(CV_CAP_PROP_POS_MSEC); 
-		[mCaptureSession stepBackward];
-		retval = 1000.0 / (t2-now); 
-	} else {
-		[mCaptureSession stepBackward]; 
-		double t2 = getProperty(CV_CAP_PROP_POS_MSEC); 
-		[mCaptureSession stepForward]; 
-		retval = 1000.0 / (now-t2); 
-	}
-	[localpool drain]; 
-	return retval; 
+    
+    /*
+     if (mCaptureSession == nil) return 0; 
+     NSAutoreleasePool* localpool = [[NSAutoreleasePool alloc] init];
+     double now = getProperty(CV_CAP_PROP_POS_MSEC); 
+     double retval = 0; 
+     if (now == 0) {
+     [mCaptureSession stepForward]; 
+     double t2 =  getProperty(CV_CAP_PROP_POS_MSEC); 
+     [mCaptureSession stepBackward];
+     retval = 1000.0 / (t2-now); 
+     } else {
+     [mCaptureSession stepBackward]; 
+     double t2 = getProperty(CV_CAP_PROP_POS_MSEC); 
+     [mCaptureSession stepForward]; 
+     retval = 1000.0 / (now-t2); 
+     }
+     [localpool drain];
+     return retval; 
+     */
+    return 15.0; //Debugging 
 }
 
 double CvCaptureFile::getProperty(int property_id){
-	if (mCaptureSession == nil) return 0;
-	
-	NSAutoreleasePool* localpool = [[NSAutoreleasePool alloc] init]; 
-	
-	double retval; 
-	QTTime t; 
-	
-	switch (property_id) {
-		case CV_CAP_PROP_POS_MSEC:
-			[[mCaptureSession attributeForKey:QTMovieCurrentTimeAttribute] getValue:&t]; 
-			retval = t.timeValue * 1000.0 / t.timeScale; 
-			break; 
-		case CV_CAP_PROP_POS_FRAMES:
-			retval = movieFPS * getProperty(CV_CAP_PROP_POS_MSEC) / 1000;
-			break; 
-		case CV_CAP_PROP_POS_AVI_RATIO:
-			retval = (getProperty(CV_CAP_PROP_POS_MSEC)) / (movieDuration ); 
-			break; 
-		case CV_CAP_PROP_FRAME_WIDTH:
-			retval = movieWidth;
-			break; 
-		case CV_CAP_PROP_FRAME_HEIGHT:  
-			retval = movieHeight; 
-			break;
-		case CV_CAP_PROP_FPS:
-			retval = currentFPS;  
-			break; 
-		case CV_CAP_PROP_FOURCC:
-		default:
-			retval = 0; 
-	}
-	
-	[localpool drain]; 
-	return retval; 
+    
+    /*
+     if (mCaptureSession == nil) return 0;
+     
+     NSAutoreleasePool* localpool = [[NSAutoreleasePool alloc] init]; 
+     
+     double retval; 
+     QTTime t; 
+     
+     switch (property_id) {
+     case CV_CAP_PROP_POS_MSEC:
+     [[mCaptureSession attributeForKey:QTMovieCurrentTimeAttribute] getValue:&t]; 
+     retval = t.timeValue * 1000.0 / t.timeScale; 
+     break; 
+     case CV_CAP_PROP_POS_FRAMES:
+     retval = movieFPS * getProperty(CV_CAP_PROP_POS_MSEC) / 1000;
+     break; 
+     case CV_CAP_PROP_POS_AVI_RATIO:
+     retval = (getProperty(CV_CAP_PROP_POS_MSEC)) / (movieDuration ); 
+     break; 
+     case CV_CAP_PROP_FRAME_WIDTH:
+     retval = movieWidth;
+     break; 
+     case CV_CAP_PROP_FRAME_HEIGHT:  
+     retval = movieHeight; 
+     break;
+     case CV_CAP_PROP_FPS:
+     retval = currentFPS;  
+     break; 
+     case CV_CAP_PROP_FOURCC:
+     default:
+     retval = 0; 
+     }
+     
+     [localpool drain]; 
+     return retval; 
+     */
+    return 1.0; //Debugging
 }
 
 bool CvCaptureFile::setProperty(int property_id, double value) {
-
-	if (mCaptureSession == nil) return false;
-	
-	NSAutoreleasePool* localpool = [[NSAutoreleasePool alloc] init]; 
-	
-	bool retval = false; 
-	QTTime t; 
-	
-	double ms; 
-	
-	switch (property_id) {
-		case CV_CAP_PROP_POS_MSEC:
-			[[mCaptureSession attributeForKey:QTMovieCurrentTimeAttribute] getValue:&t]; 
-			t.timeValue = value * t.timeScale / 1000; 
-			[mCaptureSession setCurrentTime:t]; 
-			changedPos = 1; 
-			retval = true; 
-			break; 
-		case CV_CAP_PROP_POS_FRAMES:
-			ms = (value*1000.0 -5)/ currentFPS; 
-			retval = setProperty(CV_CAP_PROP_POS_MSEC, ms); 
-			break; 
-		case CV_CAP_PROP_POS_AVI_RATIO:
-			ms = value * movieDuration; 
-			retval = setProperty(CV_CAP_PROP_POS_MSEC, ms); 
-			break; 
-		case CV_CAP_PROP_FRAME_WIDTH:
-			//retval = movieWidth;
-			break; 
-		case CV_CAP_PROP_FRAME_HEIGHT:  
-			//retval = movieHeight; 
-			break;
-		case CV_CAP_PROP_FPS:
-			//etval = currentFPS;  
-			break; 
-		case CV_CAP_PROP_FOURCC:
-		default:
-			retval = false; 
-	}
-	
-	[localpool drain]; 
-	return retval; 
+    
+    /*
+     if (mCaptureSession == nil) return false;
+     
+     NSAutoreleasePool* localpool = [[NSAutoreleasePool alloc] init]; 
+     
+     bool retval = false; 
+     QTTime t; 
+     
+     double ms; 
+     
+     switch (property_id) {
+     case CV_CAP_PROP_POS_MSEC:
+     [[mCaptureSession attributeForKey:QTMovieCurrentTimeAttribute] getValue:&t]; 
+     t.timeValue = value * t.timeScale / 1000; 
+     [mCaptureSession setCurrentTime:t]; 
+     changedPos = 1; 
+     retval = true; 
+     break; 
+     case CV_CAP_PROP_POS_FRAMES:
+     ms = (value*1000.0 -5)/ currentFPS; 
+     retval = setProperty(CV_CAP_PROP_POS_MSEC, ms); 
+     break; 
+     case CV_CAP_PROP_POS_AVI_RATIO:
+     ms = value * movieDuration; 
+     retval = setProperty(CV_CAP_PROP_POS_MSEC, ms); 
+     break; 
+     case CV_CAP_PROP_FRAME_WIDTH:
+     //retval = movieWidth;
+     break; 
+     case CV_CAP_PROP_FRAME_HEIGHT:  
+     //retval = movieHeight; 
+     break;
+     case CV_CAP_PROP_FPS:
+     //etval = currentFPS;  
+     break; 
+     case CV_CAP_PROP_FOURCC:
+     default:
+     retval = false; 
+     }
+     
+     [localpool drain]; 
+     
+     return retval; 
+     */
+    return true;
 }
 
 
@@ -900,129 +947,165 @@ bool CvCaptureFile::setProperty(int property_id, double value) {
 
 
 CvVideoWriter_QT::CvVideoWriter_QT(const char* filename, int fourcc, 
-							   double fps, CvSize frame_size, 
-							   int is_color) {
-	
-	
-	NSAutoreleasePool* localpool = [[NSAutoreleasePool alloc] init];
+                                   double fps, CvSize frame_size, 
+                                   int is_color) {
+    /*
+     AVFileTypeQuickTimeMovie
+     UTI for the QuickTime movie file format.
+     The value of this UTI is com.apple.quicktime-movie. Files are identified with the .mov and .qt extensions.
+     
+     AVFileTypeMPEG4
+     UTI for the MPEG-4 file format.
+     The value of this UTI is public.mpeg-4. Files are identified with the .mp4 extension.
 
-	movieFPS = fps; 
-	movieSize = frame_size; 
-	movieColor = is_color; 
-	mMovie = nil; 
-	path = [[[NSString stringWithCString:filename encoding:NSASCIIStringEncoding] stringByExpandingTildeInPath] retain];
-	
-	argbimage = cvCreateImage(movieSize, IPL_DEPTH_8U, 4); 
-	
-	
-	char cc[5]; 
-	cc[0] = fourcc & 255; 
-	cc[1] = (fourcc >> 8) & 255; 
-	cc[2] = (fourcc >> 16) & 255; 
-	cc[3] = (fourcc >> 24) & 255; 
-	cc[4] = 0; 
-	int cc2 = CV_FOURCC(cc[0], cc[1], cc[2], cc[3]); 
-	if (cc2!=fourcc) {
-		cout << "WARNING: Didn't properly encode FourCC. Expected " << fourcc 
-		<< " but got " << cc2 << "." << endl;
-	}
-	
-	codec = [[NSString stringWithCString:cc encoding:NSASCIIStringEncoding] retain]; 
-	
-	NSError *error = nil;
-    if (!mMovie) {
-		
-		NSFileManager* files = [NSFileManager defaultManager]; 
-		if ([files fileExistsAtPath:path]) {
-			if (![files removeItemAtPath:path error:nil]) {
-				cout << "WARNING: Failed to remove existing file " << [path cStringUsingEncoding:NSASCIIStringEncoding] << endl; 
-			}
-		}
-		
-        mMovie = [[QTMovie alloc] initToWritableFile:path error:&error];
-        if (!mMovie) {
-            cout << "WARNING: Could not create empty movie file container." << endl; 
-			[localpool drain]; 
-            return;
-        }
+     AVFileTypeAppleM4V
+     UTI for the iTunes video file format.
+     The value of this UTI is com.apple.mpeg-4-video. Files are identified with the .m4v extension.
+
+     AVFileType3GPP
+     UTI for the 3GPP file format.
+     The value of this UTI is public.3gpp. Files are identified with the .3gp, .3gpp, and .sdv extensions.
+    */
+    
+    //TODO: switch case file type and codec;
+       
+    frameCount = 0;
+    movieFPS = fps;
+    movieSize = frame_size;
+    movieColor = is_color;
+    argbimage = cvCreateImage(movieSize, IPL_DEPTH_8U, 4); 
+    
+    path = [[[NSString stringWithCString:filename encoding:NSASCIIStringEncoding] stringByExpandingTildeInPath] retain];
+    codec = nil;
+    
+    NSLog(@"Path: %@", path);
+    
+    NSError *error = nil;
+
+    
+    // Make sure the file does not already exist. Necessary to overwirte??
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    if ([fileManager fileExistsAtPath:path]){
+        [fileManager removeItemAtPath:path error:&error];
     }
-	
-	[mMovie setAttribute:[NSNumber numberWithBool:YES] forKey:QTMovieEditableAttribute];
-	
-	[localpool drain]; 
+    
+    // Wire the writer:
+    // Supported file types: 
+    //      AVFileTypeQuickTimeMovie AVFileTypeMPEG4 AVFileTypeAppleM4V AVFileType3GPP
+    mMovieWriter = [[AVAssetWriter alloc] initWithURL:[NSURL fileURLWithPath:path] 
+                                             fileType:AVFileTypeMPEG4 
+                                                error:&error];
+    //NSParameterAssert(mMovieWriter);
+    
+    // Two codec supported AVVideoCodecH264 AVVideoCodecJPEG
+    // On iPhone 3G H264 is not supported.
+    NSDictionary *videoSettings = [NSDictionary dictionaryWithObjectsAndKeys:
+                                   AVVideoCodecJPEG, AVVideoCodecKey,
+                                   [NSNumber numberWithInt:movieSize.width], AVVideoWidthKey,
+                                   [NSNumber numberWithInt:movieSize.height], AVVideoHeightKey,
+                                   nil];
+    
+    mMovieWriterInput = [[AVAssetWriterInput
+                          assetWriterInputWithMediaType:AVMediaTypeVideo
+                          outputSettings:videoSettings] retain];
+    
+    //NSParameterAssert(mMovieWriterInput);
+    //NSParameterAssert([mMovieWriter canAddInput:mMovieWriterInput]);
+    
+    [mMovieWriter addInput:mMovieWriterInput];
+    
+    mMovieWriterAdaptor = [[AVAssetWriterInputPixelBufferAdaptor alloc] initWithAssetWriterInput:mMovieWriterInput sourcePixelBufferAttributes:nil];
+    
+    
+    //Start a session:
+    [mMovieWriter startWriting];
+    [mMovieWriter startSessionAtSourceTime:kCMTimeZero];
+    
+    
+    if(mMovieWriter.status == AVAssetWriterStatusFailed){
+        NSLog(@"%@", [mMovieWriter.error localizedDescription]);
+        // TODO: error handling, cleanup. Throw execption?
+        // return;
+    }
 }
 
 
 CvVideoWriter_QT::~CvVideoWriter_QT() {
-	cvReleaseImage(&argbimage); 	
-	
-	NSAutoreleasePool* localpool = [[NSAutoreleasePool alloc] init];
-	[mMovie release]; 
-	[path release]; 
-	[codec release]; 
-	[localpool drain]; 
+    
+    [mMovieWriterInput markAsFinished];
+    [mMovieWriter finishWriting];         
+    [mMovieWriter release];
+    [mMovieWriterInput release];
+    [mMovieWriterAdaptor release];    
+    [path release];
+    [codec release];
+    cvReleaseImage(&argbimage);
+    
 }
 
-bool CvVideoWriter_QT::writeFrame(const IplImage* image) {
-	NSAutoreleasePool* localpool = [[NSAutoreleasePool alloc] init]; 
-	
-	cvCvtColor(image, argbimage, CV_BGR2BGRA); 
-	
-	
-	unsigned char* imagedata = (unsigned char*)argbimage->imageData; 
-	//BGRA --> ARGB 
-	
-	for (int j = 0; j < argbimage->height; j++) {
-		int rowstart = argbimage->widthStep * j; 
-		for (int i = rowstart; i < rowstart+argbimage->widthStep; i+=4) {
-			unsigned char temp = imagedata[i];
-			imagedata[i] = 255; 
-			imagedata[i+3] = temp;   
-			temp = imagedata[i+2];
-			imagedata[i+2] = imagedata[i+1];
-			imagedata[i+1] = temp; 
-		}
-	}
-	
-	NSBitmapImageRep* imageRep = [[NSBitmapImageRep alloc] initWithBitmapDataPlanes:&imagedata 
-																		 pixelsWide:movieSize.width 
-																		 pixelsHigh:movieSize.height 
-																	  bitsPerSample:8 
-																	samplesPerPixel:4 
-																		   hasAlpha:YES
-																		   isPlanar:NO
-																	 colorSpaceName:NSDeviceRGBColorSpace
-																	   bitmapFormat:NSAlphaFirstBitmapFormat
-																		bytesPerRow:argbimage->widthStep
-																	   bitsPerPixel:32]  ; 
-	
-	
-	NSImage* nsimage = [[NSImage alloc] init]; 
-	
-	[nsimage addRepresentation:imageRep];
-	
-	/*  
-	 codecLosslessQuality          = 0x00000400,
-	 codecMaxQuality               = 0x000003FF,
-	 codecMinQuality               = 0x00000000,
-	 codecLowQuality               = 0x00000100,
-	 codecNormalQuality            = 0x00000200,
-	 codecHighQuality              = 0x00000300
-	 */
-	
-	[mMovie addImage:nsimage forDuration:QTMakeTime(100,100*movieFPS) withAttributes:[NSDictionary dictionaryWithObjectsAndKeys:
-																					  codec, QTAddImageCodecType, 
-																					  //[NSNumber numberWithInt:codecLowQuality], QTAddImageCodecQuality,
-																					  [NSNumber numberWithInt:100*movieFPS], QTTrackTimeScaleAttribute,nil]];
-	
-	if (![mMovie updateMovieFile]) {
-		cout << "Didn't successfully update movie file." << endl; 
-	}
-	
-	[imageRep release]; 
-	[nsimage release]; 
-	[localpool drain]; 
-	
-	return 1; 
+bool CvVideoWriter_QT::writeFrame(const IplImage* iplimage) {
+    
+    // writer status check
+    if (![mMovieWriterInput isReadyForMoreMediaData] || mMovieWriter.status !=  AVAssetWriterStatusWriting ) {
+        NSLog(@"[mMovieWriterInput isReadyForMoreMediaData] Not ready for media data or ...");
+        NSLog(@"mMovieWriter.status: %d. Error: %@", mMovieWriter.status, [mMovieWriter.error localizedDescription]);
+        return false;
+    }
+    
+    BOOL success = FALSE;
+    
+    if (iplimage->height!=movieSize.height || iplimage->width!=movieSize.width){
+        cout<<"Frame size does not match video size."<<endl;
+        return false;
+    }
+    
+    if (movieColor) {
+        //assert(iplimage->nChannels == 3);
+        cvCvtColor(iplimage, argbimage, CV_BGR2BGRA);
+    }else{
+        //assert(iplimage->nChannels == 1);
+        cvCvtColor(iplimage, argbimage, CV_GRAY2BGRA);
+    }
+    //IplImage -> CGImage conversion
+    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+    NSData *nsData = [NSData dataWithBytes:argbimage->imageData length:argbimage->imageSize];
+    CGDataProviderRef provider = CGDataProviderCreateWithCFData((CFDataRef)nsData);
+    CGImageRef cgImage = CGImageCreate(argbimage->width, argbimage->height,
+                                       argbimage->depth, argbimage->depth * argbimage->nChannels, argbimage->widthStep,
+                                       colorSpace, kCGImageAlphaLast|kCGBitmapByteOrderDefault,
+                                       provider, NULL, false, kCGRenderingIntentDefault);
+    
+    //CGImage -> CVPixelBufferRef coversion
+    CVPixelBufferRef pixelBuffer = NULL;
+    CFDataRef cfData = CGDataProviderCopyData(CGImageGetDataProvider(cgImage));
+    int status = CVPixelBufferCreateWithBytes(NULL,
+                                              movieSize.width,
+                                              movieSize.height,
+                                              kCVPixelFormatType_32BGRA, 
+                                              (void*)CFDataGetBytePtr(cfData), 
+                                              CGImageGetBytesPerRow(cgImage), 
+                                              NULL, 
+                                              0,
+                                              NULL, 
+                                              &pixelBuffer);     
+    if(status == kCVReturnSuccess){
+         success = [mMovieWriterAdaptor appendPixelBuffer:pixelBuffer
+                                     withPresentationTime:CMTimeMake(frameCount, movieFPS)];
+    }
+    
+    //cleanup
+    CGImageRelease(cgImage);
+    CGDataProviderRelease(provider);
+    CGColorSpaceRelease(colorSpace);  
+    
+    if (success) {
+        frameCount ++;
+        //NSLog(@"Frame #%d", frameCount);
+        return true;
+    }else{
+        NSLog(@"Frame appendPixelBuffer failed.");
+        return false;
+    }
+    
 }
 
