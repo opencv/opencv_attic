@@ -1,0 +1,1 @@
+cmake -GXcode -DCMAKE_TOOLCHAIN_FILE=../opencv/ios/cmake/Toolchains/Toolchain-iPhoneSimulator_Xcode.cmake -DCMAKE_INSTALL_PREFIX=../OpenCV_iPhoneSimulator -D BUILD_TESTS=OFF -D OPENCV_BUILD_3RDPARTY_LIBS=OFF -D BUILD_NEW_PYTHON_SUPPORT=OFF ../opencv 
