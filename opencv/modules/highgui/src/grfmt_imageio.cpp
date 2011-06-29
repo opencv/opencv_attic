@@ -113,8 +113,11 @@ bool  ImageIODecoder::readData( Mat& img )
     }
     else if( color == CV_LOAD_IMAGE_COLOR )
     {
-				colorSpace = CGColorSpaceCreateDeviceRGB();
-        //colorSpace = CGColorSpaceCreateWithName( kCGColorSpaceGenericRGBLinear );
+#if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
+        colorSpace = CGColorSpaceCreateDeviceRGB();
+#else
+        colorSpace = CGColorSpaceCreateWithName( kCGColorSpaceGenericRGBLinear );
+#endif
         bpp = 4; /* CG only has 8 and 32 bit color spaces, so we waste a byte */
         alphaInfo = kCGImageAlphaNoneSkipLast;
     }
@@ -274,11 +277,17 @@ bool  ImageIOEncoder::write( const Mat& img, const vector<int>& params )
     uchar* bitmapData = NULL;
 
     if( bpp == 1 )
+#if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
         colorSpace = CGColorSpaceCreateDeviceGray();
-        //colorSpace = CGColorSpaceCreateWithName( kCGColorSpaceGenericGray );
+#else
+        colorSpace = CGColorSpaceCreateWithName( kCGColorSpaceGenericGray );
+#endif
     else if( bpp == 4 )
+#if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
         colorSpace = CGColorSpaceCreateDeviceRGB();
-        //colorSpace = CGColorSpaceCreateWithName( kCGColorSpaceGenericRGBLinear );
+#else
+        colorSpace = CGColorSpaceCreateWithName( kCGColorSpaceGenericRGBLinear );
+#endif
     if( !colorSpace )
         return false;
 

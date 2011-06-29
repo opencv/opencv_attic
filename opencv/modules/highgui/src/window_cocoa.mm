@@ -41,6 +41,8 @@
 //
 //M*/
 
+#include "precomp.hpp"
+
 #import <TargetConditionals.h>
 
 #if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
@@ -69,7 +71,7 @@ CV_IMPL int cvWaitKey (int maxWait) {return 0;}
 
 
 #import <Cocoa/Cocoa.h>
-#include "precomp.hpp"
+
 
 #include <iostream>
 using namespace std; 

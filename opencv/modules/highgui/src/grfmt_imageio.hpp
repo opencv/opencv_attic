@@ -12,8 +12,20 @@
 #ifdef HAVE_IMAGEIO
 
 #include "grfmt_base.hpp"
+#import <TargetConditionals.h>
+
+#if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
+
 #include <MobileCoreServices/MobileCoreServices.h> // for UTCoreTypes.h
 #include <ImageIO/ImageIO.h>
+
+#else
+
+#include <ApplicationServices/ApplicationServices.h>
+
+#endif
+
+
 
 namespace cv
 {
