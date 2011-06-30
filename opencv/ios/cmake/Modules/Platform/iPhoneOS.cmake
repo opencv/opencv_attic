@@ -1,11 +1,11 @@
 # This file is based off of the Platform/Darwin.cmake and Platform/UnixPaths.cmake
 # files which are included with CMake 2.8.4
-# It has been altered for iPhoneSimulator development
+# It has been altered for iPhoneOS development
 set (UNIX 1)
 set (APPLE 1)
-set (IPHONESIMULATOR 1)
+set (IPHONEOS 1)
 
-message ( "     Setting up iPhoneSimulator Module !!!" )
+message ( "     Setting up iPhoneOS Module !!!" )
 
 # Darwin versions:
 #   6.x == Mac OSX 10.2
@@ -63,40 +63,40 @@ if (NOT DEFINED CMAKE_INSTALL_NAME_TOOL)
 	find_program(CMAKE_INSTALL_NAME_TOOL install_name_tool)
 endif (NOT DEFINED CMAKE_INSTALL_NAME_TOOL)
 
-# Setup iPhoneSimulator developer location
-set (_CMAKE_IPHONESIMULATOR_DEVELOPER_ROOT "/Developer/Platforms/iPhoneSimulator.platform/Developer")
+# Setup iPhoneOS developer location
+set (_CMAKE_IPHONEOS_DEVELOPER_ROOT "/Developer/Platforms/iPhoneOS.platform/Developer")
 
 # Find installed iOS SDKs
-file (GLOB _CMAKE_IPHONESIMULATOR_SDKS "${_CMAKE_IPHONESIMULATOR_DEVELOPER_ROOT}/SDKs/*")
+file (GLOB _CMAKE_IPHONEOS_SDKS "${_CMAKE_IPHONEOS_DEVELOPER_ROOT}/SDKs/*")
 
-# Find and use the most recent iPhoneSimulator sdk 
-if (_CMAKE_IPHONESIMULATOR_SDKS) 
-	list (SORT _CMAKE_IPHONESIMULATOR_SDKS)
-	list (REVERSE _CMAKE_IPHONESIMULATOR_SDKS)
-	list (GET _CMAKE_IPHONESIMULATOR_SDKS 0 _CMAKE_IPHONESIMULATOR_SDK_ROOT)
+# Find and use the most recent iPhoneOS sdk 
+if (_CMAKE_IPHONEOS_SDKS) 
+	list (SORT _CMAKE_IPHONEOS_SDKS)
+	list (REVERSE _CMAKE_IPHONEOS_SDKS)
+	list (GET _CMAKE_IPHONEOS_SDKS 0 _CMAKE_IPHONEOS_SDK_ROOT)
 
 	# Set the sysroot default to the most recent SDK
-	set (CMAKE_OSX_SYSROOT ${_CMAKE_IPHONESIMULATOR_SDK_ROOT} CACHE PATH "Sysroot used for iPhoneSimulator support")
+	set (CMAKE_OSX_SYSROOT ${_CMAKE_IPHONEOS_SDK_ROOT} CACHE PATH "Sysroot used for iPhoneOS support")
 
-	# set the architecture for iPhoneSimulator
-	set (CMAKE_OSX_ARCHITECTURES i386 CACHE string  "Build architecture for iPhoneSimulator")
+	# set the architecture for iPhoneOS
+	set (CMAKE_OSX_ARCHITECTURES armv6 CACHE string  "Build architecture for iPhoneOS")
 
 	# TODO: Do we actually need this? It appears not...
 	#add_definitions(-DTARGET_OS_IPHONE)
 
 	# Set the default based on this file and not the environment variable
-	set (CMAKE_FIND_ROOT_PATH ${_CMAKE_IPHONESIMULATOR_DEVELOPER_ROOT} ${_CMAKE_IPHONESIMULATOR_SDK_ROOT} CACHE string  "iPhoneSimulator library search path root")
+	set (CMAKE_FIND_ROOT_PATH ${_CMAKE_IPHONEOS_DEVELOPER_ROOT} ${_CMAKE_IPHONEOS_SDK_ROOT} CACHE string  "iPhoneOS library search path root")
 
 	# default to searching for frameworks first
 	set (CMAKE_FIND_FRAMEWORK FIRST)
 
 	# set up the default search directories for frameworks
 	set (CMAKE_SYSTEM_FRAMEWORK_PATH
-		${_CMAKE_IPHONESIMULATOR_SDK_ROOT}/System/Library/Frameworks
-		${_CMAKE_IPHONESIMULATOR_SDK_ROOT}/System/Library/PrivateFrameworks
-		${_CMAKE_IPHONESIMULATOR_SDK_ROOT}/Developer/Library/Frameworks
+		${_CMAKE_IPHONEOS_SDK_ROOT}/System/Library/Frameworks
+		${_CMAKE_IPHONEOS_SDK_ROOT}/System/Library/PrivateFrameworks
+		${_CMAKE_IPHONEOS_SDK_ROOT}/Developer/Library/Frameworks
 	)
-endif (_CMAKE_IPHONESIMULATOR_SDKS)
+endif (_CMAKE_IPHONEOS_SDKS)
 
 if ("${CMAKE_BACKWARDS_COMPATIBILITY}" MATCHES "^1\\.[0-6]$")
 	set (CMAKE_SHARED_MODULE_CREATE_C_FLAGS "${CMAKE_SHARED_MODULE_CREATE_C_FLAGS} -flat_namespace -undefined suppress")
@@ -148,8 +148,8 @@ get_filename_component (_CMAKE_INSTALL_DIR "${_CMAKE_INSTALL_DIR}" PATH)
 # List common installation prefixes.  These will be used for all search types
 list (APPEND CMAKE_SYSTEM_PREFIX_PATH
 	# Standard
-	${_CMAKE_IPHONESIMULATOR_DEVELOPER_ROOT}/usr
-	${_CMAKE_IPHONESIMULATOR_SDK_ROOT}/usr
+	${_CMAKE_IPHONEOS_DEVELOPER_ROOT}/usr
+	${_CMAKE_IPHONEOS_SDK_ROOT}/usr
 
 	# CMake install location
 	"${_CMAKE_INSTALL_DIR}"
@@ -157,3 +157,5 @@ list (APPEND CMAKE_SYSTEM_PREFIX_PATH
 	# Project install destination.
 	"${CMAKE_INSTALL_PREFIX}"
 )
+
+message ("Hello ${CMAKE_OSX_ARCHITECTURES}")
