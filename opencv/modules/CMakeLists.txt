@@ -31,10 +31,13 @@ if(PYTHONLIBS_FOUND AND BUILD_NEW_PYTHON_SUPPORT)
 endif()
 
 add_subdirectory(video)
-#add_subdirectory(traincascade)
-#add_subdirectory(haartraining)
 
-if(NOT ANDROID)
-	#  add_subdirectory(gpu)
-	#add_subdirectory(stitching)
+if (NOT (IPHONEOS OR IPHONESIMULATOR))
+  add_subdirectory(traincascade)
+  add_subdirectory(haartraining)
+endif()
+
+if(NOT CMAKE_CROSSCOMPILING)
+	add_subdirectory(gpu)
+	add_subdirectory(stitching)
 endif()

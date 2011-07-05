@@ -73,6 +73,8 @@ endif()
 # ----------------------------------------------------------------------------
 set(OPENCV_VERSION "2.2.9")
 
+message("Hello ${ARCH}")
+
 string(REGEX MATCHALL "[0-9]" OPENCV_VERSION_PARTS "${OPENCV_VERSION}")
 
 list(GET OPENCV_VERSION_PARTS 0 OPENCV_VERSION_MAJOR)
@@ -92,12 +94,28 @@ else()
 	set(OPENCV_DEBUG_POSTFIX)
 endif()
 
+if (NOT DEFINED IPHONEOS)
+	set (IPHONEOS 0)
+endif ()
+
+if (NOT DEFINED IPHONESIMULATOR)
+	set (IPHONESIMULATOR 0)
+endif ()
+
+if (NOT DEFINED IPHONESIMULATOR)
+	set (IOS 1)
+endif ()
+
 
 # ----------------------------------------------------------------------------
 # Build static or dynamic libs?
 # Default: dynamic libraries:
 # ----------------------------------------------------------------------------
-set(BUILD_SHARED_LIBS ON CACHE BOOL "Build shared libraries (.dll/.so) instead of static ones (.lib/.a)")
+if (CMAKE_CROSSCOMPILING)
+    set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build shared libraries (.dll/.so) instead of static ones (.lib/.a)")
+else()
+    set(BUILD_SHARED_LIBS ON CACHE BOOL "Build shared libraries (.dll/.so) instead of static ones (.lib/.a)")
+endif()
 
 if(BUILD_SHARED_LIBS)
 	set(OPENCV_BUILD_SHARED_LIB 1) # For cvconfig.h, etc.
@@ -211,17 +229,24 @@ set(INSTALL_PYTHON_EXAMPLES OFF CACHE BOOL "Install Python examples")
 
 # Build tests:
 # ===================================================
-set(BUILD_TESTS OFF CACHE BOOL "Build tests")
+if (CMAKE_CROSSCOMPILING)
+    set(BUILD_TESTS OFF CACHE BOOL "Build tests")
+else()
+    set(BUILD_TESTS ON CACHE BOOL "Build tests")
+endif()
+
 
 # Build 3rdparty libraries under unix
 # ===================================================
-if(WIN32 OR APPLE)
+if(WIN32 OR (APPLE AND (NOT CMAKE_CROSSCOMPILING)))
 	set(OPENCV_BUILD_3RDPARTY_LIBS TRUE  CACHE BOOL "Build 3rd party libraries")
 else()
 	set(OPENCV_BUILD_3RDPARTY_LIBS FALSE CACHE BOOL "Build 3rd party libraries")
 endif()
 
-#include(OpenCVPCHSupport.cmake REQUIRED)
+if (NOT CMAKE_CROSSCOMPILING)
+    include(OpenCVPCHSupport.cmake REQUIRED)
+endif ()
 
 include(OpenCVModule.cmake REQUIRED)
 
@@ -282,11 +307,13 @@ endif()
 # allow fine grained control over which libraries not to link, even if
 # they are available on the system
 # ====================================================================
-set(WITH_PNG ON CACHE BOOL "Include PNG support")
-set(WITH_JPEG ON CACHE BOOL "Include JPEG support")
-set(WITH_JASPER ON CACHE BOOL "Include JPEG2K support")
-set(WITH_TIFF ON CACHE BOOL "Include TIFF support")
-set(WITH_OPENEXR ON CACHE BOOL "Include ILM support via OpenEXR")
+if (NOT CMAKE_CROSSCOMPILING)
+  set(WITH_PNG ON CACHE BOOL "Include PNG support")
+  set(WITH_JPEG ON CACHE BOOL "Include JPEG support")
+  set(WITH_JASPER ON CACHE BOOL "Include JPEG2K support")
+  set(WITH_TIFF ON CACHE BOOL "Include TIFF support")
+  set(WITH_OPENEXR ON CACHE BOOL "Include ILM support via OpenEXR")
+endif ()
 
 if(UNIX)
 	set(WITH_FFMPEG ON CACHE BOOL "Include FFMPEG support")
@@ -1428,7 +1455,11 @@ if(APPLE)
 	if(WITH_QUICKTIME)
 		message(STATUS "  Video I/O:                    QuickTime")
 	else()
-		message(STATUS "  Video I/O:                    QTKit")
+		if (CMAKE_CROSSCOMPILING)
+	        message(STATUS "  Video I/O:                    AVFoundation")
+	    else ()
+	        message(STATUS "  Video I/O:                    QTKit")
+	    endif()
 	endif()
 endif()
 
@@ -1510,3 +1541,4 @@ message(STATUS "")
 #   Generate the OpenCVConfig.cmake file for unix
 #      installation in CMAKE_INSTALL_PREFIX
 #----------------------------------------------------------------------------
+

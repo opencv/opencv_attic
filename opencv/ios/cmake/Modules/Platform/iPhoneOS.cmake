@@ -4,8 +4,7 @@
 set (UNIX 1)
 set (APPLE 1)
 set (IPHONEOS 1)
-
-message ( "     Setting up iPhoneOS Module !!!" )
+set (IOS 1)
 
 # Darwin versions:
 #   6.x == Mac OSX 10.2
@@ -157,5 +156,3 @@ list (APPEND CMAKE_SYSTEM_PREFIX_PATH
 	# Project install destination.
 	"${CMAKE_INSTALL_PREFIX}"
 )
-
-message ("Hello ${CMAKE_OSX_ARCHITECTURES}")

@@ -6079,7 +6079,14 @@ void InitGoogleTest(int* argc, wchar_t** argv) {
 #if GTEST_HAS_DEATH_TEST
 
 #if GTEST_OS_MAC
-//#include <crt_externs.h>
+#import <TargetConditionals.h>
+    
+#if ~ (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
+    
+#include <crt_externs.h>
+    
+#endif // TARGET_OS_IPHONE
+    
 #endif  // GTEST_OS_MAC
 
 #include <errno.h>

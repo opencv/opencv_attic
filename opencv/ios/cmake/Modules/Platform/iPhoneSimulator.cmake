@@ -4,8 +4,7 @@
 set (UNIX 1)
 set (APPLE 1)
 set (IPHONESIMULATOR 1)
-
-message ( "     Setting up iPhoneSimulator Module !!!" )
+set (IOS 1)
 
 # Darwin versions:
 #   6.x == Mac OSX 10.2
