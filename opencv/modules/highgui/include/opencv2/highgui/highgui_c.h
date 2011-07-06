@@ -287,7 +287,9 @@ enum
 
 	CV_CAP_OPENNI   =900,   // OpenNI (for Kinect)
 
-	CV_CAP_ANDROID  =1000   // Android
+	CV_CAP_ANDROID  =1000,  // Android
+
+	CV_CAP_AVFOUNDATION = 1100	// AVFoundation framework for iOS (OS X Lion will have the same API)
 };
 
 /* start capturing frames from camera: index = camera_index + domain_offset (CV_CAP_*) */
