@@ -125,6 +125,7 @@ CV_IMPL CvCapture * cvCreateCameraCapture (int index)
         CV_CAP_UNICAP,
         CV_CAP_OPENNI,
         CV_CAP_ANDROID,
+				CV_CAP_AVFOUNDATION,
         -1
     };
 
@@ -144,8 +145,9 @@ CV_IMPL CvCapture * cvCreateCameraCapture (int index)
         defined(HAVE_CAMV4L) || defined (HAVE_CAMV4L2) || defined(HAVE_GSTREAMER) || \
         defined(HAVE_DC1394_2) || defined(HAVE_DC1394) || defined(HAVE_CMU1394) || \
         defined(HAVE_GSTREAMER) || defined(HAVE_MIL) || defined(HAVE_QUICKTIME) || \
-        defined(HAVE_UNICAP) || defined(HAVE_PVAPI) || defined(HAVE_OPENNI) || defined(HAVE_ANDROID_NATIVE_CAMERA)
-        // local variable to memorize the captured device
+        defined(HAVE_UNICAP) || defined(HAVE_PVAPI) || defined(HAVE_OPENNI) || defined(HAVE_ANDROID_NATIVE_CAMERA) || \
+				defined(TARGET_OS_IPHONE) || defined(TARGET_IPHONE_SIMULATOR)
+   // local variable to memorize the captured device
         CvCapture *capture;
         #endif
 
@@ -260,6 +262,13 @@ CV_IMPL CvCapture * cvCreateCameraCapture (int index)
         break;
         #endif
 
+        #if  TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
+        case CV_CAP_AVFOUNDATION:
+            capture = cvCreateCameraCapture_AVFoundation (index);
+            if (capture)
+                return capture;
+            break;
+        #endif
         }
     }
 
@@ -274,6 +283,7 @@ CV_IMPL CvCapture * cvCreateCameraCapture (int index)
 CV_IMPL CvCapture * cvCreateFileCapture (const char * filename)
 {
     CvCapture * result = 0;
+		
 
     #ifdef WIN32
     if (! result)
@@ -300,6 +310,11 @@ CV_IMPL CvCapture * cvCreateFileCapture (const char * filename)
         result = cvCreateFileCapture_QT (filename);
     #endif
     
+#if  TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
+     if (! result)
+        result = cvCreateFileCapture_AVFoundation (filename);
+#endif
+
     if (! result)
         result = cvCreateFileCapture_Images (filename);
 
@@ -319,6 +334,11 @@ CV_IMPL CvVideoWriter* cvCreateVideoWriter( const char* filename, int fourcc,
 
 	if(!fourcc || !fps)
 		result = cvCreateVideoWriter_Images(filename);
+
+#if  TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
+     if (! result)
+			 result = cvCreateVideoWriter_AVFoundation(filename, fourcc, fps, frameSize, is_color);
+#endif
 
 	#ifdef WIN32
 	if(!result)

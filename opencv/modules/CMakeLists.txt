@@ -32,12 +32,12 @@ endif()
 
 add_subdirectory(video)
 
-if (NOT (IPHONEOS OR IPHONESIMULATOR))
+if (NOT IOS)
   add_subdirectory(traincascade)
   add_subdirectory(haartraining)
 endif()
 
-if(NOT CMAKE_CROSSCOMPILING)
+if(NOT (ANDROID OR IOS))
 	add_subdirectory(gpu)
 	add_subdirectory(stitching)
 endif()

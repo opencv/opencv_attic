@@ -171,12 +171,12 @@ private:
  *
  *****************************************************************************/
 
-class CvVideoWriter_QT : public CvVideoWriter{
+class CvVideoWriter_AVFoundation : public CvVideoWriter{
 public:
-    CvVideoWriter_QT(const char* filename, int fourcc, 
+    CvVideoWriter_AVFoundation(const char* filename, int fourcc, 
                      double fps, CvSize frame_size, 
                      int is_color=1);
-    ~CvVideoWriter_QT(); 
+    ~CvVideoWriter_AVFoundation(); 
     bool writeFrame(const IplImage* image); 
 private:
     IplImage* argbimage; 
@@ -198,7 +198,7 @@ private:
 /****************** Implementation of interface functions ********************/
 
 
-CvCapture* cvCreateFileCapture_QT(const char* filename) {
+CvCapture* cvCreateFileCapture_AVFoundation(const char* filename) {
 	CvCaptureFile *retval = new CvCaptureFile(filename);
     
 	if(retval->didStart())
@@ -207,7 +207,7 @@ CvCapture* cvCreateFileCapture_QT(const char* filename) {
 	return NULL;
 }
 
-CvCapture* cvCreateCameraCapture_QT(int index ) {
+CvCapture* cvCreateCameraCapture_AVFoundation(int index ) {
     
 	CvCapture* retval = new CvCaptureCAM(index);
 	if (!((CvCaptureCAM *)retval)->didStart())
@@ -216,10 +216,10 @@ CvCapture* cvCreateCameraCapture_QT(int index ) {
     
 }
 
-CvVideoWriter* cvCreateVideoWriter_QT(const char* filename, int fourcc, 
+CvVideoWriter* cvCreateVideoWriter_AVFoundation(const char* filename, int fourcc, 
                                       double fps, CvSize frame_size, 
                                       int is_color) {
-	return new CvVideoWriter_QT(filename, fourcc, fps, frame_size,is_color); 
+	return new CvVideoWriter_AVFoundation(filename, fourcc, fps, frame_size,is_color); 
 }
 
 /********************** Implementation of Classes ****************************/ 
@@ -946,7 +946,7 @@ bool CvCaptureFile::setProperty(int property_id, double value) {
  *****************************************************************************/
 
 
-CvVideoWriter_QT::CvVideoWriter_QT(const char* filename, int fourcc, 
+CvVideoWriter_AVFoundation::CvVideoWriter_AVFoundation(const char* filename, int fourcc, 
                                    double fps, CvSize frame_size, 
                                    int is_color) {
     /*
@@ -1030,7 +1030,7 @@ CvVideoWriter_QT::CvVideoWriter_QT(const char* filename, int fourcc,
 }
 
 
-CvVideoWriter_QT::~CvVideoWriter_QT() {
+CvVideoWriter_AVFoundation::~CvVideoWriter_AVFoundation() {
     
     [mMovieWriterInput markAsFinished];
     [mMovieWriter finishWriting];         
@@ -1043,7 +1043,7 @@ CvVideoWriter_QT::~CvVideoWriter_QT() {
     
 }
 
-bool CvVideoWriter_QT::writeFrame(const IplImage* iplimage) {
+bool CvVideoWriter_AVFoundation::writeFrame(const IplImage* iplimage) {
     
     // writer status check
     if (![mMovieWriterInput isReadyForMoreMediaData] || mMovieWriter.status !=  AVAssetWriterStatusWriting ) {
