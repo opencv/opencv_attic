@@ -244,7 +244,7 @@ else()
 	set(OPENCV_BUILD_3RDPARTY_LIBS FALSE CACHE BOOL "Build 3rd party libraries")
 endif()
 
-if(IOS)
+if(NOT IOS)
 include(OpenCVPCHSupport.cmake REQUIRED)
 endif(IOS)
 
