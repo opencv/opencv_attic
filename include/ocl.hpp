@@ -132,7 +132,8 @@ namespace cv{
 
 		};
 
-		OCL_EXPORTS void add(const OclMat& a, const OclMat& b, OclMat& sum);
+		//Optical Flow Horn & Schunck
+		OCL_EXPORTS void calcOpticalFlowHS(const OclMat& a, const OclMat& b, OclMat& velX, OclMat& velY, CvTermCriteria IterCriteria, float lambda);
 
 		//Creates the OpenCL context and command queue
 		OCL_EXPORTS void init();

@@ -54,6 +54,8 @@ namespace cv{
 	
 			//Step 2: Create a context
 			int createContext(cl_context* context, cl_command_queue* cmd_queue, bool hasGPU);
+
+			int buildOCLProgram(const char *filename, cl_context* context, cl_command_queue* commandQueue, cl_program* program);
 		}
 	}
 }
