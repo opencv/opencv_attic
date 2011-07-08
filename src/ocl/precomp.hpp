@@ -54,6 +54,11 @@
 #include "ocldefs.h"
 #include "ocl_util.h"
 
+#include <fstream>
+
+#include <iostream>
+using namespace std;
+
 #ifdef _DEBUG
 	#include <stdio.h>
 #endif
