@@ -1,6 +1,8 @@
 __kernel void derivatives_compute(__global uchar* imgA,__global uchar* imgB, __global float *u,__global float *v, __global float *fx, __global float *fy, __global float *ft, const int imageWidth, const int xRadius, const int yRadius)
 {
-	uint tid = get_global_id(0);
+	uint x = get_global_id(0);
+	uint y = get_global_id(1);
+	uint tid = y*imageWidth + x;
 
 	//float Ix, Iy, It;
 

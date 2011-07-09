@@ -93,6 +93,11 @@ int cv::ocl::util::buildOCLProgram(const char *filename, cl_context* context, cl
 	string  sourceStr = convertToString(filename);
 	cl_int status;
 	cl_device_id  *devices = (cl_device_id *)malloc(4);
+	status = clGetContextInfo(  *context, 
+             					CL_CONTEXT_DEVICES, 
+             					4, 
+             					devices, 
+             					NULL);
 	size_t deviceListSize;
 	const char *source    = sourceStr.c_str();
 	size_t sourceSize[]    = { strlen(source) };

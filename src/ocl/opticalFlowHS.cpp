@@ -42,41 +42,62 @@
 namespace cv{
 	namespace ocl{
 
+		extern bool initialized;
 
-		OCL_EXPORTS void calcOpticalFlowHS(const OclMat& prev, const OclMat& img, OclMat& velX, OclMat& velY, CvTermCriteria IterCriteria, float lambda){
+		CV_EXPORTS void calcOpticalFlowHS(const OclMat& prev, const OclMat& img, OclMat& velX, OclMat& velY, CvTermCriteria IterCriteria, float lambda){
 		
+			if(!initialized)
+				return;
+
+			//if(prev.empty() || img.empty() || velX.empty() || velY.empty())
+				//return;
+
 			cl_program program;
 			cl_kernel  OFLOWHS;
 			cl_int status;
 
+			cl_mem imgA_filtered;
+			cl_mem imgB_filtered;
+
 			int size = prev.cols*prev.rows;
 
-			status = cv::ocl::util::buildOCLProgram("D:/branches/ocl/src/ocl/opticalFlowHS.cl", &ocl_context, &ocl_cmd_queue, &program);
+			status = cv::ocl::util::buildOCLProgram("opticalFlowHS.cl", &ocl_context, &ocl_cmd_queue, &program);
 
 			OFLOWHS = clCreateKernel(program, "derivatives", &status);
 
+			imgA_filtered = clCreateBuffer(ocl_context, CL_MEM_READ_WRITE, sizeof(cl_uchar)*size, NULL, &status);	
+			imgB_filtered = clCreateBuffer(ocl_context, CL_MEM_READ_WRITE, sizeof(cl_uchar)*size, NULL, &status);
+
 			//Set Kernel Arguments, Enque and Run Kernels
 			size_t     globalThreads[1];
-			size_t     localThreads[1]; 
+			size_t     localThreads[2]; 
 			cl_event events[1];
 
 			//Set Kernel Arguments
 			status = clSetKernelArg(OFLOWHS, 0, sizeof(cl_mem), (void *)&(prev.data));
 			status = clSetKernelArg(OFLOWHS, 1, sizeof(cl_mem), (void *)&(img.data));
-			status = clSetKernelArg(OFLOWHS, 2, sizeof(cl_mem), (void *)&(velX.data));
-			status = clSetKernelArg(OFLOWHS, 3, sizeof(cl_mem), (void *)&(velY.data));
-			status = clSetKernelArg(OFLOWHS, 4, sizeof(cl_int), (void *)&(prev.cols));
-			status = clSetKernelArg(OFLOWHS, 5, sizeof(cl_int), (void *)&(IterCriteria.max_iter));
-			status = clSetKernelArg(OFLOWHS, 6, sizeof(cl_int), (void *)&lambda);
+			status = clSetKernelArg(OFLOWHS, 2, sizeof(cl_mem), (void *)&imgA_filtered);
+			status = clSetKernelArg(OFLOWHS, 3, sizeof(cl_mem), (void *)&imgB_filtered);
+			status = clSetKernelArg(OFLOWHS, 4, sizeof(cl_mem), (void *)&(velX.data));
+			status = clSetKernelArg(OFLOWHS, 5, sizeof(cl_mem), (void *)&(velY.data));
+			status = clSetKernelArg(OFLOWHS, 6, sizeof(cl_int), (void *)&(prev.cols));
+			status = clSetKernelArg(OFLOWHS, 7, sizeof(cl_int), (void *)&(prev.rows));
+			status = clSetKernelArg(OFLOWHS, 8, sizeof(cl_int), (void *)&(IterCriteria.max_iter));
+			status = clSetKernelArg(OFLOWHS, 9, sizeof(cl_int), (void *)&lambda);
 
 			globalThreads[0] = size;
-			localThreads[0] = 256;
+			localThreads[0] = 16;
+			localThreads[1] = 16;
 
-			if (localThreads[0]>globalThreads[0]) 
+			int totalLocal = localThreads[0]*localThreads[1];
+
+			if (totalLocal > globalThreads[0]){
 				localThreads[0] = globalThreads[0];
+				localThreads[1] = 1;
+			}
 
-			if ((globalThreads[0])%(localThreads[0]) != 0)
-				globalThreads[0] += localThreads[0]-(globalThreads[0])%(localThreads[0]);
+			if ((globalThreads[0])%(totalLocal) != 0)
+				globalThreads[0] += totalLocal -(globalThreads[0])%(totalLocal);
 
 
 			//Execute the kernel
@@ -95,6 +116,8 @@ namespace cv{
 			
 			//Cleanup
 			clReleaseEvent(events[0]);
+			status = clReleaseMemObject(imgA_filtered);
+			status = clReleaseMemObject(imgB_filtered);
 			status = clReleaseKernel(OFLOWHS);
 		}
 

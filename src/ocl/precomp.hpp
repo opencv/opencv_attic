@@ -43,8 +43,6 @@
 #ifndef PRECOMP_H__
 #define PRECOMP_H__
 
-#define OCL_EXPORTS __declspec(dllexport)
-
 #include <exception>
 
 #include "opencv/highgui.h"
