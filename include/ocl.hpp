@@ -41,6 +41,7 @@
 
 #include "precomp.hpp"
 
+#define CV_EXPORTS __declspec(dllexport)
 
 //Root level namespace
 namespace cv{
@@ -51,7 +52,7 @@ namespace cv{
 		extern cl_context ocl_context;
 		extern cl_command_queue ocl_cmd_queue;
 	
-		class OCL_EXPORTS OclMat{
+		class CV_EXPORTS OclMat{
 		
 		public:
 			//! default constructor
@@ -86,7 +87,7 @@ namespace cv{
 			//! sets some of the OclMat elements to s, according to the mask
             OclMat& setTo(const Scalar& s);
 
-			//! pefroms blocking upload data to GpuMat.
+			//! pefroms blocking upload data to OclMat.
             void upload(const cv::Mat& m);
 
             //! downloads data from device to host memory. Blocking calls.
@@ -105,7 +106,7 @@ namespace cv{
             int channels() const;
             //! returns step/elemSize1()
             size_t step1() const;
-            //! returns GpuMatrix size:
+            //! returns OclMatrix size:
             // width == number of columns, height == number of rows
             Size size() const;
             //! returns true if OclMat data is NULL
@@ -132,11 +133,80 @@ namespace cv{
 
 		};
 
-		//Optical Flow Horn & Schunck
-		OCL_EXPORTS void calcOpticalFlowHS(const OclMat& a, const OclMat& b, OclMat& velX, OclMat& velY, CvTermCriteria IterCriteria, float lambda);
+		//! Creates the OpenCL context and command queue
+		//! Should be called at the beginning of every session for a single platform
+		CV_EXPORTS void init();
 
-		//Creates the OpenCL context and command queue
-		OCL_EXPORTS void init();
+
+		//! Optical Flow Horn & Schunck
+		CV_EXPORTS void calcOpticalFlowHS(const OclMat& a, const OclMat& b, OclMat& velX, OclMat& velY, CvTermCriteria IterCriteria, float lambda);
+
+		//! Optical Flow Lucas & Kanade
+		CV_EXPORTS void calcOpticalFlowLK(const OclMat& prev, const OclMat& img, OclMat& velX, OclMat& velY, CvSize winSize);
+
+        //! adds one matrix to another (c = a + b)
+        CV_EXPORTS void add(const OclMat& a, const OclMat& b, OclMat& c );
+        
+		//! adds scalar to a matrix (c = a + s)
+        CV_EXPORTS void add(const OclMat& a, const Scalar& sc, OclMat& c );
+
+        //! subtracts one matrix from another (c = a - b)
+        CV_EXPORTS void subtract(const OclMat& a, const OclMat& b, OclMat& c );
+        
+		//! subtracts scalar from a matrix (c = a - s)
+        CV_EXPORTS void subtract(const OclMat& a, const Scalar& sc, OclMat& c );
+
+        //! computes element-wise product of the two arrays (c = a * b)
+        CV_EXPORTS void multiply(const OclMat& a, const OclMat& b, OclMat& c );
+        
+		//! multiplies matrix to a scalar (c = a * s)
+        CV_EXPORTS void multiply(const OclMat& a, const Scalar& sc, OclMat& c );
+
+        //! computes element-wise quotient of the two arrays (c = a / b)
+        CV_EXPORTS void divide(const OclMat& a, const OclMat& b, OclMat& c );
+       
+		//! computes element-wise quotient of matrix and scalar (c = a / s)
+        CV_EXPORTS void divide(const OclMat& a, const Scalar& sc, OclMat& c );
+
+        //! computes exponent of each matrix element (b = e**a)
+        //! supports only CV_32FC1 type
+        CV_EXPORTS void exp(const OclMat& a, OclMat& b );
+
+        //! computes natural logarithm of absolute value of each matrix element: b = log(abs(a))
+        CV_EXPORTS void log(const OclMat& a, OclMat& b );
+
+        //! computes element-wise absolute difference of two arrays (c = abs(a - b))
+        CV_EXPORTS void absdiff(const OclMat& a, const OclMat& b, OclMat& c );
+        
+		//! computes element-wise absolute difference of array and scalar (c = abs(a - s))
+        CV_EXPORTS void absdiff(const OclMat& a, const Scalar& s, OclMat& c );
+
+        //! compares elements of two arrays (c = a <cmpop> b)
+        CV_EXPORTS void compare(const OclMat& a, const OclMat& b, OclMat& c, int cmpop );
+
+        //! performs per-elements bit-wise inversion
+        CV_EXPORTS void bitwise_not(const OclMat& src, OclMat& dst );
+
+        //! calculates per-element bit-wise disjunction of two arrays
+        CV_EXPORTS void bitwise_or(const OclMat& src1, const OclMat& src2, OclMat& dst );
+
+        //! calculates per-element bit-wise conjunction of two arrays
+        CV_EXPORTS void bitwise_and(const OclMat& src1, const OclMat& src2, OclMat& dst );
+
+        //! calculates per-element bit-wise "exclusive or" operation
+        CV_EXPORTS void bitwise_xor(const OclMat& src1, const OclMat& src2, OclMat& dst );
+
+        //! computes per-element minimum of two arrays (dst = min(src1, src2))
+        CV_EXPORTS void min(const OclMat& src1, const OclMat& src2, OclMat& dst );
+
+        //! computes per-element minimum of array and scalar (dst = min(src1, src2))
+        CV_EXPORTS void min(const OclMat& src1, const Scalar& src2, OclMat& dst );
+
+        //! computes per-element maximum of two arrays (dst = max(src1, src2))
+        CV_EXPORTS void max(const OclMat& src1, const OclMat& src2, OclMat& dst );
+
+        //! computes per-element maximum of array and scalar (dst = max(src1, src2))
+        CV_EXPORTS void max(const OclMat& src1, const Scalar& src2, OclMat& dst );
 
 	}
 }
