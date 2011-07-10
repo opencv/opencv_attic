@@ -38,5 +38,6 @@ add_subdirectory(haartraining)
 
 if(NOT ANDROID)
   add_subdirectory(gpu)
+  add_subdirectory(ocl)
   add_subdirectory(stitching)
 endif()
