@@ -938,6 +938,15 @@ if(WITH_CUDA)
     endif() 
 endif()
 
+############################### OpenCL ################################
+
+if(WITH_CUDA)
+    include(OpenCVFindOpenCL.cmake)
+endif()
+    
+    if(OPENCL_FOUND)
+        set(HAVE_OPENCL 1)       
+    endif() 
 
 ############################### OpenNI ################################
 set(HAVE_OPENNI FALSE)

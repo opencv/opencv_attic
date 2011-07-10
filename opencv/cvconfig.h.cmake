@@ -169,6 +169,9 @@
 /* NVidia Cuda Runtime API*/
 #cmakedefine HAVE_CUDA
 
+/* OpenCL API*/
+#cmakedefine HAVE_OPENCL
+
 /* Compile for 'real' NVIDIA GPU architectures */
 #define CUDA_ARCH_BIN "${OPENCV_CUDA_ARCH_BIN}"
 
