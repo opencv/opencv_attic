@@ -19,10 +19,6 @@
 //   * Redistribution's of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //
-//   * Redistribution's in binary form must reproduce the above copyright notice,
-//     this list of conditions and the following disclaimer in the documentation
-//     and/or other materials provided with the distribution.
-//
 //   * The name of Intel Corporation may not be used to endorse or promote products
 //     derived from this software without specific prior written permission.
 //
@@ -39,17 +35,70 @@
 //
 //M*/
 
-#include <cmath>
-#include <cstdio>
-#include <ctime>
-#include <fstream>
-#include <sstream>
-#include <limits>
-#include <string>
-#include <algorithm>
-#include <iterator>
-#include <cvconfig.h>
-#include <opencv/cv.h>
-#include <opencv/highgui.h>
-#include <opencv2/ts/ts.hpp>
-#include "opencv2/ocl.hpp"
+#include "test_precomp.hpp"
+
+using namespace cv;
+using namespace cv::ocl;
+using namespace cvtest;
+
+
+int testThresholdBinary(const Mat& src, float thresh, float maxval);
+
+int verifyResult(const Mat& a, const Mat& b);
+
+int main( int argc, char** argv ){
+
+    Size size(8192,8192);
+    Mat src_8u, src_32f;
+        
+	RNG& rng = TS::ptr()->get_rng();
+        
+    src_8u = randomMat(rng, size, CV_8UC1, 1, 255, false);
+	src_32f = randomMat(rng, size, CV_32FC1, 0, 1, false);
+
+	int status;
+
+	float thresh = 100;
+	float  maxval = 1;
+
+	status = testThresholdBinary(src_8u, thresh, maxval);
+	if(status != 0){ printf("Threshold test (8u) failed \n"); }
+	if(status == 0){ printf("Threshold test (8u) passed\n"); }
+
+	status = testThresholdBinary(src_32f, thresh, maxval);
+	if(status != 0){ printf("Threshold test (32f) failed \n"); }
+	if(status == 0){ printf("Threshold test (32f) passed\n"); }
+}
+
+int testThresholdBinary(const Mat& src, float thresh, float maxval){
+
+	Mat dst_gold;
+
+	threshold(src, dst_gold, thresh, maxval, CV_THRESH_BINARY);
+	
+	Mat dst(src.rows, src.cols, src.type());
+	OclMat oclDst(src.rows, src.cols, src.type());
+
+	threshold(OclMat(src), oclDst, thresh, maxval, CV_THRESH_BINARY);
+
+	oclDst.download(dst);
+
+	int s = verifyResult(dst_gold, dst);
+
+	oclDst.release();
+	dst_gold.release();
+	dst.release();
+	
+	return s;
+}
+
+int verifyResult(const Mat& a, const Mat& b){
+
+	int count = a.rows*a.cols*a.channels();
+
+	for(int i=0;i<count;i++)
+		if(a.data[i] != b.data[i])
+			return -1;
+
+	return 0;
+}
