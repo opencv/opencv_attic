@@ -137,12 +137,19 @@ namespace cv{
 		//! Should be called at the beginning of every session for a single platform
 		CV_EXPORTS void init();
 
+		//! ///////////////////////////////////IMAGE PROCESSING////////////////////////////////////////////
 
 		//! Optical Flow Horn & Schunck
 		CV_EXPORTS void calcOpticalFlowHS(const OclMat& a, const OclMat& b, OclMat& velX, OclMat& velY, CvTermCriteria IterCriteria, float lambda);
 
 		//! Optical Flow Lucas & Kanade
 		CV_EXPORTS void calcOpticalFlowLK(const OclMat& prev, const OclMat& img, OclMat& velX, OclMat& velY, CvSize winSize);
+
+		//! applies fixed threshold to the image
+        CV_EXPORTS void threshold(const OclMat& src, OclMat& dst, float thresh, float maxval, int type);
+
+
+		//! ///////////////////////////ARITHMETIC//////////////////////////////////////////////////////////////////////////
 
         //! adds one matrix to another (c = a + b)
         CV_EXPORTS void add(const OclMat& a, const OclMat& b, OclMat& c );

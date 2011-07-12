@@ -44,6 +44,7 @@
 #define OCL_UTIL_H
 
 #include "ocl.hpp"
+using std::string;
 
 namespace cv{
 	namespace ocl{
@@ -56,6 +57,10 @@ namespace cv{
 			int createContext(cl_context* context, cl_command_queue* cmd_queue, bool hasGPU);
 
 			int buildOCLProgram(const char *filename, cl_context* context, cl_command_queue* commandQueue, cl_program* program);
+			int buildOCLProgramBinary(const char *filename, cl_context* context, cl_command_queue* commandQueue, cl_program* program);
+			
+			string string_replace(string src, string const& target, string const& repl);
+
 		}
 	}
 }
