@@ -48,7 +48,7 @@ int verifyResult(const Mat& a, const Mat& b);
 
 int main( int argc, char** argv ){
 
-    Size size(8192,8192);
+    Size size(1024,1024);
     Mat src_8u, src_32f;
         
 	RNG& rng = TS::ptr()->get_rng();
