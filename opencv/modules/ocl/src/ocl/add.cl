@@ -1,3 +1,14 @@
+//Generic add kernel
+__kernel void ${funcname}(__global const ${T}* imgA, __global const ${T}* imgB, __global ${T}* sum, const int imageWidth){
+
+	uint x = get_global_id(0);
+	uint y = get_global_id(1);
+	uint tid = y*imageWidth+x;
+
+	sum[tid] = imgA[tid] ${op} imgB [tid];
+
+}
+
 //Kernel for adding 8bit images
 __kernel void add8u(__global const uchar* imgA, __global const uchar* imgB, __global uchar* sum, const int imageWidth){
 

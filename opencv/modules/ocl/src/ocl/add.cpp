@@ -58,7 +58,7 @@ namespace cv{
 
 			int size = a.cols*a.rows*a.channels();
 
-			status = cv::ocl::util::buildOCLProgram("add.cl", &ocl_context, &ocl_cmd_queue, &program);
+			status = cv::ocl::util::buildOCLProgram("D:/branches/ocl/opencv/modules/ocl/src/ocl/add.cl", &ocl_context, &ocl_cmd_queue, &program);
 
 			switch(a.elemSize()){
 			
@@ -71,7 +71,7 @@ namespace cv{
 					break;
 
 				case 4:
-					ADD = clCreateKernel(program, "add32f", &status);
+					ADD = clCreateKernel(program, "add32fc1", &status);
 					break;
 				}
 
@@ -135,7 +135,7 @@ namespace cv{
 
 			int size = a.cols*a.rows*a.channels();
 
-			status = cv::ocl::util::buildOCLProgram("add.cl", &ocl_context, &ocl_cmd_queue, &program);
+			status = cv::ocl::util::buildOCLProgram("D:/branches/ocl/opencv/modules/ocl/src/ocl/add.cl", &ocl_context, &ocl_cmd_queue, &program);
 
 			switch(a.elemSize()){
 

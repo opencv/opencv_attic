@@ -61,7 +61,7 @@ namespace cv{
 
 			int size = prev.cols*prev.rows;
 
-			status = cv::ocl::util::buildOCLProgram("opticalFlowHS.cl", &ocl_context, &ocl_cmd_queue, &program);
+			status = cv::ocl::util::buildOCLProgram("D:/branches/ocl/opencv/modules/ocl/src/ocl/opticalFlowHS.cl", &ocl_context, &ocl_cmd_queue, &program);
 
 			OFLOWHS = clCreateKernel(program, "derivatives", &status);
 

@@ -60,6 +60,34 @@ cl_platform_id cv::ocl::util::GetOCLPlatform()
     }
 }
 
+string cv::ocl::util::string_replace( string src, string const& target, string const& repl)
+{
+    // handle error situations/trivial cases
+
+    if (target.length() == 0) {
+        // searching for a match to the empty string will result in 
+        //  an infinite loop
+        //  it might make sense to throw an exception for this case
+        return src;
+    }
+
+    if (src.length() == 0) {
+        return src;  // nothing to match against
+    }
+
+    size_t idx = 0;
+
+    for (;;) {
+        idx = src.find( target, idx);
+        if (idx == string::npos)  break;
+
+        src.replace( idx, target.length(), repl);
+        idx += repl.length();
+    }
+
+    return src;
+}
+
 int cv::ocl::util::createContext(cl_context* context, cl_command_queue* cmd_queue, bool hasGPU){
 
     size_t cb;
@@ -99,7 +127,12 @@ int cv::ocl::util::buildOCLProgram(const char *filename, cl_context* context, cl
              					devices, 
              					NULL);
 	size_t deviceListSize;
+
+	//sourceStr = string_replace( string_replace(string_replace(sourceStr, "${funcname}", "add32fc1"), "${T}", "float"), "${sat}", "_sat");
+	//sourceStr = string_replace(sourceStr, "${op}","+");
+
 	const char *source    = sourceStr.c_str();
+
 	size_t sourceSize[]    = { strlen(source) };
 
 	*program = clCreateProgramWithSource(  *context, 
@@ -172,6 +205,156 @@ int cv::ocl::util::buildOCLProgram(const char *filename, cl_context* context, cl
 	return 1;
 }
 
+//Write the PTX binary
+void writeBinaries(cl_context* context, cl_command_queue* commandQueue, cl_program* program)
+{
+		ofstream myfile("d:/branches/ocl/opencv/modules/ocl/src/ocl/kernel.ptx");
+
+        cl_uint program_num_devices;
+        clGetProgramInfo(*program, CL_PROGRAM_NUM_DEVICES, sizeof(cl_uint), &program_num_devices, NULL);
+
+		if (program_num_devices == 0)
+        {
+                        std::cerr << "no valid binary was found" << std::endl;
+                        return;
+        }
+
+        size_t* binaries_sizes = new size_t[program_num_devices];
+
+        clGetProgramInfo(*program, CL_PROGRAM_BINARY_SIZES, program_num_devices*sizeof(size_t), binaries_sizes, NULL);
+
+        char **binaries = new char*[program_num_devices];
+
+        for (size_t i = 0; i < 1; i++)
+                        binaries[i] = new char[binaries_sizes[i]+1];
+
+        clGetProgramInfo(*program, CL_PROGRAM_BINARIES, program_num_devices*sizeof(size_t), binaries, NULL);
+        
+        if(myfile.is_open())
+        {
+                for (size_t i = 0; i < program_num_devices; i++)
+                {
+                                myfile << binaries[i];
+                }
+        }
+        myfile.close();
+
+        for (size_t i = 0; i < program_num_devices; i++)
+                        delete [] binaries[i];
+
+        delete [] binaries;
+}
+
+
+int cv::ocl::util::buildOCLProgramBinary(const char *filename, cl_context* context, cl_command_queue* commandQueue, cl_program* program1){
+
+	cl_program program;
+	size_t cb;
+
+	string  sourceStr = convertToString(filename);
+	cl_int status;
+	cl_device_id  *devices = (cl_device_id *)malloc(4);
+	status = clGetContextInfo(  *context, 
+             					CL_CONTEXT_DEVICES, 
+             					4, 
+             					devices, 
+             					NULL);
+	size_t deviceListSize;
+
+	//const char *source    = sourceStr.c_str();
+
+	const char* source = "__kernel void threshBin8u(__global const uchar* img, __global uchar* dst, const float thresh, const float maxval, const int imageWidth){"\
+						"uint x = get_global_id(0);"\
+						"uint y = get_global_id(1);"\
+						"uint tid = y*imageWidth+x;"\
+						"if(img[tid] > thresh)"\
+						"dst[tid] = (uchar)maxval;"\
+						"else"\
+						"dst[tid] = 0;}";
+
+	size_t sourceSize[]    = { strlen(source) };
+
+	/*program = clCreateProgramWithSource(  *context, 
+              								1, 
+              								&source,
+ 											sourceSize,
+             								&status);
+
+
+
+	//writeBinaries(context, commandQueue, &program);
+ 	
+*/
+ 	FILE* fp = fopen("d:/branches/ocl/opencv/modules/ocl/src/ocl/kernel.ptx", "r");
+        fseek (fp , 0 , SEEK_END);
+        const size_t lSize = ftell(fp);
+        rewind(fp);
+        unsigned char* buffer;
+        buffer = (unsigned char*) malloc (lSize);
+        fread(buffer, 1, lSize, fp);
+        fclose(fp);
+
+		status= clGetContextInfo(*context, CL_CONTEXT_DEVICES, 0, NULL, &cb);
+		cl_device_id *cdDevices = (cl_device_id*)malloc(cb);
+		clGetContextInfo(*context, CL_CONTEXT_DEVICES, cb, cdDevices, NULL);
+
+		cl_int statusErr;
+        *program1 = clCreateProgramWithBinary(*context, 1, (const cl_device_id *)cdDevices, 
+                                &lSize, (const unsigned char**)&buffer, &status, &statusErr);
+        
+		if (status != CL_SUCCESS){ cout<<"Error in clCreateProgramWithBinary, Line "<<__LINE__<<" in file "<<__FILE__<<" "<<endl; } 
+ 
+	
+    status = clBuildProgram(*program1, 0, NULL, NULL, NULL, NULL);
+
+			cl_int logStatus;
+    		char * buildLog = NULL;
+    		size_t buildLogSize = 0;
+    		logStatus = clGetProgramBuildInfo(	*program1,
+                                      			devices[0],
+                                      			CL_PROGRAM_BUILD_LOG,
+                                      			buildLogSize,
+                                      			buildLog,
+												&buildLogSize);
+
+           	if(logStatus != CL_SUCCESS)
+			{
+					 cout<<"Error: Gettin Program build info\n";
+			}
+
+
+            
+        	buildLog = (char*)malloc(buildLogSize);
+
+        	if(buildLog == NULL)
+        	{
+            	 cout<<"Error: Gettin build log\n";
+        	}
+
+        	memset(buildLog, 0, buildLogSize);
+
+        	logStatus = clGetProgramBuildInfo(	*program1, 
+												devices[0], 
+												CL_PROGRAM_BUILD_LOG, 
+												buildLogSize, 
+												buildLog, 
+												NULL);
+        	if(logStatus != CL_SUCCESS)
+			{
+			 cout<<"Error: cl_get Program build info failled\n";
+			free(buildLog);
+			}
+
+        	 cout << " \n\t\t\tBUILD LOG\n";
+        	 cout << " ************************************************\n";
+        	 cout << buildLog <<  endl;
+        	 cout << " ************************************************\n";
+        	free(buildLog);
+
+
+	return status;
+}
+
 string convertToString(const char *filename)
 {
 	size_t size;
@@ -205,3 +388,5 @@ string convertToString(const char *filename)
 
 return NULL;
 }
+
+

@@ -43,6 +43,9 @@ namespace cv{
 	namespace ocl{
 
 		extern bool initialized;
+		bool initOFlowLK = false;
+
+		cl_program program;
 
 		CV_EXPORTS void calcOpticalFlowLK(const OclMat& prev, const OclMat& img, OclMat& velX, OclMat& velY, CvSize winSize){
 		
@@ -59,17 +62,23 @@ namespace cv{
 			int xRadius = winSize.width/2;
 			int yRadius = winSize.height/2;
 
-			cl_program program;
-			cl_kernel  OFLOWLK;
+			//cl_program program;
+			//cl_kernel  OFLOWLK;
 			cl_int status;
 
 			cl_mem fx;
 			cl_mem fy;
 			cl_mem ft;
 
+			cl_kernel OFLOWLK;
+
 			int size = prev.cols*prev.rows;
 
-			status = cv::ocl::util::buildOCLProgram("opticalFlowLK.cl", &ocl_context, &ocl_cmd_queue, &program);
+			//Build only once, cache it afterwards.
+			if(!initOFlowLK){
+			status = cv::ocl::util::buildOCLProgram("D:/branches/ocl/opencv/modules/ocl/src/ocl/opticalFlowLK.cl", &ocl_context, &ocl_cmd_queue, &program);
+			initOFlowLK = true;
+			}
 
 			OFLOWLK = clCreateKernel(program, "derivatives_compute", &status);
 
