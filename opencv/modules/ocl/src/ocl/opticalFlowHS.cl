@@ -8,13 +8,6 @@ __kernel void derivatives(__global const uchar* imgAsrc,__global const uchar* im
 	float temp0 = 0.00001f;
 	float temp1 = 0.00001f;
 
-/*	float filterCoeffs[25] = {1/273,4/273,7/273,4/273,1/273,
-							  4/273,16/273,26/273,16/273,4/273,
-							  7/273,26/273,41/273,26/273,7/273,
-							  4/273,16/273,26/273,16/273,4/273,
-							  1/273,4/273,7/273,4/273,1/273};
-
-
 	float filterCoeffs[9] = {0.11f,0.11f,0.11f,0.11f,0.11f,0.11f,0.11f,0.11f,0.11f};
 	uint imageSize = imageWidth*imageHeight;
 
@@ -28,10 +21,9 @@ __kernel void derivatives(__global const uchar* imgAsrc,__global const uchar* im
 			  ++count;
 			  }
 		  } 
-*/
-	imgA[tid] = imgAsrc[tid];//(uchar)temp0;
-	imgB[tid] = imgBsrc[tid];//(uchar)temp1;
 
+	imgA[tid] = (uchar)temp0;
+	imgB[tid] = (uchar)temp1;
 
 	barrier(CLK_GLOBAL_MEM_FENCE);
 

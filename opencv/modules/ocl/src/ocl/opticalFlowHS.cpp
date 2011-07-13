@@ -49,9 +49,6 @@ namespace cv{
 			if(!initialized)
 				return;
 
-			//if(prev.empty() || img.empty() || velX.empty() || velY.empty())
-				//return;
-
 			cl_program program;
 			cl_kernel  OFLOWHS;
 			cl_int status;
