@@ -2,6 +2,8 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv/cv.h>
 
+#include <iostream>
+using namespace std;
 
 using namespace cv;
 using namespace cv::ocl;
@@ -20,7 +22,6 @@ void drawOptFlowMap(const Mat& vel, Mat& cflowmap, int step, double, const Scala
 }
 
 int main(){
-
 	
 	VideoCapture capture(0);
 	if(!capture.isOpened()){
