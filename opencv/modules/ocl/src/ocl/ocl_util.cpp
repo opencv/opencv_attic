@@ -202,7 +202,7 @@ int cv::ocl::util::buildOCLProgram(const char *filename, cl_context* context, cl
 		}
     	
 	}
-	return 1;
+	return status;
 }
 
 //Write the PTX binary

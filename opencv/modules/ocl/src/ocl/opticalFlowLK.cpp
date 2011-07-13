@@ -77,8 +77,7 @@ namespace cv{
 			//Build only once, cache it afterwards.
 			if(!initOFlowLK){
 			status = cv::ocl::util::buildOCLProgram("D:/branches/ocl/opencv/modules/ocl/src/ocl/opticalFlowLK.cl", &ocl_context, &ocl_cmd_queue, &program);
-			initOFlowLK = true;
-			}
+			initOFlowLK = true;}
 
 			OFLOWLK = clCreateKernel(program, "derivatives_compute", &status);
 

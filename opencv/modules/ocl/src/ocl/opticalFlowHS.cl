@@ -4,11 +4,11 @@ __kernel void derivatives(__global const uchar* imgAsrc,__global const uchar* im
 	uint y = get_global_id(1);
 	uint tid = y*imageWidth+x;
 
-/*	int count = 0;
+	int count = 0;
 	float temp0 = 0.00001f;
 	float temp1 = 0.00001f;
 
-	float filterCoeffs[25] = {1/273,4/273,7/273,4/273,1/273,
+/*	float filterCoeffs[25] = {1/273,4/273,7/273,4/273,1/273,
 							  4/273,16/273,26/273,16/273,4/273,
 							  7/273,26/273,41/273,26/273,7/273,
 							  4/273,16/273,26/273,16/273,4/273,
@@ -28,12 +28,11 @@ __kernel void derivatives(__global const uchar* imgAsrc,__global const uchar* im
 			  ++count;
 			  }
 		  } 
-
-	imgA[tid] = (uchar)temp0;
-	imgB[tid] = (uchar)temp1;
 */
-	imgA[tid] = imgAsrc[tid];
-	imgB[tid] = imgBsrc[tid];
+	imgA[tid] = imgAsrc[tid];//(uchar)temp0;
+	imgB[tid] = imgBsrc[tid];//(uchar)temp1;
+
+
 	barrier(CLK_GLOBAL_MEM_FENCE);
 
 	uchar s_data[8];
