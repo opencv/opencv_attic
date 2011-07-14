@@ -50,7 +50,7 @@ endif()
 project(OpenCV)
 
 
-cmake_minimum_required(VERSION 2.4)
+cmake_minimum_required(VERSION 2.6)
 
 
 if(MSVC)
@@ -238,15 +238,15 @@ endif()
 
 # Build 3rdparty libraries under unix
 # ===================================================
-if(WIN32 OR (APPLE AND (NOT CMAKE_CROSSCOMPILING)))
+if(WIN32 OR (APPLE AND (NOT IOS)))
 	set(OPENCV_BUILD_3RDPARTY_LIBS TRUE  CACHE BOOL "Build 3rd party libraries")
 else()
 	set(OPENCV_BUILD_3RDPARTY_LIBS FALSE CACHE BOOL "Build 3rd party libraries")
 endif()
 
 if(NOT IOS)
-include(OpenCVPCHSupport.cmake REQUIRED)
-endif(IOS)
+    include(OpenCVPCHSupport.cmake REQUIRED)
+endif()
 
 
 include(OpenCVModule.cmake REQUIRED)
@@ -1456,7 +1456,7 @@ if(APPLE)
 	if(WITH_QUICKTIME)
 		message(STATUS "  Video I/O:                    QuickTime")
 	else()
-		if (CMAKE_CROSSCOMPILING)
+		if (IOS)
 	        message(STATUS "  Video I/O:                    AVFoundation")
 	    else ()
 	        message(STATUS "  Video I/O:                    QTKit")

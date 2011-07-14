@@ -78,10 +78,8 @@ if (_CMAKE_IPHONEOS_SDKS)
 	set (CMAKE_OSX_SYSROOT ${_CMAKE_IPHONEOS_SDK_ROOT} CACHE PATH "Sysroot used for iPhoneOS support")
 
 	# set the architecture for iPhoneOS
-	set (CMAKE_OSX_ARCHITECTURES armv6 CACHE string  "Build architecture for iPhoneOS")
+	set (CMAKE_OSX_ARCHITECTURES "armv7" CACHE string  "Build architecture for iPhoneOS")
 
-	# TODO: Do we actually need this? It appears not...
-	#add_definitions(-DTARGET_OS_IPHONE)
 
 	# Set the default based on this file and not the environment variable
 	set (CMAKE_FIND_ROOT_PATH ${_CMAKE_IPHONEOS_DEVELOPER_ROOT} ${_CMAKE_IPHONEOS_SDK_ROOT} CACHE string  "iPhoneOS library search path root")

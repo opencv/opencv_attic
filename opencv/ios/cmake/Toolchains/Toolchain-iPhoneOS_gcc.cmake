@@ -11,18 +11,16 @@ set ( ARCH "armv6 armv7" )
 set ( CMAKE_OSX_SYSROOT "${SDK_ROOT}" )
 set ( CMAKE_OSX_ARCHITECTURES "armv6" "armv7" )
 
+# Skip the platform compiler checks for cross compiling 
+set (CMAKE_CXX_COMPILER_WORKS TRUE)
+set (CMAKE_C_COMPILER_WORKS TRUE)
+
 set ( CMAKE_C_COMPILER "${DEVELOPER_ROOT}/usr/bin/gcc-4.2" )
 set ( CMAKE_CXX_COMPILER "${DEVELOPER_ROOT}/usr/bin/g++-4.2" )
 
-set ( CMAKE_C_FLAGS "-arch armv6 -mthumb -miphoneos-version-min=4.3" CACHE STRING "c flags" )
-set ( CMAKE_CXX_FLAGS "-arch armv6 -mthumb -miphoneos-version-min=4.3" CACHE STRING "c++ flags" )
+set ( CMAKE_C_FLAGS "-arch armv6 -arch armv7 -no-cpp-precomp -mthumb --sysroot=${SDK_ROOT} -miphoneos-version-min=${SDK_VERSION}" CACHE STRING "c flags" )
+set ( CMAKE_CXX_FLAGS "-arch armv6 -arch armv7 -no-cpp-precomp -mthumb --sysroot=${SDK_ROOT} -miphoneos-version-min=${SDK_VERSION}" CACHE STRING "c++ flags" )
 set ( CMAKE_SHARED_LINKER_FLAGS "-isysroot=${SDK_ROOT}" ${CMAKE_SHARED_LINKER_FLAGS} )
-
-# ADD_DEFINITIONS("-arch armv6")
-ADD_DEFINITIONS("-arch armv7")
-ADD_DEFINITIONS("-no-cpp-precomp")
-ADD_DEFINITIONS("--sysroot=${SDK_ROOT}")
-ADD_DEFINITIONS("-miphoneos-version-min=${SDK_VERSION}")
 
 INCLUDE_DIRECTORIES(SYSTEM "${SDK_ROOT}/usr/include")
 INCLUDE_DIRECTORIES(SYSTEM "${SDK_ROOT}/System/Library/Frameworks")

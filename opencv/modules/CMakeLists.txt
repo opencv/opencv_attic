@@ -32,7 +32,7 @@ endif()
 
 add_subdirectory(video)
 
-if (NOT IOS)
+if(NOT IOS)
   add_subdirectory(traincascade)
   add_subdirectory(haartraining)
 endif()

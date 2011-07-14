@@ -80,9 +80,6 @@ if (_CMAKE_IPHONESIMULATOR_SDKS)
 	# set the architecture for iPhoneSimulator
 	set (CMAKE_OSX_ARCHITECTURES i386 CACHE string  "Build architecture for iPhoneSimulator")
 
-	# TODO: Do we actually need this? It appears not...
-	#add_definitions(-DTARGET_OS_IPHONE)
-
 	# Set the default based on this file and not the environment variable
 	set (CMAKE_FIND_ROOT_PATH ${_CMAKE_IPHONESIMULATOR_DEVELOPER_ROOT} ${_CMAKE_IPHONESIMULATOR_SDK_ROOT} CACHE string  "iPhoneSimulator library search path root")
 
