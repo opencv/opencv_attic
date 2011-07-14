@@ -416,6 +416,7 @@ set(WITH_TBB OFF CACHE BOOL "Include Intel TBB support")
 set(WITH_IPP OFF CACHE BOOL "Include Intel IPP support")
 set(WITH_EIGEN ON CACHE BOOL "Include Eigen2/Eigen3 support")
 set(WITH_CUDA ON CACHE BOOL "Include NVidia Cuda Runtime support")
+set(WITH_OPENCL ON CACHE BOOL "Include OpenCL support")
 
 set(WITH_OPENNI OFF CACHE BOOL "Include OpenNI support")
 
@@ -940,13 +941,13 @@ endif()
 
 ############################### OpenCL ################################
 
-if(WITH_CUDA)
+if(WITH_OPENCL)
     include(OpenCVFindOpenCL.cmake)
 endif()
     
-    if(OPENCL_FOUND)
-        set(HAVE_OPENCL 1)       
-    endif() 
+if(OPENCL_FOUND)
+    set(HAVE_OPENCL 1)       
+endif() 
 
 ############################### OpenNI ################################
 set(HAVE_OPENNI FALSE)
@@ -1618,6 +1619,7 @@ if(UNIX)
 endif()
 
 status("    Use Cuda:"  HAVE_CUDA  THEN YES ELSE NO)
+status("    Use OpenCL:"  HAVE_OPENCL  THEN YES ELSE NO)
 status("    Use Eigen:" HAVE_EIGEN THEN YES ELSE NO)
 
 # interfaces to other languages

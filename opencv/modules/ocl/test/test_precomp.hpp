@@ -49,7 +49,7 @@
 #include <algorithm>
 #include <iterator>
 #include <cvconfig.h>
-#include <opencv/cv.h>
-#include <opencv/highgui.h>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui/highgui.hpp>
 #include <opencv2/ts/ts.hpp>
-#include "opencv2/ocl.hpp"
+#include "opencv2/ocl/ocl.hpp"

@@ -1,13 +1,12 @@
-#include <opencv2/ocl.hpp>
+#include <opencv2/ocl/ocl.hpp>
 #include <opencv2/highgui/highgui.hpp>
-#include <opencv/cv.h>
+#include <opencv2/imgproc/imgproc.hpp>
 
 #include <iostream>
-using namespace std;
 
+using namespace std;
 using namespace cv;
 using namespace cv::ocl;
-
 
 //Draws the sample motion vectors on the 1st frame
 void drawOptFlowMap(const Mat& vel, Mat& cflowmap, int step, double, const Scalar& color)

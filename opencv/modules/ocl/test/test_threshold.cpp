@@ -44,9 +44,9 @@ using namespace cvtest;
 
 int testThresholdBinary(const Mat& src, float thresh, float maxval);
 
-int verifyResult(const Mat& a, const Mat& b);
+static int verifyResult(const Mat& a, const Mat& b);
 
-int main( int argc, char** argv ){
+int test_threshold() {
 
     Size size(1024,1024);
     Mat src_8u, src_32f;
@@ -92,7 +92,7 @@ int testThresholdBinary(const Mat& src, float thresh, float maxval){
 	return s;
 }
 
-int verifyResult(const Mat& a, const Mat& b){
+static int verifyResult(const Mat& a, const Mat& b){
 
 	int count = a.rows*a.cols*a.channels();
 

@@ -1,12 +1,9 @@
-#include "ocl.hpp"
-
-#include <opencv/cv.h>
-#include <opencv/highgui.h>
+#include "test_precomp.hpp"
 
 using namespace cv;
 using namespace cv::ocl;
 
-int main(){
+void test_add(){
 
 	IplImage* img0 = cvLoadImage("d:/frame_0.png",0);
 	IplImage* img1 = cvLoadImage("d:/frame_1.png",0);

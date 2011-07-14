@@ -43,10 +43,10 @@
 
 using namespace cv;
 using namespace cv::ocl;
-
+using namespace std;
 
 //Draws the sample motion vectors on the 1st frame
-void drawOptFlowMap(const Mat& velX, const Mat& velY, Mat& cflowmap, int step, double, const Scalar& color)
+static void drawOptFlowMap(const Mat& velX, const Mat& velY, Mat& cflowmap, int step, double, const Scalar& color)
 {
     for(int y = 0; y < cflowmap.rows; y += step)
         for(int x = 0; x < cflowmap.cols; x += step)
@@ -57,7 +57,7 @@ void drawOptFlowMap(const Mat& velX, const Mat& velY, Mat& cflowmap, int step, d
         }
 }
 
-int main(){
+int test_opticalflowhs(){
 
 	VideoCapture capture("d:/dman.avi");
 	if(!capture.isOpened()){

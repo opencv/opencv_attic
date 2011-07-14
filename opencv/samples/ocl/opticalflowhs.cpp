@@ -1,13 +1,12 @@
-#include <opencv2/ocl.hpp>
+#include <opencv2/ocl/ocl.hpp>
 #include <opencv2/highgui/highgui.hpp>
-#include <opencv/cv.h>
+#include <opencv2/imgproc/imgproc.hpp>
 
 #include <iostream>
-using namespace std;
 
+using namespace std;
 using namespace cv;
 using namespace cv::ocl;
-
 
 //Draws the sample motion vectors on the 1st frame
 void drawOptFlowMap(const Mat& vel, Mat& cflowmap, int step, double, const Scalar& color)
@@ -23,7 +22,7 @@ void drawOptFlowMap(const Mat& vel, Mat& cflowmap, int step, double, const Scala
 
 int main(){
 
-	VideoCapture capture("d:/dancingman.avi");
+	VideoCapture capture("dancingman.avi");
 	if(!capture.isOpened()){
 		cout<<"Failed to capture video, check the video path again, exiting...\n";
 		exit(0);
@@ -75,8 +74,8 @@ int main(){
 		_vel[1] = velY;
 		merge(_vel, 2, vel);
 
-		for(int i=0;i<1024;i++)
-			cout<<(float)velX.data[i]<<endl;
+		/*for(int i=0;i<1024;i++)
+			cout<<(float)velX.data[i]<<endl;*/
 
 		//Draw the motion vectors on the source image
 		drawOptFlowMap(vel, frame0color, 8, 1.5, CV_RGB(0, 255, 0));

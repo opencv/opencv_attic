@@ -60,9 +60,10 @@ int testMin(const Mat& a, const Scalar& val);
 int testMax(const Mat& a, const Mat& b);
 int testMax(const Mat& a, const Scalar& val);
 
-int verifyResult(const Mat& a, const Mat& b);
+static int verifyResult(const Mat& a, const Mat& b);
 
-int main( int argc, char** argv ){
+void test_arithmetic()
+{
 
     Size size(1024,1024);
     Mat mat1_8u, mat2_8u, mat1_16u, mat2_16u, mat1_32f, mat2_32f;
@@ -442,7 +443,7 @@ int testMax(const Mat& a, const Scalar& val){
 	return s;
 }
 
-int verifyResult(const Mat& a, const Mat& b){
+static int verifyResult(const Mat& a, const Mat& b){
 
 	int count = a.rows*a.cols*a.channels();
 
