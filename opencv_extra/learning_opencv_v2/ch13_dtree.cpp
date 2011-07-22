@@ -15,7 +15,7 @@ int main( int argc, char** argv )
 
     float priors[] = { 1.0, 10.0}; // Edible vs poisonos weights
 
-    CvMat* var_type;
+    CvMat* var_type, *responses = 0, *missing = 0;
     CvMat* data; // jmh add
     data     = cvCreateMat( 20, 30, CV_8U ); // jmh add
 

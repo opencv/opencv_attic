@@ -39,6 +39,8 @@
      http://pr.willowgarage.com/wiki/OpenCV
    ************************************************** */
 
+#if 0
+
 #include "cv.h"
 #include "highgui.h"
 #include <stdio.h>
@@ -446,4 +448,9 @@ int main(int argc, char** argv)
     return 0;
 }
 
+#endif
 
+int main(int, char**)
+{
+    return 0;
+}
