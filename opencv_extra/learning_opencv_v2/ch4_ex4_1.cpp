@@ -25,9 +25,10 @@
    * The minutes of weekly OpenCV development meetings are at:
      http://pr.willowgarage.com/wiki/OpenCV
 */
-#include <cv.h>
-#include <highgui.h>
- 
+#include <opencv2/opencv.hpp>
+
+using namespace cv;
+
 // Define our callback which we will install for
 // mouse events.
 //
@@ -35,43 +36,38 @@ void my_mouse_callback(
    int event, int x, int y, int flags, void* param 
 );
  
-CvRect box;
+Rect box;
 bool drawing_box = false;
  
 // A litte subroutine to draw a box onto an image
 //
-void draw_box( IplImage* img, CvRect rect ) {
-  cvRectangle (
+void draw_box( Mat& img, Rect box ) {
+  rectangle (
     img, 
-    cvPoint(box.x,box.y),
-    cvPoint(box.x+box.width,box.y+box.height),
-    cvScalar(0xff,0x00,0x00)    /* red */
+    box.tl(),
+    box.br(),
+    Scalar(0x00,0x00,0xff)    /* red */
   );
 }
  
 int main( int argc, char* argv[] ) {
   
-  box = cvRect(-1,-1,0,0);
+  box = Rect(-1,-1,0,0);
 
-  IplImage* image = cvCreateImage( 
-    cvSize(200,200),
-    IPL_DEPTH_8U,
-    3
-  );
-  cvZero( image );
-  IplImage* temp = cvCloneImage( image );
+  Mat image(200, 200, CV_8UC3), temp;
+  image = Scalar::all(0);
   
-  cvNamedWindow( "Box Example" );
+  namedWindow( "Box Example" );
  
   // Here is the crucial moment that we actually install
   // the callback.  Note that we set the value ‘param’ to
   // be the image we are working with so that the callback
   // will have the image to edit.
   //
-  cvSetMouseCallback( 
+  setMouseCallback( 
     "Box Example", 
     my_mouse_callback, 
-    (void*) image 
+    (void*)&image 
   );
  
   // The main program loop.  Here we copy the working image
@@ -80,20 +76,16 @@ int main( int argc, char* argv[] ) {
   // display the temp image, and wait 15ms for a keystroke,
   // then repeat…
   //
-  while( 1 ) {
+  for(;;) {
  
-    cvCopyImage( image, temp );
+	image.copyTo(temp);
     if( drawing_box ) draw_box( temp, box ); 
-    cvShowImage( "Box Example", temp );
+    imshow( "Box Example", temp );
  
-    if( cvWaitKey( 15 )==27 ) break;
+    if( waitKey( 15 )==27 ) break;
   }
- 
-  // Be tidy
-  //
-  cvReleaseImage( &image );
-  cvReleaseImage( &temp );
-  cvDestroyWindow( "Box Example" );
+	
+  return 0;
 }
  
 // This is our mouse callback.  If the user
@@ -107,7 +99,7 @@ void my_mouse_callback(
    int event, int x, int y, int flags, void* param )
 {
  
-  IplImage* image = (IplImage*) param;
+  Mat& image = *(Mat*) param;
 
   switch( event ) {
     case CV_EVENT_MOUSEMOVE: {
@@ -119,7 +111,7 @@ void my_mouse_callback(
     break;
     case CV_EVENT_LBUTTONDOWN: {
       drawing_box = true;
-      box = cvRect( x, y, 0, 0 );
+      box = Rect( x, y, 0, 0 );
     }
     break;   
     case CV_EVENT_LBUTTONUP: {

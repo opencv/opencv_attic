@@ -22,26 +22,25 @@
    * The minutes of weekly OpenCV development meetings are at:
      http://pr.willowgarage.com/wiki/OpenCV
 * *****************************************************/
-#include <cv.h>
-#include <highgui.h>
-#include <stdio.h>
+#include <opencv2/opencv.hpp>
+#include <iostream>
+
+using namespace cv;
+using namespace std;
+
 int main(int argc, char** argv)
 {
    //Adding something to open a video so that we can read its properties ...
-  	IplImage *frame; //To hold movie images
-   CvCapture* capture         = NULL;
-   if((argc < 2 )|| !(capture = cvCreateFileCapture( argv[1] ))){
-   	printf("Failed to open %s\n",argv[1]);
+   Mat frame; //To hold movie images
+   VideoCapture capture;
+   if( argc < 2 || !capture.open( argv[1] ) ){
+   	cout << "Failed to open " << argv[1] << endl;
    	return -1;
    }
    //Read the properties
-	double f = cvGetCaptureProperty(
-		capture,
-		CV_CAP_PROP_FOURCC
-	);
-	char* fourcc = (char*) (&f);
-	printf("Properties of %s are:\n",argv[1]);
-	printf("FORCC = %d | %d | %d | %d |\n",fourcc[0],fourcc[1],fourcc[2],fourcc[3]);
-   cvReleaseCapture( &capture );
+   int f = (int)capture.get(CV_CAP_PROP_FOURCC);
+   cout << "Properties of " << argv[1] << " are" << endl;
+   cout << "FOURCC = " << (char)f << " | " << (char)(f>>8) << " | "
+		<< (char)(f>>16) << " | " << (char)(f>>24) << endl;
    return 0;
 }

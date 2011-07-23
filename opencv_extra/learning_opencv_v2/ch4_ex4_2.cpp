@@ -1,10 +1,10 @@
 // An example program in which the
 // user can draw boxes on the screen.
 //
-#include <cv.h>
-#include <highgui.h>
-#include <stdio.h>
- /* License:
+#include <opencv2/opencv.hpp>
+#include <iostream>
+
+/* License:
    Oct. 3, 2008
    Right to use this code in any way you want without warrenty, support or any guarentee of it working.
 
@@ -28,19 +28,23 @@
    * The minutes of weekly OpenCV development meetings are at:
      http://pr.willowgarage.com/wiki/OpenCV
 */
+
+using namespace cv;
+using namespace std;
+
 //
 // Using a trackbar to create a "switch" that the user can turn on and off.
 // We make this value global so everyone can see it.
 //
 int g_switch_value = 1;
-void switch_off_function() {printf("Pause\n");}; //YOU COULD DO SOMETHING WITH THESE FUNCTIONS TOO
-void switch_on_function() {printf("Run\n");}; 
+void switch_off_function() { cout << "Pause\n";}; //YOU COULD DO SOMETHING WITH THESE FUNCTIONS TOO
+void switch_on_function() { cout << "Run\n";}; 
 
 //
 // This will be the callback that we give to the
 // trackbar.
 //
-void switch_callback( int position ) {
+void switch_callback( int position, void* ) {
   if( position == 0 ) {
     switch_off_function();
   } else {
@@ -50,21 +54,21 @@ void switch_callback( int position ) {
  
  //OK, OK, I ADDED READING A MOVIE AND USING THE "BUTTON" TO STOP AND GO
 int main( int argc, char* argv[] ) {
-  	IplImage *frame; //To hold movie images
-   CvCapture* g_capture         = NULL;
-   if((argc < 2 )|| !(g_capture = cvCreateFileCapture( argv[1] ))){
-   	printf("Failed to open %s\n",argv[1]);
+  Mat frame; //To hold movie images
+  VideoCapture g_capture;
+  if(argc < 2 || !g_capture.open( argv[1] )){
+   	cout << "Failed to open " << argv[1] << endl;
    	return -1;
-   }
+  }
 
   // Name the main window
   //
-  cvNamedWindow( "Example4_2", 1 );
+  namedWindow( "Example4_2", 1 );
  
   // Create the trackbar.  We give it a name,
   // and tell it the name of the parent window.
   //
-  cvCreateTrackbar(
+  createTrackbar(
     "Switch",
     "Example4_2",
     &g_switch_value,
@@ -75,18 +79,14 @@ int main( int argc, char* argv[] ) {
   // This will just cause OpenCV to idle until 
   // someone hits the "Escape" key.
   //
-  while( 1 ) {
+  for(;;) {
     if(g_switch_value){
-		 frame = cvQueryFrame( g_capture );
-   	 if( !frame ) break;
+	   g_capture >> frame;
+	   if( frame.empty() ) break;
+	   imshow( "Example4_2", frame);
     }
-    cvShowImage( "Example4_2", frame);
-    if(cvWaitKey(10)==27 ) break;
+    if(waitKey(10)==27 ) break;
   }
   
-  //CLEAN UP
-  cvReleaseCapture( &g_capture );
-  cvDestroyWindow( "Example4_2" );
-  return(0);
-
+  return 0;
 }
