@@ -1,79 +1,76 @@
 /* License:
-   Oct. 3, 2008
-   Right to use this code in any way you want without warrenty, support or any guarentee of it working.
+   July 20, 2011
+   Standard BSD
 
    BOOK: It would be nice if you cited it:
-   Learning OpenCV: Computer Vision with the OpenCV Library
+   Learning OpenCV 2: Computer Vision with the OpenCV Library
      by Gary Bradski and Adrian Kaehler
-     Published by O'Reilly Media, October 3, 2008
+     Published by O'Reilly Media
  
    AVAILABLE AT: 
      http://www.amazon.com/Learning-OpenCV-Computer-Vision-Library/dp/0596516134
      Or: http://oreilly.com/catalog/9780596516130/
      ISBN-10: 0596516134 or: ISBN-13: 978-0596516130    
 
-   OTHER OPENCV SITES:
-   * The source code is on sourceforge at:
-     http://sourceforge.net/projects/opencvlibrary/
-   * The OpenCV wiki page (As of Oct 1, 2008 this is down for changing over servers, but should come back):
-     http://opencvlibrary.sourceforge.net/
+   Main OpenCV site
+   http://opencv.willowgarage.com/wiki/
    * An active user group is at:
      http://tech.groups.yahoo.com/group/OpenCV/
    * The minutes of weekly OpenCV development meetings are at:
      http://pr.willowgarage.com/wiki/OpenCV
 */
-#include "cv.h"
-#include "highgui.h"
+#include "opencv2/highgui/highgui.hpp"
+#include "opencv2/imgproc/imgproc.hpp"
 
-void example2_4( IplImage* image )
+#include <iostream>
+
+using namespace cv;
+using namespace std;
+
+
+void example2_4( Mat & image )
 {
     // Create some windows to show the input
     // and output images in.
     //
-    cvNamedWindow( "Example2_4-in", CV_WINDOW_AUTOSIZE );
-    cvNamedWindow( "Example2_4-out", CV_WINDOW_AUTOSIZE );
+    namedWindow( "Example2_4-in", CV_WINDOW_AUTOSIZE );
+    namedWindow( "Example2_4-out", CV_WINDOW_AUTOSIZE );
     
     // Create a window to show our input image
     //
-    cvShowImage( "Example2_4-in", image );
+    imshow( "Example2_4-in", image );
     
     // Create an image to hold the smoothed output
-    //
-    IplImage* out = cvCreateImage(
-        cvGetSize(image),
-        IPL_DEPTH_8U,
-        3
-    );
+    Mat out;
     
     // Do the smoothing
-    //
-    cvSmooth( image, out, CV_GAUSSIAN, 5,5 );
-    cvSmooth( out, out, CV_GAUSSIAN, 5, 5);
+    //  Could use GaussianBlur(), blur(), medianBlur() or bilateralFilter().
+    GaussianBlur(image, out, Size(5,5),3,3);
+    GaussianBlur(out,out,Size(5,5),3,3);
     
     // Show the smoothed image in the output window
     //
-    cvShowImage( "Example2_4-out", out );
-    
-    // Be tidy
-    //
-    cvReleaseImage( &out );
+    imshow( "Example2_4-out", out );
 
-    // Wait for the user to hit a key, then clean up the windows
+    // Wait for the user to hit a key, windows will self destruct
     //
-    cvWaitKey( 0 ); 
-    cvDestroyWindow("Example2_4-in" );
-    cvDestroyWindow("Example2_4-out" );
-    
+    waitKey( 0 );
+}
+
+void help()
+{
+	cout << "Call: ./ch2_ex2_4 faceScene.jpg" << endl;
 }
 
 int main( int argc, char** argv )
 {
-  IplImage* img = cvLoadImage( argv[1] );
-  cvNamedWindow("Example1", CV_WINDOW_AUTOSIZE );
-  cvShowImage("Example1", img );
-  example2_4( img );
-//  cvWaitKey(0);
-  cvReleaseImage( &img );
-  cvDestroyWindow("Example1");
+	help();
+	cv::Mat img = imread(argv[1],-1);
+	if(img.empty())
+	{
+		std::cerr << "Couldn't open the image " << argv[1] << std::endl;
+		return -1;
+	}
+	example2_4( img );
 }
 
