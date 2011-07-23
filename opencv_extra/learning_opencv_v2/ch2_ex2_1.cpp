@@ -32,7 +32,8 @@ int main( int argc, char** argv )
   cv::Mat img = imread(argv[1],-1);
   if(img.empty())
   {
-      std::cout << "Couldn't open the image " << argv[1] << std::endl;
+      std::cerr << "Couldn't open the image " << argv[1] << std::endl;
+      std::cerr << "Call: ./ch2_ex2_1 faceScene.jpg" << std::endl;
       return -1;
   }
   cv::namedWindow("Exmple1", CV_WINDOW_AUTOSIZE );

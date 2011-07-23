@@ -1,121 +1,88 @@
 /* License:
-   Oct. 3, 2008
-   Right to use this code in any way you want without warrenty, support or any guarentee of it working.
+   July 20, 2011
+   Standard BSD
 
    BOOK: It would be nice if you cited it:
-   Learning OpenCV: Computer Vision with the OpenCV Library
+   Learning OpenCV 2: Computer Vision with the OpenCV Library
      by Gary Bradski and Adrian Kaehler
-     Published by O'Reilly Media, October 3, 2008
+     Published by O'Reilly Media
  
    AVAILABLE AT: 
      http://www.amazon.com/Learning-OpenCV-Computer-Vision-Library/dp/0596516134
      Or: http://oreilly.com/catalog/9780596516130/
      ISBN-10: 0596516134 or: ISBN-13: 978-0596516130    
 
-   OTHER OPENCV SITES:
-   * The source code is on sourceforge at:
-     http://sourceforge.net/projects/opencvlibrary/
-   * The OpenCV wiki page (As of Oct 1, 2008 this is down for changing over servers, but should come back):
-     http://opencvlibrary.sourceforge.net/
+   Main OpenCV site
+   http://opencv.willowgarage.com/wiki/
    * An active user group is at:
      http://tech.groups.yahoo.com/group/OpenCV/
    * The minutes of weekly OpenCV development meetings are at:
      http://pr.willowgarage.com/wiki/OpenCV
 */
-#include <stdio.h>
+#include "opencv2/highgui/highgui.hpp"
+#include "opencv2/imgproc/imgproc.hpp"
 #include <iostream>
 #include <fstream>
-#include "cv.h"
-#include "highgui.h"
-/*
-OK, you caught us.  Video playback under linux is still just bad.  Part of this is due to FFMPEG, part of this
-is due to lack of standards in video files.  But the position slider here will often not work. We tried to at least
-find number of frames using the "getAVIFrames" hack below.  Terrible.  But, this file shows something of how to
-put a slider up and play with it.  Sorry.
-*/
 
-
+using namespace cv;
 using namespace std;
 
-int        g_slider_position = 0;
-CvCapture* g_capture         = NULL;
+int g_slider_position = 0;
+int run = 1, dontset = 0; //start out in single step mode
+VideoCapture cap;
 
-void onTrackbarSlide(int pos) {
-    cvSetCaptureProperty(
-        g_capture,
-        CV_CAP_PROP_POS_FRAMES,
-        pos
-    );
+
+void onTrackbarSlide(int pos, void *) {
+	cap.set(CV_CAP_PROP_POS_FRAMES,pos);
+	if(!dontset)
+		run = 1;
+	dontset = 0;
 }
 
-//Hack because sometimes the number of frames in a video is not accessible. 
-//Probably delete this on Widows
-int getAVIFrames(char * fname) { 
-    char tempSize[4];
-    // Trying to open the video file
-    ifstream  videoFile( fname , ios::in | ios::binary );
-    // Checking the availablity of the file
-    if ( !videoFile ) {
-      cout << "Couldn’t open the input file " << fname << endl;
-      exit( 1 );
-    }
-    // get the number of frames
-    videoFile.seekg( 0x30 , ios::beg );
-    videoFile.read( tempSize , 4 );
-    int frames = (unsigned char ) tempSize[0] + 0x100*(unsigned char ) tempSize[1] + 0x10000*(unsigned char ) tempSize[2] +    0x1000000*(unsigned char ) tempSize[3];
-    videoFile.close(  );
-    return frames;
+void help()
+{
+	cout << "\n./ch2_ex2_3 tree.avi\n" << endl;
+    cout << "'s' to single step\n'r' to run.\nTrack bar causes single step mode.\n'h'help\nESC to quit\n" << endl;
 }
-
-
 int main( int argc, char** argv ) {
-    cvNamedWindow( "Example2_3", CV_WINDOW_AUTOSIZE );
-    g_capture = cvCreateFileCapture( argv[1] );
-    IplImage *foo = cvQueryFrame( g_capture);
+	namedWindow( "Example2_3", CV_WINDOW_AUTOSIZE );
+    if(argc > 1) cap.open(string(argv[1]));
+    else {cap.open(0); cerr << "Call: ./ch2_ex2_3 tree.avi" << endl; return -1;}
+    help();
+    int frames = (int) cap.get(CV_CAP_PROP_FRAME_COUNT);
+    int tmpw = (int)cap.get(CV_CAP_PROP_FRAME_WIDTH);
+    int tmph = (int)cap.get(CV_CAP_PROP_FRAME_HEIGHT);
+    std::cout << "Video has " << frames << " frames of dimensions(" << tmpw << ", " << tmph << ")." << std::endl;
 
-
-    int frames = (int) cvGetCaptureProperty(
-        g_capture,
-        CV_CAP_PROP_FRAME_COUNT
-    );
-    
-    int tmpw = (int) cvGetCaptureProperty(
-        g_capture,
-        CV_CAP_PROP_FRAME_WIDTH
-    );
-
-    int tmph = (int) cvGetCaptureProperty(
-        g_capture,
-        CV_CAP_PROP_FRAME_HEIGHT
-    );
-
-    printf("opencv frames %d w %d h %d\n",frames,tmpw,tmph);
-
-    frames = getAVIFrames(argv[1]); //This is a hack because on linux, getting number of frames often doesn't work
-
-    printf("hacked frames %d w %d h %d\n",frames,tmpw,tmph);
-
-    cvCreateTrackbar(
+    createTrackbar(
         "Position",
         "Example2_3",
         &g_slider_position,
         frames,
         onTrackbarSlide
     );
-    IplImage* frame;
+    Mat frame;
     frames = 0;
+    int single_step = 0; //Start out free run
     while(1) {
-        frame = cvQueryFrame( g_capture );
-        if( !frame ) break;
-//      int frames = cvGetCaptureProperty( g_capture, CV_CAP_PROP_POS_FRAMES);//This should work, sometimes it does not on linux
-	frames++; //My cheat
-	printf("\nFrame number=%d\n",frames);
-        cvSetTrackbarPos("Position","Example2_3",frames);
-        cvShowImage( "Example2_3", frame );
-        char c = (char)cvWaitKey(10);
-        if( c == 27 ) break;
+    	if(run != 0)
+    	{
+    		cap >> frame;
+    		if(!frame.data) break;
+    		frames = (int)cap.get(CV_CAP_PROP_POS_FRAMES);
+    		dontset = 1;
+    		setTrackbarPos("Position","Example2_3",frames); //This causes a call to onTrackbarSlide()
+    		imshow( "Example2_3", frame );
+    		run-=1;
+    	}
+    	char c = (char)waitKey(10);
+    	if(c == 'h') help();
+    	if(c == 's') //single step
+    		{run = 1; cout << "Single step, run = " << run << endl;}
+    	if(c == 'r') //run mode
+    		{run = -1; cout << "Run mode, run = " << run <<endl;}
+    	if( c == 27 )
+    		break;
     }
-    cvReleaseCapture( &g_capture );
-    cvDestroyWindow( "Example2_3" );
     return(0);
 }
