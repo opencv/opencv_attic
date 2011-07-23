@@ -32,19 +32,19 @@ void help()
 
 int main( int argc, char** argv )
 {
-  Mat img = imread( argv[1] );
+	Mat img = imread( argv[1] );
+	help();
 	if(img.empty())
 	{
 		std::cerr << "Couldn't open the image " << argv[1] << std::endl;
-		help();
 		return -1;
 	}
-  Mat img2;
-  namedWindow("Example1", CV_WINDOW_AUTOSIZE );
-  namedWindow("Example2", CV_WINDOW_AUTOSIZE );
-  imshow("Example1", img );
-  pyrDown(img,img2);
-  imshow("Example2", img2 );
-  waitKey(0);
-  return 0;
+	Mat img2;
+	namedWindow("Example1", CV_WINDOW_AUTOSIZE );
+	namedWindow("Example2", CV_WINDOW_AUTOSIZE );
+	imshow("Example1", img );
+	pyrDown(img,img2);
+	imshow("Example2", img2 );
+	waitKey(0);
+	return 0;
 }
