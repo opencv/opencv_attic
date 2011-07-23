@@ -27,48 +27,45 @@
      http://pr.willowgarage.com/wiki/OpenCV
    ************************************************** */
 
-#include <stdio.h>
-#include <cv.h>
-#include <highgui.h>
-#include <stdio.h>
+#include <opencv2/opencv.hpp>
+#include <iostream>
+
+using namespace cv;
+using namespace std;
 
 void f( 
-  IplImage* src, 
-  IplImage* dst 
+  const Mat& src,
+  Mat& dst
 ) {
-  CvMemStorage* storage = cvCreateMemStorage(0);
-  CvSeq* comp = NULL;
+  Ptr<CvMemStorage> storage = cvCreateMemStorage(0);
+  Seq<CvConnectedComp> comp;
 
-  cvPyrSegmentation( src, dst, storage, &comp, 4, 200, 50 );
-  int n_comp = comp->total;
+  dst.create(src.size(), src.type());
+  IplImage c_src = src, c_dst = dst;
+  cvPyrSegmentation( &c_src, &c_dst, storage, &comp.seq, 4, 200, 50 );
+  int n_comp = comp.size();
 
   for( int i=0; i<n_comp; i++ ) {
-    CvConnectedComp* cc = (CvConnectedComp*) cvGetSeqElem( comp, i );
+	CvConnectedComp cc = comp[i];
     // do_something_with( cc );
+	//rectangle(dst, cc.rect, Scalar(128, 255, 255), 1);  
   }
-  cvReleaseMemStorage( &storage );
 }
 
 int main(int argc, char** argv)
 {
-
+  if(argc < 2) { cout << "specify input image" << endl; return -1; }
   // Create a named window with a the name of the file.
-  cvNamedWindow( argv[1], 1 );
+  namedWindow( argv[1], 1 );
   // Load the image from the given file name.
-  IplImage* src = cvLoadImage( argv[1] );
-  if(!src) { printf("Couldn't seem to Open %s, sorry\n",argv[1]); return -1;}
-  IplImage* dst = cvCreateImage( cvGetSize(src), src->depth, src->nChannels);
+  Mat src = imread(argv[1]), dst;
+  if(src.empty()) { cout << "Couldn't seem to open " << argv[1] << ", sorry\n"; return -1;}
   f( src, dst);
 
   // Show the image in the named window
-  cvShowImage( argv[1], dst );
+  imshow( argv[1], dst );
 
-  // Idle until the user hits the "Esc" key.
-  while( 1 ) { if( cvWaitKey( 100 ) == 27 ) break; }
-
-  // Clean up and don’t be piggies
-  cvDestroyWindow( argv[1] );
-  cvReleaseImage( &src );
-  cvReleaseImage( &dst );
-
+  // Idle until the user hits any key.
+  waitKey();
+  return 0;	
 }

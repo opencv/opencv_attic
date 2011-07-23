@@ -26,59 +26,45 @@
      http://pr.willowgarage.com/wiki/OpenCV
    ************************************************** */
 
-#include <stdio.h>
-#include <cv.h>
-#include <highgui.h>
+#include <opencv2/opencv.hpp>
+#include <iostream>
 
+using namespace cv;
+using namespace std;
 
-void sum_rgb( IplImage* src, IplImage* dst ) {
-  // Allocate individual image planes.
-  IplImage* r = cvCreateImage( cvGetSize(src), IPL_DEPTH_8U, 1 );
-  IplImage* g = cvCreateImage( cvGetSize(src), IPL_DEPTH_8U, 1 );
-  IplImage* b = cvCreateImage( cvGetSize(src), IPL_DEPTH_8U, 1 );
-
-  // Temporary storage.
-  IplImage* s = cvCreateImage(cvGetSize(src), IPL_DEPTH_32F, 1);
-      
+void sum_rgb( const Mat& src, Mat& dst ) {
   // Split image onto the color planes.
-  cvSplit( src, r, g, b, NULL );
-     
-  //Accumulate separate planes, combine and threshold
-	cvZero(s);
-	cvAcc(b,s);
-	cvAcc(g,s);
-	cvAcc(r,s);
+  vector<Mat> planes;
+  split(src, planes);
 	
-	//Truncate values above 100 and rescale into dst
-	cvThreshold( s, s, 100, 100, CV_THRESH_TRUNC );
-	cvConvertScale( s, dst, 1, 0 );
- 
-  cvReleaseImage( &r );
-  cvReleaseImage( &g );   
-  cvReleaseImage( &b );   
-  cvReleaseImage( &s );
+  Mat b = planes[0], g = planes[1], r = planes[2];
+  
+  //Accumulate separate planes, combine and threshold
+  Mat s = Mat::zeros(b.size(), CV_32F);
+  accumulate(b, s);
+  accumulate(g, s);
+  accumulate(r, s);
+	
+  //Truncate values above 100 and rescale into dst
+  threshold( s, s, 100, 100, CV_THRESH_TRUNC );
+  s.convertTo(dst, b.type());
 }
 
 int main(int argc, char** argv)
 {
-
-  // Create a named window with a the name of the file.
-  cvNamedWindow( argv[1], 1 );
-
-  // Load the image from the given file name.
-  IplImage* src = cvLoadImage( argv[1] );
-  IplImage* dst = cvCreateImage( cvGetSize(src), src->depth, 1);
-  sum_rgb( src, dst);
-
-  // Show the image in the named window
-  cvShowImage( argv[1], dst );
-
-  // Idle until the user hits the "Esc" key.
-  while( 1 ) { if( (cvWaitKey( 10 )&0x7f) == 27 ) break; }
-
-  // Clean up and don’t be piggies
-  cvDestroyWindow( argv[1] );
-  cvReleaseImage( &src );
-  cvReleaseImage( &dst );
-
+  if(argc < 2) { cout << "specify input image" << endl; return -1; }
+	
+	// Load the image from the given file name.
+	Mat src = imread( argv[1] ), dst;
+	if( src.empty() ) { cout << "can not load " << argv[1] << endl; return -1; }
+	sum_rgb( src, dst);
+	
+	// Create a named window with a the name of the file and
+	// show the image in the window
+	imshow( argv[1], dst );
+	
+	// Idle until the user hits any key.
+	waitKey();
+	
+	return 0;
 }

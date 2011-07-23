@@ -29,49 +29,39 @@
      http://pr.willowgarage.com/wiki/OpenCV
    ************************************************** */
 
-#include <cv.h>
-#include <highgui.h>
-#include <math.h>
-IplImage *Igray=0, *It = 0, *Iat;
+#include <opencv2/opencv.hpp>
+#include <iostream>
+
+using namespace cv;
+using namespace std;
+
 int main( int argc, char** argv )
 {
-     if(argc != 7){return -1;          }
-     //Command line
-     double threshold = (double)atof(argv[1]);
-     int threshold_type = atoi(argv[2]) ?
-              CV_THRESH_BINARY : CV_THRESH_BINARY_INV;
-     int adaptive_method = atoi(argv[3]) ?
-              CV_ADAPTIVE_THRESH_MEAN_C : CV_ADAPTIVE_THRESH_GAUSSIAN_C;
-     int block_size = atoi(argv[4]);
-     double offset = (double)atof(argv[5]);
-     //Read in gray image
-     if((Igray = cvLoadImage( argv[6], CV_LOAD_IMAGE_GRAYSCALE)) == 0){
-          return     -1;}
-     // Create the grayscale output images
-     It = cvCreateImage(cvSize(Igray->width,Igray->height),
-                          IPL_DEPTH_8U, 1);
-     Iat = cvCreateImage(cvSize(Igray->width,Igray->height),
-                          IPL_DEPTH_8U, 1);
-     //Threshold
-     cvThreshold(Igray,It,threshold,255,threshold_type);
-     cvAdaptiveThreshold(Igray, Iat, 255, adaptive_method,
-                          threshold_type, block_size, offset);
-     //PUT UP 2 WINDOWS
-     cvNamedWindow("Raw",1);
-     cvNamedWindow("Threshold",1);
-     cvNamedWindow("Adaptive Threshold",1);
-     //Show the results
-     cvShowImage("Raw",Igray);
-     cvShowImage("Threshold",It);
-     cvShowImage("Adaptive Threshold",Iat);
-     cvWaitKey(0);
-     //Clean up
-     cvReleaseImage(&Igray);
-     cvReleaseImage(&It);
-     cvReleaseImage(&Iat);
-	  cvDestroyWindow("Raw");
-	  cvDestroyWindow("Threshold");
-	  cvDestroyWindow("Adaptive Threshold");
-	  return(0);
+  if(argc != 7) { cout <<
+   "Usage: ch5_ex5_4 fixed_threshold invert(0=off|1=on) adaptive_type(0=mean|1=gaussian) block_size offset image\n"
+   "Example: ch5_ex5_4 100 1 0 15 10 lena.jpg\n"; return -1; }
+  //Command line
+  double fixed_threshold = (double)atof(argv[1]);
+  int threshold_type = atoi(argv[2]) ?
+          CV_THRESH_BINARY : CV_THRESH_BINARY_INV;
+  int adaptive_method = atoi(argv[3]) ?
+          CV_ADAPTIVE_THRESH_MEAN_C : CV_ADAPTIVE_THRESH_GAUSSIAN_C;
+  int block_size = atoi(argv[4]);
+  double offset = (double)atof(argv[5]);
+  Mat Igray = imread(argv[6], CV_LOAD_IMAGE_GRAYSCALE);
+  //Read in gray image
+  if( Igray.empty() ){ cout << "Can not load " << argv[6] << endl; return -1; }
+  // Declare the output images
+  Mat It, Iat;
+  //Threshold
+  threshold(Igray,It,fixed_threshold,255,threshold_type);
+  adaptiveThreshold(Igray, Iat, 255, adaptive_method,
+                    threshold_type, block_size, offset);
+  //Show the results
+  imshow("Raw",Igray);
+  imshow("Threshold",It);
+  imshow("Adaptive Threshold",Iat);
+  waitKey(0);
+  return 0;
 }
 
