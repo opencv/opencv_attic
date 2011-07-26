@@ -45,22 +45,28 @@ void sum_rgb( const Mat& src, Mat& dst ) {
   threshold( s, s, 100, 100, CV_THRESH_TRUNC );
   s.convertTo(dst, b.type());
 }
+void help()
+{
+	cout << "Call: ./ch5_ex5_2 faceScene.jpg" << endl;
+	cout << "Alternative method to combine and threshold iamge planes" << endl;
+}
 
 int main(int argc, char** argv)
 {
-  if(argc < 2) { cout << "specify input image" << endl; return -1; }
-	
+	help();
+	if(argc < 2) { cout << "specify input image" << endl; return -1; }
+
 	// Load the image from the given file name.
 	Mat src = imread( argv[1] ), dst;
 	if( src.empty() ) { cout << "can not load " << argv[1] << endl; return -1; }
 	sum_rgb( src, dst);
-	
+
 	// Create a named window with a the name of the file and
 	// show the image in the window
 	imshow( argv[1], dst );
-	
+
 	// Idle until the user hits any key.
 	waitKey();
-	
+
 	return 0;
 }
