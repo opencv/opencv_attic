@@ -27,46 +27,44 @@
      http://pr.willowgarage.com/wiki/OpenCV
    ************************************************** */
 
-#include <cv.h>
-#include <highgui.h>
+#include <opencv2/opencv.hpp>
+#include <iostream>
+
+using namespace cv;
+using namespace std;
 
 int main(int argc, char** argv)
 {
-   CvPoint2D32f srcQuad[4], dstQuad[4];
-   CvMat* warp_matrix = cvCreateMat(3,3,CV_32FC1);
-   IplImage *src, *dst;
-    if( argc == 2 && ((src=cvLoadImage(argv[1],1)) != 0 ))
+    if(argc != 2) { cout << "Usage: ch6_ex6_3 <imagename>\n" << endl; return -1; }
+    
+    Mat src = imread(argv[1],1);
+    if( src.empty() ) { cout << "Can not load " << argv[1] << endl; return -1; } 
+    
+    Point2f srcQuad[] =
     {
-   dst = cvCloneImage(src);
-   dst->origin = src->origin;
-   cvZero(dst);
-
-   srcQuad[0].x = 0;           //src Top left
-   srcQuad[0].y = 0;
-   srcQuad[1].x = src->width - 1;  //src Top right
-   srcQuad[1].y = 0;
-   srcQuad[2].x = 0;           //src Bottom left
-   srcQuad[2].y = src->height - 1;
-   srcQuad[3].x = src->width - 1;  //src Bot right
-   srcQuad[3].y = src->height - 1;
-      //- - - - - - - - - - - - - -//
-   dstQuad[0].x = src->width*0.05;  //dst Top left
-   dstQuad[0].y = src->height*0.33;
-   dstQuad[1].x = src->width*0.9;  //dst Top right
-   dstQuad[1].y = src->height*0.25;
-   dstQuad[2].x = src->width*0.2;  //dst Bottom left
-   dstQuad[2].y = src->height*0.7;      
-   dstQuad[3].x = src->width*0.8;  //dst Bot right
-   dstQuad[3].y = src->height*0.9;
-
-   cvGetPerspectiveTransform(srcQuad,dstQuad,
-                                     warp_matrix);
-   cvWarpPerspective(src,dst,warp_matrix);
-   cvNamedWindow( "Perspective_Warp", 1 );
-      cvShowImage( "Perspective_Warp", dst );
-      cvWaitKey();
-    }
-   cvReleaseImage(&dst);
-   cvReleaseMat(&warp_matrix);
+        Point2f(0,0), //src Top left
+        Point2f(src.cols-1, 0), // src Top right
+        Point2f(src.cols-1, src.rows-1), // src Bottom right
+        Point2f(0, src.rows-1)  // src Bottom left
+    };
+    
+    Point2f dstQuad[] =
+    {
+        Point2f(src.cols*0.05f, src.rows*0.33f),
+        Point2f(src.cols*0.9f, src.rows*0.25f),
+        Point2f(src.cols*0.8f, src.rows*0.9f),
+        Point2f(src.cols*0.2f, src.rows*0.7f)
+    };
+    
+    // COMPUTE PERSPECTIVE MATRIX  
+    Mat warp_mat = getPerspectiveTransform(srcQuad, dstQuad);
+    Mat dst;
+    warpPerspective(src, dst, warp_mat, src.size(), INTER_LINEAR, BORDER_CONSTANT, Scalar());
+    for( int i = 0; i < 4; i++ )
+        circle(dst, dstQuad[i], 5, Scalar(255, 0, 255), -1, CV_AA);
+    
+    imshow("Perspective Transform Test", dst);
+    waitKey();
     return 0;
 }
+

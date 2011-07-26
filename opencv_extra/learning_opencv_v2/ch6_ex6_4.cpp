@@ -34,27 +34,32 @@
    * The minutes of weekly OpenCV development meetings are at:
      http://pr.willowgarage.com/wiki/OpenCV
    ************************************************** */
-#include <cv.h>
-#include <highgui.h>
+
+#include <opencv2/opencv.hpp>
+#include <iostream>
+
+using namespace cv;
+using namespace std;
 
 int main(int argc, char** argv)
 {
-    IplImage* src;
-   double M; 
-    if( argc == 3 && ((src=cvLoadImage(argv[1],1)) != 0 ))
-    {
-      M = atof(argv[2]);
-        IplImage* dst = cvCreateImage( cvGetSize(src), 8, 3 );
-        IplImage* src2 = cvCreateImage( cvGetSize(src), 8, 3 );
-        cvLogPolar( src,  dst, cvPoint2D32f(src->width/2,src->height/2),  
-                    M, CV_INTER_LINEAR+CV_WARP_FILL_OUTLIERS );
-        cvLogPolar( dst, src2, cvPoint2D32f(src->width/2,src->height/2),
-                    M, CV_INTER_LINEAR+CV_WARP_INVERSE_MAP );
-        cvNamedWindow( "log-polar", 1 );
-        cvShowImage( "log-polar", dst );
-        cvNamedWindow( "inverse log-polar", 1 );
-        cvShowImage( "inverse log-polar", src2 );
-        cvWaitKey();
-    }
+    if(argc != 3) { cout << "Usage: ch6_ex6_4 <imagename> <M value>\n<M value>~30 is usually good enough\n"; return -1; }
+    
+    Mat src = imread(argv[1],1);
+    
+    if( src.empty() ) { cout << "Can not load " << argv[1] << endl; return -1; } 
+    
+    double M = atof(argv[2]);
+    Mat dst(src.size(), src.type()), src2(src.size(), src.type());
+    
+    IplImage c_src = src, c_dst = dst, c_src2 = src2;
+
+    cvLogPolar( &c_src,  &c_dst, Point2f(src.cols*0.5f, src.rows*0.5f),
+                M, CV_INTER_LINEAR+CV_WARP_FILL_OUTLIERS );
+    cvLogPolar( &c_dst, &c_src2, Point2f(src.cols*0.5f, src.rows*0.5f),
+                M, CV_INTER_LINEAR+CV_WARP_INVERSE_MAP );
+    imshow( "log-polar", dst );
+    imshow( "inverse log-polar", src2 );
+    waitKey();
     return 0;
 }

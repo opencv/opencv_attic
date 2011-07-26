@@ -30,76 +30,52 @@
    ************************************************** */
 //
 
-#include <cv.h>
-#include <highgui.h>
+#include <opencv2/opencv.hpp>
+#include <iostream>
+
+using namespace cv;
+using namespace std;
 
 int main(int argc, char** argv)
 {
-    int M1 = 2;
-    int M2 = 2;
-    int N1 = 2;
-    int N2 = 2;
-    // initialize A and B
-    //
-    CvMat* A = cvCreateMat( M1, N1, CV_32F );
-    CvMat* B = cvCreateMat( M2, N2, A->type );
+    if(argc != 2) { cout << "Usage: ch6_ex6_5 <imagename>" << endl; return -1; }
+    
+    Mat A = imread(argv[1],0);
+    
+    if( A.empty() ) { cout << "Can not load " << argv[1] << endl; return -1; } 
+    
+    Size patchSize(100, 100);
+    Point topleft(A.cols/2, A.rows/2);
+    Rect roi(topleft.x, topleft.y, patchSize.width, patchSize.height);
+    Mat B = A(roi);
+    
+    int dft_M = getOptimalDFTSize( A.rows+B.rows-1 );
+    int dft_N = getOptimalDFTSize( A.cols+B.cols-1 );
 
-    // it is also possible to have only abs(M2-M1)+1×abs(N2-N1)+1
-    // part of the full convolution result
-    CvMat* conv = cvCreateMat(
-      A->rows+B->rows-1,
-      A->cols+B->cols-1,
-      A->type
-    );
+    Mat dft_A = Mat::zeros(dft_M, dft_N, CV_32F);
+    Mat dft_B = Mat::zeros(dft_M, dft_N, CV_32F);
+    
+    Mat dft_A_part = dft_A(Rect(0, 0, A.cols,A.rows));
+    A.convertTo(dft_A_part, dft_A_part.type(), 1, -mean(A)[0]);
+    Mat dft_B_part = dft_B(Rect(0, 0, B.cols,B.rows));
+    B.convertTo(dft_B_part, dft_B_part.type(), 1, -mean(B)[0]);
+    
+    dft(dft_A, dft_A, 0, A.rows);
+    dft(dft_B, dft_B, 0, B.rows);
+    
+    // set the last parameter to false to compute convolution instead of correlation
+    mulSpectrums( dft_A, dft_B, dft_A, 0, true );
+    idft(dft_A, dft_A, DFT_SCALE, A.rows + B.rows - 1 );
+    
+    Mat corr = dft_A(Rect(0, 0, A.cols + B.cols - 1, A.rows + B.rows - 1));
+    normalize(corr, corr, 0, 1, NORM_MINMAX, corr.type());
+    pow(corr, 3., corr);
+    
+    B ^= Scalar::all(255);
 
-    int dft_M = cvGetOptimalDFTSize( A->rows+B->rows-1 );
-    int dft_N = cvGetOptimalDFTSize( A->cols+B->cols-1 );
-
-    CvMat* dft_A = cvCreateMat( dft_M, dft_N, A->type );
-    CvMat* dft_B = cvCreateMat( dft_M, dft_N, B->type );
-    CvMat tmp;
-
-    // copy A to dft_A and pad dft_A with zeros
-    //
-    cvGetSubRect( dft_A, &tmp, cvRect(0,0,A->cols,A->rows));
-    cvCopy( A, &tmp );
-    cvGetSubRect( 
-      dft_A,
-      &tmp,
-      cvRect( A->cols, 0, dft_A->cols-A->cols, A->rows )
-    );
-    cvZero( &tmp );
-
-    // no need to pad bottom part of dft_A with zeros because of
-    // use nonzero_rows parameter in cvDFT() call below
-    //
-    cvDFT( dft_A, dft_A, CV_DXT_FORWARD, A->rows );
-
-    // repeat the same with the second array
-    //
-    cvGetSubRect( dft_B, &tmp, cvRect(0,0,B->cols,B->rows) );
-    cvCopy( B, &tmp );
-    cvGetSubRect(
-      dft_B, 
-      &tmp, 
-      cvRect( B->cols, 0, dft_B->cols-B->cols, B->rows )
-    );
-    cvZero( &tmp );
-
-    // no need to pad bottom part of dft_B with zeros because of
-    // use nonzero_rows parameter in cvDFT() call below
-    //
-    cvDFT( dft_B, dft_B, CV_DXT_FORWARD, B->rows );
-
-    // or CV_DXT_MUL_CONJ to get correlation rather than convolution 
-    //
-    cvMulSpectrums( dft_A, dft_B, dft_A, 0 );
-
-    // calculate only the top part
-    //
-    cvDFT( dft_A, dft_A, CV_DXT_INV_SCALE, conv->rows ); 
-    cvGetSubRect( dft_A, &tmp, cvRect(0,0,conv->cols,conv->rows) );
-
-    cvCopy( &tmp, conv );
+    imshow("Image", A);
+    imshow("Correlation", corr);
+    waitKey();
+    return 0;
 }
 
