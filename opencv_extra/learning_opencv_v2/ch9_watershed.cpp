@@ -5,166 +5,161 @@
 // Think about using a morphologically eroded forground and background segmented image as the template
 // for the watershed algorithm to segment objects by color and edges for collecting 
 //
-/* *************** License:**************************
-   Oct. 3, 2008
-   Right to use this code in any way you want without warrenty, support or any guarentee of it working.
+/* License:
+   July 20, 2011
+   Standard BSD
 
    BOOK: It would be nice if you cited it:
-   Learning OpenCV: Computer Vision with the OpenCV Library
+   Learning OpenCV 2: Computer Vision with the OpenCV Library
      by Gary Bradski and Adrian Kaehler
-     Published by O'Reilly Media, October 3, 2008
+     Published by O'Reilly Media
  
    AVAILABLE AT: 
      http://www.amazon.com/Learning-OpenCV-Computer-Vision-Library/dp/0596516134
      Or: http://oreilly.com/catalog/9780596516130/
      ISBN-10: 0596516134 or: ISBN-13: 978-0596516130    
 
-   OTHER OPENCV SITES:
-   * The source code is on sourceforge at:
-     http://sourceforge.net/projects/opencvlibrary/
-   * The OpenCV wiki page (As of Oct 1, 2008 this is down for changing over servers, but should come back):
-     http://opencvlibrary.sourceforge.net/
+   Main OpenCV site
+   http://opencv.willowgarage.com/wiki/
    * An active user group is at:
      http://tech.groups.yahoo.com/group/OpenCV/
    * The minutes of weekly OpenCV development meetings are at:
      http://pr.willowgarage.com/wiki/OpenCV
-   ************************************************** */
+*/
 
-#include "cv.h"
-#include "highgui.h"
-#include <stdio.h>
-#include <stdlib.h>
+#include "opencv2/imgproc/imgproc.hpp"
+#include "opencv2/highgui/highgui.hpp"
 
-IplImage* marker_mask = 0;
-IplImage* markers = 0;
-IplImage* img0 = 0, *img = 0, *img_gray = 0, *wshed = 0;
-CvPoint prev_pt = {-1,-1};
+#include <cstdio>
+#include <iostream>
 
-void on_mouse( int event, int x, int y, int flags, void* param )
+using namespace cv;
+using namespace std;
+
+void help()
 {
-    if( !img )
-        return;
+	cout << "\nThis program demonstrates the famous watershed segmentation algorithm in OpenCV: watershed()\n"
+			"Usage:\n"
+			"./watershed [image_name -- default is fruits.jpg]\n" << endl;
 
+
+	cout << "Hot keys: \n"
+		"\tESC - quit the program\n"
+		"\tr - restore the original image\n"
+		"\tw or SPACE - run watershed segmentation algorithm\n"
+		"\t\t(before running it, *roughly* mark the areas to segment on the image)\n"
+		"\t  (before that, roughly outline several markers on the image)\n";
+}
+Mat markerMask, img;
+Point prevPt(-1, -1);
+
+void onMouse( int event, int x, int y, int flags, void* )
+{
+    if( x < 0 || x >= img.cols || y < 0 || y >= img.rows )
+        return;
     if( event == CV_EVENT_LBUTTONUP || !(flags & CV_EVENT_FLAG_LBUTTON) )
-        prev_pt = cvPoint(-1,-1);
+        prevPt = Point(-1,-1);
     else if( event == CV_EVENT_LBUTTONDOWN )
-        prev_pt = cvPoint(x,y);
+        prevPt = Point(x,y);
     else if( event == CV_EVENT_MOUSEMOVE && (flags & CV_EVENT_FLAG_LBUTTON) )
     {
-        CvPoint pt = cvPoint(x,y);
-        if( prev_pt.x < 0 )
-            prev_pt = pt;
-        cvLine( marker_mask, prev_pt, pt, cvScalarAll(255), 5, 8, 0 );
-        cvLine( img, prev_pt, pt, cvScalarAll(255), 5, 8, 0 );
-        prev_pt = pt;
-        cvShowImage( "image", img );
+        Point pt(x, y);
+        if( prevPt.x < 0 )
+            prevPt = pt;
+        line( markerMask, prevPt, pt, Scalar::all(255), 5, 8, 0 );
+        line( img, prevPt, pt, Scalar::all(255), 5, 8, 0 );
+        prevPt = pt;
+        imshow("image", img);
     }
 }
-
 
 int main( int argc, char** argv )
 {
     char* filename = argc >= 2 ? argv[1] : (char*)"fruits.jpg";
-    CvRNG rng = cvRNG(-1);
+    Mat img0 = imread(filename, 1), imgGray;
 
-    if( (img0 = cvLoadImage(filename,1)) == 0 )
+    if( img0.empty() )
+    {
+        cout << "Couldn'g open image " << filename << ". Usage: watershed <image_name>\n";
         return 0;
+    }
+    help();
+    namedWindow( "image", 1 );
 
-    printf( "Hot keys: \n"
-            "\tESC - quit the program\n"
-            "\tr - restore the original image\n"
-            "\tw or ENTER - run watershed algorithm\n"
-            "\t\t(before running it, roughly mark the areas on the image)\n"
-            "\t  (before that, roughly outline several markers on the image)\n" );
-    
-    cvNamedWindow( "image", 1 );
-    cvNamedWindow( "watershed transform", 1 );
-
-    img = cvCloneImage( img0 );
-    img_gray = cvCloneImage( img0 );
-    wshed = cvCloneImage( img0 );
-    marker_mask = cvCreateImage( cvGetSize(img), 8, 1 );
-    markers = cvCreateImage( cvGetSize(img), IPL_DEPTH_32S, 1 );
-    cvCvtColor( img, marker_mask, CV_BGR2GRAY );
-    cvCvtColor( marker_mask, img_gray, CV_GRAY2BGR );
-
-    cvZero( marker_mask );
-    cvZero( wshed );
-    cvShowImage( "image", img );
-    cvShowImage( "watershed transform", wshed );
-    cvSetMouseCallback( "image", on_mouse, 0 );
+    img0.copyTo(img);
+    cvtColor(img, markerMask, CV_BGR2GRAY);
+    cvtColor(markerMask, imgGray, CV_GRAY2BGR);
+    markerMask = Scalar::all(0);
+    imshow( "image", img );
+    setMouseCallback( "image", onMouse, 0 );
 
     for(;;)
     {
-        int c = cvWaitKey(0);
+        int c = waitKey(0);
 
         if( (char)c == 27 )
             break;
 
         if( (char)c == 'r' )
         {
-            cvZero( marker_mask );
-            cvCopy( img0, img );
-            cvShowImage( "image", img );
+            markerMask = Scalar::all(0);
+            img0.copyTo(img);
+            imshow( "image", img );
         }
 
-        if( (char)c == 'w' || (char)c == '\n' )
+        if( (char)c == 'w' || (char)c == ' ' )
         {
-            CvMemStorage* storage = cvCreateMemStorage(0);
-            CvSeq* contours = 0;
-            CvMat* color_tab;
-            int i, j, comp_count = 0;
-            //cvSaveImage( "wshed_mask.png", marker_mask );
-            //marker_mask = cvLoadImage( "wshed_mask.png", 0 );
-            cvFindContours( marker_mask, storage, &contours, sizeof(CvContour),
-                            CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE );
-            cvZero( markers );
-            for( ; contours != 0; contours = contours->h_next, comp_count++ )
+            int i, j, compCount = 0;
+            vector<vector<Point> > contours;
+            vector<Vec4i> hierarchy;
+
+            findContours(markerMask, contours, hierarchy, CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE);
+
+            if( contours.empty() )
+                continue;
+            Mat markers(markerMask.size(), CV_32S);
+            markers = Scalar::all(0);
+            int idx = 0;
+            for( ; idx >= 0; idx = hierarchy[idx][0], compCount++ )
+                drawContours(markers, contours, idx, Scalar::all(compCount+1), -1, 8, hierarchy, INT_MAX);
+
+            if( compCount == 0 )
+                continue;
+
+            vector<Vec3b> colorTab;
+            for( i = 0; i < compCount; i++ )
             {
-                cvDrawContours( markers, contours, cvScalarAll(comp_count+1),
-                                cvScalarAll(comp_count+1), -1, -1, 8, cvPoint(0,0) );
+                int b = theRNG().uniform(0, 255);
+                int g = theRNG().uniform(0, 255);
+                int r = theRNG().uniform(0, 255);
+
+                colorTab.push_back(Vec3b((uchar)b, (uchar)g, (uchar)r));
             }
 
-            color_tab = cvCreateMat( 1, comp_count, CV_8UC3 );
-            for( i = 0; i < comp_count; i++ )
-            {
-                uchar* ptr = color_tab->data.ptr + i*3;
-                ptr[0] = (uchar)(cvRandInt(&rng)%180 + 50);
-                ptr[1] = (uchar)(cvRandInt(&rng)%180 + 50);
-                ptr[2] = (uchar)(cvRandInt(&rng)%180 + 50);
-            }
+            double t = (double)getTickCount();
+            watershed( img0, markers );
+            t = (double)getTickCount() - t;
+            printf( "execution time = %gms\n", t*1000./getTickFrequency() );
 
-            {
-            double t = (double)cvGetTickCount();
-            cvWatershed( img0, markers );
-            t = (double)cvGetTickCount() - t;
-            printf( "exec time = %gms\n", t/(cvGetTickFrequency()*1000.) );
-            }
+            Mat wshed(markers.size(), CV_8UC3);
 
             // paint the watershed image
-            for( i = 0; i < markers->height; i++ )
-                for( j = 0; j < markers->width; j++ )
+            for( i = 0; i < markers.rows; i++ )
+                for( j = 0; j < markers.cols; j++ )
                 {
-                    int idx = CV_IMAGE_ELEM( markers, int, i, j );
-                    uchar* dst = &CV_IMAGE_ELEM( wshed, uchar, i, j*3 );
+                    int idx = markers.at<int>(i,j);
                     if( idx == -1 )
-                        dst[0] = dst[1] = dst[2] = (uchar)255;
-                    else if( idx <= 0 || idx > comp_count )
-                        dst[0] = dst[1] = dst[2] = (uchar)0; // should not get here
+                        wshed.at<Vec3b>(i,j) = Vec3b(255,255,255);
+                    else if( idx <= 0 || idx > compCount )
+                        wshed.at<Vec3b>(i,j) = Vec3b(0,0,0);
                     else
-                    {
-                        uchar* ptr = color_tab->data.ptr + (idx-1)*3;
-                        dst[0] = ptr[0]; dst[1] = ptr[1]; dst[2] = ptr[2];
-                    }
+                        wshed.at<Vec3b>(i,j) = colorTab[idx - 1];
                 }
 
-            cvAddWeighted( wshed, 0.5, img_gray, 0.5, 0, wshed );
-            cvShowImage( "watershed transform", wshed );
-            cvReleaseMemStorage( &storage );
-            cvReleaseMat( &color_tab );
+            wshed = wshed*0.5 + imgGray*0.5;
+            imshow( "watershed transform", wshed );
         }
     }
 
-    return 1;
+    return 0;
 }
-
