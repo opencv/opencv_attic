@@ -112,14 +112,15 @@ int main(int argc, char* argv[]) {
             for( int j=0; j<board_n; j++ ) {
                 opts[j] = Point3f((float)(j/board_w), (float)(j%board_w), 0.f);
             }
-            printf("Collected our %d of %d needed chessboard images\n", (int)image_points.size(),n_boards);
+            cout << "Collected our " <<  (int)image_points.size() <<
+            		" of " << n_boards << " needed chessboard images\n" << endl;
         }
         imshow( "Calibration", image ); //show in color if we did collect the image
         if((waitKey(30) & 255) == 27)
             return -1;
     } //END COLLECTION WHILE LOOP.
     destroyWindow("Calibration");
-    printf("\n\n*** CALLIBRATING THE CAMERA...");
+    cout << "\n\n*** CALLIBRATING THE CAMERA...\n" << endl;
     
     //CALIBRATE THE CAMERA!
     Mat intrinsic_matrix, distortion_coeffs;
