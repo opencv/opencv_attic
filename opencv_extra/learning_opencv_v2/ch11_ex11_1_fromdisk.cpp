@@ -159,6 +159,7 @@ int main(int argc, char* argv[]) {
         if(image.empty())
             continue;
         remap(image, dst, map1, map2, INTER_LINEAR, BORDER_CONSTANT, Scalar());
+        imshow("Original", image);
         imshow("Undistorted", dst);
         if((waitKey(500) & 255) == 27)
             break;
