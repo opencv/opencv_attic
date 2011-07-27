@@ -4,78 +4,79 @@
 //
 // STORE TO DISK A LINE SEGMENT OF BGR PIXELS FROM pt1 to pt2.  
 //…
-/* *************** License:**************************
-   Oct. 3, 2008
-   Right to use this code in any way you want without warrenty, support or any guarentee of it working.
+/* License:
+   July 20, 2011
+   Standard BSD
 
    BOOK: It would be nice if you cited it:
-   Learning OpenCV: Computer Vision with the OpenCV Library
+   Learning OpenCV 2: Computer Vision with the OpenCV Library
      by Gary Bradski and Adrian Kaehler
-     Published by O'Reilly Media, October 3, 2008
+     Published by O'Reilly Media
  
    AVAILABLE AT: 
      http://www.amazon.com/Learning-OpenCV-Computer-Vision-Library/dp/0596516134
      Or: http://oreilly.com/catalog/9780596516130/
      ISBN-10: 0596516134 or: ISBN-13: 978-0596516130    
 
-   OTHER OPENCV SITES:
-   * The source code is on sourceforge at:
-     http://sourceforge.net/projects/opencvlibrary/
-   * The OpenCV wiki page (As of Oct 1, 2008 this is down for changing over servers, but should come back):
-     http://opencvlibrary.sourceforge.net/
+   Main OpenCV site
+   http://opencv.willowgarage.com/wiki/
    * An active user group is at:
      http://tech.groups.yahoo.com/group/OpenCV/
    * The minutes of weekly OpenCV development meetings are at:
      http://pr.willowgarage.com/wiki/OpenCV
-   ************************************************** */
+*/
 
-#include <stdio.h>
-#include <cv.h>
-#include <highgui.h>
+#include <opencv2/opencv.hpp>
+#include <iostream>
+#include <fstream>
+
+using namespace cv;
+using namespace std;
 
 void help() {
-printf("\nRead out RGB pixel values and store them to disk\nCall:\n"
-"./ch9_ex9_1 avi_file\n"
-"\n This will store to files blines.csv, glines.csv and rlines.csv\n\n");
+  cout << "\nRead out RGB pixel values and store them to disk\nCall:\n" <<
+"./ch9_ex9_1 avi_file\n" <<
+"\n This will store to files blines.csv, glines.csv and rlines.csv\n\n" << endl;
 }
 
 int main( int argc, char** argv  )
 {
     if(argc != 2) {help(); return -1;}
-    cvNamedWindow( "Example9_1", CV_WINDOW_AUTOSIZE );
-    CvCapture* capture = cvCreateFileCapture( argv[1] );
-	if(!capture) {printf("\nCouldn't open %s\n",argv[1]); help(); return -1;}
-    CvPoint pt1 = cvPoint(10,10);
-    CvPoint pt2 = cvPoint(20,20);
+    namedWindow( "Example9_1", CV_WINDOW_AUTOSIZE );
 
+    VideoCapture cap;
+    if((argc < 2)|| !cap.open(argv[1]))
+    {
+    	cerr << "Couldn't open video file" << endl;
+    	help();
+    	cap.open(0);
+    	return -1;
+    }
+
+    Point pt1(10,10), pt2(30,30);
     int max_buffer;
-    IplImage *rawImage;
-    int r[10000],g[10000],b[10000];
-    FILE *fptrb = fopen("blines.csv","w"); //Store the data here
-    FILE *fptrg = fopen("glines.csv","w"); // for each color channel
-    FILE *fptrr = fopen("rlines.csv","w");
-    CvLineIterator iterator;
+    Mat rawImage;
+    ofstream b,g,r;
+    b.open("blines.csv");
+    g.open("glines.csv");
+    r.open("rlines.csv");
+
     //MAIN PROCESSING LOOP:
     for(;;){
-        if( !cvGrabFrame( capture ))
-              break;
-        rawImage = cvRetrieveFrame( capture );
-        max_buffer = cvInitLineIterator(rawImage,pt1,pt2,&iterator,8,0);
-        cvShowImage( "Example9_1", rawImage );
-        int c = cvWaitKey(10);
-        for(int j=0; j<max_buffer; j++){
-            fprintf(fptrb,"%d,", iterator.ptr[0]); //Write blue value
-            fprintf(fptrg,"%d,", iterator.ptr[1]); //green
-            fprintf(fptrr,"%d,", iterator.ptr[2]); //red
-            iterator.ptr[2] = 255;  //Mark this sample in red
-            CV_NEXT_LINE_POINT(iterator); //Step to the next pixel
+    	cap >> rawImage; if(!rawImage.data) break;
+    	LineIterator it(rawImage,pt1, pt2, 8);
+        for(int j=0; j<it.count; ++j,++it){
+        	b << (int)(*it)[0] << ", ";
+        	g << (int)(*it)[1] << ", ";
+        	r << (int)(*it)[2] << ", ";
+            (*it)[2] = 255;  //Mark this sample in red
         }
-        //OUTPUT THE DATA IN ROWS:
-        fprintf(fptrb,"\n");fprintf(fptrg,"\n");fprintf(fptrr,"\n");
+        imshow( "Example9_1", rawImage );
+        int c = waitKey(10);
+        b << "\n"; g << "\n"; r << "\n";
     }
     //CLEAN UP:
-    printf("\nData stored to files: blines.csv, glines.csv and rlines.csv\n\n");
-    fclose(fptrb); fclose(fptrg); fclose(fptrr);
-    cvReleaseCapture( &capture );
-    cvDestroyWindow( "Example9_1" );
+    b << endl; g << endl; r << endl;
+    b.close(); g.close(); r.close();
+    cout << "\nData stored to files: blines.csv, glines.csv and rlines.csv\n\n" << endl;
 }
