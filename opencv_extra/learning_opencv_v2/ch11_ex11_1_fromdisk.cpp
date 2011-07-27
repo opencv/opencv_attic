@@ -28,16 +28,11 @@
      http://pr.willowgarage.com/wiki/OpenCV
    ************************************************** */
 
-#include <cv.h>
-#include <highgui.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <opencv2/opencv.hpp>
+#include <iostream>
 
-int n_boards = 0; //Will be set by input list
-const int board_dt = 10;
-int board_w;
-int board_h;
-
+using namespace cv;
+using namespace std;
 
 void help(){
 	printf("Calibration from disk. Call convention:\n\n"
@@ -50,199 +45,124 @@ void help(){
 }
 
 int main(int argc, char* argv[]) {
-  
-  CvCapture* capture;// = cvCreateCameraCapture( 0 );
- // assert( capture );
-
-	if(argc != 4){
-		help();
-		return -1;
-	}
-	help();
-	board_w = atoi(argv[1]);
-	board_h = atoi(argv[2]);
-	int board_n  = board_w * board_h;
-	CvSize board_sz = cvSize( board_w, board_h );
-	FILE *fptr = fopen(argv[3],"r");
-	char names[2048];
-	//COUNT THE NUMBER OF IMAGES:
-	while(fscanf(fptr,"%s ",names)==1){
-		n_boards++;
-	}
-	rewind(fptr);
-
-  cvNamedWindow( "Calibration" );
-  //ALLOCATE STORAGE
-  CvMat* image_points      = cvCreateMat(n_boards*board_n,2,CV_32FC1);
-  CvMat* object_points     = cvCreateMat(n_boards*board_n,3,CV_32FC1);
-  CvMat* point_counts      = cvCreateMat(n_boards,1,CV_32SC1);
-
-///  CvMat * image_points	= cvCreateMat(1, n_boards*board_n, CV_32FC2);
-///  CvMat * object_points = cvCreateMat(1, n_boards*board_n, CV_32FC3);
-///  CvMat * point_counts  = cvCreateMat(1, n_boards, CV_32SC1);
-  
-  CvMat* intrinsic_matrix  = cvCreateMat(3,3,CV_32FC1);
-  CvMat* distortion_coeffs = cvCreateMat(4,1,CV_32FC1);
-
-
-  IplImage* image = 0;// = cvQueryFrame( capture );
-  IplImage* gray_image = 0; //for subpixel
-  CvPoint2D32f* corners = new CvPoint2D32f[ board_n ];
-  int corner_count;
-  int successes = 0;
-  int step;
-
-  for( int frame=0; frame<n_boards; frame++ ) {
-	  fscanf(fptr,"%s ",names);
-
-	  if(image){
-		  cvReleaseImage(&image);
-		  image = 0;
-	  }
-	  image = cvLoadImage( names);
-	  if(gray_image == 0  && image) //We'll need this for subpixel accurate stuff
-		  gray_image = cvCreateImage(cvGetSize(image),8,1);
-
-	  if(!image)
-		  printf("null image\n");
-
-      int found = cvFindChessboardCorners(
-        image,
-        board_sz,
-        corners,
-        &corner_count, 
-        CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_FILTER_QUADS
-      );
-
-	  //Get Subpixel accuracy on those corners
-	  cvCvtColor(image, gray_image, CV_BGR2GRAY);
-	  cvFindCornerSubPix(gray_image, corners, corner_count, 
-			  cvSize(11,11),cvSize(-1,-1), cvTermCriteria( CV_TERMCRIT_EPS+CV_TERMCRIT_ITER, 30, 0.1 ));
-	  //Draw it
-
-	  cvDrawChessboardCorners(image, board_sz, corners, corner_count, found);
-      cvShowImage( "Calibration", image );
-
-      // If we got a good board, add it to our data
-      //
-      if( corner_count == board_n ) {
-		  step = successes*board_n;
-//	printf("Found = %d for %s\n",found,names);
-        for( int i=step, j=0; j<board_n; ++i,++j ) {
- ///         CV_MAT_ELEM(*image_points, CvPoint2D32f,0,i) = cvPoint2D32f(corners[j].x,corners[j].y);
- ///         CV_MAT_ELEM(*object_points,CvPoint3D32f,0,i) = cvPoint3D32f(j/board_w, j%board_w, 0.0f);
-          CV_MAT_ELEM(*image_points, float,i,0) = corners[j].x;
-          CV_MAT_ELEM(*image_points, float,i,1) = corners[j].y;
-          CV_MAT_ELEM(*object_points,float,i,0) = j/board_w;
-          CV_MAT_ELEM(*object_points,float,i,1) = j%board_w;
-          CV_MAT_ELEM(*object_points,float,i,2) = 0.0f;
- 		
-		}
-//        CV_MAT_ELEM(*point_counts, int,0,successes) = board_n;
-         CV_MAT_ELEM(*point_counts, int,successes,0) = board_n;		
-       successes++;
-      }
-      
- //    if( successes == n_boards ) break;
-
-    int c = cvWaitKey(15);
-	if(c == 'p') {
-		c = 0;
-		while(c != 'p' && c != 27){
-			c = cvWaitKey(250);
-		}
-	}
-	if(c == 27)
-		return 0;
-  }
-	printf("successes = %d, n_boards=%d\n",successes,n_boards);
-  //ALLOCATE MATRICES ACCORDING TO HOW MANY IMAGES WE FOUND CHESSBOARDS ON
-///  CvMat* image_points2      = cvCreateMat(1,successes*board_n,CV_32FC2);
-///  CvMat* object_points2     = cvCreateMat(1,successes*board_n,CV_32FC3);
-///  CvMat* point_counts2      = cvCreateMat(1,successes,CV_32SC1);
-  CvMat* object_points2     = cvCreateMat(successes*board_n,3,CV_32FC1);
-  CvMat* image_points2      = cvCreateMat(successes*board_n,2,CV_32FC1);
-  CvMat* point_counts2      = cvCreateMat(successes,1,CV_32SC1);
-  //TRANSFER THE POINTS INTO THE CORRECT SIZE MATRICES
-  for(int i = 0; i<successes*board_n; ++i){
-///      CV_MAT_ELEM(*image_points2, CvPoint2D32f,0,i)  = CV_MAT_ELEM(*image_points, CvPoint2D32f,0,i);
-///      CV_MAT_ELEM(*object_points2,CvPoint3D32f,0,i)  = CV_MAT_ELEM(*object_points,CvPoint3D32f,0,i);
-	  	  CV_MAT_ELEM(*image_points2, float,i,0) 	=	CV_MAT_ELEM(*image_points, float,i,0);
-          CV_MAT_ELEM(*image_points2, float,i,1) 	= 	CV_MAT_ELEM(*image_points, float,i,1);
-          CV_MAT_ELEM(*object_points2,float,i,0) = CV_MAT_ELEM(*object_points,float,i,0) ;
-          CV_MAT_ELEM(*object_points2,float,i,1) = CV_MAT_ELEM(*object_points,float,i,1) ;
-          CV_MAT_ELEM(*object_points2,float,i,2) = CV_MAT_ELEM(*object_points,float,i,2) ;
- 
-  } 
-  for(int i=0; i<successes; ++i){
-///		CV_MAT_ELEM(*point_counts2,int,0, i) = CV_MAT_ELEM(*point_counts, int,0,i);
- 		CV_MAT_ELEM(*point_counts2,int,i, 0) = CV_MAT_ELEM(*point_counts, int,i,0);
-  }
-  cvReleaseMat(&object_points);
-  cvReleaseMat(&image_points);
-  cvReleaseMat(&point_counts);
-
- // cvWaitKey();//Now we have to reallocate the matrices
- // return 0;
-  // At this point we have all of the chessboard corners we need.
-  //
-  
-    // Initialize the intrinsic matrix such that the two focal
-    // lengths have a ratio of 1.0
+    
+    int board_w=0;
+    int board_h=0;
+    
+    if(argc != 4){
+        cout << "\nERROR: Wrong number of input parameters";
+        help();
+        return -1;
+    }
+    board_w  = atoi(argv[1]);
+    board_h  = atoi(argv[2]);
+    
+    int board_n  = board_w * board_h;
+    Size board_sz = Size( board_w, board_h );
+    
+    FILE* f = fopen(argv[3], "rt");
+    if(!f) { cout << "\nCouldn't read the file list " << argv[3] << endl; help(); return -1;}
+    
+    vector<string> filelist;
+    for(;;)
+    {
+        char buf[1000];
+        if(!fgets(buf, (int)sizeof(buf)-2, f))
+            break;
+        if(buf[0] == '#' || buf[0] == '\n') continue;
+        int l = (int)strlen(buf);
+        if(buf[l-1] == '\n') buf[l-1]='\0';
+        filelist.push_back(buf);
+    }
+    
+    //ALLOCATE STORAGE
+    vector<vector<Point2f> > image_points;
+    vector<vector<Point3f> > object_points;
+    
+    // CAPTURE CORNER VIEWS LOOP UNTIL WE’VE GOT n_boards 
+    // SUCCESSFUL CAPTURES (ALL CORNERS ON THE BOARD ARE FOUND)
     //
-    CV_MAT_ELEM( *intrinsic_matrix, float, 0, 0 ) = 1.0f;
-    CV_MAT_ELEM( *intrinsic_matrix, float, 1, 1 ) = 1.0f;
-printf("cvCalibrateCamera2\n");
-    cvCalibrateCamera2(
-      object_points2,
-      image_points2,
-      point_counts2,
-      cvGetSize( image ),
-      intrinsic_matrix,
-      distortion_coeffs,
-      NULL,
-      NULL,
-      0//CV_CALIB_FIX_ASPECT_RATIO
-    );
-  // Save our work
-  cvSave("Intrinsics.xml",intrinsic_matrix);
-  cvSave("Distortion.xml",distortion_coeffs);
-  // Load test
-  CvMat *intrinsic = (CvMat*)cvLoad("Intrinsics.xml");
-  CvMat *distortion = (CvMat*)cvLoad("Distortion.xml");
-
-  // Build the undistort map which we will use for all 
-  // subsequent frames.
-  //
-  IplImage* mapx = cvCreateImage( cvGetSize(image), IPL_DEPTH_32F, 1 );
-  IplImage* mapy = cvCreateImage( cvGetSize(image), IPL_DEPTH_32F, 1 );
-  printf("cvInitUndistortMap\n");
-  cvInitUndistortMap(
-    intrinsic,
-    distortion,
-    mapx,
-    mapy
-  );
-  // Just run the camera to the screen, now only showing the undistorted
-  // image.
-  //
-  rewind(fptr);
-  cvNamedWindow( "Undistort" );
-  printf("\n\nPress any key to step through the images, ESC to quit\n\n");
-  while(fscanf(fptr,"%s ",names)==1){
-	  if(image){
-		  cvReleaseImage(&image);
-		  image = 0;
-	  }  
-	  image = cvLoadImage( names);
-	  IplImage *t = cvCloneImage(image);
-      cvShowImage( "Calibration", image );
-      cvRemap( t, image, mapx, mapy );
-	  cvReleaseImage(&t);
-//	  cvUndistort2(
-	  cvShowImage("Undistort", image);
-    if((cvWaitKey()&0x7F) == 27) break;  
-  }
-
-  return 0;
-} 
+    Size image_size;
+    for(size_t i = 0; i < filelist.size(); i++) {
+        Mat image = imread(filelist[i]);
+        if(image.empty())
+            continue;
+        if(image_size == Size())
+            image_size = image.size();
+        else if(image_size != image.size())
+        {
+            cout << "\nImages " << filelist[0] << " and " << filelist[i] << " have different sizes\n";
+            return -1;
+        }
+        
+        //Find the board
+        vector<Point2f> corners;
+        bool found = findChessboardCorners(image, board_sz, corners);
+        
+        //Draw it
+        drawChessboardCorners(image, board_sz, corners, found);
+        
+        // If we got a good board, add it to our data
+        if( found ) {
+            image_points.push_back(corners);
+            object_points.push_back(vector<Point3f>());
+            vector<Point3f>& opts = object_points.back();
+            opts.resize(board_n);
+            for( int j=0; j<board_n; j++ ) {
+                opts[j] = Point3f((float)(j/board_w), (float)(j%board_w), 0.f);
+            }
+        }
+        imshow( "Preparing for Calibration", image ); //show in color if we did collect the image
+        if((waitKey(500) & 255) == 27)
+            return -1;
+    } //END COLLECTION WHILE LOOP.
+    destroyWindow("Preparing for Calibration");
+    printf("\n\n*** CALLIBRATING THE CAMERA...");
+    
+    //CALIBRATE THE CAMERA!
+    Mat intrinsic_matrix, distortion_coeffs;
+    double err = calibrateCamera(object_points, image_points, image_size, intrinsic_matrix,
+                                 distortion_coeffs, noArray(), noArray(),
+                                 CALIB_ZERO_TANGENT_DIST+CALIB_FIX_PRINCIPAL_POINT);
+    
+    // SAVE THE INTRINSICS AND DISTORTIONS
+    cout << " *** DONE!\n\nReprojection error is " << err <<
+    "\nStoring Intrinsics.xml and Distortions.xml files\n\n";
+    FileStorage fs("intrinsics.xml", FileStorage::WRITE);
+    
+    fs << "image_width" << image_size.width << "image_height" << image_size.height <<
+    "camera_matrix" << intrinsic_matrix << "distortion_coefficients" << distortion_coeffs;
+    fs.release();
+    
+    // EXAMPLE OF LOADING THESE MATRICES BACK IN:
+    fs.open("intrinsics.xml", FileStorage::READ);
+    cout << "\nimage width: " << (int)fs["image_width"];
+    cout << "\nimage height: " << (int)fs["image_height"];
+    Mat intrinsic_matrix_loaded, distortion_coeffs_loaded;
+    fs["camera_matrix"] >> intrinsic_matrix_loaded;
+    fs["distortion_coefficients"] >> distortion_coeffs_loaded;
+    cout << "\nintrinsic matrix:" << intrinsic_matrix_loaded;
+    cout << "\ndistortion coefficients: " << distortion_coeffs_loaded << endl;
+    
+    // Build the undistort map which we will use for all 
+    // subsequent frames.
+    //
+    Mat map1, map2;
+    initUndistortRectifyMap(intrinsic_matrix_loaded, distortion_coeffs_loaded, Mat(),
+                            intrinsic_matrix_loaded, image_size, CV_16SC2,
+                            map1, map2);
+    // Just run the camera to the screen, now showing the raw and
+    // the undistorted image.
+    //
+    for(size_t i = 0; i < filelist.size(); i++) {
+        Mat image = imread(filelist[i]), dst;
+        if(image.empty())
+            continue;
+        remap(image, dst, map1, map2, INTER_LINEAR, BORDER_CONSTANT, Scalar());
+        imshow("Undistorted", dst);
+        if((waitKey(500) & 255) == 27)
+            break;
+    }
+    
+    return 0;
+}
