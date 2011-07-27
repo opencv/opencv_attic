@@ -26,98 +26,79 @@
      http://pr.willowgarage.com/wiki/OpenCV
    ************************************************** */
 //
-#include "cv.h"
-#include "highgui.h"
-#include "cvx_defs.h"
+#include "opencv2/opencv.hpp"
 
-#define phi2xy(mat)                                                  \
-  cvPoint( cvRound(img->width/2 + img->width/3*cos(mat->data.fl[0])),\
-    cvRound( img->height/2 - img->width/3*sin(mat->data.fl[0])) )
+using namespace cv;
+
+#define phi2xy(mat)                                             \
+  Point( cvRound(img.cols/2 + img.cols/3*cos(mat.at<float>(0))),\
+    cvRound( img.rows/2 - img.cols/3*sin(mat.at<float>(0))))
 
 int main(int argc, char** argv) {
 
     // Initialize, create Kalman Filter object, window, random number
     // generator etc.
     //
-    cvNamedWindow( "Kalman", 1 );
-    CvRandState rng;
-    cvRandInit( &rng, 0, 1, -1, CV_RAND_UNI );
-
-    IplImage* img = cvCreateImage( cvSize(500,500), 8, 3 );
-    CvKalman* kalman = cvCreateKalman( 2, 1, 0 );
+    Mat img(500, 500, CV_8UC3);
+    KalmanFilter kalman(2, 1, 0);
     // state is (phi, delta_phi) - angle and angular velocity
     // Initialize with random guess.
     //
-    CvMat* x_k = cvCreateMat( 2, 1, CV_32FC1 );
-    cvRandSetRange( &rng, 0, 0.1, 0 );
-    rng.disttype = CV_RAND_NORMAL;
-    cvRand( &rng, x_k );
+    Mat x_k(2, 1, CV_32F);
+    randn(x_k, 0., 0.1);
 
     // process noise
     //
-    CvMat* w_k = cvCreateMat( 2, 1, CV_32FC1 );
+    Mat w_k(2, 1, CV_32F);
     
     // measurements, only one parameter for angle
     //
-    CvMat* z_k = cvCreateMat( 1, 1, CV_32FC1 );
-    cvZero( z_k );
+    Mat z_k = Mat::zeros(1, 1, CV_32F);
 
     // Transition matrix 'F' describes relationship between
     // model parameters at step k and at step k+1 (this is 
     // the "dynamics" in our model.
     //
-    const float F[] = { 1, 1, 0, 1 };
-    memcpy( kalman->transition_matrix->data.fl, F, sizeof(F));
+    float F[] = { 1, 1, 0, 1 };
+    kalman.transitionMatrix = Mat(2, 2, CV_32F, F).clone();
     // Initialize other Kalman filter parameters.
     //
-    cvSetIdentity( kalman->measurement_matrix,    cvRealScalar(1) );
-    cvSetIdentity( kalman->process_noise_cov,     cvRealScalar(1e-5) );
-    cvSetIdentity( kalman->measurement_noise_cov, cvRealScalar(1e-1) );
-    cvSetIdentity( kalman->error_cov_post,        cvRealScalar(1));
+    setIdentity( kalman.measurementMatrix,   Scalar(1) );
+    setIdentity( kalman.processNoiseCov,     Scalar(1e-5) );
+    setIdentity( kalman.measurementNoiseCov, Scalar(1e-1) );
+    setIdentity( kalman.errorCovPost,        Scalar(1));
 
     // choose random initial state
     //
-    cvRand( &rng, kalman->state_post );
+    randn(kalman.statePost, 0., 0.1);
 
-    while( 1 ) {
+    for(;;) {
         // predict point position
-        const CvMat* y_k = cvKalmanPredict( kalman, 0 );
+        Mat y_k = kalman.predict();
 
         // generate measurement (z_k)
         //
-        cvRandSetRange( 
-            &rng, 
-            0, 
-            sqrt(kalman->measurement_noise_cov->data.fl[0]), 
-            0 
-        );
-        cvRand( &rng, z_k );
-        cvMatMulAdd( kalman->measurement_matrix, x_k, z_k, z_k );
+        randn(z_k, 0., sqrt((double)kalman.measurementNoiseCov.at<float>(0,0)));
+        z_k = kalman.measurementMatrix*x_k + z_k;
         // plot points (eg convert to planar co-ordinates and draw)
         //
-        cvZero( img );
-        cvCircle( img, phi2xy(z_k), 4, CVX_YELLOW );   // observed state
-        cvCircle( img, phi2xy(y_k), 4, CVX_WHITE, 2 ); // "predicted" state
-        cvCircle( img, phi2xy(x_k), 4, CVX_RED );      // real state
-        cvShowImage( "Kalman", img );
+        img = Scalar::all(0);
+        circle( img, phi2xy(z_k), 4, Scalar(128,255,255) );   // observed state
+        circle( img, phi2xy(y_k), 4, Scalar(255,255,255), 2 ); // "predicted" state
+        circle( img, phi2xy(x_k), 4, Scalar(0,0,255) );      // real state
+        imshow( "Kalman", img );
         // adjust Kalman filter state
         //
-        cvKalmanCorrect( kalman, z_k );
+        kalman.correct( z_k );
 
         // Apply the transition matrix 'F' (eg, step time forward)
         // and also apply the "process" noise w_k.
         //
-        cvRandSetRange( 
-            &rng, 
-            0, 
-            sqrt(kalman->process_noise_cov->data.fl[0]), 
-            0 
-            );
-        cvRand( &rng, w_k );
-        cvMatMulAdd( kalman->transition_matrix, x_k, w_k, x_k );
+        randn(w_k, 0., sqrt((double)kalman.processNoiseCov.at<float>(0,0)));
+        x_k = kalman.transitionMatrix*x_k + w_k;
         
         // exit if user hits 'Esc'
-        if( cvWaitKey( 100 ) == 27 ) break;
+        if( (waitKey( 100 )&255) == 27 ) break;
     }
 
     return 0;
