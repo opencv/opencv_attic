@@ -33,7 +33,8 @@ using namespace std;
 void help(){
 cout << "\nDemonstrate histogram back projection\nUsage:\n" <<
   "  ./ch7_ex7_5_HistBackProj modelImage testImage\n\n" <<
-  "     Example call: ./ch7_ex7_5 HandIndoorColor.jpg HandOutdoorColor.jpg\n" <<
+  "     Example call: ./ch7_ex7_5 BlueCup.jpg adrian.jpg\n" <<
+  "       (notice that the blue color and flesh color are picked up\n" <<
   "     Projection is done using calcBackProject()\n\n" << endl;
  }
 
