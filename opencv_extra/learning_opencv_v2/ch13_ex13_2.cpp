@@ -9,30 +9,27 @@
 using namespace cv;
 using namespace std;
 
-/* *************** License:**************************
-   Oct. 3, 2008
-   Right to use this code in any way you want without warrenty, support or any guarentee of it working.
+/* License:
+   July 20, 2011
+   Standard BSD
 
    BOOK: It would be nice if you cited it:
-   Learning OpenCV: Computer Vision with the OpenCV Library
+   Learning OpenCV 2: Computer Vision with the OpenCV Library
      by Gary Bradski and Adrian Kaehler
-     Published by O'Reilly Media, October 3, 2008
+     Published by O'Reilly Media
  
    AVAILABLE AT: 
      http://www.amazon.com/Learning-OpenCV-Computer-Vision-Library/dp/0596516134
      Or: http://oreilly.com/catalog/9780596516130/
      ISBN-10: 0596516134 or: ISBN-13: 978-0596516130    
 
-   OTHER OPENCV SITES:
-   * The source code is on sourceforge at:
-     http://sourceforge.net/projects/opencvlibrary/
-   * The OpenCV wiki page (As of Oct 1, 2008 this is down for changing over servers, but should come back):
-     http://opencvlibrary.sourceforge.net/
+   Main OpenCV site
+   http://opencv.willowgarage.com/wiki/
    * An active user group is at:
      http://tech.groups.yahoo.com/group/OpenCV/
    * The minutes of weekly OpenCV development meetings are at:
      http://pr.willowgarage.com/wiki/OpenCV
-   ************************************************** */
+*/
 
 /*
 The sample demonstrates how to build a decision tree for classifying mushrooms.
@@ -287,18 +284,24 @@ void interactive_classification( Ptr<DecisionTree> dtree, const char** var_desc 
     }
 }
 
-
+void help()
+{
+	cout << "\nThe sample demonstrates how to build a decision tree for classifying mushrooms.\n"
+            " It uses the sample base agaricus-lepiota.data from UCI Repository\n\n"
+			"Usage:\n ./ch13_ex13_2 [path/file-name_data]\n"
+			"where [] means optional. If you don't give it a data file, it will try to load\n"
+			"agaricus-lepiota.data\n" << endl;
+}
 int main( int argc, char** argv )
 {
     Ptr<DecisionTree> dtree;
     TrainData mldata;
     const char* base_path = argc >= 2 ? argv[1] : "agaricus-lepiota.data";
     Mat data, responses, missing;
-
+    help();
     if( !mushroom_read_database( base_path, data, responses, missing ) )
     {
-        cout << "Unable to load the training database\n"
-                "Pass it as a parameter: dtree <path to agaricus-lepiota.data>\n";
+        cout << "Unable to load the training database\n" << base_path << endl;
         return -1;
     }
 

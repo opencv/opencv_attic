@@ -2,30 +2,27 @@
 //   Example 13-3. Training snippet for boosted classifiers
 //
 
-/* *************** License:**************************
-   Oct. 3, 2008
-   Right to use this code in any way you want without warrenty, support or any guarentee of it working.
+/* License:
+   July 20, 2011
+   Standard BSD
 
    BOOK: It would be nice if you cited it:
-   Learning OpenCV: Computer Vision with the OpenCV Library
+   Learning OpenCV 2: Computer Vision with the OpenCV Library
      by Gary Bradski and Adrian Kaehler
-     Published by O'Reilly Media, October 3, 2008
+     Published by O'Reilly Media
  
    AVAILABLE AT: 
      http://www.amazon.com/Learning-OpenCV-Computer-Vision-Library/dp/0596516134
      Or: http://oreilly.com/catalog/9780596516130/
      ISBN-10: 0596516134 or: ISBN-13: 978-0596516130    
 
-   OTHER OPENCV SITES:
-   * The source code is on sourceforge at:
-     http://sourceforge.net/projects/opencvlibrary/
-   * The OpenCV wiki page (As of Oct 1, 2008 this is down for changing over servers, but should come back):
-     http://opencvlibrary.sourceforge.net/
+   Main OpenCV site
+   http://opencv.willowgarage.com/wiki/
    * An active user group is at:
      http://tech.groups.yahoo.com/group/OpenCV/
    * The minutes of weekly OpenCV development meetings are at:
      http://pr.willowgarage.com/wiki/OpenCV
-   ************************************************** */
+*/
 
 #include <opencv2/opencv.hpp>
 #include <iostream>
@@ -55,10 +52,11 @@ and the remaining 4000 (10000 for boosting) - to test the classifier.
 void help()
 {
     cout << "This is letter recognition sample.\n"
-    "The usage: letter_recog [-data <path to letter-recognition.data>] \\\n"
+    "Usage: ./ch13_ex13_3 [-data <path to letter-recognition.data>] \\\n"
     "  [-save <output XML file for the classifier>] \\\n"
     "  [-load <XML file with the pre-trained classifier>] \\\n"
-    "  [-boost|-mlp] # to use boost/mlp classifier instead of default Random Trees\n";
+    "  [-boost|-mlp] # to use boost/mlp classifier instead of default Random Trees\n"
+    "    where [] means optional\n" << endl;
 }
 
 // This function reads data and responses from the file <filename>
@@ -419,6 +417,7 @@ int build_mlp_classifier( Mat& data, Mat& responses,
 
 int main( int argc, char *argv[] )
 {
+	help();
     char* filename_to_save = 0;
     char* filename_to_load = 0;
     char default_data_filename[] = "./letter-recognition.data";
