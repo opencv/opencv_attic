@@ -2,11 +2,13 @@
 // From OpenCV's samples/c directory
 //   Example 13-2. Creating and training a decision tree
 //
-#include "cxcore.h"
-#include "highgui.h"
-
-#include "ml.h"
+#include <opencv2/opencv.hpp>
+#include <iostream>
 #include <stdio.h>
+
+using namespace cv;
+using namespace std;
+
 /* *************** License:**************************
    Oct. 3, 2008
    Right to use this code in any way you want without warrenty, support or any guarentee of it working.
@@ -45,95 +47,68 @@ Irvine, CA: University of California, Department of Information and Computer Sci
 // loads the mushroom database, which is a text file, containing
 // one training sample per row, all the input variables and the output variable are categorical,
 // the values are encoded by characters.
-int mushroom_read_database( const char* filename, CvMat** data, CvMat** missing, CvMat** responses )
+bool mushroom_read_database( const char* filename, Mat& data, Mat& responses, Mat& missing )
 {
     const int M = 1024;
     FILE* f = fopen( filename, "rt" );
-    CvMemStorage* storage;
-    CvSeq* seq;
     char buf[M+2], *ptr;
-    float* el_ptr;
-    CvSeqReader reader;
     int i, j, var_count = 0;
-
+    
     if( !f )
-        return 0;
-
+        return false;
+    
     // read the first line and determine the number of variables
     if( !fgets( buf, M, f ))
     {
         fclose(f);
-        return 0;
+        return false;
     }
-
+    
     for( ptr = buf; *ptr != '\0'; ptr++ )
         var_count += *ptr == ',';
     assert( ptr - buf == (var_count+1)*2 );
-
+    
     // create temporary memory storage to store the whole database
-    el_ptr = new float[var_count+1];
-    storage = cvCreateMemStorage();
-    seq = cvCreateSeq( 0, sizeof(*seq), (var_count+1)*sizeof(float), storage );
-
+    vector<float> datarow(var_count+1);
+    vector<float> alldata;
+    
     for(;;)
     {
         for( i = 0; i <= var_count; i++ )
         {
             int c = buf[i*2];
-            el_ptr[i] = c == '?' ? -1.f : (float)c;
+            datarow[i] = c == '?' ? -1.f : (float)c;
         }
         if( i != var_count+1 )
             break;
-        cvSeqPush( seq, el_ptr );
+        copy(datarow.begin(), datarow.end(), back_inserter(alldata));
         if( !fgets( buf, M, f ) || !strchr( buf, ',' ) )
             break;
     }
     fclose(f);
-
+    
     // allocate the output matrices and copy the base there
-    *data = cvCreateMat( seq->total, var_count, CV_32F );
-    *missing = cvCreateMat( seq->total, var_count, CV_8U );
-    *responses = cvCreateMat( seq->total, 1, CV_32F );
-
-    cvStartReadSeq( seq, &reader );
-
-    for( i = 0; i < seq->total; i++ )
-    {
-        const float* sdata = (float*)reader.ptr + 1;
-        float* ddata = data[0]->data.fl + var_count*i;
-        float* dr = responses[0]->data.fl + i;
-        uchar* dm = missing[0]->data.ptr + var_count*i;
-
-        for( j = 0; j < var_count; j++ )
-        {
-            ddata[j] = sdata[j];
-            dm[j] = sdata[j] < 0;
-        }
-        *dr = sdata[-1];
-        CV_NEXT_SEQ_ELEM( seq->elem_size, reader );
-    }
-
-    cvReleaseMemStorage( &storage );
-    delete el_ptr;
-    return 1;
+    Mat alldatam((int)(alldata.size()/datarow.size()), (int)datarow.size(), CV_32F, &alldata[0]);
+    alldatam.colRange(1, alldatam.cols).copyTo(data);
+    missing = alldatam.colRange(1, alldatam.cols) == -1;
+    alldatam.col(0).copyTo(responses);
+    
+    return true;
 }
 
 
-CvDTree* mushroom_create_dtree( const CvMat* data, const CvMat* missing,
-                                const CvMat* responses, float p_weight )
+Ptr<DecisionTree> mushroom_create_dtree( Mat& data, Mat& responses, Mat& missing, float p_weight )
 {
-    CvDTree* dtree;
-    CvMat* var_type;
+    Ptr<DecisionTree> dtree = new DecisionTree;
+    
     int i, hr1 = 0, hr2 = 0, p_total = 0;
     float priors[] = { 1, p_weight };
 
-    var_type = cvCreateMat( data->cols + 1, 1, CV_8U );
-    cvSet( var_type, cvScalarAll(CV_VAR_CATEGORICAL) ); // all the variables are categorical
-
-    dtree = new CvDTree;
+    Mat vartypes(data.cols+1, 1, CV_8U);
+    vartypes = Scalar::all(CV_VAR_CATEGORICAL);
     
-    dtree->train( data, CV_ROW_SAMPLE, responses, 0, 0, var_type, missing,
-                  CvDTreeParams( 8, // max depth
+    dtree->train( data, CV_ROW_SAMPLE, responses, Mat(), Mat(), vartypes, missing,
+                  DTreeParams( 8, // max depth
                                  10, // min sample count
                                  0, // regression accuracy: N/A here
                                  true, // compute surrogate split, as we have missing data
@@ -145,15 +120,15 @@ CvDTree* mushroom_create_dtree( const CvMat* data, const CvMat* missing,
                                         // to the poisonous mushrooms
                                         // (a mushroom will be judjed to be poisonous with bigger chance)
                                  ));
+    
+    
 
     // compute hit-rate on the training database, demonstrates predict usage.
-    for( i = 0; i < data->rows; i++ )
+    for( i = 0; i < data.rows; i++ )
     {
-        CvMat sample, mask;
-        cvGetRow( data, &sample, i );
-        cvGetRow( missing, &mask, i );
-        double r = dtree->predict( &sample, &mask )->value;
-        int d = fabs(r - responses->data.fl[i]) >= FLT_EPSILON;
+        Mat sample = data.row(i), mask = missing.row(i);
+        double r = dtree->predict( sample, mask )->value;
+        int d = fabs(r - responses.at<float>(i)) >= FLT_EPSILON;
         if( d )
         {
             if( r != 'p' )
@@ -161,15 +136,13 @@ CvDTree* mushroom_create_dtree( const CvMat* data, const CvMat* missing,
             else
                 hr2++;
         }
-        p_total += responses->data.fl[i] == 'p';
+        p_total += responses.at<float>(i) == 'p';
     }
 
-    printf( "Results on the training database:\n"
-            "\tPoisonous mushrooms mis-predicted: %d (%g%%)\n"
-            "\tFalse-alarms: %d (%g%%)\n", hr1, (double)hr1*100/p_total,
-            hr2, (double)hr2*100/(data->rows - p_total) );
-
-    cvReleaseMat( &var_type );
+    cout << "Results on the training database:\n"
+         << "\tPoisonous mushrooms mis-predicted: "
+         << hr1 << "(" << (double)hr1*100/p_total << ")\n" <<
+         "\tFalse-alarms: " << hr2 << "(" << (double)hr2*100/(data.rows - p_total) << ")\n";
 
     return dtree;
 }
@@ -203,61 +176,59 @@ static const char* var_desc[] =
 };
 
 
-void print_variable_importance( CvDTree* dtree, const char** var_desc )
+void print_variable_importance( Ptr<DecisionTree> dtree, const char** var_desc )
 {
-    const CvMat* var_importance = dtree->get_var_importance();
+    Mat var_importance(dtree->get_var_importance());
     int i;
-    char input[1000];
 
-    if( !var_importance )
+    if( var_importance.empty() )
     {
-        printf( "Error: Variable importance can not be retrieved\n" );
+        cout << "Error: Variable importance can not be retrieved\n";
         return;
     }
 
-    printf( "Print variable importance information? (y/n) " );
-    scanf( "%1s", input );
+    cout << "Print variable importance information? (y/n) ";
+    cout.flush();
+    char input[100];
+    cin.getline(input, sizeof(input)-2);
     if( input[0] != 'y' && input[0] != 'Y' )
         return;
 
-    for( i = 0; i < var_importance->cols*var_importance->rows; i++ )
+    for( i = 0; i < var_importance.cols*var_importance.rows; i++ )
     {
-        double val = var_importance->data.db[i];
+        double val = var_importance.at<double>(i);
         if( var_desc )
         {
             char buf[100];
             int len = strchr( var_desc[i], '(' ) - var_desc[i] - 1;
             strncpy( buf, var_desc[i], len );
             buf[len] = '\0';
-            printf( "%s", buf );
+            cout << buf;
         }
         else
-            printf( "var #%d", i );
-        printf( ": %g%%\n", val*100. );
+            cout << "var #" << i;
+        cout << ": " << val*100. << endl;
     }
 }
 
-void interactive_classification( CvDTree* dtree, const char** var_desc )
+void interactive_classification( Ptr<DecisionTree> dtree, const char** var_desc )
 {
-    char input[1000];
-    const CvDTreeNode* root;
-    CvDTreeTrainData* data;
-
-    if( !dtree )
+    if( dtree.empty() )
         return;
 
-    root = dtree->get_root();
-    data = dtree->get_data();
+    const CvDTreeNode* root = dtree->get_root();
+    CvDTreeTrainData* data = dtree->get_data();
 
     for(;;)
     {
         const CvDTreeNode* node;
-        
-        printf( "Start/Proceed with interactive mushroom classification (y/n): " );
-        scanf( "%1s", input );
+        char input[100];
+        cout << "Start/Proceed with interactive mushroom classification (y/n): ";
+        cout.flush();
+        cin.getline(input, sizeof(input)-2);
         if( input[0] != 'y' && input[0] != 'Y' )
             break;
-        printf( "Enter 1-letter answers, '?' for missing/unknown value...\n" ); 
+        cout << "Enter 1-letter answers, '?' for missing/unknown value...\n"; 
 
         // custom version of predict
         node = root;
@@ -273,10 +244,11 @@ void interactive_classification( CvDTree* dtree, const char** var_desc )
             {
                 int vi = split->var_idx, j;
                 int count = data->cat_count->data.i[vi];
-                const int* map = data->cat_map->data.i + data->cat_ofs->data.i[vi];
+                const int* catmap = data->cat_map->data.i + data->cat_ofs->data.i[vi];
 
-                printf( "%s: ", var_desc[vi] );
-                scanf( "%1s", input );
+                cout << var_desc[vi] << ": ";
+                cout.flush();
+                cin.getline(input, sizeof(input)-2);
 
                 if( input[0] == '?' )
                 {
@@ -286,7 +258,7 @@ void interactive_classification( CvDTree* dtree, const char** var_desc )
 
                 // convert the input character to the normalized value of the variable
                 for( j = 0; j < count; j++ )
-                    if( map[j] == input[0] )
+                    if( catmap[j] == input[0] )
                         break;
                 if( j < count )
                 {
@@ -296,12 +268,12 @@ void interactive_classification( CvDTree* dtree, const char** var_desc )
                     break;
                 }
                 else
-                    printf( "Error: unrecognized value\n" );
+                    cout << "Error: unrecognized value\n";
             }
             
             if( !dir )
             {
-                printf( "Impossible to classify the sample\n");
+                cout << "Impossible to classify the sample\n";
                 node = 0;
                 break;
             }
@@ -309,37 +281,33 @@ void interactive_classification( CvDTree* dtree, const char** var_desc )
         }
 
         if( node )
-            printf( "Prediction result: the mushroom is %s\n",
-                    node->class_idx == 0 ? "EDIBLE" : "POISONOUS" );
-        printf( "\n-----------------------------\n" );
+            cout << "Prediction result: the mushroom is " <<
+                (node->class_idx == 0 ? "EDIBLE" : "POISONOUS");
+        cout << "\n-----------------------------\n";
     }
 }
 
 
 int main( int argc, char** argv )
 {
-    CvMat *data = 0, *missing = 0, *responses = 0;
-    CvDTree* dtree;
+    Ptr<DecisionTree> dtree;
+    TrainData mldata;
     const char* base_path = argc >= 2 ? argv[1] : "agaricus-lepiota.data";
+    Mat data, responses, missing;
 
-    if( !mushroom_read_database( base_path, &data, &missing, &responses ) )
+    if( !mushroom_read_database( base_path, data, responses, missing ) )
     {
-        printf( "Unable to load the training database\n"
-                "Pass it as a parameter: dtree <path to agaricus-lepiota.data>\n" );
-        return 0;
+        cout << "Unable to load the training database\n"
+                "Pass it as a parameter: dtree <path to agaricus-lepiota.data>\n";
         return -1;
     }
 
-    dtree = mushroom_create_dtree( data, missing, responses,
+    dtree = mushroom_create_dtree( data, responses, missing,
         10 // poisonous mushrooms will have 10x higher weight in the decision tree
         );
-    cvReleaseMat( &data );
-    cvReleaseMat( &missing );
-    cvReleaseMat( &responses );
 
     print_variable_importance( dtree, var_desc );
     interactive_classification( dtree, var_desc );
-    delete dtree;
 
     return 0;
 }

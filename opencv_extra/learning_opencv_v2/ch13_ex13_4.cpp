@@ -26,142 +26,152 @@
      http://pr.willowgarage.com/wiki/OpenCV
    ************************************************** */
 
-#include "cv.h"
-#include "highgui.h"
-
+#include "opencv2/opencv.hpp"
+#include <iostream>
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <assert.h>
-#include <math.h>
-#include <float.h>
-#include <limits.h>
-#include <time.h>
-#include <ctype.h>
 
+using namespace std;
+using namespace cv;
 
+void help()
+{
+    cout << "\nThis program demonstrates the cascade recognizer. Now you can use Haar or LBP features.\n"
+    "This classifier can recognize many ~rigid objects, it's most known use is for faces.\n"
+    "Usage:\n"
+    "./facedetect [--cascade=<cascade_path> this is the primary trained classifier such as frontal face]\n"
+    "   [--nested-cascade[=nested_cascade_path this an optional secondary classifier such as eyes]]\n"
+    "   [--scale=<image scale greater or equal to 1, try 1.3 for example>\n"
+    "   [filename|camera_index]\n\n"
+    "see facedetect.cmd for one call:\n"
+    "./facedetect --cascade=\"../../data/haarcascades/haarcascade_frontalface_alt.xml\" --nested-cascade=\"../../data/haarcascades/haarcascade_eye.xml\" --scale=1.3 \n"
+    "Hit any key to quit.\n"
+    "Using OpenCV version " << CV_VERSION << "\n" << endl;
+}
 
-static CvMemStorage* storage = 0;
-static CvHaarClassifierCascade* cascade = 0;
-static CvHaarClassifierCascade* nested_cascade = 0;
-int use_nested_cascade = 0;
+void detectAndDraw( Mat& img,
+                   CascadeClassifier& cascade, CascadeClassifier& nestedCascade,
+                   double scale);
 
-void detect_and_draw( IplImage* image );
+String cascadeName = "../../data/haarcascades/haarcascade_frontalface_alt.xml";
+String nestedCascadeName = "../../data/haarcascades/haarcascade_eye_tree_eyeglasses.xml";
 
-const char* cascade_name =
-    "haarcascade_frontalface_alt.xml";
-const char* nested_cascade_name =
-    "haarcascade_eye_tree_eyeglasses.xml";
-
-double scale = 1;
-
-int main( int argc, char** argv )
+int main( int argc, const char** argv )
 {
     CvCapture* capture = 0;
-    IplImage *frame, *frame_copy = 0;
-    IplImage *image = 0;
-    const char* scale_opt = "--scale=";
-    int scale_opt_len = (int)strlen(scale_opt);
-    const char* cascade_opt = "--cascade=";
-    int cascade_opt_len = (int)strlen(cascade_opt);
-    const char* nested_cascade_opt = "--nested-cascade";
-    int nested_cascade_opt_len = (int)strlen(nested_cascade_opt);
-    int i;
-    const char* input_name = 0;
-
-    for( i = 1; i < argc; i++ )
+    Mat frame, frameCopy, image;
+    const String scaleOpt = "--scale=";
+    size_t scaleOptLen = scaleOpt.length();
+    const String cascadeOpt = "--cascade=";
+    size_t cascadeOptLen = cascadeOpt.length();
+    const String nestedCascadeOpt = "--nested-cascade";
+    size_t nestedCascadeOptLen = nestedCascadeOpt.length();
+    String inputName;
+    
+    help();
+    
+    CascadeClassifier cascade, nestedCascade;
+    double scale = 1;
+    
+    for( int i = 1; i < argc; i++ )
     {
-        if( strncmp( argv[i], cascade_opt, cascade_opt_len) == 0 )
-            cascade_name = argv[i] + cascade_opt_len;
-        else if( strncmp( argv[i], nested_cascade_opt, nested_cascade_opt_len ) == 0 )
+        cout << "Processing " << i << " " <<  argv[i] << endl;
+        if( cascadeOpt.compare( 0, cascadeOptLen, argv[i], cascadeOptLen ) == 0 )
         {
-            if( argv[i][nested_cascade_opt_len] == '=' )
-                nested_cascade_name = argv[i] + nested_cascade_opt_len + 1;
-            nested_cascade = (CvHaarClassifierCascade*)cvLoad( nested_cascade_name, 0, 0, 0 );
-            if( !nested_cascade )
-                fprintf( stderr, "WARNING: Could not load classifier cascade for nested objects\n" );
+            cascadeName.assign( argv[i] + cascadeOptLen );
+            cout << "  from which we have cascadeName= " << cascadeName << endl;
         }
-        else if( strncmp( argv[i], scale_opt, scale_opt_len ) == 0 )
+        else if( nestedCascadeOpt.compare( 0, nestedCascadeOptLen, argv[i], nestedCascadeOptLen ) == 0 )
         {
-            if( !sscanf( argv[i] + scale_opt_len, "%lf", &scale ) || scale < 1 )
+            if( argv[i][nestedCascadeOpt.length()] == '=' )
+                nestedCascadeName.assign( argv[i] + nestedCascadeOpt.length() + 1 );
+            if( !nestedCascade.load( nestedCascadeName ) )
+                cerr << "WARNING: Could not load classifier cascade for nested objects" << endl;
+        }
+        else if( scaleOpt.compare( 0, scaleOptLen, argv[i], scaleOptLen ) == 0 )
+        {
+            if( !sscanf( argv[i] + scaleOpt.length(), "%lf", &scale ) || scale < 1 )
                 scale = 1;
+            cout << " from which we read scale = " << scale << endl;
         }
         else if( argv[i][0] == '-' )
         {
-            fprintf( stderr, "WARNING: Unknown option %s\n", argv[i] );
+            cerr << "WARNING: Unknown option %s" << argv[i] << endl;
         }
         else
-            input_name = argv[i];
+            inputName.assign( argv[i] );
     }
-
-    cascade = (CvHaarClassifierCascade*)cvLoad( cascade_name, 0, 0, 0 );
-
-    if( !cascade )
+    
+    if( !cascade.load( cascadeName ) )
     {
-        fprintf( stderr, "ERROR: Could not load classifier cascade\n" );
-        fprintf( stderr,
-        "Usage: facedetect [--cascade=\"<cascade_path>\"]\n"
-        "   [--nested-cascade[=\"nested_cascade_path\"]]\n"
+        cerr << "ERROR: Could not load classifier cascade" << endl;
+        cerr << "Usage: facedetect [--cascade=<cascade_path>]\n"
+        "   [--nested-cascade[=nested_cascade_path]]\n"
         "   [--scale[=<image scale>\n"
-        "   [filename|camera_index]\n" );
+        "   [filename|camera_index]\n" << endl ;
         return -1;
     }
-    storage = cvCreateMemStorage(0);
     
-    if( !input_name || (isdigit(input_name[0]) && input_name[1] == '\0') )
-        capture = cvCaptureFromCAM( !input_name ? 0 : input_name[0] - '0' );
-    else if( input_name )
+    if( inputName.empty() || (isdigit(inputName.c_str()[0]) && inputName.c_str()[1] == '\0') )
     {
-        image = cvLoadImage( input_name, 1 );
-        if( !image )
-            capture = cvCaptureFromAVI( input_name );
+        capture = cvCaptureFromCAM( inputName.empty() ? 0 : inputName.c_str()[0] - '0' );
+        int c = inputName.empty() ? 0 : inputName.c_str()[0] - '0' ;
+        if(!capture) cout << "Capture from CAM " <<  c << " didn't work" << endl;
+    }
+    else if( inputName.size() )
+    {
+        image = imread( inputName, 1 );
+        if( image.empty() )
+        {
+            capture = cvCaptureFromAVI( inputName.c_str() );
+            if(!capture) cout << "Capture from AVI didn't work" << endl;
+        }
     }
     else
-        image = cvLoadImage( "lena.jpg", 1 );
-
+    {
+        image = imread( "lena.jpg", 1 );
+        if(image.empty()) cout << "Couldn't read lena.jpg" << endl;
+    }
+    
     cvNamedWindow( "result", 1 );
-
+    
     if( capture )
     {
+        cout << "In capture ..." << endl;
         for(;;)
         {
-            if( !cvGrabFrame( capture ))
+            IplImage* iplImg = cvQueryFrame( capture );
+            frame = iplImg;
+            if( frame.empty() )
                 break;
-            frame = cvRetrieveFrame( capture );
-            if( !frame )
-                break;
-            if( !frame_copy )
-                frame_copy = cvCreateImage( cvSize(frame->width,frame->height),
-                                            IPL_DEPTH_8U, frame->nChannels );
-            if( frame->origin == IPL_ORIGIN_TL )
-                cvCopy( frame, frame_copy, 0 );
+            if( iplImg->origin == IPL_ORIGIN_TL )
+                frame.copyTo( frameCopy );
             else
-                cvFlip( frame, frame_copy, 0 );
+                flip( frame, frameCopy, 0 );
             
-            detect_and_draw( frame_copy );
-
-            if( cvWaitKey( 10 ) >= 0 )
+            detectAndDraw( frameCopy, cascade, nestedCascade, scale );
+            
+            if( waitKey( 10 ) >= 0 )
                 goto _cleanup_;
         }
-
-        cvWaitKey(0);
-_cleanup_:
-        cvReleaseImage( &frame_copy );
+        
+        waitKey(0);
+        
+    _cleanup_:
         cvReleaseCapture( &capture );
     }
     else
     {
-        if( image )
+        cout << "In image read" << endl;
+        if( !image.empty() )
         {
-            detect_and_draw( image );
-            cvWaitKey(0);
-            cvReleaseImage( &image );
+            detectAndDraw( image, cascade, nestedCascade, scale );
+            waitKey(0);
         }
-        else if( input_name )
+        else if( !inputName.empty() )
         {
             /* assume it is a text file containing the
-               list of the image filenames to be processed - one per line */
-            FILE* f = fopen( input_name, "rt" );
+             list of the image filenames to be processed - one per line */
+            FILE* f = fopen( inputName.c_str(), "rt" );
             if( f )
             {
                 char buf[1000+1];
@@ -171,15 +181,18 @@ _cleanup_:
                     while( len > 0 && isspace(buf[len-1]) )
                         len--;
                     buf[len] = '\0';
-                    printf( "file %s\n", buf ); 
-                    image = cvLoadImage( buf, 1 );
-                    if( image )
+                    cout << "file " << buf << endl;
+                    image = imread( buf, 1 );
+                    if( !image.empty() )
                     {
-                        detect_and_draw( image );
-                        c = cvWaitKey(0);
+                        detectAndDraw( image, cascade, nestedCascade, scale );
+                        c = waitKey(0);
                         if( c == 27 || c == 'q' || c == 'Q' )
                             break;
-                        cvReleaseImage( &image );
+                    }
+                    else
+                    {
+                    	cerr << "Aw snap, couldn't read image " << buf << endl;
                     }
                 }
                 fclose(f);
@@ -188,84 +201,70 @@ _cleanup_:
     }
     
     cvDestroyWindow("result");
-
+    
     return 0;
 }
 
-void detect_and_draw( IplImage* img )
+void detectAndDraw( Mat& img,
+                   CascadeClassifier& cascade, CascadeClassifier& nestedCascade,
+                   double scale)
 {
-    static CvScalar colors[] = 
+    int i = 0;
+    double t = 0;
+    vector<Rect> faces;
+    const static Scalar colors[] =  { CV_RGB(0,0,255),
+        CV_RGB(0,128,255),
+        CV_RGB(0,255,255),
+        CV_RGB(0,255,0),
+        CV_RGB(255,128,0),
+        CV_RGB(255,255,0),
+        CV_RGB(255,0,0),
+        CV_RGB(255,0,255)} ;
+    Mat gray, smallImg( cvRound (img.rows/scale), cvRound(img.cols/scale), CV_8UC1 );
+    
+    cvtColor( img, gray, CV_BGR2GRAY );
+    resize( gray, smallImg, smallImg.size(), 0, 0, INTER_LINEAR );
+    equalizeHist( smallImg, smallImg );
+    
+    t = (double)cvGetTickCount();
+    cascade.detectMultiScale( smallImg, faces,
+                             1.1, 2, 0
+                             //|CV_HAAR_FIND_BIGGEST_OBJECT
+                             //|CV_HAAR_DO_ROUGH_SEARCH
+                             |CV_HAAR_SCALE_IMAGE
+                             ,
+                             Size(30, 30) );
+    t = (double)cvGetTickCount() - t;
+    printf( "detection time = %g ms\n", t/((double)cvGetTickFrequency()*1000.) );
+    for( vector<Rect>::const_iterator r = faces.begin(); r != faces.end(); r++, i++ )
     {
-        {{0,0,255}},
-        {{0,128,255}},
-        {{0,255,255}},
-        {{0,255,0}},
-        {{255,128,0}},
-        {{255,255,0}},
-        {{255,0,0}},
-        {{255,0,255}}
-    };
-
-    IplImage *gray, *small_img;
-    int i, j;
-
-    gray = cvCreateImage( cvSize(img->width,img->height), 8, 1 );
-    small_img = cvCreateImage( cvSize( cvRound (img->width/scale),
-                         cvRound (img->height/scale)), 8, 1 );
-
-    cvCvtColor( img, gray, CV_BGR2GRAY );
-    cvResize( gray, small_img, CV_INTER_LINEAR );
-    cvEqualizeHist( small_img, small_img );
-    cvClearMemStorage( storage );
-
-    if( cascade )
-    {
-        double t = (double)cvGetTickCount();
-        CvSeq* faces = cvHaarDetectObjects( small_img, cascade, storage,
-                                            1.1, 2, 0
-                                            //|CV_HAAR_FIND_BIGGEST_OBJECT
-                                            //|CV_HAAR_DO_ROUGH_SEARCH
-                                            |CV_HAAR_DO_CANNY_PRUNING
-                                            //|CV_HAAR_SCALE_IMAGE
-                                            ,
-                                            cvSize(30, 30) );
-        t = (double)cvGetTickCount() - t;
-        printf( "detection time = %gms\n", t/((double)cvGetTickFrequency()*1000.) );
-        for( i = 0; i < (faces ? faces->total : 0); i++ )
+        Mat smallImgROI;
+        vector<Rect> nestedObjects;
+        Point center;
+        Scalar color = colors[i%8];
+        int radius;
+        center.x = cvRound((r->x + r->width*0.5)*scale);
+        center.y = cvRound((r->y + r->height*0.5)*scale);
+        radius = cvRound((r->width + r->height)*0.25*scale);
+        circle( img, center, radius, color, 3, 8, 0 );
+        if( nestedCascade.empty() )
+            continue;
+        smallImgROI = smallImg(*r);
+        nestedCascade.detectMultiScale( smallImgROI, nestedObjects,
+                                       1.1, 2, 0
+                                       //|CV_HAAR_FIND_BIGGEST_OBJECT
+                                       //|CV_HAAR_DO_ROUGH_SEARCH
+                                       //|CV_HAAR_DO_CANNY_PRUNING
+                                       |CV_HAAR_SCALE_IMAGE
+                                       ,
+                                       Size(30, 30) );
+        for( vector<Rect>::const_iterator nr = nestedObjects.begin(); nr != nestedObjects.end(); nr++ )
         {
-            CvRect* r = (CvRect*)cvGetSeqElem( faces, i );
-            CvMat small_img_roi;
-            CvSeq* nested_objects;
-            CvPoint center;
-            CvScalar color = colors[i%8];
-            int radius;
-            center.x = cvRound((r->x + r->width*0.5)*scale);
-            center.y = cvRound((r->y + r->height*0.5)*scale);
-            radius = cvRound((r->width + r->height)*0.25*scale);
-            cvCircle( img, center, radius, color, 3, 8, 0 );
-            if( !nested_cascade )
-                continue;
-            cvGetSubRect( small_img, &small_img_roi, *r );
-            nested_objects = cvHaarDetectObjects( &small_img_roi, nested_cascade, storage,
-                                        1.1, 2, 0
-                                        //|CV_HAAR_FIND_BIGGEST_OBJECT
-                                        //|CV_HAAR_DO_ROUGH_SEARCH
-                                        //|CV_HAAR_DO_CANNY_PRUNING
-                                        //|CV_HAAR_SCALE_IMAGE
-                                        ,
-                                        cvSize(0, 0) );
-            for( j = 0; j < (nested_objects ? nested_objects->total : 0); j++ )
-            {
-                CvRect* nr = (CvRect*)cvGetSeqElem( nested_objects, j );
-                center.x = cvRound((r->x + nr->x + nr->width*0.5)*scale);
-                center.y = cvRound((r->y + nr->y + nr->height*0.5)*scale);
-                radius = cvRound((nr->width + nr->height)*0.25*scale);
-                cvCircle( img, center, radius, color, 3, 8, 0 );
-            }
+            center.x = cvRound((r->x + nr->x + nr->width*0.5)*scale);
+            center.y = cvRound((r->y + nr->y + nr->height*0.5)*scale);
+            radius = cvRound((nr->width + nr->height)*0.25*scale);
+            circle( img, center, radius, color, 3, 8, 0 );
         }
     }
-
-    cvShowImage( "result", img );
-    cvReleaseImage( &gray );
-    cvReleaseImage( &small_img );
+    cv::imshow( "result", img );
 }
