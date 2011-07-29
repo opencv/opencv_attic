@@ -78,10 +78,13 @@ StereoCalib(const char* imageList, int nx, int ny, bool useUncalibrated)
         for( j = 0; j < nx; j++ )
             boardModel.push_back(Point3f((float)(i*squareSize), (float)(j*squareSize), 0.f)); 
     
-    for(i=0;;i++)
+    i = 0;
+    for(;;)
     {
         char buf[1024];
         lr = i % 2;
+        if( lr == 0 )
+            found[0] = found[1] = false;
         
         if( !fgets( buf, sizeof(buf)-3, f ))
             break;
@@ -95,6 +98,13 @@ StereoCalib(const char* imageList, int nx, int ny, bool useUncalibrated)
             break;
         imageSize = img.size();
         imageNames[lr].push_back(buf);
+        
+        i++;
+        // if we did not find board on the left image,
+        // it does not make sense to find it on the right
+        if( lr == 1 && !found[0] )
+            continue;
+        
     //FIND CHESSBOARDS AND CORNERS THEREIN:
         for( int s = 1; s <= maxScale; s++ )
         {
@@ -195,8 +205,7 @@ StereoCalib(const char* imageList, int nx, int ny, bool useUncalibrated)
 // IF BY CALIBRATED (BOUGUET'S METHOD)
         if( !useUncalibrated )
         {
-            stereoRectify(M1, D1, M2, D2, imageSize, R, T, R1, R2, P1, P2, noArray(),
-                          0);
+            stereoRectify(M1, D1, M2, D2, imageSize, R, T, R1, R2, P1, P2, noArray(), 0);
             isVerticalStereo = fabs(P2.at<double>(1, 3)) > fabs(P2.at<double>(0, 3));
     //Precompute maps for cvRemap()
             initUndistortRectifyMap(M1, D1, R1, P1, imageSize, CV_16SC2, map11, map12);
@@ -214,7 +223,8 @@ StereoCalib(const char* imageList, int nx, int ny, bool useUncalibrated)
                 copy(points[0][i].begin(), points[0][i].end(), back_inserter(allpoints[0]));
                 copy(points[1][i].begin(), points[1][i].end(), back_inserter(allpoints[1]));
             }
-            Mat F = findFundamentalMat(allpoints[0], allpoints[1], FM_8POINT), H1, H2;
+            Mat F = findFundamentalMat(allpoints[0], allpoints[1], FM_8POINT);
+            Mat H1, H2;
             stereoRectifyUncalibrated(allpoints[0], allpoints[1], F, imageSize, H1, H2, 3);
             
             R1 = M1.inv()*H1*M1;
@@ -231,7 +241,7 @@ StereoCalib(const char* imageList, int nx, int ny, bool useUncalibrated)
         else
             pair.create( imageSize.height*2, imageSize.width, CV_8UC3 );
 //Setup for finding stereo corrrespondences
-        StereoBM stereo(StereoBM::BASIC_PRESET, 128, 41);
+        StereoBM stereo(StereoBM::BASIC_PRESET, 128, 31);
         stereo.state->preFilterSize=41;
         stereo.state->preFilterCap=31;
         stereo.state->minDisparity=-64;
@@ -292,12 +302,12 @@ int main(int argc, char** argv)
 {
 	help();
     int board_w = 9, board_h = 6;
-    const char* board_list = "";
+    const char* board_list = "ch12_list.txt";
     if( argc == 4 )
     {
-        board_w = atoi(argv[1]);
-        board_h = atoi(argv[2]);
-        board_list = argv[3];
+        board_list = argv[1];
+        board_w = atoi(argv[2]);
+        board_h = atoi(argv[3]);
     }
     StereoCalib(board_list, board_w, board_h, true);
     return 0;
