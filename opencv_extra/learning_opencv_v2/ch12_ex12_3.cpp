@@ -1,45 +1,53 @@
 #pragma warning( disable: 4996 )
-/* *************** License:**************************
-   Oct. 3, 2008
-   Right to use this code in any way you want without warrenty, support or any guarentee of it working.
+//
+// Given a list of chessboard images, the number of corners (nx, ny)
+// on the chessboards, and a flag: useUncalibrated for calibrated (0) or
+// uncalibrated (1: use stereoCalibrate(), 2: compute fundamental
+// matrix separately) stereo. Calibrate the cameras and display the
+// rectified results along with the computed disparity images.
+//
+
+
+/* License:
+   July 20, 2011
+   Standard BSD
 
    BOOK: It would be nice if you cited it:
-   Learning OpenCV: Computer Vision with the OpenCV Library
+   Learning OpenCV 2: Computer Vision with the OpenCV Library
      by Gary Bradski and Adrian Kaehler
-     Published by O'Reilly Media, October 3, 2008
+     Published by O'Reilly Media
  
    AVAILABLE AT: 
      http://www.amazon.com/Learning-OpenCV-Computer-Vision-Library/dp/0596516134
      Or: http://oreilly.com/catalog/9780596516130/
      ISBN-10: 0596516134 or: ISBN-13: 978-0596516130    
 
-   OTHER OPENCV SITES:
-   * The source code is on sourceforge at:
-     http://sourceforge.net/projects/opencvlibrary/
-   * The OpenCV wiki page (As of Oct 1, 2008 this is down for changing over servers, but should come back):
-     http://opencvlibrary.sourceforge.net/
+   Main OpenCV site
+   http://opencv.willowgarage.com/wiki/
    * An active user group is at:
      http://tech.groups.yahoo.com/group/OpenCV/
    * The minutes of weekly OpenCV development meetings are at:
      http://pr.willowgarage.com/wiki/OpenCV
-   ************************************************** */
+*/
 
 #include <opencv2/opencv.hpp>
 #include <iostream>
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <math.h>
 
 using namespace cv;
 using namespace std;
 
-//
-// Given a list of chessboard images, the number of corners (nx, ny)
-// on the chessboards, and a flag: useCalibrated for calibrated (0) or
-// uncalibrated (1: use cvStereoCalibrate(), 2: compute fundamental
-// matrix separately) stereo. Calibrate the cameras and display the
-// rectified results along with the computed disparity images.
-//
+void help()
+{
+	cout << "Demonstrate the use of stereoCalibrate\n" <<
+			"Usage: ./ch12_ex12_3\n" <<
+			"  This is equivalent to ./ch12_ex12_3 ch12_list.txt 9 6\n\n" <<
+			"  The list is a path/file list of stereo images and 9 is the width of the pattern and 6 is the height\n" <<
+			"  You can put in your own list of calibration images with different width and height\n" << endl;
+}
 static void
 StereoCalib(const char* imageList, int nx, int ny, bool useUncalibrated)
 {
@@ -282,8 +290,9 @@ StereoCalib(const char* imageList, int nx, int ny, bool useUncalibrated)
 
 int main(int argc, char** argv)
 {
+	help();
     int board_w = 9, board_h = 6;
-    const char* board_list = "ch12_list.txt";
+    const char* board_list = "";
     if( argc == 4 )
     {
         board_w = atoi(argv[1]);

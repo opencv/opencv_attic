@@ -36,7 +36,7 @@ using namespace std;
 
 void help(){
 cout << "\n"
-"Example of using cvMatchTemplate().  The call is:\n"
+"Example of using matchTemplate().  The call is:\n"
 "\n"
 "ch7_ex7_5 template image_to_be_searched\n"
 "\n"
@@ -49,18 +49,18 @@ cout << "\n"
 "         CV_TM_CCOEFF_NORMED 5\n"
 "\n"
 "The function prototype is:\n"
-"   cvMatchTemplate( const CvArr* image, const CvArr* templ,\n"
-"                              CvArr* result, int method );\n"
+"   matchTemplate( Mat image, Mat templ,\n"
+"                              Mat result, int method );\n"
 "      image\n"
 "         Image to be searched. It should be 8-bit or 32-bit floating-point. \n"
 "      templ\n"
-"         template which must not larger than the above image and is the same type as the image. \n"
+"         template which should not larger than the above image and is the same type as the image. \n"
 "      result\n"
 "         A map of comparison results; single-channel 32-bit floating-point. \n"
 "      method\n"
 "         See the above methods 0-5 starting with CM_TM_SQDIFF\n"
 "         \n"
-"	If image is W×H and templ is w×h then result must be W-w+1×H-h+1.		\n"
+"	If image is W×H and templ is w×h then result will be W-w+1×H-h+1.		\n"
 "\n";
 }
 

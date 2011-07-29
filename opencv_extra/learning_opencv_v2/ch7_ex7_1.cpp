@@ -44,7 +44,7 @@ int main( int argc, char** argv )
     //
     Mat hsv; cvtColor(src, hsv, CV_BGR2HSV);
 
-    float h_ranges[] = {0, 180};
+    float h_ranges[] = {0, 180}; //hue is [0, 180]
     float s_ranges[] = {0, 255};
     const float* ranges[] = {h_ranges, s_ranges};
     int histSize[] = {30, 32}, ch[] = {0, 1};
@@ -58,7 +58,7 @@ int main( int argc, char** argv )
     int scale = 10;
     Mat hist_img(histSize[0]*scale, histSize[1]*scale, CV_8UC3);
     
-    // Visualize our histogram.
+    // Draw our histogram.
     for( int h = 0; h < histSize[0]; h++ )
         for( int s = 0; s < histSize[1]; s++ )
         {
