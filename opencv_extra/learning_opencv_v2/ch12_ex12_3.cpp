@@ -241,13 +241,13 @@ StereoCalib(const char* imageList, int nx, int ny, bool useUncalibrated)
         else
             pair.create( imageSize.height*2, imageSize.width, CV_8UC3 );
 //Setup for finding stereo corrrespondences
-        StereoBM stereo(StereoBM::BASIC_PRESET, 128, 31);
+        /*StereoBM stereo(StereoBM::BASIC_PRESET, 128, 31);
         stereo.state->preFilterSize=41;
         stereo.state->preFilterCap=31;
         stereo.state->minDisparity=-64;
         stereo.state->textureThreshold=10;
-        stereo.state->uniquenessRatio=15;
-        //StereoSGBM stereo(-64, 128, 21, 10, 100, 0, 0, 0, 400, 16, true);
+        stereo.state->uniquenessRatio=15;*/
+        StereoSGBM stereo(-64, 128, 11, 100, 1000, 32, 0, 15, 1000, 16, true);
 
         for( i = 0; i < nframes; i++ )
         {
