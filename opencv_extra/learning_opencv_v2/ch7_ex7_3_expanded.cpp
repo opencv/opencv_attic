@@ -144,38 +144,33 @@ int main( int argc, char** argv ) {
 	//Compare the histogram src0 vs 1, vs 2, vs 3, vs 4
 	cout << "Comparison:\nCorr                 Chi                 Intersect          Bhat\n" << endl;
 	for(i=1; i<5; ++i){//For histogram
-		cout << "Hist[0] vs: Hist["<<i<<"]: " << endl;;
+		cout << "Hist[0] vs Hist["<<i<<"]: " << endl;;
 		for(int j=0; j<4; ++j) { //For comparision type
 			cout << "method["<<j<<"]: " << compareHist(hist[0],hist[i],j) << "  ";
 		}
 		cout << endl;
 	}
-//	//Oi Vey, parse histogram to earth movers signatures
-//	//		CvRNG rng_state = cvRNG(0xffffffff); //Tested random bins
-//	CvMat* sig[5];
-//	int numrows = h_bins*s_bins;
-//	int numcols = 3; //value,i,j
-//	for(i=0; i<5; ++i){
-//		sig[i] = cvCreateMat(numrows, 3, CV_32FC1);
-//		//fill it
-//		float sum = 0.0;
-//		for( int h = 0; h < h_bins; h++ ) {
-//			for( int s = 0; s < s_bins; s++ ) {
-//				float bin_val = cvQueryHistValue_2D( hist[i], h, s );
-//				cvSet2D(sig[i],h*s_bins + s,0,cvScalar(bin_val,bin_val,bin_val)); //Point weight
-//				cvSet2D(sig[i],h*s_bins + s,1,cvScalar(h)); //Coord 1
-//				cvSet2D(sig[i],h*s_bins + s,2,cvScalar(s)); //Coord 2
-//			}
-//		}
-//	}
-//	//Do EMD AND REPORT
-//	printf("EMD: ");
-//	for(i=1; i<5; ++i){
-//		float emd = cvCalcEMD2(sig[0],sig[i],CV_DIST_L2);
-//		printf("%f; \n",emd);
-//	}
-//	printf("\n");
+    
+    //Do EMD AND REPORT
+    vector<Mat> sig(5);
+    cout << "\nEMD: " << endl;
+    for( i=0; i<5; ++i) {
+        //Oi Vey, parse histogram to earth movers signatures
+        vector<Vec3f> sigv;
+        // renormalize histogram to make the bin weights sum to 1.
+        normalize(hist[i], hist[i], 1, 0, NORM_L1);
+        for( int h = 0; h < h_bins; h++ )
+            for( int s = 0; s < s_bins; s++ ) {
+                float bin_val = hist[i].at<float>(h, s);
+                if( bin_val != 0 )
+                    sigv.push_back(Vec3f(bin_val, (float)h, (float)s));
+            }
+        // make Nx3 32fC1 matrix, where N is the number of non-zero histogram bins
+        sig[i] = Mat(sigv).clone().reshape(1);
+        if( i > 0 )
+            cout << "Hist[0] vs Hist[" << i << "]: " <<
+                EMD(sig[0], sig[i], CV_DIST_L2) << endl;
+    }
 
 	waitKey(0);
-
 }
