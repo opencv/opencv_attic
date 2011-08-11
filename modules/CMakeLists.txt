@@ -1,12 +1,5 @@
-if(ANDROID)
-  ADD_DEFINITIONS(-DGTEST_HAS_STD_WSTRING=0)
-  if(ANDROID_API_LEVEL LESS 8)
-    ADD_DEFINITIONS(-DGTEST_HAS_CLONE=0)
-  endif()
-  
-  IF(WITH_ANDROID_CAMERA)
-      add_subdirectory(androidcamera)
-  endif()
+if(ANDROID AND WITH_ANDROID_CAMERA)
+    add_subdirectory(androidcamera)
 endif()
 
 add_subdirectory(calib3d)
@@ -17,6 +10,7 @@ add_subdirectory(flann)
 if(BUILD_TESTS)
   add_subdirectory(ts)
 endif()
+
 add_subdirectory(highgui)
 add_subdirectory(imgproc)
 add_subdirectory(legacy)
