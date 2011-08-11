@@ -328,6 +328,7 @@ endif()
 # Build tests:
 # ===================================================
 set(BUILD_TESTS ON CACHE BOOL "Build tests")
+set(BUILD_PERF_TESTS OFF CACHE BOOL "Build performance tests")
 
 # Build 3rdparty libraries under unix
 # ===================================================
@@ -1715,8 +1716,9 @@ endif()
 # samples and tests
 status("")
 status("  Tests and samples:")
-status("    Tests:"    BUILD_TESTS     THEN YES ELSE NO)
-status("    Examples:" BUILD_EXAMPLES  THEN YES ELSE NO)
+status("    Tests:"             BUILD_TESTS       THEN YES ELSE NO)
+status("    Performance tests:" BUILD_PERF_TESTS  THEN YES ELSE NO)
+status("    Examples:"          BUILD_EXAMPLES    THEN YES ELSE NO)
 
 if(ANDROID)
    status("    Android tests:" BUILD_TESTS AND CAN_BUILD_ANDROID_PROJECTS THEN YES ELSE NO)

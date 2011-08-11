@@ -7,7 +7,7 @@ add_subdirectory(core)
 add_subdirectory(features2d)
 add_subdirectory(flann)
 
-if(BUILD_TESTS)
+if(BUILD_TESTS OR BUILD_PERF_TESTS)
   add_subdirectory(ts)
 endif()
 
