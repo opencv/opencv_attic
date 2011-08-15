@@ -4,4 +4,8 @@
 #include "opencv2/core/core.hpp"
 #include "opencv2/ts/ts.hpp"
 
+#if ANDROID
+#include <android/log.h>
+#endif
+
 #endif
