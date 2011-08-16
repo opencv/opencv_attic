@@ -44,7 +44,7 @@ protected:
     {
         WARMUP_READ,
         WARMUP_WRITE,
-        WARMUP_WRITERNG,
+        WARMUP_RNG,
         WARMUP_NONE
     };
 
@@ -65,7 +65,7 @@ protected:
         _declareHelper& out(cv::InputOutputArray a1, cv::InputOutputArray a2, cv::InputOutputArray a3, cv::InputOutputArray a4, int wtype = WARMUP_WRITE);
 
         _declareHelper& iterations(int n);
-        _declareHelper& time(int timeLimitSecs);
+        _declareHelper& time(double timeLimitSecs);
     private:
         TestBase* test;
         _declareHelper(TestBase* t);
@@ -83,7 +83,9 @@ protected:
     int getTotalOutputSize() const;
     void reportResults(bool toJUnitXML = false);
 
+    virtual void PerfTestBody() = 0;
 private:
+
     typedef std::vector<std::pair<int, cv::Size> > SizeVector;
     typedef std::vector<int64> TimeVector;
     SizeVector inputData;
@@ -246,17 +248,17 @@ TestBase::_declareHelper& TestBase::_declareHelper::iterations(int n)
     return *this;
 }
 
-TestBase::_declareHelper& TestBase::_declareHelper::time(int timeLimitSecs)
+TestBase::_declareHelper& TestBase::_declareHelper::time(double timeLimitSecs)
 {
     test->times.clear();
     test->currentIter = (unsigned int)-1;
-    test->timeLimit = timeLimitSecs * (int64)cv::getTickFrequency();
+    test->timeLimit = (int64)(timeLimitSecs * cv::getTickFrequency());
     return *this;
 }
 
 bool TestBase::next()
 {
-    return ++currentIter < nIters && totalTime < timeLimit;
+    return ++currentIter != nIters && totalTime < timeLimit;
 }
 
 void TestBase::warmup(cv::Mat m, int wtype)
@@ -269,12 +271,22 @@ void TestBase::warmup(cv::Mat m, int wtype)
     case WARMUP_WRITE:
         m.reshape(1).setTo(cv::Scalar::all(0));
         return;
-    case WARMUP_WRITERNG:
+    case WARMUP_RNG:
+    {
+        if (m.depth() < CV_32F)
         {
+            int minmax[] = {0, 256};
+            cv::Mat mr = cv::Mat(m.rows, m.cols * m.elemSize(), CV_8U, m.ptr(), m.step[0]);
+            cv::randu(mr, cv::Mat(1, 1, CV_32S, minmax), cv::Mat(1, 1, CV_32S, minmax + 1));
+        }
+        else
+        {
+            double minmax[] = {-DBL_MAX, DBL_MAX};
             cv::Mat mr = m.reshape(1);
-            cv::randu(mr, cv::Scalar::all(-DBL_MAX), cv::Scalar::all(DBL_MAX));
+            cv::randu(mr, cv::Mat(1, 1, CV_64F, minmax), cv::Mat(1, 1, CV_64F, minmax + 1));
         }
         return;
+    }
     default:
         return;
     }
@@ -383,7 +395,7 @@ void TestBase::reportResults(bool toJUnitXML)
     }
     else
     {
-        LOGD("samples = %7d", times.size());
+        LOGD("samples = %7d", (int)times.size());
         LOGD("min     = %7lld = %0.2fms", min, min * 1000.0 / freq);
         LOGD("median  = %7lld = %0.2fms", median, median * 1000.0 / freq);
         LOGD("gmean   = %7.0f = %0.2fms", gmean, gmean * 1000.0 / freq);
@@ -407,16 +419,31 @@ void TestBase::TearDown()
     if (times.size() < 1)
         FAIL() << "No time measurements was performed. startTimer() and stopTimer() commands are required for performance tests.";
 
+    if (HasFailure()) return;
     reportResults(true);
     reportResults(false);
 }
 
-#define PERF_TEST(fixture, testname) TEST_F(fixture, testname)
-#define PERF_TEST_P(fixture, testname) TEST_P(fixture, testname)
-#define INSTANTIATE_PERF_TEST_P(fixture, params) INSTANTIATE_TEST_CASE_P(/*none*/, fixture, params)
-#define INSTANTIATE_PERF_TEST_CASE_P(case_name, fixture, params) INSTANTIATE_TEST_CASE_P(case_name, fixture, params)
+#define PERF_TEST(fixture, testname) \
+class GTEST_TEST_CLASS_NAME_(fixture ## _perf_proxy, testname) : public fixture {\
+ public:\
+  GTEST_TEST_CLASS_NAME_(fixture ## _perf_proxy, testname)() {}\
+ protected:\
+  virtual void PerfTestBody();\
+};\
+GTEST_TEST_(fixture, testname, GTEST_TEST_CLASS_NAME_(fixture ## _perf_proxy, testname), ::testing::internal::GetTypeId<fixture>()) {\
+    try {\
+        PerfTestBody();\
+    }catch(cv::Exception e) { FAIL() << "Expected: PerfTestBody() doesn't throw an exception.\n  Actual: it throws:\n  " << e.what(); }\
+    catch(...) { FAIL() << "Expected: PerfTestBody() doesn't throw an exception.\n  Actual: it throws."; }\
+}\
+void GTEST_TEST_CLASS_NAME_(fixture ## _perf_proxy, testname)::PerfTestBody()
 
-#define TEST_CYCLE(n) for(declare().iterations(n); startTimer(), next(); stopTimer())
+//#define PERF_TEST_P(fixture, testname) TEST_P(fixture, testname)
+//#define INSTANTIATE_PERF_TEST_P(fixture, params) INSTANTIATE_TEST_CASE_P(/*none*/, fixture, params)
+//#define INSTANTIATE_PERF_TEST_CASE_P(case_name, fixture, params) INSTANTIATE_TEST_CASE_P(case_name, fixture, params)
+
+#define TEST_CYCLE(n) for(declare.iterations(n); startTimer(), next(); stopTimer())
 #define SIMPLE_TEST_CYCLE() for(; startTimer(), next(); stopTimer())
 
 }//namespace perf
@@ -436,26 +463,23 @@ typedef perf::TestBase2 AddTest2;
 
 PERF_TEST(AddTest, third)
 {
-    cv::Mat b(perf::sz720p, CV_8U, cv::Scalar(10));
-    cv::Mat a(perf::sz720p, CV_8U, cv::Scalar(20));
-    cv::Mat c(perf::sz720p, CV_8U, cv::Scalar(0));
+    cv::Size sz = ::perf::sz720p;
+    cv::Mat b(sz, CV_8U, cv::Scalar(10));
+    cv::Mat a(sz, CV_8U, cv::Scalar(20));
+    cv::Mat c(sz, CV_8U, cv::Scalar(0));
 
-    declare.in(a, b).out(c).maxTime(2);
+    declare.in(a, b, WARMUP_RNG)
+        .out(c, WARMUP_RNG)
+        .time(0.5);
 
     SIMPLE_TEST_CYCLE() cv::add(a, b, c);
-//    while(next())
-//    {
-//        startTimer();
-//        cv::add(a, b, c);
-//        stopTimer();
-//    }
 }
 
-PERF_TEST_P(AddTest2, DoesBlah) {
+/*PERF_TEST_P(AddTest2, DoesBlah) {
   cv::Size s = GetParam();
   printf("%dx%d\n", s.width, s.height);
   printf("%s\n", ::testing::PrintToString(s).c_str());
-}
+}*/
 
 //INSTANTIATE_PERF_TEST_P(AddTest2, SZ_ALL_HD);
 //INSTANTIATE_PERF_TEST_CASE_P(qqq, AddTest2, SZ_ALL_GA);
