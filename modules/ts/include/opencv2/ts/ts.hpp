@@ -7,6 +7,10 @@
 
 #include <stdarg.h> // for va_list
 
+#if _MSC_VER >= 1200
+#pragma warning( disable: 4251 4275 4355 4127 )
+#endif
+
 #include "opencv2/ts/ts_gtest.h"
 #include "opencv2/core/core.hpp"
 
