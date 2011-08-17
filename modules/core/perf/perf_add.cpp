@@ -30,6 +30,25 @@ const cv::Size sz1080p = cv::Size(1920, 1080);
 #define SZ_ALL_VGA ::testing::Values(::perf::szQVGA, ::perf::szVGA, ::perf::szSVGA)
 #define SZ_ALL_GA  ::testing::Values(::perf::szQVGA, ::perf::szVGA, ::perf::szSVGA, ::perf::szXGA, ::perf::szSXGA)
 #define SZ_ALL_HD  ::testing::Values(::perf::sznHD, ::perf::szqHD, ::perf::sz720p, ::perf::sz1080p)
+#define SZ_ALL  ::testing::Values(::perf::szQVGA, ::perf::szVGA, ::perf::szSVGA, ::perf::szXGA, ::perf::szSXGA, ::perf::sznHD, ::perf::szqHD, ::perf::sz720p, ::perf::sz1080p)
+
+#define SZ_TYPICAL  ::testing::Values(::perf::szVGA, ::perf::szqHD, ::perf::sz720p, cv::Size(127,63))
+
+typedef struct performance_metrics
+{
+    size_t bytesIn;
+    size_t bytesOut;
+    unsigned int samples;
+    unsigned int outliers;
+    double gmean;
+    double mean;
+    double stddev;
+    double median;
+    double min;
+    double frequency;
+
+    performance_metrics();
+} performance_metrics;
 
 class TestBase: public ::testing::Test
 {
@@ -79,12 +98,18 @@ protected:
     _declareHelper declare;
     bool next();
 
-    int getTotalInputSize() const;
-    int getTotalOutputSize() const;
-    void reportResults(bool toJUnitXML = false);
+    performance_metrics& calcMetrics();
+    void reportMetrics(bool toJUnitXML = false);
 
     virtual void PerfTestBody() = 0;
+
 private:
+
+    performance_metrics metrics;
+    void validateMetrics();
+
+    unsigned int getTotalInputSize() const;
+    unsigned int getTotalOutputSize() const;
 
     typedef std::vector<std::pair<int, cv::Size> > SizeVector;
     typedef std::vector<int64> TimeVector;
@@ -94,8 +119,8 @@ private:
     int64 lastTime;
     int64 totalTime;
     int64 timeLimit;
-    size_t nIters;
-    size_t currentIter;
+    unsigned int nIters;
+    unsigned int currentIter;
 
     static int64 timeLimitDefault;
 
@@ -104,19 +129,62 @@ private:
     static cv::Size getSize(cv::InputArray a);
     static void declareArray(SizeVector& sizes, cv::InputOutputArray a, int wtype = 0);
 
+    static int64 _timeadjustment;
+    static int64 _calibrate();
+
     friend class _declareHelper;
 };
 
 class TestBase2: public TestBase, public ::testing::WithParamInterface<cv::Size>
 {
 public:
+    virtual void PerfTestBody() {}
 };
+
+performance_metrics::performance_metrics()
+{
+    bytesIn = 0;
+    bytesOut = 0;
+    samples = 0;
+    outliers = 0;
+    gmean = 0;
+    mean = 0;
+    stddev = 0;
+    median = 0;
+    min = 0;
+    frequency = 0;
+}
 
 #if ANDROID
 int64 TestBase::timeLimitDefault = 20 * (int64)cv::getTickFrequency();
 #else
 int64 TestBase::timeLimitDefault = 10 * (int64)cv::getTickFrequency();
 #endif
+
+int64 TestBase::_timeadjustment = TestBase::_calibrate();
+
+int64 TestBase::_calibrate()
+{
+    class _helper : public ::perf::TestBase
+    {
+        public:
+        performance_metrics& getMetrics() { return calcMetrics(); }
+        virtual void TestBody() {}
+        virtual void PerfTestBody()
+        {
+            SetUp();
+            for(declare.iterations(1000); startTimer(), next(); stopTimer()){}
+        }
+    };
+
+    _timeadjustment = 0;
+    _helper h;
+    h.PerfTestBody();
+    double compensation = h.getMetrics().min;
+    LOGD("Time comensation is %.0f", compensation);
+    return (int64)compensation;
+}
+
 
 TestBase::_declareHelper& TestBase::_declareHelper::in(cv::InputOutputArray a1, int wtype)
 {
@@ -258,7 +326,9 @@ TestBase::_declareHelper& TestBase::_declareHelper::time(double timeLimitSecs)
 
 bool TestBase::next()
 {
-    return ++currentIter != nIters && totalTime < timeLimit;
+    //printf("%u %u %d\n", currentIter, nIters, currentIter - nIters);
+    //if (++currentIter >= nIters) return false;
+    return ++currentIter < nIters && totalTime < timeLimit;
 }
 
 void TestBase::warmup(cv::Mat m, int wtype)
@@ -292,17 +362,17 @@ void TestBase::warmup(cv::Mat m, int wtype)
     }
 }
 
-int TestBase::getTotalInputSize() const
+unsigned int TestBase::getTotalInputSize() const
 {
-    int res = 0;
+    unsigned int res = 0;
     for (SizeVector::const_iterator i = inputData.begin(); i != inputData.end(); ++i)
         res += i->first;
     return res;
 }
 
-int TestBase::getTotalOutputSize() const
+unsigned int TestBase::getTotalOutputSize() const
 {
-    int res = 0;
+    unsigned int res = 0;
     for (SizeVector::const_iterator i = outputData.begin(); i != outputData.end(); ++i)
         res += i->first;
     return res;
@@ -319,88 +389,138 @@ void TestBase::stopTimer()
     if (lastTime == 0)
         ADD_FAILURE() << "stopTimer() is called before startTimer()";
     lastTime = time - lastTime;
-    times.push_back(lastTime);
     totalTime += lastTime;
+    lastTime -= _timeadjustment;
+    if (lastTime < 0) lastTime = 0;
+    times.push_back(lastTime);
     lastTime = 0;
 }
 
-void TestBase::reportResults(bool toJUnitXML)
+performance_metrics& TestBase::calcMetrics()
 {
-    int bytesin = getTotalInputSize();
-    int bytesout = getTotalOutputSize();
-    double freq = cv::getTickFrequency();
+    if ((metrics.samples == (unsigned int)currentIter) || times.size() == 0)
+        return metrics;
 
-    if (bytesin > 0)
-    {
-        if (toJUnitXML)
-            RecordProperty("bytesin", bytesin);
-        else
-            LOGD("bytesin  = %d", bytesin);
-    }
-    if (bytesout > 0)
-    {
-        if (toJUnitXML)
-            RecordProperty("bytesout", bytesout);
-        else
-            LOGD("bytesout = %d", bytesout);
-    }
+    metrics.bytesIn = getTotalInputSize();
+    metrics.bytesOut = getTotalOutputSize();
+    metrics.frequency = cv::getTickFrequency();
+    metrics.samples = (unsigned int)times.size();
+    metrics.outliers = 0;
 
-    if (toJUnitXML)
-        RecordProperty("frequency", cv::format("%.0f", freq).c_str());
-    else
-        LOGD("frequency = %.0f", freq);
+    std::sort(times.begin(), times.end());
 
-    double gmean = 0.0;
+    //estimate mean and stddev
     double mean = 0;
     double stddev = 0;
-    int64 median = 0;
-    int64 min = 0;
-    if (times.size() > 0)
+    int n = 0;
+    for(TimeVector::const_iterator i = times.begin(); i != times.end(); ++i)
     {
-        std::sort(times.begin(), times.end());
-
-        min = times[0];
-        median = times[times.size()/2];
-        if ((times.size() & 1) == 0)
-            median = (median + times[times.size()/2 - 1]) / 2;
-
-        int n = 0;
-        for(TimeVector::const_iterator i = times.begin(); i != times.end(); ++i)
-        {
-            double x = (double)*i;
-            if(x > DBL_EPSILON)
-                gmean += log(x);
-
-            n = n + 1;
-            double delta = x - mean;
-            mean += delta / n;
-            stddev += delta * (x - mean);
-        }
-
-        gmean = exp(gmean / times.size());
-        if (n > 1)
-            stddev = sqrt(stddev / (n - 1));
-        else
-            stddev = 0;
+        double x = (double)*i;
+        n = n + 1;
+        double delta = x - mean;
+        mean += delta / n;
+        stddev += delta * (x - mean);
     }
+    stddev = n > 1 ? sqrt(stddev / (n - 1)) : 0;
+
+    TimeVector::const_iterator start = times.begin();
+    TimeVector::const_iterator end = times.end();
+
+    //filter outliers
+    int offset = 0;
+    if (stddev > DBL_EPSILON)
+    {
+        double minout = mean - 3 * stddev;
+        double maxout = mean + 5 * stddev;
+        while(*start < minout) ++start, ++metrics.outliers, ++offset;
+        do --end, ++metrics.outliers; while(*end > maxout);
+        ++end, --metrics.outliers;
+    }
+
+    metrics.min = (double)*start;
+    //calc final metrics
+    n = 0;
+    mean = 0;
+    stddev = 0;
+    double gmean = 0.0;
+    for(; start != end; ++start)
+    {
+        double x = (double)*start;
+        if(x > DBL_EPSILON) gmean += log(x);
+        n = n + 1;
+        double delta = x - mean;
+        mean += delta / n;
+        stddev += delta * (x - mean);
+    }
+
+    metrics.mean = mean;
+    metrics.gmean = exp(gmean / n);
+    metrics.stddev = n > 1 ? sqrt(stddev / (n - 1)) : 0;
+    metrics.median = n % 2
+            ? (double)times[offset + n / 2]
+            : 0.5 * (times[offset + n / 2] + times[offset + n / 2 - 1]);
+
+    return metrics;
+}
+
+void TestBase::validateMetrics()
+{
+    performance_metrics& m = calcMetrics();
+
+    if (HasFailure()) return;
+
+    ASSERT_GE(m.samples, 1u)
+      << "No time measurements was performed.\nstartTimer() and stopTimer() commands are required for performance tests.";
+
+    EXPECT_GE(m.samples, 10u)
+      << "Only a few samples are collected.\nPlease increase number of iterations or/and time limit to get reliable performance measurements.";
+
+    if (m.stddev > DBL_EPSILON)
+    {
+        EXPECT_GT(m.min, 2 * m.stddev)
+          << "Test results are not reliable (deviation is bigger than a half of measured time interval).";
+    }
+
+    EXPECT_LE(m.outliers, m.samples * 0.03)
+      << "Test results are not reliable (too many outliers).";
+}
+
+void TestBase::reportMetrics(bool toJUnitXML)
+{
+    performance_metrics& m = calcMetrics();
 
     if (toJUnitXML)
     {
-        RecordProperty("samples", (int)times.size());
-        RecordProperty("min", cv::format("%lld", min).c_str());
-        RecordProperty("median", cv::format("%lld", median).c_str());
-        RecordProperty("gmean", cv::format("%.0f", gmean).c_str());
-        RecordProperty("mean", cv::format("%.0f", mean).c_str());
-        RecordProperty("stddev", cv::format("%.0f", stddev).c_str());
+        RecordProperty("bytesIn", (int)m.bytesIn);
+        RecordProperty("bytesOut", (int)m.bytesOut);
+        RecordProperty("samples", (int)m.samples);
+        RecordProperty("outliers", (int)m.outliers);
+        RecordProperty("frequency", cv::format("%.0f", m.frequency).c_str());
+        RecordProperty("min", cv::format("%.0f", m.min).c_str());
+        RecordProperty("median", cv::format("%.0f", m.median).c_str());
+        RecordProperty("gmean", cv::format("%.0f", m.gmean).c_str());
+        RecordProperty("mean", cv::format("%.0f", m.mean).c_str());
+        RecordProperty("stddev", cv::format("%.0f", m.stddev).c_str());
     }
     else
     {
-        LOGD("samples = %7d", (int)times.size());
-        LOGD("min     = %7lld = %0.2fms", min, min * 1000.0 / freq);
-        LOGD("median  = %7lld = %0.2fms", median, median * 1000.0 / freq);
-        LOGD("gmean   = %7.0f = %0.2fms", gmean, gmean * 1000.0 / freq);
-        LOGD("mean    = %7.0f = %0.2fms", mean, mean * 1000.0 / freq);
-        LOGD("stddev  = %7.0f = %0.2fms", stddev, stddev * 1000.0 / freq);
+        const ::testing::TestInfo* const test_info = ::testing::UnitTest::GetInstance()->current_test_info();
+        const char* type_param = test_info->type_param();
+        const char* value_param = test_info->value_param();
+
+        if (type_param)  LOGD("type      =%11s", type_param);
+        if (value_param) LOGD("param     =%11s", value_param);
+
+        LOGD("bytesIn   =%11lu", m.bytesIn);
+        LOGD("bytesOut  =%11lu", m.bytesOut);
+        LOGD("samples   =%11u",  m.samples);
+        LOGD("outliers  =%11u",  m.outliers);
+        LOGD("frequency =%11.0f", m.frequency);
+        LOGD("min       =%11.0f = %.2fms", m.min, m.min * 1e3 / m.frequency);
+        LOGD("median    =%11.0f = %.2fms", m.median, m.median * 1e3 / m.frequency);
+        LOGD("gmean     =%11.0f = %.2fms", m.gmean, m.gmean * 1e3 / m.frequency);
+        LOGD("mean      =%11.0f = %.2fms", m.mean, m.mean * 1e3 / m.frequency);
+        LOGD("stddev    =%11.0f = %.2fms", m.stddev, m.stddev * 1e3 / m.frequency);
     }
 }
 
@@ -416,32 +536,67 @@ void TestBase::SetUp()
 
 void TestBase::TearDown()
 {
-    if (times.size() < 1)
-        FAIL() << "No time measurements was performed. startTimer() and stopTimer() commands are required for performance tests.";
+//    reportMetrics();
 
-    if (HasFailure()) return;
-    reportResults(true);
-    reportResults(false);
+    validateMetrics();
+    reportMetrics(!HasFailure());
 }
 
-#define PERF_TEST(fixture, testname) \
-class GTEST_TEST_CLASS_NAME_(fixture ## _perf_proxy, testname) : public fixture {\
- public:\
-  GTEST_TEST_CLASS_NAME_(fixture ## _perf_proxy, testname)() {}\
- protected:\
-  virtual void PerfTestBody();\
-};\
-GTEST_TEST_(fixture, testname, GTEST_TEST_CLASS_NAME_(fixture ## _perf_proxy, testname), ::testing::internal::GetTypeId<fixture>()) {\
-    try {\
-        PerfTestBody();\
-    }catch(cv::Exception e) { FAIL() << "Expected: PerfTestBody() doesn't throw an exception.\n  Actual: it throws:\n  " << e.what(); }\
-    catch(...) { FAIL() << "Expected: PerfTestBody() doesn't throw an exception.\n  Actual: it throws."; }\
-}\
-void GTEST_TEST_CLASS_NAME_(fixture ## _perf_proxy, testname)::PerfTestBody()
+#define PERF_PROXY_NAMESPACE_NAME_(test_case_name, test_name) \
+  test_case_name##_##test_name##_perf_namespace_proxy
 
-//#define PERF_TEST_P(fixture, testname) TEST_P(fixture, testname)
-//#define INSTANTIATE_PERF_TEST_P(fixture, params) INSTANTIATE_TEST_CASE_P(/*none*/, fixture, params)
-//#define INSTANTIATE_PERF_TEST_CASE_P(case_name, fixture, params) INSTANTIATE_TEST_CASE_P(case_name, fixture, params)
+#define PERF_TEST(test_case_name, test_name)\
+    namespace PERF_PROXY_NAMESPACE_NAME_(test_case_name, test_name) {\
+     class TestBase {/*compile error for this class means that you are trying to use perf::TestBase as a fixture*/};\
+     class test_case_name : public ::perf::TestBase {\
+      public:\
+       test_case_name() {}\
+      protected:\
+       virtual void PerfTestBody();\
+     };\
+     TEST_F(test_case_name, test_name){\
+      try {\
+       PerfTestBody();\
+      }catch(cv::Exception e) { FAIL() << "Expected: PerfTestBody() doesn't throw an exception.\n  Actual: it throws:\n  " << e.what(); }\
+      catch(...) { FAIL() << "Expected: PerfTestBody() doesn't throw an exception.\n  Actual: it throws."; }\
+     }\
+    }\
+    void PERF_PROXY_NAMESPACE_NAME_(test_case_name, test_name)::test_case_name::PerfTestBody()
+
+#define PERF_TEST_F(fixture, testname) \
+    namespace PERF_PROXY_NAMESPACE_NAME_(fixture, testname) {\
+     class TestBase {/*compile error for this class means that you are trying to use perf::TestBase as a fixture*/};\
+     class fixture : public ::fixture {\
+      public:\
+       fixture() {}\
+      protected:\
+       virtual void PerfTestBody();\
+     };\
+     TEST_F(fixture, testname){\
+      try {\
+       PerfTestBody();\
+      }catch(cv::Exception e) { FAIL() << "Expected: PerfTestBody() doesn't throw an exception.\n  Actual: it throws:\n  " << e.what(); }\
+      catch(...) { FAIL() << "Expected: PerfTestBody() doesn't throw an exception.\n  Actual: it throws."; }\
+     }\
+    }\
+    void PERF_PROXY_NAMESPACE_NAME_(fixture, testname)::fixture::PerfTestBody()
+
+#define PERF_TEST_P(fixture, name, params)  \
+    class fixture##_##name : public ::fixture {\
+     public:\
+      fixture##_##name() {}\
+     protected:\
+      virtual void PerfTestBody();\
+    };\
+    TEST_P(fixture##_##name, name /*perf*/){\
+     try {\
+      PerfTestBody();\
+     }catch(cv::Exception e) { FAIL() << "Expected: PerfTestBody() doesn't throw an exception.\n  Actual: it throws:\n  " << e.what(); }\
+     catch(...) { FAIL() << "Expected: PerfTestBody() doesn't throw an exception.\n  Actual: it throws."; }\
+    }\
+    INSTANTIATE_TEST_CASE_P(/*none*/, fixture##_##name, params);\
+    void fixture##_##name::PerfTestBody()
+
 
 #define TEST_CYCLE(n) for(declare.iterations(n); startTimer(), next(); stopTimer())
 #define SIMPLE_TEST_CYCLE() for(; startTimer(), next(); stopTimer())
@@ -458,10 +613,7 @@ void PrintTo(const Size& sz, ::std::ostream* os)
 
 }  // namespace cv
 
-typedef perf::TestBase AddTest;
-typedef perf::TestBase2 AddTest2;
-
-PERF_TEST(AddTest, third)
+/*PERF_TEST(math, add)
 {
     cv::Size sz = ::perf::sz720p;
     cv::Mat b(sz, CV_8U, cv::Scalar(10));
@@ -473,14 +625,65 @@ PERF_TEST(AddTest, third)
         .time(0.5);
 
     SIMPLE_TEST_CYCLE() cv::add(a, b, c);
-}
-
-/*PERF_TEST_P(AddTest2, DoesBlah) {
-  cv::Size s = GetParam();
-  printf("%dx%d\n", s.width, s.height);
-  printf("%s\n", ::testing::PrintToString(s).c_str());
 }*/
 
-//INSTANTIATE_PERF_TEST_P(AddTest2, SZ_ALL_HD);
-//INSTANTIATE_PERF_TEST_CASE_P(qqq, AddTest2, SZ_ALL_GA);
+typedef perf::TestBase2 math;
+
+PERF_TEST_P( math, add8u, SZ_TYPICAL) {
+    cv::Size sz = GetParam();
+
+    cv::Mat a(sz, CV_8U, cv::Scalar(20));
+    cv::Mat b(sz, CV_8U, cv::Scalar(10));
+    cv::Mat c(sz, CV_8U, cv::Scalar(0));
+
+    declare.in(a, b, WARMUP_RNG)
+        .out(c, WARMUP_RNG)
+        .time(0.5);
+
+    TEST_CYCLE(100) cv::add(a, b, c);
+}
+
+PERF_TEST_P( math, add8uc4, SZ_TYPICAL) {
+    cv::Size sz = GetParam();
+
+    cv::Mat a(sz, CV_8UC4, cv::Scalar(20));
+    cv::Mat b(sz, CV_8UC4, cv::Scalar(10));
+    cv::Mat c(sz, CV_8UC4, cv::Scalar(0));
+
+    declare.in(a, b, WARMUP_RNG)
+        .out(c, WARMUP_RNG)
+        .time(0.5);
+
+    TEST_CYCLE(100) cv::add(a, b, c);
+}
+
+PERF_TEST_P( math, DISABLED_sub8u, SZ_TYPICAL) {
+    cv::Size sz = GetParam();
+
+    cv::Mat a(sz, CV_8U, cv::Scalar(20));
+    cv::Mat b(sz, CV_8U, cv::Scalar(10));
+    cv::Mat c(sz, CV_8U, cv::Scalar(0));
+
+    declare.in(a, b, WARMUP_RNG)
+        .out(c, WARMUP_RNG)
+        .time(0.5);
+
+    TEST_CYCLE(100) cv::subtract(a, b, c);
+}
+
+PERF_TEST_P( math, sub8uc4, SZ_TYPICAL) {
+    cv::Size sz = GetParam();
+
+    cv::Mat a(sz, CV_8UC4, cv::Scalar(20));
+    cv::Mat b(sz, CV_8UC4, cv::Scalar(10));
+    cv::Mat c(sz, CV_8UC4, cv::Scalar(0));
+
+    declare.in(a, b, WARMUP_RNG)
+        .out(c, WARMUP_RNG)
+        .time(0.5);
+    ADD_FAILURE() << "just for test";
+    FAIL() << "just for fan";
+
+    TEST_CYCLE(100) cv::subtract(a, b, c);
+}
 
