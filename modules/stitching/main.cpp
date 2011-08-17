@@ -48,6 +48,7 @@
 // 3) Automatic Panoramic Image Stitching using Invariant Features. 
 //    Matthew Brown and David G. Lowe. 2007.
 
+#include <fstream>
 #include "precomp.hpp"
 #include "util.hpp"
 #include "warpers.hpp"
@@ -55,6 +56,7 @@
 #include "seam_finders.hpp"
 #include "motion_estimators.hpp"
 #include "exposure_compensate.hpp"
+#include "camera.hpp"
 
 using namespace std;
 using namespace cv;
@@ -79,10 +81,14 @@ void printUsage()
         "  --conf_thresh <float>\n"
         "      Threshold for two images are from the same panorama confidence.\n"
         "      The default is 1.0.\n"
-        "  --ba (ray|focal_ray)\n"
+        "  --ba (no|ray|focal_ray)\n"
         "      Bundle adjustment cost function. The default is 'focal_ray'.\n"
         "  --wave_correct (no|yes)\n"
         "      Perform wave effect correction. The default is 'yes'.\n"
+        "  --save_graph <file_name>\n"
+        "      Save matches graph represented in DOT language to <file_name> file.\n"
+        "      Labels description: Nm is number of matches, Ni is number of inliers,\n"
+        "      C is confidence.\n"
         "\nCompositing Flags:\n"
         "  --warp (plane|cylindrical|spherical)\n" 
         "      Warp surface type. The default is 'spherical'.\n"
@@ -100,7 +106,7 @@ void printUsage()
         "  --blend_strength <float>\n"
         "      Blending strength from [0,100] range. The default is 5.\n"
         "  --output <result_img>\n"
-        "      The default is 'result.png'.\n";
+        "      The default is 'result.jpg'.\n";
 }
 
 
@@ -114,13 +120,15 @@ double compose_megapix = -1;
 int ba_space = BundleAdjuster::FOCAL_RAY_SPACE;
 float conf_thresh = 1.f;
 bool wave_correct = true;
+bool save_graph = false;
+std::string save_graph_to;
 int warp_type = Warper::SPHERICAL;
 int expos_comp_type = ExposureCompensator::GAIN_BLOCKS;
 float match_conf = 0.65f;
 int seam_find_type = SeamFinder::GC_COLOR;
 int blend_type = Blender::MULTI_BAND;
 float blend_strength = 5;
-string result_name = "result.png";
+string result_name = "result.jpg";
 
 int parseCmdArgs(int argc, char** argv)
 {
@@ -180,7 +188,9 @@ int parseCmdArgs(int argc, char** argv)
         }
         else if (string(argv[i]) == "--ba")
         {
-            if (string(argv[i + 1]) == "ray")
+            if (string(argv[i + 1]) == "no")
+                ba_space = BundleAdjuster::NO;
+            else if (string(argv[i + 1]) == "ray")
                 ba_space = BundleAdjuster::RAY_SPACE;
             else if (string(argv[i + 1]) == "focal_ray")
                 ba_space = BundleAdjuster::FOCAL_RAY_SPACE;
@@ -207,6 +217,12 @@ int parseCmdArgs(int argc, char** argv)
                 cout << "Bad --wave_correct flag value\n";
                 return -1;
             }
+            i++;
+        }
+        else if (string(argv[i]) == "--save_graph")
+        {
+            save_graph = true;
+            save_graph_to = argv[i + 1];
             i++;
         }
         else if (string(argv[i]) == "--warp")
@@ -378,6 +394,14 @@ int main(int argc, char* argv[])
     matcher.releaseMemory();
     LOGLN("Pairwise matching, time: " << ((getTickCount() - t) / getTickFrequency()) << " sec");
 
+    // Check if we should save matches graph
+    if (save_graph)
+    {
+        LOGLN("Saving matches graph...");
+        ofstream f(save_graph_to.c_str());
+        f << matchesGraphAsString(img_names, pairwise_matches, conf_thresh);
+    }
+
     // Leave only images we are sure are from the same panorama
     vector<int> indices = leaveBiggestComponent(features, pairwise_matches, conf_thresh);
     vector<Mat> img_subset;
@@ -402,12 +426,9 @@ int main(int argc, char* argv[])
         return -1;
     }
 
-    LOGLN("Estimating rotations...");
-    t = getTickCount();
     HomographyBasedEstimator estimator;
     vector<CameraParams> cameras;
     estimator(features, pairwise_matches, cameras);
-    LOGLN("Estimating rotations, time: " << ((getTickCount() - t) / getTickFrequency()) << " sec");
 
     for (size_t i = 0; i < cameras.size(); ++i)
     {
@@ -417,11 +438,8 @@ int main(int argc, char* argv[])
         LOGLN("Initial focal length #" << indices[i]+1 << ": " << cameras[i].focal);
     }
 
-    LOG("Bundle adjustment");
-    t = getTickCount();
     BundleAdjuster adjuster(ba_space, conf_thresh);
     adjuster(features, pairwise_matches, cameras);
-    LOGLN("Bundle adjustment, time: " << ((getTickCount() - t) / getTickFrequency()) << " sec");
 
     // Find median focal length
     vector<double> focals;
@@ -435,15 +453,12 @@ int main(int argc, char* argv[])
 
     if (wave_correct)
     {
-        LOGLN("Wave correcting...");
-        t = getTickCount();
         vector<Mat> rmats;
         for (size_t i = 0; i < cameras.size(); ++i)
             rmats.push_back(cameras[i].R);
         waveCorrect(rmats);
         for (size_t i = 0; i < cameras.size(); ++i)
             cameras[i].R = rmats[i];
-        LOGLN("Wave correcting, time: " << ((getTickCount() - t) / getTickFrequency()) << " sec");
     }
 
     LOGLN("Warping images (auxiliary)... ");
@@ -480,17 +495,11 @@ int main(int argc, char* argv[])
 
     LOGLN("Warping images, time: " << ((getTickCount() - t) / getTickFrequency()) << " sec");
 
-    LOGLN("Exposure compensation (feed)...");
-    t = getTickCount();
     Ptr<ExposureCompensator> compensator = ExposureCompensator::createDefault(expos_comp_type);
     compensator->feed(corners, images_warped, masks_warped);
-    LOGLN("Exposure compensation (feed), time: " << ((getTickCount() - t) / getTickFrequency()) << " sec");
 
-    LOGLN("Finding seams...");
-    t = getTickCount();
     Ptr<SeamFinder> seam_finder = SeamFinder::createDefault(seam_find_type);
     seam_finder->find(images_warped_f, corners, masks_warped);
-    LOGLN("Finding seams, time: " << ((getTickCount() - t) / getTickFrequency()) << " sec");
 
     // Release unused memory
     images.clear();
@@ -540,6 +549,7 @@ int main(int argc, char* argv[])
                     sz.width = cvRound(full_img_sizes[i].width * compose_scale);
                     sz.height = cvRound(full_img_sizes[i].height * compose_scale);
                 }
+
                 Rect roi = warper->warpRoi(sz, static_cast<float>(cameras[i].focal), cameras[i].R);
                 corners[i] = roi.tl();
                 sizes[i] = roi.size();
@@ -591,7 +601,7 @@ int main(int argc, char* argv[])
             {
                 FeatherBlender* fb = dynamic_cast<FeatherBlender*>(static_cast<Blender*>(blender));
                 fb->setSharpness(1.f/blend_width);
-                LOGLN("Feather blender, number of bands: " << fb->sharpness());
+                LOGLN("Feather blender, sharpness: " << fb->sharpness());
             }
             blender->prepare(corners, sizes);
         }

@@ -625,21 +625,24 @@ Matx<_Tp, m, n> operator * (const Matx<_Tp, m, l>& a, const Matx<_Tp, l, n>& b)
 template<typename _Tp> static inline
 Point_<_Tp> operator * (const Matx<_Tp, 2, 2>& a, const Point_<_Tp>& b)
 {
-    return Point_<_Tp>(a*Vec<_Tp,2>(b));
+    Matx<_Tp, 2, 1> tmp = a*Vec<_Tp,2>(b.x, b.y);
+    return Point_<_Tp>(tmp.val[0], tmp.val[1]);
 }
 
     
 template<typename _Tp> static inline
 Point3_<_Tp> operator * (const Matx<_Tp, 3, 3>& a, const Point3_<_Tp>& b)
 {
-    return Point3_<_Tp>(a*Vec<_Tp,3>(b));
+    Matx<_Tp, 3, 1> tmp = a*Vec<_Tp,3>(b.x, b.y, b.z);
+    return Point3_<_Tp>(tmp.val[0], tmp.val[1], tmp.val[2]);
 }    
 
 
 template<typename _Tp> static inline
 Point3_<_Tp> operator * (const Matx<_Tp, 3, 3>& a, const Point_<_Tp>& b)
 {
-    return Point3_<_Tp>(a*Vec<_Tp,3>(b.x, b.y, 1));
+    Matx<_Tp, 3, 1> tmp = a*Vec<_Tp,3>(b.x, b.y, 1);
+    return Point3_<_Tp>(tmp.val[0], tmp.val[1], tmp.val[2]);
 }    
 
     
@@ -653,7 +656,7 @@ Matx<_Tp, 4, 1> operator * (const Matx<_Tp, 4, 4>& a, const Point3_<_Tp>& b)
 template<typename _Tp> static inline
 Scalar operator * (const Matx<_Tp, 4, 4>& a, const Scalar& b)
 {
-    return Scalar(a*Matx<_Tp, 4, 1>(b));
+    return Scalar(a*Matx<_Tp, 4, 1>(b[0],b[1],b[2],b[3]));
 }    
     
 
@@ -1035,15 +1038,7 @@ template<typename _Tp, int cn> template<typename _T2> inline
 Vec<_Tp, cn>::Vec(const Matx<_Tp, cn, 1>& a, _T2 alpha, Matx_ScaleOp op)
 : Matx<_Tp, cn, 1>(a, alpha, op)
 {}    
-    
-template<typename _Tp, int cn> inline
-Vec<_Tp, cn>& Vec<_Tp, cn>::operator = (const Matx<_Tp, cn, 1>& m)
-{
-    for( int i = 0; i < cn; i++ )
-        this->val[i] = m.val[i];
-    return *this;
-}
-    
+        
 template<typename _Tp, int cn> inline Vec<_Tp, cn> Vec<_Tp, cn>::all(_Tp alpha)
 {
     Vec v;

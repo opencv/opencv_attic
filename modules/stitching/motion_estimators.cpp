@@ -40,27 +40,13 @@
 //
 //M*/
 #include <algorithm>
+#include <sstream>
 #include "autocalib.hpp"
 #include "motion_estimators.hpp"
 #include "util.hpp"
 
 using namespace std;
 using namespace cv;
-
-
-//////////////////////////////////////////////////////////////////////////////
-
-CameraParams::CameraParams() : focal(1), R(Mat::eye(3, 3, CV_64F)), t(Mat::zeros(3, 1, CV_64F)) {}
-
-CameraParams::CameraParams(const CameraParams &other) { *this = other; }
-
-const CameraParams& CameraParams::operator =(const CameraParams &other)
-{
-    focal = other.focal;
-    R = other.R.clone();
-    t = other.t.clone();
-    return *this;
-}
 
 
 //////////////////////////////////////////////////////////////////////////////
@@ -106,7 +92,31 @@ struct CalcRotation
 void HomographyBasedEstimator::estimate(const vector<ImageFeatures> &features, const vector<MatchesInfo> &pairwise_matches, 
                                         vector<CameraParams> &cameras)
 {
+    LOGLN("Estimating rotations...");
+    int64 t = getTickCount();
+
     const int num_images = static_cast<int>(features.size());
+
+#if 0
+    // Robustly estimate focal length from rotating cameras
+    vector<Mat> Hs;
+    for (int iter = 0; iter < 100; ++iter)
+    {
+        int len = 2 + rand()%(pairwise_matches.size() - 1);
+        vector<int> subset;
+        selectRandomSubset(len, pairwise_matches.size(), subset);
+        Hs.clear();
+        for (size_t i = 0; i < subset.size(); ++i)
+            if (!pairwise_matches[subset[i]].H.empty())
+                Hs.push_back(pairwise_matches[subset[i]].H);
+        Mat_<double> K;
+        if (Hs.size() >= 2)
+        {
+            if (calibrateRotatingCamera(Hs, K))
+                cin.get();
+        }
+    }
+#endif
 
     // Estimate focal length and set it for all cameras
     vector<double> focals;
@@ -120,6 +130,8 @@ void HomographyBasedEstimator::estimate(const vector<ImageFeatures> &features, c
     vector<int> span_tree_centers;
     findMaxSpanningTree(num_images, pairwise_matches, span_tree, span_tree_centers);
     span_tree.walkBreadthFirst(span_tree_centers[0], CalcRotation(num_images, pairwise_matches, cameras));
+
+    LOGLN("Estimating rotations, time: " << ((getTickCount() - t) / getTickFrequency()) << " sec");
 }
 
 
@@ -128,6 +140,12 @@ void HomographyBasedEstimator::estimate(const vector<ImageFeatures> &features, c
 void BundleAdjuster::estimate(const vector<ImageFeatures> &features, const vector<MatchesInfo> &pairwise_matches, 
                               vector<CameraParams> &cameras)
 {
+    if (cost_space_ == NO)
+        return;
+
+    LOG("Bundle adjustment");
+    int64 t = getTickCount();
+
     num_images_ = static_cast<int>(features.size());
     features_ = &features[0];
     pairwise_matches_ = &pairwise_matches[0];
@@ -229,6 +247,8 @@ void BundleAdjuster::estimate(const vector<ImageFeatures> &features, const vecto
     Mat R_inv = cameras[span_tree_centers[0]].R.inv();
     for (int i = 0; i < num_images_; ++i)
         cameras[i].R = R_inv * cameras[i].R;
+
+    LOGLN("Bundle adjustment, time: " << ((getTickCount() - t) / getTickFrequency()) << " sec");
 }
 
 
@@ -284,7 +304,7 @@ void BundleAdjuster::calcError(Mat &err)
                        p2.x * R2[3] + p2.y * R2[4] + p2.z * R2[5],
                        p2.x * R2[6] + p2.y * R2[7] + p2.z * R2[8]);
 
-            double mult = 1;
+            double mult = 1; // For cost_space_ == RAY_SPACE
             if (cost_space_ == FOCAL_RAY_SPACE)
                 mult = sqrt(f1 * f2);
             err.at<double>(3 * match_idx, 0) = mult * (d1.x - d2.x);
@@ -352,6 +372,9 @@ void BundleAdjuster::calcJacobian()
 
 void waveCorrect(vector<Mat> &rmats)
 {
+    LOGLN("Wave correcting...");
+    int64 t = getTickCount();
+
     float data[9];
     Mat r0(1, 3, CV_32F, data);
     Mat r1(1, 3, CV_32F, data + 3);
@@ -381,27 +404,95 @@ void waveCorrect(vector<Mat> &rmats)
 
     for (size_t i = 0; i < rmats.size(); ++i)
         rmats[i] = R * rmats[i];
+
+    LOGLN("Wave correcting, time: " << ((getTickCount() - t) / getTickFrequency()) << " sec");
 }
 
 
 //////////////////////////////////////////////////////////////////////////////
 
-vector<int> leaveBiggestComponent(vector<ImageFeatures> &features,  vector<MatchesInfo> &pairwise_matches, 
-                                  float conf_threshold)
+string matchesGraphAsString(vector<string> &pathes, vector<MatchesInfo> &pairwise_matches,
+                            float conf_threshold)
 {
-    const int num_images = static_cast<int>(features.size());
+    stringstream str;
+    str << "graph matches_graph{\n";
 
-    DjSets comps(num_images);
+    const int num_images = static_cast<int>(pathes.size());
+    set<pair<int,int> > span_tree_edges;
+    DisjointSets comps(num_images);
+
     for (int i = 0; i < num_images; ++i)
     {
         for (int j = 0; j < num_images; ++j)
         {
             if (pairwise_matches[i*num_images + j].confidence < conf_threshold)
                 continue;
-            int comp1 = comps.find(i);
-            int comp2 = comps.find(j);
+            int comp1 = comps.findSetByElem(i);
+            int comp2 = comps.findSetByElem(j);
+            if (comp1 != comp2)
+            {
+                comps.mergeSets(comp1, comp2);
+                span_tree_edges.insert(make_pair(i, j));
+            }
+        }
+    }
+
+    for (set<pair<int,int> >::const_iterator itr = span_tree_edges.begin();
+         itr != span_tree_edges.end(); ++itr)
+    {
+        pair<int,int> edge = *itr;
+        if (span_tree_edges.find(edge) != span_tree_edges.end())
+        {
+            string name_src = pathes[edge.first];
+            size_t prefix_len = name_src.find_last_of("/\\");
+            if (prefix_len != string::npos) prefix_len++; else prefix_len = 0;
+            name_src = name_src.substr(prefix_len, name_src.size() - prefix_len);
+
+            string name_dst = pathes[edge.second];
+            prefix_len = name_dst.find_last_of("/\\");
+            if (prefix_len != string::npos) prefix_len++; else prefix_len = 0;
+            name_dst = name_dst.substr(prefix_len, name_dst.size() - prefix_len);
+
+            int pos = edge.first*num_images + edge.second;
+            str << "\"" << name_src << "\" -- \"" << name_dst << "\""
+                << "[label=\"Nm=" << pairwise_matches[pos].matches.size()
+                << ", Ni=" << pairwise_matches[pos].num_inliers
+                << ", C=" << pairwise_matches[pos].confidence << "\"];\n";
+        }
+    }
+
+    for (size_t i = 0; i < comps.size.size(); ++i)
+    {
+        if (comps.size[comps.findSetByElem(i)] == 1)
+        {
+            string name = pathes[i];
+            size_t prefix_len = name.find_last_of("/\\");
+            if (prefix_len != string::npos) prefix_len++; else prefix_len = 0;
+            name = name.substr(prefix_len, name.size() - prefix_len);
+            str << "\"" << name << "\";\n";
+        }
+    }
+
+    str << "}";
+    return str.str();
+}
+
+vector<int> leaveBiggestComponent(vector<ImageFeatures> &features,  vector<MatchesInfo> &pairwise_matches, 
+                                  float conf_threshold)
+{
+    const int num_images = static_cast<int>(features.size());
+
+    DisjointSets comps(num_images);
+    for (int i = 0; i < num_images; ++i)
+    {
+        for (int j = 0; j < num_images; ++j)
+        {
+            if (pairwise_matches[i*num_images + j].confidence < conf_threshold)
+                continue;
+            int comp1 = comps.findSetByElem(i);
+            int comp2 = comps.findSetByElem(j);
             if (comp1 != comp2) 
-                comps.merge(comp1, comp2);
+                comps.mergeSets(comp1, comp2);
         }
     }
 
@@ -410,7 +501,7 @@ vector<int> leaveBiggestComponent(vector<ImageFeatures> &features,  vector<Match
     vector<int> indices;
     vector<int> indices_removed;
     for (int i = 0; i < num_images; ++i)
-        if (comps.find(i) == max_comp)
+        if (comps.findSetByElem(i) == max_comp)
             indices.push_back(i);    
         else
             indices_removed.push_back(i);
@@ -463,7 +554,7 @@ void findMaxSpanningTree(int num_images, const vector<MatchesInfo> &pairwise_mat
         }
     }
 
-    DjSets comps(num_images);
+    DisjointSets comps(num_images);
     span_tree.create(num_images);
     vector<int> span_tree_powers(num_images, 0);
 
@@ -471,11 +562,11 @@ void findMaxSpanningTree(int num_images, const vector<MatchesInfo> &pairwise_mat
     sort(edges.begin(), edges.end(), greater<GraphEdge>());
     for (size_t i = 0; i < edges.size(); ++i)
     {
-        int comp1 = comps.find(edges[i].from);
-        int comp2 = comps.find(edges[i].to);
+        int comp1 = comps.findSetByElem(edges[i].from);
+        int comp2 = comps.findSetByElem(edges[i].to);
         if (comp1 != comp2)
         {
-            comps.merge(comp1, comp2);
+            comps.mergeSets(comp1, comp2);
             span_tree.addEdge(edges[i].from, edges[i].to, edges[i].weight);
             span_tree.addEdge(edges[i].to, edges[i].from, edges[i].weight);
             span_tree_powers[edges[i].from]++;

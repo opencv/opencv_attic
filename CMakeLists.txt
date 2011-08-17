@@ -372,11 +372,11 @@ if(CMAKE_COMPILER_IS_GNUCXX)
 
     if(X86 OR X86_64)
         # enable everything, since the available set of instructions is checked at runtime
-        IF ("${CMAKE_GCC_REGEX_VERSION}" VERSION_GREATER 4.5)
+        #IF ("${CMAKE_GCC_REGEX_VERSION}" VERSION_GREATER 4.5)
             SET(_USE_FAST_MATH OFF)
-        ELSE()
-            SET(_USE_FAST_MATH ON)
-        ENDIF()
+        #ELSE()
+        #    SET(_USE_FAST_MATH ON)
+        #ENDIF()
         set(USE_FAST_MATH ${_USE_FAST_MATH} CACHE BOOL "Enable -ffast-math (not recommended for GCC 4.6.x)")
         set(ENABLE_SSE ON CACHE BOOL "Enable SSE instructions")
         set(ENABLE_SSE2 ON CACHE BOOL "Enable SSE2 instructions")
@@ -429,6 +429,7 @@ set(WITH_EIGEN ON CACHE BOOL "Include Eigen2/Eigen3 support")
 set(WITH_CUDA ON CACHE BOOL "Include NVidia Cuda Runtime support")
 
 set(WITH_OPENNI OFF CACHE BOOL "Include OpenNI support")
+set(WITH_XIMEA OFF CACHE BOOL "Include XIMEA cameras support")
 
 # ===================================================
 # Macros that checks if module have been installed.
@@ -1024,6 +1025,17 @@ set(HAVE_OPENNI_PRIME_SENSOR_MODULE FALSE)
 
 if(WITH_OPENNI)
     include(OpenCVFindOpenNI.cmake)
+endif()
+
+############################### XIMEA ################################
+set(HAVE_XIMEA FALSE)
+ 
+if(WITH_XIMEA)
+    include(OpenCVFindXimea.cmake)
+endif()
+
+if(XIMEA_FOUND)
+    set(HAVE_XIMEA TRUE)
 endif()
 
 ############################## Eigen ##############################
@@ -1633,6 +1645,7 @@ status("    OpenEXR:"   WITH_OPENEXR AND OPENEXR_FOUND     THEN YES             
 status("    OpenNI:"    HAVE_OPENNI                        THEN YES             ELSE NO)
 status("    OpenNI PrimeSensor Modules:"
                         HAVE_OPENNI_PRIME_SENSOR_MODULE    THEN YES             ELSE NO)
+status("    XIMEA:"     HAVE_XIMEA  THEN YES ELSE NO)
 
 # video
 status("")

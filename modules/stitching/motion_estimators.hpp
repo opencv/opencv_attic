@@ -45,18 +45,7 @@
 #include "precomp.hpp"
 #include "matchers.hpp"
 #include "util.hpp"
-
-struct CameraParams
-{
-    CameraParams();
-    CameraParams(const CameraParams& other);
-    const CameraParams& operator =(const CameraParams& other);
-
-    double focal; // Focal length
-    cv::Mat R; // Rotation
-    cv::Mat t; // Translation
-};
-
+#include "camera.hpp"
 
 class Estimator
 {
@@ -90,7 +79,7 @@ private:
 class BundleAdjuster : public Estimator
 {
 public:
-    enum { RAY_SPACE, FOCAL_RAY_SPACE };
+    enum { NO, RAY_SPACE, FOCAL_RAY_SPACE };
 
     BundleAdjuster(int cost_space = FOCAL_RAY_SPACE, float conf_thresh = 1.f) 
         : cost_space_(cost_space), conf_thresh_(conf_thresh) {}
@@ -121,6 +110,10 @@ void waveCorrect(std::vector<cv::Mat> &rmats);
 
 //////////////////////////////////////////////////////////////////////////////
 // Auxiliary functions
+
+// Returns matches graph representation in DOT language
+std::string matchesGraphAsString(std::vector<std::string> &pathes, std::vector<MatchesInfo> &pairwise_matches,
+                                 float conf_threshold);
 
 std::vector<int> leaveBiggestComponent(std::vector<ImageFeatures> &features, std::vector<MatchesInfo> &pairwise_matches, 
                                        float conf_threshold);

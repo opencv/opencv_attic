@@ -44,7 +44,7 @@
 using namespace std;
 using namespace cv;
 
-void DjSets::create(int n) 
+void DisjointSets::createOneElemSets(int n)
 {
     rank_.assign(n, 0);
     size.assign(n, 1);
@@ -54,7 +54,7 @@ void DjSets::create(int n)
 }
 
 
-int DjSets::find(int elem) 
+int DisjointSets::findSetByElem(int elem)
 {
     int set = elem;
     while (set != parent[set])
@@ -70,7 +70,7 @@ int DjSets::find(int elem)
 }
 
 
-int DjSets::merge(int set1, int set2) 
+int DisjointSets::mergeSets(int set1, int set2)
 {
     if (rank_[set1] < rank_[set2]) 
     {
@@ -148,3 +148,16 @@ Point resultTl(const vector<Point> &corners)
     return tl;
 }
 
+
+void selectRandomSubset(int count, int size, vector<int> &subset)
+{
+    subset.clear();
+    for (int i = 0; i < size; ++i)
+    {
+        if (randu<int>() % (size - i) < count)
+        {
+            subset.push_back(i);
+            count--;
+        }
+    }
+}
