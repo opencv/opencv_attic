@@ -1,9 +1,8 @@
 # This file is based off of the Platform/Darwin.cmake and Platform/UnixPaths.cmake
 # files which are included with CMake 2.8.4
-# It has been altered for iPhoneSimulator development
+# It has been altered for iOS development
 set (UNIX 1)
 set (APPLE 1)
-set (IPHONESIMULATOR 1)
 set (IOS 1)
 
 # Darwin versions:
@@ -24,8 +23,8 @@ if (NOT DEFINED HAVE_FLAG_SEARCH_PATHS_FIRST)
 	endif ("${DARWIN_MAJOR_VERSION}" GREATER 6)
 endif (NOT DEFINED HAVE_FLAG_SEARCH_PATHS_FIRST)
 # More desirable, but does not work:
-  #INCLUDE(CheckCXXCompilerFlag)
-  #CHECK_CXX_COMPILER_FLAG("-Wl,-search_paths_first" HAVE_FLAG_SEARCH_PATHS_FIRST)
+#INCLUDE(CheckCXXCompilerFlag)
+#CHECK_CXX_COMPILER_FLAG("-Wl,-search_paths_first" HAVE_FLAG_SEARCH_PATHS_FIRST)
 
 set (CMAKE_SHARED_LIBRARY_PREFIX "lib")
 set (CMAKE_SHARED_LIBRARY_SUFFIX ".dylib")
@@ -39,8 +38,9 @@ set (CMAKE_C_OSX_CURRENT_VERSION_FLAG "-current_version ")
 set (CMAKE_CXX_OSX_COMPATIBILITY_VERSION_FLAG "${CMAKE_C_OSX_COMPATIBILITY_VERSION_FLAG}")
 set (CMAKE_CXX_OSX_CURRENT_VERSION_FLAG "${CMAKE_C_OSX_CURRENT_VERSION_FLAG}")
 
-set (CMAKE_C_LINK_FLAGS "-headerpad_max_install_names")
-set (CMAKE_CXX_LINK_FLAGS "-headerpad_max_install_names")
+# Hidden visibilty is required for cxx on iOS 
+set (CMAKE_C_FLAGS "")
+set (CMAKE_CXX_FLAGS "-headerpad_max_install_names -fvisibility=hidden -fvisibility-inlines-hidden")
 
 if (HAVE_FLAG_SEARCH_PATHS_FIRST)
 	set (CMAKE_C_LINK_FLAGS "-Wl,-search_paths_first ${CMAKE_C_LINK_FLAGS}")
@@ -62,37 +62,42 @@ if (NOT DEFINED CMAKE_INSTALL_NAME_TOOL)
 	find_program(CMAKE_INSTALL_NAME_TOOL install_name_tool)
 endif (NOT DEFINED CMAKE_INSTALL_NAME_TOOL)
 
-# Setup iPhoneSimulator developer location
-set (_CMAKE_IPHONESIMULATOR_DEVELOPER_ROOT "/Developer/Platforms/iPhoneSimulator.platform/Developer")
-
+# Setup iOS developer location
+if (IPHONEOS)
+	set (_CMAKE_IOS_DEVELOPER_ROOT "/Developer/Platforms/iPhoneOS.platform/Developer")
+else ()
+	if (IPHONESIMULATOR)
+		set (_CMAKE_IOS_DEVELOPER_ROOT "/Developer/Platforms/iPhoneSimulator.platform/Developer")
+	endif ()
+endif ()
 # Find installed iOS SDKs
-file (GLOB _CMAKE_IPHONESIMULATOR_SDKS "${_CMAKE_IPHONESIMULATOR_DEVELOPER_ROOT}/SDKs/*")
+file (GLOB _CMAKE_IOS_SDKS "${_CMAKE_IOS_DEVELOPER_ROOT}/SDKs/*")
 
-# Find and use the most recent iPhoneSimulator sdk 
-if (_CMAKE_IPHONESIMULATOR_SDKS) 
-	list (SORT _CMAKE_IPHONESIMULATOR_SDKS)
-	list (REVERSE _CMAKE_IPHONESIMULATOR_SDKS)
-	list (GET _CMAKE_IPHONESIMULATOR_SDKS 0 _CMAKE_IPHONESIMULATOR_SDK_ROOT)
+# Find and use the most recent iOS sdk 
+if (_CMAKE_IOS_SDKS) 
+	list (SORT _CMAKE_IOS_SDKS)
+	list (REVERSE _CMAKE_IOS_SDKS)
+	list (GET _CMAKE_IOS_SDKS 0 _CMAKE_IOS_SDK_ROOT)
 
 	# Set the sysroot default to the most recent SDK
-	set (CMAKE_OSX_SYSROOT ${_CMAKE_IPHONESIMULATOR_SDK_ROOT} CACHE PATH "Sysroot used for iPhoneSimulator support")
+	set (CMAKE_OSX_SYSROOT ${_CMAKE_IOS_SDK_ROOT} CACHE PATH "Sysroot used for iOS support")
 
-	# set the architecture for iPhoneSimulator
-	set (CMAKE_OSX_ARCHITECTURES i386 CACHE string  "Build architecture for iPhoneSimulator")
+	# set the architecture for iOS - this env var sets armv6,armv7 and appears to be XCode's standard. The other found is ARCHS_UNIVERSAL_IPHONE_OS but that is armv7 only
+	set (CMAKE_OSX_ARCHITECTURES "$(ARCHS_STANDARD_32_BIT)" CACHE string  "Build architecture for iOS")
 
 	# Set the default based on this file and not the environment variable
-	set (CMAKE_FIND_ROOT_PATH ${_CMAKE_IPHONESIMULATOR_DEVELOPER_ROOT} ${_CMAKE_IPHONESIMULATOR_SDK_ROOT} CACHE string  "iPhoneSimulator library search path root")
+	set (CMAKE_FIND_ROOT_PATH ${_CMAKE_IOS_DEVELOPER_ROOT} ${_CMAKE_IOS_SDK_ROOT} CACHE string  "iOS library search path root")
 
 	# default to searching for frameworks first
 	set (CMAKE_FIND_FRAMEWORK FIRST)
 
 	# set up the default search directories for frameworks
 	set (CMAKE_SYSTEM_FRAMEWORK_PATH
-		${_CMAKE_IPHONESIMULATOR_SDK_ROOT}/System/Library/Frameworks
-		${_CMAKE_IPHONESIMULATOR_SDK_ROOT}/System/Library/PrivateFrameworks
-		${_CMAKE_IPHONESIMULATOR_SDK_ROOT}/Developer/Library/Frameworks
+		${_CMAKE_IOS_SDK_ROOT}/System/Library/Frameworks
+		${_CMAKE_IOS_SDK_ROOT}/System/Library/PrivateFrameworks
+		${_CMAKE_IOS_SDK_ROOT}/Developer/Library/Frameworks
 	)
-endif (_CMAKE_IPHONESIMULATOR_SDKS)
+endif (_CMAKE_IOS_SDKS)
 
 if ("${CMAKE_BACKWARDS_COMPATIBILITY}" MATCHES "^1\\.[0-6]$")
 	set (CMAKE_SHARED_MODULE_CREATE_C_FLAGS "${CMAKE_SHARED_MODULE_CREATE_C_FLAGS} -flat_namespace -undefined suppress")
@@ -119,6 +124,7 @@ set (CMAKE_LINK_DEPENDENT_LIBRARY_FILES 1)
 
 set (CMAKE_C_CREATE_SHARED_LIBRARY_FORBIDDEN_FLAGS -w)
 set (CMAKE_CXX_CREATE_SHARED_LIBRARY_FORBIDDEN_FLAGS -w)
+
 set (CMAKE_C_CREATE_SHARED_LIBRARY
 	"<CMAKE_C_COMPILER> <LANGUAGE_COMPILE_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS> <LINK_FLAGS> -o <TARGET> -install_name <TARGET_INSTALLNAME_DIR><TARGET_SONAME> <OBJECTS> <LINK_LIBRARIES>")
 set (CMAKE_CXX_CREATE_SHARED_LIBRARY
@@ -144,8 +150,8 @@ get_filename_component (_CMAKE_INSTALL_DIR "${_CMAKE_INSTALL_DIR}" PATH)
 # List common installation prefixes.  These will be used for all search types
 list (APPEND CMAKE_SYSTEM_PREFIX_PATH
 	# Standard
-	${_CMAKE_IPHONESIMULATOR_DEVELOPER_ROOT}/usr
-	${_CMAKE_IPHONESIMULATOR_SDK_ROOT}/usr
+	${_CMAKE_IOS_DEVELOPER_ROOT}/usr
+	${_CMAKE_IOS_SDK_ROOT}/usr
 
 	# CMake install location
 	"${_CMAKE_INSTALL_DIR}"

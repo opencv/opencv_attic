@@ -1,42 +1,24 @@
-message ( "Setting up iPhoneSimulator toolchain" )
+message (STATUS "Setting up iPhoneOS toolchain")
+set (IPHONESIMULATOR TRUE)
 
-set ( CMAKE_SYSTEM_NAME iPhoneSimulator )
-set ( CMAKE_SYSTEM_PROCESSOR i386)
+# Standard settings
+set (CMAKE_SYSTEM_NAME iOS)
+# Include extra modules for the iOS platform files
 set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/ios/cmake/Modules")
 
-set ( SDK_VERSION "4.3" )
-set ( DEVELOPER_ROOT "/Developer/Platforms/iPhoneSimulator.platform/Developer" )
-set ( SDK_ROOT "${DEVELOPER_ROOT}/SDKs/iPhoneSimulator${SDKVER}.sdk" )
-set ( ARCH "i386" )
-set ( CMAKE_OSX_SYSROOT "${SDK_ROOT}" )
-set ( CMAKE_OSX_ARCHITECTURES "${ARCH}" )
+# Force the compilers to gcc for iOS
+include (CMakeForceCompiler)
+CMAKE_FORCE_C_COMPILER (gcc gcc)
+CMAKE_FORCE_CXX_COMPILER (g++ g++)
 
-# Skip the platform compiler checks for cross compiling 
+# Skip the platform compiler checks for cross compiling
 set (CMAKE_CXX_COMPILER_WORKS TRUE)
 set (CMAKE_C_COMPILER_WORKS TRUE)
 
-set ( CMAKE_C_FLAGS "-m32 ${CMAKE_C_FLAGS}" CACHE STRING "c flags" )
-set ( CMAKE_CXX_FLAGS "-m32 ${CMAKE_CXX_FLAGS}" CACHE STRING "c++ flags" )
+# Search for programs in the build host directories
+SET(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM ONLY)
+#   for libraries and headers in the target directories
+SET(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+SET(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 
-set ( CMAKE_OSX_SYSROOT "${SDK_ROOT}" )
-set ( CMAKE_OSX_ARCHITECTURES "${ARCH}" )
-
-ADD_DEFINITIONS("-m32")
-ADD_DEFINITIONS("-arch i386")
-ADD_DEFINITIONS("-no-cpp-precomp")
-ADD_DEFINITIONS("--sysroot=${SDK_ROOT}")
-ADD_DEFINITIONS("-miphoneos-version-min=${SDK_VERSION}")
-
-INCLUDE_DIRECTORIES(SYSTEM "${SDK_ROOT}/usr/include")
-INCLUDE_DIRECTORIES(SYSTEM "${SDK_ROOT}/System/Library/Frameworks")
-
-LINK_DIRECTORIES("${SDK_ROOT}/usr/lib")
-LINK_DIRECTORIES("${SDK_ROOT}/System/Library/Frameworks")
-
-SET (CMAKE_FIND_ROOT_PATH "${SDK_ROOT}")
-SET (CMAKE_FIND_ROOT_PATH_MODE_PROGRAM BOTH)
-SET (CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
-SET (CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
-
-
-message ("iPhoneSimulator toolchain loaded")
+message (STATUS "iPhoneOS toolchain loaded")
