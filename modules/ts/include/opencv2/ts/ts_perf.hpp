@@ -143,6 +143,7 @@ class CV_EXPORTS Regression
 {
 public:
     static Regression add;
+    static void Init(const std::string& testSuitName, const std::string& ext = ".xml");
 
     Regression& operator() (const std::string& name, cv::InputArray array, double eps = DBL_EPSILON);
 
@@ -154,7 +155,8 @@ private:
     Regression& operator=(const Regression&);
 
     cv::RNG regRNG;//own random numbers generator to make collection and verification work identical
-    std::string storagePath;
+    std::string storageInPath;
+    std::string storageOutPath;
     cv::FileStorage storageIn;
     cv::FileStorage storageOut;
     cv::FileNode rootIn;
@@ -165,6 +167,7 @@ private:
     static bool isVector(cv::InputArray a);
     static double getElem(cv::Mat& m, int x, int y, int cn = 0);
 
+    void init(const std::string& testSuitName, const std::string& ext);
     void write(cv::InputArray array);
     void write(cv::Mat m);
     void verify(cv::FileNode node, cv::InputArray array, double eps);

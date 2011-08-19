@@ -99,13 +99,53 @@ cv::Mat MatInfo::makeMat(double v1, double v2, double v3, double v4) const
 
 Regression Regression::add;
 
+void Regression::Init(const std::string& testSuitName, const std::string& ext)
+{
+    add.init(testSuitName, ext);
+}
+
+void Regression::init(const std::string& testSuitName, const std::string& ext)
+{
+    if (!storageInPath.empty())
+    {
+        LOGE("Subsequent initialisation of Regression utility is not allowed.");
+        return;
+    }
+
+    const char *data_path_dir = getenv("OPENCV_TEST_DATA_PATH");
+    const char *path_separator = "/";
+
+    if (data_path_dir)
+    {
+        int len = strlen(data_path_dir)-1;
+        if (len < 0) len = 0;
+        std::string path_base = (data_path_dir[0] == 0 ? std::string(".") : std::string(data_path_dir))
+                + (data_path_dir[len] == '/' || data_path_dir[len] == '\\' ? "" : path_separator)
+                + "perf"
+                + path_separator;
+
+        storageInPath = path_base + testSuitName + ext;
+        storageOutPath = path_base + testSuitName;
+    }
+    else
+    {
+        storageInPath = testSuitName + ext;
+        storageOutPath = testSuitName;
+    }
+
+    if (storageIn.open(storageInPath, cv::FileStorage::READ))
+    {
+        rootIn = storageIn.root();
+        if (storageInPath.length() > 3 && storageInPath.substr(storageInPath.length()-3) == ".gz")
+            storageOutPath += "_new";
+        storageOutPath += ext;
+    }
+    else
+        storageOutPath = storageInPath;
+}
+
 Regression::Regression() : regRNG(809564)
 {
-    //const char *data_path_dir = getenv("OPENCV_TEST_DATA_PATH");
-
-    storagePath = "test.xml";
-    if (storageIn.open(storagePath, cv::FileStorage::READ))
-        rootIn = storageIn.root();
 }
 
 Regression::~Regression()
@@ -122,8 +162,21 @@ Regression::~Regression()
 
 cv::FileStorage& Regression::write()
 {
-    if (!storageOut.isOpened())
-        storageOut.open(storagePath, storageIn.isOpened() ? cv::FileStorage::APPEND : cv::FileStorage::WRITE);
+    if (!storageOut.isOpened() && !storageOutPath.empty())
+    {
+        int mode = (storageIn.isOpened() && storageInPath == storageOutPath)
+                ? cv::FileStorage::APPEND : cv::FileStorage::WRITE;
+        storageOut.open(storageOutPath, mode);
+        if (!storageOut.isOpened())
+        {
+            LOGE("Could not open \"%s\" file for writing", storageOutPath.c_str());
+            storageOutPath.clear();
+        }
+        else if (mode == cv::FileStorage::WRITE && !rootIn.empty())
+        {
+            //TODO: write content of rootIn node into the storageOut
+        }
+    }
     return storageOut;
 }
 
