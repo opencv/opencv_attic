@@ -427,13 +427,19 @@ performance_metrics::performance_metrics()
 /*****************************************************************************************\
 *                                   ::perf::TestBase
 \*****************************************************************************************/
+int64 TestBase::timeLimitDefault = 0;
+int64 TestBase::_timeadjustment = 0;
+
+void TestBase::Init()
+{
 #if ANDROID
-int64 TestBase::timeLimitDefault = 2 * (int64)cv::getTickFrequency();
+    timeLimitDefault = 2 * (int64)cv::getTickFrequency();
 #else
-int64 TestBase::timeLimitDefault = 1 * (int64)cv::getTickFrequency();
+    timeLimitDefault = 1 * (int64)cv::getTickFrequency();
 #endif
 
-int64 TestBase::_timeadjustment = TestBase::_calibrate();
+    _timeadjustment = _calibrate();
+}
 
 int64 TestBase::_calibrate()
 {
@@ -444,6 +450,17 @@ int64 TestBase::_calibrate()
         virtual void TestBody() {}
         virtual void PerfTestBody()
         {
+            //the whole system warmup
+            SetUp();
+            cv::Mat a(2048, 2048, CV_32S, cv::Scalar(1));
+            cv::Mat b(2048, 2048, CV_32S, cv::Scalar(2));
+            declare.time(30);
+            double s = 0;
+            for(declare.iterations(20); startTimer(), next(); stopTimer())
+                s+=a.dot(b);
+            declare.time(s);
+
+            //self calibration
             SetUp();
             for(declare.iterations(1000); startTimer(), next(); stopTimer()){}
         }
@@ -453,7 +470,7 @@ int64 TestBase::_calibrate()
     _helper h;
     h.PerfTestBody();
     double compensation = h.getMetrics().min;
-    LOGD("Time comensation is %.0f", compensation);
+    LOGD("Time compensation is %.0f", compensation);
     return (int64)compensation;
 }
 

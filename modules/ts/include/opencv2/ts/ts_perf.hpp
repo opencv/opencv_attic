@@ -206,6 +206,8 @@ class CV_EXPORTS TestBase: public ::testing::Test
 public:
     TestBase();
 
+    static void Init();
+
 protected:
     virtual void PerfTestBody() = 0;
 
@@ -420,6 +422,15 @@ CV_EXPORTS void PrintTo(const Size& sz, ::std::ostream* os);
     INSTANTIATE_TEST_CASE_P(/*none*/, fixture##_##name, params);\
     void fixture##_##name::PerfTestBody()
 
+
+#define CV_PERF_TEST_MAIN(testsuitname) \
+int main(int argc, char **argv)\
+{\
+    ::perf::Regression::Init(#testsuitname);\
+    ::perf::TestBase::Init();\
+    ::testing::InitGoogleTest(&argc, argv);\
+    return RUN_ALL_TESTS();\
+}
 
 #define TEST_CYCLE(n) for(declare.iterations(n); startTimer(), next(); stopTimer())
 #define SIMPLE_TEST_CYCLE() for(; startTimer(), next(); stopTimer())
