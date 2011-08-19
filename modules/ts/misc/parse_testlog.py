@@ -24,6 +24,32 @@ class TestInfo(object):
     def __str__(self):
         return '::'.join(filter(None, [self.fixture, self.type_param, self.value_param]))
 
+    def __cmp__(self, other):
+        r = cmp(self.fixture, other.fixture);
+        if r != 0:
+            return r
+        if self.type_param:
+            if other.type_param:
+                r = cmp(self.type_param, other.type_param);
+                if r != 0:
+                     return r
+            else:
+                return -1
+        else:
+            if other.type_param:
+                return 1
+        if self.value_param:
+            if other.value_param:
+                r = cmp(self.value_param, other.value_param);
+                if r != 0:
+                     return r
+            else:
+                return -1
+        else:
+            if other.value_param:
+                return 1
+        return 0
+
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
@@ -36,5 +62,5 @@ if __name__ == "__main__":
     for case in log.getElementsByTagName("testcase"):
         tests.append(TestInfo(case))
 
-    for t in tests:
+    for t in sorted(tests):
         t.dump()

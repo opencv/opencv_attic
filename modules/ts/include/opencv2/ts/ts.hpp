@@ -546,3 +546,4 @@ int main(int argc, char **argv) \
 
 #endif
 
+#include "ts_perf.hpp"
