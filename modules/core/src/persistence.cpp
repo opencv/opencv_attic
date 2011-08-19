@@ -134,7 +134,7 @@ cv::string cv::FileStorage::getDefaultObjectName(const string& _filename)
 
 namespace cv
 {
-#ifndef ANDROID //unsuported wcstombs on android
+//#ifndef ANDROID //unsuported wcstombs on android
 string fromUtf16(const WString& str)
 {
     cv::AutoBuffer<char> _buf(str.size()*4 + 1);
@@ -158,7 +158,7 @@ WString toUtf16(const string& str)
     buf[sz] = '\0';
     return WString(buf);
 }
-#endif
+//#endif
 }
 
 typedef struct CvGenericHash
@@ -2160,6 +2160,7 @@ icvXMLParse( CvFileStorage* fs )
     ptr = icvXMLSkipSpaces( fs, ptr, CV_XML_INSIDE_TAG );
 
     if( memcmp( ptr, "<?xml", 5 ) != 0 )
+
         CV_PARSE_ERROR( "Valid XML should start with \'<?xml ...?>\'" );
 
     ptr = icvXMLParseTag( fs, ptr, &key, &list, &tag_type );

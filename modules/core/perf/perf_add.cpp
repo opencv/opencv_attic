@@ -27,12 +27,135 @@ const cv::Size szqHD = cv::Size(960, 540);
 const cv::Size sz720p = cv::Size(1280, 720);
 const cv::Size sz1080p = cv::Size(1920, 1080);
 
+const cv::Size szODD = cv::Size(127, 61);
+
 #define SZ_ALL_VGA ::testing::Values(::perf::szQVGA, ::perf::szVGA, ::perf::szSVGA)
 #define SZ_ALL_GA  ::testing::Values(::perf::szQVGA, ::perf::szVGA, ::perf::szSVGA, ::perf::szXGA, ::perf::szSXGA)
 #define SZ_ALL_HD  ::testing::Values(::perf::sznHD, ::perf::szqHD, ::perf::sz720p, ::perf::sz1080p)
 #define SZ_ALL  ::testing::Values(::perf::szQVGA, ::perf::szVGA, ::perf::szSVGA, ::perf::szXGA, ::perf::szSXGA, ::perf::sznHD, ::perf::szqHD, ::perf::sz720p, ::perf::sz1080p)
 
-#define SZ_TYPICAL  ::testing::Values(::perf::szVGA, ::perf::szqHD, ::perf::sz720p, cv::Size(127,63))
+#define SZ_TYPICAL  ::testing::Values(::perf::szVGA, ::perf::szqHD, ::perf::sz720p, ::perf::szODD)
+
+typedef struct MatInfo
+{
+    enum {
+        Zeros,
+        Ones,
+        Eye,
+        Diag,
+        Fill,
+        Rng
+    };
+
+    cv::Size size;
+    int type;
+    int kind;
+    cv::Range roix, roiy;
+
+    MatInfo(cv::Size sz, int type = CV_8UC1, int kind = Fill, cv::Range roix = cv::Range::all(), cv::Range roiy = cv::Range::all());
+
+    cv::Mat makeMat() const;
+    cv::Mat makeMat(double v1, double v2 = 0, double v3 =0, double v4 = 0) const;
+
+} MatInfo, iMat;
+
+#define mQVGA8UC1(...)  ::perf::MatInfo(::perf::szQVGA,  CV_8UC1 , ## __VA_ARGS__)
+#define mVGA8UC1(...)   ::perf::MatInfo(::perf::szVGA,   CV_8UC1 , ## __VA_ARGS__)
+#define mSVGA8UC1(...)  ::perf::MatInfo(::perf::szSVGA,  CV_8UC1 , ## __VA_ARGS__)
+#define mXGA8UC1(...)   ::perf::MatInfo(::perf::szXGA,   CV_8UC1 , ## __VA_ARGS__)
+#define mSXGA8UC1(...)  ::perf::MatInfo(::perf::szSXGA,  CV_8UC1 , ## __VA_ARGS__)
+#define mnHD8UC1(...)   ::perf::MatInfo(::perf::sznHD,   CV_8UC1 , ## __VA_ARGS__)
+#define mqHD8UC1(...)   ::perf::MatInfo(::perf::szqHD,   CV_8UC1 , ## __VA_ARGS__)
+#define m720p8UC1(...)  ::perf::MatInfo(::perf::sz720p,  CV_8UC1 , ## __VA_ARGS__)
+#define m1080p8UC1(...) ::perf::MatInfo(::perf::sz1080p, CV_8UC1 , ## __VA_ARGS__)
+
+#define mQVGA8UC3(...)  ::perf::MatInfo(::perf::szQVGA,  CV_8UC3 , ## __VA_ARGS__)
+#define mVGA8UC3(...)   ::perf::MatInfo(::perf::szVGA,   CV_8UC3 , ## __VA_ARGS__)
+#define mSVGA8UC3(...)  ::perf::MatInfo(::perf::szSVGA,  CV_8UC3 , ## __VA_ARGS__)
+#define mXGA8UC3(...)   ::perf::MatInfo(::perf::szXGA,   CV_8UC3 , ## __VA_ARGS__)
+#define mSXGA8UC3(...)  ::perf::MatInfo(::perf::szSXGA,  CV_8UC3 , ## __VA_ARGS__)
+#define mnHD8UC3(...)   ::perf::MatInfo(::perf::sznHD,   CV_8UC3 , ## __VA_ARGS__)
+#define mqHD8UC3(...)   ::perf::MatInfo(::perf::szqHD,   CV_8UC3 , ## __VA_ARGS__)
+#define m720p8UC3(...)  ::perf::MatInfo(::perf::sz720p,  CV_8UC3 , ## __VA_ARGS__)
+#define m1080p8UC3(...) ::perf::MatInfo(::perf::sz1080p, CV_8UC3 , ## __VA_ARGS__)
+
+#define mQVGA8UC4(...)  ::perf::MatInfo(::perf::szQVGA,  CV_8UC4 , ## __VA_ARGS__)
+#define mVGA8UC4(...)   ::perf::MatInfo(::perf::szVGA,   CV_8UC4 , ## __VA_ARGS__)
+#define mSVGA8UC4(...)  ::perf::MatInfo(::perf::szSVGA,  CV_8UC4 , ## __VA_ARGS__)
+#define mXGA8UC4(...)   ::perf::MatInfo(::perf::szXGA,   CV_8UC4 , ## __VA_ARGS__)
+#define mSXGA8UC4(...)  ::perf::MatInfo(::perf::szSXGA,  CV_8UC4 , ## __VA_ARGS__)
+#define mnHD8UC4(...)   ::perf::MatInfo(::perf::sznHD,   CV_8UC4 , ## __VA_ARGS__)
+#define mqHD8UC4(...)   ::perf::MatInfo(::perf::szqHD,   CV_8UC4 , ## __VA_ARGS__)
+#define m720p8UC4(...)  ::perf::MatInfo(::perf::sz720p,  CV_8UC4 , ## __VA_ARGS__)
+#define m1080p8UC4(...) ::perf::MatInfo(::perf::sz1080p, CV_8UC4 , ## __VA_ARGS__)
+
+#define mQVGA32FC1(...)  ::perf::MatInfo(::perf::szQVGA,  CV_32FC1 , ## __VA_ARGS__)
+#define mVGA32FC1(...)   ::perf::MatInfo(::perf::szVGA,   CV_32FC1 , ## __VA_ARGS__)
+#define mSVGA32FC1(...)  ::perf::MatInfo(::perf::szSVGA,  CV_32FC1 , ## __VA_ARGS__)
+#define mXGA32FC1(...)   ::perf::MatInfo(::perf::szXGA,   CV_32FC1 , ## __VA_ARGS__)
+#define mSXGA32FC1(...)  ::perf::MatInfo(::perf::szSXGA,  CV_32FC1 , ## __VA_ARGS__)
+#define mnHD32FC1(...)   ::perf::MatInfo(::perf::sznHD,   CV_32FC1 , ## __VA_ARGS__)
+#define mqHD32FC1(...)   ::perf::MatInfo(::perf::szqHD,   CV_32FC1 , ## __VA_ARGS__)
+#define m720p32FC1(...)  ::perf::MatInfo(::perf::sz720p,  CV_32FC1 , ## __VA_ARGS__)
+#define m1080p32FC1(...) ::perf::MatInfo(::perf::sz1080p, CV_32FC1 , ## __VA_ARGS__)
+
+#define mQVGA32FC3(...)  ::perf::MatInfo(::perf::szQVGA,  CV_32FC3 , ## __VA_ARGS__)
+#define mVGA32FC3(...)   ::perf::MatInfo(::perf::szVGA,   CV_32FC3 , ## __VA_ARGS__)
+#define mSVGA32FC3(...)  ::perf::MatInfo(::perf::szSVGA,  CV_32FC3 , ## __VA_ARGS__)
+#define mXGA32FC3(...)   ::perf::MatInfo(::perf::szXGA,   CV_32FC3 , ## __VA_ARGS__)
+#define mSXGA32FC3(...)  ::perf::MatInfo(::perf::szSXGA,  CV_32FC3 , ## __VA_ARGS__)
+#define mnHD32FC3(...)   ::perf::MatInfo(::perf::sznHD,   CV_32FC3 , ## __VA_ARGS__)
+#define mqHD32FC3(...)   ::perf::MatInfo(::perf::szqHD,   CV_32FC3 , ## __VA_ARGS__)
+#define m720p32FC3(...)  ::perf::MatInfo(::perf::sz720p,  CV_32FC3 , ## __VA_ARGS__)
+#define m1080p32FC3(...) ::perf::MatInfo(::perf::sz1080p, CV_32FC3 , ## __VA_ARGS__)
+
+#define mQVGA32FC4(...)  ::perf::MatInfo(::perf::szQVGA,  CV_32FC4 , ## __VA_ARGS__)
+#define mVGA32FC4(...)   ::perf::MatInfo(::perf::szVGA,   CV_32FC4 , ## __VA_ARGS__)
+#define mSVGA32FC4(...)  ::perf::MatInfo(::perf::szSVGA,  CV_32FC4 , ## __VA_ARGS__)
+#define mXGA32FC4(...)   ::perf::MatInfo(::perf::szXGA,   CV_32FC4 , ## __VA_ARGS__)
+#define mSXGA32FC4(...)  ::perf::MatInfo(::perf::szSXGA,  CV_32FC4 , ## __VA_ARGS__)
+#define mnHD32FC4(...)   ::perf::MatInfo(::perf::sznHD,   CV_32FC4 , ## __VA_ARGS__)
+#define mqHD32FC4(...)   ::perf::MatInfo(::perf::szqHD,   CV_32FC4 , ## __VA_ARGS__)
+#define m720p32FC4(...)  ::perf::MatInfo(::perf::sz720p,  CV_32FC4 , ## __VA_ARGS__)
+#define m1080p32FC4(...) ::perf::MatInfo(::perf::sz1080p, CV_32FC4 , ## __VA_ARGS__)
+
+#define mODD8U(...) ::perf::MatInfo(::perf::szODD, CV_8UC1 , ## __VA_ARGS__)
+#define mODD32F(...) ::perf::MatInfo(::perf::szODD, CV_32FC1 , ## __VA_ARGS__)
+
+class Regression
+{
+public:
+    static Regression add;
+
+    Regression& operator() (const std::string& name, cv::InputArray array, double eps = DBL_EPSILON);
+
+private:
+    Regression();
+    ~Regression();
+
+    Regression(const Regression&);
+    Regression& operator=(const Regression&);
+
+    cv::RNG regRNG;//own random numbers generator to make collection and verification work identical
+    std::string storagePath;
+    cv::FileStorage storageIn;
+    cv::FileStorage storageOut;
+    cv::FileNode rootIn;
+    std::string currentTestNodeName;
+
+    static std::string getCurrentTestNodeName();
+    cv::FileStorage& write();
+
+    static bool isVector(cv::InputArray a);
+
+    void write(cv::InputArray array);
+    void write(cv::Mat m);
+    void verify(cv::FileNode node, cv::InputArray array, double eps);
+    void verify(cv::FileNode node, cv::Mat actual, double eps, std::string argname);
+    double getElem(cv::Mat& m, int x, int y, int cn = 0);
+};
+
+#define SANITY_CHECK(array) ::perf::Regression::add(#array, array)
 
 typedef struct performance_metrics
 {
@@ -41,6 +164,7 @@ typedef struct performance_metrics
     unsigned int samples;
     unsigned int outliers;
     double gmean;
+    double gstddev;//stddev for log(time)
     double mean;
     double stddev;
     double median;
@@ -135,11 +259,352 @@ private:
     friend class _declareHelper;
 };
 
-class TestBase2: public TestBase, public ::testing::WithParamInterface<cv::Size>
+template<typename T>
+class TestBaseWithParam: public TestBase, public ::testing::WithParamInterface<T>
 {
-public:
-    virtual void PerfTestBody() {}
 };
+
+
+Regression Regression::add;
+
+Regression::Regression() : regRNG(809564)
+{
+    //const char *data_path_dir = getenv("OPENCV_TEST_DATA_PATH");
+
+    storagePath = "test.xml";
+    if (storageIn.open(storagePath, cv::FileStorage::READ))
+        rootIn = storageIn.root();
+}
+
+Regression::~Regression()
+{
+    if (storageIn.isOpened())
+        storageIn.release();
+    if (storageOut.isOpened())
+    {
+        if (!currentTestNodeName.empty())
+            storageOut << "}";
+        storageOut.release();
+    }
+}
+
+cv::FileStorage& Regression::write()
+{
+    if (!storageOut.isOpened())
+        storageOut.open(storagePath, storageIn.isOpened() ? cv::FileStorage::APPEND : cv::FileStorage::WRITE);
+    return storageOut;
+}
+
+std::string Regression::getCurrentTestNodeName()
+{
+    const ::testing::TestInfo* const test_info =
+      ::testing::UnitTest::GetInstance()->current_test_info();
+
+    if (test_info == 0)
+        return "undefined";
+
+    std::string nodename = std::string(test_info->test_case_name()) + "--" + test_info->name();
+    size_t idx = nodename.find_first_of('/');
+    if (idx != std::string::npos)
+        nodename.erase(idx);
+
+    const char* type_param = test_info->type_param();
+    if (type_param != 0)
+        (nodename += "--") += type_param;
+
+    const char* value_param = test_info->value_param();
+    if (value_param != 0)
+        (nodename += "--") += value_param;
+
+    for(size_t i = 0; i < nodename.length(); ++i)
+        if (!isalnum(nodename[i]) && '_' != nodename[i])
+            nodename[i] = '-';
+
+    return nodename;
+}
+
+bool Regression::isVector(cv::InputArray a)
+{
+    return a.kind() == cv::_InputArray::STD_VECTOR_MAT || a.kind() == cv::_InputArray::STD_VECTOR_VECTOR;
+}
+
+double Regression::getElem(cv::Mat& m, int y, int x, int cn)
+{
+    switch (m.depth())
+    {
+    case CV_8U: return *(m.ptr<unsigned char>(y, x) + cn);
+    case CV_8S: return *(m.ptr<signed char>(y, x) + cn);
+    case CV_16U: return *(m.ptr<unsigned short>(y, x) + cn);
+    case CV_16S: return *(m.ptr<signed short>(y, x) + cn);
+    case CV_32S: return *(m.ptr<signed int>(y, x) + cn);
+    case CV_32F: return *(m.ptr<float>(y, x) + cn);
+    case CV_64F: return *(m.ptr<double>(y, x) + cn);
+    default: return 0;
+    }
+}
+
+void Regression::write(cv::Mat m)
+{
+    double min, max;
+    cv::minMaxLoc(m, &min, &max);
+    write() << "min" << min << "max" << max;
+
+    write() << "last" << "{" << "x" << m.cols-1 << "y" << m.rows-1
+        << "val" << getElem(m, m.rows-1, m.cols-1, m.channels()-1) << "}";
+
+    int x, y, cn;
+    x = regRNG.uniform(0, m.cols);
+    y = regRNG.uniform(0, m.rows);
+    cn = regRNG.uniform(0, m.channels());
+    write() << "rng1" << "{" << "x" << x << "y" << y;
+    if(cn > 0) write() << "cn" << cn;
+    write() << "val" << getElem(m, y, x, cn) << "}";
+
+    x = regRNG.uniform(0, m.cols);
+    y = regRNG.uniform(0, m.rows);
+    cn = regRNG.uniform(0, m.channels());
+    write() << "rng2" << "{" << "x" << x << "y" << y;
+    if (cn > 0) write() << "cn" << cn;
+    write() << "val" << getElem(m, y, x, cn) << "}";
+}
+
+void Regression::verify(cv::FileNode node, cv::Mat actual, double eps, std::string argname)
+{
+    double actualmin, actualmax;
+    cv::minMaxLoc(actual, &actualmin, &actualmax);
+
+    ASSERT_NEAR((double)node["min"], actualmin, eps)
+            << argname << " has unexpected minimal value";
+    ASSERT_NEAR((double)node["max"], actualmax, eps)
+            << argname << " has unexpected maximal value";
+
+    cv::FileNode last = node["last"];
+    double actualLast = getElem(actual, actual.rows - 1, actual.cols - 1, actual.channels() - 1);
+    ASSERT_EQ((int)last["x"], actual.cols - 1)
+            << argname << " has unexpected number of columns";
+    ASSERT_EQ((int)last["y"], actual.rows - 1)
+            << argname << " has unexpected number of rows";
+    ASSERT_NEAR((double)last["val"], actualLast, eps)
+            << argname << " has unexpected value of last element";
+
+    cv::FileNode rng1 = node["rng1"];
+    int x1 = rng1["x"];
+    int y1 = rng1["y"];
+    int cn1 = rng1["cn"];
+    ASSERT_NEAR((double)rng1["val"], getElem(actual, y1, x1, cn1), eps)
+            << argname << " has unexpected value of ["<< x1 << ":" << y1 << ":" << cn1 <<"] element";
+
+    cv::FileNode rng2 = node["rng2"];
+    int x2 = rng2["x"];
+    int y2 = rng2["y"];
+    int cn2 = rng2["cn"];
+    ASSERT_NEAR((double)rng2["val"], getElem(actual, y2, x2, cn2), eps)
+            << argname << " has unexpected value of ["<< x2 << ":" << y2 << ":" << cn2 <<"] element";
+}
+
+void Regression::write(cv::InputArray array)
+{
+    write() << "kind" << array.kind();
+    write() << "type" << array.type();
+    if (isVector(array))
+    {
+        int total = array.total();
+        int idx = regRNG.uniform(0, total);
+        write() << "len" << total;
+        write() << "idx" << idx;
+
+        cv::Mat m = array.getMat(idx);
+
+        if (m.total() * m.channels() < 26) //5x5 or smaller
+            write() << "val" << m;
+        else
+            write(m);
+    }
+    else
+    {
+        if (array.total() * array.channels() < 26) //5x5 or smaller
+            write() << "val" << array.getMat();
+        else
+            write(array.getMat());
+    }
+}
+
+void Regression::verify(cv::FileNode node, cv::InputArray array, double eps)
+{
+    ASSERT_EQ((int)node["kind"], array.kind()) << "Argument " << node.name() << " has unexpected kind";
+    ASSERT_EQ((int)node["type"], array.type()) << "Argument " << node.name() << " has unexpected type";
+
+    cv::FileNode valnode = node["val"];
+    if (isVector(array))
+    {
+        ASSERT_EQ((int)node["len"], array.total()) << "Vector " << node.name() << " has unexpected length";
+        int idx = node["idx"];
+
+        cv::Mat actual = array.getMat(idx);
+
+        if (valnode.isNone())
+        {
+            ASSERT_LE((size_t)26, actual.total() * (size_t)actual.channels())
+                    << node.name() << "[" <<  idx << "] has unexpected number of elements";
+            verify(node, actual, eps, cv::format("%s[%d]", node.name().c_str(), idx));
+        }
+        else
+        {
+            cv::Mat expected;
+            valnode >> expected;
+
+            ASSERT_EQ(expected.size(), actual.size())
+                    << node.name() << "[" <<  idx<< "] has unexpected size";
+
+            cv::Mat diff;
+            cv::absdiff(expected, actual, diff);
+            if (!cv::checkRange(diff, true, 0, 0, eps))
+                FAIL() << "Difference between argument "
+                       << node.name() << "[" <<  idx << "] and expected value is bugger than " << eps;
+        }
+    }
+    else
+    {
+        if (valnode.isNone())
+        {
+            ASSERT_LE((size_t)26, array.total() * (size_t)array.channels())
+                    << "Argument " << node.name() << " has unexpected number of elements";
+            verify(node, array.getMat(), eps, "Argument " + node.name());
+        }
+        else
+        {
+            cv::Mat expected;
+            valnode >> expected;
+            cv::Mat actual = array.getMat();
+
+            ASSERT_EQ(expected.size(), actual.size())
+                    << "Argument " << node.name() << " has unexpected size";
+
+            cv::Mat diff;
+            cv::absdiff(expected, actual, diff);
+            if (!cv::checkRange(diff, true, 0, 0, eps))
+                FAIL() << "Difference between argument " << node.name()
+                       << " and expected value is bugger than " << eps;
+        }
+    }
+}
+
+Regression& Regression::operator() (const std::string& name, cv::InputArray array, double eps)
+{
+    std::string nodename = getCurrentTestNodeName();
+
+    cv::FileNode n = rootIn[nodename];
+    if(n.isNone())
+    {
+        if (nodename != currentTestNodeName)
+        {
+            if (!currentTestNodeName.empty())
+                write() << "}";
+            currentTestNodeName = nodename;
+
+            write() << nodename << "{";
+        }
+        write() << name << "{";
+        write(array);
+        write() << "}";
+    }
+    else
+    {
+        cv::FileNode this_arg = n[name];
+        if (!this_arg.isMap())
+            ADD_FAILURE() << "No regression data for " << name << " argument";
+        else
+            verify(this_arg, array, eps);
+    }
+    return *this;
+}
+
+void randu(cv::Mat& m)
+{
+    if (m.depth() < CV_32F)
+    {
+        int minmax[] = {0, 256};
+        cv::Mat mr = cv::Mat(m.rows, m.cols * m.elemSize(), CV_8U, m.ptr(), m.step[0]);
+        cv::randu(mr, cv::Mat(1, 1, CV_32S, minmax), cv::Mat(1, 1, CV_32S, minmax + 1));
+    }
+    else
+    {
+        double minmax[] = {-DBL_MAX, DBL_MAX};
+        cv::Mat mr = m.reshape(1);
+        cv::randu(mr, cv::Mat(1, 1, CV_64F, minmax), cv::Mat(1, 1, CV_64F, minmax + 1));
+    }
+}
+
+MatInfo::MatInfo(cv::Size sz, int _type, int _kind, cv::Range _roix, cv::Range _roiy)
+{
+    size = sz;
+    type = _type;
+    kind = _kind;
+    roix = _roix;
+    roiy = _roiy;
+}
+
+cv::Mat MatInfo::makeMat() const
+{
+    cv::Mat m;
+    switch(kind)
+    {
+    case Ones:
+        m = cv::Mat::ones(size, type);
+        break;
+    case Eye:
+    case Diag:
+        m = cv::Mat::eye(size, type);
+        break;
+    case Rng:
+        m = cv::Mat(size, type);
+        randu(m);
+        break;
+    case Fill:
+    case Zeros:
+    default:
+        m = cv::Mat::zeros(size, type);
+        break;
+    };
+
+    if (roix.start > 0 || roix.end < m.cols || roiy.start > 0 || roiy.end < m.rows)
+        return m(roiy, roix);
+    return m;
+}
+
+cv::Mat MatInfo::makeMat(double v1, double v2, double v3, double v4) const
+{
+    cv::Mat m;
+    cv::Scalar s(v1,v2,v3,v4);
+    switch(kind)
+    {
+    case Ones:
+        m = cv::Mat::ones(size, type);
+        break;
+    case Eye:
+        m = cv::Mat::eye(size, type);
+        break;
+    case Diag:
+        m = cv::Mat::zeros(size, type);
+        m.diag().setTo(s);
+        break;
+    case Rng:
+        m = cv::Mat(size, type);
+        randu(m);
+        break;
+    case Fill:
+        m = cv::Mat(size, type, s);
+        break;
+    case Zeros:
+    default:
+        m = cv::Mat::zeros(size, type);
+        break;
+    };
+
+    if (roix.start > 0 || roix.end < m.cols || roiy.start > 0 || roiy.end < m.rows)
+        return m(roiy, roix);
+    return m;
+}
 
 performance_metrics::performance_metrics()
 {
@@ -148,6 +613,7 @@ performance_metrics::performance_metrics()
     samples = 0;
     outliers = 0;
     gmean = 0;
+    gstddev = 0;
     mean = 0;
     stddev = 0;
     median = 0;
@@ -156,9 +622,9 @@ performance_metrics::performance_metrics()
 }
 
 #if ANDROID
-int64 TestBase::timeLimitDefault = 20 * (int64)cv::getTickFrequency();
+int64 TestBase::timeLimitDefault = 2 * (int64)cv::getTickFrequency();
 #else
-int64 TestBase::timeLimitDefault = 10 * (int64)cv::getTickFrequency();
+int64 TestBase::timeLimitDefault = 1 * (int64)cv::getTickFrequency();
 #endif
 
 int64 TestBase::_timeadjustment = TestBase::_calibrate();
@@ -270,7 +736,7 @@ void TestBase::declareArray(SizeVector& sizes, cv::InputOutputArray a, int wtype
         warmup(a, wtype);
     }
     else if (a.kind() != cv::_InputArray::NONE)
-        ADD_FAILURE() << "Uninitialized input/output parameters are not allowed for performance tests.";
+        ADD_FAILURE() << "Uninitialized input/output parameters are not allowed for performance tests";
 }
 
 void TestBase::warmup(cv::InputOutputArray a, int wtype)
@@ -326,8 +792,6 @@ TestBase::_declareHelper& TestBase::_declareHelper::time(double timeLimitSecs)
 
 bool TestBase::next()
 {
-    //printf("%u %u %d\n", currentIter, nIters, currentIter - nIters);
-    //if (++currentIter >= nIters) return false;
     return ++currentIter < nIters && totalTime < timeLimit;
 }
 
@@ -342,21 +806,8 @@ void TestBase::warmup(cv::Mat m, int wtype)
         m.reshape(1).setTo(cv::Scalar::all(0));
         return;
     case WARMUP_RNG:
-    {
-        if (m.depth() < CV_32F)
-        {
-            int minmax[] = {0, 256};
-            cv::Mat mr = cv::Mat(m.rows, m.cols * m.elemSize(), CV_8U, m.ptr(), m.step[0]);
-            cv::randu(mr, cv::Mat(1, 1, CV_32S, minmax), cv::Mat(1, 1, CV_32S, minmax + 1));
-        }
-        else
-        {
-            double minmax[] = {-DBL_MAX, DBL_MAX};
-            cv::Mat mr = m.reshape(1);
-            cv::randu(mr, cv::Mat(1, 1, CV_64F, minmax), cv::Mat(1, 1, CV_64F, minmax + 1));
-        }
+        randu(m);
         return;
-    }
     default:
         return;
     }
@@ -409,29 +860,34 @@ performance_metrics& TestBase::calcMetrics()
 
     std::sort(times.begin(), times.end());
 
-    //estimate mean and stddev
-    double mean = 0;
-    double stddev = 0;
+    //estimate mean and stddev for log(time)
+    double gmean = 0;
+    double gstddev = 0;
     int n = 0;
     for(TimeVector::const_iterator i = times.begin(); i != times.end(); ++i)
     {
         double x = (double)*i;
-        n = n + 1;
-        double delta = x - mean;
-        mean += delta / n;
-        stddev += delta * (x - mean);
+        if (x < DBL_EPSILON) continue;
+        double lx = log(x);
+
+        ++n;
+        double delta = lx - gmean;
+        gmean += delta / n;
+        gstddev += delta * (lx - gmean);
     }
-    stddev = n > 1 ? sqrt(stddev / (n - 1)) : 0;
+
+    gstddev = n > 1 ? sqrt(gstddev / (n - 1)) : 0;
 
     TimeVector::const_iterator start = times.begin();
     TimeVector::const_iterator end = times.end();
 
-    //filter outliers
+    //filter outliers assuming log-normal distribution
+    //http://stackoverflow.com/questions/1867426/modeling-distribution-of-performance-measurements
     int offset = 0;
-    if (stddev > DBL_EPSILON)
+    if (gstddev > DBL_EPSILON)
     {
-        double minout = mean - 3 * stddev;
-        double maxout = mean + 5 * stddev;
+        double minout = exp(gmean - 3 * gstddev);
+        double maxout = exp(gmean + 3 * gstddev);
         while(*start < minout) ++start, ++metrics.outliers, ++offset;
         do --end, ++metrics.outliers; while(*end > maxout);
         ++end, --metrics.outliers;
@@ -440,21 +896,31 @@ performance_metrics& TestBase::calcMetrics()
     metrics.min = (double)*start;
     //calc final metrics
     n = 0;
-    mean = 0;
-    stddev = 0;
-    double gmean = 0.0;
+    gmean = 0;
+    gstddev = 0;
+    double mean = 0;
+    double stddev = 0;
+    int m = 0;
     for(; start != end; ++start)
     {
         double x = (double)*start;
-        if(x > DBL_EPSILON) gmean += log(x);
-        n = n + 1;
+        if (x > DBL_EPSILON)
+        {
+            double lx = log(x);
+            ++m;
+            double gdelta = lx - gmean;
+            gmean += gdelta / m;
+            gstddev += gdelta * (lx - gmean);
+        }
+        ++n;
         double delta = x - mean;
         mean += delta / n;
         stddev += delta * (x - mean);
     }
 
     metrics.mean = mean;
-    metrics.gmean = exp(gmean / n);
+    metrics.gmean = exp(gmean);
+    metrics.gstddev = m > 1 ? sqrt(gstddev / (m - 1)) : 0;
     metrics.stddev = n > 1 ? sqrt(stddev / (n - 1)) : 0;
     metrics.median = n % 2
             ? (double)times[offset + n / 2]
@@ -475,13 +941,13 @@ void TestBase::validateMetrics()
     EXPECT_GE(m.samples, 10u)
       << "Only a few samples are collected.\nPlease increase number of iterations or/and time limit to get reliable performance measurements.";
 
-    if (m.stddev > DBL_EPSILON)
+    if (m.gstddev > DBL_EPSILON)
     {
-        EXPECT_GT(m.min, 2 * m.stddev)
-          << "Test results are not reliable (deviation is bigger than a half of measured time interval).";
+        EXPECT_GT(/*m.gmean * */1., /*m.gmean * */ 2 * sinh(m.gstddev))
+          << "Test results are not reliable ((mean-sigma,mean+sigma) deviation interval is bigger than measured time interval).";
     }
 
-    EXPECT_LE(m.outliers, m.samples * 0.03)
+    EXPECT_LE(m.outliers, std::max(m.samples * 0.06, 1.))
       << "Test results are not reliable (too many outliers).";
 }
 
@@ -499,6 +965,7 @@ void TestBase::reportMetrics(bool toJUnitXML)
         RecordProperty("min", cv::format("%.0f", m.min).c_str());
         RecordProperty("median", cv::format("%.0f", m.median).c_str());
         RecordProperty("gmean", cv::format("%.0f", m.gmean).c_str());
+        RecordProperty("gstddev", cv::format("%.6f", m.gstddev).c_str());
         RecordProperty("mean", cv::format("%.0f", m.mean).c_str());
         RecordProperty("stddev", cv::format("%.0f", m.stddev).c_str());
     }
@@ -508,6 +975,7 @@ void TestBase::reportMetrics(bool toJUnitXML)
         const char* type_param = test_info->type_param();
         const char* value_param = test_info->value_param();
 
+        LOGD("");
         if (type_param)  LOGD("type      =%11s", type_param);
         if (value_param) LOGD("param     =%11s", value_param);
 
@@ -519,6 +987,7 @@ void TestBase::reportMetrics(bool toJUnitXML)
         LOGD("min       =%11.0f = %.2fms", m.min, m.min * 1e3 / m.frequency);
         LOGD("median    =%11.0f = %.2fms", m.median, m.median * 1e3 / m.frequency);
         LOGD("gmean     =%11.0f = %.2fms", m.gmean, m.gmean * 1e3 / m.frequency);
+        LOGD("gstddev   =%11.8f = %.2fms for 97%% dispersion interval", m.gstddev, m.gmean * 2 * sinh(m.gstddev * 3) * 1e3 / m.frequency);
         LOGD("mean      =%11.0f = %.2fms", m.mean, m.mean * 1e3 / m.frequency);
         LOGD("stddev    =%11.0f = %.2fms", m.stddev, m.stddev * 1e3 / m.frequency);
     }
@@ -532,12 +1001,11 @@ void TestBase::SetUp()
     currentIter = (unsigned int)-1;
     timeLimit = timeLimitDefault;
     times.clear();
+    cv::theRNG().state = 4321;//TODO: make seed configurable
 }
 
 void TestBase::TearDown()
 {
-//    reportMetrics();
-
     validateMetrics();
     reportMetrics(!HasFailure());
 }
@@ -608,10 +1076,103 @@ namespace cv {
 
 void PrintTo(const Size& sz, ::std::ostream* os)
 {
-    *os << sz.width << "x" << sz.height;
+    *os << "Size:" << sz.width << "x" << sz.height;
 }
 
 }  // namespace cv
+
+//printer functions for perf classes
+namespace perf {
+
+
+void PrintTo(const MatInfo& mi, ::std::ostream* os)
+{
+    *os << "MatInfo:";
+    switch(mi.kind)
+    {
+    case MatInfo::Ones:
+        *os << "ones";
+        break;
+    case MatInfo::Eye:
+        *os << "eye";
+        break;
+    case MatInfo::Diag:
+        *os << "diag";
+        break;
+    case MatInfo::Rng:
+        *os << "rng";
+        break;
+    case MatInfo::Fill:
+        //*os << "fill";
+        break;
+    case MatInfo::Zeros:
+        *os << "zeros";
+        break;
+    default:
+        break;
+    };
+
+    switch (CV_MAT_DEPTH(mi.type))
+    {
+    case CV_8U:
+        *os << "8UC";
+        break;
+    case CV_8S:
+        *os << "8SC";
+        break;
+    case CV_16U:
+        *os << "16UC";
+        break;
+    case CV_16S:
+        *os << "16SC";
+        break;
+    case CV_32S:
+        *os << "32SC";
+        break;
+    case CV_32F:
+        *os << "32FC";
+        break;
+    case CV_64F:
+        *os << "64FC";
+        break;
+    default:
+        *os << "XXC";
+        break;
+    };
+    *os << CV_MAT_CN(mi.type);
+
+    *os << "x";
+
+    if (mi.size == szQVGA)
+        *os << "QVGA";
+    else if (mi.size == szVGA)
+        *os << "VGA";
+    else if (mi.size == szSVGA)
+        *os << "SVGA";
+    else if (mi.size == szXGA)
+        *os << "XGA";
+    else if (mi.size == szSXGA)
+        *os << "SXGA";
+    else if (mi.size == sznHD)
+        *os << "nHD";
+    else if (mi.size == szqHD)
+        *os << "qHD";
+    else if (mi.size == sz720p)
+        *os << "720p";
+    else if (mi.size == sz1080p)
+        *os << "1080p";
+    else
+        *os << mi.size.width << "x" << mi.size.height;
+
+    if (mi.roix.start > 0 || mi.roix.end < mi.size.width || mi.roiy.start > 0 || mi.roiy.end < mi.size.height)
+    {
+        cv::Range x = mi.roix & cv::Range(0, mi.size.width);
+        cv::Range y = mi.roiy & cv::Range(0, mi.size.height);
+        *os << "{" << x.start << "," << y.start << ";" << x.end << "," << y.end << "}";
+    }
+}
+
+}  // namespace perf
 
 /*PERF_TEST(math, add)
 {
@@ -627,63 +1188,32 @@ void PrintTo(const Size& sz, ::std::ostream* os)
     SIMPLE_TEST_CYCLE() cv::add(a, b, c);
 }*/
 
-typedef perf::TestBase2 math;
+typedef perf::TestBaseWithParam<perf::iMat> math;
 
-PERF_TEST_P( math, add8u, SZ_TYPICAL) {
-    cv::Size sz = GetParam();
+PERF_TEST_P(math, add, ::testing::Values(mVGA8UC1(), mqHD8UC1(), mODD8U(), mVGA32FC4(), mqHD8UC4(), m720p8UC4(), m720p32FC1(), mODD32F())) {
+    cv::Mat a = GetParam().makeMat(20,21,22,23);
+    cv::Mat b = GetParam().makeMat(10,9,8,7);
+    cv::Mat c = GetParam().makeMat();
 
-    cv::Mat a(sz, CV_8U, cv::Scalar(20));
-    cv::Mat b(sz, CV_8U, cv::Scalar(10));
-    cv::Mat c(sz, CV_8U, cv::Scalar(0));
-
-    declare.in(a, b, WARMUP_RNG)
-        .out(c, WARMUP_RNG)
+    declare.in(a, b)
+        .out(c)
         .time(0.5);
 
     TEST_CYCLE(100) cv::add(a, b, c);
+
+    SANITY_CHECK(c);
 }
 
-PERF_TEST_P( math, add8uc4, SZ_TYPICAL) {
-    cv::Size sz = GetParam();
+PERF_TEST_P(math, sub, ::testing::Values(mVGA8UC1(), mqHD8UC1(), mODD8U(), mVGA32FC4(), mqHD8UC4(), m720p8UC4(), m720p32FC1(), mODD32F())) {
+    cv::Mat a = GetParam().makeMat(20,21,22,23);
+    cv::Mat b = GetParam().makeMat(10,9,8,7);
+    cv::Mat c = GetParam().makeMat();
 
-    cv::Mat a(sz, CV_8UC4, cv::Scalar(20));
-    cv::Mat b(sz, CV_8UC4, cv::Scalar(10));
-    cv::Mat c(sz, CV_8UC4, cv::Scalar(0));
-
-    declare.in(a, b, WARMUP_RNG)
-        .out(c, WARMUP_RNG)
-        .time(0.5);
-
-    TEST_CYCLE(100) cv::add(a, b, c);
-}
-
-PERF_TEST_P( math, DISABLED_sub8u, SZ_TYPICAL) {
-    cv::Size sz = GetParam();
-
-    cv::Mat a(sz, CV_8U, cv::Scalar(20));
-    cv::Mat b(sz, CV_8U, cv::Scalar(10));
-    cv::Mat c(sz, CV_8U, cv::Scalar(0));
-
-    declare.in(a, b, WARMUP_RNG)
-        .out(c, WARMUP_RNG)
+    declare.in(a, b)
+        .out(c)
         .time(0.5);
 
     TEST_CYCLE(100) cv::subtract(a, b, c);
+
+    SANITY_CHECK(c);
 }
-
-PERF_TEST_P( math, sub8uc4, SZ_TYPICAL) {
-    cv::Size sz = GetParam();
-
-    cv::Mat a(sz, CV_8UC4, cv::Scalar(20));
-    cv::Mat b(sz, CV_8UC4, cv::Scalar(10));
-    cv::Mat c(sz, CV_8UC4, cv::Scalar(0));
-
-    declare.in(a, b, WARMUP_RNG)
-        .out(c, WARMUP_RNG)
-        .time(0.5);
-    ADD_FAILURE() << "just for test";
-    FAIL() << "just for fan";
-
-    TEST_CYCLE(100) cv::subtract(a, b, c);
-}
-
