@@ -142,12 +142,13 @@ typedef struct CV_EXPORTS MatInfo
 class CV_EXPORTS Regression
 {
 public:
-    static Regression add;
+    static Regression& add(const std::string& name, cv::InputArray array, double eps = DBL_EPSILON);
     static void Init(const std::string& testSuitName, const std::string& ext = ".xml");
 
     Regression& operator() (const std::string& name, cv::InputArray array, double eps = DBL_EPSILON);
 
 private:
+    static Regression& instance();
     Regression();
     ~Regression();
 
@@ -260,7 +261,7 @@ private:
     static cv::Size getSize(cv::InputArray a);
     static void declareArray(SizeVector& sizes, cv::InputOutputArray a, int wtype = 0);
 
-    class _declareHelper
+    class CV_EXPORTS _declareHelper
     {
     public:
         _declareHelper& in(cv::InputOutputArray a1, int wtype = WARMUP_READ);

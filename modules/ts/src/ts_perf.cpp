@@ -97,11 +97,20 @@ cv::Mat MatInfo::makeMat(double v1, double v2, double v3, double v4) const
 *                                   ::perf::Regression
 \*****************************************************************************************/
 
-Regression Regression::add;
+Regression& Regression::instance()
+{
+    static Regression single;
+    return single;
+}
+
+Regression& Regression::add(const std::string& name, cv::InputArray array, double eps)
+{
+    return instance()(name, array, eps);
+}
 
 void Regression::Init(const std::string& testSuitName, const std::string& ext)
 {
-    add.init(testSuitName, ext);
+    instance().init(testSuitName, ext);
 }
 
 void Regression::init(const std::string& testSuitName, const std::string& ext)

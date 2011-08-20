@@ -1,8 +1,15 @@
 #ifndef __OPENCV_GTESTCV_HPP__
 #define __OPENCV_GTESTCV_HPP__
 
-#ifndef GTEST_CREATE_AS_SHARED_LIBRARY
+#ifndef GTEST_CREATE_SHARED_LIBRARY
 #define GTEST_LINKED_AS_SHARED_LIBRARY 1
+#endif
+
+#ifdef ANDROID
+# include <android/api-level.h>
+# define GTEST_HAS_CLONE (__ANDROID_API__ > 7)
+# define GTEST_HAS_POSIX_RE (__ANDROID_API__ > 7)
+# define GTEST_HAS_STD_WSTRING _GLIBCXX_USE_WCHAR_T
 #endif
 
 #include <stdarg.h> // for va_list
