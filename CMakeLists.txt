@@ -328,7 +328,7 @@ endif()
 # Build tests:
 # ===================================================
 set(BUILD_TESTS ON CACHE BOOL "Build tests")
-set(BUILD_PERF_TESTS OFF CACHE BOOL "Build performance tests")
+set(BUILD_PERF_TESTS ON CACHE BOOL "Build performance tests")
 
 # Build 3rdparty libraries under unix
 # ===================================================
