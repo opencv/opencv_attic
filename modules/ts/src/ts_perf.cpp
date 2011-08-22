@@ -153,7 +153,7 @@ void Regression::init(const std::string& testSuitName, const std::string& ext)
         storageOutPath = storageInPath;
 }
 
-Regression::Regression() : regRNG(809564)
+Regression::Regression() : regRNG(cv::getTickCount())//this rng should be really random
 {
 }
 
@@ -717,7 +717,12 @@ void TestBase::reportMetrics(bool toJUnitXML)
         const char* type_param = test_info->type_param();
         const char* value_param = test_info->value_param();
 
+#if defined(ANDROID) && defined(USE_ANDROID_LOGGING)
+        LOGD("[ FAILED   ] %s.%s", test_info->test_case_name(), test_info->name());
+#else
         LOGD(" ");
+#endif
+
         if (type_param)  LOGD("type      =%11s", type_param);
         if (value_param) LOGD("param     =%11s", value_param);
 
@@ -743,7 +748,8 @@ void TestBase::SetUp()
     currentIter = (unsigned int)-1;
     timeLimit = timeLimitDefault;
     times.clear();
-    cv::theRNG().state = 4321;//TODO: make seed configurable
+    //TODO: make seed configurable
+    cv::theRNG().state = 809564;//this rng should generate same numbers for each run
 }
 
 void TestBase::TearDown()

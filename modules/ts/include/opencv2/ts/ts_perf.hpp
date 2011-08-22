@@ -4,7 +4,7 @@
 #include "opencv2/core/core.hpp"
 #include "ts_gtest.h"
 
-#ifdef ANDROID
+#if defined(ANDROID) && defined(USE_ANDROID_LOGGING)
 #include <android/log.h>
 
 #define PERF_TESTS_LOG_TAG "OpenCV_perf"
