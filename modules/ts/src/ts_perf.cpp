@@ -430,6 +430,7 @@ performance_metrics::performance_metrics()
     median = 0;
     min = 0;
     frequency = 0;
+    terminationReason = TERM_UNKNOWN;
 }
 
 
@@ -600,6 +601,13 @@ performance_metrics& TestBase::calcMetrics()
     metrics.samples = (unsigned int)times.size();
     metrics.outliers = 0;
 
+    if (currentIter == nIters)
+        metrics.terminationReason = performance_metrics::TERM_ITERATIONS;
+    else if (totalTime >= timeLimit)
+        metrics.terminationReason = performance_metrics::TERM_TIME;
+    else
+        metrics.terminationReason = performance_metrics::TERM_UNKNOWN;
+
     std::sort(times.begin(), times.end());
 
     //estimate mean and stddev for log(time)
@@ -701,6 +709,7 @@ void TestBase::reportMetrics(bool toJUnitXML)
     {
         RecordProperty("bytesIn", (int)m.bytesIn);
         RecordProperty("bytesOut", (int)m.bytesOut);
+        RecordProperty("term", m.terminationReason);
         RecordProperty("samples", (int)m.samples);
         RecordProperty("outliers", (int)m.outliers);
         RecordProperty("frequency", cv::format("%.0f", m.frequency).c_str());
@@ -719,17 +728,32 @@ void TestBase::reportMetrics(bool toJUnitXML)
 
 #if defined(ANDROID) && defined(USE_ANDROID_LOGGING)
         LOGD("[ FAILED   ] %s.%s", test_info->test_case_name(), test_info->name());
-#else
-        LOGD(" ");
 #endif
 
-        if (type_param)  LOGD("type      =%11s", type_param);
-        if (value_param) LOGD("param     =%11s", value_param);
+        if (type_param)  LOGD("type      = %11s", type_param);
+        if (value_param) LOGD("param     = %11s", value_param);
+
+        switch (m.terminationReason)
+        {
+        case performance_metrics::TERM_ITERATIONS:
+            LOGD("termination reason:  reached maximum number of iterations");
+            break;
+        case performance_metrics::TERM_TIME:
+            LOGD("termination reason:  reached time limit");
+            break;
+        case performance_metrics::TERM_UNKNOWN:
+        default:
+            LOGD("termination reason:  unknown");
+            break;
+        };
 
         LOGD("bytesIn   =%11lu", m.bytesIn);
         LOGD("bytesOut  =%11lu", m.bytesOut);
-        LOGD("samples   =%11u",  m.samples);
-        LOGD("outliers  =%11u",  m.outliers);
+        if (nIters == (unsigned int)-1 || m.terminationReason == performance_metrics::TERM_ITERATIONS)
+            LOGD("samples   =%11u",  m.samples);
+        else
+            LOGD("samples   =%11u of %u", m.samples, nIters);
+        LOGD("outliers  =%11u", m.outliers);
         LOGD("frequency =%11.0f", m.frequency);
         LOGD("min       =%11.0f = %.2fms", m.min, m.min * 1e3 / m.frequency);
         LOGD("median    =%11.0f = %.2fms", m.median, m.median * 1e3 / m.frequency);
@@ -755,7 +779,17 @@ void TestBase::SetUp()
 void TestBase::TearDown()
 {
     validateMetrics();
-    reportMetrics(!HasFailure());
+    if (HasFailure())
+        reportMetrics(false);
+    else
+    {
+        const ::testing::TestInfo* const test_info = ::testing::UnitTest::GetInstance()->current_test_info();
+        const char* type_param = test_info->type_param();
+        const char* value_param = test_info->value_param();
+        if (value_param) printf("[ VALUE    ] \t%s\n", value_param), fflush(stdout);
+        if (type_param)  printf("[ TYPE     ] \t%s\n", type_param), fflush(stdout);
+        reportMetrics(true);
+    }
 }
 
 /*****************************************************************************************\
@@ -956,3 +990,15 @@ void PrintTo(const Size& sz, ::std::ostream* os)
 }
 
 }  // namespace cv
+
+
+/*****************************************************************************************\
+*                                  ::cv::PrintTo
+\*****************************************************************************************/
+namespace perf
+{
+//GTEST_DEFINE_int32_(
+//    allowed_outliers,
+//    ::testing::internal::Int32FromGTestEnv("allowed_outliers", 6), "");
+
+} //namespace perf

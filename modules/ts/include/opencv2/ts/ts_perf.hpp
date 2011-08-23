@@ -194,6 +194,14 @@ typedef struct CV_EXPORTS performance_metrics
     double median;
     double min;
     double frequency;
+    int terminationReason;
+
+    enum
+    {
+        TERM_ITERATIONS = 0,
+        TERM_TIME = 1,
+        TERM_UNKNOWN = 2
+    };
 
     performance_metrics();
 } performance_metrics;
@@ -435,5 +443,11 @@ int main(int argc, char **argv)\
 
 #define TEST_CYCLE(n) for(declare.iterations(n); startTimer(), next(); stopTimer())
 #define SIMPLE_TEST_CYCLE() for(; startTimer(), next(); stopTimer())
+
+//flags
+namespace perf
+{
+//GTEST_DECLARE_int32_(allowed_outliers);
+} //namespace perf
 
 #endif //__OPENCV_TS_PERF_HPP__
