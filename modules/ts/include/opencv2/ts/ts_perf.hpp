@@ -215,7 +215,7 @@ class CV_EXPORTS TestBase: public ::testing::Test
 public:
     TestBase();
 
-    static void Init();
+    static void Init(int argc, const char* const argv[]);
 
 protected:
     virtual void PerfTestBody() = 0;
@@ -436,7 +436,7 @@ CV_EXPORTS void PrintTo(const Size& sz, ::std::ostream* os);
 int main(int argc, char **argv)\
 {\
     ::perf::Regression::Init(#testsuitname);\
-    ::perf::TestBase::Init();\
+    ::perf::TestBase::Init(argc, argv);\
     ::testing::InitGoogleTest(&argc, argv);\
     return RUN_ALL_TESTS();\
 }

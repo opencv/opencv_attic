@@ -440,14 +440,45 @@ performance_metrics::performance_metrics()
 int64 TestBase::timeLimitDefault = 0;
 int64 TestBase::_timeadjustment = 0;
 
-void TestBase::Init()
+const char *command_line_keys =
 {
-#if ANDROID
-    timeLimitDefault = 2 * (int64)cv::getTickFrequency();
-#else
-    timeLimitDefault = 1 * (int64)cv::getTickFrequency();
-#endif
+    "{!!bugbugbugbug!!   |perf_max_outliers   |6        |percent of allowed outliers}"
+    "{!!bugbugbugbug!!   |perf_min_samples    |10       |minimal required numer of samples}"
+    "{!!bugbugbugbug!!   |perf_seed           |809564   |seed for random numbers generator}"
+    #if ANDROID
+    "{!!bugbugbugbug!!   |perf_time_limit     |2.0      |default time limit for a single test (in seconds)}"
+    #else
+    "{!!bugbugbugbug!!   |perf_time_limit     |1.0      |default time limit for a single test (in seconds)}"
+    #endif
+    "{!!bugbugbugbug!!   |perf_max_deviation  |1.0      |}"
+    "{h                  |help                |false    |}"
+};
 
+double       param_max_outliers;
+double       param_max_deviation;
+unsigned int param_min_samples;
+uint64       param_seed;
+double       param_time_limit;
+
+void TestBase::Init(int argc, const char* const argv[])
+{
+    cv::CommandLineParser args(argc, argv, command_line_keys);
+    param_max_outliers = std::min(100., std::max(0., args.get<double>("perf_max_outliers")));
+    param_min_samples  = std::max(1u, args.get<unsigned int>("perf_min_samples"));
+    param_max_deviation = std::max(0., args.get<double>("perf_max_deviation"));
+    param_seed = args.get<uint64>("perf_seed");
+    param_time_limit = std::max(0., args.get<double>("perf_time_limit"));
+
+    if (args.get<bool>("help"))
+    {
+        args.printParams();
+        printf("\n\n");
+        return;
+    }
+
+    //LOGD("!!!!!!!!!!!! %f !!!!!!", param_time_limit);
+
+    timeLimitDefault = param_time_limit == 0.0 ? 1 : (int64)(param_time_limit * cv::getTickFrequency());
     _timeadjustment = _calibrate();
 }
 
@@ -688,16 +719,16 @@ void TestBase::validateMetrics()
     ASSERT_GE(m.samples, 1u)
       << "No time measurements was performed.\nstartTimer() and stopTimer() commands are required for performance tests.";
 
-    EXPECT_GE(m.samples, 10u)
+    EXPECT_GE(m.samples, param_min_samples)
       << "Only a few samples are collected.\nPlease increase number of iterations or/and time limit to get reliable performance measurements.";
 
     if (m.gstddev > DBL_EPSILON)
     {
-        EXPECT_GT(/*m.gmean * */1., /*m.gmean * */ 2 * sinh(m.gstddev))
+        EXPECT_GT(/*m.gmean * */1., /*m.gmean * */ 2 * sinh(m.gstddev * param_max_deviation))
           << "Test results are not reliable ((mean-sigma,mean+sigma) deviation interval is bigger than measured time interval).";
     }
 
-    EXPECT_LE(m.outliers, std::max(m.samples * 0.06, 1.))
+    EXPECT_LE(m.outliers, std::max((unsigned int)cvCeil(m.samples * param_max_outliers / 100.), 1u))
       << "Test results are not reliable (too many outliers).";
 }
 
@@ -772,8 +803,7 @@ void TestBase::SetUp()
     currentIter = (unsigned int)-1;
     timeLimit = timeLimitDefault;
     times.clear();
-    //TODO: make seed configurable
-    cv::theRNG().state = 809564;//this rng should generate same numbers for each run
+    cv::theRNG().state = param_seed;//this rng should generate same numbers for each run
 }
 
 void TestBase::TearDown()
