@@ -10,6 +10,12 @@ void randu(cv::Mat& m)
         cv::Mat mr = cv::Mat(m.rows, m.cols * m.elemSize(), CV_8U, m.ptr(), m.step[0]);
         cv::randu(mr, cv::Mat(1, 1, CV_32S, minmax), cv::Mat(1, 1, CV_32S, minmax + 1));
     }
+    else if (m.depth() == CV_32F)
+    {
+        double minmax[] = {-FLT_MAX, FLT_MAX};
+        cv::Mat mr = m.reshape(1);
+        cv::randu(mr, cv::Mat(1, 1, CV_32F, minmax), cv::Mat(1, 1, CV_32F, minmax + 1));
+    }
     else
     {
         double minmax[] = {-DBL_MAX, DBL_MAX};
