@@ -1,5 +1,4 @@
 import sys, re, os.path, cgi, stat
-from rdflib.sparql.sparqlOperators import getValue
 
 class tblCell(object):
     def __init__(self, text, value = None, props = None):
@@ -17,6 +16,9 @@ class tblRow(object):
     def __init__(self, colsNum, props = None):
         self.cells = [None] * colsNum
         self.props = props
+        
+def htmlEncode(str):
+    return '<br/>'.join([cgi.escape(s) for s in str])
 
 class table(object):
     def_align = "left"
@@ -312,15 +314,12 @@ class table(object):
             return (height - space + 1) / 2
         return 0
     
-    def htmlEncode(self, str):
-        return '<br/>'.join([cgi.escape(s) for s in str])
-    
     def htmlPrintTable(self, out):
         columns = self.layoutTable()
         
         out.write("<div class=\"tableFormatter\">\n<table class=\"tbl\">\n")
         if self.caption:
-            out.write(" <caption>%s</caption>\n" % self.htmlEncode(self.reformatTextValue(self.caption)))
+            out.write(" <caption>%s</caption>\n" % htmlEncode(self.reformatTextValue(self.caption)))
         out.write(" <thead>\n")
         
         headerRow = tblRow(len(columns), {"align": "center", "valign": "top", "bold": True, "header": True})
@@ -342,7 +341,7 @@ class table(object):
                     attr += " valign=\"%s\"" % valign
                 out.write("   <th%s>\n" % attr)
                 if th is not None:
-                    out.write("    %s\n" % self.htmlEncode(th.text))
+                    out.write("    %s\n" % htmlEncode(th.text))
                 out.write("   </th>\n")
             out.write("  </tr>\n")
             
@@ -388,19 +387,19 @@ class table(object):
                     attr += " style=\"%s\"" % style
                 out.write("   <td%s>\n" % attr)
                 if th is not None:
-                    out.write("    %s\n" % self.htmlEncode(td.text))
+                    out.write("    %s\n" % htmlEncode(td.text))
                 out.write("   </td>\n")
                 i += colspan
             out.write("  </tr>\n")
             
         out.write(" </tbody>\n</table>\n</div>\n")
         
-    def htmlPrintHeader(self, out, title = None):
-        if title:
-            titletag = "<title>%s</title>\n" % self.htmlEncode([str(title)])
-        else:
-            titletag = ""
-        out.write("""<!DOCTYPE HTML>
+def htmlPrintHeader(out, title = None):
+    if title:
+        titletag = "<title>%s</title>\n" % htmlEncode([str(title)])
+    else:
+        titletag = ""
+    out.write("""<!DOCTYPE HTML>
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=us-ascii">
@@ -418,21 +417,10 @@ html, body {font-family: Lucida Console, Courier New, Courier;font-size: 16px;co
 </head>
 <body>
 """ % titletag)
-        
-    def htmlPrintFooter(self, out):
-        out.write("</body>\n</html>")
+    
+def htmlPrintFooter(out):
+    out.write("</body>\n</html>")
 
-
-def findFile(dev,ino):
-    namelist = []
-    for root,dirs,files in os.walk("."):
-        for name in files:
-            path = os.path.join(root,name)
-            statinfo = os.stat(path)
-            fdev,fino = statinfo[stat.ST_DEV],statinfo[stat.ST_INO]
-            if (dev,ino) == (fdev,fino):
-                namelist.append(path)
-                return namelist
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
@@ -463,15 +451,30 @@ if __name__ == "__main__":
 #    if sys.stdout.isatty():
 #        tbl.consolePrintTable(sys.stdout)
 #    else:
-#        tbl.htmlPrintHeader(sys.stdout)
+#        htmlPrintHeader(sys.stdout)
 #        tbl.htmlPrintTable(sys.stdout)
-#        tbl.htmlPrintFooter(sys.stdout)
+#        htmlPrintFooter(sys.stdout)
 
     import testlog_parser
+    
+    if sys.stdout.isatty():
+        astext = True
+    else:
+        outname = os.readlink('/proc/self/fd/1')
+        if outname:
+            if outname.endswith(".htm") or outname.endswith(".html"):
+                astext = False
+            else:
+                astext = True
+        else:
+            astext = True
+            
+    if not astext:
+        htmlPrintHeader(sys.stdout, "Tables demo")
 
     for arg in sys.argv[1:]:
         tests = testlog_parser.parseLogFile(arg)
-        tbl = table()
+        tbl = table(arg)
         tbl.newColumn("name", "Name of Test", align = "left")
         tbl.newColumn("gmean", "Geometric mean", align = "center")
         
@@ -482,19 +485,10 @@ if __name__ == "__main__":
             if gmean:
                 tbl.newCell("gmean", "%.3f ms" % gmean, gmean, bold = "true")
         
-        if sys.stdout.isatty():
+        if astext:
             tbl.consolePrintTable(sys.stdout)
         else:
-            #sys.stderr.write(sys.stdout.__str__())
-            tbl.htmlPrintHeader(sys.stdout, arg)
             tbl.htmlPrintTable(sys.stdout)
-            tbl.htmlPrintFooter(sys.stdout)
-            
-            fd = sys.stdout.fileno()
-            statinfo = os.fstat(fd)
-            mode = statinfo[stat.ST_MODE]
-            
-            if stat.S_ISREG(mode):
-                dev,ino = statinfo[stat.ST_DEV],statinfo[stat.ST_INO]
-                sys.stderr.write("stdout is a regular file on device %d inode %d\n" % (dev,ino))
-                sys.stderr.write("filename(s): %s\n" % findFile(dev,ino))
+                
+    if not astext:
+        htmlPrintFooter(sys.stdout)
