@@ -1,4 +1,5 @@
 #include "perf_precomp.hpp"
+#include "perf_testsets.h"
 
 /*PERF_TEST(math, add)
 {
@@ -16,7 +17,7 @@
 
 typedef perf::TestBaseWithParam<perf::iMat> math;
 
-PERF_TEST_P(math, add, ::testing::Values(mVGA8UC1(), mqHD8UC1(), mODD8U(), mVGA32FC4(), mqHD8UC4(), m720p8UC4(), m720p32FC1(), mODD32F())) {
+PERF_TEST_P(math, add, ::testing::Values( TESTSET_1 )) {
     cv::Mat a = GetParam().makeMat(20,21,22,23);
     cv::Mat b = GetParam().makeMat(10,9,8,7);
     cv::Mat c = GetParam().makeMat();
@@ -30,7 +31,7 @@ PERF_TEST_P(math, add, ::testing::Values(mVGA8UC1(), mqHD8UC1(), mODD8U(), mVGA3
     SANITY_CHECK(c);
 }
 
-PERF_TEST_P(math, sub, ::testing::Values(mVGA8UC1(), mqHD8UC1(), mODD8U(), mVGA32FC4(), mqHD8UC4(), m720p8UC4(), m720p32FC1(), mODD32F())) {
+PERF_TEST_P(math, sub, ::testing::Values(TESTSET_1)) {
     cv::Mat a = GetParam().makeMat(20,21,22,23);
     cv::Mat b = GetParam().makeMat(10,9,8,7);
     cv::Mat c = GetParam().makeMat();
