@@ -1,4 +1,5 @@
-import sys, re, os.path
+import sys, re, os.path, cgi, stat
+from rdflib.sparql.sparqlOperators import getValue
 
 class tblCell(object):
     def __init__(self, text, value = None, props = None):
@@ -12,13 +13,8 @@ class tblColumn(object):
         self.title = title
         self.props = props
         
-        lines = caption.splitlines()
-        self.minWidth = max(max([len(line) for line in lines]), 1)
-        self.linesNum = len(lines)
-        
 class tblRow(object):
     def __init__(self, colsNum, props = None):
-        self.maxHeight = 1
         self.cells = [None] * colsNum
         self.props = props
 
@@ -32,10 +28,11 @@ class table(object):
     def_italic = False
     def_text="-"
 
-    def __init__(self):
+    def __init__(self, caption = None):
         self.columns = {}
         self.rows = []
         self.ridx = -1;
+        self.caption = caption
         pass
 
     def newRow(self, **properties):
@@ -80,24 +77,127 @@ class table(object):
             cl = text
         else:
             cl = tblCell(text, value, properties)
-        lines = cl.text.splitlines()
-        width = max([len(line) for line in lines])
-        height = len(lines)
-        cl.linesNum = height
-        colspan = self.getValue("colspan", cl)
-        if colspan < 2:
-            if col.minWidth < width:
-                col.minWidth = width
-        else:
-            columns = self.columns.values()
-            columns.sort(key=lambda c: c.index)
-            columns = columns[col.index: col.index + colspan]
-            self.adjustColWidth(columns, width)
-            
-        if row.maxHeight < height:
-            row.maxHeight = height
         row.cells[col.index] = cl
         return cl
+    
+    def layoutTable(self):
+        columns = self.columns.values()
+        columns.sort(key=lambda c: c.index)
+        
+        colspanned = []
+        rowspanned = []
+        
+        self.headerHeight = 1
+        rowsToAppend = 0
+        
+        for col in columns:
+            self.measureCell(col)
+            if col.height > self.headerHeight:
+                self.headerHeight = col.height
+            col.minwidth = col.width
+            col.line = None
+        
+        for r in range(len(self.rows)):
+            row = self.rows[r]
+            row.minheight = 1
+            for i in range(len(row.cells)):
+                cell = row.cells[i]
+                if row.cells[i] is None:
+                    continue
+                cell.line = None
+                self.measureCell(cell)
+                colspan = int(self.getValue("colspan", cell))
+                rowspan = int(self.getValue("rowspan", cell))
+                if colspan > 1:
+                    colspanned.append((r,i))
+                    if i + colspan > len(columns):
+                        colspan = len(columns) - i
+                    cell.colspan = colspan
+                    #clear spanned cells
+                    for j in range(i+1, min(len(row.cells), i + colspan)):
+                        row.cells[j] = None
+                elif columns[i].minwidth < cell.width:
+                    columns[i].minwidth = cell.width
+                if rowspan > 1:
+                    rowspanned.append((r,i))
+                    rowsToAppend2 = r + colspan - len(self.rows)
+                    if rowsToAppend2 > rowsToAppend:
+                        rowsToAppend = rowsToAppend2
+                    cell.rowspan = rowspan
+                    #clear spanned cells
+                    for j in range(r+1, min(len(self.rows), r + rowspan)):
+                        if len(self.rows[j].cells) > i:
+                            self.rows[j].cells[i] = None
+                elif row.minheight < cell.height:
+                    row.minheight = cell.height
+                    
+        self.ridx = len(self.rows) - 1
+        for r in range(rowsToAppend):
+            self.newRow()
+            self.rows[len(self.rows) - 1].minheight = 1
+            
+        while colspanned:
+            colspanned_new = []
+            for r, c in colspanned:
+                cell = self.rows[r].cells[c]
+                sum([col.minwidth for col in columns[c:c + cell.colspan]])
+                cell.awailable = sum([col.minwidth for col in columns[c:c + cell.colspan]]) + cell.colspan - 1
+                if cell.awailable < cell.width:
+                    colspanned_new.append((r,c))
+            colspanned = colspanned_new
+            if colspanned:
+                r,c = colspanned[0]
+                cell = self.rows[r].cells[c]
+                cols = columns[c:c + cell.colspan]
+                total = cell.awailable - cell.colspan + 1
+                budget = cell.width - cell.awailable
+                spent = 0
+                s = 0
+                for col in cols:
+                    s += col.minwidth
+                    addition = s * budget / total - spent
+                    spent += addition
+                    col.minwidth += addition
+        
+        while rowspanned:
+            rowspanned_new = []
+            for r, c in rowspanned:
+                cell = self.rows[r].cells[c]
+                cell.awailable = sum([row.minheight for row in self.rows[r:r + cell.rowspan]])
+                if cell.awailable < cell.height:
+                    rowspanned_new.append((r,c))
+            rowspanned = rowspanned_new
+            if rowspanned:
+                r,c = rowspanned[0]
+                cell = self.rows[r].cells[c]
+                rows = self.rows[r:r + cell.rowspan]
+                total = cell.awailable
+                budget = cell.height - cell.awailable
+                spent = 0
+                s = 0
+                for row in rows:
+                    s += row.minheight
+                    addition = s * budget / total - spent
+                    spent += addition
+                    row.minheight += addition
+                    
+        return columns
+
+    def measureCell(self, cell):
+        text = self.getValue("text", cell)
+        cell.text = self.reformatTextValue(text)
+        cell.height = len(cell.text)
+        cell.width = len(max(cell.text, key = lambda line: len(line)))
+                
+    def reformatTextValue(self, value):
+        if isinstance(value, str):
+            vstr = value
+        else:
+            try:
+                vstr = '\n'.join([str(v) for v in value])
+            except TypeError:
+                vstr = str(value)
+        return vstr.splitlines()
     
     def adjustColWidth(self, cols, width):
         total = sum([c.minWidth for c in cols])
@@ -131,127 +231,270 @@ class table(object):
         except AttributeError:
             return None
         
-    def consolePrintTable(self):
-        columns = self.columns.values()
-        columns.sort(key=lambda c: c.index)
+    def consolePrintTable(self, out):
+        columns = self.layoutTable()
         
-        headerRow = tblRow(len(columns), {"align": "center", "valign": "top", "bold": True})
+        headerRow = tblRow(len(columns), {"align": "center", "valign": "top", "bold": True, "header": True})
         headerRow.cells = columns
-        headerRow.maxHeight = max([col.linesNum for col in columns])
+        headerRow.minheight = self.headerHeight
         
-        self.consolePrintRow(headerRow, columns, -1)
+        self.consolePrintRow2(out, headerRow, columns)
         
         for i in range(0, len(self.rows)):
-            self.consolePrintRow(self.rows[i], columns, i)
-                
-    def consolePrintRow(self, r, columns, idx):
-        cells = r.cells
-        ln = 0
-        while (ln < r.maxHeight):
-            i = 0
-            while (i < len(cells)):
-                cell = cells[i]
-                col = columns[i]
-                colspan = self.getValue("colspan", cell)
-                if colspan == 1:
-                    width = col.minWidth
-                else:
-                    width = colspan - 1 + sum([v.minWidth for v in columns[i: i + colspan]])
-                                #for v columns[i:i]
-                if cell is None:
-                    valign = "middle"
-                else:
-                    valign = self.getValue("valign", cell, r, col)
-                
-                if valign == "bottom":
-                    lineIdx = cell.linesNum + ln - r.maxHeight
-                elif valign == "middle":
-                    if cell is None:
-                        lineIdx = (ln == (r.maxHeight - 1) / 2)
-                    else:
-                        lineIdx = ln + (cell.linesNum - r.maxHeight + 1)/2
-                else:
-                    lineIdx = ln
-                                
-                self.consolePrintCell(cell, col, r, width, lineIdx,  i > 0)
-                i += colspan
-            print
-            ln += 1
-        
-    def consolePrintCell(self, cell, col, row, width, lineNum, addSpace):
-        text = self.getValue("text", cell)
-        if cell is None:
-            align = "center"
-            if lineNum:
-                line = text
-            else:
-                line = ""
+            self.consolePrintRow2(out, i, columns)
+            
+    def consolePrintRow2(self, out, r, columns):
+        if isinstance(r, tblRow):
+            row = r
+            r = -1
         else:
-            if isinstance(cell, tblColumn):
-                align = self.getValue("align", row, col)
-            else:
-                align = self.getValue("align", cell, row, col)
-            if lineNum < 0 or lineNum >= cell.linesNum:
-                line = ""
-            else:
-                line = text.splitlines()[lineNum]
+            row = self.rows[r]
+        
+        #evaluate initial values for line numbers
+        i = 0
+        while i < len(row.cells):
+            cell = row.cells[i]
+            colspan = self.getValue("colspan", cell)
+            if cell is not None:
+                cell.wspace = sum([col.minwidth for col in columns[i:i + colspan]]) + colspan - 1
+                if cell.line is None:
+                    if r < 0:
+                        rows = [row]
+                    else:
+                        rows = self.rows[r:r + self.getValue("rowspan", cell)]
+                    cell.line = self.evalLine(cell, rows, columns[i])
+                    if len(rows) > 1:
+                        for rw in rows:
+                            rw.cells[i] = cell
+            i += colspan
+            
+        #print content
+        for ln in range(row.minheight):
+            i = 0
+            while i < len(row.cells):
+                if i > 0:
+                    out.write(" ")
+                cell = row.cells[i]
+                column = columns[i]
+                if cell is None:
+                    out.write(" " * column.minwidth)
+                    i += 1
+                else:
+                    self.consolePrintLine(cell, row, column, out)
+                    i += self.getValue("colspan", cell)
+            out.write(os.linesep)
+                
+    def consolePrintLine(self, cell, row, column, out):
+        if cell.line < 0 or cell.line >= cell.height:
+            line = ""
+        else:
+            line = cell.text[cell.line]
+        width = cell.wspace
+        align = self.getValue("align", ((None, cell)[isinstance(cell, tblCell)]), row, column)
+        
         if align == "right":
             pattern = "%" + str(width) + "s"
         elif align == "center":
             pattern = "%" + str((width - len(line)) / 2 + len(line)) + "s" + " " * (width - len(line) - (width - len(line)) / 2)
         else:
             pattern = "%-" + str(width) + "s"
-        if addSpace:
-            pattern = " " + pattern
-        sys.stdout.write(pattern % line,)
         
+        out.write(pattern % line)
+        cell.line += 1
+            
+    def evalLine(self, cell, rows, column):
+        height = cell.height
+        valign = self.getValue("valign", cell, rows[0], column)
+        space = sum([row.minheight for row in rows])
+        if valign == "bottom":
+            return height - space
+        if valign == "middle":
+            return (height - space + 1) / 2
+        return 0
+    
+    def htmlEncode(self, str):
+        return '<br/>'.join([cgi.escape(s) for s in str])
+    
+    def htmlPrintTable(self, out):
+        columns = self.layoutTable()
+        
+        out.write("<div class=\"tableFormatter\">\n<table class=\"tbl\">\n")
+        if self.caption:
+            out.write(" <caption>%s</caption>\n" % self.htmlEncode(self.reformatTextValue(self.caption)))
+        out.write(" <thead>\n")
+        
+        headerRow = tblRow(len(columns), {"align": "center", "valign": "top", "bold": True, "header": True})
+        headerRow.cells = columns
+        
+        header_rows = [headerRow]
+        
+        header_rows.extend([row for row in self.rows if self.getValue("header")])
+        
+        for row in header_rows:
+            out.write("  <tr>\n")
+            for th in row.cells:
+                align = self.getValue("align", ((None, th)[isinstance(th, tblCell)]), row)
+                valign = self.getValue("valign", th)
+                attr = ""
+                if align:
+                    attr += " align=\"%s\"" % align
+                if valign:
+                    attr += " valign=\"%s\"" % valign
+                out.write("   <th%s>\n" % attr)
+                if th is not None:
+                    out.write("    %s\n" % self.htmlEncode(th.text))
+                out.write("   </th>\n")
+            out.write("  </tr>\n")
+            
+        out.write(" </thead>\n <tbody>\n")
+        
+        rows = [row for row in self.rows if not self.getValue("header")]
+        for r in range(len(rows)):
+            row = rows[r]
+            out.write("  <tr>\n")
+            i = 0
+            while i < len(row.cells):
+                column = columns[i] 
+                td = row.cells[i]
+                if isinstance(td, int):
+                    i += td
+                    continue
+                colspan = self.getValue("colspan", td)
+                rowspan = self.getValue("rowspan", td)
+                align = self.getValue("align", td, row, column)
+                valign = self.getValue("valign", td, row, column)
+                color = self.getValue("color", td, row, column)
+                bold = self.getValue("bold", td, row, column)
+                italic = self.getValue("italic", td, row, column)
+                style = ""
+                attr = ""
+                if color:
+                    style += "color:%s;" % color
+                if bold:
+                    style += "font-weight: bold;"
+                if italic:
+                    style += "font-style: italic;"
+                if align:
+                    attr += " align=\"%s\"" % align
+                if valign:
+                    attr += " valign=\"%s\"" % valign
+                if colspan > 1:
+                    attr += " colspan=\"%s\"" % colspan
+                if rowspan > 1:
+                    attr += " rowspan=\"%s\"" % rowspan
+                    for q in range(r+1, min(r+rowspan, len(rows))):
+                        rows[q].cells[i] = colspan
+                if style:
+                    attr += " style=\"%s\"" % style
+                out.write("   <td%s>\n" % attr)
+                if th is not None:
+                    out.write("    %s\n" % self.htmlEncode(td.text))
+                out.write("   </td>\n")
+                i += colspan
+            out.write("  </tr>\n")
+            
+        out.write(" </tbody>\n</table>\n</div>\n")
+        
+    def htmlPrintHeader(self, out, title = None):
+        if title:
+            titletag = "<title>%s</title>\n" % self.htmlEncode([str(title)])
+        else:
+            titletag = ""
+        out.write("""<!DOCTYPE HTML>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=us-ascii">
+%s<style type="text/css">
+html, body {font-family: Lucida Console, Courier New, Courier;font-size: 16px;color:#3e4758;}
+.tbl{background:none repeat scroll 0 0 #FFFFFF;border-collapse:collapse;font-family:"Lucida Sans Unicode","Lucida Grande",Sans-Serif;font-size:14px;margin:20px;text-align:left;width:480px;margin-left: auto;margin-right: auto;white-space:nowrap;}
+.tbl span{display:block;white-space:nowrap;}
+.tbl thead tr:last-child th {padding-bottom:5px;}
+.tbl tbody tr:first-child td {border-top:2px solid #6678B1;}
+.tbl th{color:#003399;font-size:16px;font-weight:normal;white-space:nowrap;padding:3px 10px;}
+.tbl td{border-bottom:1px solid #CCCCCC;color:#666699;padding:6px 8px;white-space:nowrap;}
+.tbl tbody tr:hover td{color:#000099;}
+.tbl caption{font:italic 16px "Trebuchet MS",Verdana,Arial,Helvetica,sans-serif;padding:0 0 5px;text-align:right;}
+</style>
+</head>
+<body>
+""" % titletag)
+        
+    def htmlPrintFooter(self, out):
+        out.write("</body>\n</html>")
+
+
+def findFile(dev,ino):
+    namelist = []
+    for root,dirs,files in os.walk("."):
+        for name in files:
+            path = os.path.join(root,name)
+            statinfo = os.stat(path)
+            fdev,fino = statinfo[stat.ST_DEV],statinfo[stat.ST_INO]
+            if (dev,ino) == (fdev,fino):
+                namelist.append(path)
+                return namelist
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print "Usage:\n", os.path.basename(sys.argv[0]), "<log_name>.xml"
         exit(0)
 
-    tbl = table()
-    tbl.newColumn("first", "qqqq", align = "left")
-    tbl.newColumn("second", "wwww\nz\nx\n")
-    tbl.newColumn("third", "wwasdas")
-
-    tbl.newCell(0, "ccc111", align = "right")
-    tbl.newCell(1, "dddd1")
-    tbl.newCell(2, "8768756754")
-    tbl.newRow()
-    tbl.newCell(0, "1\n2\n3\n4\n5\n6\n7", align = "center", colspan = 2)
-    tbl.newCell(2, "xxx\nqqq", align = "center", colspan = 1, valign = "middle")
-    tbl.newRow()
-    tbl.newCell(0, "vcvvbasdsadassdasdasv", align = "right", colspan = 2)
-    tbl.newRow()
-    tbl.newCell(0, "vcvvbv")
-    tbl.newCell(1, "3445324", align = "right")
-    #tbl.newCell(1, "0000")
-
-    #print vars(tbl)
-    
-    tbl.consolePrintTable()
-
-
-    print "!!!!!", tbl.getValue("align", {},  tbl.getColumn(0))
+#    tbl = table()
+#    tbl.newColumn("first", "qqqq", align = "left")
+#    tbl.newColumn("second", "wwww\nz\nx\n")
+#    tbl.newColumn("third", "wwasdas")
+#
+#    tbl.newCell(0, "ccc111", align = "right")
+#    tbl.newCell(1, "dddd1")
+#    tbl.newCell(2, "8768756754")
+#    tbl.newRow()
+#    tbl.newCell(0, "1\n2\n3\n4\n5\n6\n7", align = "center", colspan = 2, rowspan = 2)
+#    tbl.newCell(2, "xxx\nqqq", align = "center", colspan = 1, valign = "middle")
+#    tbl.newRow()
+#    tbl.newCell(2, "+", align = "center", colspan = 1, valign = "middle")
+#    tbl.newRow()
+#    tbl.newCell(0, "vcvvbasdsadassdasdasv", align = "right", colspan = 2)
+#    tbl.newCell(2, "dddd1")
+#    tbl.newRow()
+#    tbl.newCell(0, "vcvvbv")
+#    tbl.newCell(1, "3445324", align = "right")
+#    tbl.newCell(2, None)
+#    tbl.newCell(1, "0000")
+#    if sys.stdout.isatty():
+#        tbl.consolePrintTable(sys.stdout)
+#    else:
+#        tbl.htmlPrintHeader(sys.stdout)
+#        tbl.htmlPrintTable(sys.stdout)
+#        tbl.htmlPrintFooter(sys.stdout)
 
     import testlog_parser
 
     for arg in sys.argv[1:]:
-        print "Tests found in", arg
         tests = testlog_parser.parseLogFile(arg)
         tbl = table()
-        tbl.newColumn("name", "Name\nof\nTest", align = "left")
-        tbl.newColumn("gmean", "Geometric mean\n(ms)", align = "center")
+        tbl.newColumn("name", "Name of Test", align = "left")
+        tbl.newColumn("gmean", "Geometric mean", align = "center")
         
         for t in sorted(tests):
             tbl.newRow()
             gmean = t.get("gmean")
             tbl.newCell("name", str(t))
             if gmean:
-                tbl.newCell("gmean", "%.3f ms" % gmean, gmean)
-            #t.dump()
-        print
+                tbl.newCell("gmean", "%.3f ms" % gmean, gmean, bold = "true")
         
-        tbl.consolePrintTable()
+        if sys.stdout.isatty():
+            tbl.consolePrintTable(sys.stdout)
+        else:
+            #sys.stderr.write(sys.stdout.__str__())
+            tbl.htmlPrintHeader(sys.stdout, arg)
+            tbl.htmlPrintTable(sys.stdout)
+            tbl.htmlPrintFooter(sys.stdout)
+            
+            fd = sys.stdout.fileno()
+            statinfo = os.fstat(fd)
+            mode = statinfo[stat.ST_MODE]
+            
+            if stat.S_ISREG(mode):
+                dev,ino = statinfo[stat.ST_DEV],statinfo[stat.ST_INO]
+                sys.stderr.write("stdout is a regular file on device %d inode %d\n" % (dev,ino))
+                sys.stderr.write("filename(s): %s\n" % findFile(dev,ino))
