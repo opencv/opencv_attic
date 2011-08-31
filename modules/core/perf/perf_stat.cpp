@@ -1,4 +1,5 @@
 #include "perf_precomp.hpp"
+#include "opencv2/core/core_c.h"
 #include <iostream>
 
 using namespace std;
@@ -9,7 +10,7 @@ using namespace perf;
 /*
 // Scalar sum(InputArray arr)
 */
-PERF_TEST_P( Size_MatType_param, sum, TYPICAL_MATS )
+PERF_TEST_P( Size_MatType, sum, TYPICAL_MATS )
 {
     Size sz = std::tr1::get<0>(GetParam());
     int type = std::tr1::get<1>(GetParam());
@@ -29,7 +30,7 @@ PERF_TEST_P( Size_MatType_param, sum, TYPICAL_MATS )
 /*
 // Scalar mean(InputArray src)
 */
-PERF_TEST_P( Size_MatType_param, mean, TYPICAL_MATS )
+PERF_TEST_P( Size_MatType, mean, TYPICAL_MATS )
 {
     Size sz = std::tr1::get<0>(GetParam());
     int type = std::tr1::get<1>(GetParam());
@@ -48,7 +49,7 @@ PERF_TEST_P( Size_MatType_param, mean, TYPICAL_MATS )
 /*
 // Scalar mean(InputArray src, InputArray mask=noArray())
 */
-PERF_TEST_P( Size_MatType_param, mean_mask, TYPICAL_MATS )
+PERF_TEST_P( Size_MatType, mean_mask, TYPICAL_MATS )
 {
     Size sz = std::tr1::get<0>(GetParam());
     int type = std::tr1::get<1>(GetParam());
@@ -92,13 +93,13 @@ CV_EXPORTS void PrintTo(const NormType& t, std::ostream* os)
         }
 }
 
-typedef std::tr1::tuple<Size, MatType, NormType> Size_MatType_NormType;
-typedef perf::TestBaseWithParam<Size_MatType_NormType> Size_MatType_NormType_param;
+typedef std::tr1::tuple<Size, MatType, NormType> Size_MatType_NormType_t;
+typedef perf::TestBaseWithParam<Size_MatType_NormType_t> Size_MatType_NormType;
 
 /*
 // double norm(InputArray src1, int normType=NORM_L2)
 */
-PERF_TEST_P( Size_MatType_NormType_param, norm, 
+PERF_TEST_P( Size_MatType_NormType, norm, 
     testing::Combine(
         testing::Values( TYPICAL_MAT_SIZES ), 
         testing::Values( TYPICAL_MAT_TYPES ),
@@ -124,7 +125,7 @@ PERF_TEST_P( Size_MatType_NormType_param, norm,
 /*
 // double norm(InputArray src1, int normType=NORM_L2, InputArray mask=noArray())
 */
-PERF_TEST_P( Size_MatType_NormType_param, norm_mask, 
+PERF_TEST_P( Size_MatType_NormType, norm_mask, 
     testing::Combine(
         testing::Values( TYPICAL_MAT_SIZES ), 
         testing::Values( TYPICAL_MAT_TYPES ),
@@ -151,7 +152,7 @@ PERF_TEST_P( Size_MatType_NormType_param, norm_mask,
 /*
 // double norm(InputArray src1, InputArray src2, int normType)
 */
-PERF_TEST_P( Size_MatType_NormType_param, norm2, 
+PERF_TEST_P( Size_MatType_NormType, norm2, 
     testing::Combine(
         testing::Values( TYPICAL_MAT_SIZES ), 
         testing::Values( TYPICAL_MAT_TYPES ),
@@ -179,7 +180,7 @@ PERF_TEST_P( Size_MatType_NormType_param, norm2,
 /*
 // double norm(InputArray src1, InputArray src2, int normType, InputArray mask=noArray())
 */
-PERF_TEST_P( Size_MatType_NormType_param, norm2_mask,
+PERF_TEST_P( Size_MatType_NormType, norm2_mask,
     testing::Combine(
         testing::Values( TYPICAL_MAT_SIZES ), 
         testing::Values( TYPICAL_MAT_TYPES ),
@@ -209,7 +210,7 @@ PERF_TEST_P( Size_MatType_NormType_param, norm2_mask,
 /*
 // void normalize(const InputArray src, OutputArray dst, double alpha=1, double beta=0, int normType=NORM_L2)
 */
-PERF_TEST_P( Size_MatType_NormType_param, normalize, 
+PERF_TEST_P( Size_MatType_NormType, normalize, 
     testing::Combine(
         testing::Values( TYPICAL_MAT_SIZES ), 
         testing::Values( TYPICAL_MAT_TYPES ),
@@ -238,7 +239,7 @@ PERF_TEST_P( Size_MatType_NormType_param, normalize,
 /*
 // void normalize(const InputArray src, OutputArray dst, double alpha=1, double beta=0, int normType=NORM_L2, int rtype=-1, InputArray mask=noArray())
 */
-PERF_TEST_P( Size_MatType_NormType_param, normalize_mask, 
+PERF_TEST_P( Size_MatType_NormType, normalize_mask, 
     testing::Combine(
         testing::Values( TYPICAL_MAT_SIZES ), 
         testing::Values( TYPICAL_MAT_TYPES ),
@@ -268,7 +269,7 @@ PERF_TEST_P( Size_MatType_NormType_param, normalize_mask,
 /*
 // void normalize(const InputArray src, OutputArray dst, double alpha=1, double beta=0, int normType=NORM_L2, int rtype=-1)
 */
-PERF_TEST_P( Size_MatType_NormType_param, normalize_32f, 
+PERF_TEST_P( Size_MatType_NormType, normalize_32f, 
     testing::Combine(
         testing::Values( TYPICAL_MAT_SIZES ), 
         testing::Values( TYPICAL_MAT_TYPES ),
@@ -297,7 +298,7 @@ PERF_TEST_P( Size_MatType_NormType_param, normalize_32f,
 /*
 // void normalize(const InputArray src, OutputArray dst, double alpha=1, double beta=0, int normType=NORM_L2)
 */
-PERF_TEST_P( Size_MatType_param, normalize_minmax, TYPICAL_MATS )
+PERF_TEST_P( Size_MatType, normalize_minmax, TYPICAL_MATS )
 {
     Size sz = std::tr1::get<0>(GetParam());
     int matType = std::tr1::get<1>(GetParam());
@@ -318,7 +319,7 @@ PERF_TEST_P( Size_MatType_param, normalize_minmax, TYPICAL_MATS )
 /*
 // void meanStdDev(InputArray src, OutputArray mean, OutputArray stddev)
 */
-PERF_TEST_P( Size_MatType_param, meanStdDev, TYPICAL_MATS )
+PERF_TEST_P( Size_MatType, meanStdDev, TYPICAL_MATS )
 {
     Size sz = std::tr1::get<0>(GetParam());
     int matType = std::tr1::get<1>(GetParam());
@@ -339,7 +340,7 @@ PERF_TEST_P( Size_MatType_param, meanStdDev, TYPICAL_MATS )
 /*
 // void meanStdDev(InputArray src, OutputArray mean, OutputArray stddev, InputArray mask=noArray())
 */
-PERF_TEST_P( Size_MatType_param, meanStdDev_mask, TYPICAL_MATS )
+PERF_TEST_P( Size_MatType, meanStdDev_mask, TYPICAL_MATS )
 {
     Size sz = std::tr1::get<0>(GetParam());
     int matType = std::tr1::get<1>(GetParam());
@@ -355,3 +356,98 @@ PERF_TEST_P( Size_MatType_param, meanStdDev_mask, TYPICAL_MATS )
     SANITY_CHECK(dev);
 }
 
+
+/*
+// int countNonZero(InputArray mtx)
+*/
+PERF_TEST_P( Size_MatType, countNonZero, TYPICAL_MATS_C1 )
+{
+    Size sz = std::tr1::get<0>(GetParam());
+    int matType = std::tr1::get<1>(GetParam());
+    Mat src(sz, matType);
+    int cnt = 0;
+
+    declare.in(src, WARMUP_RNG);
+    
+    TEST_CYCLE(100) { cnt = countNonZero(src);  }
+    
+    SANITY_CHECK(cnt);
+}
+
+/*
+// void minMaxLoc(InputArray src, double* minVal, double* maxVal=0, Point* minLoc=0, Point* maxLoc=0, InputArray mask=noArray())
+*/
+PERF_TEST_P( Size_MatType, minMaxLoc, TYPICAL_MATS_C1 )
+{
+    Size sz = std::tr1::get<0>(GetParam());
+    int matType = std::tr1::get<1>(GetParam());
+    Mat src(sz, matType);
+    double minVal, maxVal;
+    Point minLoc, maxLoc;
+
+    declare.in(src, WARMUP_RNG);
+    
+    TEST_CYCLE(100) { minMaxLoc(src, &minVal, &maxVal, &minLoc, &maxLoc);  }
+    
+    SANITY_CHECK(minVal);
+    SANITY_CHECK(maxVal);
+    //SANITY_CHECK(minLoc);
+    //SANITY_CHECK(maxLoc);
+}
+
+
+class ROp
+{
+public:
+    ROp(int val=0) : _val(val) {}
+    operator int() const {return _val;}
+
+private:
+    int _val;
+};
+
+CV_EXPORTS void PrintTo(const ROp& t, std::ostream* os)
+{
+        switch( (int)t )
+        {
+            case CV_REDUCE_SUM: *os << "REDUCE_SUM"; break;
+            case CV_REDUCE_AVG: *os << "CV_REDUCE_AVG"; break;
+            case CV_REDUCE_MAX: *os << "CV_REDUCE_MAX"; break;
+            case CV_REDUCE_MIN: *os << "CV_REDUCE_MIN"; break;
+            default: *os << "INVALID_OP";
+        }
+}
+
+
+typedef std::tr1::tuple<Size, MatType, int, ROp> Size_MatType_int_ROp_t;
+typedef perf::TestBaseWithParam<Size_MatType_int_ROp_t> Size_MatType_int_ROp;
+
+
+/*
+// void reduce(InputArray mtx, OutputArray vec, int dim, int reduceOp, int dtype=-1)
+*/
+PERF_TEST_P( Size_MatType_int_ROp, reduce, 
+    testing::Combine( 
+        testing::Values( TYPICAL_MAT_SIZES ), 
+        testing::Values( TYPICAL_MAT_TYPES ),
+        testing::Values( 0, 1 ),
+        testing::Values( CV_REDUCE_SUM, CV_REDUCE_AVG, CV_REDUCE_MAX, CV_REDUCE_MIN )
+    )
+)
+{
+    Size sz = std::tr1::get<0>(GetParam());
+    int matType = std::tr1::get<1>(GetParam());
+    int dim = std::tr1::get<2>(GetParam());
+    int reduceOp = std::tr1::get<3>(GetParam());
+    int ddepth = -1;
+    if( CV_MAT_DEPTH(matType)<CV_32S && (reduceOp == CV_REDUCE_SUM || reduceOp == CV_REDUCE_AVG) )
+        ddepth = CV_32S;
+    Mat src(sz, matType);
+    Mat vec;
+
+    declare.in(src, WARMUP_RNG);
+    
+    TEST_CYCLE(100) { reduce(src, vec, dim, reduceOp, ddepth);  }
+    
+    SANITY_CHECK(vec);
+}
