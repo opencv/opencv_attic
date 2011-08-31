@@ -1013,6 +1013,23 @@ void PrintTo(const MatInfo& mi, ::std::ostream* os)
     }
 }
 
+void PrintTo(const MatType& t, ::std::ostream* os)
+{
+    switch( CV_MAT_DEPTH((int)t) )
+    {
+        case CV_8U:  *os << "8U";  break;
+        case CV_8S:  *os << "8S";  break;
+        case CV_16U: *os << "16U"; break;
+        case CV_16S: *os << "16S"; break;
+        case CV_32S: *os << "32S"; break;
+        case CV_32F: *os << "32F"; break;
+        case CV_64F: *os << "64F"; break;
+        case CV_USRTYPE1: *os << "USRTYPE1"; break;
+        default: *os << "INVALID_TYPE"; break;
+    }
+    *os << 'C' << CV_MAT_CN((int)t);
+}
+
 } //namespace perf
 
 /*****************************************************************************************\
@@ -1022,7 +1039,7 @@ namespace cv {
 
 void PrintTo(const Size& sz, ::std::ostream* os)
 {
-    *os << "Size:" << sz.width << "x" << sz.height;
+    *os << /*"Size:" << */sz.width << "x" << sz.height;
 }
 
 }  // namespace cv

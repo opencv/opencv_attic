@@ -211,6 +211,26 @@ typedef struct CV_EXPORTS MatInfo
 #define mODD8U(...) ::perf::MatInfo(::perf::szODD, CV_8UC1 , ## __VA_ARGS__)
 #define mODD32F(...) ::perf::MatInfo(::perf::szODD, CV_32FC1 , ## __VA_ARGS__)
 
+#define TYPICAL_MAT_SIZES szVGA, sz720p, sz1080p, szODD
+#define TYPICAL_MAT_TYPES CV_8UC1, CV_8UC4, CV_32FC1
+#define TYPICAL_MATS testing::Combine( testing::Values( TYPICAL_MAT_SIZES ), testing::Values( TYPICAL_MAT_TYPES ) )
+
+
+/*****************************************************************************************\
+*                MatType - printable wrapper over integer 'type' of Mat                   *
+\*****************************************************************************************/
+class MatType
+{
+public:
+    MatType(int val=0) : _type(val) {}
+    operator int() const {return _type;}
+
+private:
+    int _type;
+};
+
+CV_EXPORTS void PrintTo(const MatType& t, std::ostream* os);
+
 
 /*****************************************************************************************\
 *                 Regression control utility for performance testing                      *
@@ -374,6 +394,10 @@ public:
 };
 
 template<typename T> class TestBaseWithParam: public TestBase, public ::testing::WithParamInterface<T> {};
+
+
+typedef std::tr1::tuple<cv::Size, perf::MatType> Size_MatType;
+typedef perf::TestBaseWithParam<Size_MatType> Size_MatType_param;
 
 
 /*****************************************************************************************\
