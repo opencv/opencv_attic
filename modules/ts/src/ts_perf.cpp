@@ -12,7 +12,7 @@ void randu(cv::Mat& m)
     }
     else if (m.depth() == CV_32F)
     {
-        double minmax[] = {-FLT_MAX, FLT_MAX};
+        float minmax[] = {-FLT_MAX, FLT_MAX};
         cv::Mat mr = m.reshape(1);
         cv::randu(mr, cv::Mat(1, 1, CV_32F, minmax), cv::Mat(1, 1, CV_32F, minmax + 1));
     }
