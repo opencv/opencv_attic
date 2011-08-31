@@ -237,6 +237,9 @@ class table(object):
     def consolePrintTable(self, out):
         columns = self.layoutTable()
         
+        if self.caption:
+            out.write("%s%s%s" % ( os.linesep,  os.linesep.join(self.reformatTextValue(self.caption)), os.linesep * 2))
+        
         headerRow = tblRow(len(columns), {"align": "center", "valign": "top", "bold": True, "header": True})
         headerRow.cells = columns
         headerRow.minheight = self.headerHeight
