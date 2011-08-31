@@ -1,13 +1,18 @@
 #include "perf_precomp.hpp"
-#include "perf_testsets.h"
 
+using namespace std;
 using namespace cv;
-typedef perf::TestBaseWithParam<perf::iMat> math;
+using namespace perf;
+#define TYPICAL_MAT_SIZES_ABS  TYPICAL_MAT_SIZES 
+#define TYPICAL_MAT_TYPES_ABS  CV_8SC1, CV_8SC4, CV_32SC1, CV_32FC1
+#define TYPICAL_MATS_ABS       testing::Combine( testing::Values( TYPICAL_MAT_SIZES_ABS), testing::Values( TYPICAL_MAT_TYPES_ABS) )
 
-PERF_TEST_P(math, abs, ::testing::Values( TESTSET_1 )) 
+PERF_TEST_P(Size_MatType, abs, TYPICAL_MATS_ABS) 
 {
-    cv::Mat a = GetParam().makeMat(-20, 21, -22, 23);
-    cv::Mat c = GetParam().makeMat();
+    Size sz = std::tr1::get<0>(GetParam());
+    int type = std::tr1::get<1>(GetParam());
+    cv::Mat a = Mat(sz, type);
+    cv::Mat c = Mat(sz, type);
 
     declare.in(a, ::perf::TestBase::WARMUP_RNG)
         .out(c)

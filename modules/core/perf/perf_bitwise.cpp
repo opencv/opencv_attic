@@ -1,100 +1,23 @@
 #include "perf_precomp.hpp"
-#include "perf_testsets.h"
 
+using namespace std;
 using namespace cv;
-typedef perf::TestBaseWithParam<perf::iMat> math;
+using namespace perf;
+#define TYPICAL_MAT_SIZES_BITWNOT  TYPICAL_MAT_SIZES 
+#define TYPICAL_MAT_TYPES_BITWNOT  CV_8SC1, CV_8SC4, CV_32SC1, CV_32SC4
+#define TYPICAL_MATS_BITWNOT       testing::Combine( testing::Values( TYPICAL_MAT_SIZES_BITWNOT), testing::Values( TYPICAL_MAT_TYPES_BITWNOT) )
 
-PERF_TEST_P(math, bitwise_not, ::testing::Values( TESTSET_1 )){
-    cv::Mat a = GetParam().makeMat(-20, 21, -22, 23);
-    cv::Mat c = GetParam().makeMat();
+PERF_TEST_P(Size_MatType, bitwise_not, TYPICAL_MATS_BITWNOT){
+    Size sz = std::tr1::get<0>(GetParam());
+    int type = std::tr1::get<1>(GetParam());
+    cv::Mat a = Mat(sz, type);
+    cv::Mat c = Mat(sz, type);
 
     declare.in(a, WARMUP_RNG)
-        .out(c)
-        .time(0.5);
+        .out(c);
 
     TEST_CYCLE(100) cv::bitwise_not(a, c);
 
     SANITY_CHECK(c);
 }
 
-PERF_TEST_P(math, bitwise_and, ::testing::Values( TESTSET_1 )){
-    cv::Mat a = GetParam().makeMat(-20, 21, -22, 23);
-    cv::Mat b = GetParam().makeMat(-16, 10, 8, 14);
-    cv::Mat c = GetParam().makeMat();
-
-    declare.in(a, b, WARMUP_RNG)
-        .out(c)
-        .time(0.5);
-
-    TEST_CYCLE(100) cv::bitwise_and(a,b, c);
-
-    SANITY_CHECK(c);
-}
-
-PERF_TEST_P(math, bitwise_or, ::testing::Values( TESTSET_1 )){
-    cv::Mat a = GetParam().makeMat(-20, 21, -22, 23);
-    cv::Mat b = GetParam().makeMat(-16, 10, 8, 14);
-    cv::Mat c = GetParam().makeMat();
-
-    declare.in(a, b, WARMUP_RNG)
-        .out(c)
-        .time(0.5);
-
-    TEST_CYCLE(100) cv::bitwise_or(a,b, c);
-
-    SANITY_CHECK(c);
-}
-PERF_TEST_P(math, bitwise_xor, ::testing::Values( TESTSET_1 )){
-    cv::Mat a = GetParam().makeMat(-20, 21, -22, 23);
-    cv::Mat b = GetParam().makeMat(-16, 10, 8, 14);
-    cv::Mat c = GetParam().makeMat();
-
-    declare.in(a, b, WARMUP_RNG)
-        .out(c)
-        .time(0.5);
-
-    TEST_CYCLE(100) cv::bitwise_xor(a,b, c);
-
-    SANITY_CHECK(c);
-}
-
-PERF_TEST_P(math, bitwise_and__Scalar, ::testing::Values( TESTSET_1 )){
-    cv::Mat a = GetParam().makeMat(-20, 21, -22, 23);
-    cv::Scalar b;
-    cv::Mat c = GetParam().makeMat();
-
-    declare.in(a, b, WARMUP_RNG)
-        .out(c)
-        .time(0.5);
-
-    TEST_CYCLE(100) cv::bitwise_and(a,(InputArray)b, c);
-
-    SANITY_CHECK(c);
-}
-
-PERF_TEST_P(math, bitwise_or__Scalar, ::testing::Values( TESTSET_1 )){
-    cv::Mat a = GetParam().makeMat(-20, 21, -22, 23);
-    cv::Scalar b;
-    cv::Mat c = GetParam().makeMat();
-
-    declare.in(a, b, WARMUP_RNG)
-        .out(c)
-        .time(0.5);
-
-    TEST_CYCLE(100) cv::bitwise_or(a,(InputArray)b, c);
-
-    SANITY_CHECK(c);
-}
-PERF_TEST_P(math, bitwise_xor__Scalar, ::testing::Values( TESTSET_1 )){
-    cv::Mat a = GetParam().makeMat(-20, 21, -22, 23);
-    cv::Scalar b;
-    cv::Mat c = GetParam().makeMat();
-
-    declare.in(a, b, WARMUP_RNG)
-        .out(c)
-        .time(0.5);
-
-    TEST_CYCLE(100) cv::bitwise_xor(a,(InputArray)b, c);
-
-    SANITY_CHECK(c);
-}
