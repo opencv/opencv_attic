@@ -456,6 +456,18 @@ def detectHtmlOutputType(requestedType):
                     return False
             else:
                 return False 
+            
+def getRelativeVal(test, test0, metric):
+    if not test or not test0:
+        return None
+    val0 = test0.get(metric, "s")
+    if not val0 or val0 == 0:
+        return None
+    val =  test.get(metric, "s")
+    if not val:
+        return None
+    return float(val)/val0
+
         
 metrix_table = \
 {
@@ -465,7 +477,13 @@ metrix_table = \
     "median": ("Median", lambda test,test0,units: test.get("median", units)),
     "stddev": ("Standard deviation", lambda test,test0,units: test.get("stddev", units)),
     "gstddev": ("Standard deviation of Ln(time)", lambda test,test0,units: test.get("gstddev")),
-    "gstddev": ("Standard deviation of Ln(time)", lambda test,test0,units: test.get("gstddev", units)),
+    
+    "gmean%": ("Geometric mean (relative)", lambda test,test0,units: getRelativeVal(test, test0, "gmean")),
+    "mean%": ("Mean (relative)", lambda test,test0,units: getRelativeVal(test, test0, "mean")),
+    "min%": ("Min (relative)", lambda test,test0,units: getRelativeVal(test, test0, "min")),
+    "median%": ("Median (relative)", lambda test,test0,units: getRelativeVal(test, test0, "median")),
+    "stddev%": ("Standard deviation (relative)", lambda test,test0,units: getRelativeVal(test, test0, "stddev")),
+    "gstddev%": ("Standard deviation of Ln(time) (relative)", lambda test,test0,units: getRelativeVal(test, test0, "gstddev")),
 }
 
 if __name__ == "__main__":
@@ -537,7 +555,10 @@ if __name__ == "__main__":
             else:
                 val = getter(t, None, options.units)
                 if val:
-                    tbl.newCell("value", "%.3f %s" % (val, options.units), val)
+                    if options.metric.endswith("%"):
+                        tbl.newCell("value", "%.2f" % val, val)
+                    else:
+                        tbl.newCell("value", "%.3f %s" % (val, options.units), val)
                 else:
                     tbl.newCell("value", "-")
         
