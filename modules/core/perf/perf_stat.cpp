@@ -102,7 +102,7 @@ PERF_TEST_P( Size_MatType_NormType_param, norm,
     testing::Combine(
         testing::Values( TYPICAL_MAT_SIZES ), 
         testing::Values( TYPICAL_MAT_TYPES ),
-        testing::Values( NORM_INF, NORM_L1, NORM_L2 )
+        testing::Values( (int)NORM_INF, (int)NORM_L1, (int)NORM_L2 )
     )
 )
 {
@@ -128,7 +128,7 @@ PERF_TEST_P( Size_MatType_NormType_param, norm_mask,
     testing::Combine(
         testing::Values( TYPICAL_MAT_SIZES ), 
         testing::Values( TYPICAL_MAT_TYPES ),
-        testing::Values( NORM_INF, NORM_L1, NORM_L2 )
+        testing::Values( (int)NORM_INF, (int)NORM_L1, (int)NORM_L2 )
     )
 )
 {
@@ -155,7 +155,7 @@ PERF_TEST_P( Size_MatType_NormType_param, norm2,
     testing::Combine(
         testing::Values( TYPICAL_MAT_SIZES ), 
         testing::Values( TYPICAL_MAT_TYPES ),
-        testing::Values( NORM_INF, NORM_L1, NORM_L2, NORM_RELATIVE+NORM_INF, NORM_RELATIVE+NORM_L1, NORM_RELATIVE+NORM_L2 )
+        testing::Values( (int)NORM_INF, (int)NORM_L1, (int)NORM_L2, (int)(NORM_RELATIVE+NORM_INF), (int)(NORM_RELATIVE+NORM_L1), (int)(NORM_RELATIVE+NORM_L2) )
     )
 )
 {
@@ -183,7 +183,7 @@ PERF_TEST_P( Size_MatType_NormType_param, norm2_mask,
     testing::Combine(
         testing::Values( TYPICAL_MAT_SIZES ), 
         testing::Values( TYPICAL_MAT_TYPES ),
-        testing::Values( NORM_INF, NORM_L1, NORM_L2, NORM_RELATIVE+NORM_INF, NORM_RELATIVE+NORM_L1, NORM_RELATIVE+NORM_L2 )
+        testing::Values( (int)NORM_INF, (int)NORM_L1, (int)NORM_L2, (int)(NORM_RELATIVE+NORM_INF), (int)(NORM_RELATIVE+NORM_L1), (int)(NORM_RELATIVE+NORM_L2) )
     )
 )
 {
@@ -213,7 +213,7 @@ PERF_TEST_P( Size_MatType_NormType_param, normalize,
     testing::Combine(
         testing::Values( TYPICAL_MAT_SIZES ), 
         testing::Values( TYPICAL_MAT_TYPES ),
-        testing::Values( NORM_INF, NORM_L1, NORM_L2 )
+        testing::Values( (int)NORM_INF, (int)NORM_L1, (int)NORM_L2 )
     )
 )
 {
@@ -242,7 +242,7 @@ PERF_TEST_P( Size_MatType_NormType_param, normalize_mask,
     testing::Combine(
         testing::Values( TYPICAL_MAT_SIZES ), 
         testing::Values( TYPICAL_MAT_TYPES ),
-        testing::Values( NORM_INF, NORM_L1, NORM_L2 )
+        testing::Values( (int)NORM_INF, (int)NORM_L1, (int)NORM_L2 )
     )
 )
 {
@@ -272,7 +272,7 @@ PERF_TEST_P( Size_MatType_NormType_param, normalize_32f,
     testing::Combine(
         testing::Values( TYPICAL_MAT_SIZES ), 
         testing::Values( TYPICAL_MAT_TYPES ),
-        testing::Values( NORM_INF, NORM_L1, NORM_L2 )
+        testing::Values( (int)NORM_INF, (int)NORM_L1, (int)NORM_L2 )
     )
 )
 {
