@@ -1,4 +1,5 @@
 import sys, re, os.path, cgi, stat
+from optparse import OptionParser
 
 class tblCell(object):
     def __init__(self, text, value = None, props = None):
@@ -420,12 +421,67 @@ html, body {font-family: Lucida Console, Courier New, Courier;font-size: 16px;co
     
 def htmlPrintFooter(out):
     out.write("</body>\n</html>")
-
+    
+def getStdoutFilename():
+    try:
+        if os.name == "nt":
+            import msvcrt, ctypes
+            handle = msvcrt.get_osfhandle(sys.stdout.fileno())
+            size = ctypes.c_ulong(1024)
+            nameBuffer = ctypes.create_string_buffer(size.value)
+            ctypes.windll.kernel32.GetFinalPathNameByHandleA(handle, nameBuffer, size, 4)
+            return nameBuffer.value
+        else:
+            return os.readlink('/proc/self/fd/1')
+    except:
+        return ""
+    
+def detectHtmlOutputType(requestedType):
+    if requestedType == "txt":
+        return False
+    elif requestedType == "html":
+        return True
+    else:
+        if sys.stdout.isatty():
+            return False
+        else:
+            outname = getStdoutFilename()
+            if outname:
+                if outname.endswith(".htm") or outname.endswith(".html"):
+                    return True
+                else:
+                    return False
+            else:
+                return False 
+        
+metrix_table = \
+{
+    "gmean": ("Geometric mean", lambda test,test0,units: test.get("gmean", units)),
+    "mean": ("Mean", lambda test,test0,units: test.get("mean", units)),
+    "min": ("Min", lambda test,test0,units: test.get("min", units)),
+    "median": ("Median", lambda test,test0,units: test.get("median", units)),
+    "stddev": ("Standard deviation", lambda test,test0,units: test.get("stddev", units)),
+    "gstddev": ("Standard deviation of Ln(time)", lambda test,test0,units: test.get("gstddev")),
+    "gstddev": ("Standard deviation of Ln(time)", lambda test,test0,units: test.get("gstddev", units)),
+}
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print "Usage:\n", os.path.basename(sys.argv[0]), "<log_name>.xml"
         exit(0)
+        
+    parser = OptionParser()
+    parser.add_option("-o", "--output", dest="format", help="output results in text format (can be 'txt', 'html' or 'auto' - default)", metavar="FMT", default="auto")
+    parser.add_option("-m", "--metric", dest="metric", help="output metric", metavar="NAME", default="gmean")
+    parser.add_option("-u", "--units", dest="units", help="units for output values (s, ms (default), mks, ns or ticks)", metavar="UNITS", default="ms")
+    (options, args) = parser.parse_args()
+    
+    options.generateHtml = detectHtmlOutputType(options.format)
+    if options.metric not in metrix_table:
+        options.metric = "gmean"
+    
+    #print options
+    #print args
 
 #    tbl = table()
 #    tbl.newColumn("first", "qqqq", align = "left")
@@ -457,38 +513,35 @@ if __name__ == "__main__":
 
     import testlog_parser
     
-    if sys.stdout.isatty():
-        astext = True
-    else:
-        outname = os.readlink('/proc/self/fd/1')
-        if outname:
-            if outname.endswith(".htm") or outname.endswith(".html"):
-                astext = False
-            else:
-                astext = True
-        else:
-            astext = True
-            
-    if not astext:
+    if options.generateHtml:
         htmlPrintHeader(sys.stdout, "Tables demo")
+        
+    getter = metrix_table[options.metric][1]
 
-    for arg in sys.argv[1:]:
+    for arg in args:
         tests = testlog_parser.parseLogFile(arg)
         tbl = table(arg)
         tbl.newColumn("name", "Name of Test", align = "left")
-        tbl.newColumn("gmean", "Geometric mean", align = "center")
+        tbl.newColumn("value", metrix_table[options.metric][0], align = "center", bold = "true")
         
         for t in sorted(tests):
             tbl.newRow()
-            gmean = t.get("gmean")
             tbl.newCell("name", str(t))
-            if gmean:
-                tbl.newCell("gmean", "%.3f ms" % gmean, gmean, bold = "true")
+            
+            status = t.get("status")
+            if status != "run":
+                tbl.newCell("value", status)
+            else:
+                val = getter(t, None, options.units)
+                if val:
+                    tbl.newCell("value", "%.3f %s" % (val, options.units), val)
+                else:
+                    tbl.newCell("value", "-")
         
-        if astext:
-            tbl.consolePrintTable(sys.stdout)
-        else:
+        if options.generateHtml:
             tbl.htmlPrintTable(sys.stdout)
-                
-    if not astext:
+        else:
+            tbl.consolePrintTable(sys.stdout)
+            
+    if options.generateHtml:
         htmlPrintFooter(sys.stdout)
