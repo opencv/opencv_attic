@@ -471,6 +471,11 @@ def getRelativeVal(test, test0, metric):
         
 metrix_table = \
 {
+    "name": ("Name of Test", lambda test,test0,units: str(test)),
+    
+    "samples": ("Number of\ncollected samples", lambda test,test0,units: test.get("samples", units)),
+    "outliers": ("Number of\noutliers", lambda test,test0,units: test.get("outliers", units)),
+    
     "gmean": ("Geometric mean", lambda test,test0,units: test.get("gmean", units)),
     "mean": ("Mean", lambda test,test0,units: test.get("mean", units)),
     "min": ("Min", lambda test,test0,units: test.get("min", units)),

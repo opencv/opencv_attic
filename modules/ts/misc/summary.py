@@ -4,7 +4,7 @@ from optparse import OptionParser
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print "Usage:\n", os.path.basename(sys.argv[0]), "<log_name1>.xml [<log_name2>.xml ...]"
+        print >> sys.stderr, "Usage:\n", os.path.basename(sys.argv[0]), "<log_name1>.xml [<log_name2>.xml ...]"
         exit(0)
         
     parser = OptionParser()

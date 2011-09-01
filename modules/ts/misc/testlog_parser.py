@@ -95,6 +95,20 @@ class TestInfo(object):
 
     def dump(self, units="ms"):
         print "%s ->\t\033[1;31m%s\033[0m = \t%.2f%s" % (str(self), self.status, self.get("gmean", units), units)
+        
+    def shortName(self):
+        pos = self.name.find("/")
+        if pos > 0:
+            name = self.name[:pos]
+        else:
+            name = self.name
+        if self.fixture.endswith(name):
+            fixture = self.fixture[:-len(name)]
+        else:
+            fixture = self.fixture
+        if fixture.endswith("_"):
+            fixture = fixture[:-1]
+        return '::'.join(filter(None, [name, fixture]))
 
     def __str__(self):
         pos = self.name.find("/")
