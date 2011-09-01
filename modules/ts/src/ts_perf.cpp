@@ -4,6 +4,7 @@ using namespace perf;
 
 void randu(cv::Mat& m)
 {
+    const int bigValue = 0x00000FFF;
     if (m.depth() < CV_32F)
     {
         int minmax[] = {0, 256};
@@ -12,13 +13,15 @@ void randu(cv::Mat& m)
     }
     else if (m.depth() == CV_32F)
     {
-        float minmax[] = {-FLT_MAX, FLT_MAX};
+        //float minmax[] = {-FLT_MAX, FLT_MAX};
+        float minmax[] = {-bigValue, bigValue};
         cv::Mat mr = m.reshape(1);
         cv::randu(mr, cv::Mat(1, 1, CV_32F, minmax), cv::Mat(1, 1, CV_32F, minmax + 1));
     }
     else
     {
-        double minmax[] = {-DBL_MAX, DBL_MAX};
+        //double minmax[] = {-DBL_MAX, DBL_MAX};
+        double minmax[] = {-bigValue, bigValue};
         cv::Mat mr = m.reshape(1);
         cv::randu(mr, cv::Mat(1, 1, CV_64F, minmax), cv::Mat(1, 1, CV_64F, minmax + 1));
     }
