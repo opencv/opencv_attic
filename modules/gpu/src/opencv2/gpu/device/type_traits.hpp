@@ -40,84 +40,41 @@
 //
 //M*/
 
-#ifndef __OPENCV_GPU_KENELRS_HPP__
-#define __OPENCV_GPU_KENELRS_HPP__
+#ifndef __OPENCV_GPU_TYPE_TRAITS_HPP__
+#define __OPENCV_GPU_TYPE_TRAITS_HPP__
 
-namespace cv
+#include "detail/type_traits_detail.hpp"
+
+namespace cv { namespace gpu { namespace device
 {
-	namespace gpu
-	{
-		namespace device
-		{
-			struct Grid1D
-			{
-				static __forceinline__ __device__ int STRIDE() { return  gridDim.x * blockDim.x; }
-				static __forceinline__ __device__ int SHIFT()  { return blockIdx.x * blockDim.x + threadIdx.x; }
-			};
+    template <typename T> struct IsSimpleParameter
+    {
+        enum {value = detail::IsIntegral<T>::value || detail::IsFloat<T>::value || detail::PointerTraits<typename detail::ReferenceTraits<T>::type>::value};
+    };
 
-			struct Block1D
-			{
-				static __forceinline__ __device__ int STRIDE() { return blockDim.x; }
-				static __forceinline__ __device__ int SHIFT()  { return threadIdx.x; }			
-			};
+    template <typename T> struct TypeTraits
+    {
+        typedef typename detail::UnConst<T>::type                                       NonConstType;
+        typedef typename detail::UnVolatile<T>::type                                    NonVolatileType;
+        typedef typename detail::UnVolatile<typename detail::UnConst<T>::type>::type    UnqualifiedType;
+        typedef typename detail::PointerTraits<UnqualifiedType>::type                   PointeeType;
+        typedef typename detail::ReferenceTraits<T>::type                               ReferredType;
 
-			struct Warp
-			{
-				static __forceinline__ __device__ int STRIDE() { return warpSize };            
-				static __forceinline__ __device__ int SHIFT()  { return threadIdx.x & (warpSize - 1); }			
-			};
+        enum { isConst          = detail::UnConst<T>::value };
+        enum { isVolatile       = detail::UnVolatile<T>::value };
 
-			template <class Worker, typename T>
-			__forceinline__ __device__ void Copy(const T* in, T *out, int length)
-			{
-				int STRIDE = Worker::STRIDE();
-				int idx    = Worker::SHIFT();				
-				
-				for (; idx < length; idx += STRIDE) 
-	                out[idx] = in[idx];
-			}
+        enum { isReference      = detail::ReferenceTraits<UnqualifiedType>::value };
+        enum { isPointer        = detail::PointerTraits<typename detail::ReferenceTraits<UnqualifiedType>::type>::value };        
 
-			template <class Worker, typename InIter, typename OutIter>
-			__forceinline__ __device__ void Copy(InIter beg, InIter end, OutIter out)
-			{
-				int STRIDE = Worker::STRIDE();
-				int SHIFT  = Worker::SHIFT();
-				
-				beg += SHIFT;
-				out += SHIFT;
+        enum { isUnsignedInt = detail::IsUnsignedIntegral<UnqualifiedType>::value };
+        enum { isSignedInt   = detail::IsSignedIntergral<UnqualifiedType>::value };
+        enum { isIntegral    = detail::IsIntegral<UnqualifiedType>::value };
+        enum { isFloat       = detail::IsFloat<UnqualifiedType>::value  };
+        enum { isArith       = isIntegral || isFloat };
+        enum { isVec         = detail::IsVec<UnqualifiedType>::value  };
+        
+        typedef typename detail::Select<IsSimpleParameter<UnqualifiedType>::value, T, typename detail::AddParameterType<T>::type>::type ParameterType;
+    };
+}}}
 
-				for (; beg < end; beg += STRIDE, out += STRIDE) 
-					*out = *beg;				
-			}		
-
-			 template <class Worker, typename T>
-			__forceinline__ __device__ void Yota(T* out, int beg, int end)
-			{	            				
-				int STRIDE = Worker::STRIDE();
-				int SHIFT  = Worker::SHIFT();
-
-				int idx    = SHIFT;
-				int cur    = beg + SHIFT;
-				int length = end - beg;
-				
-				for (; idx < length; idx += STRIDE, cur += STRIDE)
-					out[idx] = cur;				
-			}
-
-			template <class Worker, typename OutIter>
-			__forceinline__ __device__ void Yota(OutIter beg, OutIter end, int val)
-			{
-				int STRIDE = Worker::STRIDE();
-				int SHIFT  = Worker::SHIFT();
-
-				beg += SHIFT;
-				val += SHIFT;
-				
-				for (; beg < end; beg += STRIDE, val += STRIDE)
-					*beg = val;
-			}
-		}
-	}
-}
-
-#endif /* __OPENCV_GPU_KENELRS_HPP__ */
+#endif // __OPENCV_GPU_TYPE_TRAITS_HPP__

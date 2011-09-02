@@ -60,6 +60,8 @@ CV_EXPORTS_W void namedWindow( const string& winname, int flags=WINDOW_AUTOSIZE 
 CV_EXPORTS_W void destroyWindow( const string& winname );
 CV_EXPORTS_W void destroyAllWindows();
 CV_EXPORTS_W int startWindowThread();
+CV_EXPORTS_W void resizeWindow( const string& name, int width, int height );
+CV_EXPORTS_W void moveWindow( const string& name, int x, int y );
 
 CV_EXPORTS_W void setWindowProperty(const string& winname, int prop_id, double prop_value);//YV
 CV_EXPORTS_W double getWindowProperty(const string& winname, int prop_id);//YV
@@ -129,13 +131,34 @@ typedef void (*MouseCallback )(int event, int x, int y, int flags, void* param);
 
 //! assigns callback for mouse events
 CV_EXPORTS void setMouseCallback( const string& windowName, MouseCallback onMouse, void* param=0);
+
+enum
+{
+    // 8bit, color or not
+    IMREAD_UNCHANGED  =-1,
+    // 8bit, gray
+    IMREAD_GRAYSCALE  =0,
+    // ?, color
+    IMREAD_COLOR      =1,
+    // any depth, ?
+    IMREAD_ANYDEPTH   =2,
+    // ?, any color
+    IMREAD_ANYCOLOR   =4
+};
+    
+enum
+{
+    IMWRITE_JPEG_QUALITY =1,
+    IMWRITE_PNG_COMPRESSION =16,
+    IMWRITE_PXM_BINARY =32
+};
     
 CV_EXPORTS_W Mat imread( const string& filename, int flags=1 );
 CV_EXPORTS_W bool imwrite( const string& filename, InputArray img,
               const vector<int>& params=vector<int>());
 CV_EXPORTS_W Mat imdecode( InputArray buf, int flags );
 CV_EXPORTS_W bool imencode( const string& ext, InputArray img,
-                            vector<uchar>& buf,
+                            CV_OUT vector<uchar>& buf,
                             const vector<int>& params=vector<int>());
 
 CV_EXPORTS_W int waitKey(int delay=0);

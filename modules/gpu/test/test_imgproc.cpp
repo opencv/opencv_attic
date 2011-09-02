@@ -181,10 +181,12 @@ INSTANTIATE_TEST_CASE_P(ImgProc, Resize, testing::Combine(
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 // remap
 
-struct Remap : testing::TestWithParam< std::tr1::tuple<cv::gpu::DeviceInfo, int> >
+struct Remap : testing::TestWithParam< std::tr1::tuple<cv::gpu::DeviceInfo, int, int, int> >
 {
     cv::gpu::DeviceInfo devInfo;
     int type;
+    int interpolation;
+    int borderType;
 
     cv::Size size;
     cv::Mat src;
@@ -197,25 +199,48 @@ struct Remap : testing::TestWithParam< std::tr1::tuple<cv::gpu::DeviceInfo, int>
     {
         devInfo = std::tr1::get<0>(GetParam());
         type = std::tr1::get<1>(GetParam());
+        interpolation = std::tr1::get<2>(GetParam());
+        borderType = std::tr1::get<3>(GetParam());
 
         cv::gpu::setDevice(devInfo.deviceID());
 
         cv::RNG& rng = cvtest::TS::ptr()->get_rng();
 
-        size = cv::Size(rng.uniform(20, 150), rng.uniform(20, 150));
+        size = cv::Size(rng.uniform(100, 200), rng.uniform(100, 200));
 
-        src = cvtest::randomMat(rng, size, type, 0.0, 127.0, false);
-        xmap = cvtest::randomMat(rng, size, CV_32FC1, 0.0, src.cols - 1, false);
-        ymap = cvtest::randomMat(rng, size, CV_32FC1, 0.0, src.rows - 1, false);
+        src = cvtest::randomMat(rng, size, type, 0.0, 256.0, false);
+
+        xmap.create(size, CV_32FC1);
+        ymap.create(size, CV_32FC1);
+
+        for (int y = 0; y < src.rows; ++y)
+        {
+            float* xmap_row = xmap.ptr<float>(y);
+            float* ymap_row = ymap.ptr<float>(y);
+
+            for (int x = 0; x < src.cols; ++x)
+            {
+                xmap_row[x] = src.cols - 1 - x + 10;
+                ymap_row[x] = src.rows - 1 - y + 10;
+            }
+        }
         
-        cv::remap(src, dst_gold, xmap, ymap, cv::INTER_LINEAR, cv::BORDER_WRAP);
+        cv::remap(src, dst_gold, xmap, ymap, interpolation, borderType);
     }
 };
 
 TEST_P(Remap, Accuracy)
 {
+    static const char* interpolations_str[] = {"INTER_NEAREST", "INTER_LINEAR", "INTER_CUBIC"};
+    static const char* borderTypes_str[] = {"BORDER_CONSTANT", "BORDER_REPLICATE", "BORDER_REFLECT", "BORDER_WRAP", "BORDER_REFLECT_101"};
+
+    const char* interpolationStr = interpolations_str[interpolation];
+    const char* borderTypeStr = borderTypes_str[borderType];
+
     PRINT_PARAM(devInfo);
     PRINT_TYPE(type);
+    PRINT_PARAM(interpolationStr);
+    PRINT_PARAM(borderTypeStr);
     PRINT_PARAM(size);
 
     cv::Mat dst;
@@ -223,17 +248,34 @@ TEST_P(Remap, Accuracy)
     ASSERT_NO_THROW(
         cv::gpu::GpuMat gpuRes;
         
-        cv::gpu::remap(cv::gpu::GpuMat(src), gpuRes, cv::gpu::GpuMat(xmap), cv::gpu::GpuMat(ymap));
+        cv::gpu::remap(cv::gpu::GpuMat(src), gpuRes, cv::gpu::GpuMat(xmap), cv::gpu::GpuMat(ymap), interpolation, borderType);
 
         gpuRes.download(dst);
     );
 
-    EXPECT_MAT_SIMILAR(dst_gold, dst, 0.5);
+    if (dst_gold.depth() == CV_32F)
+    {
+        dst_gold.convertTo(dst_gold, CV_8U);
+        dst.convertTo(dst, CV_8U);
+    }
+
+    EXPECT_MAT_NEAR(dst_gold, dst, 1e-5);
 }
 
-INSTANTIATE_TEST_CASE_P(ImgProc, Remap, testing::Combine(
-                        testing::ValuesIn(devices()), 
-                        testing::Values(CV_8UC1, CV_8UC3)));
+INSTANTIATE_TEST_CASE_P
+(
+    ImgProc, Remap, testing::Combine
+    (
+        testing::ValuesIn(devices()), 
+        testing::Values
+        (
+            CV_8UC1, CV_8UC3, CV_8UC4,
+            CV_32FC1, CV_32FC3, CV_32FC4
+        ),
+        testing::Values(cv::INTER_NEAREST, cv::INTER_LINEAR),
+        testing::Values(cv::BORDER_REFLECT101, cv::BORDER_REPLICATE, cv::BORDER_CONSTANT, cv::BORDER_REFLECT, cv::BORDER_WRAP)
+    )
+);
                         
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 // copyMakeBorder
@@ -3594,13 +3636,8 @@ INSTANTIATE_TEST_CASE_P(ImgProc, MatchTemplate32F, testing::Combine(
                         testing::Range(1, 5), 
                         testing::Values((int)CV_TM_SQDIFF, (int)CV_TM_CCORR)));
 
-struct MatchTemplate : testing::TestWithParam< std::tr1::tuple<cv::gpu::DeviceInfo, int> >
+struct MatchTemplateBlackSource : testing::TestWithParam< std::tr1::tuple<cv::gpu::DeviceInfo, int> >
 {
-    cv::Mat image;
-    cv::Mat pattern;
-
-    cv::Point maxLocGold;
-
     cv::gpu::DeviceInfo devInfo;
     int method;
 
@@ -3608,25 +3645,24 @@ struct MatchTemplate : testing::TestWithParam< std::tr1::tuple<cv::gpu::DeviceIn
     {
         devInfo = std::tr1::get<0>(GetParam());
         method = std::tr1::get<1>(GetParam());
-
         cv::gpu::setDevice(devInfo.deviceID());
-        
-        image = readImage("matchtemplate/black.png");
-        ASSERT_FALSE(image.empty());
-        
-        pattern = readImage("matchtemplate/cat.png");
-        ASSERT_FALSE(pattern.empty());
-
-        maxLocGold = cv::Point(284, 12);
     }
 };
 
-TEST_P(MatchTemplate, FindPatternInBlack)
+TEST_P(MatchTemplateBlackSource, Accuracy)
 {
     const char* matchTemplateMethodStr = matchTemplateMethods[method];
 
     PRINT_PARAM(devInfo);
     PRINT_PARAM(matchTemplateMethodStr);
+
+    cv::Mat image = readImage("matchtemplate/black.png");
+    ASSERT_FALSE(image.empty());
+
+    cv::Mat pattern = readImage("matchtemplate/cat.png");
+    ASSERT_FALSE(pattern.empty());
+
+    cv::Point maxLocGold = cv::Point(284, 12);
 
     cv::Mat dst;
 
@@ -3643,9 +3679,67 @@ TEST_P(MatchTemplate, FindPatternInBlack)
     ASSERT_EQ(maxLocGold, maxLoc);
 }
 
-INSTANTIATE_TEST_CASE_P(ImgProc, MatchTemplate, testing::Combine(
-                        testing::ValuesIn(devices()), 
+INSTANTIATE_TEST_CASE_P(ImgProc, MatchTemplateBlackSource, testing::Combine(
+                        testing::ValuesIn(devices()),
                         testing::Values((int)CV_TM_CCOEFF_NORMED, (int)CV_TM_CCORR_NORMED)));
+
+
+struct MatchTemplate_CCOEF_NORMED : testing::TestWithParam< std::tr1::tuple<cv::gpu::DeviceInfo, std::pair<std::string, std::string> > >
+{
+    cv::gpu::DeviceInfo devInfo;
+    std::string imageName;
+    std::string patternName;
+
+    cv::Mat image, pattern;
+
+    virtual void SetUp()
+    {
+        devInfo = std::tr1::get<0>(GetParam());
+        imageName = std::tr1::get<1>(GetParam()).first;
+        patternName = std::tr1::get<1>(GetParam()).second;
+
+        image = readImage(imageName);
+        ASSERT_FALSE(image.empty());
+
+        pattern = readImage(patternName);
+        ASSERT_FALSE(pattern.empty());
+    }
+};
+
+TEST_P(MatchTemplate_CCOEF_NORMED, Accuracy)
+{
+    PRINT_PARAM(devInfo);
+    PRINT_PARAM(imageName);
+    PRINT_PARAM(patternName);
+
+    cv::Mat dstGold;
+    cv::matchTemplate(image, pattern, dstGold, CV_TM_CCOEFF_NORMED);
+    cv::Point minLocGold, maxLocGold;
+    cv::minMaxLoc(dstGold, NULL, NULL, &minLocGold, &maxLocGold);
+
+    cv::Mat dst;
+    ASSERT_NO_THROW(
+        cv::gpu::GpuMat dev_dst;
+        cv::gpu::matchTemplate(cv::gpu::GpuMat(image), cv::gpu::GpuMat(pattern), dev_dst, CV_TM_CCOEFF_NORMED);
+        dev_dst.download(dst);
+    );
+
+    cv::Point minLoc, maxLoc;
+    double minVal, maxVal;
+    cv::minMaxLoc(dst, &minVal, &maxVal, &minLoc, &maxLoc);
+
+    ASSERT_EQ(minLocGold, minLoc);
+    ASSERT_EQ(maxLocGold, maxLoc);
+    ASSERT_LE(maxVal, 1.);
+    ASSERT_GE(minVal, -1.);
+}
+
+
+INSTANTIATE_TEST_CASE_P(ImgProc, MatchTemplate_CCOEF_NORMED, testing::Combine(
+                        testing::ValuesIn(devices()),
+                        testing::Values(std::make_pair(std::string("matchtemplate/source-0.png"), std::string("matchtemplate/target-0.png")),
+                                        std::make_pair(std::string("matchtemplate/source-1.png"), std::string("matchtemplate/target-1.png")))));
+
 
 ////////////////////////////////////////////////////////////////////////////
 // MulSpectrums
@@ -3959,23 +4053,28 @@ INSTANTIATE_TEST_CASE_P(ImgProc, Blend, testing::Combine(
 ////////////////////////////////////////////////////////
 // pyrDown
 
-struct PyrDown : testing::TestWithParam<cv::gpu::DeviceInfo>
+struct PyrDown : testing::TestWithParam< std::tr1::tuple<cv::gpu::DeviceInfo, int> >
 {    
     cv::gpu::DeviceInfo devInfo;
+    int type;
     
+    cv::Size size;
     cv::Mat src;
     
     cv::Mat dst_gold;
 
     virtual void SetUp()
     {
-        devInfo = GetParam();
+        devInfo = std::tr1::get<0>(GetParam());
+        type = std::tr1::get<1>(GetParam());
+
         cv::gpu::setDevice(devInfo.deviceID());
-        
-        cv::Mat img = readImage("stereobm/aloe-L.png");
-        ASSERT_FALSE(img.empty());
-        
-        img.convertTo(src, CV_16S);
+
+        cv::RNG& rng = cvtest::TS::ptr()->get_rng();
+
+        size = cv::Size(rng.uniform(100, 200), rng.uniform(100, 200));
+
+        src = cvtest::randomMat(rng, size, type, 0.0, 255.0, false);
         
         cv::pyrDown(src, dst_gold);
     }
@@ -3984,6 +4083,8 @@ struct PyrDown : testing::TestWithParam<cv::gpu::DeviceInfo>
 TEST_P(PyrDown, Accuracy)
 {
     PRINT_PARAM(devInfo);
+    PRINT_TYPE(type);
+    PRINT_PARAM(size);
     
     cv::Mat dst;
 
@@ -3998,34 +4099,43 @@ TEST_P(PyrDown, Accuracy)
     ASSERT_EQ(dst_gold.cols, dst.cols);
     ASSERT_EQ(dst_gold.rows, dst.rows);
     ASSERT_EQ(dst_gold.type(), dst.type());
-
-    double err = cvtest::crossCorr(dst_gold, dst) /
-            (cv::norm(dst_gold,cv::NORM_L2)*cv::norm(dst,cv::NORM_L2));
+    
+    double err = cvtest::crossCorr(dst_gold, dst) / (cv::norm(dst_gold,cv::NORM_L2)*cv::norm(dst,cv::NORM_L2));
     ASSERT_NEAR(err, 1., 1e-2);
 }
 
-INSTANTIATE_TEST_CASE_P(ImgProc, PyrDown, testing::ValuesIn(devices()));
+INSTANTIATE_TEST_CASE_P(ImgProc, PyrDown, testing::Combine(
+                        testing::ValuesIn(devices()), 
+                        testing::Values(CV_8UC1, CV_8UC2, CV_8UC3, CV_8UC4,
+                                        CV_16UC1, CV_16UC2, CV_16UC3, CV_16UC4,
+                                        CV_16SC1, CV_16SC2, CV_16SC3, CV_16SC4,
+                                        CV_32FC1, CV_32FC2, CV_32FC3, CV_32FC4)));
 
 ////////////////////////////////////////////////////////
 // pyrUp
 
-struct PyrUp: testing::TestWithParam<cv::gpu::DeviceInfo>
+struct PyrUp: testing::TestWithParam< std::tr1::tuple<cv::gpu::DeviceInfo, int> >
 {    
     cv::gpu::DeviceInfo devInfo;
+    int type;
     
+    cv::Size size;    
     cv::Mat src;
     
     cv::Mat dst_gold;
 
     virtual void SetUp()
     {
-        devInfo = GetParam();
+        devInfo = std::tr1::get<0>(GetParam());
+        type = std::tr1::get<1>(GetParam());
+
         cv::gpu::setDevice(devInfo.deviceID());
         
-        cv::Mat img = readImage("stereobm/aloe-L.png");
-        ASSERT_FALSE(img.empty());
-        
-        img.convertTo(src, CV_16S);
+        cv::RNG& rng = cvtest::TS::ptr()->get_rng();
+
+        size = cv::Size(rng.uniform(100, 200), rng.uniform(100, 200));
+
+        src = cvtest::randomMat(rng, size, type, 0.0, 255.0, false);
         
         cv::pyrUp(src, dst_gold);
     }
@@ -4034,6 +4144,8 @@ struct PyrUp: testing::TestWithParam<cv::gpu::DeviceInfo>
 TEST_P(PyrUp, Accuracy)
 {
     PRINT_PARAM(devInfo);
+    PRINT_TYPE(type);
+    PRINT_PARAM(size);
     
     cv::Mat dst;
 
@@ -4049,12 +4161,17 @@ TEST_P(PyrUp, Accuracy)
     ASSERT_EQ(dst_gold.rows, dst.rows);
     ASSERT_EQ(dst_gold.type(), dst.type());
 
-    double err = cvtest::crossCorr(dst_gold, dst) /
-            (cv::norm(dst_gold,cv::NORM_L2)*cv::norm(dst,cv::NORM_L2));
+    double err = cvtest::crossCorr(dst_gold, dst) / (cv::norm(dst_gold,cv::NORM_L2)*cv::norm(dst,cv::NORM_L2));
     ASSERT_NEAR(err, 1., 1e-2);
 }
 
-INSTANTIATE_TEST_CASE_P(ImgProc, PyrUp, testing::ValuesIn(devices()));
+
+INSTANTIATE_TEST_CASE_P(ImgProc, PyrUp, testing::Combine(
+                        testing::ValuesIn(devices()), 
+                        testing::Values(CV_8UC1, CV_8UC2, CV_8UC3, CV_8UC4,
+                                        CV_16UC1, CV_16UC2, CV_16UC3, CV_16UC4,
+                                        CV_16SC1, CV_16SC2, CV_16SC3, CV_16SC4,
+                                        CV_32FC1, CV_32FC2, CV_32FC3, CV_32FC4)));
 
 ////////////////////////////////////////////////////////
 // Canny

@@ -41,11 +41,10 @@
 //M*/
 
 #include <utility>
+#include <algorithm>
 #include "internal_shared.hpp"
-#include "opencv2/gpu/device/utility.hpp"
 
 using namespace cv::gpu;
-using namespace cv::gpu::device;
 
 namespace cv { namespace gpu { namespace canny
 {

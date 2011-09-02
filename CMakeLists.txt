@@ -36,7 +36,11 @@ endif(NOT CMAKE_TOOLCHAIN_FILE)
 # --------------------------------------------------------------
 # Top level OpenCV project
 # --------------------------------------------------------------
-cmake_minimum_required(VERSION 2.4)
+if(NOT IOS)
+	cmake_minimum_required(VERSION 2.6)
+else()
+	cmake_minimum_required(VERSION 2.8)
+endif()
 project(OpenCV)
 
 set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "Configs" FORCE)
@@ -72,8 +76,11 @@ endif()
 # Build static or dynamic libs?
 # Default: dynamic libraries
 # ----------------------------------------------------------------------------
-set(BUILD_SHARED_LIBS ON CACHE BOOL "Build shared libraries (.dll/.so) instead of static ones (.lib/.a)")
-
+if(NOT IOS)
+	set(BUILD_SHARED_LIBS ON CACHE BOOL "Build shared libraries (.dll/.so) instead of static ones (.lib/.a)")
+else()
+	set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build shared libraries (.dll/.so) instead of static ones (.lib/.a)")
+endif()
 # ----------------------------------------------------------------------------
 # Include debug info into debug libs?
 # Default: yes
@@ -327,7 +334,11 @@ endif()
 
 # Build tests:
 # ===================================================
-set(BUILD_TESTS ON CACHE BOOL "Build tests")
+if(NOT IOS)
+	set(BUILD_TESTS ON CACHE BOOL "Build tests")
+else()
+	set(BUILD_TESTS OFF CACHE BOOL "Build tests")
+endif()
 set(BUILD_PERF_TESTS ON CACHE BOOL "Build performance tests")
 
 # Build 3rdparty libraries under unix
@@ -338,7 +349,10 @@ else()
     set(OPENCV_BUILD_3RDPARTY_LIBS FALSE CACHE BOOL "Build 3rd party libraries")
 endif()
 
+if(NOT IOS)
 include(OpenCVPCHSupport.cmake REQUIRED)
+endif()
+
 include(OpenCVModule.cmake REQUIRED)
 if(ANDROID)
     include(OpenCVAndroidProject.cmake REQUIRED)
@@ -399,11 +413,13 @@ endif()
 # allow fine grained control over which libraries not to link, even if
 # they are available on the system
 # ====================================================================
+if(NOT IOS)
 set(WITH_PNG ON CACHE BOOL "Include PNG support")
 set(WITH_JPEG ON CACHE BOOL "Include JPEG support")
 set(WITH_JASPER ON CACHE BOOL "Include JPEG2K support")
 set(WITH_TIFF ON CACHE BOOL "Include TIFF support")
 set(WITH_OPENEXR ON CACHE BOOL "Include ILM support via OpenEXR")
+
 
 if(UNIX)
     set(WITH_FFMPEG ON CACHE BOOL "Include FFMPEG support")
@@ -418,9 +434,15 @@ if(UNIX)
     set(WITH_1394 ON CACHE BOOL "Include IEEE1394 support")
 endif()
 
+endif()
+
 if(APPLE)
     set(WITH_CARBON OFF CACHE BOOL "Use Carbon for UI instead of Cocoa")
     set(WITH_QUICKTIME OFF CACHE BOOL "Use QuickTime for Video I/O insted of QTKit")
+endif()
+
+if(IOS)
+	set(WITH_AVFOUNDATION ON CACHE BOOL "Use AVFoundation for Video I/O")
 endif()
 
 set(WITH_TBB OFF CACHE BOOL "Include Intel TBB support")
@@ -1085,8 +1107,11 @@ Set this variable to path to your Android sources to compile
 libnative_camera_rx.x.x.so for your Android")
     SET(BUILD_ANDROID_CAMERA_WRAPPER OFF)
     if (ANDROID_SOURCE_TREE)
-        FILE(STRINGS "${ANDROID_SOURCE_TREE}/development/sdk/platform_source.properties" ANDROID_VERSION REGEX "Platform\\.Version=[0-9]+\\.[0-9]+\\.[0-9]+" )
-        string(REGEX REPLACE "Platform\\.Version=([0-9]+\\.[0-9]+\\.[0-9]+)" "\\1" ANDROID_VERSION "${ANDROID_VERSION}")
+        FILE(STRINGS "${ANDROID_SOURCE_TREE}/development/sdk/platform_source.properties" ANDROID_VERSION REGEX "Platform\\.Version=[0-9]+\\.[0-9]+(\\.[0-9]+)?" )
+        string(REGEX REPLACE "Platform\\.Version=([0-9]+\\.[0-9]+(\\.[0-9]+)?)" "\\1" ANDROID_VERSION "${ANDROID_VERSION}")
+        if (ANDROID_VERSION MATCHES "^[0-9]+\\.[0-9]+$")
+            SET(ANDROID_VERSION "${ANDROID_VERSION}.0")
+        endif()
         if(NOT "${ANDROID_VERSION}" STREQUAL "")
             SET(BUILD_ANDROID_CAMERA_WRAPPER ON)
         endif()
@@ -1679,7 +1704,11 @@ if(UNIX AND NOT APPLE)
         endif()
     endif()
 elseif(APPLE)
-    status("  Video I/O:"        WITH_QUICKTIME      THEN QuickTime ELSE QTKit)
+	if(NOT IOS)
+		status("  Video I/O:"        WITH_QUICKTIME      THEN QuickTime ELSE QTKit)
+	else()
+		status("  Video I/O: AVFoundation")
+	endif()		
 elseif(WIN32)
     status("  Video I/O:"        HAVE_VIDEOINPUT     THEN DirectShow ELSE NO)
 endif()

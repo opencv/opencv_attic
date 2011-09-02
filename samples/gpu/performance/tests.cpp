@@ -79,9 +79,9 @@ TEST(remap)
     Mat src, dst, xmap, ymap;
     gpu::GpuMat d_src, d_dst, d_xmap, d_ymap;
 
-    for (int size = 1000; size <= 8000; size *= 2)
+    for (int size = 1000; size <= 4000; size *= 2)
     {
-        SUBTEST << "src " << size << " and 8U, 32F maps";
+        SUBTEST << "src " << size << ", 8UC1";
 
         gen(src, size, size, CV_8UC1, 0, 256);
 
@@ -101,7 +101,7 @@ TEST(remap)
         dst.create(xmap.size(), src.type());
 
         CPU_ON;
-        remap(src, dst, xmap, ymap, INTER_LINEAR);
+        remap(src, dst, xmap, ymap, INTER_LINEAR, BORDER_REPLICATE);
         CPU_OFF;
 
         d_src = src;
@@ -110,7 +110,112 @@ TEST(remap)
         d_dst.create(d_xmap.size(), d_src.type());
 
         GPU_ON;
-        gpu::remap(d_src, d_dst, d_xmap, d_ymap);
+        gpu::remap(d_src, d_dst, d_xmap, d_ymap, INTER_LINEAR, BORDER_REPLICATE);
+        GPU_OFF;
+    }
+
+    for (int size = 1000; size <= 4000; size *= 2)
+    {
+        SUBTEST << "src " << size << ", 8UC3";
+
+        gen(src, size, size, CV_8UC3, 0, 256);
+
+        xmap.create(size, size, CV_32F);
+        ymap.create(size, size, CV_32F);
+        for (int i = 0; i < size; ++i)
+        {
+            float* xmap_row = xmap.ptr<float>(i);
+            float* ymap_row = ymap.ptr<float>(i);
+            for (int j = 0; j < size; ++j)
+            {
+                xmap_row[j] = (j - size * 0.5f) * 0.75f + size * 0.5f;
+                ymap_row[j] = (i - size * 0.5f) * 0.75f + size * 0.5f;
+            }
+        }
+
+        dst.create(xmap.size(), src.type());
+
+        CPU_ON;
+        remap(src, dst, xmap, ymap, INTER_LINEAR, BORDER_REPLICATE);
+        CPU_OFF;
+
+        d_src = src;
+        d_xmap = xmap;
+        d_ymap = ymap;
+        d_dst.create(d_xmap.size(), d_src.type());
+
+        GPU_ON;
+        gpu::remap(d_src, d_dst, d_xmap, d_ymap, INTER_LINEAR, BORDER_REPLICATE);
+        GPU_OFF;
+    }
+
+    for (int size = 1000; size <= 4000; size *= 2)
+    {
+        SUBTEST << "src " << size << ", 8UC4";
+
+        gen(src, size, size, CV_8UC4, 0, 256);
+
+        xmap.create(size, size, CV_32F);
+        ymap.create(size, size, CV_32F);
+        for (int i = 0; i < size; ++i)
+        {
+            float* xmap_row = xmap.ptr<float>(i);
+            float* ymap_row = ymap.ptr<float>(i);
+            for (int j = 0; j < size; ++j)
+            {
+                xmap_row[j] = (j - size * 0.5f) * 0.75f + size * 0.5f;
+                ymap_row[j] = (i - size * 0.5f) * 0.75f + size * 0.5f;
+            }
+        }
+
+        dst.create(xmap.size(), src.type());
+
+        CPU_ON;
+        remap(src, dst, xmap, ymap, INTER_LINEAR, BORDER_REPLICATE);
+        CPU_OFF;
+
+        d_src = src;
+        d_xmap = xmap;
+        d_ymap = ymap;
+        d_dst.create(d_xmap.size(), d_src.type());
+
+        GPU_ON;
+        gpu::remap(d_src, d_dst, d_xmap, d_ymap, INTER_LINEAR, BORDER_REPLICATE);
+        GPU_OFF;
+    }
+
+    for (int size = 1000; size <= 4000; size *= 2)
+    {
+        SUBTEST << "src " << size << ", 16SC3";
+
+        gen(src, size, size, CV_16SC3, 0, 256);
+
+        xmap.create(size, size, CV_32F);
+        ymap.create(size, size, CV_32F);
+        for (int i = 0; i < size; ++i)
+        {
+            float* xmap_row = xmap.ptr<float>(i);
+            float* ymap_row = ymap.ptr<float>(i);
+            for (int j = 0; j < size; ++j)
+            {
+                xmap_row[j] = (j - size * 0.5f) * 0.75f + size * 0.5f;
+                ymap_row[j] = (i - size * 0.5f) * 0.75f + size * 0.5f;
+            }
+        }
+
+        dst.create(xmap.size(), src.type());
+
+        CPU_ON;
+        remap(src, dst, xmap, ymap, INTER_LINEAR, BORDER_REPLICATE);
+        CPU_OFF;
+
+        d_src = src;
+        d_xmap = xmap;
+        d_ymap = ymap;
+        d_dst.create(d_xmap.size(), d_src.type());
+
+        GPU_ON;
+        gpu::remap(d_src, d_dst, d_xmap, d_ymap, INTER_LINEAR, BORDER_REPLICATE);
         GPU_OFF;
     }
 }
@@ -286,7 +391,7 @@ TEST(BruteForceMatcher)
 {
     // Init CPU matcher
 
-    int desc_len = 128;
+    int desc_len = 64;
 
     BruteForceMatcher< L2<float> > matcher;
 
@@ -304,8 +409,8 @@ TEST(BruteForceMatcher)
     gpu::GpuMat d_train(train);
 
     // Output
-    vector< vector<DMatch> > matches(1);
-    vector< vector<DMatch> > d_matches(1);
+    vector< vector<DMatch> > matches(2);
+    vector< vector<DMatch> > d_matches(2);
 
     SUBTEST << "match";
 
@@ -329,7 +434,7 @@ TEST(BruteForceMatcher)
     GPU_OFF;
 
     SUBTEST << "radiusMatch";
-    float max_distance = 3.8f;
+    float max_distance = 2.0f;
 
     CPU_ON;
     matcher.radiusMatch(query, train, matches, max_distance);
@@ -875,49 +980,269 @@ TEST(GaussianBlur)
 
 TEST(pyrDown)
 {
-    gpu::PyrDownBuf buf(Size(4000, 4000), CV_16SC3);
-
-    for (int size = 4000; size >= 1000; size -= 1000)
     {
-        SUBTEST << "size " << size;
+        for (int size = 4000; size >= 1000; size -= 1000)
+        {
+            SUBTEST << "8UC1, size " << size;
 
-        Mat src; gen(src, size, size, CV_16SC3, 0, 256);
-        Mat dst(Size(src.cols / 2, src.rows / 2), src.type());
+            Mat src; gen(src, size, size, CV_8UC1, 0, 256);
+            Mat dst(Size(src.cols / 2, src.rows / 2), src.type());
 
-        CPU_ON;
-        pyrDown(src, dst);
-        CPU_OFF;
+            CPU_ON;
+            pyrDown(src, dst);
+            CPU_OFF;
 
-        gpu::GpuMat d_src(src);
-        gpu::GpuMat d_dst(Size(src.cols / 2, src.rows / 2), src.type());
+            gpu::GpuMat d_src(src);
+            gpu::GpuMat d_dst(Size(src.cols / 2, src.rows / 2), src.type());
 
-        GPU_ON;
-        gpu::pyrDown(d_src, d_dst, buf);
-        GPU_OFF;
+            GPU_ON;
+            gpu::pyrDown(d_src, d_dst);
+            GPU_OFF;
+        }
+    }
+    {
+        for (int size = 4000; size >= 1000; size -= 1000)
+        {
+            SUBTEST << "8UC3, size " << size;
+
+            Mat src; gen(src, size, size, CV_8UC3, 0, 256);
+            Mat dst(Size(src.cols / 2, src.rows / 2), src.type());
+
+            CPU_ON;
+            pyrDown(src, dst);
+            CPU_OFF;
+
+            gpu::GpuMat d_src(src);
+            gpu::GpuMat d_dst(Size(src.cols / 2, src.rows / 2), src.type());
+
+            GPU_ON;
+            gpu::pyrDown(d_src, d_dst);
+            GPU_OFF;
+        }
+    }
+    {
+        for (int size = 4000; size >= 1000; size -= 1000)
+        {
+            SUBTEST << "8UC4, size " << size;
+
+            Mat src; gen(src, size, size, CV_8UC4, 0, 256);
+            Mat dst(Size(src.cols / 2, src.rows / 2), src.type());
+
+            CPU_ON;
+            pyrDown(src, dst);
+            CPU_OFF;
+
+            gpu::GpuMat d_src(src);
+            gpu::GpuMat d_dst(Size(src.cols / 2, src.rows / 2), src.type());
+
+            GPU_ON;
+            gpu::pyrDown(d_src, d_dst);
+            GPU_OFF;
+        }
+    }
+    {
+        for (int size = 4000; size >= 1000; size -= 1000)
+        {
+            SUBTEST << "16SC3, size " << size;
+
+            Mat src; gen(src, size, size, CV_16SC3, 0, 256);
+            Mat dst(Size(src.cols / 2, src.rows / 2), src.type());
+
+            CPU_ON;
+            pyrDown(src, dst);
+            CPU_OFF;
+
+            gpu::GpuMat d_src(src);
+            gpu::GpuMat d_dst(Size(src.cols / 2, src.rows / 2), src.type());
+
+            GPU_ON;
+            gpu::pyrDown(d_src, d_dst);
+            GPU_OFF;
+        }
+    }
+    {
+        for (int size = 4000; size >= 1000; size -= 1000)
+        {
+            SUBTEST << "32FC1, size " << size;
+
+            Mat src; gen(src, size, size, CV_32FC1, 0, 256);
+            Mat dst(Size(src.cols / 2, src.rows / 2), src.type());
+
+            CPU_ON;
+            pyrDown(src, dst);
+            CPU_OFF;
+
+            gpu::GpuMat d_src(src);
+            gpu::GpuMat d_dst(Size(src.cols / 2, src.rows / 2), src.type());
+
+            GPU_ON;
+            gpu::pyrDown(d_src, d_dst);
+            GPU_OFF;
+        }
+    }
+    {
+        for (int size = 4000; size >= 1000; size -= 1000)
+        {
+            SUBTEST << "32FC3, size " << size;
+
+            Mat src; gen(src, size, size, CV_32FC3, 0, 256);
+            Mat dst(Size(src.cols / 2, src.rows / 2), src.type());
+
+            CPU_ON;
+            pyrDown(src, dst);
+            CPU_OFF;
+
+            gpu::GpuMat d_src(src);
+            gpu::GpuMat d_dst(Size(src.cols / 2, src.rows / 2), src.type());
+
+            GPU_ON;
+            gpu::pyrDown(d_src, d_dst);
+            GPU_OFF;
+        }
+    }
+    {
+        for (int size = 4000; size >= 1000; size -= 1000)
+        {
+            SUBTEST << "32FC4, size " << size;
+
+            Mat src; gen(src, size, size, CV_32FC4, 0, 256);
+            Mat dst(Size(src.cols / 2, src.rows / 2), src.type());
+
+            CPU_ON;
+            pyrDown(src, dst);
+            CPU_OFF;
+
+            gpu::GpuMat d_src(src);
+            gpu::GpuMat d_dst(Size(src.cols / 2, src.rows / 2), src.type());
+
+            GPU_ON;
+            gpu::pyrDown(d_src, d_dst);
+            GPU_OFF;
+        }
     }
 }
 
 TEST(pyrUp)
 {
-    gpu::PyrUpBuf buf(Size(4000, 4000), CV_16SC3);
-
-    for (int size = 4000; size >= 1000; size -= 1000)
     {
-        SUBTEST << "size " << size;
+        for (int size = 2000; size >= 1000; size -= 1000)
+        {
+            SUBTEST << "8UC1, size " << size;
 
-        Mat src; gen(src, size, size, CV_16SC3, 0, 256);
-        Mat dst(Size(src.cols * 2, src.rows * 2), src.type());
+            Mat src; gen(src, size, size, CV_8UC1, 0, 256);
+            Mat dst(Size(src.cols * 2, src.rows * 2), src.type());
 
-        CPU_ON;
-        pyrUp(src, dst);
-        CPU_OFF;
+            CPU_ON;
+            pyrUp(src, dst);
+            CPU_OFF;
 
-        gpu::GpuMat d_src(src);
-        gpu::GpuMat d_dst(Size(src.cols * 2, src.rows * 2), src.type());
+            gpu::GpuMat d_src(src);
+            gpu::GpuMat d_dst(Size(src.cols * 2, src.rows * 2), src.type());
 
-        GPU_ON;
-        gpu::pyrUp(d_src, d_dst, buf);
-        GPU_OFF;
+            GPU_ON;
+            gpu::pyrUp(d_src, d_dst);
+            GPU_OFF;
+        }
+    }
+    {
+        for (int size = 2000; size >= 1000; size -= 1000)
+        {
+            SUBTEST << "8UC3, size " << size;
+
+            Mat src; gen(src, size, size, CV_8UC3, 0, 256);
+            Mat dst(Size(src.cols * 2, src.rows * 2), src.type());
+
+            CPU_ON;
+            pyrUp(src, dst);
+            CPU_OFF;
+
+            gpu::GpuMat d_src(src);
+            gpu::GpuMat d_dst(Size(src.cols * 2, src.rows * 2), src.type());
+
+            GPU_ON;
+            gpu::pyrUp(d_src, d_dst);
+            GPU_OFF;
+        }
+    }
+    {
+        for (int size = 2000; size >= 1000; size -= 1000)
+        {
+            SUBTEST << "8UC4, size " << size;
+
+            Mat src; gen(src, size, size, CV_8UC4, 0, 256);
+            Mat dst(Size(src.cols * 2, src.rows * 2), src.type());
+
+            CPU_ON;
+            pyrUp(src, dst);
+            CPU_OFF;
+
+            gpu::GpuMat d_src(src);
+            gpu::GpuMat d_dst(Size(src.cols * 2, src.rows * 2), src.type());
+
+            GPU_ON;
+            gpu::pyrUp(d_src, d_dst);
+            GPU_OFF;
+        }
+    }
+    {
+        for (int size = 2000; size >= 1000; size -= 1000)
+        {
+            SUBTEST << "16SC3, size " << size;
+
+            Mat src; gen(src, size, size, CV_16SC3, 0, 256);
+            Mat dst(Size(src.cols * 2, src.rows * 2), src.type());
+
+            CPU_ON;
+            pyrUp(src, dst);
+            CPU_OFF;
+
+            gpu::GpuMat d_src(src);
+            gpu::GpuMat d_dst(Size(src.cols * 2, src.rows * 2), src.type());
+
+            GPU_ON;
+            gpu::pyrUp(d_src, d_dst);
+            GPU_OFF;
+        }
+    }
+    {
+        for (int size = 2000; size >= 1000; size -= 1000)
+        {
+            SUBTEST << "32FC1, size " << size;
+
+            Mat src; gen(src, size, size, CV_32FC1, 0, 256);
+            Mat dst(Size(src.cols * 2, src.rows * 2), src.type());
+
+            CPU_ON;
+            pyrUp(src, dst);
+            CPU_OFF;
+
+            gpu::GpuMat d_src(src);
+            gpu::GpuMat d_dst(Size(src.cols * 2, src.rows * 2), src.type());
+
+            GPU_ON;
+            gpu::pyrUp(d_src, d_dst);
+            GPU_OFF;
+        }
+    }
+    {
+        for (int size = 2000; size >= 1000; size -= 1000)
+        {
+            SUBTEST << "32FC3, size " << size;
+
+            Mat src; gen(src, size, size, CV_32FC3, 0, 256);
+            Mat dst(Size(src.cols * 2, src.rows * 2), src.type());
+
+            CPU_ON;
+            pyrUp(src, dst);
+            CPU_OFF;
+
+            gpu::GpuMat d_src(src);
+            gpu::GpuMat d_dst(Size(src.cols * 2, src.rows * 2), src.type());
+
+            GPU_ON;
+            gpu::pyrUp(d_src, d_dst);
+            GPU_OFF;
+        }
     }
 }
 

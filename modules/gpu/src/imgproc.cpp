@@ -47,7 +47,7 @@ using namespace cv::gpu;
 
 #if !defined (HAVE_CUDA)
 
-void cv::gpu::remap(const GpuMat&, GpuMat&, const GpuMat&, const GpuMat&){ throw_nogpu(); }
+void cv::gpu::remap(const GpuMat&, GpuMat&, const GpuMat&, const GpuMat&, int, int, const Scalar&){ throw_nogpu(); }
 void cv::gpu::meanShiftFiltering(const GpuMat&, GpuMat&, int, int, TermCriteria) { throw_nogpu(); }
 void cv::gpu::meanShiftProc(const GpuMat&, GpuMat&, GpuMat&, int, int, TermCriteria) { throw_nogpu(); }
 void cv::gpu::drawColorDisp(const GpuMat&, GpuMat&, int, Stream&) { throw_nogpu(); }
@@ -92,12 +92,8 @@ void cv::gpu::convolve(const GpuMat&, const GpuMat&, GpuMat&, bool) { throw_nogp
 void cv::gpu::convolve(const GpuMat&, const GpuMat&, GpuMat&, bool, ConvolveBuf&) { throw_nogpu(); }
 void cv::gpu::downsample(const GpuMat&, GpuMat&, Stream&) { throw_nogpu(); }
 void cv::gpu::upsample(const GpuMat&, GpuMat&, Stream&) { throw_nogpu(); }
-void cv::gpu::pyrDown(const GpuMat&, GpuMat&, Stream&) { throw_nogpu(); }
-void cv::gpu::PyrDownBuf::create(Size, int) { throw_nogpu(); }
-void cv::gpu::pyrDown(const GpuMat&, GpuMat&, PyrDownBuf&, Stream&) { throw_nogpu(); }
-void cv::gpu::pyrUp(const GpuMat&, GpuMat&, Stream&) { throw_nogpu(); }
-void cv::gpu::PyrUpBuf::create(Size, int) { throw_nogpu(); }
-void cv::gpu::pyrUp(const GpuMat&, GpuMat&, PyrUpBuf&, Stream&) { throw_nogpu(); }
+void cv::gpu::pyrDown(const GpuMat&, GpuMat&, int, Stream&) { throw_nogpu(); }
+void cv::gpu::pyrUp(const GpuMat&, GpuMat&, int, Stream&) { throw_nogpu(); }
 void cv::gpu::Canny(const GpuMat&, GpuMat&, double, double, int, bool) { throw_nogpu(); }
 void cv::gpu::Canny(const GpuMat&, CannyBuf&, GpuMat&, double, double, int, bool) { throw_nogpu(); }
 void cv::gpu::Canny(const GpuMat&, const GpuMat&, GpuMat&, double, double, bool) { throw_nogpu(); }
@@ -108,38 +104,51 @@ void cv::gpu::CannyBuf::release() { throw_nogpu(); }
 
 #else /* !defined (HAVE_CUDA) */
 
-namespace cv { namespace gpu {  namespace imgproc
-{
-    void remap_gpu_1c(const DevMem2D& src, const DevMem2Df& xmap, const DevMem2Df& ymap, DevMem2D dst);
-    void remap_gpu_3c(const DevMem2D& src, const DevMem2Df& xmap, const DevMem2Df& ymap, DevMem2D dst);
-
-    extern "C" void meanShiftFiltering_gpu(const DevMem2D& src, DevMem2D dst, int sp, int sr, int maxIter, float eps);
-    extern "C" void meanShiftProc_gpu(const DevMem2D& src, DevMem2D dstr, DevMem2D dstsp, int sp, int sr, int maxIter, float eps);
-
-    void drawColorDisp_gpu(const DevMem2D& src, const DevMem2D& dst, int ndisp, const cudaStream_t& stream);
-    void drawColorDisp_gpu(const DevMem2D_<short>& src, const DevMem2D& dst, int ndisp, const cudaStream_t& stream);
-
-    void reprojectImageTo3D_gpu(const DevMem2D& disp, const DevMem2Df& xyzw, const float* q, const cudaStream_t& stream);
-    void reprojectImageTo3D_gpu(const DevMem2D_<short>& disp, const DevMem2Df& xyzw, const float* q, const cudaStream_t& stream);
-}}}
-
 ////////////////////////////////////////////////////////////////////////
 // remap
 
-void cv::gpu::remap(const GpuMat& src, GpuMat& dst, const GpuMat& xmap, const GpuMat& ymap)
+namespace cv { namespace gpu {  namespace imgproc
 {
-    typedef void (*remap_gpu_t)(const DevMem2D& src, const DevMem2Df& xmap, const DevMem2Df& ymap, DevMem2D dst);
-    static const remap_gpu_t callers[] = {imgproc::remap_gpu_1c, 0, imgproc::remap_gpu_3c};
+    template <typename T> void remap_gpu(const DevMem2D& src, const DevMem2Df& xmap, const DevMem2Df& ymap, const DevMem2D& dst, 
+                                         int interpolation, int borderMode, const double borderValue[4]);
+}}}
 
-    CV_Assert((src.type() == CV_8U || src.type() == CV_8UC3) && xmap.type() == CV_32F && ymap.type() == CV_32F);
+void cv::gpu::remap(const GpuMat& src, GpuMat& dst, const GpuMat& xmap, const GpuMat& ymap, int interpolation, int borderMode, const Scalar& borderValue)
+{
+    using namespace cv::gpu::imgproc;
+
+    typedef void (*caller_t)(const DevMem2D& src, const DevMem2Df& xmap, const DevMem2Df& ymap, const DevMem2D& dst, int interpolation, int borderMode, const double borderValue[4]);;
+    static const caller_t callers[6][4] = 
+    {
+        {remap_gpu<uchar>, remap_gpu<uchar2>, remap_gpu<uchar3>, remap_gpu<uchar4>},
+        {remap_gpu<schar>, remap_gpu<char2>, remap_gpu<char3>, remap_gpu<char4>},
+        {remap_gpu<ushort>, remap_gpu<ushort2>, remap_gpu<ushort3>, remap_gpu<ushort4>},
+        {remap_gpu<short>, remap_gpu<short2>, remap_gpu<short3>, remap_gpu<short4>},
+        {remap_gpu<int>, remap_gpu<int2>, remap_gpu<int3>, remap_gpu<int4>},
+        {remap_gpu<float>, remap_gpu<float2>, remap_gpu<float3>, remap_gpu<float4>}
+    };
+
+    CV_Assert(src.depth() <= CV_32F && src.channels() <= 4);
+    CV_Assert(xmap.type() == CV_32F && ymap.type() == CV_32F && xmap.size() == ymap.size());
+
+    CV_Assert(interpolation == INTER_NEAREST || interpolation == INTER_LINEAR);
+
+    CV_Assert(borderMode == BORDER_REFLECT101 || borderMode == BORDER_REPLICATE || borderMode == BORDER_CONSTANT || borderMode == BORDER_REFLECT || borderMode == BORDER_WRAP);
+    int gpuBorderType;
+    CV_Assert(tryConvertToGpuBorderType(borderMode, gpuBorderType));
 
     dst.create(xmap.size(), src.type());
 
-    callers[src.channels() - 1](src, xmap, ymap, dst);
+    callers[src.depth()][src.channels() - 1](src, xmap, ymap, dst, interpolation, gpuBorderType, borderValue.val);
 }
 
 ////////////////////////////////////////////////////////////////////////
 // meanShiftFiltering_GPU
+
+namespace cv { namespace gpu {  namespace imgproc
+{
+    extern "C" void meanShiftFiltering_gpu(const DevMem2D& src, DevMem2D dst, int sp, int sr, int maxIter, float eps);
+}}}
 
 void cv::gpu::meanShiftFiltering(const GpuMat& src, GpuMat& dst, int sp, int sr, TermCriteria criteria)
 {
@@ -166,6 +175,11 @@ void cv::gpu::meanShiftFiltering(const GpuMat& src, GpuMat& dst, int sp, int sr,
 
 ////////////////////////////////////////////////////////////////////////
 // meanShiftProc_GPU
+
+namespace cv { namespace gpu {  namespace imgproc
+{
+    extern "C" void meanShiftProc_gpu(const DevMem2D& src, DevMem2D dstr, DevMem2D dstsp, int sp, int sr, int maxIter, float eps);
+}}}
 
 void cv::gpu::meanShiftProc(const GpuMat& src, GpuMat& dstr, GpuMat& dstsp, int sp, int sr, TermCriteria criteria)
 {
@@ -194,6 +208,12 @@ void cv::gpu::meanShiftProc(const GpuMat& src, GpuMat& dstr, GpuMat& dstsp, int 
 ////////////////////////////////////////////////////////////////////////
 // drawColorDisp
 
+namespace cv { namespace gpu {  namespace imgproc
+{
+    void drawColorDisp_gpu(const DevMem2D& src, const DevMem2D& dst, int ndisp, const cudaStream_t& stream);
+    void drawColorDisp_gpu(const DevMem2D_<short>& src, const DevMem2D& dst, int ndisp, const cudaStream_t& stream);
+}}}
+
 namespace
 {
     template <typename T>
@@ -218,6 +238,12 @@ void cv::gpu::drawColorDisp(const GpuMat& src, GpuMat& dst, int ndisp, Stream& s
 
 ////////////////////////////////////////////////////////////////////////
 // reprojectImageTo3D
+
+namespace cv { namespace gpu {  namespace imgproc
+{
+    void reprojectImageTo3D_gpu(const DevMem2D& disp, const DevMem2Df& xyzw, const float* q, const cudaStream_t& stream);
+    void reprojectImageTo3D_gpu(const DevMem2D_<short>& disp, const DevMem2Df& xyzw, const float* q, const cudaStream_t& stream);
+}}}
 
 namespace
 {
@@ -1202,24 +1228,26 @@ namespace
 
 bool cv::gpu::tryConvertToGpuBorderType(int cpuBorderType, int& gpuBorderType)
 {
-    if (cpuBorderType == cv::BORDER_REFLECT101)
+    switch (cpuBorderType)
     {
+    case cv::BORDER_REFLECT101:
         gpuBorderType = cv::gpu::BORDER_REFLECT101_GPU;
         return true;
-    }
-
-    if (cpuBorderType == cv::BORDER_REPLICATE)
-    {
+    case cv::BORDER_REPLICATE:
         gpuBorderType = cv::gpu::BORDER_REPLICATE_GPU;
         return true;
-    }
-    
-    if (cpuBorderType == cv::BORDER_CONSTANT)
-    {
+    case cv::BORDER_CONSTANT:
         gpuBorderType = cv::gpu::BORDER_CONSTANT_GPU;
         return true;
-    }
-
+    case cv::BORDER_REFLECT:
+        gpuBorderType = cv::gpu::BORDER_REFLECT_GPU;
+        return true;
+    case cv::BORDER_WRAP:
+        gpuBorderType = cv::gpu::BORDER_WRAP_GPU;
+        return true;
+    default:
+        return false;
+    };
     return false;
 }
 
@@ -1598,66 +1626,72 @@ void cv::gpu::upsample(const GpuMat& src, GpuMat& dst, Stream& stream)
 //////////////////////////////////////////////////////////////////////////////
 // pyrDown
 
-void cv::gpu::pyrDown(const GpuMat& src, GpuMat& dst, Stream& stream)
+namespace cv { namespace gpu { namespace imgproc
 {
-    PyrDownBuf buf;
-    pyrDown(src, dst, buf, stream);
-}
+    template <typename T, int cn> void pyrDown_gpu(const DevMem2D& src, const DevMem2D& dst, int borderType, cudaStream_t stream);
+}}}
 
-cv::Mat cv::gpu::PyrDownBuf::ker;
-
-void cv::gpu::PyrDownBuf::create(Size image_size, int image_type_)
+void cv::gpu::pyrDown(const GpuMat& src, GpuMat& dst, int borderType, Stream& stream)
 {
-    if (ker.empty() || image_type_ != image_type)
-        ker = getGaussianKernel(5, 0, std::max(CV_32F, CV_MAT_DEPTH(image_type_)));
+    using namespace cv::gpu::imgproc;
 
-    ensureSizeIsEnough(image_size.height, image_size.width, image_type_, buf);
+    typedef void (*func_t)(const DevMem2D& src, const DevMem2D& dst, int borderType, cudaStream_t stream);
 
-    if (filter.empty() || image_type_ != image_type)
+    static const func_t funcs[6][4] = 
     {
-        image_type = image_type_;
-        filter = createSeparableLinearFilter_GPU(image_type, image_type, ker, ker);
-    }
-}
+        {pyrDown_gpu<uchar, 1>, pyrDown_gpu<uchar, 2>, pyrDown_gpu<uchar, 3>, pyrDown_gpu<uchar, 4>},
+        {pyrDown_gpu<schar, 1>, pyrDown_gpu<schar, 2>, pyrDown_gpu<schar, 3>, pyrDown_gpu<schar, 4>},
+        {pyrDown_gpu<ushort, 1>, pyrDown_gpu<ushort, 2>, pyrDown_gpu<ushort, 3>, pyrDown_gpu<ushort, 4>},
+        {pyrDown_gpu<short, 1>, pyrDown_gpu<short, 2>, pyrDown_gpu<short, 3>, pyrDown_gpu<short, 4>},
+        {pyrDown_gpu<int, 1>, pyrDown_gpu<int, 2>, pyrDown_gpu<int, 3>, pyrDown_gpu<int, 4>},
+        {pyrDown_gpu<float, 1>, pyrDown_gpu<float, 2>, pyrDown_gpu<float, 3>, pyrDown_gpu<float, 4>},
+    };
 
-void cv::gpu::pyrDown(const GpuMat& src, GpuMat& dst, PyrDownBuf& buf, Stream& stream)
-{
-    buf.create(src.size(), src.type());
-    buf.filter->apply(src, buf.buf, Rect(0, 0, src.cols, src.rows), stream);
-    downsample(buf.buf, dst, stream);
+    CV_Assert(src.depth() <= CV_32F && src.channels() <= 4);
+
+    CV_Assert(borderType == BORDER_REFLECT101 || borderType == BORDER_REPLICATE || borderType == BORDER_CONSTANT || borderType == BORDER_REFLECT || borderType == BORDER_WRAP);
+    int gpuBorderType;
+    CV_Assert(tryConvertToGpuBorderType(borderType, gpuBorderType));
+
+    dst.create((src.rows + 1) / 2, (src.cols + 1) / 2, src.type());
+
+    funcs[src.depth()][src.channels() - 1](src, dst, gpuBorderType, StreamAccessor::getStream(stream));
 }
 
 
 //////////////////////////////////////////////////////////////////////////////
 // pyrUp
 
-void cv::gpu::pyrUp(const GpuMat& src, GpuMat& dst, Stream& stream)
+namespace cv { namespace gpu { namespace imgproc
 {
-    PyrUpBuf buf;
-    pyrUp(src, dst, buf, stream);
-}
+    template <typename T, int cn> void pyrUp_gpu(const DevMem2D& src, const DevMem2D& dst, int borderType, cudaStream_t stream);
+}}}
 
-cv::Mat cv::gpu::PyrUpBuf::ker;
-
-void cv::gpu::PyrUpBuf::create(Size image_size, int image_type_)
+void cv::gpu::pyrUp(const GpuMat& src, GpuMat& dst, int borderType, Stream& stream)
 {
-    if (ker.empty() || image_type_ != image_type)
-        ker = getGaussianKernel(5, 0, std::max(CV_32F, CV_MAT_DEPTH(image_type_))) * 2;
+    using namespace cv::gpu::imgproc;
 
-    ensureSizeIsEnough(image_size.height * 2, image_size.width * 2, image_type_, buf);
+    typedef void (*func_t)(const DevMem2D& src, const DevMem2D& dst, int borderType, cudaStream_t stream);
 
-    if (filter.empty() || image_type_ != image_type)
+    static const func_t funcs[6][4] = 
     {
-        image_type = image_type_;
-        filter = createSeparableLinearFilter_GPU(image_type, image_type, ker, ker);
-    }
-}
+        {pyrUp_gpu<uchar, 1>, pyrUp_gpu<uchar, 2>, pyrUp_gpu<uchar, 3>, pyrUp_gpu<uchar, 4>},
+        {pyrUp_gpu<schar, 1>, pyrUp_gpu<schar, 2>, pyrUp_gpu<schar, 3>, pyrUp_gpu<schar, 4>},
+        {pyrUp_gpu<ushort, 1>, pyrUp_gpu<ushort, 2>, pyrUp_gpu<ushort, 3>, pyrUp_gpu<ushort, 4>},
+        {pyrUp_gpu<short, 1>, pyrUp_gpu<short, 2>, pyrUp_gpu<short, 3>, pyrUp_gpu<short, 4>},
+        {pyrUp_gpu<int, 1>, pyrUp_gpu<int, 2>, pyrUp_gpu<int, 3>, pyrUp_gpu<int, 4>},
+        {pyrUp_gpu<float, 1>, pyrUp_gpu<float, 2>, pyrUp_gpu<float, 3>, pyrUp_gpu<float, 4>},
+    };
 
-void cv::gpu::pyrUp(const GpuMat& src, GpuMat& dst, PyrUpBuf& buf, Stream& stream)
-{
-    buf.create(src.size(), src.type());
-    upsample(src, buf.buf, stream);
-    buf.filter->apply(buf.buf, dst, Rect(0, 0, buf.buf.cols, buf.buf.rows), stream);
+    CV_Assert(src.depth() <= CV_32F && src.channels() <= 4);
+
+    CV_Assert(borderType == BORDER_REFLECT101 || borderType == BORDER_REPLICATE || borderType == BORDER_CONSTANT || borderType == BORDER_REFLECT || borderType == BORDER_WRAP);
+    int gpuBorderType;
+    CV_Assert(tryConvertToGpuBorderType(borderType, gpuBorderType));
+
+    dst.create(src.rows*2, src.cols*2, src.type());
+
+    funcs[src.depth()][src.channels() - 1](src, dst, gpuBorderType, StreamAccessor::getStream(stream));
 }
 
 
