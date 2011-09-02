@@ -1051,10 +1051,3 @@ void PrintTo(const Size& sz, ::std::ostream* os)
 /*****************************************************************************************\
 *                                  ::cv::PrintTo
 \*****************************************************************************************/
-namespace perf
-{
-//GTEST_DEFINE_int32_(
-//    allowed_outliers,
-//    ::testing::internal::Int32FromGTestEnv("allowed_outliers", 6), "");
-
-} //namespace perf

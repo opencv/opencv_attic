@@ -231,8 +231,59 @@ private:
     int _type;
 };
 
-CV_EXPORTS void PrintTo(const MatType& t, std::ostream* os);
+/*****************************************************************************************\
+*                MatType - printable wrapper over integer 'type' of Mat                   *
+\*****************************************************************************************/
 
+#define CV_ENUM(class_name, ...) \
+class CV_EXPORTS class_name {\
+public:\
+  class_name(int val = 0) : _val(val) {}\
+  operator int() const {return _val;}\
+  void PrintTo(std::ostream* os) const {\
+    const int vals[] = {__VA_ARGS__};\
+    const char* svals = #__VA_ARGS__;\
+    for(int i = 0, pos = 0; i < (int)(sizeof(vals)/sizeof(int)); ++i){\
+      while(isspace(svals[pos]) || svals[pos] == ',') ++pos;\
+      int start = pos;\
+      while(!(isspace(svals[pos]) || svals[pos] == ',' || svals[pos] == 0)) ++pos;\
+      if (_val == vals[i]) {\
+        *os << std::string(svals + start, svals + pos);\
+        return;\
+      }\
+    }\
+    *os << "UNKNOWN";\
+  }\
+private: int _val;\
+};\
+inline void PrintTo(const class_name& t, std::ostream* os) { t.PrintTo(os); }
+
+#define CV_FLAGS(class_name, ...) \
+class CV_EXPORTS class_name {\
+public:\
+  class_name(int val = 0) : _val(val) {}\
+  operator int() const {return _val;}\
+  void PrintTo(std::ostream* os) const {\
+    const int vals[] = {__VA_ARGS__};\
+    const char* svals = #__VA_ARGS__;\
+    int value = _val;\
+    bool first = true;\
+    for(int i = 0, pos = 0; i < (int)(sizeof(vals)/sizeof(int)); ++i){\
+      while(isspace(svals[pos]) || svals[pos] == ',') ++pos;\
+      int start = pos;\
+      while(!(isspace(svals[pos]) || svals[pos] == ',' || svals[pos] == 0)) ++pos;\
+      if ((value & vals[i]) == vals[i]) {\
+        value &= ~vals[i]; \
+        if (first) first = false; else *os << "|"; \
+        *os << std::string(svals + start, svals + pos);\
+        if (!value) return;\
+      }\
+    }\
+    if (first) *os << "UNKNOWN";\
+  }\
+private: int _val;\
+};\
+inline void PrintTo(const class_name& t, std::ostream* os) { t.PrintTo(os); }
 
 /*****************************************************************************************\
 *                 Regression control utility for performance testing                      *
@@ -397,15 +448,15 @@ public:
 
 template<typename T> class TestBaseWithParam: public TestBase, public ::testing::WithParamInterface<T> {};
 
-
-typedef std::tr1::tuple<cv::Size, perf::MatType> Size_MatType_t;
-typedef perf::TestBaseWithParam<Size_MatType_t> Size_MatType;
+typedef std::tr1::tuple<cv::Size, MatType> Size_MatType_t;
+typedef TestBaseWithParam<Size_MatType_t> Size_MatType;
 
 
 /*****************************************************************************************\
 *                              Print functions for googletest                             *
 \*****************************************************************************************/
 CV_EXPORTS void PrintTo(const MatInfo& mi, ::std::ostream* os);
+CV_EXPORTS void PrintTo(const MatType& t, std::ostream* os);
 
 } //namespace perf
 
@@ -415,6 +466,7 @@ namespace cv
 CV_EXPORTS void PrintTo(const Size& sz, ::std::ostream* os);
 
 } //namespace cv
+
 
 /*****************************************************************************************\
 *                        Macro definitions for performance tests                          *
