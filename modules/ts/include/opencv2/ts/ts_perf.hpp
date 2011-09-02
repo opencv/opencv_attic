@@ -232,7 +232,7 @@ private:
 };
 
 /*****************************************************************************************\
-*                MatType - printable wrapper over integer 'type' of Mat                   *
+*     CV_ENUM and CV_FLAGS - macro to create printable wrappers for defines and enums     *
 \*****************************************************************************************/
 
 #define CV_ENUM(class_name, ...) \
