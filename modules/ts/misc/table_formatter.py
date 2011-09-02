@@ -23,7 +23,7 @@ def htmlEncode(str):
 
 class table(object):
     def_align = "left"
-    def_valign = "top"
+    def_valign = "middle"
     def_color = None
     def_colspan = 1
     def_rowspan = 1
@@ -336,8 +336,8 @@ class table(object):
         for row in header_rows:
             out.write("  <tr>\n")
             for th in row.cells:
-                align = self.getValue("align", ((None, th)[isinstance(th, tblCell)]), row)
-                valign = self.getValue("valign", th)
+                align = self.getValue("align", ((None, th)[isinstance(th, tblCell)]), row, row)
+                valign = self.getValue("valign", th, row)
                 attr = ""
                 if align:
                     attr += " align=\"%s\"" % align
@@ -377,9 +377,9 @@ class table(object):
                     style += "font-weight: bold;"
                 if italic:
                     style += "font-style: italic;"
-                if align:
+                if align and align != "left":
                     attr += " align=\"%s\"" % align
-                if valign:
+                if valign and valign != "middle":
                     attr += " valign=\"%s\"" % valign
                 if colspan > 1:
                     attr += " colspan=\"%s\"" % colspan
