@@ -7,7 +7,7 @@ using namespace perf;
 CV_ENUM(CvtMode, CV_YUV2BGR, CV_YUV2RGB, //YUV
                  CV_YUV420i2BGR, CV_YUV420i2RGB, CV_YUV420sp2BGR, CV_YUV420sp2RGB, //YUV420
                  CV_RGB2GRAY, CV_RGBA2GRAY, CV_BGR2GRAY, CV_BGRA2GRAY, //Gray
-                 CV_GRAY2RGB, CV_GRAY2RGBA, CV_GRAY2BGR, CV_GRAY2BGRA //Gray2
+                 CV_GRAY2RGB, CV_GRAY2RGBA/*, CV_GRAY2BGR, CV_GRAY2BGRA*/ //Gray2
                  )
 
 typedef std::tr1::tuple<Size, CvtMode> Size_CvtMode_t;
@@ -92,7 +92,7 @@ PERF_TEST_P( Size_CvtMode, cvtColorGray,
 PERF_TEST_P( Size_CvtMode, cvtColorGray2,
     testing::Combine( 
         testing::Values( TYPICAL_MAT_SIZES ), 
-        testing::Values( CV_GRAY2RGB, CV_GRAY2RGBA, CV_GRAY2BGR, CV_GRAY2BGRA )
+        testing::Values( CV_GRAY2RGB, CV_GRAY2RGBA/*, CV_GRAY2BGR, CV_GRAY2BGRA*/ )
     )
 )
 {
