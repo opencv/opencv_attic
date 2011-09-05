@@ -159,7 +159,7 @@ class RunInfo(object):
             if fname == name:
                 return t
             if fname.endswith(".exe"):
-                fname = app[:-4]
+                fname = fname[:-4]
             if fname == name:
                 return t
             if fname.startswith(nameprefix):
