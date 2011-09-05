@@ -1,10 +1,12 @@
-import testlog_parser, sys, os, xml, re
-from table_formatter import *
+import testlog_parser, sys, os, platform, xml, re, tempfile, glob
+#from table_formatter import *
 from optparse import OptionParser
 from subprocess import Popen, PIPE
 
-hostos = os.name
+hostos = os.name # 'nt', 'posix'
+hostmachine = platform.machine() # 'x86', 'AMD64', 'x86_64'
 nameprefix = "opencv_perf_"
+
 
 parse_patterns = (
   {'name': "has_perf_tests",     'default': "OFF",      'pattern': re.compile("^BUILD_PERF_TESTS:BOOL=(ON)$")},
@@ -19,6 +21,8 @@ parse_patterns = (
   {'name': "ndk_path",           'default': None,       'pattern': re.compile("^ANDROID_NDK(?:_TOOLCHAIN_ROOT)?:PATH=(.*)$")},
   {'name': "arm_target",         'default': None,       'pattern': re.compile("^ARM_TARGET:INTERNAL=(.*)$")},
   {'name': "android_executable", 'default': None,       'pattern': re.compile("^ANDROID_EXECUTABLE:FILEPATH=(.*android.*)$")},
+  {'name': "is_x64",            'default': "OFF",      'pattern': re.compile("^CUDA_64_BIT_DEVICE_CODE:BOOL=(ON)$")},#ugly(
+  {'name': "cmake_generator",    'default': None,       'pattern': re.compile("^CMAKE_GENERATOR:INTERNAL=(.+)$")},
 )
 
 class RunInfo(object):
@@ -53,17 +57,65 @@ class RunInfo(object):
             self.targetos = hostos
         # fix has_perf_tests param
         self.has_perf_tests = self.has_perf_tests == "ON"
+        # fix is_x64 flag
+        self.is_x64 = self.is_x64 == "ON"
+        # detect target arch
+        if self.targetos == "android":
+            self.targetarch = "arm"
+        elif self.is_x64 and hostmachine in ["AMD64", "x86_64"]:
+            self.targetarch = "x64"
+        elif hostmachine in ["x86", "AMD64", "x86_64"]:
+            self.targetarch = "x86"
+        else:
+            self.targetarch = "unknown"
         
         self.getSvnVersion(self.cmake_home, "cmake_home_svn")
-        self.getSvnVersion(self.opencv_home, "opencv_home_svn")
+        if self.opencv_home == self.cmake_home:
+            self.opencv_home_svn = self.cmake_home_svn
+        else:
+            self.getSvnVersion(self.opencv_home, "opencv_home_svn")
         
     def getSvnVersion(self, path, name):
         if not self.has_perf_tests or not self.svnversion_path or not os.path.isdir(path):
-            setattr(self, name, None)
+            if not self.svnversion_path and hostos == 'nt':
+                self.tryGetSvnVersionWithTortoise(path, name)
+            else:
+                setattr(self, name, None)
             return
         svnprocess = Popen([self.svnversion_path, "-n", path], stdout=PIPE, stderr=PIPE)
         output = svnprocess.communicate()
         setattr(self, name, output[0])
+        
+    def tryGetSvnVersionWithTortoise(self, path, name):
+        try:
+            wcrev = "SubWCRev.exe"
+            dir = tempfile.mkdtemp()
+            #print dir
+            tmpfilename = os.path.join(dir, "svn.tmp")
+            tmpfilename2 = os.path.join(dir, "svn_out.tmp")
+            tmpfile = open(tmpfilename, "w")
+            tmpfile.write("$WCRANGE$$WCMODS?M:$")
+            tmpfile.close();
+            wcrevprocess = Popen([wcrev, path, tmpfilename, tmpfilename2, "-f"], stdout=PIPE, stderr=PIPE)
+            output = wcrevprocess.communicate()
+            if "is not a working copy" in output[0]:
+                version = "exported"
+            else:
+                tmpfile = open(tmpfilename2, "r")
+                version = tmpfile.read()
+                tmpfile.close()
+            setattr(self, name, version)
+        except:
+            setattr(self, name, None)
+        finally:
+            if dir:
+                import shutil
+                shutil.rmtree(dir)
+                
+    def getAvailableTestApps(self):
+        pass
+        #if self.tests_dir and os.path.isdir(self.tests_dir):
+        #glob.glob(nameprefix
 
 if __name__ == "__main__":
     parser = OptionParser()

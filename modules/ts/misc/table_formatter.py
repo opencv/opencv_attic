@@ -195,6 +195,8 @@ class table(object):
     def reformatTextValue(self, value):
         if isinstance(value, str):
             vstr = value
+        elif isinstance(value, unicode):
+            vstr = str(value)
         else:
             try:
                 vstr = '\n'.join([str(v) for v in value])
