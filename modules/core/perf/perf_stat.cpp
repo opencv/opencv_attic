@@ -1,13 +1,10 @@
 #include "perf_precomp.hpp"
 #include "opencv2/core/core_c.h"
-#include <iostream>
 
 using namespace std;
 using namespace cv;
 using namespace perf;
 
-CV_ENUM(ROp, CV_REDUCE_SUM, CV_REDUCE_AVG, CV_REDUCE_MAX, CV_REDUCE_MIN)
-CV_FLAGS(NormType, NORM_INF, NORM_L1, NORM_L2, NORM_TYPE_MASK, NORM_RELATIVE, NORM_MINMAX)
 
 /*
 // Scalar sum(InputArray arr)
@@ -66,7 +63,7 @@ PERF_TEST_P( Size_MatType, mean_mask, TYPICAL_MATS )
     SANITY_CHECK(s);
 }
 
-
+CV_FLAGS(NormType, NORM_INF, NORM_L1, NORM_L2, NORM_TYPE_MASK, NORM_RELATIVE, NORM_MINMAX)
 typedef std::tr1::tuple<Size, MatType, NormType> Size_MatType_NormType_t;
 typedef perf::TestBaseWithParam<Size_MatType_NormType_t> Size_MatType_NormType;
 
@@ -196,8 +193,8 @@ PERF_TEST_P( Size_MatType_NormType, normalize,
     Mat src(sz, matType);
     Mat dst(sz, matType);
     double alpha = 100.;
-    if(normType==NORM_L1) alpha = src.total() * src.channels();
-    if(normType==NORM_L2) alpha = src.total()/10;
+    if(normType==NORM_L1) alpha = (double)src.total() * src.channels();
+    if(normType==NORM_L2) alpha = (double)src.total()/10;
     
     declare.in(src, WARMUP_RNG).out(dst);
     
@@ -226,8 +223,8 @@ PERF_TEST_P( Size_MatType_NormType, normalize_mask,
     Mat dst(sz, matType);
     Mat mask = Mat::ones(sz, CV_8U);
     double alpha = 100.;
-    if(normType==NORM_L1) alpha = src.total() * src.channels();
-    if(normType==NORM_L2) alpha = src.total()/10;
+    if(normType==NORM_L1) alpha = (double)src.total() * src.channels();
+    if(normType==NORM_L2) alpha = (double)src.total()/10;
     
     declare.in(src, WARMUP_RNG).in(mask).out(dst);
     
@@ -255,8 +252,8 @@ PERF_TEST_P( Size_MatType_NormType, normalize_32f,
     Mat src(sz, matType);
     Mat dst(sz, matType);
     double alpha = 100.;
-    if(normType==NORM_L1) alpha = src.total() * src.channels();
-    if(normType==NORM_L2) alpha = src.total()/10;
+    if(normType==NORM_L1) alpha = (double)src.total() * src.channels();
+    if(normType==NORM_L2) alpha = (double)src.total()/10;
     
     declare.in(src, WARMUP_RNG).out(dst);
     
@@ -365,26 +362,27 @@ PERF_TEST_P( Size_MatType, minMaxLoc, TYPICAL_MATS_C1 )
     SANITY_CHECK(maxVal);
 }
 
-typedef std::tr1::tuple<Size, MatType, int, ROp> Size_MatType_int_ROp_t;
-typedef perf::TestBaseWithParam<Size_MatType_int_ROp_t> Size_MatType_int_ROp;
+
+
+CV_ENUM(ROp, CV_REDUCE_SUM, CV_REDUCE_AVG, CV_REDUCE_MAX, CV_REDUCE_MIN)
+typedef std::tr1::tuple<Size, MatType, ROp> Size_MatType_ROp_t;
+typedef perf::TestBaseWithParam<Size_MatType_ROp_t> Size_MatType_ROp;
 
 
 /*
 // void reduce(InputArray mtx, OutputArray vec, int dim, int reduceOp, int dtype=-1)
 */
-PERF_TEST_P( Size_MatType_int_ROp, reduce, 
+PERF_TEST_P( Size_MatType_ROp, reduceR, 
     testing::Combine( 
         testing::Values( TYPICAL_MAT_SIZES ), 
         testing::Values( TYPICAL_MAT_TYPES ),
-        testing::Values( 0, 1 ),
         testing::Values( CV_REDUCE_SUM, CV_REDUCE_AVG, CV_REDUCE_MAX, CV_REDUCE_MIN )
     )
 )
 {
     Size sz = std::tr1::get<0>(GetParam());
     int matType = std::tr1::get<1>(GetParam());
-    int dim = std::tr1::get<2>(GetParam());
-    int reduceOp = std::tr1::get<3>(GetParam());
+    int reduceOp = std::tr1::get<2>(GetParam());
 
     int ddepth = -1;
     if( CV_MAT_DEPTH(matType)< CV_32S && (reduceOp == CV_REDUCE_SUM || reduceOp == CV_REDUCE_AVG) )
@@ -394,7 +392,35 @@ PERF_TEST_P( Size_MatType_int_ROp, reduce,
 
     declare.in(src, WARMUP_RNG);
     
-    TEST_CYCLE(100) { reduce(src, vec, dim, reduceOp, ddepth);  }
+    TEST_CYCLE(100) { reduce(src, vec, 0, reduceOp, ddepth);  }
+    
+    SANITY_CHECK(vec);
+}
+
+/*
+// void reduce(InputArray mtx, OutputArray vec, int dim, int reduceOp, int dtype=-1)
+*/
+PERF_TEST_P( Size_MatType_ROp, reduceC, 
+    testing::Combine( 
+        testing::Values( TYPICAL_MAT_SIZES ), 
+        testing::Values( TYPICAL_MAT_TYPES ),
+        testing::Values( CV_REDUCE_SUM, CV_REDUCE_AVG, CV_REDUCE_MAX, CV_REDUCE_MIN )
+    )
+)
+{
+    Size sz = std::tr1::get<0>(GetParam());
+    int matType = std::tr1::get<1>(GetParam());
+    int reduceOp = std::tr1::get<2>(GetParam());
+
+    int ddepth = -1;
+    if( CV_MAT_DEPTH(matType)< CV_32S && (reduceOp == CV_REDUCE_SUM || reduceOp == CV_REDUCE_AVG) )
+        ddepth = CV_32S;
+    Mat src(sz, matType);
+    Mat vec;
+
+    declare.in(src, WARMUP_RNG);
+    
+    TEST_CYCLE(100) { reduce(src, vec, 1, reduceOp, ddepth);  }
     
     SANITY_CHECK(vec);
 }
