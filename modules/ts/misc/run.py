@@ -223,6 +223,7 @@ class RunInfo(object):
         args = args[:]
         timestamp = datetime.datetime.now()
         logfile = self.getLogName(path, timestamp)
+        exe = os.path.abspath(path)
         
         userlog = [a for a in args if a.startswith("--gtest_output=")]
         if len(userlog) == 0:
@@ -231,27 +232,70 @@ class RunInfo(object):
             logfile = userlog[userlog[0].find(":")+1:]
         
         if self.targetos == "android":
-            uname = getpass.getuser()
-            print uname
-            pass
+            andoidcwd = "/data/bin/" + getpass.getuser().replace(" ","") + "_perf/"
+            exename = os.path.basename(exe)
+            androidexe = andoidcwd + exename
+            #upload
+            print >> _stderr, "Uploading", exename, "to device..."
+            adbprocess = Popen([self.adb, "push", exe, androidexe], stdout=_stdout, stderr=_stderr)
+            output = adbprocess.wait()
+            if output != 0:
+                print >> _stderr, "adb finishes unexpectedly with error code", output
+                return
+            #chmod
+            print >> _stderr, "Changing mode of ", androidexe
+            adbprocess = Popen([self.adb, "shell", "chmod 777 " + androidexe], stdout=_stdout, stderr=_stderr)
+            output = adbprocess.wait()
+            if output != 0:
+                print >> _stderr, "adb finishes unexpectedly with error code", output
+                return
+            #run
+            command = exename + " " + " ".join(args)
+            print >> _stderr, "Running:", command
+            adbprocess = Popen([self.adb, "shell", "cd " + andoidcwd + "&& ./" + command], stdout=_stdout, stderr=_stderr)
+            output = adbprocess.wait()
+            # try get log
+            print >> _stderr, "Pulling", logfile, "from device..."
+            hostlogpath = os.path.join(workingDir, logfile)
+            adbprocess = Popen([self.adb, "pull", andoidcwd + logfile, hostlogpath], stdout=_stdout, stderr=_stderr)
+            output = adbprocess.wait()
+            if output != 0:
+                print >> _stderr, "adb finishes unexpectedly with error code", output
+                return
+            #rm log
+            adbprocess = Popen([self.adb, "shell", "rm " + andoidcwd + logfile], stdout=_stdout, stderr=_stderr)
+            output = adbprocess.wait()
+            
+            if os.path.isfile(hostlogpath):
+                return hostlogpath
+            return None
         else:
-            cmd = [os.path.abspath(path)]
+            cmd = [exe]
             cmd.extend(args)
             print >> _stderr, "Running:", " ".join(cmd) 
             testprocess = Popen(cmd, stdout=_stdout, stderr=_stderr, cwd = workingDir)
-            testprocess.communicate()
+            testprocess.wait()
+            
+            logpath = os.path.join(workingDir, logfile)
+            if os.path.isfile(logpath):
+                return logpath
+            return None
             
     def runTests(self, tests, _stdout, _stderr, workingDir, args = []):
         if self.error:
-            return
+            return []
         if not tests:
             tests = self.tests
+        logs = []
         for test in tests:
             t = self.getTest(test)
             if t:
-                self.runTest(t, workingDir, _stdout, _stderr, args)
+                logfile = self.runTest(t, workingDir, _stdout, _stderr, args)
+                if logfile:
+                    logs.append(os.path.relpath(logfile, "."))
             else:
                 print >> _stderr, "Test \"%s\" is not found in %s" % (test, self.tests_dir)
+        return logs
 
 if __name__ == "__main__":
     test_args = [a for a in sys.argv if a.startswith("--perf_") or a.startswith("--gtest_")]
@@ -289,10 +333,13 @@ if __name__ == "__main__":
         #remove --gtest_output from params
         test_args = [a for a in test_args if not a.startswith("--gtest_output=")]
     
+    logs = []
     for path in run_args:
         info = RunInfo(path)
         #print vars(info),"\n"
         if not info.isRunnable():
             print >> sys.stderr, "Error:", info.error
         else:
-            info.runTests(tests, sys.stdout, sys.stderr, options.cwd, test_args)
+            logs.extend(info.runTests(tests, sys.stdout, sys.stderr, options.cwd, test_args))
+            
+    print >> sys.stderr, "Collected:", " ".join(logs)

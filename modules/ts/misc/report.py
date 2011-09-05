@@ -8,6 +8,7 @@ if __name__ == "__main__":
     parser.add_option("-u", "--units", dest="units", help="units for output values (s, ms (default), mks, ns or ticks)", metavar="UNITS", default="ms")
     parser.add_option("-c", "--columns", dest="columns", help="comma-separated list of columns to show", metavar="COLS", default="")
     parser.add_option("-f", "--filter", dest="filter", help="regex to filter tests", metavar="REGEX", default=None)
+    parser.add_option("", "--show-all", action="store_true", dest="showall", default=False, help="also include empty and \"notrun\" lines")
     (options, args) = parser.parse_args()
     
     if len(args) != 1:
@@ -38,23 +39,32 @@ if __name__ == "__main__":
             tbl.newColumn(m, metrix_table[m][0])
         else:
             tbl.newColumn(m, metrix_table[m][0], align = "center")
-            
+
+    needNewRow = True            
     for case in sorted(tests):
-        tbl.newRow()
+        if needNewRow:
+            tbl.newRow()
+            if not options.showall:
+                needNewRow = False
         status = case.get("status")
         if status != "run":
+            if status != "notrun":
+                needNewRow = True
             for m in metrics:
                 if m == "name":
                     tbl.newCell(m, str(case))
                 else:
                     tbl.newCell(m, status, color = "red")
         else:
+            needNewRow = True
             for m in metrics:
                 val = metrix_table[m][1](case, None, options.units)
                 if isinstance(val, float):
                     tbl.newCell(m, "%.2f %s" % (val, options.units), val)
                 else:
                     tbl.newCell(m, val, val)
+    if not needNewRow:
+        tbl.trimLastRow()
                     
     # output table
     if options.generateHtml:
