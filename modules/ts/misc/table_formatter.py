@@ -44,6 +44,12 @@ class table(object):
         else:
             self.rows[ridx + 1].props = properties
         self.ridx += 1
+    
+    def trimLastRow(self):
+        if self.rows:
+            self.rows.pop()
+        if self.ridx >= len(self.rows):
+            self.ridx = len(self.rows) - 1
 
     def newColumn(self, name, caption, title = None, **properties):
         if name in self.columns:

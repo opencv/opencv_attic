@@ -1,4 +1,4 @@
-import testlog_parser, sys, os, platform, xml, re, tempfile, glob
+import testlog_parser, sys, os, platform, xml, re, tempfile, glob, datetime
 #from table_formatter import *
 from optparse import OptionParser
 from subprocess import Popen, PIPE
@@ -21,13 +21,14 @@ parse_patterns = (
   {'name': "ndk_path",           'default': None,       'pattern': re.compile("^ANDROID_NDK(?:_TOOLCHAIN_ROOT)?:PATH=(.*)$")},
   {'name': "arm_target",         'default': None,       'pattern': re.compile("^ARM_TARGET:INTERNAL=(.*)$")},
   {'name': "android_executable", 'default': None,       'pattern': re.compile("^ANDROID_EXECUTABLE:FILEPATH=(.*android.*)$")},
-  {'name': "is_x64",            'default': "OFF",      'pattern': re.compile("^CUDA_64_BIT_DEVICE_CODE:BOOL=(ON)$")},#ugly(
+  {'name': "is_x64",             'default': "OFF",      'pattern': re.compile("^CUDA_64_BIT_DEVICE_CODE:BOOL=(ON)$")},#ugly(
   {'name': "cmake_generator",    'default': None,       'pattern': re.compile("^CMAKE_GENERATOR:INTERNAL=(.+)$")},
 )
 
 class RunInfo(object):
     def __init__(self, path):
         self.path = path
+        self.error = None
         for p in parse_patterns:
             setattr(self, p["name"], p["default"])
         cachefile = open(os.path.join(path, "CMakeCache.txt"), "rt")
@@ -68,12 +69,16 @@ class RunInfo(object):
             self.targetarch = "x86"
         else:
             self.targetarch = "unknown"
+            
+        self.hardware = None
         
         self.getSvnVersion(self.cmake_home, "cmake_home_svn")
         if self.opencv_home == self.cmake_home:
             self.opencv_home_svn = self.cmake_home_svn
         else:
             self.getSvnVersion(self.opencv_home, "opencv_home_svn")
+            
+        self.tests = self.getAvailableTestApps()
         
     def getSvnVersion(self, path, name):
         if not self.has_perf_tests or not self.svnversion_path or not os.path.isdir(path):
@@ -113,21 +118,148 @@ class RunInfo(object):
                 shutil.rmtree(dir)
                 
     def getAvailableTestApps(self):
-        pass
-        #if self.tests_dir and os.path.isdir(self.tests_dir):
-        #glob.glob(nameprefix
+        if self.tests_dir and os.path.isdir(self.tests_dir):
+            files = glob.glob(os.path.join(self.tests_dir, nameprefix + "*"))
+            if self.targetos == hostos:
+                files = [f for f in files if os.access(f, os.X_OK)]
+            return files
+        return []
+    
+    def getLogName(self, app, timestamp):
+        app = os.path.basename(app)
+        if app.endswith(".exe"):
+            app = app[:-4]
+        if app.startswith(nameprefix):
+            app = app[len(nameprefix):]
+        if self.opencv_home_svn:
+            if self.cmake_home_svn == self.opencv_home_svn:
+                rev = self.cmake_home_svn
+            else:
+                rev = self.cmake_home_svn + "-" + self.opencv_home_svn
+        else:
+            rev = None
+        if rev:
+            rev = rev.replace(":","to") + "_" 
+        else:
+            rev = ""
+        if self.hardware:
+            hw = str(self.hardware).replace(" ", "_") + "_"
+        else:
+            hw = ""
+        return "%s_%s_%s_%s%s%s.xml" %(app, self.targetos, self.targetarch, hw, rev, timestamp.strftime("%Y%m%dT%H%M%S"))
+        
+    def getTest(self, name):
+        for t in self.tests:
+            if t == name:
+                return t
+            fname = os.path.basename(t)
+            if fname == name:
+                return t
+            if fname.endswith(".exe"):
+                fname = app[:-4]
+            if fname == name:
+                return t
+            if fname.startswith(nameprefix):
+                fname = fname[len(nameprefix):]
+            if fname == name:
+                return t
+        return None
+    
+    def runAdb(self, *args):
+        cmd = [self.adb]
+        cmd.extend(args)
+        adbprocess = Popen(cmd, stdout=PIPE, stderr=PIPE)
+        output = adbprocess.communicate()
+        if not output[1]:
+            return output[0]
+        self.error = output[1]
+        print self.error
+        return None
+    
+    def isRunnable(self):
+        if not self.has_perf_tests or not self.tests:
+            self.error = "Performance tests are not built (at %s)" % self.path
+            return False
+        if self.targetarch == "x64" and hostmachine == "x86":
+            self.error = "Target architecture is incompatible with current platform (at %s)" % self.path
+            return False
+        if self.targetos == "android":
+            if not self.adb or not os.path.isfile(self.adb) or not os.access(self.adb, os.X_OK):
+                self.error = "Could not find adb executable (at %s)" % self.path
+                return False
+            adb_res = self.runAdb("devices")
+            if not adb_res:
+                self.error = "Could not run adb command: %s (at %s)" % (self.error, self.path)
+                return False
+            connected_devices = len(re.findall(r"^[^ \t]+[ \t]+device$", adb_res, re.MULTILINE))
+            if connected_devices == 0:
+                self.error = "No Android device connected (at %s)" % self.path
+                return False
+            if connected_devices > 1:
+                self.error = "Too many (%s) devices are connected. Single device is required. (at %s)" % (connected_devices, self.path)
+                return False
+            if "armeabi-v7a" in self.arm_target:
+                adb_res = self.runAdb("shell", "cat /proc/cpuinfo")
+                if not adb_res:
+                    self.error = "Could not get info about Android platform: %s (at %s)" % (self.error, self.path)
+                    return False
+                if "ARMv7" not in adb_res:
+                    self.error = "Android device does not support ARMv7 commands, but tests are built for armeabi-v7a (at %s)" % self.path
+                    return False
+                if "NEON" in self.arm_target and "neon" not in adb_res:
+                    self.error = "Android device has no NEON, but tests are built for %s (at %s)" % (self.arm_target, self.path)
+                    return False
+                hw = re.search(r"^Hardware[ \t]*:[ \t]*(.*?)$", adb_res, re.MULTILINE)
+                if hw:
+                    self.hardware = hw.groups()[0].strip()
+        return True
+    
+    def runTest(self, path, workingDir, _stdout, _stderr, args = []):
+        if self.error:
+            return
+        args = args[:]
+        timestamp = datetime.datetime.now()
+        logfile = self.getLogName(path, timestamp)
+        
+        userlog = [a for a in args if a.startswith("--gtest_output=")]
+        if len(userlog) == 0:
+            args.append("--gtest_output=xml:" + logfile)
+        else:
+            logfile = userlog[userlog[0].find(":")+1:]
+        
+        if self.targetos == "android":
+            pass
+        else:
+            cmd = [os.path.abspath(path)]
+            cmd.extend(args)
+            print >> _stderr, "Running:", " ".join(cmd) 
+            testprocess = Popen(cmd, stdout=_stdout, stderr=_stderr, cwd = workingDir)
+            testprocess.communicate()
+            
+    def runTests(self, tests, _stdout, _stderr, workingDir, args = []):
+        if self.error:
+            return
+        if not tests:
+            tests = self.tests
+        for test in tests:
+            t = self.getTest(test)
+            if t:
+                self.runTest(t, workingDir, _stdout, _stderr, args)
+            else:
+                print >> _stderr, "Test \"%s\" is not found in %s" % (test, self.tests_dir)
 
 if __name__ == "__main__":
+    test_args = [a for a in sys.argv if a.startswith("--perf_") or a.startswith("--gtest_")]
+    argv =      [a for a in sys.argv if not(a.startswith("--perf_") or a.startswith("--gtest_"))]
+    
     parser = OptionParser()
     parser.add_option("-t", "--tests", dest="tests", help="comma-separated list of modules to test", metavar="SUITS", default="")
-    (options, args) = parser.parse_args()
-    
-    test_args = [a for a in args if a.startswith("--perf_") or a.startswith("--gtest_")]
-    run_args2 = [a for a in args if not(a.startswith("--perf_") or a.startswith("--gtest_"))]
+    parser.add_option("-w", "--cwd", dest="cwd", help="working directory for tests", metavar="PATH", default=".")
+    (options, args) = parser.parse_args(argv)
     
     run_args = []
     
-    for path in run_args2:
+    for path in args:
         path = os.path.abspath(path)
         while (True):
             if os.path.isdir(path) and os.path.isfile(os.path.join(path, "CMakeCache.txt")):
@@ -137,19 +269,25 @@ if __name__ == "__main__":
             if npath == path:
                 break
             path = npath
-    #run_args = [ a for a in run_args if os.path.isdir(a) and os.path.isfile(os.path.join(a, "CMakeCache.txt"))]
     
     if len(run_args) == 0:
         print >> sys.stderr, "Usage:\n", os.path.basename(sys.argv[0]), "<build_path>"
         exit(1)
         
-    tests = [s.strip() for s in options.tests.split(",")]
+    tests = [s.strip() for s in options.tests.split(",") if s]
     for i in range(len(tests)):
         name = tests[i]
         if not name.startswith(nameprefix):
             tests[i] = nameprefix + name
+            
+    if len(tests) != 1 or len(run_args) != 1:
+        #remove --gtest_output from params
+        test_args = [a for a in test_args if not a.startswith("--gtest_output=")]
     
-    infos = []
     for path in run_args:
-        infos.append(RunInfo(path))
-        print vars(infos[len(infos)-1]),"\n"
+        info = RunInfo(path)
+        #print vars(info),"\n"
+        if not info.isRunnable():
+            print >> sys.stderr, "Error:", info.error
+        else:
+            info.runTests(tests, sys.stdout, sys.stderr, options.cwd, test_args)
