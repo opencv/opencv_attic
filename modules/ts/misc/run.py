@@ -1,5 +1,4 @@
-import testlog_parser, sys, os, platform, xml, re, tempfile, glob, datetime
-#from table_formatter import *
+import testlog_parser, sys, os, platform, xml, re, tempfile, glob, datetime, getpass
 from optparse import OptionParser
 from subprocess import Popen, PIPE
 
@@ -69,6 +68,10 @@ class RunInfo(object):
             self.targetarch = "x86"
         else:
             self.targetarch = "unknown"
+            
+        # fix test path
+        if "Visual Studio" in self.cmake_generator:
+            self.tests_dir = os.path.join(self.tests_dir, self.build_type)
             
         self.hardware = None
         
@@ -228,6 +231,8 @@ class RunInfo(object):
             logfile = userlog[userlog[0].find(":")+1:]
         
         if self.targetos == "android":
+            uname = getpass.getuser()
+            print uname
             pass
         else:
             cmd = [os.path.abspath(path)]
