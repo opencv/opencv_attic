@@ -1,5 +1,6 @@
 import sys, re, os.path, cgi, stat
 from optparse import OptionParser
+from color import getColorizer
 
 class tblCell(object):
     def __init__(self, text, value = None, props = None):
@@ -244,6 +245,7 @@ class table(object):
         
     def consolePrintTable(self, out):
         columns = self.layoutTable()
+        colrizer = getColorizer(out) 
         
         if self.caption:
             out.write("%s%s%s" % ( os.linesep,  os.linesep.join(self.reformatTextValue(self.caption)), os.linesep * 2))
@@ -252,10 +254,10 @@ class table(object):
         headerRow.cells = columns
         headerRow.minheight = self.headerHeight
         
-        self.consolePrintRow2(out, headerRow, columns)
+        self.consolePrintRow2(colrizer, headerRow, columns)
         
         for i in range(0, len(self.rows)):
-            self.consolePrintRow2(out, i, columns)
+            self.consolePrintRow2(colrizer, i, columns)
             
     def consolePrintRow2(self, out, r, columns):
         if isinstance(r, tblRow):
@@ -313,7 +315,7 @@ class table(object):
         else:
             pattern = "%-" + str(width) + "s"
         
-        out.write(pattern % line)
+        out.write(pattern % line, color = self.getValue("color", cell, row, column))
         cell.line += 1
             
     def evalLine(self, cell, rows, column):

@@ -22,6 +22,7 @@ parse_patterns = (
   {'name': "android_executable", 'default': None,       'pattern': re.compile("^ANDROID_EXECUTABLE:FILEPATH=(.*android.*)$")},
   {'name': "is_x64",             'default': "OFF",      'pattern': re.compile("^CUDA_64_BIT_DEVICE_CODE:BOOL=(ON)$")},#ugly(
   {'name': "cmake_generator",    'default': None,       'pattern': re.compile("^CMAKE_GENERATOR:INTERNAL=(.+)$")},
+  {'name': "cxx_compiler",       'default': None,       'pattern': re.compile("^CMAKE_CXX_COMPILER:FILEPATH=(.+)$")},
 )
 
 class RunInfo(object):
@@ -45,6 +46,9 @@ class RunInfo(object):
         except:
             pass
         cachefile.close()
+        # fix empty tests dir
+        if not self.tests_dir:
+            self.tests_dir = self.path
         # add path to adb
         if self.android_executable:
             self.adb = os.path.join(os.path.dirname(os.path.dirname(self.android_executable)), ("platform-tools/adb","platform-tools/adb.exe")[hostos == 'nt'])
@@ -59,6 +63,18 @@ class RunInfo(object):
         self.has_perf_tests = self.has_perf_tests == "ON"
         # fix is_x64 flag
         self.is_x64 = self.is_x64 == "ON"
+        if not self.is_x64 and ("X64" in "%s %s %s" % (self.cxx_flags, self.cxx_flags_release, self.cxx_flags_debug) or "Win64" in self.cmake_generator):
+            self.is_x64 = True
+
+        # fix test path
+        if "Visual Studio" in self.cmake_generator:
+            self.tests_dir = os.path.join(self.tests_dir, self.build_type)
+        elif not self.is_x64 and self.cxx_compiler:
+            #one more attempt to detect x64 compiler
+            output = Popen([self.cxx_compiler, "-v"], stdout=PIPE, stderr=PIPE).communicate()
+            if not output[0] and "x86_64" in output[1]:
+                self.is_x64 = True
+
         # detect target arch
         if self.targetos == "android":
             self.targetarch = "arm"
@@ -68,10 +84,6 @@ class RunInfo(object):
             self.targetarch = "x86"
         else:
             self.targetarch = "unknown"
-            
-        # fix test path
-        if "Visual Studio" in self.cmake_generator:
-            self.tests_dir = os.path.join(self.tests_dir, self.build_type)
             
         self.hardware = None
         
@@ -84,7 +96,22 @@ class RunInfo(object):
         self.tests = self.getAvailableTestApps()
         
     def getSvnVersion(self, path, name):
-        if not self.has_perf_tests or not self.svnversion_path or not os.path.isdir(path):
+        if not path:
+            setattr(self, name, None)
+            return
+        if not self.svnversion_path and hostos == 'nt':
+            self.tryGetSvnVersionWithTortoise(path, name)
+        else:
+            svnversion = self.svnversion_path
+            if not svnversion:
+                svnversion = "svnversion"
+            output = Popen([svnversion, "-n", path], stdout=PIPE, stderr=PIPE).communicate()
+            if not output[1]:
+                setattr(self, name, output[0])
+            else:
+                setattr(self, name, None)
+        return
+        if not self.svnversion_path:#not self.has_perf_tests or 
             if not self.svnversion_path and hostos == 'nt':
                 self.tryGetSvnVersionWithTortoise(path, name)
             else:
@@ -120,11 +147,18 @@ class RunInfo(object):
                 import shutil
                 shutil.rmtree(dir)
                 
+    def isTest(self, fullpath):
+        if not os.path.isfile(fullpath):
+            return False
+        if hostos == self.targetos:
+            return os.access(fullpath, os.X_OK)
+        return True
+                
     def getAvailableTestApps(self):
         if self.tests_dir and os.path.isdir(self.tests_dir):
             files = glob.glob(os.path.join(self.tests_dir, nameprefix + "*"))
             if self.targetos == hostos:
-                files = [f for f in files if os.access(f, os.X_OK)]
+                files = [f for f in files if self.isTest(f)]
             return files
         return []
     
@@ -134,11 +168,13 @@ class RunInfo(object):
             app = app[:-4]
         if app.startswith(nameprefix):
             app = app[len(nameprefix):]
-        if self.opencv_home_svn:
+        if self.cmake_home_svn:
             if self.cmake_home_svn == self.opencv_home_svn:
                 rev = self.cmake_home_svn
-            else:
+            elif self.opencv_home_svn:
                 rev = self.cmake_home_svn + "-" + self.opencv_home_svn
+            else:
+                rev = self.cmake_home_svn
         else:
             rev = None
         if rev:
@@ -152,6 +188,21 @@ class RunInfo(object):
         return "%s_%s_%s_%s%s%s.xml" %(app, self.targetos, self.targetarch, hw, rev, timestamp.strftime("%Y%m%dT%H%M%S"))
         
     def getTest(self, name):
+        # full path
+        if self.isTest(name):
+            return name
+        
+        # name only
+        fullname = os.path.join(self.tests_dir, name)
+        if self.isTest(fullname):
+            return fullname
+        
+        # name without extension
+        fullname += ".exe"
+        if self.isTest(fullname):
+            return fullname
+        
+        # short name for OpenCV tests
         for t in self.tests:
             if t == name:
                 return t
@@ -180,9 +231,9 @@ class RunInfo(object):
         return None
     
     def isRunnable(self):
-        if not self.has_perf_tests or not self.tests:
-            self.error = "Performance tests are not built (at %s)" % self.path
-            return False
+        #if not self.has_perf_tests or not self.tests:
+            #self.error = "Performance tests are not built (at %s)" % self.path
+            #return False
         if self.targetarch == "x64" and hostmachine == "x86":
             self.error = "Target architecture is incompatible with current platform (at %s)" % self.path
             return False
@@ -294,7 +345,7 @@ class RunInfo(object):
                 if logfile:
                     logs.append(os.path.relpath(logfile, "."))
             else:
-                print >> _stderr, "Test \"%s\" is not found in %s" % (test, self.tests_dir)
+                print >> _stderr, "Error: Test \"%s\" is not found in %s" % (test, self.tests_dir)
         return logs
 
 if __name__ == "__main__":
@@ -324,10 +375,6 @@ if __name__ == "__main__":
         exit(1)
         
     tests = [s.strip() for s in options.tests.split(",") if s]
-    for i in range(len(tests)):
-        name = tests[i]
-        if not name.startswith(nameprefix):
-            tests[i] = nameprefix + name
             
     if len(tests) != 1 or len(run_args) != 1:
         #remove --gtest_output from params
@@ -341,5 +388,6 @@ if __name__ == "__main__":
             print >> sys.stderr, "Error:", info.error
         else:
             logs.extend(info.runTests(tests, sys.stdout, sys.stderr, options.cwd, test_args))
-            
-    print >> sys.stderr, "Collected:", " ".join(logs)
+
+    if logs:            
+        print >> sys.stderr, "Collected:", " ".join(logs)

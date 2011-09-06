@@ -326,12 +326,13 @@ if os.name == 'nt':
         def write(self, *text, **attrs):
             if not text:
                 return
-            if "color" in attrs:
-                col = getNearestConsoleColor(attrs["color"])
+            color = attrs.get("color", None)
+            if color:
+                col = getNearestConsoleColor(color)
                 self.stream.flush()
                 self.set_text_attr(col)
             self.stream.write(" ".join([str(t) for t in text]))
-            if "color" in attrs:
+            if color:
                 self.stream.flush()
                 self.set_text_attr(self.default_attrs)
                 
@@ -364,11 +365,12 @@ class asciiSeqColorizer(object):
     def write(self, *text, **attrs):
         if not text:
             return
-        if "color" in attrs:
-            col = getNearestConsoleColor(attrs["color"])
+        color = attrs.get("color", None)
+        if color:
+            col = getNearestConsoleColor(color)
             self.stream.write(self.get_seq(col))
         self.stream.write(" ".join([str(t) for t in text]))
-        if "color" in attrs:
+        if color:
             self.stream.write(self.__class__.RESET_SEQ)
         
 
