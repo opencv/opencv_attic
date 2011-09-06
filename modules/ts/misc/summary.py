@@ -11,6 +11,7 @@ if __name__ == "__main__":
     parser.add_option("-o", "--output", dest="format", help="output results in text format (can be 'txt', 'html' or 'auto' - default)", metavar="FMT", default="auto")
     parser.add_option("-m", "--metric", dest="metric", help="output metric", metavar="NAME", default="gmean")
     parser.add_option("-u", "--units", dest="units", help="units for output values (s, ms (default), mks, ns or ticks)", metavar="UNITS", default="ms")
+    parser.add_option("-f", "--filter", dest="filter", help="regex to filter tests", metavar="REGEX", default=None)
     parser.add_option("", "--no-relatives", action="store_false", dest="calc_relatives", default=True, help="do not output relative values")
     parser.add_option("", "--show-all", action="store_true", dest="showall", default=False, help="also include empty and \"notrun\" lines")
     (options, args) = parser.parse_args()
@@ -38,6 +39,9 @@ if __name__ == "__main__":
     for arg in files:
         try:
             tests = testlog_parser.parseLogFile(arg)
+            if options.filter:
+                expr = re.compile(options.filter)
+                tests = [t for t in tests if expr.search(str(t))] 
             if tests:
                 test_sets.append((os.path.basename(arg), tests))
         except IOError as err:

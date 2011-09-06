@@ -15,6 +15,7 @@ PERF_TEST_P(MatInfo_Size_Size, resizeUpLinear,
                 )
 )
 {
+    getDataPath("perf/test.png");
     int matType = tr1::get<0>(GetParam());
     Size from = tr1::get<1>(GetParam());
     Size to = tr1::get<2>(GetParam());

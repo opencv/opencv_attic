@@ -24,6 +24,28 @@ parse_patterns = (
   {'name': "cxx_compiler",       'default': None,       'pattern': re.compile("^CMAKE_CXX_COMPILER:FILEPATH=(.+)$")},
 )
 
+def query_yes_no(stdout, question, default="yes"):
+    valid = {"yes":True, "y":True, "ye":True, "no":False, "n":False}
+    if default == None:
+        prompt = " [y/n] "
+    elif default == "yes":
+        prompt = " [Y/n] "
+    elif default == "no":
+        prompt = " [y/N] "
+    else:
+        raise ValueError("invalid default answer: '%s'" % default)
+
+    while True:
+        stdout.write(os.linesep + question + prompt)
+        choice = raw_input().lower()
+        if default is not None and choice == '':
+            return valid[default]
+        elif choice in valid:
+            return valid[choice]
+        else:
+            stdout.write("Please respond with 'yes' or 'no' "\
+                             "(or 'y' or 'n').\n")
+            
 class RunInfo(object):
     def __init__(self, path):
         self.path = path
@@ -134,8 +156,7 @@ class RunInfo(object):
             tmpfile = open(tmpfilename, "w")
             tmpfile.write("$WCRANGE$$WCMODS?M:$")
             tmpfile.close();
-            wcrevprocess = Popen([wcrev, path, tmpfilename, tmpfilename2, "-f"], stdout=PIPE, stderr=PIPE)
-            output = wcrevprocess.communicate()
+            output = Popen([wcrev, path, tmpfilename, tmpfilename2, "-f"], stdout=PIPE, stderr=PIPE).communicate()
             if "is not a working copy" in output[0]:
                 version = "exported"
             else:
@@ -307,7 +328,7 @@ class RunInfo(object):
                 #run
                 command = exename + " " + " ".join(args)
                 print >> _stderr, "Running:", command
-                output = Popen([self.adb, "shell", "cd " + andoidcwd + "&& ./" + command], stdout=_stdout, stderr=_stderr).wait()
+                Popen([self.adb, "shell", "export OPENCV_TEST_DATA_PATH=" + self.test_data_path + "&& cd " + andoidcwd + "&& ./" + command], stdout=_stdout, stderr=_stderr).wait()
                 # try get log
                 print >> _stderr, "Pulling", logfile, "from device..."
                 hostlogpath = os.path.join(workingDir, logfile)
@@ -359,6 +380,8 @@ if __name__ == "__main__":
     parser = OptionParser()
     parser.add_option("-t", "--tests", dest="tests", help="comma-separated list of modules to test", metavar="SUITS", default="")
     parser.add_option("-w", "--cwd", dest="cwd", help="working directory for tests", metavar="PATH", default=".")
+    parser.add_option("", "--android_test_data_path", dest="test_data_path", help="OPENCV_TEST_DATA_PATH for Android run", metavar="PATH", default="/sdcard/opencv_testdata/")
+    
     (options, args) = parser.parse_args(argv)
     
     run_args = []
@@ -391,6 +414,7 @@ if __name__ == "__main__":
         if not info.isRunnable():
             print >> sys.stderr, "Error:", info.error
         else:
+            info.test_data_path = options.test_data_path
             logs.extend(info.runTests(tests, sys.stdout, sys.stderr, options.cwd, test_args))
 
     if logs:            

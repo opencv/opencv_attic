@@ -213,6 +213,8 @@ protected:
     void stopTimer();
     bool next();
 
+    std::string getDataPath(const std::string& relativePath);
+
     //_declareHelper declare;
 
     enum

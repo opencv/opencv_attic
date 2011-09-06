@@ -203,32 +203,32 @@ void Regression::verify(cv::FileNode node, cv::Mat actual, double eps, std::stri
     cv::minMaxLoc(actual, &actualmin, &actualmax);
 
     ASSERT_NEAR((double)node["min"], actualmin, eps)
-            << argname << " has unexpected minimal value";
+            << "  " << argname << " has unexpected minimal value";
     ASSERT_NEAR((double)node["max"], actualmax, eps)
-            << argname << " has unexpected maximal value";
+            << "  " << argname << " has unexpected maximal value";
 
     cv::FileNode last = node["last"];
     double actualLast = getElem(actual, actual.rows - 1, actual.cols - 1, actual.channels() - 1);
     ASSERT_EQ((int)last["x"], actual.cols - 1)
-            << argname << " has unexpected number of columns";
+            << "  " << argname << " has unexpected number of columns";
     ASSERT_EQ((int)last["y"], actual.rows - 1)
-            << argname << " has unexpected number of rows";
+            << "  " << argname << " has unexpected number of rows";
     ASSERT_NEAR((double)last["val"], actualLast, eps)
-            << argname << " has unexpected value of last element";
+            << "  " << argname << " has unexpected value of last element";
 
     cv::FileNode rng1 = node["rng1"];
     int x1 = rng1["x"];
     int y1 = rng1["y"];
     int cn1 = rng1["cn"];
     ASSERT_NEAR((double)rng1["val"], getElem(actual, y1, x1, cn1), eps)
-            << argname << " has unexpected value of ["<< x1 << ":" << y1 << ":" << cn1 <<"] element";
+            << "  " << argname << " has unexpected value of ["<< x1 << ":" << y1 << ":" << cn1 <<"] element";
 
     cv::FileNode rng2 = node["rng2"];
     int x2 = rng2["x"];
     int y2 = rng2["y"];
     int cn2 = rng2["cn"];
     ASSERT_NEAR((double)rng2["val"], getElem(actual, y2, x2, cn2), eps)
-            << argname << " has unexpected value of ["<< x2 << ":" << y2 << ":" << cn2 <<"] element";
+            << "  " << argname << " has unexpected value of ["<< x2 << ":" << y2 << ":" << cn2 <<"] element";
 }
 
 void Regression::write(cv::InputArray array)
@@ -260,13 +260,13 @@ void Regression::write(cv::InputArray array)
 
 void Regression::verify(cv::FileNode node, cv::InputArray array, double eps)
 {
-    ASSERT_EQ((int)node["kind"], array.kind()) << "Argument " << node.name() << " has unexpected kind";
-    ASSERT_EQ((int)node["type"], array.type()) << "Argument " << node.name() << " has unexpected type";
+    ASSERT_EQ((int)node["kind"], array.kind()) << "  Argument " << node.name() << " has unexpected kind";
+    ASSERT_EQ((int)node["type"], array.type()) << "  Argument " << node.name() << " has unexpected type";
 
     cv::FileNode valnode = node["val"];
     if (isVector(array))
     {
-        ASSERT_EQ((int)node["len"], (int)array.total()) << "Vector " << node.name() << " has unexpected length";
+        ASSERT_EQ((int)node["len"], (int)array.total()) << "  Vector " << node.name() << " has unexpected length";
         int idx = node["idx"];
 
         cv::Mat actual = array.getMat(idx);
@@ -274,7 +274,7 @@ void Regression::verify(cv::FileNode node, cv::InputArray array, double eps)
         if (valnode.isNone())
         {
             ASSERT_LE((size_t)26, actual.total() * (size_t)actual.channels())
-                    << node.name() << "[" <<  idx << "] has unexpected number of elements";
+                    << "  " << node.name() << "[" <<  idx << "] has unexpected number of elements";
             verify(node, actual, eps, cv::format("%s[%d]", node.name().c_str(), idx));
         }
         else
@@ -283,12 +283,12 @@ void Regression::verify(cv::FileNode node, cv::InputArray array, double eps)
             valnode >> expected;
 
             ASSERT_EQ(expected.size(), actual.size())
-                    << node.name() << "[" <<  idx<< "] has unexpected size";
+                    << "  " << node.name() << "[" <<  idx<< "] has unexpected size";
 
             cv::Mat diff;
             cv::absdiff(expected, actual, diff);
             if (!cv::checkRange(diff, true, 0, 0, eps))
-                FAIL() << "Difference between argument "
+                FAIL() << "  Difference between argument "
                        << node.name() << "[" <<  idx << "] and expected value is bugger than " << eps;
         }
     }
@@ -297,7 +297,7 @@ void Regression::verify(cv::FileNode node, cv::InputArray array, double eps)
         if (valnode.isNone())
         {
             ASSERT_LE((size_t)26, array.total() * (size_t)array.channels())
-                    << "Argument " << node.name() << " has unexpected number of elements";
+                    << "  Argument " << node.name() << " has unexpected number of elements";
             verify(node, array.getMat(), eps, "Argument " + node.name());
         }
         else
@@ -307,12 +307,12 @@ void Regression::verify(cv::FileNode node, cv::InputArray array, double eps)
             cv::Mat actual = array.getMat();
 
             ASSERT_EQ(expected.size(), actual.size())
-                    << "Argument " << node.name() << " has unexpected size";
+                    << "  Argument " << node.name() << " has unexpected size";
 
             cv::Mat diff;
             cv::absdiff(expected, actual, diff);
             if (!cv::checkRange(diff, true, 0, 0, eps))
-                FAIL() << "Difference between argument " << node.name()
+                FAIL() << "  Difference between argument " << node.name()
                        << " and expected value is bugger than " << eps;
         }
     }
@@ -341,7 +341,7 @@ Regression& Regression::operator() (const std::string& name, cv::InputArray arra
     {
         cv::FileNode this_arg = n[name];
         if (!this_arg.isMap())
-            ADD_FAILURE() << "No regression data for " << name << " argument";
+            ADD_FAILURE() << "  No regression data for " << name << " argument";
         else
             verify(this_arg, array, eps);
     }
@@ -462,7 +462,7 @@ void TestBase::declareArray(SizeVector& sizes, cv::InputOutputArray a, int wtype
         warmup(a, wtype);
     }
     else if (a.kind() != cv::_InputArray::NONE)
-        ADD_FAILURE() << "Uninitialized input/output parameters are not allowed for performance tests";
+        ADD_FAILURE() << "  Uninitialized input/output parameters are not allowed for performance tests";
 }
 
 void TestBase::warmup(cv::InputOutputArray a, int wtype)
@@ -547,7 +547,7 @@ void TestBase::stopTimer()
 {
     int64 time = cv::getTickCount();
     if (lastTime == 0)
-        ADD_FAILURE() << "stopTimer() is called before startTimer()";
+        ADD_FAILURE() << "  stopTimer() is called before startTimer()";
     lastTime = time - lastTime;
     totalTime += lastTime;
     lastTime -= _timeadjustment;
@@ -652,19 +652,19 @@ void TestBase::validateMetrics()
     if (HasFailure()) return;
 
     ASSERT_GE(m.samples, 1u)
-      << "No time measurements was performed.\nstartTimer() and stopTimer() commands are required for performance tests.";
+      << "  No time measurements was performed.\nstartTimer() and stopTimer() commands are required for performance tests.";
 
     EXPECT_GE(m.samples, param_min_samples)
-      << "Only a few samples are collected.\nPlease increase number of iterations or/and time limit to get reliable performance measurements.";
+      << "  Only a few samples are collected.\nPlease increase number of iterations or/and time limit to get reliable performance measurements.";
 
     if (m.gstddev > DBL_EPSILON)
     {
         EXPECT_GT(/*m.gmean * */1., /*m.gmean * */ 2 * sinh(m.gstddev * param_max_deviation))
-          << "Test results are not reliable ((mean-sigma,mean+sigma) deviation interval is bigger than measured time interval).";
+          << "  Test results are not reliable ((mean-sigma,mean+sigma) deviation interval is bigger than measured time interval).";
     }
 
     EXPECT_LE(m.outliers, std::max((unsigned int)cvCeil(m.samples * param_max_outliers / 100.), 1u))
-      << "Test results are not reliable (too many outliers).";
+      << "  Test results are not reliable (too many outliers).";
 }
 
 void TestBase::reportMetrics(bool toJUnitXML)
@@ -755,6 +755,44 @@ void TestBase::TearDown()
         if (type_param)  printf("[ TYPE     ] \t%s\n", type_param), fflush(stdout);
         reportMetrics(true);
     }
+}
+
+std::string TestBase::getDataPath(const std::string& relativePath)
+{
+    if (relativePath.empty())
+    {
+        ADD_FAILURE() << "  Bad path to test resource";
+        return std::string();
+    }
+
+    const char *data_path_dir = getenv("OPENCV_TEST_DATA_PATH");
+    const char *path_separator = "/";
+
+    std::string path;
+    if (data_path_dir)
+    {
+        int len = strlen(data_path_dir) - 1;
+        if (len < 0) len = 0;
+        path = (data_path_dir[0] == 0 ? std::string(".") : std::string(data_path_dir))
+                + (data_path_dir[len] == '/' || data_path_dir[len] == '\\' ? "" : path_separator);
+    }
+    else
+    {
+        path = ".";
+        path += path_separator;
+    }
+
+    if (relativePath[0] == '/' || relativePath[0] == '\\')
+        path += relativePath.substr(1);
+    else
+        path += relativePath;
+
+    FILE* fp = fopen(path.c_str(), "r");
+    if (fp)
+        fclose(fp);
+    else
+        ADD_FAILURE() << "  Requested file \"" << path << "\" does not exist.";
+    return path;
 }
 
 /*****************************************************************************************\
