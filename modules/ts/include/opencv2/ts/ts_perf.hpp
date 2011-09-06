@@ -24,7 +24,7 @@ namespace perf
 {
 
 /*****************************************************************************************\
-*                              Predefined typical frame sizes                             *
+*                Predefined typical frame sizes and typical test parameters               *
 \*****************************************************************************************/
 const cv::Size szQVGA = cv::Size(320, 240);
 const cv::Size szVGA = cv::Size(640, 480);
@@ -46,172 +46,7 @@ const cv::Size szODD = cv::Size(127, 61);
 #define SZ_TYPICAL  ::testing::Values(::perf::szVGA, ::perf::szqHD, ::perf::sz720p, ::perf::szODD)
 
 
-/*****************************************************************************************\
-*                MatInfo - descriptor for test arguments of type Mat                      *
-\*****************************************************************************************/
-typedef struct CV_EXPORTS MatInfo
-{
-    enum {
-        Zeros,
-        Ones,
-        Eye,
-        Diag,
-        Fill,
-        Rng
-    };
-
-    cv::Size size;
-    int type;
-    int kind;
-    cv::Range roix, roiy;
-
-    MatInfo(cv::Size sz, int type = CV_8UC1, int kind = Fill, cv::Range roix = cv::Range::all(), cv::Range roiy = cv::Range::all());
-
-    cv::Mat makeMat() const;
-    cv::Mat makeMat(double v1, double v2 = 0, double v3 =0, double v4 = 0) const;
-
-} MatInfo, iMat;
-
-#define mQVGA8UC1(...)  ::perf::MatInfo(::perf::szQVGA,  CV_8UC1 , ## __VA_ARGS__)
-#define mVGA8UC1(...)   ::perf::MatInfo(::perf::szVGA,   CV_8UC1 , ## __VA_ARGS__)
-#define mSVGA8UC1(...)  ::perf::MatInfo(::perf::szSVGA,  CV_8UC1 , ## __VA_ARGS__)
-#define mXGA8UC1(...)   ::perf::MatInfo(::perf::szXGA,   CV_8UC1 , ## __VA_ARGS__)
-#define mSXGA8UC1(...)  ::perf::MatInfo(::perf::szSXGA,  CV_8UC1 , ## __VA_ARGS__)
-#define mnHD8UC1(...)   ::perf::MatInfo(::perf::sznHD,   CV_8UC1 , ## __VA_ARGS__)
-#define mqHD8UC1(...)   ::perf::MatInfo(::perf::szqHD,   CV_8UC1 , ## __VA_ARGS__)
-#define m720p8UC1(...)  ::perf::MatInfo(::perf::sz720p,  CV_8UC1 , ## __VA_ARGS__)
-#define m1080p8UC1(...) ::perf::MatInfo(::perf::sz1080p, CV_8UC1 , ## __VA_ARGS__)
-#define mODD8UC1(...)   ::perf::MatInfo(::perf::szODD,   CV_8UC1 , ## __VA_ARGS__)
-
-#define mQVGA8SC1(...)  ::perf::MatInfo(::perf::szQVGA,  CV_8SC1 , ## __VA_ARGS__)
-#define mVGA8SC1(...)   ::perf::MatInfo(::perf::szVGA,   CV_8SC1 , ## __VA_ARGS__)
-#define mSVGA8SC1(...)  ::perf::MatInfo(::perf::szSVGA,  CV_8SC1 , ## __VA_ARGS__)
-#define mXGA8SC1(...)   ::perf::MatInfo(::perf::szXGA,   CV_8SC1 , ## __VA_ARGS__)
-#define mSXGA8SC1(...)  ::perf::MatInfo(::perf::szSXGA,  CV_8SC1 , ## __VA_ARGS__)
-#define mnHD8SC1(...)   ::perf::MatInfo(::perf::sznHD,   CV_8SC1 , ## __VA_ARGS__)
-#define mqHD8SC1(...)   ::perf::MatInfo(::perf::szqHD,   CV_8SC1 , ## __VA_ARGS__)
-#define m720p8SC1(...)  ::perf::MatInfo(::perf::sz720p,  CV_8SC1 , ## __VA_ARGS__)
-#define m1080p8SC1(...) ::perf::MatInfo(::perf::sz1080p, CV_8SC1 , ## __VA_ARGS__)
-#define mODD8SC1(...)   ::perf::MatInfo(::perf::szODD,   CV_8SC1 , ## __VA_ARGS__)
-
-#define mQVGA8UC3(...)  ::perf::MatInfo(::perf::szQVGA,  CV_8UC3 , ## __VA_ARGS__)
-#define mVGA8UC3(...)   ::perf::MatInfo(::perf::szVGA,   CV_8UC3 , ## __VA_ARGS__)
-#define mSVGA8UC3(...)  ::perf::MatInfo(::perf::szSVGA,  CV_8UC3 , ## __VA_ARGS__)
-#define mXGA8UC3(...)   ::perf::MatInfo(::perf::szXGA,   CV_8UC3 , ## __VA_ARGS__)
-#define mSXGA8UC3(...)  ::perf::MatInfo(::perf::szSXGA,  CV_8UC3 , ## __VA_ARGS__)
-#define mnHD8UC3(...)   ::perf::MatInfo(::perf::sznHD,   CV_8UC3 , ## __VA_ARGS__)
-#define mqHD8UC3(...)   ::perf::MatInfo(::perf::szqHD,   CV_8UC3 , ## __VA_ARGS__)
-#define m720p8UC3(...)  ::perf::MatInfo(::perf::sz720p,  CV_8UC3 , ## __VA_ARGS__)
-#define m1080p8UC3(...) ::perf::MatInfo(::perf::sz1080p, CV_8UC3 , ## __VA_ARGS__)
-#define mODD8UC3(...)   ::perf::MatInfo(::perf::szODD,   CV_8UC3 , ## __VA_ARGS__)
-
-#define mQVGA8SC3(...)  ::perf::MatInfo(::perf::szQVGA,  CV_8SC3 , ## __VA_ARGS__)
-#define mVGA8SC3(...)   ::perf::MatInfo(::perf::szVGA,   CV_8SC3 , ## __VA_ARGS__)
-#define mSVGA8SC3(...)  ::perf::MatInfo(::perf::szSVGA,  CV_8SC3 , ## __VA_ARGS__)
-#define mXGA8SC3(...)   ::perf::MatInfo(::perf::szXGA,   CV_8SC3 , ## __VA_ARGS__)
-#define mSXGA8SC3(...)  ::perf::MatInfo(::perf::szSXGA,  CV_8SC3 , ## __VA_ARGS__)
-#define mnHD8SC3(...)   ::perf::MatInfo(::perf::sznHD,   CV_8SC3 , ## __VA_ARGS__)
-#define mqHD8SC3(...)   ::perf::MatInfo(::perf::szqHD,   CV_8SC3 , ## __VA_ARGS__)
-#define m720p8SC3(...)  ::perf::MatInfo(::perf::sz720p,  CV_8SC3 , ## __VA_ARGS__)
-#define m1080p8SC3(...) ::perf::MatInfo(::perf::sz1080p, CV_8SC3 , ## __VA_ARGS__)
-#define mODD8SC3(...)   ::perf::MatInfo(::perf::szODD,   CV_8SC3 , ## __VA_ARGS__)
-
-#define mQVGA8UC4(...)  ::perf::MatInfo(::perf::szQVGA,  CV_8UC4 , ## __VA_ARGS__)
-#define mVGA8UC4(...)   ::perf::MatInfo(::perf::szVGA,   CV_8UC4 , ## __VA_ARGS__)
-#define mSVGA8UC4(...)  ::perf::MatInfo(::perf::szSVGA,  CV_8UC4 , ## __VA_ARGS__)
-#define mXGA8UC4(...)   ::perf::MatInfo(::perf::szXGA,   CV_8UC4 , ## __VA_ARGS__)
-#define mSXGA8UC4(...)  ::perf::MatInfo(::perf::szSXGA,  CV_8UC4 , ## __VA_ARGS__)
-#define mnHD8UC4(...)   ::perf::MatInfo(::perf::sznHD,   CV_8UC4 , ## __VA_ARGS__)
-#define mqHD8UC4(...)   ::perf::MatInfo(::perf::szqHD,   CV_8UC4 , ## __VA_ARGS__)
-#define m720p8UC4(...)  ::perf::MatInfo(::perf::sz720p,  CV_8UC4 , ## __VA_ARGS__)
-#define m1080p8UC4(...) ::perf::MatInfo(::perf::sz1080p, CV_8UC4 , ## __VA_ARGS__)
-#define mODD8UC4(...)   ::perf::MatInfo(::perf::szODD,   CV_8UC4 , ## __VA_ARGS__)
-
-#define mQVGA8SC4(...)  ::perf::MatInfo(::perf::szQVGA,  CV_8SC4 , ## __VA_ARGS__)
-#define mVGA8SC4(...)   ::perf::MatInfo(::perf::szVGA,   CV_8SC4 , ## __VA_ARGS__)
-#define mSVGA8SC4(...)  ::perf::MatInfo(::perf::szSVGA,  CV_8SC4 , ## __VA_ARGS__)
-#define mXGA8SC4(...)   ::perf::MatInfo(::perf::szXGA,   CV_8SC4 , ## __VA_ARGS__)
-#define mSXGA8SC4(...)  ::perf::MatInfo(::perf::szSXGA,  CV_8SC4 , ## __VA_ARGS__)
-#define mnHD8SC4(...)   ::perf::MatInfo(::perf::sznHD,   CV_8SC4 , ## __VA_ARGS__)
-#define mqHD8SC4(...)   ::perf::MatInfo(::perf::szqHD,   CV_8SC4 , ## __VA_ARGS__)
-#define m720p8SC4(...)  ::perf::MatInfo(::perf::sz720p,  CV_8SC4 , ## __VA_ARGS__)
-#define m1080p8SC4(...) ::perf::MatInfo(::perf::sz1080p, CV_8SC4 , ## __VA_ARGS__)
-#define mODD8SC4(...)   ::perf::MatInfo(::perf::szODD,   CV_8SC4 , ## __VA_ARGS__)
-
-#define mQVGA32SC1(...)  ::perf::MatInfo(::perf::szQVGA,  CV_32SC1 , ## __VA_ARGS__)
-#define mVGA32SC1(...)   ::perf::MatInfo(::perf::szVGA,   CV_32SC1 , ## __VA_ARGS__)
-#define mSVGA32SC1(...)  ::perf::MatInfo(::perf::szSVGA,  CV_32SC1 , ## __VA_ARGS__)
-#define mXGA32SC1(...)   ::perf::MatInfo(::perf::szXGA,   CV_32SC1 , ## __VA_ARGS__)
-#define mSXGA32SC1(...)  ::perf::MatInfo(::perf::szSXGA,  CV_32SC1 , ## __VA_ARGS__)
-#define mnHD32SC1(...)   ::perf::MatInfo(::perf::sznHD,   CV_32SC1 , ## __VA_ARGS__)
-#define mqHD32SC1(...)   ::perf::MatInfo(::perf::szqHD,   CV_32SC1 , ## __VA_ARGS__)
-#define m720p32SC1(...)  ::perf::MatInfo(::perf::sz720p,  CV_32SC1 , ## __VA_ARGS__)
-#define m1080p32SC1(...) ::perf::MatInfo(::perf::sz1080p, CV_32SC1 , ## __VA_ARGS__)
-#define mODD32SC1(...)   ::perf::MatInfo(::perf::szODD,   CV_32SC1 , ## __VA_ARGS__)
-
-
-#define mQVGA32SC3(...)  ::perf::MatInfo(::perf::szQVGA,  CV_32SC3 , ## __VA_ARGS__)
-#define mVGA32SC3(...)   ::perf::MatInfo(::perf::szVGA,   CV_32SC3 , ## __VA_ARGS__)
-#define mSVGA32SC3(...)  ::perf::MatInfo(::perf::szSVGA,  CV_32SC3 , ## __VA_ARGS__)
-#define mXGA32SC3(...)   ::perf::MatInfo(::perf::szXGA,   CV_32SC3 , ## __VA_ARGS__)
-#define mSXGA32SC3(...)  ::perf::MatInfo(::perf::szSXGA,  CV_32SC3 , ## __VA_ARGS__)
-#define mnHD32SC3(...)   ::perf::MatInfo(::perf::sznHD,   CV_32SC3 , ## __VA_ARGS__)
-#define mqHD32SC3(...)   ::perf::MatInfo(::perf::szqHD,   CV_32SC3 , ## __VA_ARGS__)
-#define m720p32SC3(...)  ::perf::MatInfo(::perf::sz720p,  CV_32SC3 , ## __VA_ARGS__)
-#define m1080p32SC3(...) ::perf::MatInfo(::perf::sz1080p, CV_32SC3 , ## __VA_ARGS__)
-#define mODD32SC3(...)   ::perf::MatInfo(::perf::szODD,   CV_32SC3 , ## __VA_ARGS__)
-
-
-#define mQVGA32SC4(...)  ::perf::MatInfo(::perf::szQVGA,  CV_32SC4 , ## __VA_ARGS__)
-#define mVGA32SC4(...)   ::perf::MatInfo(::perf::szVGA,   CV_32SC4 , ## __VA_ARGS__)
-#define mSVGA32SC4(...)  ::perf::MatInfo(::perf::szSVGA,  CV_32SC4 , ## __VA_ARGS__)
-#define mXGA32SC4(...)   ::perf::MatInfo(::perf::szXGA,   CV_32SC4 , ## __VA_ARGS__)
-#define mSXGA32SC4(...)  ::perf::MatInfo(::perf::szSXGA,  CV_32SC4 , ## __VA_ARGS__)
-#define mnHD32SC4(...)   ::perf::MatInfo(::perf::sznHD,   CV_32SC4 , ## __VA_ARGS__)
-#define mqHD32SC4(...)   ::perf::MatInfo(::perf::szqHD,   CV_32SC4 , ## __VA_ARGS__)
-#define m720p32SC4(...)  ::perf::MatInfo(::perf::sz720p,  CV_32SC4 , ## __VA_ARGS__)
-#define m1080p32SC4(...) ::perf::MatInfo(::perf::sz1080p, CV_32SC4 , ## __VA_ARGS__)
-#define mODD32SC4(...)   ::perf::MatInfo(::perf::szODD,   CV_32SC4 , ## __VA_ARGS__)
-
-
-
-#define mQVGA32FC1(...)  ::perf::MatInfo(::perf::szQVGA,  CV_32FC1 , ## __VA_ARGS__)
-#define mVGA32FC1(...)   ::perf::MatInfo(::perf::szVGA,   CV_32FC1 , ## __VA_ARGS__)
-#define mSVGA32FC1(...)  ::perf::MatInfo(::perf::szSVGA,  CV_32FC1 , ## __VA_ARGS__)
-#define mXGA32FC1(...)   ::perf::MatInfo(::perf::szXGA,   CV_32FC1 , ## __VA_ARGS__)
-#define mSXGA32FC1(...)  ::perf::MatInfo(::perf::szSXGA,  CV_32FC1 , ## __VA_ARGS__)
-#define mnHD32FC1(...)   ::perf::MatInfo(::perf::sznHD,   CV_32FC1 , ## __VA_ARGS__)
-#define mqHD32FC1(...)   ::perf::MatInfo(::perf::szqHD,   CV_32FC1 , ## __VA_ARGS__)
-#define m720p32FC1(...)  ::perf::MatInfo(::perf::sz720p,  CV_32FC1 , ## __VA_ARGS__)
-#define m1080p32FC1(...) ::perf::MatInfo(::perf::sz1080p, CV_32FC1 , ## __VA_ARGS__)
-#define mODD32FC1(...)   ::perf::MatInfo(::perf::szODD,   CV_32FC1 , ## __VA_ARGS__)
-
-#define mQVGA32FC3(...)  ::perf::MatInfo(::perf::szQVGA,  CV_32FC3 , ## __VA_ARGS__)
-#define mVGA32FC3(...)   ::perf::MatInfo(::perf::szVGA,   CV_32FC3 , ## __VA_ARGS__)
-#define mSVGA32FC3(...)  ::perf::MatInfo(::perf::szSVGA,  CV_32FC3 , ## __VA_ARGS__)
-#define mXGA32FC3(...)   ::perf::MatInfo(::perf::szXGA,   CV_32FC3 , ## __VA_ARGS__)
-#define mSXGA32FC3(...)  ::perf::MatInfo(::perf::szSXGA,  CV_32FC3 , ## __VA_ARGS__)
-#define mnHD32FC3(...)   ::perf::MatInfo(::perf::sznHD,   CV_32FC3 , ## __VA_ARGS__)
-#define mqHD32FC3(...)   ::perf::MatInfo(::perf::szqHD,   CV_32FC3 , ## __VA_ARGS__)
-#define m720p32FC3(...)  ::perf::MatInfo(::perf::sz720p,  CV_32FC3 , ## __VA_ARGS__)
-#define m1080p32FC3(...) ::perf::MatInfo(::perf::sz1080p, CV_32FC3 , ## __VA_ARGS__)
-#define mODD32FC3(...)   ::perf::MatInfo(::perf::szODD,   CV_32FC3 , ## __VA_ARGS__)
-
-#define mQVGA32FC4(...)  ::perf::MatInfo(::perf::szQVGA,  CV_32FC4 , ## __VA_ARGS__)
-#define mVGA32FC4(...)   ::perf::MatInfo(::perf::szVGA,   CV_32FC4 , ## __VA_ARGS__)
-#define mSVGA32FC4(...)  ::perf::MatInfo(::perf::szSVGA,  CV_32FC4 , ## __VA_ARGS__)
-#define mXGA32FC4(...)   ::perf::MatInfo(::perf::szXGA,   CV_32FC4 , ## __VA_ARGS__)
-#define mSXGA32FC4(...)  ::perf::MatInfo(::perf::szSXGA,  CV_32FC4 , ## __VA_ARGS__)
-#define mnHD32FC4(...)   ::perf::MatInfo(::perf::sznHD,   CV_32FC4 , ## __VA_ARGS__)
-#define mqHD32FC4(...)   ::perf::MatInfo(::perf::szqHD,   CV_32FC4 , ## __VA_ARGS__)
-#define m720p32FC4(...)  ::perf::MatInfo(::perf::sz720p,  CV_32FC4 , ## __VA_ARGS__)
-#define m1080p32FC4(...) ::perf::MatInfo(::perf::sz1080p, CV_32FC4 , ## __VA_ARGS__)
-#define mODD32FC4(...)   ::perf::MatInfo(::perf::szODD,   CV_32FC4 , ## __VA_ARGS__)
-
-#define mODD8U(...) ::perf::MatInfo(::perf::szODD, CV_8UC1 , ## __VA_ARGS__)
-#define mODD32F(...) ::perf::MatInfo(::perf::szODD, CV_32FC1 , ## __VA_ARGS__)
-
-#define TYPICAL_MAT_SIZES szVGA, sz720p, sz1080p, szODD
+#define TYPICAL_MAT_SIZES ::perf::szVGA, ::perf::sz720p, ::perf::sz1080p, ::perf::szODD
 #define TYPICAL_MAT_TYPES CV_8UC1, CV_8UC4, CV_32FC1
 #define TYPICAL_MATS testing::Combine( testing::Values( TYPICAL_MAT_SIZES ), testing::Values( TYPICAL_MAT_TYPES ) )
 #define TYPICAL_MATS_C1 testing::Combine( testing::Values( TYPICAL_MAT_SIZES ), testing::Values( CV_8UC1, CV_32FC1 ) )
@@ -258,7 +93,7 @@ private: int _val;\
 };\
 inline void PrintTo(const class_name& t, std::ostream* os) { t.PrintTo(os); }
 
-CV_ENUM(MatDepth, CV_8U, CV_8S, CV_16U, CV_16S, CV_32S, CV_32F, CV_64F, CV_USRTYPE1);
+CV_ENUM(MatDepth, CV_8U, CV_8S, CV_16U, CV_16S, CV_32S, CV_32F, CV_64F, CV_USRTYPE1)
 
 #define CV_FLAGS(class_name, ...) \
 class CV_EXPORTS class_name {\
@@ -453,11 +288,9 @@ template<typename T> class TestBaseWithParam: public TestBase, public ::testing:
 typedef std::tr1::tuple<cv::Size, MatType> Size_MatType_t;
 typedef TestBaseWithParam<Size_MatType_t> Size_MatType;
 
-
 /*****************************************************************************************\
 *                              Print functions for googletest                             *
 \*****************************************************************************************/
-CV_EXPORTS void PrintTo(const MatInfo& mi, ::std::ostream* os);
 CV_EXPORTS void PrintTo(const MatType& t, std::ostream* os);
 
 } //namespace perf

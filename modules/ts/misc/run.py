@@ -1,4 +1,4 @@
-import testlog_parser, sys, os, platform, xml, re, tempfile, glob, datetime, getpass
+import sys, os, platform, xml, re, tempfile, glob, datetime, getpass
 from optparse import OptionParser
 from subprocess import Popen, PIPE
 

@@ -1,38 +1,54 @@
 #include "perf_precomp.hpp"
 
-typedef std::tr1::tuple<perf::MatInfo, cv::Size> resizeParams;
-typedef perf::TestBaseWithParam<resizeParams> ResizeTest;
+using namespace std;
+using namespace cv;
+using namespace perf;
 
-PERF_TEST_P(ResizeTest, upLinear, ::testing::Values(
-                resizeParams(mVGA8UC1(), ::perf::szqHD),
-                resizeParams(mVGA8UC1(), ::perf::sz720p),
-                resizeParams(mVGA8UC4(), ::perf::sz720p)
-                )) {
-    cv::Mat src = std::tr1::get<0>(GetParam()).makeMat(20,21,22,23);
-    cv::Size sz = std::tr1::get<1>(GetParam());
-    cv::Mat dst = cv::Mat(sz, src.type());
+typedef tr1::tuple<MatType, Size, Size> MatInfo_Size_Size_t;
+typedef TestBaseWithParam<MatInfo_Size_Size_t> MatInfo_Size_Size;
 
-    declare.in(src).out(dst);
+PERF_TEST_P(MatInfo_Size_Size, resizeUpLinear,
+    testing::Values(
+                MatInfo_Size_Size_t(CV_8UC1, szVGA, szqHD),
+                MatInfo_Size_Size_t(CV_8UC1, szVGA, sz720p),
+                MatInfo_Size_Size_t(CV_8UC4, szVGA, sz720p)
+                )
+)
+{
+    int matType = tr1::get<0>(GetParam());
+    Size from = tr1::get<1>(GetParam());
+    Size to = tr1::get<2>(GetParam());
 
-    TEST_CYCLE(100) cv::resize(src, dst, sz);
+    cv::Mat src(from, matType);
+    cv::Mat dst(to, matType);
+
+    declare.in(src, WARMUP_RNG).out(dst);
+
+    TEST_CYCLE(100) cv::resize(src, dst, to);
 
     SANITY_CHECK(dst);
 }
 
-PERF_TEST_P(ResizeTest, downLinear, ::testing::Values(
-                resizeParams(mVGA8UC1(), ::perf::szQVGA),
-                resizeParams(mqHD8UC4(), ::perf::szVGA),
-                resizeParams(m720p8UC1(), cv::Size(120 * ::perf::sz720p.width / ::perf::sz720p.height, 120)),//face detection min_face_size = 20%
-                resizeParams(m720p8UC4(), ::perf::szVGA),
-                resizeParams(m720p8UC4(), ::perf::szQVGA)
-                )) {
-    cv::Mat src = std::tr1::get<0>(GetParam()).makeMat(20,21,22,23);
-    cv::Size sz = std::tr1::get<1>(GetParam());
-    cv::Mat dst = cv::Mat(sz, src.type());
+PERF_TEST_P(MatInfo_Size_Size, resizeDownLinear,
+    testing::Values(
+                MatInfo_Size_Size_t(CV_8UC1, szVGA, szQVGA),
+                MatInfo_Size_Size_t(CV_8UC4, szqHD, szVGA),
+                MatInfo_Size_Size_t(CV_8UC1, sz720p, Size(120 * sz720p.width / sz720p.height, 120)),//face detection min_face_size = 20%
+                MatInfo_Size_Size_t(CV_8UC4, sz720p, szVGA),
+                MatInfo_Size_Size_t(CV_8UC4, sz720p, szQVGA)
+                )
+)
+{
+    int matType = tr1::get<0>(GetParam());
+    Size from = tr1::get<1>(GetParam());
+    Size to = tr1::get<2>(GetParam());
 
-    declare.in(src).out(dst);
+    cv::Mat src(from, matType);
+    cv::Mat dst(to, matType);
 
-    TEST_CYCLE(100) cv::resize(src, dst, sz);
+    declare.in(src, WARMUP_RNG).out(dst);
+
+    TEST_CYCLE(100) cv::resize(src, dst, to);
 
     SANITY_CHECK(dst);
 }

@@ -12,7 +12,8 @@ using namespace perf;
 #define TYPICAL_MATS_BITW_ARITHM        testing::Combine( testing::Values( TYPICAL_MAT_SIZES_CORE_ARITHM ), testing::Values( TYPICAL_MAT_TYPES_BITW_ARITHM ) )
 
 #define PERF_TEST_P__CORE_ARITHM(__f, __testset) \
-PERF_TEST_P(Size_MatType, core_arithm__ ## __f, __testset){ \
+PERF_TEST_P(Size_MatType, core_arithm__ ## __f, __testset)     \
+{                                                              \
     Size sz = std::tr1::get<0>(GetParam());                    \
     int type = std::tr1::get<1>(GetParam());                   \
     cv::Mat a = Mat(sz, type);                                 \
@@ -28,7 +29,8 @@ PERF_TEST_P(Size_MatType, core_arithm__ ## __f, __testset){ \
 }
 
 #define PERF_TEST_P__CORE_ARITHM_SCALAR(__f, __testset) \
-PERF_TEST_P(Size_MatType, core_arithm__ ## __f ##__Scalar, __testset){ \
+PERF_TEST_P(Size_MatType, core_arithm__ ## __f ##__Scalar, __testset)     \
+{                                                                         \
     Size sz = std::tr1::get<0>(GetParam());                               \
     int type = std::tr1::get<1>(GetParam());                              \
     cv::Mat a = Mat(sz, type);                                            \

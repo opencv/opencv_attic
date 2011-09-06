@@ -11,19 +11,24 @@ if __name__ == "__main__":
     parser.add_option("", "--show-all", action="store_true", dest="showall", default=False, help="also include empty and \"notrun\" lines")
     (options, args) = parser.parse_args()
     
-    if len(args) != 1:
+    if len(args) < 1:
         print >> sys.stderr, "Usage:\n", os.path.basename(sys.argv[0]), "<log_name1>.xml"
         exit(0)
 
     options.generateHtml = detectHtmlOutputType(options.format)
     args[0] = os.path.basename(args[0])
         
-    tests = testlog_parser.parseLogFile(args[0])
+    tests = []
+    files = []
+    for arg in set(args):
+        files.append(os.path.basename(arg))
+        tests.extend(testlog_parser.parseLogFile(arg))
+
     if options.filter:
         expr = re.compile(options.filter)
         tests = [t for t in tests if expr.search(str(t))] 
     
-    tbl = table(args[0])
+    tbl = table(", ".join(files))
     if options.columns:
         metrics = [s.strip() for s in options.columns.split(",")]
         metrics = [m for m in metrics if m and not m.endswith("%") and m in metrix_table]
@@ -68,7 +73,7 @@ if __name__ == "__main__":
                     
     # output table
     if options.generateHtml:
-        htmlPrintHeader(sys.stdout, "Report %s" % args[0])
+        htmlPrintHeader(sys.stdout, "Report %s tests from %s" % (len(tests), ", ".join(files)))
         tbl.htmlPrintTable(sys.stdout)
         htmlPrintFooter(sys.stdout)
     else:

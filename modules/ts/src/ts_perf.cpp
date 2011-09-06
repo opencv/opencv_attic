@@ -27,80 +27,6 @@ void randu(cv::Mat& m)
     }
 }
 
-/*****************************************************************************************\
-*                                   ::perf::MatInfo
-\*****************************************************************************************/
-MatInfo::MatInfo(cv::Size sz, int _type, int _kind, cv::Range _roix, cv::Range _roiy)
-{
-    size = sz;
-    type = _type;
-    kind = _kind;
-    roix = _roix;
-    roiy = _roiy;
-}
-
-cv::Mat MatInfo::makeMat() const
-{
-    cv::Mat m;
-    switch(kind)
-    {
-    case Ones:
-        m = cv::Mat::ones(size, type);
-        break;
-    case Eye:
-    case Diag:
-        m = cv::Mat::eye(size, type);
-        break;
-    case Rng:
-        m = cv::Mat(size, type);
-        randu(m);
-        break;
-    case Fill:
-    case Zeros:
-    default:
-        m = cv::Mat::zeros(size, type);
-        break;
-    };
-
-    if (roix.start > 0 || roix.end < m.cols || roiy.start > 0 || roiy.end < m.rows)
-        return m(roiy, roix);
-    return m;
-}
-
-cv::Mat MatInfo::makeMat(double v1, double v2, double v3, double v4) const
-{
-    cv::Mat m;
-    cv::Scalar s(v1,v2,v3,v4);
-    switch(kind)
-    {
-    case Ones:
-        m = cv::Mat::ones(size, type);
-        break;
-    case Eye:
-        m = cv::Mat::eye(size, type);
-        break;
-    case Diag:
-        m = cv::Mat::zeros(size, type);
-        m.diag().setTo(s);
-        break;
-    case Rng:
-        m = cv::Mat(size, type);
-        randu(m);
-        break;
-    case Fill:
-        m = cv::Mat(size, type, s);
-        break;
-    case Zeros:
-    default:
-        m = cv::Mat::zeros(size, type);
-        break;
-    };
-
-    if (roix.start > 0 || roix.end < m.cols || roiy.start > 0 || roiy.end < m.rows)
-        return m(roiy, roix);
-    return m;
-}
-
 
 /*****************************************************************************************\
 *                                   ::perf::Regression
@@ -451,7 +377,7 @@ int64 TestBase::_timeadjustment = 0;
 
 const char *command_line_keys =
 {
-    "{!!bugbugbugbug!!   |perf_max_outliers   |6        |percent of allowed outliers}"
+    "{!!bugbugbugbug!!   |perf_max_outliers   |8        |percent of allowed outliers}"
     "{!!bugbugbugbug!!   |perf_min_samples    |10       |minimal required numer of samples}"
     "{!!bugbugbugbug!!   |perf_seed           |809564   |seed for random numbers generator}"
     #if ANDROID
@@ -928,93 +854,6 @@ TestBase::_declareHelper::_declareHelper(TestBase* t) : test(t)
 \*****************************************************************************************/
 namespace perf
 {
-
-void PrintTo(const MatInfo& mi, ::std::ostream* os)
-{
-    *os << "MatInfo:";
-    switch(mi.kind)
-    {
-    case MatInfo::Ones:
-        *os << "ones";
-        break;
-    case MatInfo::Eye:
-        *os << "eye";
-        break;
-    case MatInfo::Diag:
-        *os << "diag";
-        break;
-    case MatInfo::Rng:
-        *os << "rng";
-        break;
-    case MatInfo::Fill:
-        //*os << "fill";
-        break;
-    case MatInfo::Zeros:
-        *os << "zeros";
-        break;
-    default:
-        break;
-    };
-
-    switch (CV_MAT_DEPTH(mi.type))
-    {
-    case CV_8U:
-        *os << "8UC";
-        break;
-    case CV_8S:
-        *os << "8SC";
-        break;
-    case CV_16U:
-        *os << "16UC";
-        break;
-    case CV_16S:
-        *os << "16SC";
-        break;
-    case CV_32S:
-        *os << "32SC";
-        break;
-    case CV_32F:
-        *os << "32FC";
-        break;
-    case CV_64F:
-        *os << "64FC";
-        break;
-    default:
-        *os << "XXC";
-        break;
-    };
-    *os << CV_MAT_CN(mi.type);
-
-    *os << "x";
-
-    if (mi.size == szQVGA)
-        *os << "QVGA";
-    else if (mi.size == szVGA)
-        *os << "VGA";
-    else if (mi.size == szSVGA)
-        *os << "SVGA";
-    else if (mi.size == szXGA)
-        *os << "XGA";
-    else if (mi.size == szSXGA)
-        *os << "SXGA";
-    else if (mi.size == sznHD)
-        *os << "nHD";
-    else if (mi.size == szqHD)
-        *os << "qHD";
-    else if (mi.size == sz720p)
-        *os << "720p";
-    else if (mi.size == sz1080p)
-        *os << "1080p";
-    else
-        *os << mi.size.width << "x" << mi.size.height;
-
-    if (mi.roix.start > 0 || mi.roix.end < mi.size.width || mi.roiy.start > 0 || mi.roiy.end < mi.size.height)
-    {
-        cv::Range x = mi.roix & cv::Range(0, mi.size.width);
-        cv::Range y = mi.roiy & cv::Range(0, mi.size.height);
-        *os << "{" << x.start << "," << y.start << ";" << x.end << "," << y.end << "}";
-    }
-}
 
 void PrintTo(const MatType& t, ::std::ostream* os)
 {

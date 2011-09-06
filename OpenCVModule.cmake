@@ -64,6 +64,10 @@ macro(define_opencv_perf_test name)
         target_link_libraries(${the_target} ${OPENCV_LINKER_LIBS} ${perf_deps})
 
         add_opencv_precompiled_headers(${the_target})
+
+        if (PYTHON_EXECUTABLE)
+            add_dependencies(perf ${the_target})
+        endif()
     endif()    
 endmacro()
 
