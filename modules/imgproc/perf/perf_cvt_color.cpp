@@ -25,7 +25,7 @@ typedef perf::TestBaseWithParam<Size_CvtMode_OutChNum_t> Size_CvtMode_OutChNum;
 PERF_TEST_P( Size_CvtMode_OutChNum, cvtColorYUV,
     testing::Combine( 
     testing::Values( TYPICAL_MAT_SIZES ), 
-        testing::Values( CV_YUV2BGR, CV_YUV2RGB ),
+        testing::Values( (int)CV_YUV2BGR, (int)CV_YUV2RGB ),
         testing::Values( 3, 4 )
     )
 )
@@ -48,7 +48,7 @@ PERF_TEST_P( Size_CvtMode_OutChNum, cvtColorYUV,
 PERF_TEST_P( Size_CvtMode_OutChNum, cvtColorYUV420,
     testing::Combine( 
         testing::Values( szVGA, sz720p, sz1080p, Size(130, 60) ), 
-        testing::Values( CV_YUV420i2BGR, CV_YUV420i2RGB, CV_YUV420sp2BGR, CV_YUV420sp2RGB ),
+        testing::Values( (int)CV_YUV420i2BGR, (int)CV_YUV420i2RGB, (int)CV_YUV420sp2BGR, (int)CV_YUV420sp2RGB ),
         testing::Values( 3, 4 )
     )
 )
@@ -71,7 +71,7 @@ PERF_TEST_P( Size_CvtMode_OutChNum, cvtColorYUV420,
 PERF_TEST_P( Size_CvtMode, cvtColorGray,
     testing::Combine( 
         testing::Values( TYPICAL_MAT_SIZES ), 
-        testing::Values( CV_RGB2GRAY, CV_RGBA2GRAY, CV_BGR2GRAY, CV_BGRA2GRAY )
+        testing::Values( (int)CV_RGB2GRAY, (int)CV_RGBA2GRAY, (int)CV_BGR2GRAY, (int)CV_BGRA2GRAY )
     )
 )
 {
@@ -92,7 +92,7 @@ PERF_TEST_P( Size_CvtMode, cvtColorGray,
 PERF_TEST_P( Size_CvtMode, cvtColorGray2,
     testing::Combine( 
         testing::Values( TYPICAL_MAT_SIZES ), 
-        testing::Values( CV_GRAY2RGB, CV_GRAY2RGBA/*, CV_GRAY2BGR, CV_GRAY2BGRA*/ )
+        testing::Values( (int)CV_GRAY2RGB, (int)CV_GRAY2RGBA/*, CV_GRAY2BGR, CV_GRAY2BGRA*/ )
     )
 )
 {
