@@ -905,6 +905,11 @@ enum
     COLOR_YUV420sp2RGB = 92,
     COLOR_YUV420sp2BGR = 93,
     
+    COLOR_YUV420i2RGBA  = 94,
+    COLOR_YUV420i2BGRA  = 95,
+    COLOR_YUV420sp2RGBA = 96,
+    COLOR_YUV420sp2BGRA = 97,
+
     COLOR_COLORCVT_MAX  =100
 };
     
@@ -1131,6 +1136,14 @@ struct CvLSHOperations
   virtual void hash_remove(lsh_hash h, int l, int i) = 0;
   virtual int hash_lookup(lsh_hash h, int l, int* ret_i, int ret_i_max) = 0;
 };
+
+namespace cv
+{
+
+CV_EXPORTS_W cv::Point2d phaseCorrelate(InputArray _src1, InputArray _src2, InputArray window = noArray());
+CV_EXPORTS_W void createHanningWindow(OutputArray _dst, cv::Size winSize, int type);
+
+}
 
 #endif /* __cplusplus */
 

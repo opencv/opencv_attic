@@ -287,31 +287,31 @@ std::string CommandLineParser::analyzeValue<std::string>(const std::string& str,
 }
 
 template<>
-int CommandLineParser::analyzeValue<int>(const std::string& str, bool space_delete)
+int CommandLineParser::analyzeValue<int>(const std::string& str, bool /*space_delete*/)
 {
     return fromStringNumber<int>(str);
 }
 
 template<>
-unsigned int CommandLineParser::analyzeValue<unsigned int>(const std::string& str, bool space_delete)
+unsigned int CommandLineParser::analyzeValue<unsigned int>(const std::string& str, bool /*space_delete*/)
 {
     return fromStringNumber<unsigned int>(str);
 }
 
 template<>
-uint64 CommandLineParser::analyzeValue<uint64>(const std::string& str, bool space_delete)
+uint64 CommandLineParser::analyzeValue<uint64>(const std::string& str, bool /*space_delete*/)
 {
     return fromStringNumber<uint64>(str);
 }
 
 template<>
-float CommandLineParser::analyzeValue<float>(const std::string& str, bool space_delete)
+float CommandLineParser::analyzeValue<float>(const std::string& str, bool /*space_delete*/)
 {
     return fromStringNumber<float>(str);
 }
 
 template<>
-double CommandLineParser::analyzeValue<double>(const std::string& str, bool space_delete)
+double CommandLineParser::analyzeValue<double>(const std::string& str, bool /*space_delete*/)
 {
     return fromStringNumber<double>(str);
 }

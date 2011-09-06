@@ -77,6 +77,7 @@ namespace cv
             FEATURE_SET_COMPUTE_20 = 20,
             FEATURE_SET_COMPUTE_21 = 21,
             GLOBAL_ATOMICS = FEATURE_SET_COMPUTE_11,
+            SHARED_ATOMICS = FEATURE_SET_COMPUTE_12,
             NATIVE_DOUBLE = FEATURE_SET_COMPUTE_13
         };
 
@@ -598,7 +599,8 @@ namespace cv
         //! DST[x,y] = SRC[xmap[x,y],ymap[x,y]] with bilinear interpolation.
         //! supports CV_32FC1 map type
         CV_EXPORTS void remap(const GpuMat& src, GpuMat& dst, const GpuMat& xmap, const GpuMat& ymap,
-            int interpolation, int borderMode = BORDER_CONSTANT, const Scalar& borderValue = Scalar());
+            int interpolation, int borderMode = BORDER_CONSTANT, const Scalar& borderValue = Scalar(), 
+            Stream& stream = Stream::Null());
 
         //! Does mean shift filtering on GPU.
         CV_EXPORTS void meanShiftFiltering(const GpuMat& src, GpuMat& dst, int sp, int sr,

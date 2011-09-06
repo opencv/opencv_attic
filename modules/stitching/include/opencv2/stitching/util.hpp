@@ -39,25 +39,83 @@
 // the use of this software, even if advised of the possibility of such damage.
 //
 //M*/
-#ifndef __OPENCV_STITCHING_PRECOMP_H__
-#define __OPENCV_STITCHING_PRECOMP_H__
+#ifndef __OPENCV_STITCHING_UTIL_HPP__
+#define __OPENCV_STITCHING_UTIL_HPP__
 
-#ifdef HAVE_CVCONFIG_H 
-#include "cvconfig.h"
-#endif
-
-#include <vector>
-#include <algorithm>
-#include <utility>
-#include <set>
-#include <functional>
+#include <list>
 #include "opencv2/core/core.hpp"
-#include "opencv2/core/internal.hpp"
-#include "opencv2/imgproc/imgproc.hpp"
-#include "opencv2/highgui/highgui.hpp"
-#include "opencv2/features2d/features2d.hpp"
-#include "opencv2/calib3d/calib3d.hpp"
-#include "opencv2/gpu/gpu.hpp"
-#include "gcgraph.hpp"
 
+#define ENABLE_LOG 1
+
+#if ENABLE_LOG
+  #include <iostream>
+  #define LOG(msg) { std::cout << msg; std::cout.flush(); }
+#else
+  #define LOG(msg)
 #endif
+
+#define LOGLN(msg) LOG(msg << std::endl)
+
+namespace cv
+{
+
+class CV_EXPORTS DisjointSets
+{
+public:
+    DisjointSets(int elem_count = 0) { createOneElemSets(elem_count); }
+
+    void createOneElemSets(int elem_count);
+    int findSetByElem(int elem);
+    int mergeSets(int set1, int set2);
+
+    std::vector<int> parent;
+    std::vector<int> size;
+
+private:
+    std::vector<int> rank_;
+};
+
+
+struct CV_EXPORTS GraphEdge
+{
+    GraphEdge(int from, int to, float weight) 
+        : from(from), to(to), weight(weight) {}
+    bool operator <(const GraphEdge& other) const { return weight < other.weight; }
+    bool operator >(const GraphEdge& other) const { return weight > other.weight; }
+
+    int from, to;
+    float weight;
+};
+
+
+class CV_EXPORTS Graph
+{
+public:
+    Graph(int num_vertices = 0) { create(num_vertices); }
+    void create(int num_vertices) { edges_.assign(num_vertices, std::list<GraphEdge>()); }
+    int numVertices() const { return static_cast<int>(edges_.size()); }
+    void addEdge(int from, int to, float weight);
+    template <typename B> B forEach(B body) const;
+    template <typename B> B walkBreadthFirst(int from, B body) const;
+    
+private:
+    std::vector< std::list<GraphEdge> > edges_;
+};
+
+
+//////////////////////////////////////////////////////////////////////////////
+// Auxiliary functions
+
+bool CV_EXPORTS overlapRoi(Point tl1, Point tl2, Size sz1, Size sz2, Rect &roi);
+Rect CV_EXPORTS resultRoi(const std::vector<Point> &corners, const std::vector<Mat> &images);
+Rect CV_EXPORTS resultRoi(const std::vector<Point> &corners, const std::vector<Size> &sizes);
+Point CV_EXPORTS resultTl(const std::vector<Point> &corners);
+
+// Returns random 'count' element subset of the {0,1,...,size-1} set
+void CV_EXPORTS selectRandomSubset(int count, int size, std::vector<int> &subset);
+
+} // namespace cv
+
+#include "util_inl.hpp"
+
+#endif // __OPENCV_STITCHING_UTIL_HPP__

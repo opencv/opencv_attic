@@ -39,63 +39,68 @@
 // the use of this software, even if advised of the possibility of such damage.
 //
 //M*/
-#ifndef __OPENCV_BLENDERS_HPP__
-#define __OPENCV_BLENDERS_HPP__
+#ifndef __OPENCV_STITCHING_BLENDERS_HPP__
+#define __OPENCV_STITCHING_BLENDERS_HPP__
 
-#include "precomp.hpp"
+#include "opencv2/core/core.hpp"
+
+namespace cv
+{
 
 // Simple blender which puts one image over another
-class Blender
+class CV_EXPORTS Blender
 {
 public:
-    enum { NO, FEATHER, MULTI_BAND };
-    static cv::Ptr<Blender> createDefault(int type, bool try_gpu = false);
+    virtual ~Blender() {}
 
-    void prepare(const std::vector<cv::Point> &corners, const std::vector<cv::Size> &sizes);
-    virtual void prepare(cv::Rect dst_roi);
-    virtual void feed(const cv::Mat &img, const cv::Mat &mask, cv::Point tl);
-    virtual void blend(cv::Mat &dst, cv::Mat &dst_mask);
+    enum { NO, FEATHER, MULTI_BAND };
+    static Ptr<Blender> createDefault(int type, bool try_gpu = false);
+
+    void prepare(const std::vector<Point> &corners, const std::vector<Size> &sizes);
+    virtual void prepare(Rect dst_roi);
+    virtual void feed(const Mat &img, const Mat &mask, Point tl);
+    virtual void blend(Mat &dst, Mat &dst_mask);
 
 protected:
-    cv::Mat dst_, dst_mask_;
-    cv::Rect dst_roi_;
+    Mat dst_, dst_mask_;
+    Rect dst_roi_;
 };
 
 
-class FeatherBlender : public Blender
+class CV_EXPORTS FeatherBlender : public Blender
 {
 public:
     FeatherBlender(float sharpness = 0.02f) { setSharpness(sharpness); }
     float sharpness() const { return sharpness_; }
     void setSharpness(float val) { sharpness_ = val; }
 
-    void prepare(cv::Rect dst_roi);
-    void feed(const cv::Mat &img, const cv::Mat &mask, cv::Point tl);
-    void blend(cv::Mat &dst, cv::Mat &dst_mask);
+    void prepare(Rect dst_roi);
+    void feed(const Mat &img, const Mat &mask, Point tl);
+    void blend(Mat &dst, Mat &dst_mask);
 
 private:
     float sharpness_;
-    cv::Mat weight_map_;
-    cv::Mat dst_weight_map_;
+    Mat weight_map_;
+    Mat dst_weight_map_;
 };
 
 
-class MultiBandBlender : public Blender
+class CV_EXPORTS MultiBandBlender : public Blender
 {
 public:
     MultiBandBlender(int try_gpu = false, int num_bands = 5);
     int numBands() const { return actual_num_bands_; }
     void setNumBands(int val) { actual_num_bands_ = val; }
 
-    void prepare(cv::Rect dst_roi);
-    void feed(const cv::Mat &img, const cv::Mat &mask, cv::Point tl);
-    void blend(cv::Mat &dst, cv::Mat &dst_mask);
+    void prepare(Rect dst_roi);
+    void feed(const Mat &img, const Mat &mask, Point tl);
+    void blend(Mat &dst, Mat &dst_mask);
 
 private:
     int actual_num_bands_, num_bands_;
-    std::vector<cv::Mat> dst_pyr_laplace_;
-    std::vector<cv::Mat> dst_band_weights_;
-    cv::Rect dst_roi_final_;
+    std::vector<Mat> dst_pyr_laplace_;
+    std::vector<Mat> dst_band_weights_;
+    Rect dst_roi_final_;
     bool can_use_gpu_;
 };
 
@@ -103,15 +108,17 @@ private:
 //////////////////////////////////////////////////////////////////////////////
 // Auxiliary functions
 
-void normalize(const cv::Mat& weight, cv::Mat& src);
+void CV_EXPORTS normalizeUsingWeightMap(const Mat& weight, Mat& src);
 
-void createWeightMap(const cv::Mat& mask, float sharpness, cv::Mat& weight);
+void CV_EXPORTS createWeightMap(const Mat& mask, float sharpness, Mat& weight);
 
-void createLaplacePyr(const cv::Mat &img, int num_levels, std::vector<cv::Mat>& pyr);
+void CV_EXPORTS createLaplacePyr(const Mat &img, int num_levels, std::vector<Mat>& pyr);
 
-void createLaplacePyrGpu(const cv::Mat &img, int num_levels, std::vector<cv::Mat>& pyr);
+void CV_EXPORTS createLaplacePyrGpu(const Mat &img, int num_levels, std::vector<Mat>& pyr);
 
 // Restores source image
-void restoreImageFromLaplacePyr(std::vector<cv::Mat>& pyr);
+void CV_EXPORTS restoreImageFromLaplacePyr(std::vector<Mat>& pyr);
 
-#endif // __OPENCV_BLENDERS_HPP__
+} // namespace cv
+
+#endif // __OPENCV_STITCHING_BLENDERS_HPP__

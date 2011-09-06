@@ -39,12 +39,16 @@
 // the use of this software, even if advised of the possibility of such damage.
 //
 //M*/
-#ifndef __OPENCV_MATCHERS_HPP__
-#define __OPENCV_MATCHERS_HPP__
+#ifndef __OPENCV_STITCHING_MATCHERS_HPP__
+#define __OPENCV_STITCHING_MATCHERS_HPP__
 
-#include "precomp.hpp"
+#include "opencv2/core/core.hpp"
+#include "opencv2/features2d/features2d.hpp"
 
-struct ImageFeatures
+namespace cv
+{
+
+struct CV_EXPORTS ImageFeatures
 {
     int img_idx;
     cv::Size img_size;
@@ -53,7 +57,7 @@ struct ImageFeatures
 };
 
 
-class FeaturesFinder
+class CV_EXPORTS FeaturesFinder
 {
 public:
     virtual ~FeaturesFinder() {}
@@ -66,7 +70,7 @@ protected:
 };
 
 
-class SurfFeaturesFinder : public FeaturesFinder
+class CV_EXPORTS SurfFeaturesFinder : public FeaturesFinder
 {
 public:
     SurfFeaturesFinder(bool try_use_gpu = true, double hess_thresh = 300.0, 
@@ -82,7 +86,7 @@ protected:
 };
 
 
-struct MatchesInfo
+struct CV_EXPORTS MatchesInfo
 {
     MatchesInfo();
     MatchesInfo(const MatchesInfo &other);
@@ -97,7 +101,7 @@ struct MatchesInfo
 };
 
 
-class FeaturesMatcher
+class CV_EXPORTS FeaturesMatcher
 {
 public:
     virtual ~FeaturesMatcher() {}
@@ -120,7 +124,7 @@ protected:
 };
 
 
-class BestOf2NearestMatcher : public FeaturesMatcher
+class CV_EXPORTS BestOf2NearestMatcher : public FeaturesMatcher
 {
 public:
     BestOf2NearestMatcher(bool try_use_gpu = true, float match_conf = 0.55f, int num_matches_thresh1 = 6, 
@@ -136,4 +140,6 @@ protected:
     cv::Ptr<FeaturesMatcher> impl_;
 };
 
-#endif // __OPENCV_MATCHERS_HPP__
+} // namespace cv
+
+#endif // __OPENCV_STITCHING_MATCHERS_HPP__

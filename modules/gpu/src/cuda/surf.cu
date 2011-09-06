@@ -50,6 +50,7 @@
 #include "opencv2/gpu/device/saturate_cast.hpp"
 #include "opencv2/gpu/device/utility.hpp"
 #include "opencv2/gpu/device/functional.hpp"
+#include "opencv2/gpu/device/filters.hpp"
 
 using namespace cv::gpu;
 using namespace cv::gpu::device;
@@ -323,7 +324,7 @@ namespace cv { namespace gpu { namespace surf
         const int layer_rows = img_rows >> octave;
         const int layer_cols = img_cols >> octave;
 
-        int min_margin = ((calcSize(octave, 2) >> 1) >> octave) + 1;
+        const int min_margin = ((calcSize(octave, 2) >> 1) >> octave) + 1;
 
         dim3 threads(16, 16);
 

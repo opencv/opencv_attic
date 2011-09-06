@@ -39,65 +39,34 @@
 // the use of this software, even if advised of the possibility of such damage.
 //
 //M*/
-#ifndef __OPENCV_SEAM_FINDERS_HPP__
-#define __OPENCV_SEAM_FINDERS_HPP__
+#ifndef __OPENCV_STITCHING_PRECOMP_H__
+#define __OPENCV_STITCHING_PRECOMP_H__
 
-#include "precomp.hpp"
+#ifdef HAVE_CVCONFIG_H 
+#include "cvconfig.h"
+#endif
 
-class SeamFinder
-{
-public:
-    enum { NO, VORONOI, GC_COLOR, GC_COLOR_GRAD };
-    static cv::Ptr<SeamFinder> createDefault(int type);
+#include <vector>
+#include <algorithm>
+#include <utility>
+#include <set>
+#include <functional>
+#include <sstream>
+#include "opencv2/stitching/autocalib.hpp"
+#include "opencv2/stitching/blenders.hpp"
+#include "opencv2/stitching/camera.hpp"
+#include "opencv2/stitching/exposure_compensate.hpp"
+#include "opencv2/stitching/matchers.hpp"
+#include "opencv2/stitching/motion_estimators.hpp"
+#include "opencv2/stitching/seam_finders.hpp"
+#include "opencv2/stitching/util.hpp"
+#include "opencv2/stitching/warpers.hpp"
+#include "opencv2/core/core.hpp"
+#include "opencv2/core/internal.hpp"
+#include "opencv2/imgproc/imgproc.hpp"
+#include "opencv2/features2d/features2d.hpp"
+#include "opencv2/calib3d/calib3d.hpp"
+#include "opencv2/gpu/gpu.hpp"
+#include "gcgraph.hpp"
 
-    virtual ~SeamFinder() {}
-    virtual void find(const std::vector<cv::Mat> &src, const std::vector<cv::Point> &corners,
-                      std::vector<cv::Mat> &masks) = 0;
-};
-
-
-class NoSeamFinder : public SeamFinder
-{
-public:
-    void find(const std::vector<cv::Mat>&, const std::vector<cv::Point>&, std::vector<cv::Mat>&) {}
-};
-
-
-class PairwiseSeamFinder : public SeamFinder
-{
-public:
-    virtual void find(const std::vector<cv::Mat> &src, const std::vector<cv::Point> &corners,
-                      std::vector<cv::Mat> &masks);
-
-protected:
-    virtual void findInPair(size_t first, size_t second, cv::Rect roi) = 0;
-
-    std::vector<cv::Mat> images_;
-    std::vector<cv::Point> corners_;
-    std::vector<cv::Mat> masks_;
-};
-
-
-class VoronoiSeamFinder : public PairwiseSeamFinder
-{
-private:
-    void findInPair(size_t first, size_t second, cv::Rect roi);
-};
-
-
-class GraphCutSeamFinder : public SeamFinder
-{
-public:
-    enum { COST_COLOR, COST_COLOR_GRAD };
-    GraphCutSeamFinder(int cost_type = COST_COLOR_GRAD, float terminal_cost = 10000.f,
-                       float bad_region_penalty = 1000.f);
-
-    void find(const std::vector<cv::Mat> &src, const std::vector<cv::Point> &corners,
-              std::vector<cv::Mat> &masks);
-
-private:
-    class Impl;
-    cv::Ptr<Impl> impl_;
-};
-
-#endif // __OPENCV_SEAM_FINDERS_HPP__
+#endif

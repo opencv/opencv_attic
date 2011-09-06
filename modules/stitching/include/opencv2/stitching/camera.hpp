@@ -39,21 +39,25 @@
 // the use of this software, even if advised of the possibility of such damage.
 //
 //M*/
-#ifndef __OPENCV_CAMERA_HPP__
-#define __OPENCV_CAMERA_HPP__
+#ifndef __OPENCV_STITCHING_CAMERA_HPP__
+#define __OPENCV_STITCHING_CAMERA_HPP__
 
-#include "precomp.hpp"
+#include "opencv2/core/core.hpp"
 
+namespace cv
+{
 
-struct CameraParams
+struct CV_EXPORTS CameraParams
 {
     CameraParams();
     CameraParams(const CameraParams& other);
     const CameraParams& operator =(const CameraParams& other);
 
     double focal; // Focal length
-    cv::Mat R; // Rotation
-    cv::Mat t; // Translation
+    Mat R; // Rotation
+    Mat t; // Translation
 };
 
-#endif // #ifndef __OPENCV_CAMERA_HPP__
+} // namespace cv
+
+#endif // #ifndef __OPENCV_STITCHING_CAMERA_HPP__

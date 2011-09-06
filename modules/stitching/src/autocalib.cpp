@@ -39,13 +39,27 @@
 // the use of this software, even if advised of the possibility of such damage.
 //
 //M*/
-#include "autocalib.hpp"
-#include "util.hpp"
+#include "precomp.hpp"
 
 using namespace std;
 using namespace cv;
 
-void focalsFromHomography(const Mat& H, double &f0, double &f1, bool &f0_ok, bool &f1_ok)
+namespace
+{
+    template<typename _Tp> static inline bool
+    decomposeCholesky(_Tp* A, size_t astep, int m)
+    {
+        if (!Cholesky(A, astep, m, 0, 0, 0))
+            return false;
+        astep /= sizeof(A[0]);
+        for (int i = 0; i < m; ++i)
+            A[i*astep + i] = (_Tp)(1./A[i*astep + i]);
+        return true;
+    }
+} // namespace
+
+
+void cv::focalsFromHomography(const Mat& H, double &f0, double &f1, bool &f0_ok, bool &f1_ok)
 {
     CV_Assert(H.type() == CV_64F && H.size() == Size(3, 3));
 
@@ -59,8 +73,8 @@ void focalsFromHomography(const Mat& H, double &f0, double &f1, bool &f0_ok, boo
     d2 = (h[7] - h[6]) * (h[7] + h[6]);
     v1 = -(h[0] * h[1] + h[3] * h[4]) / d1;
     v2 = (h[0] * h[0] + h[3] * h[3] - h[1] * h[1] - h[4] * h[4]) / d2;
-    if (v1 < v2) swap(v1, v2);
-    if (v1 > 0 && v2 > 0) f1 = sqrt(abs(d1) > abs(d2) ? v1 : v2);
+    if (v1 < v2) std::swap(v1, v2);
+    if (v1 > 0 && v2 > 0) f1 = sqrt(std::abs(d1) > std::abs(d2) ? v1 : v2);
     else if (v1 > 0) f1 = sqrt(v1);
     else f1_ok = false;
 
@@ -69,15 +83,15 @@ void focalsFromHomography(const Mat& H, double &f0, double &f1, bool &f0_ok, boo
     d2 = h[0] * h[0] + h[1] * h[1] - h[3] * h[3] - h[4] * h[4];
     v1 = -h[2] * h[5] / d1;
     v2 = (h[5] * h[5] - h[2] * h[2]) / d2;
-    if (v1 < v2) swap(v1, v2);
-    if (v1 > 0 && v2 > 0) f0 = sqrt(abs(d1) > abs(d2) ? v1 : v2);
+    if (v1 < v2) std::swap(v1, v2);
+    if (v1 > 0 && v2 > 0) f0 = sqrt(std::abs(d1) > std::abs(d2) ? v1 : v2);
     else if (v1 > 0) f0 = sqrt(v1);
     else f0_ok = false;
 }
 
 
-void estimateFocal(const vector<ImageFeatures> &features, const vector<MatchesInfo> &pairwise_matches, 
-                   vector<double> &focals)
+void cv::estimateFocal(const vector<ImageFeatures> &features, const vector<MatchesInfo> &pairwise_matches,
+                       vector<double> &focals)
 {
     const int num_images = static_cast<int>(features.size());
     focals.resize(num_images);
@@ -117,22 +131,7 @@ void estimateFocal(const vector<ImageFeatures> &features, const vector<MatchesIn
 }
 
 
-namespace
-{
-    template<typename _Tp> static inline bool
-    decomposeCholesky(_Tp* A, size_t astep, int m)
-    {
-        if (!Cholesky(A, astep, m, 0, 0, 0))
-            return false;
-        astep /= sizeof(A[0]);
-        for (int i = 0; i < m; ++i)
-            A[i*astep + i] = (_Tp)(1./A[i*astep + i]);
-        return true;
-    }
-} // namespace
-
-
-bool calibrateRotatingCamera(const vector<Mat> &Hs, Mat &K)
+bool cv::calibrateRotatingCamera(const vector<Mat> &Hs, Mat &K)
 {
     int m = static_cast<int>(Hs.size());
     CV_Assert(m >= 1);

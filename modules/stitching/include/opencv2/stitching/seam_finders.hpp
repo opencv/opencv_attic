@@ -39,81 +39,70 @@
 // the use of this software, even if advised of the possibility of such damage.
 //
 //M*/
-#ifndef __OPENCV_STITCHING_UTIL_INL_HPP__
-#define __OPENCV_STITCHING_UTIL_INL_HPP__
+#ifndef __OPENCV_STITCHING_SEAM_FINDERS_HPP__
+#define __OPENCV_STITCHING_SEAM_FINDERS_HPP__
 
-#include <queue>
-#include "util.hpp" // Make your IDE see declarations
+#include "opencv2/core/core.hpp"
 
-template <typename B>
-B Graph::forEach(B body) const
+namespace cv
 {
-    for (int i = 0; i < numVertices(); ++i)
-    {
-        std::list<GraphEdge>::const_iterator edge = edges_[i].begin();
-        for (; edge != edges_[i].end(); ++edge)
-            body(*edge);
-    }
-    return body;
-}
 
-
-template <typename B>
-B Graph::walkBreadthFirst(int from, B body) const
+class CV_EXPORTS SeamFinder
 {
-    std::vector<bool> was(numVertices(), false);
-    std::queue<int> vertices;
+public:
+    enum { NO, VORONOI, GC_COLOR, GC_COLOR_GRAD };
+    static Ptr<SeamFinder> createDefault(int type);
 
-    was[from] = true;
-    vertices.push(from);
-
-    while (!vertices.empty())
-    {
-        int vertex = vertices.front();
-        vertices.pop();
-
-        std::list<GraphEdge>::const_iterator edge = edges_[vertex].begin();
-        for (; edge != edges_[vertex].end(); ++edge)
-        {
-            if (!was[edge->to])
-            {
-                body(*edge);
-                was[edge->to] = true;
-                vertices.push(edge->to);
-            }
-        }
-    }
-
-    return body;
-}
+    virtual ~SeamFinder() {}
+    virtual void find(const std::vector<Mat> &src, const std::vector<Point> &corners,
+                      std::vector<Mat> &masks) = 0;
+};
 
 
-//////////////////////////////////////////////////////////////////////////////
-// Some auxiliary math functions
-
-static inline
-float normL2(const cv::Point3f& a)
+class CV_EXPORTS NoSeamFinder : public SeamFinder
 {
-    return a.x * a.x + a.y * a.y + a.z * a.z;
-}
+public:
+    void find(const std::vector<Mat>&, const std::vector<Point>&, std::vector<Mat>&) {}
+};
 
 
-static inline
-float normL2(const cv::Point3f& a, const cv::Point3f& b)
+class CV_EXPORTS PairwiseSeamFinder : public SeamFinder
 {
-    return normL2(a - b);
-}
+public:
+    virtual void find(const std::vector<Mat> &src, const std::vector<Point> &corners,
+                      std::vector<Mat> &masks);
+
+protected:
+    virtual void findInPair(size_t first, size_t second, Rect roi) = 0;
+
+    std::vector<Mat> images_;
+    std::vector<Point> corners_;
+    std::vector<Mat> masks_;
+};
 
 
-static inline
-double normL2sq(const cv::Mat &r)
+class CV_EXPORTS VoronoiSeamFinder : public PairwiseSeamFinder
 {
-    return r.dot(r);
-}
+private:
+    void findInPair(size_t first, size_t second, Rect roi);
+};
 
 
-static inline int sqr(int x) { return x * x; }
-static inline float sqr(float x) { return x * x; }
-static inline double sqr(double x) { return x * x; }
+class CV_EXPORTS GraphCutSeamFinder : public SeamFinder
+{
+public:
+    enum { COST_COLOR, COST_COLOR_GRAD };
+    GraphCutSeamFinder(int cost_type = COST_COLOR_GRAD, float terminal_cost = 10000.f,
+                       float bad_region_penalty = 1000.f);
 
-#endif // __OPENCV_STITCHING_UTIL_INL_HPP__
+    void find(const std::vector<Mat> &src, const std::vector<Point> &corners,
+              std::vector<Mat> &masks);
+
+private:
+    class Impl;
+    Ptr<Impl> impl_;
+};
+
+} // namespace cv
+
+#endif // __OPENCV_STITCHING_SEAM_FINDERS_HPP__

@@ -39,79 +39,66 @@
 // the use of this software, even if advised of the possibility of such damage.
 //
 //M*/
-#ifndef __OPENCV_STITCHING_UTIL_HPP__
-#define __OPENCV_STITCHING_UTIL_HPP__
+#ifndef __OPENCV_STITCHING_EXPOSURE_COMPENSATE_HPP__
+#define __OPENCV_STITCHING_EXPOSURE_COMPENSATE_HPP__
 
-#include <list>
-#include "precomp.hpp"
+#include "opencv2/core/core.hpp"
 
-#define ENABLE_LOG 1
+namespace cv
+{
 
-#if ENABLE_LOG
-  #include <iostream>
-  #define LOG(msg) { std::cout << msg; std::cout.flush(); }
-#else
-  #define LOG(msg)
-#endif
-
-#define LOGLN(msg) LOG(msg << std::endl)
-
-
-class DisjointSets
+class CV_EXPORTS ExposureCompensator
 {
 public:
-    DisjointSets(int elem_count = 0) { createOneElemSets(elem_count); }
+    virtual ~ExposureCompensator() {}
 
-    void createOneElemSets(int elem_count);
-    int findSetByElem(int elem);
-    int mergeSets(int set1, int set2);
+    enum { NO, GAIN, GAIN_BLOCKS };
+    static Ptr<ExposureCompensator> createDefault(int type);
 
-    std::vector<int> parent;
-    std::vector<int> size;
-
-private:
-    std::vector<int> rank_;
+    void feed(const std::vector<Point> &corners, const std::vector<Mat> &images,
+              const std::vector<Mat> &masks);
+    virtual void feed(const std::vector<Point> &corners, const std::vector<Mat> &images,
+                      const std::vector<std::pair<Mat,uchar> > &masks) = 0;
+    virtual void apply(int index, Point corner, Mat &image, const Mat &mask) = 0;
 };
 
 
-struct GraphEdge
-{
-    GraphEdge(int from, int to, float weight) 
-        : from(from), to(to), weight(weight) {}
-    bool operator <(const GraphEdge& other) const { return weight < other.weight; }
-    bool operator >(const GraphEdge& other) const { return weight > other.weight; }
-
-    int from, to;
-    float weight;
-};
-
-
-class Graph
+class CV_EXPORTS NoExposureCompensator : public ExposureCompensator
 {
 public:
-    Graph(int num_vertices = 0) { create(num_vertices); }
-    void create(int num_vertices) { edges_.assign(num_vertices, std::list<GraphEdge>()); }
-    int numVertices() const { return static_cast<int>(edges_.size()); }
-    void addEdge(int from, int to, float weight);
-    template <typename B> B forEach(B body) const;
-    template <typename B> B walkBreadthFirst(int from, B body) const;
-    
-private:
-    std::vector< std::list<GraphEdge> > edges_;
+    void feed(const std::vector<Point> &/*corners*/, const std::vector<Mat> &/*images*/,
+              const std::vector<std::pair<Mat,uchar> > &/*masks*/) {};
+    void apply(int /*index*/, Point /*corner*/, Mat &/*image*/, const Mat &/*mask*/) {};
 };
 
 
-//////////////////////////////////////////////////////////////////////////////
-// Auxiliary functions
+class CV_EXPORTS GainCompensator : public ExposureCompensator
+{
+public:
+    void feed(const std::vector<Point> &corners, const std::vector<Mat> &images,
+              const std::vector<std::pair<Mat,uchar> > &masks);
+    void apply(int index, Point corner, Mat &image, const Mat &mask);
+    std::vector<double> gains() const;
 
-bool overlapRoi(cv::Point tl1, cv::Point tl2, cv::Size sz1, cv::Size sz2, cv::Rect &roi);
-cv::Rect resultRoi(const std::vector<cv::Point> &corners, const std::vector<cv::Mat> &images);
-cv::Rect resultRoi(const std::vector<cv::Point> &corners, const std::vector<cv::Size> &sizes);
-cv::Point resultTl(const std::vector<cv::Point> &corners);
+private:
+    Mat_<double> gains_;
+};
 
-// Returns random 'count' element subset of the {0,1,...,size-1} set
-void selectRandomSubset(int count, int size, std::vector<int> &subset);
 
-#include "util_inl.hpp"
+class CV_EXPORTS BlocksGainCompensator : public ExposureCompensator
+{
+public:
+    BlocksGainCompensator(int bl_width = 32, int bl_height = 32) 
+            : bl_width_(bl_width), bl_height_(bl_height) {}
+    void feed(const std::vector<Point> &corners, const std::vector<Mat> &images,
+              const std::vector<std::pair<Mat,uchar> > &masks);
+    void apply(int index, Point corner, Mat &image, const Mat &mask);
 
-#endif // __OPENCV_STITCHING_UTIL_HPP__
+private:
+    int bl_width_, bl_height_;
+    std::vector<Mat_<float> > gain_maps_;
+};
+
+} // namespace cv
+
+#endif // __OPENCV_STITCHING_EXPOSURE_COMPENSATE_HPP__
