@@ -6,7 +6,6 @@ hostos = os.name # 'nt', 'posix'
 hostmachine = platform.machine() # 'x86', 'AMD64', 'x86_64'
 nameprefix = "opencv_perf_"
 
-
 parse_patterns = (
   {'name': "has_perf_tests",     'default': "OFF",      'pattern': re.compile("^BUILD_PERF_TESTS:BOOL=(ON)$")},
   {'name': "cmake_home",         'default': None,       'pattern': re.compile("^CMAKE_HOME_DIRECTORY:INTERNAL=(.+)$")},
@@ -54,11 +53,19 @@ class RunInfo(object):
             self.adb = os.path.join(os.path.dirname(os.path.dirname(self.android_executable)), ("platform-tools/adb","platform-tools/adb.exe")[hostos == 'nt'])
         else:
             self.adb = None
+
         # detect target platform    
         if self.android_executable or self.arm_target or self.ndk_path:
             self.targetos = "android"
+            if not self.adb:
+                try:
+                    output = Popen(["adb", "devices"], stdout=PIPE, stderr=PIPE).communicate()
+                    self.adb = "adb"
+                except OSError:
+                    pass
         else:
             self.targetos = hostos
+
         # fix has_perf_tests param
         self.has_perf_tests = self.has_perf_tests == "ON"
         # fix is_x64 flag
@@ -71,9 +78,12 @@ class RunInfo(object):
             self.tests_dir = os.path.join(self.tests_dir, self.build_type)
         elif not self.is_x64 and self.cxx_compiler:
             #one more attempt to detect x64 compiler
-            output = Popen([self.cxx_compiler, "-v"], stdout=PIPE, stderr=PIPE).communicate()
-            if not output[0] and "x86_64" in output[1]:
-                self.is_x64 = True
+            try:
+                output = Popen([self.cxx_compiler, "-v"], stdout=PIPE, stderr=PIPE).communicate()
+                if not output[0] and "x86_64" in output[1]:
+                    self.is_x64 = True
+            except OSError:
+                pass
 
         # detect target arch
         if self.targetos == "android":
@@ -105,21 +115,14 @@ class RunInfo(object):
             svnversion = self.svnversion_path
             if not svnversion:
                 svnversion = "svnversion"
-            output = Popen([svnversion, "-n", path], stdout=PIPE, stderr=PIPE).communicate()
-            if not output[1]:
-                setattr(self, name, output[0])
-            else:
+            try:
+                output = Popen([svnversion, "-n", path], stdout=PIPE, stderr=PIPE).communicate()
+                if not output[1]:
+                    setattr(self, name, output[0])
+                else:
+                    setattr(self, name, None)
+            except OSError:
                 setattr(self, name, None)
-        return
-        if not self.svnversion_path:#not self.has_perf_tests or 
-            if not self.svnversion_path and hostos == 'nt':
-                self.tryGetSvnVersionWithTortoise(path, name)
-            else:
-                setattr(self, name, None)
-            return
-        svnprocess = Popen([self.svnversion_path, "-n", path], stdout=PIPE, stderr=PIPE)
-        output = svnprocess.communicate()
-        setattr(self, name, output[0])
         
     def tryGetSvnVersionWithTortoise(self, path, name):
         try:
@@ -222,12 +225,14 @@ class RunInfo(object):
     def runAdb(self, *args):
         cmd = [self.adb]
         cmd.extend(args)
-        adbprocess = Popen(cmd, stdout=PIPE, stderr=PIPE)
-        output = adbprocess.communicate()
-        if not output[1]:
-            return output[0]
-        self.error = output[1]
-        print self.error
+        try:
+            output = Popen(cmd, stdout=PIPE, stderr=PIPE).communicate()
+            if not output[1]:
+                return output[0]
+            self.error = output[1]
+            print self.error
+        except OSError:
+            pass
         return None
     
     def isRunnable(self):
@@ -283,49 +288,48 @@ class RunInfo(object):
             logfile = userlog[userlog[0].find(":")+1:]
         
         if self.targetos == "android":
-            andoidcwd = "/data/bin/" + getpass.getuser().replace(" ","") + "_perf/"
-            exename = os.path.basename(exe)
-            androidexe = andoidcwd + exename
-            #upload
-            print >> _stderr, "Uploading", exename, "to device..."
-            adbprocess = Popen([self.adb, "push", exe, androidexe], stdout=_stdout, stderr=_stderr)
-            output = adbprocess.wait()
-            if output != 0:
-                print >> _stderr, "adb finishes unexpectedly with error code", output
-                return
-            #chmod
-            print >> _stderr, "Changing mode of ", androidexe
-            adbprocess = Popen([self.adb, "shell", "chmod 777 " + androidexe], stdout=_stdout, stderr=_stderr)
-            output = adbprocess.wait()
-            if output != 0:
-                print >> _stderr, "adb finishes unexpectedly with error code", output
-                return
-            #run
-            command = exename + " " + " ".join(args)
-            print >> _stderr, "Running:", command
-            adbprocess = Popen([self.adb, "shell", "cd " + andoidcwd + "&& ./" + command], stdout=_stdout, stderr=_stderr)
-            output = adbprocess.wait()
-            # try get log
-            print >> _stderr, "Pulling", logfile, "from device..."
-            hostlogpath = os.path.join(workingDir, logfile)
-            adbprocess = Popen([self.adb, "pull", andoidcwd + logfile, hostlogpath], stdout=_stdout, stderr=_stderr)
-            output = adbprocess.wait()
-            if output != 0:
-                print >> _stderr, "adb finishes unexpectedly with error code", output
-                return
-            #rm log
-            adbprocess = Popen([self.adb, "shell", "rm " + andoidcwd + logfile], stdout=_stdout, stderr=_stderr)
-            output = adbprocess.wait()
-            
+            try:
+                andoidcwd = "/data/bin/" + getpass.getuser().replace(" ","") + "_perf/"
+                exename = os.path.basename(exe)
+                androidexe = andoidcwd + exename
+                #upload
+                print >> _stderr, "Uploading", exename, "to device..."
+                output = Popen([self.adb, "push", exe, androidexe], stdout=_stdout, stderr=_stderr).wait()
+                if output != 0:
+                    print >> _stderr, "adb finishes unexpectedly with error code", output
+                    return
+                #chmod
+                print >> _stderr, "Changing mode of ", androidexe
+                output = Popen([self.adb, "shell", "chmod 777 " + androidexe], stdout=_stdout, stderr=_stderr).wait()
+                if output != 0:
+                    print >> _stderr, "adb finishes unexpectedly with error code", output
+                    return
+                #run
+                command = exename + " " + " ".join(args)
+                print >> _stderr, "Running:", command
+                output = Popen([self.adb, "shell", "cd " + andoidcwd + "&& ./" + command], stdout=_stdout, stderr=_stderr).wait()
+                # try get log
+                print >> _stderr, "Pulling", logfile, "from device..."
+                hostlogpath = os.path.join(workingDir, logfile)
+                output = Popen([self.adb, "pull", andoidcwd + logfile, hostlogpath], stdout=_stdout, stderr=_stderr).wait()
+                if output != 0:
+                    print >> _stderr, "adb finishes unexpectedly with error code", output
+                    return
+                #rm log
+                Popen([self.adb, "shell", "rm " + andoidcwd + logfile], stdout=_stdout, stderr=_stderr).wait()
+            except OSError:
+                pass
             if os.path.isfile(hostlogpath):
                 return hostlogpath
             return None
         else:
             cmd = [exe]
             cmd.extend(args)
-            print >> _stderr, "Running:", " ".join(cmd) 
-            testprocess = Popen(cmd, stdout=_stdout, stderr=_stderr, cwd = workingDir)
-            testprocess.wait()
+            print >> _stderr, "Running:", " ".join(cmd)
+            try: 
+                Popen(cmd, stdout=_stdout, stderr=_stderr, cwd = workingDir).wait()
+            except OSError:
+                pass
             
             logpath = os.path.join(workingDir, logfile)
             if os.path.isfile(logpath):
