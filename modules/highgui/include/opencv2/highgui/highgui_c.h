@@ -103,9 +103,10 @@ enum
     CV_WND_PROP_AUTOSIZE   = 1,//to change/get window's autosize property
     CV_WND_PROP_ASPECTRATIO= 2,//to change/get window's aspectratio property
     //
-    //These 2 flags are used by cvNamedWindow and cvSet/GetWindowProperty
+    //These 3 flags are used by cvNamedWindow and cvSet/GetWindowProperty
     CV_WINDOW_NORMAL       = 0x00000000,//the user can resize the window (no constraint)  / also use to switch a fullscreen window to a normal size
     CV_WINDOW_AUTOSIZE     = 0x00000001,//the user cannot resize the window, the size is constrainted by the image displayed
+    CV_WINDOW_OPENGL       = 0x00001000,
     //
     //Those flags are only for Qt
     CV_GUI_EXPANDED         = 0x00000000,//status bar and tool bar
@@ -243,6 +244,21 @@ CVAPI(void) cvConvertImage( const CvArr* src, CvArr* dst, int flags CV_DEFAULT(0
 
 /* wait for key event infinitely (delay<=0) or for "delay" milliseconds */
 CVAPI(int) cvWaitKey(int delay CV_DEFAULT(0));
+
+
+// Vinogradov Vlad : OpenGL support
+typedef void (CV_CDECL *CvGLDrawCallback)(int width, int height, void* userdata);
+CVAPI(void) cvSetGLDrawCallback(const char* window_name, CvGLDrawCallback callback, void* userdata CV_DEFAULT(NULL));
+
+typedef void (CV_CDECL *CvCloseCallback)(void* userdata);
+CVAPI(void) cvSetCloseCallback(const char* window_name, CvCloseCallback callback, void* userdata CV_DEFAULT(NULL));
+
+CVAPI(void) cvSetGLContext(const char* window_name);
+
+CVAPI(void) cvGlGenBuffers(int n, unsigned int* buffers);
+CVAPI(void) cvGlBufferData(unsigned int target, ptrdiff_t size, const void *data, unsigned int usage);
+CVAPI(void) cvGlDeleteBuffers(int n, const unsigned int *buffers);
+CVAPI(void) cvGlBindBuffer(unsigned int target, unsigned int buffer);
 
 /****************************************************************************************\
 *                         Working with Video Files and Cameras                           *

@@ -6,6 +6,10 @@ project(${the_target})
 set(DEPS "opencv_core" "opencv_imgproc" "opencv_objdetect" "opencv_features2d" "opencv_flann" "opencv_calib3d") #"opencv_features2d" "opencv_flann" "opencv_objdetect" - only headers needed 
 set(OPENCV_LINKER_LIBS ${OPENCV_LINKER_LIBS} opencv_gpu)
 
+if(WIN32)
+    set(DEPS ${DEPS} opengl32 glu32)
+endif()
+
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/include"
 					"${CMAKE_CURRENT_SOURCE_DIR}/src/cuda"
 					"${CMAKE_CURRENT_SOURCE_DIR}/src"

@@ -54,7 +54,13 @@ struct CvVideoWriter;
 namespace cv
 {
 
-enum { WINDOW_AUTOSIZE=1 };
+enum { 
+    WINDOW_NORMAL   = CV_WINDOW_NORMAL, 
+    WINDOW_AUTOSIZE = CV_WINDOW_AUTOSIZE, 
+    WINDOW_OPENGL   = CV_WINDOW_OPENGL,
+
+    WND_PROP_AUTOSIZE = CV_WND_PROP_AUTOSIZE
+};
 
 CV_EXPORTS_W void namedWindow( const string& winname, int flags=WINDOW_AUTOSIZE );
 CV_EXPORTS_W void destroyWindow( const string& winname );
@@ -131,6 +137,23 @@ typedef void (*MouseCallback )(int event, int x, int y, int flags, void* param);
 
 //! assigns callback for mouse events
 CV_EXPORTS void setMouseCallback( const string& windowName, MouseCallback onMouse, void* param=0);
+
+// Vinogradov Vlad : OpenGL support
+typedef void (CV_CDECL *GLDrawCallback)(int width, int height, void* userdata);
+CV_EXPORTS void setGLDrawCallback(const string& windowName, GLDrawCallback callback, void* userdata = 0);
+
+typedef void (CV_CDECL *CloseCallback)(void* userdata);
+CV_EXPORTS void setCloseCallback(const string& windowName, CloseCallback callback, void* userdata = 0);
+
+CV_EXPORTS void setGLContext(const string& windowName);
+
+namespace gl
+{
+CV_EXPORTS void genBuffers(int n, unsigned int* buffers);
+CV_EXPORTS void bufferData(unsigned int target, ptrdiff_t size, const void *data, unsigned int usage);
+CV_EXPORTS void deleteBuffers(int n, const unsigned int *buffers);
+CV_EXPORTS void bindBuffer(unsigned int target, unsigned int buffer);
+}
 
 enum
 {

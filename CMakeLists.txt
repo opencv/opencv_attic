@@ -1104,7 +1104,7 @@ endif()
 
 if(WIN32)
     set(WITH_VIDEOINPUT ON CACHE BOOL "Build HighGUI with DirectShow support")
-    set(HIGHGUI_LIBRARIES ${HIGHGUI_LIBRARIES} comctl32 gdi32 ole32)
+    set(HIGHGUI_LIBRARIES ${HIGHGUI_LIBRARIES} comctl32 gdi32 ole32 opengl32)
 
     if(WITH_VIDEOINPUT)
         set(HAVE_VIDEOINPUT 1)

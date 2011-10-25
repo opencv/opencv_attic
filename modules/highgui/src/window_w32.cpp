@@ -53,6 +53,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <assert.h>
+#include <gl\gl.h>
 
 static const char* trackbar_text =
 "                                                                                             ";
@@ -155,6 +156,17 @@ typedef struct CvWindow
         CvTrackbar* first;
     }
     toolbar;
+
+    // Vinogradov Vlad: OpenGL support
+    bool useGl;
+    HGLRC hGLRC;
+    int glWidth;
+    int glHeight;
+    CvGLDrawCallback glDrawCallback;
+    void* glDrawUserData;
+
+    CvCloseCallback closeCallback;
+    void* closeUserData;
 }
 CvWindow;
 
@@ -464,6 +476,209 @@ void cvSetModeWindow_W32( const char*, double)
 }
 #endif
 
+// Vinogradov Vlad
+// OpenGL support
+namespace
+{
+#ifndef APIENTRY
+#define APIENTRY
+#endif
+
+#ifndef APIENTRYP
+#define APIENTRYP APIENTRY *
+#endif
+
+#ifndef GL_VERSION_1_5
+    /* GL types for handling large vertex buffer objects */
+    typedef ptrdiff_t GLintptr;
+    typedef ptrdiff_t GLsizeiptr;
+#endif
+
+    typedef void (APIENTRYP PFNGLGENBUFFERSPROC   ) (GLsizei n, GLuint *buffers);
+    typedef void (APIENTRYP PFNGLBUFFERDATAPROC   ) (GLenum target, GLsizeiptr size, const GLvoid *data, GLenum usage);
+    typedef void (APIENTRYP PFNGLDELETEBUFFERSPROC) (GLsizei n, const GLuint *buffers);
+    typedef void (APIENTRYP PFNGLBINDBUFFERPROC   ) (GLenum target, GLuint buffer);
+
+    PFNGLGENBUFFERSPROC    glGenBuffersExt    = NULL;
+    PFNGLBUFFERDATAPROC    glBufferDataExt    = NULL;
+    PFNGLDELETEBUFFERSPROC glDeleteBuffersExt = NULL;
+    PFNGLBINDBUFFERPROC    glBindBufferExt    = NULL;
+
+    void initGL()
+    {
+        bool first = true;
+
+        if (first)
+        {
+            glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+            glClearDepth(1.0f);
+
+            // Load extensions
+            PROC func;
+
+            func = wglGetProcAddress("glGenBuffers");
+            CV_Assert(func != NULL);
+            glGenBuffersExt = (PFNGLGENBUFFERSPROC)func;
+
+            func = wglGetProcAddress("glBufferData");
+            CV_Assert(func != NULL);
+            glBufferDataExt = (PFNGLBUFFERDATAPROC)func;
+
+            func = wglGetProcAddress("glDeleteBuffers");
+            CV_Assert(func != NULL);
+            glDeleteBuffersExt = (PFNGLDELETEBUFFERSPROC)func;
+
+            func = wglGetProcAddress("glBindBuffer");
+            CV_Assert(func != NULL);
+            glBindBufferExt = (PFNGLBINDBUFFERPROC)func;
+        }
+    }
+
+    void createGLContext(HWND hWnd, HDC& hGLDC, HGLRC& hGLRC, bool& useGl)
+    {
+        CV_FUNCNAME( "createGLContext" );
+
+        __BEGIN__;
+
+        useGl = false;
+
+        GLuint PixelFormat;
+
+        static PIXELFORMATDESCRIPTOR pfd =
+        {
+            sizeof(PIXELFORMATDESCRIPTOR), // Size Of This Pixel Format Descriptor
+            1,                             // Version Number
+            PFD_DRAW_TO_WINDOW |           // Format Must Support Window
+            PFD_SUPPORT_OPENGL |           // Format Must Support OpenGL
+            PFD_DOUBLEBUFFER,              // Must Support Double Buffering
+            PFD_TYPE_RGBA,                 // Request An RGBA Format
+            32,                            // Select Our Color Depth
+            0, 0, 0, 0, 0, 0,              // Color Bits Ignored
+            0,                             // No Alpha Buffer
+            0,                             // Shift Bit Ignored
+            0,                             // No Accumulation Buffer
+            0, 0, 0, 0,                    // Accumulation Bits Ignored
+            16,                            // 16Bit Z-Buffer (Depth Buffer)  
+            0,                             // No Stencil Buffer
+            0,                             // No Auxiliary Buffer
+            PFD_MAIN_PLANE,                // Main Drawing Layer
+            0,                             // Reserved
+            0, 0, 0	                       // Layer Masks Ignored
+        };
+
+        hGLDC = GetDC(hWnd);
+        if (!hGLDC)
+            CV_ERROR( CV_StsError, "Can't Create A GL Device Context" );
+
+        PixelFormat = ChoosePixelFormat(hGLDC, &pfd);
+        if (!PixelFormat)
+            CV_ERROR( CV_StsError, "Can't Find A Suitable PixelFormat" );
+
+        if (!SetPixelFormat(hGLDC, PixelFormat, &pfd))
+            CV_ERROR( CV_StsError, "Can't Set The PixelFormat" );
+
+        hGLRC = wglCreateContext(hGLDC);
+        if (!hGLRC)
+            CV_ERROR( CV_StsError, "Can't Create A GL Rendering Context" );
+
+        if (!wglMakeCurrent(hGLDC, hGLRC))
+            CV_ERROR( CV_StsError, "Can't Activate The GL Rendering Context" );
+
+        initGL();
+
+        useGl = true;
+
+        __END__;
+    }
+
+    void releaseGLContext(CvWindow* window)
+    {
+        CV_FUNCNAME( "releaseGLContext" );
+
+        __BEGIN__;
+
+        if (!window->useGl)
+            return;
+
+        if (window->hGLRC)
+        {
+            wglDeleteContext(window->hGLRC);
+            window->hGLRC = NULL;
+        }
+
+        if (window->dc)	
+        {
+            ReleaseDC(window->hwnd, window->dc);
+            window->dc = NULL;
+        }
+
+        window->useGl = false;
+
+        __END__;
+    }
+
+    void drawGL(CvWindow* window)
+    {
+        CV_FUNCNAME( "drawGL" );
+
+        __BEGIN__;
+
+        if (!wglMakeCurrent(window->dc, window->hGLRC))
+            CV_ERROR( CV_StsError, "Can't Activate The GL Rendering Context" );
+
+	    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        if (window->glDrawCallback)
+            window->glDrawCallback(window->glWidth, window->glHeight, window->glDrawUserData);
+
+        if (!SwapBuffers(window->dc))
+            CV_ERROR( CV_StsError, "Can't swap OpenGL buffers" );
+
+        __END__;
+    }
+
+    void resizeGL(CvWindow* window, GLsizei width, GLsizei height)
+    {
+        CV_FUNCNAME( "resizeGL" );
+
+        __BEGIN__;
+
+        if (!wglMakeCurrent(window->dc, window->hGLRC))
+            CV_ERROR( CV_StsError, "Can't Activate The GL Rendering Context" );
+
+        glViewport(0, 0, width, height);
+
+        window->glWidth = width;
+        window->glHeight = height;
+
+        __END__;
+    }
+}
+
+CV_IMPL void cvGlGenBuffers(int n, unsigned int* buffers)
+{
+    CV_Assert(glGenBuffersExt != NULL);
+    glGenBuffersExt(n, buffers);
+}
+
+CV_IMPL void cvGlBufferData(unsigned int target, ptrdiff_t size, const void *data, unsigned int usage)
+{
+    CV_Assert(glBufferDataExt != NULL);
+    glBufferDataExt(target, size, data, usage);
+}
+
+CV_IMPL void cvGlDeleteBuffers(int n, const unsigned int *buffers)
+{
+    CV_Assert(glDeleteBuffersExt != NULL);
+    glDeleteBuffersExt(n, buffers);
+}
+
+CV_IMPL void cvGlBindBuffer(unsigned int target, unsigned int buffer)
+{
+    CV_Assert(glBindBufferExt != NULL);
+    glBindBufferExt(target, buffer);
+}
+
 CV_IMPL int cvNamedWindow( const char* name, int flags )
 {
     int result = 0;
@@ -506,19 +721,48 @@ CV_IMPL int cvNamedWindow( const char* name, int flags )
     if( !hWnd )
         CV_ERROR( CV_StsError, "Frame window can not be created" );
 
+    // Vinogradov Vlad - try to create OpenGL context if it is an OpenGL windos
+    bool useGl = false;
+    HDC hGLDC = 0;
+    HGLRC hGLRC = 0;
+    if (flags & CV_WINDOW_OPENGL)
+        createGLContext(hWnd, hGLDC, hGLRC, useGl);
+
     ShowWindow(hWnd, SW_SHOW);
 
     len = (int)strlen(name);
     CV_CALL( window = (CvWindow*)cvAlloc(sizeof(CvWindow) + len + 1));
 
     window->signature = CV_WINDOW_MAGIC_VAL;
+
     window->hwnd = hWnd;
     window->frame = mainhWnd;
+
     window->name = (char*)(window + 1);
     memcpy( window->name, name, len + 1 );
+
     window->flags = flags;
+
     window->image = 0;
-    window->dc = CreateCompatibleDC(0);
+
+    if (!useGl)
+    {
+        window->dc = CreateCompatibleDC(0);
+        window->hGLRC = NULL;
+        window->useGl = false;
+    }
+    else
+    {
+        window->dc = hGLDC;
+        window->hGLRC = hGLRC;
+        window->useGl = true;
+    }
+    window->glDrawCallback = 0;
+    window->glDrawUserData = 0;
+
+    window->closeCallback = 0;
+    window->closeUserData = 0;
+
     window->last_key = 0;
     window->status = CV_WINDOW_NORMAL;//YV
 
@@ -544,11 +788,105 @@ CV_IMPL int cvNamedWindow( const char* name, int flags )
     return result;
 }
 
+CV_IMPL void cvSetGLContext(const char* name)
+{
+    CV_FUNCNAME( "cvSetGLContext" );
+
+    __BEGIN__;
+
+    CvWindow* window;
+
+    if(!name)
+        CV_ERROR( CV_StsNullPtr, "NULL name string" );
+
+    window = icvFindWindowByName( name );
+    if( !window )
+        EXIT;
+
+    if (window->useGl && !wglMakeCurrent(window->dc, window->hGLRC))
+        CV_ERROR( CV_StsError, "Can't Activate The GL Rendering Context" );
+
+    __END__;
+}
+
+CV_IMPL void cvSetGLDrawCallback(const char* name, CvGLDrawCallback callback, void* userdata)
+{
+    CV_FUNCNAME( "cvSetGLDrawCallback" );
+
+    __BEGIN__;
+
+    CvWindow* window;
+
+    if(!name)
+        CV_ERROR( CV_StsNullPtr, "NULL name string" );
+
+    window = icvFindWindowByName( name );
+    if( !window )
+        EXIT;
+
+    window->glDrawCallback = callback;
+    window->glDrawUserData = userdata;
+
+    __END__;
+}
+
+CV_IMPL void cvSetCloseCallback(const char* name, CvCloseCallback callback, void* userdata)
+{
+    CV_FUNCNAME( "cvSetCloseCallback" );
+
+    __BEGIN__;
+
+    CvWindow* window;
+
+    if(!name)
+        CV_ERROR( CV_StsNullPtr, "NULL name string" );
+
+    window = icvFindWindowByName( name );
+    if( !window )
+        EXIT;
+
+    window->closeCallback = callback;
+    window->closeUserData = userdata;
+
+    __END__;
+}
+
+double cvGetPropWindowAutoSize_W32(const char* name)
+{
+    double result = -1;
+    CV_FUNCNAME( "cvSetCloseCallback" );
+
+    __BEGIN__;
+
+    CvWindow* window;
+
+    if(!name)
+        CV_ERROR( CV_StsNullPtr, "NULL name string" );
+
+    window = icvFindWindowByName( name );
+    if( !window )
+        EXIT;
+
+    result = window->flags & CV_WINDOW_AUTOSIZE;
+
+    __END__;
+
+    return result;
+}
+
 
 static void icvRemoveWindow( CvWindow* window )
 {
     CvTrackbar* trackbar = NULL;
     RECT wrect={0,0,0,0};
+
+    if (window->useGl)
+        wglMakeCurrent(window->dc, window->hGLRC);
+
+    if (window->closeCallback)
+        window->closeCallback(window->closeUserData);
+
+    releaseGLContext(window);
 
     if( window->frame )
         GetWindowRect( window->frame, &wrect );
@@ -1069,6 +1407,11 @@ static LRESULT CALLBACK HighGUIProc( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
             //DeleteDC(hdc);
             EndPaint(hwnd, &paint);
         }
+        else if (window->useGl) 
+        {
+            DefWindowProc(hwnd, uMsg, wParam, lParam);
+            drawGL(window);
+        }
         else
         {
             return DefWindowProc(hwnd, uMsg, wParam, lParam);
@@ -1094,6 +1437,10 @@ static LRESULT CALLBACK HighGUIProc( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
     case WM_KEYDOWN:
         window->last_key = (int)wParam;
         return 0;
+
+    case WM_SIZE:
+        if (window->useGl)
+            resizeGL(window, LOWORD(lParam), HIWORD(lParam));
     }
 
     return DefWindowProc(hwnd, uMsg, wParam, lParam);

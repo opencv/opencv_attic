@@ -109,6 +109,8 @@ CV_IMPL double cvGetWindowProperty(const char* name, int prop_id)
             
         #if defined (HAVE_QT)
             return cvGetPropWindow_QT(name);
+        #elif defined WIN32 || defined _WIN32 
+            return cvGetPropWindowAutoSize_W32(name);
         #else
             return -1;
         #endif  
@@ -199,6 +201,43 @@ void cv::setMouseCallback( const string& windowName, MouseCallback onMouse, void
 int cv::startWindowThread()
 {
     return cvStartWindowThread();
+}
+
+// Vinogradov Vlad : OpenGL support
+
+void cv::setGLDrawCallback(const string& windowName, GLDrawCallback callback, void* userdata)
+{
+    cvSetGLDrawCallback(windowName.c_str(), callback, userdata);
+}
+
+void cv::setCloseCallback(const string& windowName, CloseCallback callback, void* userdata)
+{
+    cvSetCloseCallback(windowName.c_str(), callback, userdata);
+}
+
+void cv::setGLContext(const string& windowName)
+{
+    cvSetGLContext(windowName.c_str());
+}
+
+void cv::gl::genBuffers(int n, unsigned int* buffers)
+{
+    cvGlGenBuffers(n, buffers);
+}
+
+void cv::gl::bufferData(unsigned int target, ptrdiff_t size, const void *data, unsigned int usage)
+{
+    cvGlBufferData(target, size, data, usage);
+}
+
+void cv::gl::deleteBuffers(int n, const unsigned int *buffers)
+{
+    cvGlDeleteBuffers(n, buffers);
+}
+
+void cv::gl::bindBuffer(unsigned int target, unsigned int buffer)
+{
+    cvGlBindBuffer(target, buffer);
 }
 
 #if defined (HAVE_QT)

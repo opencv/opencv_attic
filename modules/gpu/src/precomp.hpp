@@ -62,6 +62,7 @@
 #include <utility>
 
 #include "opencv2/gpu/gpu.hpp"
+#include "opencv2/gpu/highgui_gpu.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/calib3d/calib3d.hpp"
 #include "opencv2/core/internal.hpp"
@@ -70,15 +71,19 @@
 
 #ifdef HAVE_CUDA
 
-    #include "cuda_runtime_api.h"
-    #include "npp.h"
+    #define NOMINMAX
+    #include <windows.h>
+
+    #include <cuda_runtime_api.h>
+    #include <cuda_gl_interop.h>
+    #include <npp.h>
     
     #ifdef HAVE_CUFFT
-        #include "cufft.h"
+        #include <cufft.h>
     #endif
 
     #ifdef HAVE_CUBLAS
-        #include "cublas.h"
+        #include <cublas.h>
     #endif
 
     #include "internal_shared.hpp"
