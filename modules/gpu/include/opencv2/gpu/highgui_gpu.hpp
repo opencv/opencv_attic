@@ -57,8 +57,11 @@ namespace cv
         {
         public:
 	        GlTexture();
+
             GlTexture(int rows, int cols, int type);
             GlTexture(const Size& size, int type);
+
+            explicit GlTexture(const GpuMat& mat);
 
             GlTexture(const GlTexture& other);
 
@@ -104,8 +107,11 @@ namespace cv
         {
         public:
 	        GlVertexBuffer();
+
             GlVertexBuffer(int rows, int cols, int type);
             GlVertexBuffer(const Size& size, int type);
+
+            explicit GlVertexBuffer(const GpuMat& mat);
 
             GlVertexBuffer(const GlVertexBuffer& other);
 
@@ -151,8 +157,11 @@ namespace cv
         {
         public:
 	        GlColorBuffer();
+
             GlColorBuffer(int rows, int cols, int type);
             GlColorBuffer(const Size& size, int type);
+
+            explicit GlColorBuffer(const GpuMat& mat);
 
             GlColorBuffer(const GlColorBuffer& other);
 
@@ -209,12 +218,55 @@ namespace cv
         CV_EXPORTS void setGlDevice(int device = 0);
 
         CV_EXPORTS void imshow(const std::string& windowName, const GpuMat& img);
+
         CV_EXPORTS void imshow(const std::string& windowName, const GlTexture& tex);
 
         CV_EXPORTS void imshow(const std::string& windowName, const GpuMat& img, const std::string& text,            
-            const Point2f& textLoc = Point2f(), const Scalar& textColor = Scalar::all(255), int textFont = FONT_9_BY_15);
+            const Point2d& textLoc = Point2d(), const Scalar& textColor = Scalar::all(255), int textFont = FONT_9_BY_15);
+
         CV_EXPORTS void imshow(const std::string& windowName, const GlTexture& tex, const std::string& text,            
-            const Point2f& textLoc = Point2f(), const Scalar& textColor = Scalar::all(255), int textFont = FONT_9_BY_15);
+            const Point2d& textLoc = Point2d(), const Scalar& textColor = Scalar::all(255), int textFont = FONT_9_BY_15);
+
+        class CV_EXPORTS Camera
+        {
+        public:
+            Camera();
+
+            void lookAt(const Point3d& eye, const Point3d& center, const Point3d& up);
+
+            void setScale(const Point3d& scale);
+
+            void setProjectionMatrix(const Mat& projectionMatrix);
+            void setPerspectiveProjection(double fov, double zNear = 0.1, double zFar = 1000.0);
+            void setOrthoProjection(double left = 0, double right = 1, double bottom = 1, double top = 0, double zNear = -1, double zFar = 1);
+
+        protected:
+            Point3d eye_;
+            Point3d center_;
+            Point3d up_;
+            
+            Point3d scale_;
+
+            Mat projectionMatrix_;
+
+            bool perspectiveProjection_;
+
+            double fov_;
+
+            double left_;
+            double right_;
+            double bottom_;
+            double top_;
+
+            double zNear_;
+            double zFar_;
+        };        
+        
+        CV_EXPORTS void pointCloudShow(const std::string& windowName, const GpuMat& points, const Camera& camera, 
+            const GpuMat& colors = GpuMat());
+
+        CV_EXPORTS void pointCloudShow(const std::string& windowName, const GlVertexBuffer& points, const Camera& camera, 
+            const GlColorBuffer& colors = GlColorBuffer());
     }
 }
 

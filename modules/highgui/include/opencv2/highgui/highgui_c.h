@@ -254,11 +254,7 @@ typedef void (CV_CDECL *CvCloseCallback)(void* userdata);
 CVAPI(void) cvSetCloseCallback(const char* window_name, CvCloseCallback callback, void* userdata CV_DEFAULT(NULL));
 
 CVAPI(void) cvSetGlContext(const char* window_name);
-
-CVAPI(void) cvGlGenBuffers(int n, unsigned int* buffers);
-CVAPI(void) cvGlBufferData(unsigned int target, ptrdiff_t size, const void *data, unsigned int usage);
-CVAPI(void) cvGlDeleteBuffers(int n, const unsigned int *buffers);
-CVAPI(void) cvGlBindBuffer(unsigned int target, unsigned int buffer);
+CVAPI(void) cvUpdateWindow(const char* window_name);
 
 /****************************************************************************************\
 *                         Working with Video Files and Cameras                           *

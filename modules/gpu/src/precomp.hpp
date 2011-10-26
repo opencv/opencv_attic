@@ -74,11 +74,14 @@
 
 #ifdef HAVE_CUDA
 
-    #define NOMINMAX
-    #include <windows.h>
-
     #include <cuda_runtime_api.h>
+
+#if defined WIN32 || defined _WIN32
     #include <cuda_gl_interop.h>
+    #include <GL/gl.h>
+    #include <GL/glu.h>
+#endif
+
     #include <npp.h>
     
     #ifdef HAVE_CUFFT

@@ -655,25 +655,25 @@ namespace
     }
 }
 
-CV_IMPL void cvGlGenBuffers(int n, unsigned int* buffers)
+CV_EXPORTS void icvGlGenBuffers(int n, unsigned int* buffers)
 {
     CV_Assert(glGenBuffersExt != NULL);
     glGenBuffersExt(n, buffers);
 }
 
-CV_IMPL void cvGlBufferData(unsigned int target, ptrdiff_t size, const void *data, unsigned int usage)
+CV_EXPORTS void icvGlBufferData(unsigned int target, ptrdiff_t size, const void *data, unsigned int usage)
 {
     CV_Assert(glBufferDataExt != NULL);
     glBufferDataExt(target, size, data, usage);
 }
 
-CV_IMPL void cvGlDeleteBuffers(int n, const unsigned int *buffers)
+CV_EXPORTS void icvGlDeleteBuffers(int n, const unsigned int *buffers)
 {
     CV_Assert(glDeleteBuffersExt != NULL);
     glDeleteBuffersExt(n, buffers);
 }
 
-CV_IMPL void cvGlBindBuffer(unsigned int target, unsigned int buffer)
+CV_EXPORTS void icvGlBindBuffer(unsigned int target, unsigned int buffer)
 {
     CV_Assert(glBindBufferExt != NULL);
     glBindBufferExt(target, buffer);
@@ -805,6 +805,26 @@ CV_IMPL void cvSetGlContext(const char* name)
 
     if (window->useGl && !wglMakeCurrent(window->dc, window->hGLRC))
         CV_ERROR( CV_StsError, "Can't Activate The GL Rendering Context" );
+
+    __END__;
+}
+
+CV_IMPL void cvUpdateWindow(const char* name)
+{
+    CV_FUNCNAME( "cvSetGlContext" );
+
+    __BEGIN__;
+
+    CvWindow* window;
+
+    if(!name)
+        CV_ERROR( CV_StsNullPtr, "NULL name string" );
+
+    window = icvFindWindowByName( name );
+    if( !window )
+        EXIT;
+
+    InvalidateRect(window->hwnd, 0, 0);
 
     __END__;
 }

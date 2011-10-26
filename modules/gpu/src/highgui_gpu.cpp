@@ -53,12 +53,22 @@ void cv::gpu::setGlDevice(int) { throw_nogpu(); }
 void cv::gpu::imshow(const string&, const GpuMat&) { throw_nogpu(); }
 void cv::gpu::imshow(const std::string&, const GlTexture&) { throw_nogpu(); }
 
-void cv::gpu::imshow(const string&, const GpuMat&, const string&, const Point2f&, const Scalar&, int) { throw_nogpu(); }
-void cv::gpu::imshow(const string&, const GlTexture&, const string&, const Point2f&, const Scalar&, int) { throw_nogpu(); }
+void cv::gpu::imshow(const string&, const GpuMat&, const string&, const Point2d&, const Scalar&, int) { throw_nogpu(); }
+void cv::gpu::imshow(const string&, const GlTexture&, const string&, const Point2d&, const Scalar&, int) { throw_nogpu(); }
+
+cv::gpu::Camera::Camera() { throw_nogpu(); }
+void cv::gpu::Camera::lookAt(const Point3d&, const Point3d&, const Point3d&) { throw_nogpu(); }
+void cv::gpu::Camera::setScale(const Point3d&) { throw_nogpu(); }
+void cv::gpu::Camera::setProjectionMatrix(const Mat&) { throw_nogpu(); }
+void cv::gpu::Camera::setPerspectiveProjection(double, double, double) { throw_nogpu(); }
+void cv::gpu::Camera::setOrthoProjection(double, double, double, double, double, double) { throw_nogpu(); }
+void cv::gpu::pointCloudShow(const string&, const GpuMat&, const Camera&, const GpuMat&) { throw_nogpu(); }
+void cv::gpu::pointCloudShow(const string&, const GlVertexBuffer&, const Camera&, const GlColorBuffer&) { throw_nogpu(); }
 
 cv::gpu::GlTexture::GlTexture() { throw_nogpu(); }
 cv::gpu::GlTexture::GlTexture(int, int, int) { throw_nogpu(); }
 cv::gpu::GlTexture::GlTexture(const Size&, int) { throw_nogpu(); }
+cv::gpu::GlTexture::GlTexture(const GpuMat&) { throw_nogpu(); }
 cv::gpu::GlTexture::GlTexture(const GlTexture&) { throw_nogpu(); }
 cv::gpu::GlTexture::~GlTexture() {  }
 GlTexture& cv::gpu::GlTexture::operator =(const GlTexture&) { throw_nogpu(); return *this; }
@@ -83,6 +93,7 @@ void cv::gpu::GlTexture::swap(GlTexture&) { throw_nogpu(); }
 cv::gpu::GlVertexBuffer::GlVertexBuffer() { throw_nogpu(); }
 cv::gpu::GlVertexBuffer::GlVertexBuffer(int, int, int) { throw_nogpu(); }
 cv::gpu::GlVertexBuffer::GlVertexBuffer(const Size&, int) { throw_nogpu(); }
+cv::gpu::GlVertexBuffer::GlVertexBuffer(const GpuMat&) { throw_nogpu(); }
 cv::gpu::GlVertexBuffer::GlVertexBuffer(const GlVertexBuffer&) { throw_nogpu(); }
 cv::gpu::GlVertexBuffer::~GlVertexBuffer() {  }
 GlVertexBuffer& cv::gpu::GlVertexBuffer::operator =(const GlVertexBuffer&) { throw_nogpu(); return *this; }
@@ -107,6 +118,7 @@ void cv::gpu::GlVertexBuffer::swap(GlVertexBuffer&) { throw_nogpu(); }
 cv::gpu::GlColorBuffer::GlColorBuffer() { throw_nogpu(); }
 cv::gpu::GlColorBuffer::GlColorBuffer(int, int, int) { throw_nogpu(); }
 cv::gpu::GlColorBuffer::GlColorBuffer(const Size&, int) { throw_nogpu(); }
+cv::gpu::GlColorBuffer::GlColorBuffer(const GpuMat&) { throw_nogpu(); }
 cv::gpu::GlColorBuffer::GlColorBuffer(const GlColorBuffer&) { throw_nogpu(); }
 cv::gpu::GlColorBuffer::~GlColorBuffer() {  }
 GlColorBuffer& cv::gpu::GlColorBuffer::operator =(const GlColorBuffer&) { throw_nogpu(); return *this; }
@@ -230,137 +242,6 @@ namespace
     };
 
     ///////////////////////////////////////////////////////////////////////
-    // TextureRenderer
-
-    class TextureRenderer : public Renderer
-    {
-    public:
-        explicit TextureRenderer(const string& windowName) : Renderer(windowName), top_left_(0.0f, 0.0f), botton_right_(1.0f, 1.0f) 
-        {
-        }
-
-        void set(const GlTexture& tex)
-        {
-            tex_ = tex;
-        }
-
-        void set(const GpuMat& img)
-        {
-            if (!img.empty())
-            {
-                GpuMat mat;
-
-                if (img.cols % 16 == 0)
-                    mat = img;
-                else
-                {
-                    copyMakeBorder(img, mat, 0, 0, 0, 16 - img.cols % 16, BORDER_REPLICATE);
-                }
-
-                tex_.copyFrom(mat);
-            }
-        }
-
-        void render(int, int)
-        {
-            if (!tex_.empty())
-            {
-                tex_.bind();
-
-                glDisable(GL_DEPTH_TEST);
-
-                glMatrixMode(GL_PROJECTION);
-                glLoadIdentity();
-                glOrtho(0, 1, 1, 0, -1, 1);
-
-                glMatrixMode(GL_MODELVIEW);
-                glLoadIdentity();
-
-                glColor3f(1.0f, 1.0f, 1.0f);
-
-                glBegin(GL_QUADS);
-                    glVertex2f(top_left_.x, top_left_.y);
-                    glTexCoord2f(1.0, 0.0);	 
-
-                    glVertex2f(botton_right_.x, top_left_.y);
-                    glTexCoord2f(1.0, 1.0);
-
-                    glVertex2f(botton_right_.x, botton_right_.y);
-                    glTexCoord2f(0.0, 1.0);	 
-
-                    glVertex2f(top_left_.x, botton_right_.y);
-                    glTexCoord2f(0.0 ,0.0);	
-                glEnd();
-
-                tex_.unbind();
-            }
-        }
-
-    private:
-        GlTexture tex_;
-
-        Point2f top_left_;
-        Point2f botton_right_;
-    };
-
-    ///////////////////////////////////////////////////////////////////////
-    // TextRenderer   
-
-    void bitmapString(int fontID, const unsigned char* string);
-
-    template <typename R> class TextRenderer : public Renderer
-    {
-    public:
-        explicit TextRenderer(const string& windowName) : Renderer(windowName), originalRenderer_(new R(windowName)) {}
-
-        void setText(const string& text, const Point2f& loc, const Scalar& color, int font)
-        {
-            text_ = text;
-            loc_ = loc;
-            color_ = color;
-            font_ = font;
-        }
-
-        void setOriginalRenderer(const Ptr<R>& originalRenderer)
-        {
-            originalRenderer_ = originalRenderer;
-        }
-
-        Ptr<R> originalRenderer() const
-        {
-            return originalRenderer_;
-        }
-
-        void render(int width, int height)
-        {
-            originalRenderer_->render(width, height);
-
-            glDisable(GL_DEPTH_TEST);
-
-            glMatrixMode(GL_PROJECTION);
-            glLoadIdentity();
-            glOrtho(0, 1, 1, 0, -1, 1);
-
-            glMatrixMode(GL_MODELVIEW);
-            glLoadIdentity();
-
-            glColor3dv(color_.val);
-
-            glRasterPos3f(loc_.x, loc_.y, 0.0f);
-
-            bitmapString(font_, (const unsigned char*)text_.c_str());
-        }
-
-    private:
-        string text_;
-        Point2f loc_;
-        Scalar color_;
-        int font_;
-
-        Ptr<R> originalRenderer_;
-    };
-
-    ///////////////////////////////////////////////////////////////////////
     // Callbacks
 
     static vector<Renderer*> g_renderers;
@@ -428,6 +309,147 @@ namespace
 
         return nr;
     }
+
+    ///////////////////////////////////////////////////////////////////////
+    // TextureRenderer
+
+    class TextureRenderer : public Renderer
+    {
+    public:
+        explicit TextureRenderer(const string& windowName) : Renderer(windowName), topLeft_(0.0, 0.0), bottonRight_(1.0, 1.0) 
+        {
+        }
+
+        void set(const GlTexture& tex)
+        {
+            tex_ = tex;
+        }
+
+        void set(const GpuMat& img)
+        {
+            if (!img.empty())
+            {
+                GpuMat mat;
+
+                if (img.cols % 16 == 0)
+                    mat = img;
+                else
+                {
+                    copyMakeBorder(img, mat, 0, 0, 0, 16 - img.cols % 16, BORDER_REPLICATE);
+                }
+
+                tex_.copyFrom(mat);
+            }
+        }
+
+        void setPos(const Point2d& topLeft, const Point2d& bottonRight)
+        {
+            topLeft_ = topLeft;
+            bottonRight_ = bottonRight;
+        }
+
+        void render(int, int)
+        {
+            if (!tex_.empty())
+            {
+                tex_.bind();
+
+                glDisable(GL_DEPTH_TEST);
+
+                glMatrixMode(GL_PROJECTION);
+                glLoadIdentity();
+                glOrtho(0, 1, 1, 0, -1, 1);
+
+                glMatrixMode(GL_MODELVIEW);
+                glLoadIdentity();
+
+                glColor3d(1.0, 1.0, 1.0);
+
+                glBegin(GL_QUADS);
+                    glVertex2d(topLeft_.x, topLeft_.y);
+                    glTexCoord2d(1.0, 0.0);	 
+
+                    glVertex2d(bottonRight_.x, topLeft_.y);
+                    glTexCoord2d(1.0, 1.0);
+
+                    glVertex2d(bottonRight_.x, bottonRight_.y);
+                    glTexCoord2d(0.0, 1.0);	 
+
+                    glVertex2d(topLeft_.x, bottonRight_.y);
+                    glTexCoord2d(0.0, 0.0);	
+                glEnd();
+
+                checkGlError();
+
+                tex_.unbind();
+            }
+        }
+
+    private:
+        GlTexture tex_;
+
+        Point2d topLeft_;
+        Point2d bottonRight_;
+    };
+
+    ///////////////////////////////////////////////////////////////////////
+    // TextRenderer   
+
+    void bitmapString(int fontID, const unsigned char* string);
+
+    template <typename R> class TextRenderer : public Renderer
+    {
+    public:
+        explicit TextRenderer(const string& windowName) : Renderer(windowName), originalRenderer_(new R(windowName)) {}
+
+        void setText(const string& text, const Point2f& loc, const Scalar& color, int font)
+        {
+            text_ = text;
+            loc_ = loc;
+            color_ = color;
+            font_ = font;
+        }
+
+        void setOriginalRenderer(const Ptr<R>& originalRenderer)
+        {
+            originalRenderer_ = originalRenderer;
+        }
+
+        Ptr<R> originalRenderer() const
+        {
+            return originalRenderer_;
+        }
+
+        void render(int width, int height)
+        {
+            originalRenderer_->render(width, height);
+
+            glDisable(GL_DEPTH_TEST);
+
+            glMatrixMode(GL_PROJECTION);
+            glLoadIdentity();
+            glOrtho(0, 1, 1, 0, -1, 1);
+
+            glMatrixMode(GL_MODELVIEW);
+            glLoadIdentity();
+
+            glColor3dv(color_.val);
+
+            glRasterPos2d(loc_.x, loc_.y);
+
+            bitmapString(font_, (const unsigned char*)text_.c_str());
+
+            checkGlError();
+        }
+
+    private:
+        string text_;
+        Point2f loc_;
+        Scalar color_;
+        int font_;
+
+        Ptr<R> originalRenderer_;
+    };
 }
 
 void cv::gpu::imshow(const string& windowName, const GpuMat& img) 
@@ -444,6 +466,8 @@ void cv::gpu::imshow(const string& windowName, const GpuMat& img)
 
     setGlDrawCallback(windowName, drawCallback, (Renderer*)renderer);
     setCloseCallback(windowName, closeCallback, (Renderer*)renderer);
+
+    updateWindow(windowName);
 }
 
 void cv::gpu::imshow(const string& windowName, const GlTexture& tex) 
@@ -460,9 +484,11 @@ void cv::gpu::imshow(const string& windowName, const GlTexture& tex)
 
     setGlDrawCallback(windowName, drawCallback, (Renderer*)renderer);
     setCloseCallback(windowName, closeCallback, (Renderer*)renderer);
+
+    updateWindow(windowName);
 }
 
-void cv::gpu::imshow(const string& windowName, const GpuMat& img, const string& text, const Point2f& textLoc, const Scalar& textColor, int textFont)
+void cv::gpu::imshow(const string& windowName, const GpuMat& img, const string& text, const Point2d& textLoc, const Scalar& textColor, int textFont)
 {
     namedWindow(windowName, WINDOW_OPENGL);
 
@@ -477,9 +503,11 @@ void cv::gpu::imshow(const string& windowName, const GpuMat& img, const string& 
 
     setGlDrawCallback(windowName, drawCallback, (Renderer*)renderer);
     setCloseCallback(windowName, closeCallback, (Renderer*)renderer);
+
+    updateWindow(windowName);
 }
 
-void cv::gpu::imshow(const string& windowName, const GlTexture& tex, const string& text, const Point2f& textLoc, const Scalar& textColor, int textFont)
+void cv::gpu::imshow(const string& windowName, const GlTexture& tex, const string& text, const Point2d& textLoc, const Scalar& textColor, int textFont)
 {
     namedWindow(windowName, WINDOW_OPENGL);
 
@@ -494,6 +522,220 @@ void cv::gpu::imshow(const string& windowName, const GlTexture& tex, const strin
 
     setGlDrawCallback(windowName, drawCallback, (Renderer*)renderer);
     setCloseCallback(windowName, closeCallback, (Renderer*)renderer);
+
+    updateWindow(windowName);
+}
+
+namespace
+{
+    class GlCamera : public Camera
+    {
+    public:
+        GlCamera() {}
+        GlCamera(const Camera& cam) : Camera(cam) {}
+
+        GlCamera& operator =(const Camera& cam)
+        {
+            Camera::operator =(cam);
+            return *this;
+        }
+
+        void setProjectionMatrix(double aspect)
+        {
+            glMatrixMode(GL_PROJECTION);
+            glLoadIdentity();
+
+            if (projectionMatrix_.empty())
+            {
+                if (perspectiveProjection_)
+                    gluPerspective(fov_, aspect, zNear_, zFar_);
+                else
+                    glOrtho(left_, right_, bottom_, top_, zNear_, zFar_);
+            }
+            else
+            {
+                if (projectionMatrix_.type() == CV_32F)
+                    glLoadMatrixf(projectionMatrix_.ptr<float>());
+                else
+                    glLoadMatrixd(projectionMatrix_.ptr<double>());
+            }
+
+            checkGlError();
+        }
+
+        void setModelViewMatrix()
+        {
+            glMatrixMode(GL_MODELVIEW);
+            glLoadIdentity();
+
+            gluLookAt(eye_.x, eye_.y, eye_.z, center_.x, center_.y, center_.z, up_.x, up_.y, up_.z);
+
+            glScaled(scale_.x, scale_.y, scale_.z);
+
+            checkGlError();
+        }
+    };
+
+    ///////////////////////////////////////////////////////////////////////
+    // PointCloudRenderer  
+
+    class PointCloudRenderer : public Renderer
+    {
+    public:
+        explicit PointCloudRenderer(const string& windowName) : Renderer(windowName)
+        {
+        }
+
+        void set(const GlVertexBuffer& vb, const GlColorBuffer& cb)
+        {
+            vb_ = vb;
+            cb_ = cb;
+        }
+
+        void set(const GpuMat& points, const GpuMat& colors)
+        {
+            vb_.copyFrom(points);
+
+            if (colors.empty())
+                cb_.release();
+            else
+                cb_.copyFrom(colors);
+        }
+
+        void setCamera(const Camera& camera)
+        {
+            camera_ = camera;
+        }
+
+        void render(int width, int height)
+        {
+            if (!vb_.empty())
+            {
+                glEnable(GL_DEPTH_TEST);
+
+                camera_.setProjectionMatrix(static_cast<double>(width) / height);
+                camera_.setModelViewMatrix();
+
+                if (!cb_.empty())
+                {
+                    CV_Assert(cb_.size().area() == vb_.size().area());
+
+                    cb_.bind();
+                }
+
+                vb_.bind();
+
+                glDrawArrays(GL_POINTS, 0, vb_.size().area());
+                checkGlError();
+
+                vb_.unbind();
+
+                if (!cb_.empty())
+                    cb_.unbind();
+            }
+        }
+
+    private:
+        GlVertexBuffer vb_;
+        GlColorBuffer cb_;
+
+        GlCamera camera_;
+    };
+}
+
+cv::gpu::Camera::Camera() : 
+    eye_(0.0, 0.0, -5.0), center_(0.0, 0.0, 0.0), up_(0.0, 1.0, 0.0),            
+    scale_(1.0, 1.0, 1.0),
+    perspectiveProjection_(true), 
+    fov_(45.0),
+    left_(0.0), right_(1.0), bottom_(1.0), top_(0.0),
+    zNear_(0.1), zFar_(1000.0)
+{
+}
+
+void cv::gpu::Camera::lookAt(const Point3d& eye, const Point3d& center, const Point3d& up)
+{
+    eye_ = eye;
+    center_ = center;
+    up_ = up;
+}
+
+void cv::gpu::Camera::setScale(const Point3d& scale)
+{
+    scale_ = scale;
+}
+
+void cv::gpu::Camera::setProjectionMatrix(const Mat& projectionMatrix)
+{
+    CV_Assert(projectionMatrix.type() == CV_32F || projectionMatrix.type() == CV_64F);
+    CV_Assert(projectionMatrix.cols == 4 && projectionMatrix.rows == 4);
+
+    projectionMatrix_ = projectionMatrix.t();
+}
+
+void cv::gpu::Camera::setPerspectiveProjection(double fov, double zNear, double zFar)
+{
+    projectionMatrix_.release();
+
+    perspectiveProjection_ = true;
+
+    fov_ = fov;
+
+    zNear_ = zNear;
+    zFar_ = zFar;
+}
+
+void cv::gpu::Camera::setOrthoProjection(double left, double right, double bottom, double top, double zNear, double zFar)
+{
+    projectionMatrix_.release();
+
+    perspectiveProjection_ = false;
+
+    left_ = left;
+    right_ = right;
+    bottom_ = bottom;
+    top_ = top;
+
+    zNear_ = zNear;
+    zFar_ = zFar;
+}
+
+void cv::gpu::pointCloudShow(const string& windowName, const GpuMat& points, const Camera& camera, const GpuMat& colors)
+{
+    namedWindow(windowName, WINDOW_OPENGL);
+
+    if (getWindowProperty(windowName, WND_PROP_AUTOSIZE))
+        resizeWindow(windowName, 800, 600);
+
+    setGlContext(windowName);
+
+    PointCloudRenderer* renderer = getRenderer<PointCloudRenderer>(windowName);
+    renderer->set(points, colors);
+    renderer->setCamera(camera);
+
+    setGlDrawCallback(windowName, drawCallback, (Renderer*)renderer);
+    setCloseCallback(windowName, closeCallback, (Renderer*)renderer);
+
+    updateWindow(windowName);
+}
+
+void cv::gpu::pointCloudShow(const string& windowName, const GlVertexBuffer& points, const Camera& camera, const GlColorBuffer& colors)
+{
+    namedWindow(windowName, WINDOW_OPENGL);
+
+    if (getWindowProperty(windowName, WND_PROP_AUTOSIZE))
+        resizeWindow(windowName, 800, 600);
+
+    setGlContext(windowName);
+
+    PointCloudRenderer* renderer = getRenderer<PointCloudRenderer>(windowName);
+    renderer->set(points, colors);
+    renderer->setCamera(camera);
+
+    setGlDrawCallback(windowName, drawCallback, (Renderer*)renderer);
+    setCloseCallback(windowName, closeCallback, (Renderer*)renderer);
+
+    updateWindow(windowName);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -589,15 +831,17 @@ namespace
         }
 
     private:
-        cudaGraphicsResource_t resource_; 
-
-        GlResource(const GlResource&);
-        GlResource& operator =(const GlResource&);
+        cudaGraphicsResource_t resource_;
     };
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // GlBuffer
+
+CV_EXPORTS void icvGlGenBuffers(int n, unsigned int* buffers);
+CV_EXPORTS void icvGlBufferData(unsigned int target, ptrdiff_t size, const void *data, unsigned int usage);
+CV_EXPORTS void icvGlDeleteBuffers(int n, const unsigned int* buffers);
+CV_EXPORTS void icvGlBindBuffer(unsigned int target, unsigned int buffer);
 
 namespace
 {
@@ -608,7 +852,7 @@ namespace
         public:
             GenBuffers()
             {
-                gl::genBuffers(1, &buffer_);
+                icvGlGenBuffers(1, &buffer_);
                 checkGlError();
             }
 
@@ -616,7 +860,7 @@ namespace
             {
                 if (buffer_)
                 {
-                    gl::deleteBuffers(1, &buffer_);
+                    icvGlDeleteBuffers(1, &buffer_);
                     buffer_ = 0;
                 }
             }
@@ -647,7 +891,7 @@ namespace
             ~Unbind()
             {
                 if (undind_)
-                    gl::bindBuffer(buf_type_, 0);
+                    icvGlBindBuffer(buf_type_, 0);
             }
 
             void release()
@@ -677,13 +921,13 @@ namespace
             
             size_t size = rows * cols * sizes[depth] * cn;            
 
-            gl::bindBuffer(buf_type_, buffer.get());
+            icvGlBindBuffer(buf_type_, buffer.get());
             checkGlError();
 
-            gl::bufferData(buf_type_, size, 0, GL_DYNAMIC_DRAW);
+            icvGlBufferData(buf_type_, size, 0, GL_DYNAMIC_DRAW);
             checkGlError();
 
-            gl::bindBuffer(buf_type_, 0);
+            icvGlBindBuffer(buf_type_, 0);
 
             res_.registerBuffer(buffer.get());
 
@@ -697,7 +941,7 @@ namespace
         { 
             if (buffer_)
             {
-                gl::deleteBuffers(1, &buffer_);
+                icvGlDeleteBuffers(1, &buffer_);
                 buffer_ = 0;
             }
         }
@@ -708,7 +952,7 @@ namespace
 
             Unbind bindHadler(buf_type_);
 
-            gl::bindBuffer(buf_type_, buffer_); 
+            icvGlBindBuffer(buf_type_, buffer_); 
             checkGlError();
 
             bindHadler.release();
@@ -716,7 +960,7 @@ namespace
 
         void unbind() const
         { 
-            gl::bindBuffer(buf_type_, 0);
+            icvGlBindBuffer(buf_type_, 0);
         }
 
         void copyFrom(const GpuMat& mat, cudaStream_t stream) 
@@ -760,9 +1004,6 @@ namespace
         unsigned int buffer_;
 
         GlResource res_;
-
-        GlBuffer(const GlBuffer&);
-        GlBuffer& operator =(const GlBuffer&);
     };
 }
 
@@ -886,9 +1127,6 @@ private:
 
     int internalFormat_;
     int format_;
-
-    Impl(const GlTexture::Impl&);
-    GlTexture::Impl& operator =(const GlTexture::Impl&);
 };
 
 cv::gpu::GlTexture::GlTexture() : impl_(0), refcount_(0)
@@ -914,6 +1152,17 @@ cv::gpu::GlTexture::GlTexture(int rows, int cols, int type) : impl_(0), refcount
 cv::gpu::GlTexture::GlTexture(const Size& size, int type) : impl_(0), refcount_(0)
 {
     auto_ptr<Impl> impl(new Impl(size.height, size.width, type));
+
+    refcount_ = static_cast<int*>(fastMalloc(sizeof(int)));
+    *refcount_ = 1;
+
+    impl_ = impl.release();
+}
+
+cv::gpu::GlTexture::GlTexture(const GpuMat& mat) : impl_(0), refcount_(0)
+{
+    auto_ptr<Impl> impl(new Impl(mat.rows, mat.cols, mat.type()));
+    impl->copyFrom(mat, 0);
 
     refcount_ = static_cast<int*>(fastMalloc(sizeof(int)));
     *refcount_ = 1;
@@ -1089,10 +1338,6 @@ public:
     using GlBuffer::channels;
     using GlBuffer::elemSize;
     using GlBuffer::elemSize1;
-
-private:
-    Impl(const GlVertexBuffer::Impl&);
-    GlVertexBuffer::Impl& operator =(const GlVertexBuffer::Impl&);
 };
 
 cv::gpu::GlVertexBuffer::GlVertexBuffer() : impl_(0), refcount_(0)
@@ -1118,6 +1363,17 @@ cv::gpu::GlVertexBuffer::GlVertexBuffer(int rows, int cols, int type) : impl_(0)
 cv::gpu::GlVertexBuffer::GlVertexBuffer(const Size& size, int type) : impl_(0), refcount_(0)
 {
     auto_ptr<Impl> impl(new Impl(size.height, size.width, type));
+
+    refcount_ = static_cast<int*>(fastMalloc(sizeof(int)));
+    *refcount_ = 1;
+
+    impl_ = impl.release();
+}
+
+cv::gpu::GlVertexBuffer::GlVertexBuffer(const GpuMat& mat) : impl_(0), refcount_(0)
+{
+    auto_ptr<Impl> impl(new Impl(mat.rows, mat.cols, mat.type()));
+    impl->copyFrom(mat, 0);
 
     refcount_ = static_cast<int*>(fastMalloc(sizeof(int)));
     *refcount_ = 1;
@@ -1293,10 +1549,6 @@ public:
     using GlBuffer::channels;
     using GlBuffer::elemSize;
     using GlBuffer::elemSize1;
-
-private:
-    Impl(const GlColorBuffer::Impl&);
-    GlColorBuffer::Impl& operator =(const GlColorBuffer::Impl&);
 };
 
 cv::gpu::GlColorBuffer::GlColorBuffer() : impl_(0), refcount_(0)
@@ -1322,6 +1574,17 @@ cv::gpu::GlColorBuffer::GlColorBuffer(int rows, int cols, int type) : impl_(0), 
 cv::gpu::GlColorBuffer::GlColorBuffer(const Size& size, int type) : impl_(0), refcount_(0)
 {
     auto_ptr<Impl> impl(new Impl(size.height, size.width, type));
+
+    refcount_ = static_cast<int*>(fastMalloc(sizeof(int)));
+    *refcount_ = 1;
+
+    impl_ = impl.release();
+}
+
+cv::gpu::GlColorBuffer::GlColorBuffer(const GpuMat& mat) : impl_(0), refcount_(0)
+{
+    auto_ptr<Impl> impl(new Impl(mat.rows, mat.cols, mat.type()));
+    impl->copyFrom(mat, 0);
 
     refcount_ = static_cast<int*>(fastMalloc(sizeof(int)));
     *refcount_ = 1;

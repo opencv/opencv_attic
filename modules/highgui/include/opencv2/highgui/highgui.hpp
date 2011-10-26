@@ -139,6 +139,7 @@ typedef void (*MouseCallback )(int event, int x, int y, int flags, void* param);
 CV_EXPORTS void setMouseCallback( const string& windowName, MouseCallback onMouse, void* param=0);
 
 // Vinogradov Vlad : OpenGL support
+
 typedef void (CV_CDECL *GlDrawCallback)(int width, int height, void* userdata);
 CV_EXPORTS void setGlDrawCallback(const string& windowName, GlDrawCallback callback, void* userdata = 0);
 
@@ -147,13 +148,7 @@ CV_EXPORTS void setCloseCallback(const string& windowName, CloseCallback callbac
 
 CV_EXPORTS void setGlContext(const string& windowName);
 
-namespace gl
-{
-CV_EXPORTS void genBuffers(int n, unsigned int* buffers);
-CV_EXPORTS void bufferData(unsigned int target, ptrdiff_t size, const void *data, unsigned int usage);
-CV_EXPORTS void deleteBuffers(int n, const unsigned int *buffers);
-CV_EXPORTS void bindBuffer(unsigned int target, unsigned int buffer);
-}
+CV_EXPORTS void updateWindow(const string& windowName);
 
 enum
 {

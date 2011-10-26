@@ -220,24 +220,9 @@ void cv::setGlContext(const string& windowName)
     cvSetGlContext(windowName.c_str());
 }
 
-void cv::gl::genBuffers(int n, unsigned int* buffers)
+void cv::updateWindow(const string& windowName)
 {
-    cvGlGenBuffers(n, buffers);
-}
-
-void cv::gl::bufferData(unsigned int target, ptrdiff_t size, const void *data, unsigned int usage)
-{
-    cvGlBufferData(target, size, data, usage);
-}
-
-void cv::gl::deleteBuffers(int n, const unsigned int *buffers)
-{
-    cvGlDeleteBuffers(n, buffers);
-}
-
-void cv::gl::bindBuffer(unsigned int target, unsigned int buffer)
-{
-    cvGlBindBuffer(target, buffer);
+    cvUpdateWindow(windowName.c_str());
 }
 
 #if defined (HAVE_QT)
