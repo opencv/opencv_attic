@@ -24,18 +24,21 @@ int main(int argc, char* argv[])
     cvtColor(img0, img0Gray, COLOR_BGR2GRAY);
     cvtColor(img1, img1Gray, COLOR_BGR2GRAY);
 
+    Mat img0Rgb;
+    cvtColor(img0, img0Rgb, COLOR_BGR2RGB);
+
     Mat disp;
 
     static float Q_vals[4 * 4] = 
     {
         1,0,0,0,
         0,1,0,0,
-        0,0,1,0,
+        0,0,5,0,
         0,0,0,1
     };
     Mat Q(4, 4, CV_32F, Q_vals);
 
-    namedWindow("CPU Disparity", WINDOW_NORMAL);
+    //namedWindow("CPU Disparity", WINDOW_NORMAL);
     
     // we must create at least one OpenGL Window to use CUDA code
     namedWindow("GPU Disparity", WINDOW_OPENGL | WINDOW_NORMAL);
@@ -45,13 +48,14 @@ int main(int argc, char* argv[])
     setGlDevice();
 
     GpuMat d_img0(img0);
+    GpuMat d_img0Rgb(img0Rgb);
     GpuMat d_img0Gray(img0Gray);
     GpuMat d_img1Gray(img1Gray);
     GpuMat d_disp;
     GpuMat d_xyzw;
 
-    StereoBM bm(0, 256);
-    StereoBM_GPU d_bm(0, 256);
+    StereoBM bm(0, 128);
+    StereoBM_GPU d_bm(0, 128);
 
     while (true)
     {
@@ -78,17 +82,18 @@ int main(int argc, char* argv[])
         ostringstream gpuReprojectFps;
         gpuReprojectFps << "FPS: " << 1.0 / gpuReprojectTm.getTimeSec();
 
+        // show Mat
         putText(disp, cpuFps.str(), Point(0, 35), FONT_HERSHEY_PLAIN, 2.0, Scalar::all(255));
-
         imshow("CPU Disparity", disp);
+
+        // show GpuMat
         imshow("GPU Disparity", d_disp, gpuFps.str());
 
+        // show point cloud
         Camera camera;
-
-        camera.lookAt(Point3d(0.0, 0.0, 170.0), Point3d(60.0, 60.0, 0.0), Point3d(0.0, -1.0, 0.0));
+        camera.lookAt(Point3d(-50.0, -30.0, 170.0), Point3d(60.0, 60.0, 0.0), Point3d(0.0, -1.0, 0.0));
         camera.setScale(Point3d(0.1, 0.1, 0.1));
-
-        pointCloudShow("GPU Point Cloud", d_xyzw, camera, d_img0);
+        pointCloudShow("GPU Point Cloud", d_xyzw, camera, d_img0Rgb, d_img0, Point2d(0.75, 0.0), Point2d(1.0, 0.25), gpuReprojectFps.str());
 
         if (waitKey(1) >= 0)
             break;

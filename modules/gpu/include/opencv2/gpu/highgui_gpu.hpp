@@ -260,13 +260,107 @@ namespace cv
 
             double zNear_;
             double zFar_;
-        };        
+        };
         
-        CV_EXPORTS void pointCloudShow(const std::string& windowName, const GpuMat& points, const Camera& camera, 
-            const GpuMat& colors = GpuMat());
+        CV_EXPORTS void pointCloudShow(const std::string& windowName, const GpuMat& points, const Camera& camera, const Scalar& color = Scalar::all(255));
 
-        CV_EXPORTS void pointCloudShow(const std::string& windowName, const GlVertexBuffer& points, const Camera& camera, 
-            const GlColorBuffer& colors = GlColorBuffer());
+        CV_EXPORTS void pointCloudShow(const std::string& windowName, const GpuMat& points, const Camera& camera, const GpuMat& colors);
+
+        CV_EXPORTS void pointCloudShow(const std::string& windowName, const GpuMat& points, const Camera& camera, const GlColorBuffer& colors);
+
+        CV_EXPORTS void pointCloudShow(const std::string& windowName, const GlVertexBuffer& points, const Camera& camera, const Scalar& color = Scalar::all(255));
+
+        CV_EXPORTS void pointCloudShow(const std::string& windowName, const GlVertexBuffer& points, const Camera& camera, const GlColorBuffer& colors);
+        
+        CV_EXPORTS void pointCloudShow(const std::string& windowName, const GpuMat& points, const Camera& camera, const Scalar& color, 
+            const std::string& text, const Point2d& textLoc = Point2d(), const Scalar& textColor = Scalar::all(255), int textFont = FONT_9_BY_15);
+
+        CV_EXPORTS void pointCloudShow(const std::string& windowName, const GpuMat& points, const Camera& camera, const GpuMat& colors, 
+            const std::string& text, const Point2d& textLoc = Point2d(), const Scalar& textColor = Scalar::all(255), int textFont = FONT_9_BY_15);
+
+        CV_EXPORTS void pointCloudShow(const std::string& windowName, const GpuMat& points, const Camera& camera, const GlColorBuffer& colors, 
+            const std::string& text, const Point2d& textLoc = Point2d(), const Scalar& textColor = Scalar::all(255), int textFont = FONT_9_BY_15);
+
+        CV_EXPORTS void pointCloudShow(const std::string& windowName, const GlVertexBuffer& points, const Camera& camera, const Scalar& color, 
+            const std::string& text, const Point2d& textLoc = Point2d(), const Scalar& textColor = Scalar::all(255), int textFont = FONT_9_BY_15);
+
+        CV_EXPORTS void pointCloudShow(const std::string& windowName, const GlVertexBuffer& points, const Camera& camera, const GlColorBuffer& colors, 
+            const std::string& text, const Point2d& textLoc = Point2d(), const Scalar& textColor = Scalar::all(255), int textFont = FONT_9_BY_15);
+
+        CV_EXPORTS void pointCloudShow(const std::string& windowName, const GpuMat& points, const Camera& camera, const Scalar& color,
+            const GpuMat& img, const Point2d& topLeft = Point2d(0.75, 0.0), const Point2d& bottonRight = Point2d(1.0, 0.25));
+
+        CV_EXPORTS void pointCloudShow(const std::string& windowName, const GpuMat& points, const Camera& camera, const GpuMat& colors,
+            const GpuMat& img, const Point2d& topLeft = Point2d(0.75, 0.0), const Point2d& bottonRight = Point2d(1.0, 0.25));
+
+        CV_EXPORTS void pointCloudShow(const std::string& windowName, const GpuMat& points, const Camera& camera, const GlColorBuffer& colors,
+            const GpuMat& img, const Point2d& topLeft = Point2d(0.75, 0.0), const Point2d& bottonRight = Point2d(1.0, 0.25));
+
+        CV_EXPORTS void pointCloudShow(const std::string& windowName, const GlVertexBuffer& points, const Camera& camera, const Scalar& color,
+            const GpuMat& img, const Point2d& topLeft = Point2d(0.75, 0.0), const Point2d& bottonRight = Point2d(1.0, 0.25));
+
+        CV_EXPORTS void pointCloudShow(const std::string& windowName, const GlVertexBuffer& points, const Camera& camera, const GlColorBuffer& colors,
+            const GpuMat& img, const Point2d& topLeft = Point2d(0.75, 0.0), const Point2d& bottonRight = Point2d(1.0, 0.25));
+        
+        CV_EXPORTS void pointCloudShow(const std::string& windowName, const GpuMat& points, const Camera& camera, const Scalar& color,
+            const GpuMat& img, const Point2d& topLeft, const Point2d& bottonRight, 
+            const std::string& text, const Point2d& textLoc = Point2d(), const Scalar& textColor = Scalar::all(255), int textFont = FONT_9_BY_15);
+
+        CV_EXPORTS void pointCloudShow(const std::string& windowName, const GpuMat& points, const Camera& camera, const GpuMat& colors,
+            const GpuMat& img, const Point2d& topLeft, const Point2d& bottonRight, 
+            const std::string& text, const Point2d& textLoc = Point2d(), const Scalar& textColor = Scalar::all(255), int textFont = FONT_9_BY_15);
+
+        CV_EXPORTS void pointCloudShow(const std::string& windowName, const GpuMat& points, const Camera& camera, const GlColorBuffer& colors,
+            const GpuMat& img, const Point2d& topLeft, const Point2d& bottonRight, 
+            const std::string& text, const Point2d& textLoc = Point2d(), const Scalar& textColor = Scalar::all(255), int textFont = FONT_9_BY_15);
+
+        CV_EXPORTS void pointCloudShow(const std::string& windowName, const GlVertexBuffer& points, const Camera& camera, const Scalar& color,
+            const GpuMat& img, const Point2d& topLeft, const Point2d& bottonRight, 
+            const std::string& text, const Point2d& textLoc = Point2d(), const Scalar& textColor = Scalar::all(255), int textFont = FONT_9_BY_15);
+
+        CV_EXPORTS void pointCloudShow(const std::string& windowName, const GlVertexBuffer& points, const Camera& camera, const GlColorBuffer& colors,
+            const GpuMat& img, const Point2d& topLeft, const Point2d& bottonRight, 
+            const std::string& text, const Point2d& textLoc = Point2d(), const Scalar& textColor = Scalar::all(255), int textFont = FONT_9_BY_15);
+
+
+
+
+        
+
+        CV_EXPORTS void pointCloudShow(const std::string& windowName, const GpuMat& points, const Camera& camera, const Scalar& color,
+            const GlTexture& img, const Point2d& topLeft = Point2d(0.75, 0.0), const Point2d& bottonRight = Point2d(1.0, 0.25));
+
+        CV_EXPORTS void pointCloudShow(const std::string& windowName, const GpuMat& points, const Camera& camera, const GpuMat& colors,
+            const GlTexture& img, const Point2d& topLeft = Point2d(0.75, 0.0), const Point2d& bottonRight = Point2d(1.0, 0.25));
+
+        CV_EXPORTS void pointCloudShow(const std::string& windowName, const GpuMat& points, const Camera& camera, const GlColorBuffer& colors,
+            const GlTexture& img, const Point2d& topLeft = Point2d(0.75, 0.0), const Point2d& bottonRight = Point2d(1.0, 0.25));
+
+        CV_EXPORTS void pointCloudShow(const std::string& windowName, const GlVertexBuffer& points, const Camera& camera, const Scalar& color,
+            const GlTexture& img, const Point2d& topLeft = Point2d(0.75, 0.0), const Point2d& bottonRight = Point2d(1.0, 0.25));
+
+        CV_EXPORTS void pointCloudShow(const std::string& windowName, const GlVertexBuffer& points, const Camera& camera, const GlColorBuffer& colors,
+            const GlTexture& img, const Point2d& topLeft = Point2d(0.75, 0.0), const Point2d& bottonRight = Point2d(1.0, 0.25));
+        
+        CV_EXPORTS void pointCloudShow(const std::string& windowName, const GpuMat& points, const Camera& camera, const Scalar& color,
+            const GlTexture& img, const Point2d& topLeft, const Point2d& bottonRight, 
+            const std::string& text, const Point2d& textLoc = Point2d(), const Scalar& textColor = Scalar::all(255), int textFont = FONT_9_BY_15);
+
+        CV_EXPORTS void pointCloudShow(const std::string& windowName, const GpuMat& points, const Camera& camera, const GpuMat& colors,
+            const GlTexture& img, const Point2d& topLeft, const Point2d& bottonRight, 
+            const std::string& text, const Point2d& textLoc = Point2d(), const Scalar& textColor = Scalar::all(255), int textFont = FONT_9_BY_15);
+
+        CV_EXPORTS void pointCloudShow(const std::string& windowName, const GpuMat& points, const Camera& camera, const GlColorBuffer& colors,
+            const GlTexture& img, const Point2d& topLeft, const Point2d& bottonRight, 
+            const std::string& text, const Point2d& textLoc = Point2d(), const Scalar& textColor = Scalar::all(255), int textFont = FONT_9_BY_15);
+
+        CV_EXPORTS void pointCloudShow(const std::string& windowName, const GlVertexBuffer& points, const Camera& camera, const Scalar& color,
+            const GlTexture& img, const Point2d& topLeft, const Point2d& bottonRight, 
+            const std::string& text, const Point2d& textLoc = Point2d(), const Scalar& textColor = Scalar::all(255), int textFont = FONT_9_BY_15);
+
+        CV_EXPORTS void pointCloudShow(const std::string& windowName, const GlVertexBuffer& points, const Camera& camera, const GlColorBuffer& colors,
+            const GlTexture& img, const Point2d& topLeft, const Point2d& bottonRight, 
+            const std::string& text, const Point2d& textLoc = Point2d(), const Scalar& textColor = Scalar::all(255), int textFont = FONT_9_BY_15);
     }
 }
 

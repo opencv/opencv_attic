@@ -62,8 +62,37 @@ void cv::gpu::Camera::setScale(const Point3d&) { throw_nogpu(); }
 void cv::gpu::Camera::setProjectionMatrix(const Mat&) { throw_nogpu(); }
 void cv::gpu::Camera::setPerspectiveProjection(double, double, double) { throw_nogpu(); }
 void cv::gpu::Camera::setOrthoProjection(double, double, double, double, double, double) { throw_nogpu(); }
+
+void cv::gpu::pointCloudShow(const string&, const GpuMat&, const Camera&, const Scalar&) { throw_nogpu(); }
 void cv::gpu::pointCloudShow(const string&, const GpuMat&, const Camera&, const GpuMat&) { throw_nogpu(); }
+void cv::gpu::pointCloudShow(const string&, const GpuMat&, const Camera&, const GlColorBuffer&) { throw_nogpu(); }
+void cv::gpu::pointCloudShow(const string&, const GlVertexBuffer&, const Camera&, const Scalar&) { throw_nogpu(); }
 void cv::gpu::pointCloudShow(const string&, const GlVertexBuffer&, const Camera&, const GlColorBuffer&) { throw_nogpu(); }
+void cv::gpu::pointCloudShow(const string&, const GpuMat&, const Camera&, const Scalar&, const string&, const Point2d&, const Scalar&, int) { throw_nogpu(); }
+void cv::gpu::pointCloudShow(const string&, const GpuMat&, const Camera&, const GpuMat&, const string&, const Point2d&, const Scalar&, int) { throw_nogpu(); }
+void cv::gpu::pointCloudShow(const string&, const GpuMat&, const Camera&, const GlColorBuffer&, const string&, const Point2d&, const Scalar&, int) { throw_nogpu(); }
+void cv::gpu::pointCloudShow(const string&, const GlVertexBuffer&, const Camera&, const Scalar&, const string&, const Point2d&, const Scalar&, int) { throw_nogpu(); }
+void cv::gpu::pointCloudShow(const string&, const GlVertexBuffer&, const Camera&, const GlColorBuffer&, const string&, const Point2d&, const Scalar&, int) { throw_nogpu(); }
+void cv::gpu::pointCloudShow(const string&, const GpuMat&, const Camera&, const Scalar&, const GpuMat&, const Point2d&, const Point2d&) { throw_nogpu(); }
+void cv::gpu::pointCloudShow(const string&, const GpuMat&, const Camera&, const GpuMat&, const GpuMat&, const Point2d&, const Point2d&) { throw_nogpu(); }
+void cv::gpu::pointCloudShow(const string&, const GpuMat&, const Camera&, const GlColorBuffer&, const GpuMat&, const Point2d&, const Point2d&) { throw_nogpu(); }
+void cv::gpu::pointCloudShow(const string&, const GlVertexBuffer&, const Camera&, const Scalar&, const GpuMat&, const Point2d&, const Point2d&) { throw_nogpu(); }
+void cv::gpu::pointCloudShow(const string&, const GlVertexBuffer&, const Camera&, const GlColorBuffer&, const GpuMat&, const Point2d&, const Point2d&) { throw_nogpu(); }
+void cv::gpu::pointCloudShow(const string&, const GpuMat&, const Camera&, const Scalar&, const GpuMat&, const Point2d&, const Point2d&, const string&, const Point2d&, const Scalar&, int) { throw_nogpu(); }
+void cv::gpu::pointCloudShow(const string&, const GpuMat&, const Camera&, const GpuMat&, const GpuMat&, const Point2d&, const Point2d&, const string&, const Point2d&, const Scalar&, int) { throw_nogpu(); }
+void cv::gpu::pointCloudShow(const string&, const GpuMat&, const Camera&, const GlColorBuffer&, const GpuMat&, const Point2d&, const Point2d&, const string&, const Point2d&, const Scalar&, int) { throw_nogpu(); }
+void cv::gpu::pointCloudShow(const string&, const GlVertexBuffer&, const Camera&, const Scalar&, const GpuMat&, const Point2d&, const Point2d&, const string&, const Point2d&, const Scalar&, int) { throw_nogpu(); }
+void cv::gpu::pointCloudShow(const string&, const GlVertexBuffer&, const Camera&, const GlColorBuffer&, const GpuMat&, const Point2d&, const Point2d&, const string&, const Point2d&, const Scalar&, int) { throw_nogpu(); }
+void cv::gpu::pointCloudShow(const string&, const GpuMat&, const Camera&, const Scalar&, const GlTexture&, const Point2d&, const Point2d&) { throw_nogpu(); }
+void cv::gpu::pointCloudShow(const string&, const GpuMat&, const Camera&, const GpuMat&, const GlTexture&, const Point2d&, const Point2d&) { throw_nogpu(); }
+void cv::gpu::pointCloudShow(const string&, const GpuMat&, const Camera&, const GlColorBuffer&, const GlTexture&, const Point2d&, const Point2d&) { throw_nogpu(); }
+void cv::gpu::pointCloudShow(const string&, const GlVertexBuffer&, const Camera&, const Scalar&, const GlTexture&, const Point2d&, const Point2d&) { throw_nogpu(); }
+void cv::gpu::pointCloudShow(const string&, const GlVertexBuffer&, const Camera&, const GlColorBuffer&, const GlTexture&, const Point2d&, const Point2d&) { throw_nogpu(); }
+void cv::gpu::pointCloudShow(const string&, const GpuMat&, const Camera&, const Scalar&, const GlTexture&, const Point2d&, const Point2d&, const string&, const Point2d&, const Scalar&, int) { throw_nogpu(); }
+void cv::gpu::pointCloudShow(const string&, const GpuMat&, const Camera&, const GpuMat&, const GlTexture&, const Point2d&, const Point2d&, const string&, const Point2d&, const Scalar&, int) { throw_nogpu(); }
+void cv::gpu::pointCloudShow(const string&, const GpuMat&, const Camera&, const GlColorBuffer&, const GlTexture&, const Point2d&, const Point2d&, const string&, const Point2d&, const Scalar&, int) { throw_nogpu(); }
+void cv::gpu::pointCloudShow(const string&, const GlVertexBuffer&, const Camera&, const Scalar&, const GlTexture&, const Point2d&, const Point2d&, const string&, const Point2d&, const Scalar&, int) { throw_nogpu(); }
+void cv::gpu::pointCloudShow(const string&, const GlVertexBuffer&, const Camera&, const GlColorBuffer&, const GlTexture&, const Point2d&, const Point2d&, const string&, const Point2d&, const Scalar&, int) { throw_nogpu(); }
 
 cv::gpu::GlTexture::GlTexture() { throw_nogpu(); }
 cv::gpu::GlTexture::GlTexture(int, int, int) { throw_nogpu(); }
@@ -244,7 +273,9 @@ namespace
     ///////////////////////////////////////////////////////////////////////
     // Callbacks
 
-    static vector<Renderer*> g_renderers;
+    const int MAX_RENDERERS = 100; // it should be enough ;)
+    Renderer* g_renderers[MAX_RENDERERS];
+    int g_renderersCount = 0;
 
     class FindByWindowName
     {
@@ -274,30 +305,30 @@ namespace
 
         if (renderer)
         {
-            vector<Renderer*>::iterator it = find(g_renderers.begin(), g_renderers.end(), renderer);
+            ptrdiff_t ind = find(g_renderers, g_renderers + g_renderersCount, renderer) - g_renderers;
 
-            if (it != g_renderers.end())
+            if (ind < g_renderersCount)
             {
-                swap(*it, g_renderers.back());
-                g_renderers.pop_back();
+                swap(g_renderers[ind], g_renderers[--g_renderersCount]);
+                delete renderer;
             }
-
-            delete renderer;
         }
     }
 
     template <typename T> T* getRenderer(const string& windowName)
     {
-        vector<Renderer*>::iterator it = find_if(g_renderers.begin(), g_renderers.end(), FindByWindowName(windowName));
+        ptrdiff_t ind = find_if(g_renderers, g_renderers + g_renderersCount, FindByWindowName(windowName)) - g_renderers;
 
-        if (it == g_renderers.end())
+        if (ind >= g_renderersCount)
         {
+            CV_Assert(g_renderersCount < MAX_RENDERERS);
+
             T* r = new T(windowName);
-            g_renderers.push_back(r);
+            g_renderers[g_renderersCount++] = r;
             return r;
         }
 
-        Renderer* r = *it;
+        Renderer* r = g_renderers[ind];
 
         if (T* nr = dynamic_cast<T*>(r))
             return nr;
@@ -305,7 +336,7 @@ namespace
         delete r;
         
         T* nr = new T(windowName);
-        *it = nr;
+        g_renderers[ind] = nr;
 
         return nr;
     }
@@ -397,12 +428,14 @@ namespace
 
     void bitmapString(int fontID, const unsigned char* string);
 
-    template <typename R> class TextRenderer : public Renderer
+    class TextRenderer : public Renderer
     {
     public:
-        explicit TextRenderer(const string& windowName) : Renderer(windowName), originalRenderer_(new R(windowName)) {}
+        explicit TextRenderer(const string& windowName) : Renderer(windowName) 
+        {
+        }
 
-        void setText(const string& text, const Point2f& loc, const Scalar& color, int font)
+        void set(const string& text, const Point2f& loc, const Scalar& color, int font)
         {
             text_ = text;
             loc_ = loc;
@@ -410,20 +443,8 @@ namespace
             font_ = font;
         }
 
-        void setOriginalRenderer(const Ptr<R>& originalRenderer)
+        void render(int, int)
         {
-            originalRenderer_ = originalRenderer;
-        }
-
-        Ptr<R> originalRenderer() const
-        {
-            return originalRenderer_;
-        }
-
-        void render(int width, int height)
-        {
-            originalRenderer_->render(width, height);
-
             glDisable(GL_DEPTH_TEST);
 
             glMatrixMode(GL_PROJECTION);
@@ -447,8 +468,23 @@ namespace
         Point2f loc_;
         Scalar color_;
         int font_;
+    };
 
-        Ptr<R> originalRenderer_;
+    ///////////////////////////////////////////////////////////////////////
+    // PairRenderer
+
+    template <typename R1, typename R2> class PairRenderer : public pair<R1, R2>, public Renderer
+    {
+    public:
+        explicit PairRenderer(const string& windowName) : pair<R1, R2>(make_pair(R1(windowName), R2(windowName))), Renderer(windowName) 
+        {
+        }
+
+        void render(int width, int height)
+        {
+            first.render(width, height);
+            second.render(width, height);
+        }
     };
 }
 
@@ -462,6 +498,7 @@ void cv::gpu::imshow(const string& windowName, const GpuMat& img)
     setGlContext(windowName);
 
     TextureRenderer* renderer = getRenderer<TextureRenderer>(windowName);
+
     renderer->set(img);
 
     setGlDrawCallback(windowName, drawCallback, (Renderer*)renderer);
@@ -480,6 +517,7 @@ void cv::gpu::imshow(const string& windowName, const GlTexture& tex)
     setGlContext(windowName);
 
     TextureRenderer* renderer = getRenderer<TextureRenderer>(windowName);
+
     renderer->set(tex);
 
     setGlDrawCallback(windowName, drawCallback, (Renderer*)renderer);
@@ -497,9 +535,10 @@ void cv::gpu::imshow(const string& windowName, const GpuMat& img, const string& 
 
     setGlContext(windowName);
 
-    TextRenderer<TextureRenderer>* renderer = getRenderer< TextRenderer<TextureRenderer> >(windowName);
-    renderer->setText(text, textLoc, textColor, textFont);
-    renderer->originalRenderer()->set(img);
+    PairRenderer<TextureRenderer, TextRenderer>* renderer = getRenderer< PairRenderer<TextureRenderer, TextRenderer> >(windowName);
+
+    renderer->first.set(img);
+    renderer->second.set(text, textLoc, textColor, textFont);
 
     setGlDrawCallback(windowName, drawCallback, (Renderer*)renderer);
     setCloseCallback(windowName, closeCallback, (Renderer*)renderer);
@@ -516,9 +555,10 @@ void cv::gpu::imshow(const string& windowName, const GlTexture& tex, const strin
 
     setGlContext(windowName);
 
-    TextRenderer<TextureRenderer>* renderer = getRenderer< TextRenderer<TextureRenderer> >(windowName);
-    renderer->setText(text, textLoc, textColor, textFont);
-    renderer->originalRenderer()->set(tex);
+    PairRenderer<TextureRenderer, TextRenderer>* renderer = getRenderer< PairRenderer<TextureRenderer, TextRenderer> >(windowName);
+
+    renderer->first.set(tex);
+    renderer->second.set(text, textLoc, textColor, textFont);
 
     setGlDrawCallback(windowName, drawCallback, (Renderer*)renderer);
     setCloseCallback(windowName, closeCallback, (Renderer*)renderer);
@@ -586,20 +626,30 @@ namespace
         {
         }
 
-        void set(const GlVertexBuffer& vb, const GlColorBuffer& cb)
+        void setPoints(const GlVertexBuffer& vb)
         {
             vb_ = vb;
+        }
+
+        void setPoints(const GpuMat& points)
+        {
+            vb_.copyFrom(points);
+        }
+
+        void setColor(const GlColorBuffer& cb)
+        {
             cb_ = cb;
         }
 
-        void set(const GpuMat& points, const GpuMat& colors)
+        void setColor(const GpuMat& colors)
         {
-            vb_.copyFrom(points);
+            cb_.copyFrom(colors);
+        }
 
-            if (colors.empty())
-                cb_.release();
-            else
-                cb_.copyFrom(colors);
+        void setColor(const Scalar& color)
+        {
+            cb_.release();
+            color_ = color;
         }
 
         void setCamera(const Camera& camera)
@@ -616,7 +666,9 @@ namespace
                 camera_.setProjectionMatrix(static_cast<double>(width) / height);
                 camera_.setModelViewMatrix();
 
-                if (!cb_.empty())
+                if (cb_.empty())
+                    glColor4dv(color_.val);
+                else
                 {
                     CV_Assert(cb_.size().area() == vb_.size().area());
 
@@ -638,6 +690,8 @@ namespace
     private:
         GlVertexBuffer vb_;
         GlColorBuffer cb_;
+
+        Scalar color_;
 
         GlCamera camera_;
     };
@@ -700,6 +754,27 @@ void cv::gpu::Camera::setOrthoProjection(double left, double right, double botto
     zFar_ = zFar;
 }
 
+void cv::gpu::pointCloudShow(const string& windowName, const GpuMat& points, const Camera& camera, const Scalar& color)
+{
+    namedWindow(windowName, WINDOW_OPENGL);
+
+    if (getWindowProperty(windowName, WND_PROP_AUTOSIZE))
+        resizeWindow(windowName, 800, 600);
+
+    setGlContext(windowName);
+
+    PointCloudRenderer* renderer = getRenderer<PointCloudRenderer>(windowName);
+
+    renderer->setPoints(points);
+    renderer->setColor(color);
+    renderer->setCamera(camera);
+
+    setGlDrawCallback(windowName, drawCallback, (Renderer*)renderer);
+    setCloseCallback(windowName, closeCallback, (Renderer*)renderer);
+
+    updateWindow(windowName);
+}
+
 void cv::gpu::pointCloudShow(const string& windowName, const GpuMat& points, const Camera& camera, const GpuMat& colors)
 {
     namedWindow(windowName, WINDOW_OPENGL);
@@ -710,7 +785,51 @@ void cv::gpu::pointCloudShow(const string& windowName, const GpuMat& points, con
     setGlContext(windowName);
 
     PointCloudRenderer* renderer = getRenderer<PointCloudRenderer>(windowName);
-    renderer->set(points, colors);
+
+    renderer->setPoints(points);
+    renderer->setColor(colors);
+    renderer->setCamera(camera);
+
+    setGlDrawCallback(windowName, drawCallback, (Renderer*)renderer);
+    setCloseCallback(windowName, closeCallback, (Renderer*)renderer);
+
+    updateWindow(windowName);
+}
+
+void cv::gpu::pointCloudShow(const string& windowName, const GpuMat& points, const Camera& camera, const GlColorBuffer& colors)
+{
+    namedWindow(windowName, WINDOW_OPENGL);
+
+    if (getWindowProperty(windowName, WND_PROP_AUTOSIZE))
+        resizeWindow(windowName, 800, 600);
+
+    setGlContext(windowName);
+
+    PointCloudRenderer* renderer = getRenderer<PointCloudRenderer>(windowName);
+
+    renderer->setPoints(points);
+    renderer->setColor(colors);
+    renderer->setCamera(camera);
+
+    setGlDrawCallback(windowName, drawCallback, (Renderer*)renderer);
+    setCloseCallback(windowName, closeCallback, (Renderer*)renderer);
+
+    updateWindow(windowName);
+}
+
+void cv::gpu::pointCloudShow(const string& windowName, const GlVertexBuffer& points, const Camera& camera, const Scalar& color)
+{
+    namedWindow(windowName, WINDOW_OPENGL);
+
+    if (getWindowProperty(windowName, WND_PROP_AUTOSIZE))
+        resizeWindow(windowName, 800, 600);
+
+    setGlContext(windowName);
+
+    PointCloudRenderer* renderer = getRenderer<PointCloudRenderer>(windowName);
+
+    renderer->setPoints(points);
+    renderer->setColor(color);
     renderer->setCamera(camera);
 
     setGlDrawCallback(windowName, drawCallback, (Renderer*)renderer);
@@ -729,8 +848,635 @@ void cv::gpu::pointCloudShow(const string& windowName, const GlVertexBuffer& poi
     setGlContext(windowName);
 
     PointCloudRenderer* renderer = getRenderer<PointCloudRenderer>(windowName);
-    renderer->set(points, colors);
+
+    renderer->setPoints(points);
+    renderer->setColor(colors);
     renderer->setCamera(camera);
+
+    setGlDrawCallback(windowName, drawCallback, (Renderer*)renderer);
+    setCloseCallback(windowName, closeCallback, (Renderer*)renderer);
+
+    updateWindow(windowName);
+}
+
+void cv::gpu::pointCloudShow(const string& windowName, const GpuMat& points, const Camera& camera, const Scalar& color,
+                             const string& text, const Point2d& textLoc, const Scalar& textColor, int textFont)
+{
+    namedWindow(windowName, WINDOW_OPENGL);
+
+    if (getWindowProperty(windowName, WND_PROP_AUTOSIZE))
+        resizeWindow(windowName, 800, 600);
+
+    setGlContext(windowName);
+
+    PairRenderer<PointCloudRenderer, TextRenderer>* renderer = getRenderer< PairRenderer<PointCloudRenderer, TextRenderer> >(windowName);
+
+    renderer->first.setPoints(points);
+    renderer->first.setColor(color);
+    renderer->first.setCamera(camera);
+    renderer->second.set(text, textLoc, textColor, textFont);
+
+    setGlDrawCallback(windowName, drawCallback, (Renderer*)renderer);
+    setCloseCallback(windowName, closeCallback, (Renderer*)renderer);
+
+    updateWindow(windowName);
+}
+
+void cv::gpu::pointCloudShow(const string& windowName, const GpuMat& points, const Camera& camera, const GpuMat& colors,
+                             const string& text, const Point2d& textLoc, const Scalar& textColor, int textFont)
+{
+    namedWindow(windowName, WINDOW_OPENGL);
+
+    if (getWindowProperty(windowName, WND_PROP_AUTOSIZE))
+        resizeWindow(windowName, 800, 600);
+
+    setGlContext(windowName);
+
+    PairRenderer<PointCloudRenderer, TextRenderer>* renderer = getRenderer< PairRenderer<PointCloudRenderer, TextRenderer> >(windowName);
+
+    renderer->first.setPoints(points);
+    renderer->first.setColor(colors);
+    renderer->first.setCamera(camera);
+    renderer->second.set(text, textLoc, textColor, textFont);
+
+    setGlDrawCallback(windowName, drawCallback, (Renderer*)renderer);
+    setCloseCallback(windowName, closeCallback, (Renderer*)renderer);
+
+    updateWindow(windowName);
+}
+
+void cv::gpu::pointCloudShow(const string& windowName, const GpuMat& points, const Camera& camera, const GlColorBuffer& colors,
+                             const string& text, const Point2d& textLoc, const Scalar& textColor, int textFont)
+{
+    namedWindow(windowName, WINDOW_OPENGL);
+
+    if (getWindowProperty(windowName, WND_PROP_AUTOSIZE))
+        resizeWindow(windowName, 800, 600);
+
+    setGlContext(windowName);
+
+    PairRenderer<PointCloudRenderer, TextRenderer>* renderer = getRenderer< PairRenderer<PointCloudRenderer, TextRenderer> >(windowName);
+
+    renderer->first.setPoints(points);
+    renderer->first.setColor(colors);
+    renderer->first.setCamera(camera);
+    renderer->second.set(text, textLoc, textColor, textFont);
+
+    setGlDrawCallback(windowName, drawCallback, (Renderer*)renderer);
+    setCloseCallback(windowName, closeCallback, (Renderer*)renderer);
+
+    updateWindow(windowName);
+}
+
+void cv::gpu::pointCloudShow(const string& windowName, const GlVertexBuffer& points, const Camera& camera, const Scalar& color,
+                             const string& text, const Point2d& textLoc, const Scalar& textColor, int textFont)
+{
+    namedWindow(windowName, WINDOW_OPENGL);
+
+    if (getWindowProperty(windowName, WND_PROP_AUTOSIZE))
+        resizeWindow(windowName, 800, 600);
+
+    setGlContext(windowName);
+
+    PairRenderer<PointCloudRenderer, TextRenderer>* renderer = getRenderer< PairRenderer<PointCloudRenderer, TextRenderer> >(windowName);
+
+    renderer->first.setPoints(points);
+    renderer->first.setColor(color);
+    renderer->first.setCamera(camera);
+    renderer->second.set(text, textLoc, textColor, textFont);
+
+    setGlDrawCallback(windowName, drawCallback, (Renderer*)renderer);
+    setCloseCallback(windowName, closeCallback, (Renderer*)renderer);
+
+    updateWindow(windowName);
+}
+
+void cv::gpu::pointCloudShow(const string& windowName, const GlVertexBuffer& points, const Camera& camera, const GlColorBuffer& colors,
+                             const string& text, const Point2d& textLoc, const Scalar& textColor, int textFont)
+{
+    namedWindow(windowName, WINDOW_OPENGL);
+
+    if (getWindowProperty(windowName, WND_PROP_AUTOSIZE))
+        resizeWindow(windowName, 800, 600);
+
+    setGlContext(windowName);
+
+    PairRenderer<PointCloudRenderer, TextRenderer>* renderer = getRenderer< PairRenderer<PointCloudRenderer, TextRenderer> >(windowName);
+
+    renderer->first.setPoints(points);
+    renderer->first.setColor(colors);
+    renderer->first.setCamera(camera);
+    renderer->second.set(text, textLoc, textColor, textFont);
+
+    setGlDrawCallback(windowName, drawCallback, (Renderer*)renderer);
+    setCloseCallback(windowName, closeCallback, (Renderer*)renderer);
+
+    updateWindow(windowName);
+}
+
+void cv::gpu::pointCloudShow(const string& windowName, const GpuMat& points, const Camera& camera, const Scalar& color,
+                             const GpuMat& img, const Point2d& topLeft, const Point2d& bottonRight)
+{
+    namedWindow(windowName, WINDOW_OPENGL);
+
+    if (getWindowProperty(windowName, WND_PROP_AUTOSIZE))
+        resizeWindow(windowName, 800, 600);
+
+    setGlContext(windowName);
+
+    PairRenderer<PointCloudRenderer, TextureRenderer>* renderer = getRenderer< PairRenderer<PointCloudRenderer, TextureRenderer> >(windowName);
+
+    renderer->first.setPoints(points);
+    renderer->first.setColor(color);
+    renderer->first.setCamera(camera);
+    renderer->second.set(img);
+    renderer->second.setPos(topLeft, bottonRight);
+
+    setGlDrawCallback(windowName, drawCallback, (Renderer*)renderer);
+    setCloseCallback(windowName, closeCallback, (Renderer*)renderer);
+
+    updateWindow(windowName);
+}
+
+void cv::gpu::pointCloudShow(const string& windowName, const GpuMat& points, const Camera& camera, const GpuMat& colors,
+                             const GpuMat& img, const Point2d& topLeft, const Point2d& bottonRight)
+{
+    namedWindow(windowName, WINDOW_OPENGL);
+
+    if (getWindowProperty(windowName, WND_PROP_AUTOSIZE))
+        resizeWindow(windowName, 800, 600);
+
+    setGlContext(windowName);
+
+    PairRenderer<PointCloudRenderer, TextureRenderer>* renderer = getRenderer< PairRenderer<PointCloudRenderer, TextureRenderer> >(windowName);
+
+    renderer->first.setPoints(points);
+    renderer->first.setColor(colors);
+    renderer->first.setCamera(camera);
+    renderer->second.set(img);
+    renderer->second.setPos(topLeft, bottonRight);
+
+    setGlDrawCallback(windowName, drawCallback, (Renderer*)renderer);
+    setCloseCallback(windowName, closeCallback, (Renderer*)renderer);
+
+    updateWindow(windowName);
+}
+
+void cv::gpu::pointCloudShow(const string& windowName, const GpuMat& points, const Camera& camera, const GlColorBuffer& colors,
+                             const GpuMat& img, const Point2d& topLeft, const Point2d& bottonRight)
+{
+    namedWindow(windowName, WINDOW_OPENGL);
+
+    if (getWindowProperty(windowName, WND_PROP_AUTOSIZE))
+        resizeWindow(windowName, 800, 600);
+
+    setGlContext(windowName);
+
+    PairRenderer<PointCloudRenderer, TextureRenderer>* renderer = getRenderer< PairRenderer<PointCloudRenderer, TextureRenderer> >(windowName);
+
+    renderer->first.setPoints(points);
+    renderer->first.setColor(colors);
+    renderer->first.setCamera(camera);
+    renderer->second.set(img);
+    renderer->second.setPos(topLeft, bottonRight);
+
+    setGlDrawCallback(windowName, drawCallback, (Renderer*)renderer);
+    setCloseCallback(windowName, closeCallback, (Renderer*)renderer);
+
+    updateWindow(windowName);
+}
+
+void cv::gpu::pointCloudShow(const string& windowName, const GlVertexBuffer& points, const Camera& camera, const Scalar& color,
+                             const GpuMat& img, const Point2d& topLeft, const Point2d& bottonRight)
+{
+    namedWindow(windowName, WINDOW_OPENGL);
+
+    if (getWindowProperty(windowName, WND_PROP_AUTOSIZE))
+        resizeWindow(windowName, 800, 600);
+
+    setGlContext(windowName);
+
+    PairRenderer<PointCloudRenderer, TextureRenderer>* renderer = getRenderer< PairRenderer<PointCloudRenderer, TextureRenderer> >(windowName);
+
+    renderer->first.setPoints(points);
+    renderer->first.setColor(color);
+    renderer->first.setCamera(camera);
+    renderer->second.set(img);
+    renderer->second.setPos(topLeft, bottonRight);
+
+    setGlDrawCallback(windowName, drawCallback, (Renderer*)renderer);
+    setCloseCallback(windowName, closeCallback, (Renderer*)renderer);
+
+    updateWindow(windowName);
+}
+
+void cv::gpu::pointCloudShow(const string& windowName, const GlVertexBuffer& points, const Camera& camera, const GlColorBuffer& colors,
+                             const GpuMat& img, const Point2d& topLeft, const Point2d& bottonRight)
+{
+    namedWindow(windowName, WINDOW_OPENGL);
+
+    if (getWindowProperty(windowName, WND_PROP_AUTOSIZE))
+        resizeWindow(windowName, 800, 600);
+
+    setGlContext(windowName);
+
+    PairRenderer<PointCloudRenderer, TextureRenderer>* renderer = getRenderer< PairRenderer<PointCloudRenderer, TextureRenderer> >(windowName);
+
+    renderer->first.setPoints(points);
+    renderer->first.setColor(colors);
+    renderer->first.setCamera(camera);
+    renderer->second.set(img);
+    renderer->second.setPos(topLeft, bottonRight);
+
+    setGlDrawCallback(windowName, drawCallback, (Renderer*)renderer);
+    setCloseCallback(windowName, closeCallback, (Renderer*)renderer);
+
+    updateWindow(windowName);
+}
+
+void cv::gpu::pointCloudShow(const string& windowName, const GpuMat& points, const Camera& camera, const Scalar& color,
+                             const GpuMat& img, const Point2d& topLeft, const Point2d& bottonRight,
+                             const string& text, const Point2d& textLoc, const Scalar& textColor, int textFont)
+{
+    namedWindow(windowName, WINDOW_OPENGL);
+
+    if (getWindowProperty(windowName, WND_PROP_AUTOSIZE))
+        resizeWindow(windowName, 800, 600);
+
+    setGlContext(windowName);
+
+    PairRenderer<PairRenderer<PointCloudRenderer, TextureRenderer>, TextRenderer>* renderer = 
+        getRenderer< PairRenderer<PairRenderer<PointCloudRenderer, TextureRenderer>, TextRenderer> >(windowName);
+
+    renderer->first.first.setPoints(points);
+    renderer->first.first.setColor(color);
+    renderer->first.first.setCamera(camera);
+    renderer->first.second.set(img);
+    renderer->first.second.setPos(topLeft, bottonRight);
+    renderer->second.set(text, textLoc, textColor, textFont);
+
+    setGlDrawCallback(windowName, drawCallback, (Renderer*)renderer);
+    setCloseCallback(windowName, closeCallback, (Renderer*)renderer);
+
+    updateWindow(windowName);
+}
+
+void cv::gpu::pointCloudShow(const string& windowName, const GpuMat& points, const Camera& camera, const GpuMat& colors,
+                             const GpuMat& img, const Point2d& topLeft, const Point2d& bottonRight,
+                             const string& text, const Point2d& textLoc, const Scalar& textColor, int textFont)
+{
+    namedWindow(windowName, WINDOW_OPENGL);
+
+    if (getWindowProperty(windowName, WND_PROP_AUTOSIZE))
+        resizeWindow(windowName, 800, 600);
+
+    setGlContext(windowName);
+
+    PairRenderer<PairRenderer<PointCloudRenderer, TextureRenderer>, TextRenderer>* renderer = 
+        getRenderer< PairRenderer<PairRenderer<PointCloudRenderer, TextureRenderer>, TextRenderer> >(windowName);
+
+    renderer->first.first.setPoints(points);
+    renderer->first.first.setColor(colors);
+    renderer->first.first.setCamera(camera);
+    renderer->first.second.set(img);
+    renderer->first.second.setPos(topLeft, bottonRight);
+    renderer->second.set(text, textLoc, textColor, textFont);
+
+    setGlDrawCallback(windowName, drawCallback, (Renderer*)renderer);
+    setCloseCallback(windowName, closeCallback, (Renderer*)renderer);
+
+    updateWindow(windowName);
+}
+
+void cv::gpu::pointCloudShow(const string& windowName, const GpuMat& points, const Camera& camera, const GlColorBuffer& colors,
+                             const GpuMat& img, const Point2d& topLeft, const Point2d& bottonRight,
+                             const string& text, const Point2d& textLoc, const Scalar& textColor, int textFont)
+{
+    namedWindow(windowName, WINDOW_OPENGL);
+
+    if (getWindowProperty(windowName, WND_PROP_AUTOSIZE))
+        resizeWindow(windowName, 800, 600);
+
+    setGlContext(windowName);
+
+    PairRenderer<PairRenderer<PointCloudRenderer, TextureRenderer>, TextRenderer>* renderer = 
+        getRenderer< PairRenderer<PairRenderer<PointCloudRenderer, TextureRenderer>, TextRenderer> >(windowName);
+
+    renderer->first.first.setPoints(points);
+    renderer->first.first.setColor(colors);
+    renderer->first.first.setCamera(camera);
+    renderer->first.second.set(img);
+    renderer->first.second.setPos(topLeft, bottonRight);
+    renderer->second.set(text, textLoc, textColor, textFont);
+
+    setGlDrawCallback(windowName, drawCallback, (Renderer*)renderer);
+    setCloseCallback(windowName, closeCallback, (Renderer*)renderer);
+
+    updateWindow(windowName);
+}
+
+void cv::gpu::pointCloudShow(const string& windowName, const GlVertexBuffer& points, const Camera& camera, const Scalar& color,
+                             const GpuMat& img, const Point2d& topLeft, const Point2d& bottonRight,
+                             const string& text, const Point2d& textLoc, const Scalar& textColor, int textFont)
+{
+    namedWindow(windowName, WINDOW_OPENGL);
+
+    if (getWindowProperty(windowName, WND_PROP_AUTOSIZE))
+        resizeWindow(windowName, 800, 600);
+
+    setGlContext(windowName);
+
+    PairRenderer<PairRenderer<PointCloudRenderer, TextureRenderer>, TextRenderer>* renderer = 
+        getRenderer< PairRenderer<PairRenderer<PointCloudRenderer, TextureRenderer>, TextRenderer> >(windowName);
+
+    renderer->first.first.setPoints(points);
+    renderer->first.first.setColor(color);
+    renderer->first.first.setCamera(camera);
+    renderer->first.second.set(img);
+    renderer->first.second.setPos(topLeft, bottonRight);
+    renderer->second.set(text, textLoc, textColor, textFont);
+
+    setGlDrawCallback(windowName, drawCallback, (Renderer*)renderer);
+    setCloseCallback(windowName, closeCallback, (Renderer*)renderer);
+
+    updateWindow(windowName);
+}
+
+void cv::gpu::pointCloudShow(const string& windowName, const GlVertexBuffer& points, const Camera& camera, const GlColorBuffer& colors,
+                             const GpuMat& img, const Point2d& topLeft, const Point2d& bottonRight,
+                             const string& text, const Point2d& textLoc, const Scalar& textColor, int textFont)
+{
+    namedWindow(windowName, WINDOW_OPENGL);
+
+    if (getWindowProperty(windowName, WND_PROP_AUTOSIZE))
+        resizeWindow(windowName, 800, 600);
+
+    setGlContext(windowName);
+
+    PairRenderer<PairRenderer<PointCloudRenderer, TextureRenderer>, TextRenderer>* renderer = 
+        getRenderer< PairRenderer<PairRenderer<PointCloudRenderer, TextureRenderer>, TextRenderer> >(windowName);
+
+    renderer->first.first.setPoints(points);
+    renderer->first.first.setColor(colors);
+    renderer->first.first.setCamera(camera);
+    renderer->first.second.set(img);
+    renderer->first.second.setPos(topLeft, bottonRight);
+    renderer->second.set(text, textLoc, textColor, textFont);
+
+    setGlDrawCallback(windowName, drawCallback, (Renderer*)renderer);
+    setCloseCallback(windowName, closeCallback, (Renderer*)renderer);
+
+    updateWindow(windowName);
+}
+
+void cv::gpu::pointCloudShow(const string& windowName, const GpuMat& points, const Camera& camera, const Scalar& color,
+                             const GlTexture& img, const Point2d& topLeft, const Point2d& bottonRight)
+{
+    namedWindow(windowName, WINDOW_OPENGL);
+
+    if (getWindowProperty(windowName, WND_PROP_AUTOSIZE))
+        resizeWindow(windowName, 800, 600);
+
+    setGlContext(windowName);
+
+    PairRenderer<PointCloudRenderer, TextureRenderer>* renderer = getRenderer< PairRenderer<PointCloudRenderer, TextureRenderer> >(windowName);
+
+    renderer->first.setPoints(points);
+    renderer->first.setColor(color);
+    renderer->first.setCamera(camera);
+    renderer->second.set(img);
+    renderer->second.setPos(topLeft, bottonRight);
+
+    setGlDrawCallback(windowName, drawCallback, (Renderer*)renderer);
+    setCloseCallback(windowName, closeCallback, (Renderer*)renderer);
+
+    updateWindow(windowName);
+}
+
+void cv::gpu::pointCloudShow(const string& windowName, const GpuMat& points, const Camera& camera, const GpuMat& colors,
+                             const GlTexture& img, const Point2d& topLeft, const Point2d& bottonRight)
+{
+    namedWindow(windowName, WINDOW_OPENGL);
+
+    if (getWindowProperty(windowName, WND_PROP_AUTOSIZE))
+        resizeWindow(windowName, 800, 600);
+
+    setGlContext(windowName);
+
+    PairRenderer<PointCloudRenderer, TextureRenderer>* renderer = getRenderer< PairRenderer<PointCloudRenderer, TextureRenderer> >(windowName);
+
+    renderer->first.setPoints(points);
+    renderer->first.setColor(colors);
+    renderer->first.setCamera(camera);
+    renderer->second.set(img);
+    renderer->second.setPos(topLeft, bottonRight);
+
+    setGlDrawCallback(windowName, drawCallback, (Renderer*)renderer);
+    setCloseCallback(windowName, closeCallback, (Renderer*)renderer);
+
+    updateWindow(windowName);
+}
+
+void cv::gpu::pointCloudShow(const string& windowName, const GpuMat& points, const Camera& camera, const GlColorBuffer& colors,
+                             const GlTexture& img, const Point2d& topLeft, const Point2d& bottonRight)
+{
+    namedWindow(windowName, WINDOW_OPENGL);
+
+    if (getWindowProperty(windowName, WND_PROP_AUTOSIZE))
+        resizeWindow(windowName, 800, 600);
+
+    setGlContext(windowName);
+
+    PairRenderer<PointCloudRenderer, TextureRenderer>* renderer = getRenderer< PairRenderer<PointCloudRenderer, TextureRenderer> >(windowName);
+
+    renderer->first.setPoints(points);
+    renderer->first.setColor(colors);
+    renderer->first.setCamera(camera);
+    renderer->second.set(img);
+    renderer->second.setPos(topLeft, bottonRight);
+
+    setGlDrawCallback(windowName, drawCallback, (Renderer*)renderer);
+    setCloseCallback(windowName, closeCallback, (Renderer*)renderer);
+
+    updateWindow(windowName);
+}
+
+void cv::gpu::pointCloudShow(const string& windowName, const GlVertexBuffer& points, const Camera& camera, const Scalar& color,
+                             const GlTexture& img, const Point2d& topLeft, const Point2d& bottonRight)
+{
+    namedWindow(windowName, WINDOW_OPENGL);
+
+    if (getWindowProperty(windowName, WND_PROP_AUTOSIZE))
+        resizeWindow(windowName, 800, 600);
+
+    setGlContext(windowName);
+
+    PairRenderer<PointCloudRenderer, TextureRenderer>* renderer = getRenderer< PairRenderer<PointCloudRenderer, TextureRenderer> >(windowName);
+
+    renderer->first.setPoints(points);
+    renderer->first.setColor(color);
+    renderer->first.setCamera(camera);
+    renderer->second.set(img);
+    renderer->second.setPos(topLeft, bottonRight);
+
+    setGlDrawCallback(windowName, drawCallback, (Renderer*)renderer);
+    setCloseCallback(windowName, closeCallback, (Renderer*)renderer);
+
+    updateWindow(windowName);
+}
+
+void cv::gpu::pointCloudShow(const string& windowName, const GlVertexBuffer& points, const Camera& camera, const GlColorBuffer& colors,
+                             const GlTexture& img, const Point2d& topLeft, const Point2d& bottonRight)
+{
+    namedWindow(windowName, WINDOW_OPENGL);
+
+    if (getWindowProperty(windowName, WND_PROP_AUTOSIZE))
+        resizeWindow(windowName, 800, 600);
+
+    setGlContext(windowName);
+
+    PairRenderer<PointCloudRenderer, TextureRenderer>* renderer = getRenderer< PairRenderer<PointCloudRenderer, TextureRenderer> >(windowName);
+
+    renderer->first.setPoints(points);
+    renderer->first.setColor(colors);
+    renderer->first.setCamera(camera);
+    renderer->second.set(img);
+    renderer->second.setPos(topLeft, bottonRight);
+
+    setGlDrawCallback(windowName, drawCallback, (Renderer*)renderer);
+    setCloseCallback(windowName, closeCallback, (Renderer*)renderer);
+
+    updateWindow(windowName);
+}
+
+void cv::gpu::pointCloudShow(const string& windowName, const GpuMat& points, const Camera& camera, const Scalar& color,
+                             const GlTexture& img, const Point2d& topLeft, const Point2d& bottonRight,
+                             const string& text, const Point2d& textLoc, const Scalar& textColor, int textFont)
+{
+    namedWindow(windowName, WINDOW_OPENGL);
+
+    if (getWindowProperty(windowName, WND_PROP_AUTOSIZE))
+        resizeWindow(windowName, 800, 600);
+
+    setGlContext(windowName);
+
+    PairRenderer<PairRenderer<PointCloudRenderer, TextureRenderer>, TextRenderer>* renderer = 
+        getRenderer< PairRenderer<PairRenderer<PointCloudRenderer, TextureRenderer>, TextRenderer> >(windowName);
+
+    renderer->first.first.setPoints(points);
+    renderer->first.first.setColor(color);
+    renderer->first.first.setCamera(camera);
+    renderer->first.second.set(img);
+    renderer->first.second.setPos(topLeft, bottonRight);
+    renderer->second.set(text, textLoc, textColor, textFont);
+
+    setGlDrawCallback(windowName, drawCallback, (Renderer*)renderer);
+    setCloseCallback(windowName, closeCallback, (Renderer*)renderer);
+
+    updateWindow(windowName);
+}
+
+void cv::gpu::pointCloudShow(const string& windowName, const GpuMat& points, const Camera& camera, const GpuMat& colors,
+                             const GlTexture& img, const Point2d& topLeft, const Point2d& bottonRight,
+                             const string& text, const Point2d& textLoc, const Scalar& textColor, int textFont)
+{
+    namedWindow(windowName, WINDOW_OPENGL);
+
+    if (getWindowProperty(windowName, WND_PROP_AUTOSIZE))
+        resizeWindow(windowName, 800, 600);
+
+    setGlContext(windowName);
+
+    PairRenderer<PairRenderer<PointCloudRenderer, TextureRenderer>, TextRenderer>* renderer = 
+        getRenderer< PairRenderer<PairRenderer<PointCloudRenderer, TextureRenderer>, TextRenderer> >(windowName);
+
+    renderer->first.first.setPoints(points);
+    renderer->first.first.setColor(colors);
+    renderer->first.first.setCamera(camera);
+    renderer->first.second.set(img);
+    renderer->first.second.setPos(topLeft, bottonRight);
+    renderer->second.set(text, textLoc, textColor, textFont);
+
+    setGlDrawCallback(windowName, drawCallback, (Renderer*)renderer);
+    setCloseCallback(windowName, closeCallback, (Renderer*)renderer);
+
+    updateWindow(windowName);
+}
+
+void cv::gpu::pointCloudShow(const string& windowName, const GpuMat& points, const Camera& camera, const GlColorBuffer& colors,
+                             const GlTexture& img, const Point2d& topLeft, const Point2d& bottonRight,
+                             const string& text, const Point2d& textLoc, const Scalar& textColor, int textFont)
+{
+    namedWindow(windowName, WINDOW_OPENGL);
+
+    if (getWindowProperty(windowName, WND_PROP_AUTOSIZE))
+        resizeWindow(windowName, 800, 600);
+
+    setGlContext(windowName);
+
+    PairRenderer<PairRenderer<PointCloudRenderer, TextureRenderer>, TextRenderer>* renderer = 
+        getRenderer< PairRenderer<PairRenderer<PointCloudRenderer, TextureRenderer>, TextRenderer> >(windowName);
+
+    renderer->first.first.setPoints(points);
+    renderer->first.first.setColor(colors);
+    renderer->first.first.setCamera(camera);
+    renderer->first.second.set(img);
+    renderer->first.second.setPos(topLeft, bottonRight);
+    renderer->second.set(text, textLoc, textColor, textFont);
+
+    setGlDrawCallback(windowName, drawCallback, (Renderer*)renderer);
+    setCloseCallback(windowName, closeCallback, (Renderer*)renderer);
+
+    updateWindow(windowName);
+}
+
+void cv::gpu::pointCloudShow(const string& windowName, const GlVertexBuffer& points, const Camera& camera, const Scalar& color,
+                             const GlTexture& img, const Point2d& topLeft, const Point2d& bottonRight,
+                             const string& text, const Point2d& textLoc, const Scalar& textColor, int textFont)
+{
+    namedWindow(windowName, WINDOW_OPENGL);
+
+    if (getWindowProperty(windowName, WND_PROP_AUTOSIZE))
+        resizeWindow(windowName, 800, 600);
+
+    setGlContext(windowName);
+
+    PairRenderer<PairRenderer<PointCloudRenderer, TextureRenderer>, TextRenderer>* renderer = 
+        getRenderer< PairRenderer<PairRenderer<PointCloudRenderer, TextureRenderer>, TextRenderer> >(windowName);
+
+    renderer->first.first.setPoints(points);
+    renderer->first.first.setColor(color);
+    renderer->first.first.setCamera(camera);
+    renderer->first.second.set(img);
+    renderer->first.second.setPos(topLeft, bottonRight);
+    renderer->second.set(text, textLoc, textColor, textFont);
+
+    setGlDrawCallback(windowName, drawCallback, (Renderer*)renderer);
+    setCloseCallback(windowName, closeCallback, (Renderer*)renderer);
+
+    updateWindow(windowName);
+}
+
+void cv::gpu::pointCloudShow(const string& windowName, const GlVertexBuffer& points, const Camera& camera, const GlColorBuffer& colors,
+                             const GlTexture& img, const Point2d& topLeft, const Point2d& bottonRight,
+                             const string& text, const Point2d& textLoc, const Scalar& textColor, int textFont)
+{
+    namedWindow(windowName, WINDOW_OPENGL);
+
+    if (getWindowProperty(windowName, WND_PROP_AUTOSIZE))
+        resizeWindow(windowName, 800, 600);
+
+    setGlContext(windowName);
+
+    PairRenderer<PairRenderer<PointCloudRenderer, TextureRenderer>, TextRenderer>* renderer = 
+        getRenderer< PairRenderer<PairRenderer<PointCloudRenderer, TextureRenderer>, TextRenderer> >(windowName);
+
+    renderer->first.first.setPoints(points);
+    renderer->first.first.setColor(colors);
+    renderer->first.first.setCamera(camera);
+    renderer->first.second.set(img);
+    renderer->first.second.setPos(topLeft, bottonRight);
+    renderer->second.set(text, textLoc, textColor, textFont);
 
     setGlDrawCallback(windowName, drawCallback, (Renderer*)renderer);
     setCloseCallback(windowName, closeCallback, (Renderer*)renderer);

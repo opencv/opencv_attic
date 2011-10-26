@@ -1429,8 +1429,8 @@ static LRESULT CALLBACK HighGUIProc( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
         }
         else if (window->useGl) 
         {
-            DefWindowProc(hwnd, uMsg, wParam, lParam);
             drawGl(window);
+            DefWindowProc(hwnd, uMsg, wParam, lParam);
         }
         else
         {
