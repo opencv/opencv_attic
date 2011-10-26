@@ -47,18 +47,152 @@
 #include <vector>
 #include <utility>
 
-#include "opencv2/core/core.hpp"
-#include "opencv2/highgui/highgui.hpp"
 #include "opencv2/gpu/gpu.hpp"
 
 namespace cv 
 {
     namespace gpu
     {
-        //! set a CUDA device to use OpenGL interoperability
-        CV_EXPORTS void setGLDevice(int device = 0);
+        class CV_EXPORTS GlTexture
+        {
+        public:
+	        GlTexture();
+            GlTexture(int rows, int cols, int type);
+            GlTexture(const Size& size, int type);
 
-        CV_EXPORTS void imshow(const std::string& windowName, const GpuMat& img);
+            GlTexture(const GlTexture& other);
+
+            ~GlTexture();
+
+            GlTexture& operator =(const GlTexture& other);
+
+            void create(int rows, int cols, int type);
+            void create(const Size& size, int type) { create(size.height, size.width, type); }
+            void release();
+
+            void bind() const;
+            void unbind() const;
+
+            void copyFrom(const GpuMat& mat, Stream& stream = Stream::Null());
+
+            GpuMat map(Stream& stream = Stream::Null());
+            void unmap(Stream& stream = Stream::Null());
+
+            int rows() const;
+            int cols() const;
+            Size size() const;
+            bool empty() const;
+
+            int type() const;
+            int depth() const;
+            int channels() const;
+            int elemSize() const;
+            int elemSize1() const;
+
+            void swap(GlTexture& other);
+
+        private:
+            class Impl;
+            Impl* impl_;
+
+            int* refcount_;
+        };
+
+        static inline void swap(GlTexture& a, GlTexture& b) { a.swap(b); }
+
+        class CV_EXPORTS GlVertexBuffer
+        {
+        public:
+	        GlVertexBuffer();
+            GlVertexBuffer(int rows, int cols, int type);
+            GlVertexBuffer(const Size& size, int type);
+
+            GlVertexBuffer(const GlVertexBuffer& other);
+
+            ~GlVertexBuffer();
+
+            GlVertexBuffer& operator =(const GlVertexBuffer& other);
+
+            void create(int rows, int cols, int type);
+            void create(const Size& size, int type) { create(size.height, size.width, type); }
+            void release();
+
+            void bind() const;
+            void unbind() const;
+
+            void copyFrom(const GpuMat& mat, Stream& stream = Stream::Null());
+
+            GpuMat map(Stream& stream = Stream::Null());
+            void unmap(Stream& stream = Stream::Null());
+
+            int rows() const;
+            int cols() const;
+            Size size() const;
+            bool empty() const;
+
+            int type() const;
+            int depth() const;
+            int channels() const;
+            int elemSize() const;
+            int elemSize1() const;
+
+            void swap(GlVertexBuffer& other);
+
+        private:
+            class Impl;
+            Impl* impl_;
+
+            int* refcount_;
+        };
+
+        static inline void swap(GlVertexBuffer& a, GlVertexBuffer& b) { a.swap(b); }
+
+        class CV_EXPORTS GlColorBuffer
+        {
+        public:
+	        GlColorBuffer();
+            GlColorBuffer(int rows, int cols, int type);
+            GlColorBuffer(const Size& size, int type);
+
+            GlColorBuffer(const GlColorBuffer& other);
+
+            ~GlColorBuffer();
+
+            GlColorBuffer& operator =(const GlColorBuffer& other);
+
+            void create(int rows, int cols, int type);
+            void create(const Size& size, int type) { create(size.height, size.width, type); }
+            void release();
+
+            void bind() const;
+            void unbind() const;
+
+            void copyFrom(const GpuMat& mat, Stream& stream = Stream::Null());
+
+            GpuMat map(Stream& stream = Stream::Null());
+            void unmap(Stream& stream = Stream::Null());
+
+            int rows() const;
+            int cols() const;
+            Size size() const;
+            bool empty() const;
+
+            int type() const;
+            int depth() const;
+            int channels() const;
+            int elemSize() const;
+            int elemSize1() const;
+
+            void swap(GlColorBuffer& other);
+
+        private:
+            class Impl;
+            Impl* impl_;
+
+            int* refcount_;
+        };
+
+        static inline void swap(GlColorBuffer& a, GlColorBuffer& b) { a.swap(b); }
 
         enum
         {
@@ -71,201 +205,16 @@ namespace cv
             FONT_HELVETICA_18
         };
 
+        //! set a CUDA device to use OpenGL interoperability
+        CV_EXPORTS void setGlDevice(int device = 0);
+
+        CV_EXPORTS void imshow(const std::string& windowName, const GpuMat& img);
+        CV_EXPORTS void imshow(const std::string& windowName, const GlTexture& tex);
+
         CV_EXPORTS void imshow(const std::string& windowName, const GpuMat& img, const std::string& text,            
-            const Point& textLoc = Point(0, 0), const Scalar& textColor = Scalar::all(255), int textFont = FONT_9_BY_15);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        class CV_EXPORTS GlResource
-        {
-        public:
-            GlResource();
-            GlResource(unsigned int buffer);
-
-            ~GlResource();
-            
-            void registerBuffer(unsigned int buffer);
-            void unregisterBuffer();
-
-            void copyFrom(const GpuMat& mat);
-
-            GpuMat map(int rows, int cols, int type);
-            GpuMat map(const Size& sz, int type) { return map(sz.height, sz.width, type); }
-
-            void unmap();
-
-        private:
-            class Impl;
-            Impl* impl_;
-            int* refcount_;
-        };
-
-        class CV_EXPORTS GlBuffer
-        {
-        public:
-            explicit GlBuffer(unsigned int buf_type) : rows_(0), cols_(0), type_(0), buf_type_(buf_type), buffer_(0) {}
-            GlBuffer(int rows, int cols, int type, unsigned int buf_type) : rows_(0), cols_(0), type_(0), buf_type_(buf_type), buffer_(0) { create(rows, cols, type); }
-            GlBuffer(const Size& size, int type, unsigned int buf_type) : rows_(0), cols_(0), type_(0), buf_type_(buf_type), buffer_(0) { create(size, type); }
-            ~GlBuffer() { release(); }
-
-            void create(int rows, int cols, int type);
-            void create(const Size& size, int type) { create(size.height, size.width, type); }
-            void release();
-
-            void bind() const;
-            void unbind() const;
-
-            void copyFrom(const GpuMat& mat) { create(mat.rows, mat.cols, mat.type()); res_.copyFrom(mat); }
-
-            GpuMat map() { return res_.map(rows_, cols_, type_); }
-            void unmap() { res_.unmap(); }
-
-            int rows() const { return rows_; }
-            int cols() const { return cols_; }
-            Size size() const { return Size(cols_, rows_); }
-            bool empty() const { return rows_ == 0 || cols_ == 0; }
-
-            int type() const { return type_; }
-            int depth() const { return CV_MAT_DEPTH(type_); }
-            int channels() const { return CV_MAT_CN(type_); }
-            int elemSize() const { return CV_ELEM_SIZE(type_); }
-            int elemSize1() const { return CV_ELEM_SIZE1(type_); }
-
-        private:
-            int rows_;
-            int cols_;
-            int type_;
-
-            unsigned int buf_type_;
-            unsigned int buffer_;
-
-            GlResource res_;
-
-            GlBuffer(const GlBuffer&);
-            GlBuffer& operator =(const GlBuffer&);
-        };
-
-        class CV_EXPORTS Texture2D : private GlBuffer
-        {
-        public:
-	        Texture2D();
-            Texture2D(int rows, int cols, int type);
-            Texture2D(const Size& size, int type);
-            ~Texture2D() { release(); }
-
-            void create(int rows, int cols, int type);
-            void create(const Size& size, int type) { create(size.height, size.width, type); }
-            void release();
-
-            void bind() const;
-            void unbind() const;
-
-            void copyFrom(const GpuMat& mat) { create(mat.rows, mat.cols, mat.type()); GlBuffer::copyFrom(mat); }
-
-            using GlBuffer::map;
-            using GlBuffer::unmap;
-            
-            using GlBuffer::rows;
-            using GlBuffer::cols;
-            using GlBuffer::size;
-            using GlBuffer::empty;
-            
-            using GlBuffer::type;
-            using GlBuffer::depth;
-            using GlBuffer::channels;
-            using GlBuffer::elemSize;
-            using GlBuffer::elemSize1;
-
-        private:
-            unsigned int tex_;
-
-            int internalFormat_;
-            int format_;
-
-            Texture2D(const Texture2D&);
-            Texture2D& operator =(const Texture2D&);
-        };
-
-        class CV_EXPORTS VertexBuffer : private GlBuffer
-        {
-        public:
-	        VertexBuffer();
-            VertexBuffer(int rows, int cols, int type);
-            VertexBuffer(const Size& size, int type);
-
-            void create(int rows, int cols, int type);
-            void create(const Size& size, int type) { create(size.height, size.width, type); }
-
-            void bind() const;
-            void unbind() const;
-
-            void copyFrom(const GpuMat& mat) { create(mat.rows, mat.cols, mat.type()); GlBuffer::copyFrom(mat); }
-
-            using GlBuffer::map;
-            using GlBuffer::unmap;
-            
-            using GlBuffer::rows;
-            using GlBuffer::cols;
-            using GlBuffer::size;
-            using GlBuffer::empty;
-            
-            using GlBuffer::type;
-            using GlBuffer::depth;
-            using GlBuffer::channels;
-            using GlBuffer::elemSize;
-            using GlBuffer::elemSize1;
-
-        private:
-            VertexBuffer(const VertexBuffer&);
-            VertexBuffer& operator =(const VertexBuffer&);
-        };
-
-        class CV_EXPORTS ColorBuffer : private GlBuffer
-        {
-        public:
-	        ColorBuffer();
-            ColorBuffer(int rows, int cols, int type);
-            ColorBuffer(const Size& size, int type);
-
-            void create(int rows, int cols, int type);
-            void create(const Size& size, int type) { create(size.height, size.width, type); }
-
-            void bind() const;
-            void unbind() const;
-
-            void copyFrom(const GpuMat& mat) { create(mat.rows, mat.cols, mat.type()); GlBuffer::copyFrom(mat); }
-
-            using GlBuffer::map;
-            using GlBuffer::unmap;
-            
-            using GlBuffer::rows;
-            using GlBuffer::cols;
-            using GlBuffer::size;
-            using GlBuffer::empty;
-            
-            using GlBuffer::type;
-            using GlBuffer::depth;
-            using GlBuffer::channels;
-            using GlBuffer::elemSize;
-            using GlBuffer::elemSize1;
-
-        private:
-            ColorBuffer(const ColorBuffer&);
-            ColorBuffer& operator =(const ColorBuffer&);
-        };
+            const Point2f& textLoc = Point2f(), const Scalar& textColor = Scalar::all(255), int textFont = FONT_9_BY_15);
+        CV_EXPORTS void imshow(const std::string& windowName, const GlTexture& tex, const std::string& text,            
+            const Point2f& textLoc = Point2f(), const Scalar& textColor = Scalar::all(255), int textFont = FONT_9_BY_15);
     }
 }
 

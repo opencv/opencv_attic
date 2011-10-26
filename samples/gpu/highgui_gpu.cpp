@@ -18,7 +18,7 @@ int main(int argc, char* argv[])
     Mat img1 = imread(argv[2]);
 
     // set a CUDA device to use OpenGL interoperability
-    setGLDevice();
+    setGlDevice();
 
     namedWindow("WINDOW_NORMAL", WINDOW_NORMAL);
     namedWindow("WINDOW_AUTOSIZE", WINDOW_AUTOSIZE);

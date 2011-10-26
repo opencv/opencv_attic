@@ -3,7 +3,9 @@ set(name "gpu")
 set(the_target "opencv_${name}")
 project(${the_target})
 
-set(DEPS "opencv_core" "opencv_imgproc" "opencv_objdetect" "opencv_features2d" "opencv_flann" "opencv_calib3d") #"opencv_features2d" "opencv_flann" "opencv_objdetect" - only headers needed 
+#"opencv_features2d" "opencv_flann" "opencv_objdetect" - only headers needed 
+set(DEPS "opencv_core" "opencv_imgproc" "opencv_objdetect" "opencv_features2d" "opencv_flann" "opencv_calib3d" "opencv_highgui") 
+
 set(OPENCV_LINKER_LIBS ${OPENCV_LINKER_LIBS} opencv_gpu)
 
 if(WIN32)

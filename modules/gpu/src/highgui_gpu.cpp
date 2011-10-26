@@ -48,54 +48,91 @@ using namespace std;
 
 #if (!defined WIN32 && !defined _WIN32) || !defined (HAVE_CUDA)
 
-void cv::gpu::setGLDevice(int device) { throw_nogpu(); }
-void cv::gpu::imshow(const string& windowName, const GpuMat& img) { throw_nogpu(); }
-void cv::gpu::imshow(const string&, const GpuMat&, const string&, const Point&, const Scalar&, int) { throw_nogpu(); }
+void cv::gpu::setGlDevice(int) { throw_nogpu(); }
 
-void cv::gpu::GlResource::registerBuffer(unsigned int) { throw_nogpu(); }
-void cv::gpu::GlResource::unregisterBuffer() {  }
-void cv::gpu::GlResource::copyFrom(const GpuMat&) { throw_nogpu(); }
-GpuMat cv::gpu::GlResource::map(int, int, int) { throw_nogpu(); return GpuMat(); }
-void cv::gpu::GlResource::unmap() {  }
+void cv::gpu::imshow(const string&, const GpuMat&) { throw_nogpu(); }
+void cv::gpu::imshow(const std::string&, const GlTexture&) { throw_nogpu(); }
 
-void cv::gpu::GlBuffer::create(int, int, int) { throw_nogpu(); }
-void cv::gpu::GlBuffer::release() {  }
-void cv::gpu::GlBuffer::bind() const  { throw_nogpu(); }
-void cv::gpu::GlBuffer::unbind() const  {  }
+void cv::gpu::imshow(const string&, const GpuMat&, const string&, const Point2f&, const Scalar&, int) { throw_nogpu(); }
+void cv::gpu::imshow(const string&, const GlTexture&, const string&, const Point2f&, const Scalar&, int) { throw_nogpu(); }
 
-cv::gpu::Texture2D::Texture2D() { throw_nogpu(); }
-cv::gpu::Texture2D::Texture2D(int, int, int) { throw_nogpu(); }
-cv::gpu::Texture2D::Texture2D(const Size&, int) { throw_nogpu(); }
-void cv::gpu::Texture2D::create(int, int, int) { throw_nogpu(); }
-void cv::gpu::Texture2D::release() {  }
-void cv::gpu::Texture2D::bind() const { throw_nogpu(); }
-void cv::gpu::Texture2D::unbind() const {  }
+cv::gpu::GlTexture::GlTexture() { throw_nogpu(); }
+cv::gpu::GlTexture::GlTexture(int, int, int) { throw_nogpu(); }
+cv::gpu::GlTexture::GlTexture(const Size&, int) { throw_nogpu(); }
+cv::gpu::GlTexture::GlTexture(const GlTexture&) { throw_nogpu(); }
+cv::gpu::GlTexture::~GlTexture() {  }
+GlTexture& cv::gpu::GlTexture::operator =(const GlTexture&) { throw_nogpu(); return *this; }
+void cv::gpu::GlTexture::create(int, int, int) { throw_nogpu(); }
+void cv::gpu::GlTexture::release() { throw_nogpu(); }
+void cv::gpu::GlTexture::bind() const { throw_nogpu(); }
+void cv::gpu::GlTexture::unbind() const { throw_nogpu(); }
+void cv::gpu::GlTexture::copyFrom(const GpuMat&, Stream&) { throw_nogpu(); }
+GpuMat cv::gpu::GlTexture::map(Stream&) { throw_nogpu(); return GpuMat(); }
+void cv::gpu::GlTexture::unmap(Stream&) { throw_nogpu(); }
+int cv::gpu::GlTexture::rows() const { throw_nogpu(); return 0; }
+int cv::gpu::GlTexture::cols() const { throw_nogpu(); return 0; }
+Size cv::gpu::GlTexture::size() const { throw_nogpu(); return Size(); }
+bool cv::gpu::GlTexture::empty() const { throw_nogpu(); return false; }
+int cv::gpu::GlTexture::type() const { throw_nogpu(); return 0; }
+int cv::gpu::GlTexture::depth() const { throw_nogpu(); return 0; }
+int cv::gpu::GlTexture::channels() const { throw_nogpu(); return 0; }
+int cv::gpu::GlTexture::elemSize() const { throw_nogpu(); return 0; }
+int cv::gpu::GlTexture::elemSize1() const { throw_nogpu(); return 0; }
+void cv::gpu::GlTexture::swap(GlTexture&) { throw_nogpu(); }
 
-cv::gpu::VertexBuffer::VertexBuffer() { throw_nogpu(); }
-cv::gpu::VertexBuffer::VertexBuffer(int, int, int) { throw_nogpu(); }
-cv::gpu::VertexBuffer::VertexBuffer(const Size&, int) { throw_nogpu(); }
-void cv::gpu::VertexBuffer::create(int, int, int) { throw_nogpu(); }
-void cv::gpu::VertexBuffer::bind() const { throw_nogpu(); }
-void cv::gpu::VertexBuffer::unbind() const {  }
+cv::gpu::GlVertexBuffer::GlVertexBuffer() { throw_nogpu(); }
+cv::gpu::GlVertexBuffer::GlVertexBuffer(int, int, int) { throw_nogpu(); }
+cv::gpu::GlVertexBuffer::GlVertexBuffer(const Size&, int) { throw_nogpu(); }
+cv::gpu::GlVertexBuffer::GlVertexBuffer(const GlVertexBuffer&) { throw_nogpu(); }
+cv::gpu::GlVertexBuffer::~GlVertexBuffer() {  }
+GlVertexBuffer& cv::gpu::GlVertexBuffer::operator =(const GlVertexBuffer&) { throw_nogpu(); return *this; }
+void cv::gpu::GlVertexBuffer::create(int, int, int) { throw_nogpu(); }
+void cv::gpu::GlVertexBuffer::release() { throw_nogpu(); }
+void cv::gpu::GlVertexBuffer::bind() const { throw_nogpu(); }
+void cv::gpu::GlVertexBuffer::unbind() const { throw_nogpu(); }
+void cv::gpu::GlVertexBuffer::copyFrom(const GpuMat&, Stream&) { throw_nogpu(); }
+GpuMat cv::gpu::GlVertexBuffer::map(Stream&) { throw_nogpu(); return GpuMat(); }
+void cv::gpu::GlVertexBuffer::unmap(Stream&) { throw_nogpu(); }
+int cv::gpu::GlVertexBuffer::rows() const { throw_nogpu(); return 0; }
+int cv::gpu::GlVertexBuffer::cols() const { throw_nogpu(); return 0; }
+Size cv::gpu::GlVertexBuffer::size() const { throw_nogpu(); return Size(); }
+bool cv::gpu::GlVertexBuffer::empty() const { throw_nogpu(); return false; }
+int cv::gpu::GlVertexBuffer::type() const { throw_nogpu(); return 0; }
+int cv::gpu::GlVertexBuffer::depth() const { throw_nogpu(); return 0; }
+int cv::gpu::GlVertexBuffer::channels() const { throw_nogpu(); return 0; }
+int cv::gpu::GlVertexBuffer::elemSize() const { throw_nogpu(); return 0; }
+int cv::gpu::GlVertexBuffer::elemSize1() const { throw_nogpu(); return 0; }
+void cv::gpu::GlVertexBuffer::swap(GlVertexBuffer&) { throw_nogpu(); }
 
-cv::gpu::ColorBuffer::ColorBuffer() { throw_nogpu(); }
-cv::gpu::ColorBuffer::ColorBuffer(int, int, int) { throw_nogpu(); }
-cv::gpu::ColorBuffer::ColorBuffer(const Size&, int) { throw_nogpu(); }
-void cv::gpu::ColorBuffer::create(int, int, int) { throw_nogpu(); }
-void cv::gpu::ColorBuffer::bind() const { throw_nogpu(); }
-void cv::gpu::ColorBuffer::unbind() const {  }
+cv::gpu::GlColorBuffer::GlColorBuffer() { throw_nogpu(); }
+cv::gpu::GlColorBuffer::GlColorBuffer(int, int, int) { throw_nogpu(); }
+cv::gpu::GlColorBuffer::GlColorBuffer(const Size&, int) { throw_nogpu(); }
+cv::gpu::GlColorBuffer::GlColorBuffer(const GlColorBuffer&) { throw_nogpu(); }
+cv::gpu::GlColorBuffer::~GlColorBuffer() {  }
+GlColorBuffer& cv::gpu::GlColorBuffer::operator =(const GlColorBuffer&) { throw_nogpu(); return *this; }
+void cv::gpu::GlColorBuffer::create(int, int, int) { throw_nogpu(); }
+void cv::gpu::GlColorBuffer::release() { throw_nogpu(); }
+void cv::gpu::GlColorBuffer::bind() const { throw_nogpu(); }
+void cv::gpu::GlColorBuffer::unbind() const { throw_nogpu(); }
+void cv::gpu::GlColorBuffer::copyFrom(const GpuMat&, Stream&) { throw_nogpu(); }
+GpuMat cv::gpu::GlColorBuffer::map(Stream&) { throw_nogpu(); return GpuMat(); }
+void cv::gpu::GlColorBuffer::unmap(Stream&) { throw_nogpu(); }
+int cv::gpu::GlColorBuffer::rows() const { throw_nogpu(); return 0; }
+int cv::gpu::GlColorBuffer::cols() const { throw_nogpu(); return 0; }
+Size cv::gpu::GlColorBuffer::size() const { throw_nogpu(); return Size(); }
+bool cv::gpu::GlColorBuffer::empty() const { throw_nogpu(); return false; }
+int cv::gpu::GlColorBuffer::type() const { throw_nogpu(); return 0; }
+int cv::gpu::GlColorBuffer::depth() const { throw_nogpu(); return 0; }
+int cv::gpu::GlColorBuffer::channels() const { throw_nogpu(); return 0; }
+int cv::gpu::GlColorBuffer::elemSize() const { throw_nogpu(); return 0; }
+int cv::gpu::GlColorBuffer::elemSize1() const { throw_nogpu(); return 0; }
+void cv::gpu::GlColorBuffer::swap(GlColorBuffer&) { throw_nogpu(); }
 
 #else
-
-#if defined(__GNUC__)
-#define checkGlError() __checkGlError(__FILE__, __LINE__, __func__)
-#else
-#define checkGlError() __checkGlError(__FILE__, __LINE__)
-#endif
 
 namespace
 {
-    void __checkGlError(const char *file, const int line, const char *func = "")
+    bool __checkGlError(const char* file, const int line, const char* func = "")
     {
         GLenum err = glGetError();
 
@@ -128,9 +165,18 @@ namespace
             };
 
             cv::gpu::error(msg.c_str(), file, line, func);
+            return false;
         }
+
+        return true;
     }  
 }
+
+#if defined(__GNUC__)
+#define checkGlError() CV_DbgAssert( __checkGlError(__FILE__, __LINE__, __func__) )
+#else
+#define checkGlError() CV_DbgAssert( __checkGlError(__FILE__, __LINE__) )
+#endif
 
 namespace
 {    
@@ -161,7 +207,7 @@ namespace
 //////////////////////////////////////////////////////////////////////////////////////////
 // High Level API
 
-void cv::gpu::setGLDevice(int device)
+void cv::gpu::setGlDevice(int device)
 { 
     cudaSafeCall( cudaGLSetGLDevice(device) ); 
 }
@@ -171,18 +217,34 @@ namespace
     class Renderer
     {
     public:
+        explicit Renderer(const string& windowName) : windowName_(windowName) {}
+
         virtual ~Renderer() {}
 
-        virtual void render() = 0;
+        virtual void render(int width, int height) = 0;
+
+        const string& parentWindow() const { return windowName_; }
+
+    private:
+        string windowName_;
     };
 
     ///////////////////////////////////////////////////////////////////////
-    // ImageRenderer
+    // TextureRenderer
 
-    class ImageRenderer : public Renderer
+    class TextureRenderer : public Renderer
     {
     public:
-        explicit ImageRenderer(const GpuMat& img) : top_left_(0.0f, 0.0f), botton_right_(1.0f, 1.0f) 
+        explicit TextureRenderer(const string& windowName) : Renderer(windowName), top_left_(0.0f, 0.0f), botton_right_(1.0f, 1.0f) 
+        {
+        }
+
+        void set(const GlTexture& tex)
+        {
+            tex_ = tex;
+        }
+
+        void set(const GpuMat& img)
         {
             if (!img.empty())
             {
@@ -192,14 +254,14 @@ namespace
                     mat = img;
                 else
                 {
-                    resize(img, mat, Size((img.cols / 16) * 16, img.rows));
+                    copyMakeBorder(img, mat, 0, 0, 0, 16 - img.cols % 16, BORDER_REPLICATE);
                 }
 
                 tex_.copyFrom(mat);
             }
         }
 
-        void render()
+        void render(int, int)
         {
             if (!tex_.empty())
             {
@@ -235,10 +297,10 @@ namespace
         }
 
     private:
+        GlTexture tex_;
+
         Point2f top_left_;
         Point2f botton_right_;
-
-        Texture2D tex_;
     };
 
     ///////////////////////////////////////////////////////////////////////
@@ -246,16 +308,33 @@ namespace
 
     void bitmapString(int fontID, const unsigned char* string);
 
-    class TextRenderer : public Renderer
+    template <typename R> class TextRenderer : public Renderer
     {
     public:
-        TextRenderer(const string& text, const Point2f& loc, const Scalar& color, int font) : 
-            text_(text), loc_(loc), color_(color), font_(font)
+        explicit TextRenderer(const string& windowName) : Renderer(windowName), originalRenderer_(new R(windowName)) {}
+
+        void setText(const string& text, const Point2f& loc, const Scalar& color, int font)
         {
+            text_ = text;
+            loc_ = loc;
+            color_ = color;
+            font_ = font;
         }
 
-        void render()
+        void setOriginalRenderer(const Ptr<R>& originalRenderer)
         {
+            originalRenderer_ = originalRenderer;
+        }
+
+        Ptr<R> originalRenderer() const
+        {
+            return originalRenderer_;
+        }
+
+        void render(int width, int height)
+        {
+            originalRenderer_->render(width, height);
+
             glDisable(GL_DEPTH_TEST);
 
             glMatrixMode(GL_PROJECTION);
@@ -277,43 +356,35 @@ namespace
         Point2f loc_;
         Scalar color_;
         int font_;
-    };
 
-    ///////////////////////////////////////////////////////////////////////
-    // MultiRenderer 
-
-    class MultiRenderer : public Renderer
-    {
-    public:
-        MultiRenderer()
-        {
-            renderers_.reserve(2);
-        }
-
-        void add(const Ptr<Renderer>& renderer)
-        {
-            renderers_.push_back(renderer);
-        }
-
-        void render()
-        {
-            for (size_t i = 0, size = renderers_.size(); i < size; ++i)
-                renderers_[i]->render();
-        }
-
-    private:
-        vector< Ptr<Renderer> > renderers_;
+        Ptr<R> originalRenderer_;
     };
 
     ///////////////////////////////////////////////////////////////////////
     // Callbacks
 
+    static vector<Renderer*> g_renderers;
+
+    class FindByWindowName
+    {
+    public:
+        explicit FindByWindowName(const string& windowName) : windowName_(windowName) {}
+
+        bool operator ()(Renderer* r)
+        {
+            return r->parentWindow() == windowName_;
+        }
+
+    private:
+        string windowName_;
+    };
+    
     void CV_CDECL drawCallback(int width, int height, void* userdata)
     {
         Renderer* renderer = (Renderer*)userdata;
 
         if (renderer)
-            renderer->render();
+            renderer->render(width, height);
     }
 
     void CV_CDECL closeCallback(void* userdata)
@@ -321,7 +392,41 @@ namespace
         Renderer* renderer = (Renderer*)userdata;
 
         if (renderer)
+        {
+            vector<Renderer*>::iterator it = find(g_renderers.begin(), g_renderers.end(), renderer);
+
+            if (it != g_renderers.end())
+            {
+                swap(*it, g_renderers.back());
+                g_renderers.pop_back();
+            }
+
             delete renderer;
+        }
+    }
+
+    template <typename T> T* getRenderer(const string& windowName)
+    {
+        vector<Renderer*>::iterator it = find_if(g_renderers.begin(), g_renderers.end(), FindByWindowName(windowName));
+
+        if (it == g_renderers.end())
+        {
+            T* r = new T(windowName);
+            g_renderers.push_back(r);
+            return r;
+        }
+
+        Renderer* r = *it;
+
+        if (T* nr = dynamic_cast<T*>(r))
+            return nr;
+
+        delete r;
+        
+        T* nr = new T(windowName);
+        *it = nr;
+
+        return nr;
     }
 }
 
@@ -333,14 +438,31 @@ void cv::gpu::imshow(const string& windowName, const GpuMat& img)
         resizeWindow(windowName, img.cols, img.rows);
 
     setGLContext(windowName);
-    Renderer* renderer = new ImageRenderer(img);
 
-    setGLDrawCallback(windowName, drawCallback, renderer);
-    setCloseCallback(windowName, closeCallback, renderer);
+    TextureRenderer* renderer = getRenderer<TextureRenderer>(windowName);
+    renderer->set(img);
+
+    setGLDrawCallback(windowName, drawCallback, (Renderer*)renderer);
+    setCloseCallback(windowName, closeCallback, (Renderer*)renderer);
 }
 
+void cv::gpu::imshow(const string& windowName, const GlTexture& tex) 
+{
+    namedWindow(windowName, WINDOW_OPENGL);
 
-void cv::gpu::imshow(const string& windowName, const GpuMat& img, const string& text, const Point& textLoc, const Scalar& textColor, int textFont)
+    if (getWindowProperty(windowName, WND_PROP_AUTOSIZE))
+        resizeWindow(windowName, tex.cols(), tex.rows());
+
+    setGLContext(windowName);
+
+    TextureRenderer* renderer = getRenderer<TextureRenderer>(windowName);
+    renderer->set(tex);
+
+    setGLDrawCallback(windowName, drawCallback, (Renderer*)renderer);
+    setCloseCallback(windowName, closeCallback, (Renderer*)renderer);
+}
+
+void cv::gpu::imshow(const string& windowName, const GpuMat& img, const string& text, const Point2f& textLoc, const Scalar& textColor, int textFont)
 {
     namedWindow(windowName, WINDOW_OPENGL);
 
@@ -349,336 +471,977 @@ void cv::gpu::imshow(const string& windowName, const GpuMat& img, const string& 
 
     setGLContext(windowName);
 
-    Ptr<Renderer> imageRenderer(new ImageRenderer(img));
-    Ptr<Renderer> textRenderer(new TextRenderer(text, Point2f((float)textLoc.x / img.cols, (float)textLoc.y / img.rows), textColor, textFont));
+    TextRenderer<TextureRenderer>* renderer = getRenderer< TextRenderer<TextureRenderer> >(windowName);
+    renderer->setText(text, textLoc, textColor, textFont);
+    renderer->originalRenderer()->set(img);
 
-    auto_ptr<MultiRenderer> multyRenderer(new MultiRenderer);
-    multyRenderer->add(imageRenderer);
-    multyRenderer->add(textRenderer);
+    setGLDrawCallback(windowName, drawCallback, (Renderer*)renderer);
+    setCloseCallback(windowName, closeCallback, (Renderer*)renderer);
+}
 
-    Renderer* renderer = multyRenderer.release();
+void cv::gpu::imshow(const string& windowName, const GlTexture& tex, const string& text, const Point2f& textLoc, const Scalar& textColor, int textFont)
+{
+    namedWindow(windowName, WINDOW_OPENGL);
 
-    setGLDrawCallback(windowName, drawCallback, renderer);
-    setCloseCallback(windowName, closeCallback, renderer);
+    if (getWindowProperty(windowName, WND_PROP_AUTOSIZE))
+        resizeWindow(windowName, tex.cols(), tex.rows());
+
+    setGLContext(windowName);
+
+    TextRenderer<TextureRenderer>* renderer = getRenderer< TextRenderer<TextureRenderer> >(windowName);
+    renderer->setText(text, textLoc, textColor, textFont);
+    renderer->originalRenderer()->set(tex);
+
+    setGLDrawCallback(windowName, drawCallback, (Renderer*)renderer);
+    setCloseCallback(windowName, closeCallback, (Renderer*)renderer);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // GlResource
 
-class GlResource::Impl
+namespace
 {
-public:
-    Impl() : resource_(0) {}
-    Impl(unsigned int buffer) : resource_(0) { registerBuffer(buffer); }
-
-    ~Impl() { unregisterBuffer(); }
-    
-    void registerBuffer(unsigned int buffer)
+    class GlResource
     {
-        unregisterBuffer();
-        cudaSafeCall( cudaGraphicsGLRegisterBuffer(&resource_, buffer, cudaGraphicsMapFlagsWriteDiscard) );
-    }
-
-    void unregisterBuffer()
-    {
-        if (resource_)
+        class MapResources
         {
-            cudaGraphicsUnregisterResource(resource_);
-            resource_ = 0;
-        }   
-    }
+        public:
+            MapResources(cudaGraphicsResource_t* resource, cudaStream_t stream) : resource_(resource), stream_(stream)
+            {
+                cudaSafeCall( cudaGraphicsMapResources(1, resource_, stream_) );
+            }
 
-    void copyFrom(const GpuMat& mat)
-    {
-        cudaSafeCall( cudaGraphicsMapResources(1, &resource_, 0) );
+            ~MapResources()
+            {
+                if (resource_)
+                    cudaGraphicsUnmapResources(1, resource_, stream_);
+            }
 
-        void* dst_ptr;
-        size_t num_bytes;
-        cudaSafeCall( cudaGraphicsResourceGetMappedPointer(&dst_ptr, &num_bytes, resource_) );
-        
-        const unsigned char* src_ptr = mat.ptr<unsigned char>();
-        size_t widthBytes = mat.cols * mat.elemSize();
+            void release()
+            {
+                resource_ = 0;
+            }
 
-        CV_Assert( widthBytes * mat.rows <= num_bytes );
+        private:
+            cudaGraphicsResource_t* resource_;
+            cudaStream_t stream_;
+        };
 
-        cudaSafeCall( cudaMemcpy2D(dst_ptr, widthBytes, src_ptr, mat.step, widthBytes, mat.rows, cudaMemcpyDeviceToDevice) );
+    public:
+        GlResource() : resource_(0) 
+        {
+        }
 
-        unmap();
-    }
+        ~GlResource() 
+        { 
+            if (resource_)
+            {
+                cudaGraphicsUnregisterResource(resource_);
+                resource_ = 0;
+            } 
+        }
 
-    GpuMat map(int rows, int cols, int type)
-    {
-        cudaSafeCall( cudaGraphicsMapResources(1, &resource_, 0) );
+        void registerBuffer(unsigned int buffer)
+        {
+            cudaGraphicsResource_t resource;
+            cudaSafeCall( cudaGraphicsGLRegisterBuffer(&resource, buffer, cudaGraphicsMapFlagsNone) );
 
-        void* ptr;
-        size_t num_bytes;
-        cudaSafeCall( cudaGraphicsResourceGetMappedPointer(&ptr, &num_bytes, resource_) );
+            resource_ = resource;
+        }
 
-        CV_Assert( (size_t)cols * CV_ELEM_SIZE(type) * rows <= num_bytes );
+        void copyFrom(const GpuMat& mat, cudaStream_t stream)
+        {
+            MapResources mapHandler(&resource_, stream);
 
-        return GpuMat(rows, cols, type, ptr);
-    }
+            void* dst_ptr;
+            size_t num_bytes;
+            cudaSafeCall( cudaGraphicsResourceGetMappedPointer(&dst_ptr, &num_bytes, resource_) );
+            
+            const void* src_ptr = mat.ptr();
+            size_t widthBytes = mat.cols * mat.elemSize();
 
-    void unmap()
-    {
-        cudaGraphicsUnmapResources(1, (cudaGraphicsResource**)&resource_, 0);
-    }
+            CV_Assert(widthBytes * mat.rows <= num_bytes);
 
-private:
-    cudaGraphicsResource* resource_; 
+            if (stream == 0)
+                cudaSafeCall( cudaMemcpy2D(dst_ptr, widthBytes, src_ptr, mat.step, widthBytes, mat.rows, cudaMemcpyDeviceToDevice) );
+            else
+                cudaSafeCall( cudaMemcpy2DAsync(dst_ptr, widthBytes, src_ptr, mat.step, widthBytes, mat.rows, cudaMemcpyDeviceToDevice, stream) );
+        }
 
-    Impl(const Impl&);
-    Impl& operator =(const Impl&);
-};
+        GpuMat map(int rows, int cols, int type, cudaStream_t stream)
+        {
+            MapResources mapHandler(&resource_, stream);
 
-cv::gpu::GlResource();
-GlResource(unsigned int buffer);
+            void* ptr;
+            size_t num_bytes;
+            cudaSafeCall( cudaGraphicsResourceGetMappedPointer(&ptr, &num_bytes, resource_) );
 
-~GlResource();
+            CV_Assert( static_cast<size_t>(cols) * CV_ELEM_SIZE(type) * rows <= num_bytes );
 
-void registerBuffer(unsigned int buffer);
-void unregisterBuffer();
+            mapHandler.release();
 
-void copyFrom(const GpuMat& mat);
+            return GpuMat(rows, cols, type, ptr);
+        }
 
-GpuMat map(int rows, int cols, int type);
-GpuMat map(const Size& sz, int type) { return map(sz.height, sz.width, type); }
+        void unmap(cudaStream_t stream)
+        {
+            cudaGraphicsUnmapResources(1, &resource_, stream);
+        }
 
-void unmap();
+    private:
+        cudaGraphicsResource_t resource_; 
+
+        GlResource(const GlResource&);
+        GlResource& operator =(const GlResource&);
+    };
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // GlBuffer
 
-void cv::gpu::GlBuffer::create(int rows, int cols, int type)
+namespace
 {
-    int depth = CV_MAT_DEPTH(type);
-    int cn = CV_MAT_CN(type);
-
-    CV_Assert(rows > 0 && cols > 0);
-    CV_Assert(depth >= 0 && depth <= CV_64F);
-
-    if (rows != rows_ || cols != cols_ || type != type_)
+    class GlBuffer
     {
-        release();
+        class GenBuffers
+        {
+        public:
+            GenBuffers()
+            {
+                gl::genBuffers(1, &buffer_);
+                checkGlError();
+            }
 
-        gl::genBuffers(1, &buffer_);
-        checkGlError();
+            ~GenBuffers()
+            {
+                if (buffer_)
+                {
+                    gl::deleteBuffers(1, &buffer_);
+                    buffer_ = 0;
+                }
+            }
 
-        rows_ = rows;
-        cols_ = cols;
-        type_ = type;
-        size_t size = rows_ * cols_ *  sizes[depth] * cn;    
+            unsigned int get() const
+            {
+                return buffer_;
+            }
 
-	    bind();
+            unsigned int release()
+            {
+                unsigned int res = buffer_;
+                buffer_ = 0;
+                return res;
+            }
 
-        gl::bufferData(buf_type_, size, 0, GL_DYNAMIC_DRAW);
-        checkGlError();
+        private:
+            unsigned int buffer_;
+        };
 
-        res_.registerBuffer(buffer_);
+        class Unbind
+        {
+        public:
+            explicit Unbind(unsigned int buf_type) : buf_type_(buf_type), undind_(true) 
+            { 
+            }
 
-        unbind();
-    }
-}
+            ~Unbind()
+            {
+                if (undind_)
+                    gl::bindBuffer(buf_type_, 0);
+            }
 
-void cv::gpu::GlBuffer::release()
-{
-    if (buffer_)
-    {
-        res_.unregisterBuffer();
+            void release()
+            {
+                undind_ = false;
+            }
 
-        gl::deleteBuffers(1, &buffer_);
-        buffer_ = 0;
-    }
-}
+        private:
+            unsigned int buf_type_;
+            bool undind_;
+        };
 
-void cv::gpu::GlBuffer::bind() const 
-{ 
-    gl::bindBuffer(buf_type_, buffer_); 
-    checkGlError();
-}
+    public:
+        explicit GlBuffer(unsigned int buf_type) : rows_(0), cols_(0), type_(0), buf_type_(buf_type), buffer_(0) 
+        {
+        }
 
-void cv::gpu::GlBuffer::unbind() const 
-{ 
-    gl::bindBuffer(buf_type_, 0);
+        GlBuffer(int rows, int cols, int type, unsigned int buf_type) : rows_(0), cols_(0), type_(0), buf_type_(buf_type), buffer_(0) 
+        { 
+            int depth = CV_MAT_DEPTH(type);
+            int cn = CV_MAT_CN(type);
+
+            CV_Assert(rows > 0 && cols > 0);
+            CV_Assert(depth >= 0 && depth <= CV_64F);
+
+            GenBuffers buffer;
+            
+            size_t size = rows * cols * sizes[depth] * cn;            
+
+            gl::bindBuffer(buf_type_, buffer.get());
+            checkGlError();
+
+            gl::bufferData(buf_type_, size, 0, GL_DYNAMIC_DRAW);
+            checkGlError();
+
+            gl::bindBuffer(buf_type_, 0);
+
+            res_.registerBuffer(buffer.get());
+
+            rows_ = rows;
+            cols_ = cols;
+            type_ = type;
+            buffer_ = buffer.release();
+        }
+
+        ~GlBuffer() 
+        { 
+            if (buffer_)
+            {
+                gl::deleteBuffers(1, &buffer_);
+                buffer_ = 0;
+            }
+        }
+
+        void bind() const 
+        {
+            CV_Assert(buffer_ != 0);
+
+            Unbind bindHadler(buf_type_);
+
+            gl::bindBuffer(buf_type_, buffer_); 
+            checkGlError();
+
+            bindHadler.release();
+        }
+
+        void unbind() const
+        { 
+            gl::bindBuffer(buf_type_, 0);
+        }
+
+        void copyFrom(const GpuMat& mat, cudaStream_t stream) 
+        {
+            CV_Assert(buffer_ != 0);
+
+            CV_DbgAssert(rows_ == mat.rows && cols_ == mat.cols && type_ == mat.type());
+
+            res_.copyFrom(mat, stream); 
+        }
+
+        GpuMat map(cudaStream_t stream) 
+        { 
+            CV_Assert(buffer_ != 0);
+
+            return res_.map(rows_, cols_, type_, stream); 
+        }
+
+        void unmap(cudaStream_t stream) 
+        { 
+            res_.unmap(stream); 
+        }
+
+        int rows() const { return rows_; }
+        int cols() const { return cols_; }
+        Size size() const { return Size(cols_, rows_); }
+        bool empty() const { return rows_ == 0 || cols_ == 0; }
+
+        int type() const { return type_; }
+        int depth() const { return CV_MAT_DEPTH(type_); }
+        int channels() const { return CV_MAT_CN(type_); }
+        int elemSize() const { return CV_ELEM_SIZE(type_); }
+        int elemSize1() const { return CV_ELEM_SIZE1(type_); }
+
+    private:
+        int rows_;
+        int cols_;
+        int type_;
+
+        unsigned int buf_type_;
+        unsigned int buffer_;
+
+        GlResource res_;
+
+        GlBuffer(const GlBuffer&);
+        GlBuffer& operator =(const GlBuffer&);
+    };
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
-// Texture2D
+// GlTexture
 
-cv::gpu::Texture2D::Texture2D() : GlBuffer(GL_PIXEL_UNPACK_BUFFER), tex_(0), internalFormat_(0), format_(0) 
+class cv::gpu::GlTexture::Impl : private GlBuffer
 {
-}
-
-cv::gpu::Texture2D::Texture2D(int rows, int cols, int type) : GlBuffer(GL_PIXEL_UNPACK_BUFFER), tex_(0), internalFormat_(0), format_(0) 
-{ 
-    create(rows, cols, type); 
-}
-
-cv::gpu::Texture2D::Texture2D(const Size& size, int type) : GlBuffer(GL_PIXEL_UNPACK_BUFFER), tex_(0), internalFormat_(0), format_(0)
-{
-    create(size, type); 
-}
-
-void cv::gpu::Texture2D::create(int rows, int cols, int type)
-{
-    int depth = CV_MAT_DEPTH(type);
-    int cn = CV_MAT_CN(type);
-
-    CV_Assert(rows > 0 && cols > 0);
-    CV_Assert(cn == 1 || cn == 3 || cn == 4);
-    CV_Assert(depth >= 0 && depth <= CV_32F);
-
-    if (rows != GlBuffer::rows() || cols != GlBuffer::cols() || type != GlBuffer::type())
+    class BindTexture
     {
-        release();
+    public:
+        BindTexture(const GlBuffer* buf, unsigned int tex, unsigned int internalFormat, unsigned int format, int cols, int rows, int depth) : 
+          buf_(buf), undind_(true)
+        {
+            glEnable(GL_TEXTURE_2D);
+            checkGlError();
 
-        GlBuffer::create(rows, cols, type);
-        
+            buf_->bind();
+
+            glBindTexture(GL_TEXTURE_2D, tex);
+            checkGlError();
+
+            glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, cols, rows, 0, format, gl_types[depth], 0);
+            checkGlError();
+        }
+
+        ~BindTexture()
+        {
+            buf_->unbind();
+
+            if (undind_)
+            {
+                glBindTexture(GL_TEXTURE_2D, 0);
+                glDisable(GL_TEXTURE_2D);
+            }
+        }
+
+        void release()
+        {
+            undind_ = false;
+        }
+
+    private:
+        const GlBuffer* buf_;
+        bool undind_;
+    };
+
+public:
+    Impl() : GlBuffer(GL_PIXEL_UNPACK_BUFFER), tex_(0), internalFormat_(0), format_(0) 
+    {
+    }
+
+    Impl(int rows, int cols, int type) : GlBuffer(rows, cols, type, GL_PIXEL_UNPACK_BUFFER), tex_(0), internalFormat_(0), format_(0) 
+    { 
+        int depth = CV_MAT_DEPTH(type);
+        int cn = CV_MAT_CN(type);
+
+        CV_Assert(rows > 0 && cols > 0 && cols % 16 == 0);
+        CV_Assert(cn == 1 || cn == 3 || cn == 4);
+        CV_Assert(depth >= 0 && depth <= CV_32F);
+
         glGenTextures(1, &tex_);
         checkGlError();
 
         internalFormat_ = cn == 1 ? GL_LUMINANCE : cn == 3 ? GL_RGB : GL_RGBA;
         format_ = cn == 1 ? GL_LUMINANCE : cn == 3 ? GL_BGR : GL_BGRA;
     }
-}
 
-void cv::gpu::Texture2D::release() 
-{ 
-    if (tex_)
-    {
-        glDeleteTextures(1, &tex_);
-        tex_ = 0;
+    ~Impl() 
+    { 
+        if (tex_)
+        {
+            glDeleteTextures(1, &tex_);
+            tex_ = 0;
+        }
     }
 
-    GlBuffer::release();
+    void bind() const
+    {
+        CV_Assert(tex_ != 0);
+
+        BindTexture texBind(this, tex_, internalFormat_, format_, cols(), rows(), depth());
+
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        checkGlError();
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        checkGlError();
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        checkGlError();
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        checkGlError();
+
+        texBind.release();
+    }
+
+    void unbind() const
+    {
+        glBindTexture(GL_TEXTURE_2D, 0);
+
+        glDisable(GL_TEXTURE_2D);
+    }
+
+    using GlBuffer::copyFrom;
+
+    using GlBuffer::map;
+    using GlBuffer::unmap;
+
+    using GlBuffer::rows;
+    using GlBuffer::cols;
+    using GlBuffer::size;
+    using GlBuffer::empty;
+
+    using GlBuffer::type;
+    using GlBuffer::depth;
+    using GlBuffer::channels;
+    using GlBuffer::elemSize;
+    using GlBuffer::elemSize1;
+
+private:
+    unsigned int tex_;
+
+    int internalFormat_;
+    int format_;
+
+    Impl(const GlTexture::Impl&);
+    GlTexture::Impl& operator =(const GlTexture::Impl&);
+};
+
+cv::gpu::GlTexture::GlTexture() : impl_(0), refcount_(0)
+{
+    auto_ptr<Impl> impl(new Impl);
+
+    refcount_ = static_cast<int*>(fastMalloc(sizeof(int)));
+    *refcount_ = 1;
+
+    impl_ = impl.release();
 }
 
-void cv::gpu::Texture2D::bind() const
+cv::gpu::GlTexture::GlTexture(int rows, int cols, int type) : impl_(0), refcount_(0)
 {
-    glEnable(GL_TEXTURE_2D);
-    checkGlError();
+    auto_ptr<Impl> impl(new Impl(rows, cols, type));
 
-    GlBuffer::bind();
+    refcount_ = static_cast<int*>(fastMalloc(sizeof(int)));
+    *refcount_ = 1;
 
-    glBindTexture(GL_TEXTURE_2D, tex_);
-    checkGlError();
-
-    glTexImage2D(GL_TEXTURE_2D, 0, internalFormat_, cols(), rows(), 0, format_, gl_types[depth()], 0);
-    checkGlError();
-
-    GlBuffer::unbind();
-
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    checkGlError();
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    checkGlError();
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    checkGlError();
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    checkGlError();
+    impl_ = impl.release();
 }
 
-void cv::gpu::Texture2D::unbind() const
+cv::gpu::GlTexture::GlTexture(const Size& size, int type) : impl_(0), refcount_(0)
 {
-    glBindTexture(GL_TEXTURE_2D, 0);
+    auto_ptr<Impl> impl(new Impl(size.height, size.width, type));
 
-    glDisable(GL_TEXTURE_2D);
+    refcount_ = static_cast<int*>(fastMalloc(sizeof(int)));
+    *refcount_ = 1;
+
+    impl_ = impl.release();
+}
+
+cv::gpu::GlTexture::GlTexture(const GlTexture& other) : impl_(other.impl_), refcount_(other.refcount_)
+{
+    CV_XADD(refcount_, 1);
+}
+
+cv::gpu::GlTexture::~GlTexture()
+{
+    if (CV_XADD(refcount_, -1) == 1)
+    {
+        delete impl_;
+        fastFree(refcount_);
+    }
+}
+
+GlTexture& cv::gpu::GlTexture::operator =(const GlTexture& other)
+{
+    GlTexture temp(other);
+    temp.swap(*this);
+    return *this;
+}
+
+void cv::gpu::GlTexture::create(int rows_, int cols_, int type_)
+{
+    if (rows_ != rows() || cols_ != cols() || type_ != type())
+    {
+        GlTexture temp(rows_, cols_, type_);
+        temp.swap(*this);
+    }
+}
+
+void cv::gpu::GlTexture::release()
+{
+    GlTexture temp;
+    temp.swap(*this);
+}
+
+void cv::gpu::GlTexture::bind() const
+{
+    impl_->bind();
+}
+
+void cv::gpu::GlTexture::unbind() const
+{
+    impl_->unbind();
+}
+
+void cv::gpu::GlTexture::copyFrom(const GpuMat& mat, Stream& stream)
+{
+    create(mat.rows, mat.cols, mat.type());
+
+    impl_->copyFrom(mat, StreamAccessor::getStream(stream));
+}
+
+GpuMat cv::gpu::GlTexture::map(Stream& stream)
+{
+    return impl_->map(StreamAccessor::getStream(stream));
+}
+
+void cv::gpu::GlTexture::unmap(Stream& stream)
+{
+    impl_->unmap(StreamAccessor::getStream(stream));
+}
+
+int cv::gpu::GlTexture::rows() const
+{
+    return impl_->rows();
+}
+
+int cv::gpu::GlTexture::cols() const
+{
+    return impl_->cols();
+}
+
+Size cv::gpu::GlTexture::size() const
+{
+    return impl_->size();
+}
+
+bool cv::gpu::GlTexture::empty() const
+{
+    return impl_->empty();
+}
+
+int cv::gpu::GlTexture::type() const
+{
+    return impl_->type();
+}
+
+int cv::gpu::GlTexture::depth() const
+{
+    return impl_->depth();
+}
+
+int cv::gpu::GlTexture::channels() const
+{
+    return impl_->channels();
+}
+
+int cv::gpu::GlTexture::elemSize() const
+{
+    return impl_->elemSize();
+}
+
+int cv::gpu::GlTexture::elemSize1() const
+{
+    return impl_->elemSize1();
+}
+
+void cv::gpu::GlTexture::swap(GlTexture& other)
+{
+    std::swap(impl_, other.impl_);
+    std::swap(refcount_, other.refcount_);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
-// VertexBuffer
+// GlVertexBuffer
 
-cv::gpu::VertexBuffer::VertexBuffer() : GlBuffer(GL_ARRAY_BUFFER)
+class cv::gpu::GlVertexBuffer::Impl : private GlBuffer
 {
+public:
+    Impl() : GlBuffer(GL_ARRAY_BUFFER)
+    {
+    }
+
+    Impl(int rows, int cols, int type) : GlBuffer(rows, cols, type, GL_ARRAY_BUFFER)
+    {
+        int cn = CV_MAT_CN(type);
+        int depth = CV_MAT_DEPTH(type);
+
+        CV_Assert(rows > 0 && cols > 0);
+        CV_Assert(cn == 2 || cn ==3 || cn == 4);
+        CV_Assert(depth == CV_16S || depth == CV_32S || depth == CV_32F || depth == CV_64F);
+    }
+
+
+    void bind() const
+    {
+        glEnableClientState(GL_VERTEX_ARRAY);
+        checkGlError();
+
+        GlBuffer::bind();
+
+        glVertexPointer(channels(), gl_types[depth()], 0, 0);
+        checkGlError();
+    }
+
+    void unbind() const
+    {
+        GlBuffer::unbind();
+
+        glDisableClientState(GL_VERTEX_ARRAY);
+    }
+
+    using GlBuffer::copyFrom;
+
+    using GlBuffer::map;
+    using GlBuffer::unmap;
+
+    using GlBuffer::rows;
+    using GlBuffer::cols;
+    using GlBuffer::size;
+    using GlBuffer::empty;
+
+    using GlBuffer::type;
+    using GlBuffer::depth;
+    using GlBuffer::channels;
+    using GlBuffer::elemSize;
+    using GlBuffer::elemSize1;
+
+private:
+    Impl(const GlVertexBuffer::Impl&);
+    GlVertexBuffer::Impl& operator =(const GlVertexBuffer::Impl&);
+};
+
+cv::gpu::GlVertexBuffer::GlVertexBuffer() : impl_(0), refcount_(0)
+{
+    auto_ptr<Impl> impl(new Impl);
+
+    refcount_ = static_cast<int*>(fastMalloc(sizeof(int)));
+    *refcount_ = 1;
+
+    impl_ = impl.release();
 }
 
-cv::gpu::VertexBuffer::VertexBuffer(int rows, int cols, int type) : GlBuffer(GL_ARRAY_BUFFER)
+cv::gpu::GlVertexBuffer::GlVertexBuffer(int rows, int cols, int type) : impl_(0), refcount_(0)
 {
-    create(rows, cols, type);
+    auto_ptr<Impl> impl(new Impl(rows, cols, type));
+
+    refcount_ = static_cast<int*>(fastMalloc(sizeof(int)));
+    *refcount_ = 1;
+
+    impl_ = impl.release();
 }
 
-cv::gpu::VertexBuffer::VertexBuffer(const Size& size, int type) : GlBuffer(GL_ARRAY_BUFFER)
+cv::gpu::GlVertexBuffer::GlVertexBuffer(const Size& size, int type) : impl_(0), refcount_(0)
 {
-    create(size, type);
+    auto_ptr<Impl> impl(new Impl(size.height, size.width, type));
+
+    refcount_ = static_cast<int*>(fastMalloc(sizeof(int)));
+    *refcount_ = 1;
+
+    impl_ = impl.release();
 }
 
-void cv::gpu::VertexBuffer::create(int rows, int cols, int type)
+cv::gpu::GlVertexBuffer::GlVertexBuffer(const GlVertexBuffer& other) : impl_(other.impl_), refcount_(other.refcount_)
 {
-    int cn = CV_MAT_CN(type);
-    int depth = CV_MAT_DEPTH(type);
-
-    CV_Assert(rows > 0 && cols > 0);
-    CV_Assert(cn == 2 || cn ==3 || cn == 4);
-    CV_Assert(depth == CV_16S || depth == CV_32S || depth == CV_32F || depth == CV_64F);
-
-    GlBuffer::create(rows, cols, type);
+    CV_XADD(refcount_, 1);
 }
 
-void cv::gpu::VertexBuffer::bind() const
+cv::gpu::GlVertexBuffer::~GlVertexBuffer()
 {
-    glEnableClientState(GL_VERTEX_ARRAY);
-    checkGlError();
-
-    GlBuffer::bind();
-
-    glVertexPointer(channels(), gl_types[depth()], 0, 0);
-    checkGlError();
+    if (CV_XADD(refcount_, -1) == 1)
+    {
+        delete impl_;
+        fastFree(refcount_);
+    }
 }
 
-void cv::gpu::VertexBuffer::unbind() const
+GlVertexBuffer& cv::gpu::GlVertexBuffer::operator =(const GlVertexBuffer& other)
 {
-    GlBuffer::unbind();
+    GlVertexBuffer temp(other);
+    temp.swap(*this);
+    return *this;
+}
 
-    glDisableClientState(GL_VERTEX_ARRAY);
+void cv::gpu::GlVertexBuffer::create(int rows_, int cols_, int type_)
+{
+    if (rows_ != rows() || cols_ != cols() || type_ != type())
+    {
+        GlVertexBuffer temp(rows_, cols_, type_);
+        temp.swap(*this);
+    }
+}
+
+void cv::gpu::GlVertexBuffer::release()
+{
+    GlVertexBuffer temp;
+    temp.swap(*this);
+}
+
+void cv::gpu::GlVertexBuffer::bind() const
+{
+    impl_->bind();
+}
+
+void cv::gpu::GlVertexBuffer::unbind() const
+{
+    impl_->unbind();
+}
+
+void cv::gpu::GlVertexBuffer::copyFrom(const GpuMat& mat, Stream& stream)
+{
+    create(mat.rows, mat.cols, mat.type());
+
+    impl_->copyFrom(mat, StreamAccessor::getStream(stream));
+}
+
+GpuMat cv::gpu::GlVertexBuffer::map(Stream& stream)
+{
+    return impl_->map(StreamAccessor::getStream(stream));
+}
+
+void cv::gpu::GlVertexBuffer::unmap(Stream& stream)
+{
+    impl_->unmap(StreamAccessor::getStream(stream));
+}
+
+int cv::gpu::GlVertexBuffer::rows() const
+{
+    return impl_->rows();
+}
+
+int cv::gpu::GlVertexBuffer::cols() const
+{
+    return impl_->cols();
+}
+
+Size cv::gpu::GlVertexBuffer::size() const
+{
+    return impl_->size();
+}
+
+bool cv::gpu::GlVertexBuffer::empty() const
+{
+    return impl_->empty();
+}
+
+int cv::gpu::GlVertexBuffer::type() const
+{
+    return impl_->type();
+}
+
+int cv::gpu::GlVertexBuffer::depth() const
+{
+    return impl_->depth();
+}
+
+int cv::gpu::GlVertexBuffer::channels() const
+{
+    return impl_->channels();
+}
+
+int cv::gpu::GlVertexBuffer::elemSize() const
+{
+    return impl_->elemSize();
+}
+
+int cv::gpu::GlVertexBuffer::elemSize1() const
+{
+    return impl_->elemSize1();
+}
+
+void cv::gpu::GlVertexBuffer::swap(GlVertexBuffer& other)
+{
+    std::swap(impl_, other.impl_);
+    std::swap(refcount_, other.refcount_);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
-// ColorBuffer
+// GlColorBuffer
 
-cv::gpu::ColorBuffer::ColorBuffer() : GlBuffer(GL_ARRAY_BUFFER)
+class cv::gpu::GlColorBuffer::Impl : private GlBuffer
 {
+public:
+    Impl() : GlBuffer(GL_ARRAY_BUFFER)
+    {
+    }
+
+    Impl(int rows, int cols, int type) : GlBuffer(rows, cols, type, GL_ARRAY_BUFFER)
+    {
+        int cn = CV_MAT_CN(type);
+        int depth = CV_MAT_DEPTH(type);
+
+        CV_Assert(rows > 0 && cols > 0);
+        CV_Assert(cn ==3 || cn == 4);
+        CV_Assert(depth >= 0 && depth <= CV_64F);
+    }
+
+
+    void bind() const
+    {
+        glEnableClientState(GL_COLOR_ARRAY);
+        checkGlError();
+
+        GlBuffer::bind();
+
+        glColorPointer(channels(), gl_types[depth()], 0, 0);
+        checkGlError();
+    }
+
+    void unbind() const
+    {
+        GlBuffer::unbind();
+
+        glDisableClientState(GL_COLOR_ARRAY);
+    }
+
+    using GlBuffer::copyFrom;
+
+    using GlBuffer::map;
+    using GlBuffer::unmap;
+
+    using GlBuffer::rows;
+    using GlBuffer::cols;
+    using GlBuffer::size;
+    using GlBuffer::empty;
+
+    using GlBuffer::type;
+    using GlBuffer::depth;
+    using GlBuffer::channels;
+    using GlBuffer::elemSize;
+    using GlBuffer::elemSize1;
+
+private:
+    Impl(const GlColorBuffer::Impl&);
+    GlColorBuffer::Impl& operator =(const GlColorBuffer::Impl&);
+};
+
+cv::gpu::GlColorBuffer::GlColorBuffer() : impl_(0), refcount_(0)
+{
+    auto_ptr<Impl> impl(new Impl);
+
+    refcount_ = static_cast<int*>(fastMalloc(sizeof(int)));
+    *refcount_ = 1;
+
+    impl_ = impl.release();
 }
 
-cv::gpu::ColorBuffer::ColorBuffer(int rows, int cols, int type) : GlBuffer(GL_ARRAY_BUFFER)
+cv::gpu::GlColorBuffer::GlColorBuffer(int rows, int cols, int type) : impl_(0), refcount_(0)
 {
-    create(rows, cols, type);
+    auto_ptr<Impl> impl(new Impl(rows, cols, type));
+
+    refcount_ = static_cast<int*>(fastMalloc(sizeof(int)));
+    *refcount_ = 1;
+
+    impl_ = impl.release();
 }
 
-cv::gpu::ColorBuffer::ColorBuffer(const Size& size, int type) : GlBuffer(GL_ARRAY_BUFFER)
+cv::gpu::GlColorBuffer::GlColorBuffer(const Size& size, int type) : impl_(0), refcount_(0)
 {
-    create(size, type);
+    auto_ptr<Impl> impl(new Impl(size.height, size.width, type));
+
+    refcount_ = static_cast<int*>(fastMalloc(sizeof(int)));
+    *refcount_ = 1;
+
+    impl_ = impl.release();
 }
 
-void cv::gpu::ColorBuffer::create(int rows, int cols, int type)
+cv::gpu::GlColorBuffer::GlColorBuffer(const GlColorBuffer& other) : impl_(other.impl_), refcount_(other.refcount_)
 {
-    int cn = CV_MAT_CN(type);
-    int depth = CV_MAT_DEPTH(type);
-
-    CV_Assert(rows > 0 && cols > 0);
-    CV_Assert(cn ==3 || cn == 4);
-    CV_Assert(depth >= 0 && depth <= CV_64F);
-
-    GlBuffer::create(rows, cols, type);
+    CV_XADD(refcount_, 1);
 }
 
-void cv::gpu::ColorBuffer::bind() const
+cv::gpu::GlColorBuffer::~GlColorBuffer()
 {
-    glEnableClientState(GL_COLOR_ARRAY);
-    checkGlError();
-
-    GlBuffer::bind();
-
-    glColorPointer(channels(), gl_types[depth()], 0, 0);
-    checkGlError();
+    if (CV_XADD(refcount_, -1) == 1)
+    {
+        delete impl_;
+        fastFree(refcount_);
+    }
 }
 
-void cv::gpu::ColorBuffer::unbind() const
+GlColorBuffer& cv::gpu::GlColorBuffer::operator =(const GlColorBuffer& other)
 {
-    GlBuffer::unbind();
-
-    glDisableClientState(GL_COLOR_ARRAY);
+    GlColorBuffer temp(other);
+    temp.swap(*this);
+    return *this;
 }
 
+void cv::gpu::GlColorBuffer::create(int rows_, int cols_, int type_)
+{
+    if (rows_ != rows() || cols_ != cols() || type_ != type())
+    {
+        GlColorBuffer temp(rows_, cols_, type_);
+        temp.swap(*this);
+    }
+}
+
+void cv::gpu::GlColorBuffer::release()
+{
+    GlColorBuffer temp;
+    temp.swap(*this);
+}
+
+void cv::gpu::GlColorBuffer::bind() const
+{
+    impl_->bind();
+}
+
+void cv::gpu::GlColorBuffer::unbind() const
+{
+    impl_->unbind();
+}
+
+void cv::gpu::GlColorBuffer::copyFrom(const GpuMat& mat, Stream& stream)
+{
+    create(mat.rows, mat.cols, mat.type());
+
+    impl_->copyFrom(mat, StreamAccessor::getStream(stream));
+}
+
+GpuMat cv::gpu::GlColorBuffer::map(Stream& stream)
+{
+    return impl_->map(StreamAccessor::getStream(stream));
+}
+
+void cv::gpu::GlColorBuffer::unmap(Stream& stream)
+{
+    impl_->unmap(StreamAccessor::getStream(stream));
+}
+
+int cv::gpu::GlColorBuffer::rows() const
+{
+    return impl_->rows();
+}
+
+int cv::gpu::GlColorBuffer::cols() const
+{
+    return impl_->cols();
+}
+
+Size cv::gpu::GlColorBuffer::size() const
+{
+    return impl_->size();
+}
+
+bool cv::gpu::GlColorBuffer::empty() const
+{
+    return impl_->empty();
+}
+
+int cv::gpu::GlColorBuffer::type() const
+{
+    return impl_->type();
+}
+
+int cv::gpu::GlColorBuffer::depth() const
+{
+    return impl_->depth();
+}
+
+int cv::gpu::GlColorBuffer::channels() const
+{
+    return impl_->channels();
+}
+
+int cv::gpu::GlColorBuffer::elemSize() const
+{
+    return impl_->elemSize();
+}
+
+int cv::gpu::GlColorBuffer::elemSize1() const
+{
+    return impl_->elemSize1();
+}
+
+void cv::gpu::GlColorBuffer::swap(GlColorBuffer& other)
+{
+    std::swap(impl_, other.impl_);
+    std::swap(refcount_, other.refcount_);
+}
 
 //////////////////////////////////////////////////////////////////////////////
 // Font Data
