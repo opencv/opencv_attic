@@ -57,6 +57,8 @@ int main(int argc, char* argv[])
     StereoBM bm(0, 128);
     StereoBM_GPU d_bm(0, 128);
 
+    double alpha = 0.0;
+
     while (true)
     {
         TickMeter cpuTm, gpuTm, gpuReprojectTm;
@@ -91,9 +93,11 @@ int main(int argc, char* argv[])
 
         // show point cloud
         Camera camera;
-        camera.lookAt(Point3d(-50.0, -30.0, 170.0), Point3d(60.0, 60.0, 0.0), Point3d(0.0, -1.0, 0.0));
+        camera.lookAt(Point3d(-60.0 * sin(alpha), -60.0 * cos(alpha), 170.0), Point3d(80.0, 80.0, 0.0), Point3d(0.0, -1.0, 0.0));
         camera.setScale(Point3d(0.1, 0.1, 0.1));
         pointCloudShow("GPU Point Cloud", d_xyzw, camera, d_img0Rgb, d_img0, Point2d(0.75, 0.0), Point2d(1.0, 0.25), gpuReprojectFps.str());
+
+        alpha += 0.05;
 
         if (waitKey(1) >= 0)
             break;
