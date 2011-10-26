@@ -38,7 +38,7 @@ int main(int argc, char* argv[])
     };
     Mat Q(4, 4, CV_32F, Q_vals);
 
-    //namedWindow("CPU Disparity", WINDOW_NORMAL);
+    namedWindow("CPU Disparity", WINDOW_NORMAL);
     
     // we must create at least one OpenGL Window to use CUDA code
     namedWindow("GPU Disparity", WINDOW_OPENGL | WINDOW_NORMAL);
