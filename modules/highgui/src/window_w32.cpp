@@ -162,7 +162,7 @@ typedef struct CvWindow
     HGLRC hGLRC;
     int glWidth;
     int glHeight;
-    CvGLDrawCallback glDrawCallback;
+    CvGlDrawCallback glDrawCallback;
     void* glDrawUserData;
 
     CvCloseCallback closeCallback;
@@ -504,7 +504,7 @@ namespace
     PFNGLDELETEBUFFERSPROC glDeleteBuffersExt = NULL;
     PFNGLBINDBUFFERPROC    glBindBufferExt    = NULL;
 
-    void initGL()
+    void initGl()
     {
         bool first = true;
 
@@ -534,9 +534,9 @@ namespace
         }
     }
 
-    void createGLContext(HWND hWnd, HDC& hGLDC, HGLRC& hGLRC, bool& useGl)
+    void createGlContext(HWND hWnd, HDC& hGLDC, HGLRC& hGLRC, bool& useGl)
     {
-        CV_FUNCNAME( "createGLContext" );
+        CV_FUNCNAME( "createGlContext" );
 
         __BEGIN__;
 
@@ -584,16 +584,16 @@ namespace
         if (!wglMakeCurrent(hGLDC, hGLRC))
             CV_ERROR( CV_StsError, "Can't Activate The GL Rendering Context" );
 
-        initGL();
+        initGl();
 
         useGl = true;
 
         __END__;
     }
 
-    void releaseGLContext(CvWindow* window)
+    void releaseGlContext(CvWindow* window)
     {
-        CV_FUNCNAME( "releaseGLContext" );
+        CV_FUNCNAME( "releaseGlContext" );
 
         __BEGIN__;
 
@@ -617,9 +617,9 @@ namespace
         __END__;
     }
 
-    void drawGL(CvWindow* window)
+    void drawGl(CvWindow* window)
     {
-        CV_FUNCNAME( "drawGL" );
+        CV_FUNCNAME( "drawGl" );
 
         __BEGIN__;
 
@@ -637,9 +637,9 @@ namespace
         __END__;
     }
 
-    void resizeGL(CvWindow* window, GLsizei width, GLsizei height)
+    void resizeGl(CvWindow* window, GLsizei width, GLsizei height)
     {
-        CV_FUNCNAME( "resizeGL" );
+        CV_FUNCNAME( "resizeGl" );
 
         __BEGIN__;
 
@@ -726,7 +726,7 @@ CV_IMPL int cvNamedWindow( const char* name, int flags )
     HDC hGLDC = 0;
     HGLRC hGLRC = 0;
     if (flags & CV_WINDOW_OPENGL)
-        createGLContext(hWnd, hGLDC, hGLRC, useGl);
+        createGlContext(hWnd, hGLDC, hGLRC, useGl);
 
     ShowWindow(hWnd, SW_SHOW);
 
@@ -788,9 +788,9 @@ CV_IMPL int cvNamedWindow( const char* name, int flags )
     return result;
 }
 
-CV_IMPL void cvSetGLContext(const char* name)
+CV_IMPL void cvSetGlContext(const char* name)
 {
-    CV_FUNCNAME( "cvSetGLContext" );
+    CV_FUNCNAME( "cvSetGlContext" );
 
     __BEGIN__;
 
@@ -809,7 +809,7 @@ CV_IMPL void cvSetGLContext(const char* name)
     __END__;
 }
 
-CV_IMPL void cvSetGLDrawCallback(const char* name, CvGLDrawCallback callback, void* userdata)
+CV_IMPL void cvSetGlDrawCallback(const char* name, CvGlDrawCallback callback, void* userdata)
 {
     CV_FUNCNAME( "cvSetGLDrawCallback" );
 
@@ -886,7 +886,7 @@ static void icvRemoveWindow( CvWindow* window )
     if (window->closeCallback)
         window->closeCallback(window->closeUserData);
 
-    releaseGLContext(window);
+    releaseGlContext(window);
 
     if( window->frame )
         GetWindowRect( window->frame, &wrect );
@@ -1410,7 +1410,7 @@ static LRESULT CALLBACK HighGUIProc( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
         else if (window->useGl) 
         {
             DefWindowProc(hwnd, uMsg, wParam, lParam);
-            drawGL(window);
+            drawGl(window);
         }
         else
         {
@@ -1440,7 +1440,7 @@ static LRESULT CALLBACK HighGUIProc( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 
     case WM_SIZE:
         if (window->useGl)
-            resizeGL(window, LOWORD(lParam), HIWORD(lParam));
+            resizeGl(window, LOWORD(lParam), HIWORD(lParam));
     }
 
     return DefWindowProc(hwnd, uMsg, wParam, lParam);

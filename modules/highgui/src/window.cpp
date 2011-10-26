@@ -205,9 +205,9 @@ int cv::startWindowThread()
 
 // Vinogradov Vlad : OpenGL support
 
-void cv::setGLDrawCallback(const string& windowName, GLDrawCallback callback, void* userdata)
+void cv::setGlDrawCallback(const string& windowName, GlDrawCallback callback, void* userdata)
 {
-    cvSetGLDrawCallback(windowName.c_str(), callback, userdata);
+    cvSetGlDrawCallback(windowName.c_str(), callback, userdata);
 }
 
 void cv::setCloseCallback(const string& windowName, CloseCallback callback, void* userdata)
@@ -215,9 +215,9 @@ void cv::setCloseCallback(const string& windowName, CloseCallback callback, void
     cvSetCloseCallback(windowName.c_str(), callback, userdata);
 }
 
-void cv::setGLContext(const string& windowName)
+void cv::setGlContext(const string& windowName)
 {
-    cvSetGLContext(windowName.c_str());
+    cvSetGlContext(windowName.c_str());
 }
 
 void cv::gl::genBuffers(int n, unsigned int* buffers)

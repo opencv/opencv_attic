@@ -247,13 +247,13 @@ CVAPI(int) cvWaitKey(int delay CV_DEFAULT(0));
 
 
 // Vinogradov Vlad : OpenGL support
-typedef void (CV_CDECL *CvGLDrawCallback)(int width, int height, void* userdata);
-CVAPI(void) cvSetGLDrawCallback(const char* window_name, CvGLDrawCallback callback, void* userdata CV_DEFAULT(NULL));
+typedef void (CV_CDECL *CvGlDrawCallback)(int width, int height, void* userdata);
+CVAPI(void) cvSetGlDrawCallback(const char* window_name, CvGlDrawCallback callback, void* userdata CV_DEFAULT(NULL));
 
 typedef void (CV_CDECL *CvCloseCallback)(void* userdata);
 CVAPI(void) cvSetCloseCallback(const char* window_name, CvCloseCallback callback, void* userdata CV_DEFAULT(NULL));
 
-CVAPI(void) cvSetGLContext(const char* window_name);
+CVAPI(void) cvSetGlContext(const char* window_name);
 
 CVAPI(void) cvGlGenBuffers(int n, unsigned int* buffers);
 CVAPI(void) cvGlBufferData(unsigned int target, ptrdiff_t size, const void *data, unsigned int usage);

@@ -437,12 +437,12 @@ void cv::gpu::imshow(const string& windowName, const GpuMat& img)
     if (getWindowProperty(windowName, WND_PROP_AUTOSIZE))
         resizeWindow(windowName, img.cols, img.rows);
 
-    setGLContext(windowName);
+    setGlContext(windowName);
 
     TextureRenderer* renderer = getRenderer<TextureRenderer>(windowName);
     renderer->set(img);
 
-    setGLDrawCallback(windowName, drawCallback, (Renderer*)renderer);
+    setGlDrawCallback(windowName, drawCallback, (Renderer*)renderer);
     setCloseCallback(windowName, closeCallback, (Renderer*)renderer);
 }
 
@@ -453,12 +453,12 @@ void cv::gpu::imshow(const string& windowName, const GlTexture& tex)
     if (getWindowProperty(windowName, WND_PROP_AUTOSIZE))
         resizeWindow(windowName, tex.cols(), tex.rows());
 
-    setGLContext(windowName);
+    setGlContext(windowName);
 
     TextureRenderer* renderer = getRenderer<TextureRenderer>(windowName);
     renderer->set(tex);
 
-    setGLDrawCallback(windowName, drawCallback, (Renderer*)renderer);
+    setGlDrawCallback(windowName, drawCallback, (Renderer*)renderer);
     setCloseCallback(windowName, closeCallback, (Renderer*)renderer);
 }
 
@@ -469,13 +469,13 @@ void cv::gpu::imshow(const string& windowName, const GpuMat& img, const string& 
     if (getWindowProperty(windowName, WND_PROP_AUTOSIZE))
         resizeWindow(windowName, img.cols, img.rows);
 
-    setGLContext(windowName);
+    setGlContext(windowName);
 
     TextRenderer<TextureRenderer>* renderer = getRenderer< TextRenderer<TextureRenderer> >(windowName);
     renderer->setText(text, textLoc, textColor, textFont);
     renderer->originalRenderer()->set(img);
 
-    setGLDrawCallback(windowName, drawCallback, (Renderer*)renderer);
+    setGlDrawCallback(windowName, drawCallback, (Renderer*)renderer);
     setCloseCallback(windowName, closeCallback, (Renderer*)renderer);
 }
 
@@ -486,13 +486,13 @@ void cv::gpu::imshow(const string& windowName, const GlTexture& tex, const strin
     if (getWindowProperty(windowName, WND_PROP_AUTOSIZE))
         resizeWindow(windowName, tex.cols(), tex.rows());
 
-    setGLContext(windowName);
+    setGlContext(windowName);
 
     TextRenderer<TextureRenderer>* renderer = getRenderer< TextRenderer<TextureRenderer> >(windowName);
     renderer->setText(text, textLoc, textColor, textFont);
     renderer->originalRenderer()->set(tex);
 
-    setGLDrawCallback(windowName, drawCallback, (Renderer*)renderer);
+    setGlDrawCallback(windowName, drawCallback, (Renderer*)renderer);
     setCloseCallback(windowName, closeCallback, (Renderer*)renderer);
 }
 
