@@ -44,6 +44,9 @@ int main(int argc, char* argv[])
     namedWindow("GPU Disparity", WINDOW_OPENGL | WINDOW_NORMAL);
     namedWindow("GPU Point Cloud", WINDOW_OPENGL | WINDOW_AUTOSIZE);
 
+    int trackBarPos = 0;
+    createTrackbar("Distance", "GPU Point Cloud", &trackBarPos, 100);
+
     // set a CUDA device to use OpenGL interoperability
     setGlDevice();
 
@@ -93,7 +96,7 @@ int main(int argc, char* argv[])
 
         // show point cloud
         Camera camera;
-        camera.lookAt(Point3d(-60.0 * sin(alpha), -60.0 * cos(alpha), 170.0), Point3d(80.0, 80.0, 0.0), Point3d(0.0, -1.0, 0.0));
+        camera.lookAt(Point3d(-60.0 * sin(alpha), -60.0 * cos(alpha), 170.0 + trackBarPos), Point3d(80.0, 80.0, 0.0), Point3d(0.0, -1.0, 0.0));
         camera.setScale(Point3d(0.1, 0.1, 0.1));
         pointCloudShow("GPU Point Cloud", d_xyzw, camera, d_img0Rgb, d_img0, Point2d(0.75, 0.0), Point2d(1.0, 0.25), gpuReprojectFps.str());
 

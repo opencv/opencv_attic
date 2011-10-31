@@ -1430,13 +1430,13 @@ static LRESULT CALLBACK HighGUIProc( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
         else if (window->useGl) 
         {
             drawGl(window);
-            DefWindowProc(hwnd, uMsg, wParam, lParam);
+            //DefWindowProc(hwnd, uMsg, wParam, lParam);
         }
-        else
-        {
+        //else
+        //{
             return DefWindowProc(hwnd, uMsg, wParam, lParam);
-        }
-        return 0;
+        //}
+        //return 0;
 
     case WM_ERASEBKGND:
         if(window->image)
