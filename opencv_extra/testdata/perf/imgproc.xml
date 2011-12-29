@@ -1,5 +1,4 @@
-<?xml version="1.0"?>
-<opencv_storage>
+<?xml version="1.0" ?><opencv_storage>
 <Size_MatType_pyrDown--pyrDown---1920x1080--8UC1->
   <dst>
     <kind>65536</kind>
@@ -22976,4 +22975,156 @@
       <y>30</y>
       <cn>3</cn>
       <val>105.</val></rng2></dst></MatInfo_Size_Scale_resizeAreaFast--resizeAreaFast---8UC4--1920x1080--4->
+ <InpaintArea_InpaintingMethod_inpaint--inpaint---24x24--INPAINT_NS->
+  <inpaintedArea>
+    <kind>65536</kind>
+    <type>16</type>
+    <min>87.</min>
+    <max>215.</max>
+    <last>
+      <x>23</x>
+      <y>23</y>
+      <val>177.</val></last>
+    <rng1>
+      <x>5</x>
+      <y>14</y>
+      <cn>1</cn>
+      <val>129.</val></rng1>
+    <rng2>
+      <x>5</x>
+      <y>7</y>
+      <val>169.</val></rng2></inpaintedArea></InpaintArea_InpaintingMethod_inpaint--inpaint---24x24--INPAINT_NS->
+<InpaintArea_InpaintingMethod_inpaint--inpaint---24x24--INPAINT_TELEA->
+  <inpaintedArea>
+    <kind>65536</kind>
+    <type>16</type>
+    <min>93.</min>
+    <max>189.</max>
+    <last>
+      <x>23</x>
+      <y>23</y>
+      <val>177.</val></last>
+    <rng1>
+      <x>18</x>
+      <y>0</y>
+      <val>140.</val></rng1>
+    <rng2>
+      <x>12</x>
+      <y>6</y>
+      <val>148.</val></rng2></inpaintedArea></InpaintArea_InpaintingMethod_inpaint--inpaint---24x24--INPAINT_TELEA->
+<InpaintArea_InpaintingMethod_inpaint--inpaint---32x32--INPAINT_NS->
+  <inpaintedArea>
+    <kind>65536</kind>
+    <type>16</type>
+    <min>5.</min>
+    <max>213.</max>
+    <last>
+      <x>31</x>
+      <y>31</y>
+      <val>212.</val></last>
+    <rng1>
+      <x>21</x>
+      <y>2</y>
+      <cn>2</cn>
+      <val>147.</val></rng1>
+    <rng2>
+      <x>5</x>
+      <y>20</y>
+      <cn>2</cn>
+      <val>125.</val></rng2></inpaintedArea></InpaintArea_InpaintingMethod_inpaint--inpaint---32x32--INPAINT_NS->
+<InpaintArea_InpaintingMethod_inpaint--inpaint---32x32--INPAINT_TELEA->
+  <inpaintedArea>
+    <kind>65536</kind>
+    <type>16</type>
+    <min>19.</min>
+    <max>209.</max>
+    <last>
+      <x>31</x>
+      <y>31</y>
+      <val>208.</val></last>
+    <rng1>
+      <x>29</x>
+      <y>12</y>
+      <val>116.</val></rng1>
+    <rng2>
+      <x>10</x>
+      <y>13</y>
+      <val>145.</val></rng2></inpaintedArea></InpaintArea_InpaintingMethod_inpaint--inpaint---32x32--INPAINT_TELEA->
+<InpaintArea_InpaintingMethod_inpaint--inpaint---64x64--INPAINT_NS->
+  <inpaintedArea>
+    <kind>65536</kind>
+    <type>16</type>
+    <min>2.</min>
+    <max>248.</max>
+    <last>
+      <x>63</x>
+      <y>63</y>
+      <val>203.</val></last>
+    <rng1>
+      <x>46</x>
+      <y>19</y>
+      <val>119.</val></rng1>
+    <rng2>
+      <x>61</x>
+      <y>53</y>
+      <cn>2</cn>
+      <val>207.</val></rng2></inpaintedArea></InpaintArea_InpaintingMethod_inpaint--inpaint---64x64--INPAINT_NS->
+<InpaintArea_InpaintingMethod_inpaint--inpaint---64x64--INPAINT_TELEA->
+  <inpaintedArea>
+    <kind>65536</kind>
+    <type>16</type>
+    <min>5.</min>
+    <max>241.</max>
+    <last>
+      <x>63</x>
+      <y>63</y>
+      <val>207.</val></last>
+    <rng1>
+      <x>39</x>
+      <y>37</y>
+      <cn>2</cn>
+      <val>198.</val></rng1>
+    <rng2>
+      <x>44</x>
+      <y>31</y>
+      <val>192.</val></rng2></inpaintedArea></InpaintArea_InpaintingMethod_inpaint--inpaint---64x64--INPAINT_TELEA->
+<InpaintArea_InpaintingMethod_inpaint--inpaint---128x128--INPAINT_NS->
+  <inpaintedArea>
+    <kind>65536</kind>
+    <type>16</type>
+    <min>28.</min>
+    <max>248.</max>
+    <last>
+      <x>127</x>
+      <y>127</y>
+      <val>205.</val></last>
+    <rng1>
+      <x>49</x>
+      <y>119</y>
+      <cn>2</cn>
+      <val>91.</val></rng1>
+    <rng2>
+      <x>79</x>
+      <y>81</y>
+      <cn>2</cn>
+      <val>116.</val></rng2></inpaintedArea></InpaintArea_InpaintingMethod_inpaint--inpaint---128x128--INPAINT_NS->
+<InpaintArea_InpaintingMethod_inpaint--inpaint---128x128--INPAINT_TELEA->
+  <inpaintedArea>
+    <kind>65536</kind>
+    <type>16</type>
+    <min>31.</min>
+    <max>241.</max>
+    <last>
+      <x>127</x>
+      <y>127</y>
+      <val>206.</val></last>
+    <rng1>
+      <x>20</x>
+      <y>114</y>
+      <val>47.</val></rng1>
+    <rng2>
+      <x>65</x>
+      <y>12</y>
+      <cn>1</cn>
+      <val>164.</val></rng2></inpaintedArea></InpaintArea_InpaintingMethod_inpaint--inpaint---128x128--INPAINT_TELEA->
 </opencv_storage>
