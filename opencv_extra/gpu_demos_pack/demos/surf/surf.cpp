@@ -75,7 +75,7 @@ void App::run(int argc, char **argv)
 
         if (use_gpu)
         {
-            img = h_img_gray;
+            img.upload(h_img_gray);
         }
 
         int64 proc_start = getTickCount();

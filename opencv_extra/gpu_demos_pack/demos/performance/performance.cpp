@@ -11,8 +11,8 @@ void TestSystem::run()
     if (is_list_mode_)
     {
         for (vector<Runnable*>::iterator it = tests_.begin(); it != tests_.end(); ++it)
-            if ((*it)->name().find(test_filter_, 0) != string::npos)
-                cout << (*it)->name() << endl;
+            cout << (*it)->name() << endl;
+
         return;
     }
 
@@ -146,31 +146,34 @@ int CV_CDECL cvErrorCallback(int /*status*/, const char* /*func_name*/,
 }
 
 
-int main(int argc, char** argv)
+int main(int argc, const char* argv[])
 {
-    // Parse command line arguments
-    for (int i = 1; i < argc; ++i)
+    redirectError(cvErrorCallback);
+
+    const char* keys =
+       "{ h | help    | false | print help message }"
+       "{ f | filter  |       | filter for test }"
+       "{ l | list    | false | show all tests }";
+
+    CommandLineParser cmd(argc, argv, keys);
+
+    if (cmd.get<bool>("help"))
     {
-        string key = argv[i];
-        if (key == "--help")
-        {
-            cout << "Usage: demo_performance [--ls] [--filter <test_filter>]\n";
-            return 0;
-        }
-        if (key == "--filter" && i + 1 < argc)
-            TestSystem::instance().setTestFilter(argv[++i]);
-        //else if (key == "--workdir" && i + 1 < argc)
-        //    TestSystem::instance().setWorkingDir(argv[++i]);
-        else if (key == "--ls")
-            TestSystem::instance().setListMode(true);
-        else 
-        {
-            cout << "Unknown parameter: '" << key << "'" << endl;
-            return -1;
-        }
+        cout << "Usage: demo_performance [options]" << endl;
+        cout << "Avaible options:" << endl;
+        cmd.printParams();
+        return 0;
     }
 
-    redirectError(cvErrorCallback);
+    string filter = cmd.get<string>("filter");
+    bool list = cmd.get<bool>("list");
+
+    if (!filter.empty())
+        TestSystem::instance().setTestFilter(filter);
+
+    if (list)
+        TestSystem::instance().setListMode(true);
+
     TestSystem::instance().run();
 
     return 0;

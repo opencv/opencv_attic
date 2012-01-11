@@ -79,8 +79,8 @@ void App::run(int argc, char **argv)
         sources[1]->next(right_src);
         makeGray(left_src, left);
         makeGray(right_src, right);
-        d_left = left;
-        d_right = right;
+        d_left.upload(left);
+        d_right.upload(right);
 
         imshow("left", left);
         imshow("right", right);
@@ -109,7 +109,7 @@ void App::run(int argc, char **argv)
 
         if (method != BM_CPU)
         {
-            disp = d_disp;
+            d_disp.download(disp);
             disp *= 255. / ndisp;
         }
 

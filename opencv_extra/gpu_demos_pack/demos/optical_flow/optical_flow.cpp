@@ -134,8 +134,8 @@ void App::run(int argc, char **argv)
         cvtColor(frame0Color, frame0Gray, COLOR_BGR2GRAY);
         cvtColor(frame1Color, frame1Gray, COLOR_BGR2GRAY);
 
-        d_frame0 = frame0Gray;
-        d_frame1 = frame1Gray;
+        d_frame0.upload(frame0Gray);
+        d_frame1.upload(frame1Gray);
 
         int64 proc_start = getTickCount();
 
@@ -193,11 +193,11 @@ void App::parseCmdArgs(int argc, char **argv)
         if (parseBaseCmdArgs(i, argc, argv))
             continue;
         else if (string(argv[i]) == PARAM_SCALE)
-            flow.scale_factor = atof(argv[++i]);
+            flow.scale_factor = static_cast<float>(atof(argv[++i]));
         else if (string(argv[i]) == PARAM_ALPHA)
-            flow.alpha = atof(argv[++i]);
+            flow.alpha = static_cast<float>(atof(argv[++i]));
         else if (string(argv[i]) == PARAM_GAMMA)
-            flow.gamma = atof(argv[++i]);
+            flow.gamma = static_cast<float>(atof(argv[++i]));
         else if (string(argv[i]) == PARAM_INNER)
             flow.inner_iterations = atoi(argv[++i]);
         else if (string(argv[i]) == PARAM_OUTER)

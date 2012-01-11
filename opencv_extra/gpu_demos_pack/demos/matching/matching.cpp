@@ -94,8 +94,8 @@ void App::run(int argc, char **argv)
 
         if (use_gpu)
         {
-            descriptors1_gpu = Mat(descriptors1_cpu).reshape(0, keypoints1_cpu.size());
-            descriptors2_gpu = Mat(descriptors2_cpu).reshape(0, keypoints2_cpu.size());
+            descriptors1_gpu.upload(Mat(descriptors1_cpu).reshape(0, keypoints1_cpu.size()));
+            descriptors2_gpu.upload(Mat(descriptors2_cpu).reshape(0, keypoints2_cpu.size()));
             matcher_gpu.knnMatch(descriptors1_gpu, descriptors2_gpu, matches, 2);
         }
         else
