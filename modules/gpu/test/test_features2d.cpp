@@ -83,12 +83,12 @@ int getValidMatchesCount(const std::vector<cv::KeyPoint>& keypoints1, const std:
 
 PARAM_TEST_CASE(BruteForceMatcher, cv::gpu::DeviceInfo, DistType, int)
 {
-    static const int queryDescCount = 300; // must be even number because we split train data in some cases in two
-    static const int countFactor = 4; // do not change it
-
     cv::gpu::DeviceInfo devInfo;
     cv::gpu::BruteForceMatcher_GPU_base::DistType distType;
     int dim;
+        
+    int queryDescCount;
+    int countFactor;
     
     cv::Mat query, train;
 
@@ -99,6 +99,9 @@ PARAM_TEST_CASE(BruteForceMatcher, cv::gpu::DeviceInfo, DistType, int)
         dim = GET_PARAM(2);
 
         cv::gpu::setDevice(devInfo.deviceID());
+        
+        queryDescCount = 300; // must be even number because we split train data in some cases in two
+        countFactor = 4; // do not change it
 
         cv::RNG& rng = cvtest::TS::ptr()->get_rng();
 
