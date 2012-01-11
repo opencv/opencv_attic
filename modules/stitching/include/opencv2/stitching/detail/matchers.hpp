@@ -74,21 +74,6 @@ protected:
     virtual void find(const Mat &image, ImageFeatures &features) = 0;
 };
 
-
-class CV_EXPORTS SurfFeaturesFinder : public FeaturesFinder
-{
-public:
-    SurfFeaturesFinder(double hess_thresh = 300., int num_octaves = 3, int num_layers = 4,
-                       int num_octaves_descr = /*4*/3, int num_layers_descr = /*2*/4);
-
-private:
-    void find(const Mat &image, ImageFeatures &features);
-
-    Ptr<FeatureDetector> detector_;
-    Ptr<DescriptorExtractor> extractor_;
-    Ptr<SURF> surf;
-};
-
 class CV_EXPORTS OrbFeaturesFinder : public FeaturesFinder
 {
 public:
@@ -100,29 +85,6 @@ private:
     Ptr<ORB> orb;
     Size grid_size;
 };
-
-
-#ifndef ANDROID
-class CV_EXPORTS SurfFeaturesFinderGpu : public FeaturesFinder
-{
-public:
-    SurfFeaturesFinderGpu(double hess_thresh = 300., int num_octaves = 3, int num_layers = 4,
-                          int num_octaves_descr = 4, int num_layers_descr = 2);
-
-    void collectGarbage();
-
-private:
-    void find(const Mat &image, ImageFeatures &features);
-
-    gpu::GpuMat image_;
-    gpu::GpuMat gray_image_;
-    gpu::SURF_GPU surf_;
-    gpu::GpuMat keypoints_;
-    gpu::GpuMat descriptors_;
-    int num_octaves_, num_layers_;
-    int num_octaves_descr_, num_layers_descr_;
-};
-#endif
 
 
 struct CV_EXPORTS MatchesInfo

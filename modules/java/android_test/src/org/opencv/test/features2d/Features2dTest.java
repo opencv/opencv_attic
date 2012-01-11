@@ -78,9 +78,9 @@ public class Features2dTest extends OpenCVTestCase {
         String detectorCfg = "%YAML:1.0\nhessianThreshold: 4000.\noctaves: 3\noctaveLayers: 4\nupright: 0\n";
         String extractorCfg = "%YAML:1.0\nnOctaves: 4\nnOctaveLayers: 2\nextended: 0\nupright: 0\n";
 
-        FeatureDetector detector = FeatureDetector.create(FeatureDetector.SURF);
-        DescriptorExtractor extractor = DescriptorExtractor.create(DescriptorExtractor.SURF);
-        DescriptorMatcher matcher = DescriptorMatcher.create(DescriptorMatcher.BRUTEFORCE);
+        FeatureDetector detector = FeatureDetector.create(FeatureDetector.ORB);
+        DescriptorExtractor extractor = DescriptorExtractor.create(DescriptorExtractor.ORB);
+        DescriptorMatcher matcher = DescriptorMatcher.create(DescriptorMatcher.BRUTEFORCE_HAMMING);
 
         String detectorCfgFile = OpenCVTestRunner.getTempFileName("yml");
         writeFile(detectorCfgFile, detectorCfg);

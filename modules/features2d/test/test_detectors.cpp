@@ -252,14 +252,6 @@ template <class T> bool CV_DetectorsTest::testDetector(const Mat& img, const T& 
     return true;        
 }
 
-struct SurfNoMaskWrap 
-{
-    const SURF& detector;
-    SurfNoMaskWrap(const SURF& surf) : detector(surf) {}
-    SurfNoMaskWrap& operator=(const SurfNoMaskWrap&);
-    void operator()(const Mat& img, vector<KeyPoint>& kpts) const { detector(img, Mat(), kpts); }
-};
-
 void CV_DetectorsTest::LoadExpected(const string& file, vector<KeyPoint>& out)
 {     
     Mat mat_exp;
@@ -293,13 +285,7 @@ void CV_DetectorsTest::run( int /*start_from*/ )
     GaussianBlur(to_test, to_test, Size(3, 3), 1.5);
         
     vector<KeyPoint> exp;
-    LoadExpected(string(ts->get_data_path()) + "detectors/surf.xml", exp);        
-    if (exp.empty())
-        return;
 
-    if (!testDetector(to_test, SurfNoMaskWrap(SURF(1536+512+512, 2)), exp))
-        return;
-    
     LoadExpected(string(ts->get_data_path()) + "detectors/star.xml", exp);
     if (exp.empty())
         return;

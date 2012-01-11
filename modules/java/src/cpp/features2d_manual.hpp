@@ -19,8 +19,6 @@ public:
     {
         FAST          = 1,
         STAR          = 2,
-        SIFT          = 3,
-        SURF          = 4,
         ORB           = 5,
         MSER          = 6,
         GFTT          = 7,
@@ -33,8 +31,6 @@ public:
 
         GRID_FAST          = GRIDRETECTOR + FAST,
         GRID_STAR          = GRIDRETECTOR + STAR,
-        GRID_SIFT          = GRIDRETECTOR + SIFT,
-        GRID_SURF          = GRIDRETECTOR + SURF,
         GRID_ORB           = GRIDRETECTOR + ORB,
         GRID_MSER          = GRIDRETECTOR + MSER,
         GRID_GFTT          = GRIDRETECTOR + GFTT,
@@ -47,8 +43,6 @@ public:
 
         PYRAMID_FAST       = PYRAMIDDETECTOR + FAST,
         PYRAMID_STAR       = PYRAMIDDETECTOR + STAR,
-        PYRAMID_SIFT       = PYRAMIDDETECTOR + SIFT,
-        PYRAMID_SURF       = PYRAMIDDETECTOR + SURF,
         PYRAMID_ORB        = PYRAMIDDETECTOR + ORB,
         PYRAMID_MSER       = PYRAMIDDETECTOR + MSER,
         PYRAMID_GFTT       = PYRAMIDDETECTOR + GFTT,
@@ -60,8 +54,6 @@ public:
 
         DYNAMIC_FAST       = DYNAMICDETECTOR + FAST,
         DYNAMIC_STAR       = DYNAMICDETECTOR + STAR,
-        DYNAMIC_SIFT       = DYNAMICDETECTOR + SIFT,
-        DYNAMIC_SURF       = DYNAMICDETECTOR + SURF,
         DYNAMIC_ORB        = DYNAMICDETECTOR + ORB,
         DYNAMIC_MSER       = DYNAMICDETECTOR + MSER,
         DYNAMIC_GFTT       = DYNAMICDETECTOR + GFTT,
@@ -70,7 +62,7 @@ public:
         DYNAMIC_DENSE      = DYNAMICDETECTOR + DENSE
     };
 
-    //supported: FAST STAR SIFT SURF ORB MSER GFTT HARRIS Grid(XXXX) Pyramid(XXXX) Dynamic(XXXX)
+    //supported: FAST STAR ORB MSER GFTT HARRIS Grid(XXXX) Pyramid(XXXX) Dynamic(XXXX)
     //not supported: SimpleBlob, Dense
     CV_WRAP static javaFeatureDetector* create( int detectorType )
     {
@@ -98,12 +90,6 @@ public:
             break;
         case STAR:
             name += "STAR";
-            break;
-        case SIFT:
-            name += "SIFT";
-            break;
-        case SURF:
-            name += "SURF";
             break;
         case ORB:
             name += "ORB";
@@ -255,8 +241,6 @@ public:
 
     enum
     {
-        SIFT  = 1,
-        SURF  = 2,
         ORB   = 3,
         BRIEF = 4,
 
@@ -265,13 +249,11 @@ public:
 
 
 
-        OPPONENT_SIFT  = OPPONENTEXTRACTOR + SIFT,
-        OPPONENT_SURF  = OPPONENTEXTRACTOR + SURF,
         OPPONENT_ORB   = OPPONENTEXTRACTOR + ORB,
         OPPONENT_BRIEF = OPPONENTEXTRACTOR + BRIEF
     };
 
-    //supported SIFT, SURF, ORB, BRIEF, Opponent(XXXX)
+    //supported ORB, BRIEF, Opponent(XXXX)
     //not supported: Calonder
     CV_WRAP static javaDescriptorExtractor* create( int extractorType )
     {
@@ -285,12 +267,6 @@ public:
 
         switch(extractorType)
         {
-        case SIFT:
-            name += "SIFT";
-            break;
-        case SURF:
-            name += "SURF";
-            break;
         case ORB:
             name += "ORB";
             break;

@@ -829,13 +829,6 @@ GoodFeaturesToTrack cornerCount
   int blockSize 3
   int useHarris 0
   double k 0.04
-ExtractSURF keypoints,descriptors
-  CvArr image
-  CvArr mask
-  CvSeqOfCvSURFPoint* keypoints /O
-  CvSeqOfCvSURFDescriptor* descriptors /O
-  CvMemStorage storage
-  CvSURFParams params
 GetStarKeypoints CvSeqOfCvStarKeypoint*
   CvArr image
   CvMemStorage storage

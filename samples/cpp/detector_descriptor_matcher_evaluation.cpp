@@ -248,7 +248,6 @@ int main(int argc, char** argv)
         //"ORB3_BF", "ORB", "ORB", "BruteForce-Hamming(2)",
         //"ORB4_BF", "ORB", "ORB", "BruteForce-Hamming(2)",
         //"ORB_LSH", "ORB", "ORB", "LSH"
-        //"SURF_BF", "SURF", "SURF", "BruteForce",
         0
     };
     

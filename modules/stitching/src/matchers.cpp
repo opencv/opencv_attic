@@ -309,39 +309,6 @@ void FeaturesFinder::operator ()(const Mat &image, ImageFeatures &features, cons
     }
 }
 
-
-SurfFeaturesFinder::SurfFeaturesFinder(double hess_thresh, int num_octaves, int num_layers,
-                                       int num_octaves_descr, int num_layers_descr)
-{
-    if (num_octaves_descr == num_octaves && num_layers_descr == num_layers)
-    {
-        surf = new SURF(hess_thresh, num_octaves, num_layers);
-    }
-    else
-    {
-        detector_ = new SurfFeatureDetector(hess_thresh, num_octaves, num_layers);
-        extractor_ = new SurfDescriptorExtractor(num_octaves_descr, num_layers_descr);
-    }
-}
-
-void SurfFeaturesFinder::find(const Mat &image, ImageFeatures &features)
-{
-    Mat gray_image;
-    CV_Assert(image.type() == CV_8UC3);
-    cvtColor(image, gray_image, CV_BGR2GRAY);
-    if (surf == 0)
-    {
-        detector_->detect(gray_image, features.keypoints);
-        extractor_->compute(gray_image, features.keypoints, features.descriptors);
-    }
-    else
-    {
-        vector<float> descriptors;
-        (*surf)(gray_image, Mat(), features.keypoints, descriptors);
-        features.descriptors = Mat(descriptors, true).reshape(1, (int)features.keypoints.size());
-    }
-}
-
 OrbFeaturesFinder::OrbFeaturesFinder(Size _grid_size, size_t n_features, const ORB::CommonParams & detector_params)
 {
     grid_size = _grid_size;
@@ -397,55 +364,6 @@ void OrbFeaturesFinder::find(const Mat &image, ImageFeatures &features)
             }
     }
 }
-
-#ifndef ANDROID
-SurfFeaturesFinderGpu::SurfFeaturesFinderGpu(double hess_thresh, int num_octaves, int num_layers,
-                                             int num_octaves_descr, int num_layers_descr)
-{
-    surf_.keypointsRatio = 0.1f;
-    surf_.hessianThreshold = hess_thresh;
-    surf_.extended = false;
-    num_octaves_ = num_octaves;
-    num_layers_ = num_layers;
-    num_octaves_descr_ = num_octaves_descr;
-    num_layers_descr_ = num_layers_descr;
-}
-
-
-void SurfFeaturesFinderGpu::find(const Mat &image, ImageFeatures &features)
-{
-    CV_Assert(image.depth() == CV_8U);
-
-    ensureSizeIsEnough(image.size(), image.type(), image_);
-    image_.upload(image);
-
-    ensureSizeIsEnough(image.size(), CV_8UC1, gray_image_);
-    cvtColor(image_, gray_image_, CV_BGR2GRAY);
-
-    surf_.nOctaves = num_octaves_;
-    surf_.nOctaveLayers = num_layers_;
-    surf_.upright = false;
-    surf_(gray_image_, GpuMat(), keypoints_);
-
-    surf_.nOctaves = num_octaves_descr_;
-    surf_.nOctaveLayers = num_layers_descr_;
-    surf_.upright = true;
-    surf_(gray_image_, GpuMat(), keypoints_, descriptors_, true);
-    surf_.downloadKeypoints(keypoints_, features.keypoints);
-
-    descriptors_.download(features.descriptors);
-}
-
-void SurfFeaturesFinderGpu::collectGarbage()
-{
-    surf_.releaseMemory();
-    image_.release();
-    gray_image_.release();
-    keypoints_.release();
-    descriptors_.release();
-}
-#endif
-
 
 //////////////////////////////////////////////////////////////////////////////
 

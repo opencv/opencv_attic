@@ -1728,33 +1728,7 @@ namespace cv{
 
     void extractPatches (IplImage *img, vector<IplImage*>& patches, CvSize patch_size)
     {
-        vector<KeyPoint> features;
-        SURF surf_extractor(1.0f);
-        //printf("Extracting SURF features...");
-        surf_extractor(img, Mat(), features);
-        //printf("done\n");
-
-        for (int j = 0; j < (int)features.size(); j++)
-        {
-            int patch_width = patch_size.width;
-            int patch_height = patch_size.height;
-
-            CvPoint center = features[j].pt;
-
-            CvRect roi = cvRect(center.x - patch_width / 2, center.y - patch_height / 2, patch_width, patch_height);
-            cvSetImageROI(img, roi);
-            roi = cvGetImageROI(img);
-            if (roi.width != patch_width || roi.height != patch_height)
-            {
-                continue;
-            }
-
-            IplImage* patch = cvCreateImage(cvSize(patch_width, patch_height), IPL_DEPTH_8U, 1);
-            cvCopy(img, patch);
-            patches.push_back(patch);
-            cvResetImageROI(img);
-        }
-        //printf("Completed file, extracted %d features\n", (int)features.size());
+         CV_Error(CV_StsNotImplemented, "This method is not supported in OpenCV4Tegra");
     }
 
 /*

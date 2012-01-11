@@ -86,7 +86,7 @@ struct CV_EXPORTS CvMeanShiftTrackerParams
 // Feature tracking parameters
 struct CV_EXPORTS CvFeatureTrackerParams
 {
-	enum {	SIFT = 0, SURF = 1, OPTICAL_FLOW = 2 };
+	enum {	OPTICAL_FLOW = 2 };
 	CvFeatureTrackerParams(int feature_type = 0, int window_size = 0)
 	{
 		feature_type = 0;
@@ -141,7 +141,7 @@ public:
 	Point2f getTrackingCenter();
 };
 
-// Performs SIFT/SURF feature tracking using parameters from FeatureTrackerParams
+// Performs feature tracking using parameters from FeatureTrackerParams
 class CV_EXPORTS CvFeatureTracker
 {
 private:

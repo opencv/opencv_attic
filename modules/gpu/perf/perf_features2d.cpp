@@ -105,34 +105,6 @@ INSTANTIATE_TEST_CASE_P(Features2D, BruteForceMatcher_radiusMatch, testing::Comb
                         testing::Values(64, 128, 256)));
 
 //////////////////////////////////////////////////////////////////////
-// SURF
-
-GPU_PERF_TEST_1(SURF, cv::gpu::DeviceInfo)
-{
-    cv::gpu::DeviceInfo devInfo = GetParam();
-
-    cv::gpu::setDevice(devInfo.deviceID());
-
-    cv::Mat img_host = readImage("gpu/perf/aloe.jpg", cv::IMREAD_GRAYSCALE);
-
-    ASSERT_FALSE(img_host.empty());
-
-    cv::gpu::GpuMat img(img_host);
-    cv::gpu::GpuMat keypoints, descriptors;
-
-    cv::gpu::SURF_GPU surf;
-
-    declare.time(2.0);
-
-    TEST_CYCLE()
-    {
-        surf(img, cv::gpu::GpuMat(), keypoints, descriptors);
-    }
-}
-
-INSTANTIATE_TEST_CASE_P(Features2D, SURF, DEVICES(cv::gpu::GLOBAL_ATOMICS));
-
-//////////////////////////////////////////////////////////////////////
 // FAST
 
 GPU_PERF_TEST_1(FAST, cv::gpu::DeviceInfo)

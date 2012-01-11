@@ -100,14 +100,6 @@ Ptr<FeatureDetector> FeatureDetector::create( const string& detectorType )
     {
         fd = new StarFeatureDetector();
     }
-    else if( !detectorType.compare( "SIFT" ) )
-    {
-        fd = new SiftFeatureDetector();
-    }
-    else if( !detectorType.compare( "SURF" ) )
-    {
-        fd = new SurfFeatureDetector();
-    }
     else if( !detectorType.compare( "ORB" ) )
     {
         fd = new OrbFeatureDetector();
@@ -359,92 +351,6 @@ void StarFeatureDetector::detectImpl( const Mat& image, vector<KeyPoint>& keypoi
 
     star(grayImage, keypoints);
     KeyPointsFilter::runByPixelsMask( keypoints, mask );
-}
-
-/*
- *   SiftFeatureDetector
- */
-SiftFeatureDetector::SiftFeatureDetector( const SIFT::DetectorParams &detectorParams,
-                                          const SIFT::CommonParams &commonParams )
-    : sift(detectorParams.threshold, detectorParams.edgeThreshold,
-           commonParams.nOctaves, commonParams.nOctaveLayers, commonParams.firstOctave, commonParams.angleMode)
-{
-}
-
-SiftFeatureDetector::SiftFeatureDetector( double threshold, double edgeThreshold,
-                                          int nOctaves, int nOctaveLayers, int firstOctave, int angleMode ) :
-    sift(threshold, edgeThreshold, nOctaves, nOctaveLayers, firstOctave, angleMode)
-{
-}
-
-void SiftFeatureDetector::read( const FileNode& fn )
-{
-    double threshold = fn["threshold"];
-    double edgeThreshold = fn["edgeThreshold"];
-    int nOctaves = fn["nOctaves"];
-    int nOctaveLayers = fn["nOctaveLayers"];
-    int firstOctave = fn["firstOctave"];
-    int angleMode = fn["angleMode"];
-
-    sift = SIFT(threshold, edgeThreshold, nOctaves, nOctaveLayers, firstOctave, angleMode);
-}
-
-void SiftFeatureDetector::write (FileStorage& fs) const
-{
-    //fs << "algorithm" << getAlgorithmName ();
-
-    SIFT::CommonParams commParams = sift.getCommonParams ();
-    SIFT::DetectorParams detectorParams = sift.getDetectorParams ();
-    fs << "threshold" << detectorParams.threshold;
-    fs << "edgeThreshold" << detectorParams.edgeThreshold;
-    fs << "nOctaves" << commParams.nOctaves;
-    fs << "nOctaveLayers" << commParams.nOctaveLayers;
-    fs << "firstOctave" << commParams.firstOctave;
-    fs << "angleMode" << commParams.angleMode;
-}
-
-
-void SiftFeatureDetector::detectImpl( const Mat& image, vector<KeyPoint>& keypoints, const Mat& mask ) const
-{
-    Mat grayImage = image;
-    if( image.type() != CV_8U ) cvtColor( image, grayImage, CV_BGR2GRAY );
-
-    sift(grayImage, mask, keypoints);
-}
-
-/*
- *  SurfFeatureDetector
- */
-SurfFeatureDetector::SurfFeatureDetector( double hessianThreshold, int octaves, int octaveLayers, bool upright )
-    : surf(hessianThreshold, octaves, octaveLayers, false, upright)
-{}
-
-void SurfFeatureDetector::read (const FileNode& fn)
-{
-    double hessianThreshold = fn["hessianThreshold"];
-    int octaves = fn["octaves"];
-    int octaveLayers = fn["octaveLayers"];
-    bool upright = (int)fn["upright"] != 0;
-
-    surf = SURF( hessianThreshold, octaves, octaveLayers, false, upright );
-}
-
-void SurfFeatureDetector::write (FileStorage& fs) const
-{
-    //fs << "algorithm" << getAlgorithmName ();
-
-    fs << "hessianThreshold" << surf.hessianThreshold;
-    fs << "octaves" << surf.nOctaves;
-    fs << "octaveLayers" << surf.nOctaveLayers;
-    fs << "upright" << surf.upright;
-}
-
-void SurfFeatureDetector::detectImpl( const Mat& image, vector<KeyPoint>& keypoints, const Mat& mask ) const
-{
-    Mat grayImage = image;
-    if( image.type() != CV_8U ) cvtColor( image, grayImage, CV_BGR2GRAY );
-
-    surf(grayImage, mask, keypoints);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

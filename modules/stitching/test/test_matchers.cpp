@@ -44,9 +44,9 @@
 using namespace cv;
 using namespace std;
 
-TEST(SurfFeaturesFinder, CanFindInROIs)
+TEST(OrbFeaturesFinder, CanFindInROIs)
 {
-    Ptr<detail::FeaturesFinder> finder = new detail::SurfFeaturesFinder();
+    Ptr<detail::FeaturesFinder> finder = new detail::OrbFeaturesFinder();
     Mat img  = imread(string(cvtest::TS::ptr()->get_data_path()) + "shared/lena.jpg");
 
     vector<Rect> rois;

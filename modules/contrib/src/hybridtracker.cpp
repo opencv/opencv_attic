@@ -68,7 +68,7 @@ CvHybridTracker::CvHybridTracker() {
 
 CvHybridTracker::CvHybridTracker(HybridTrackerParams _params) :
 	params(_params) {
-	params.ft_params.feature_type = CvFeatureTrackerParams::SIFT;
+	params.ft_params.feature_type = CvFeatureTrackerParams::OPTICAL_FLOW;
 	mstracker = new CvMeanShiftTracker(params.ms_params);
 	fttracker = new CvFeatureTracker(params.ft_params);
 }

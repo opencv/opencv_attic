@@ -440,7 +440,7 @@ protected:
             fs.open( string(ts->get_data_path()) + FEATURES2D_DIR + "/keypoints.xml.gz", FileStorage::WRITE );
             if( fs.isOpened() )
             {
-                SurfFeatureDetector fd;
+                OrbFeatureDetector fd;
                 fd.detect(img, keypoints);
                 write( fs, "keypoints", keypoints );
             }
@@ -991,21 +991,9 @@ TEST( Features2d_Detector_MSER, regression )
     test.safe_run();
 }
 
-TEST( Features2d_Detector_SIFT, regression )
-{
-    CV_FeatureDetectorTest test( "detector-sift", FeatureDetector::create("SIFT") );
-    test.safe_run();
-}
-
 TEST( Features2d_Detector_STAR, regression )
 {
     CV_FeatureDetectorTest test( "detector-star", FeatureDetector::create("STAR") );
-    test.safe_run();
-}
-
-TEST( Features2d_Detector_SURF, regression )
-{
-    CV_FeatureDetectorTest test( "detector-surf", FeatureDetector::create("SURF") );
     test.safe_run();
 }
 
@@ -1030,20 +1018,6 @@ TEST( Features2d_Detector_PyramidFAST, regression )
 /*
  * Descriptors
  */
-TEST( Features2d_DescriptorExtractor_SIFT, regression )
-{
-    CV_DescriptorExtractorTest<L2<float> > test( "descriptor-sift", 0.03f,
-                                                  DescriptorExtractor::create("SIFT"), 8.06652f  );
-    test.safe_run();
-}
-
-TEST( Features2d_DescriptorExtractor_SURF, regression )
-{
-    CV_DescriptorExtractorTest<L2<float> > test( "descriptor-surf",  0.035f,
-                                                 DescriptorExtractor::create("SURF"), 0.147372f );
-    test.safe_run();
-}
-
 TEST( Features2d_DescriptorExtractor_ORB, regression )
 {
     // TODO adjust the parameters below
@@ -1056,20 +1030,6 @@ TEST( Features2d_DescriptorExtractor_BRIEF, regression )
 {
     CV_DescriptorExtractorTest<Hamming> test( "descriptor-brief",  1,
                                                DescriptorExtractor::create("BRIEF"), 0.00527548f );
-    test.safe_run();
-}
-
-/*TEST( Features2d_DescriptorExtractor_OpponentSIFT, regression )
-{
-    CV_DescriptorExtractorTest<L2<float> > test( "descriptor-opponent-sift", 0.18f,
-                                                 DescriptorExtractor::create("OpponentSIFT"), 8.06652f  );
-    test.safe_run();
-}*/
-
-TEST( Features2d_DescriptorExtractor_OpponentSURF, regression )
-{
-    CV_DescriptorExtractorTest<L2<float> > test( "descriptor-opponent-surf",  0.18f,
-                                                 DescriptorExtractor::create("OpponentSURF"), 0.147372f );
     test.safe_run();
 }
 

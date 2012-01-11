@@ -58,17 +58,16 @@ Stitcher Stitcher::createDefault(bool try_use_gpu)
     stitcher.setFeaturesMatcher(new detail::BestOf2NearestMatcher(try_use_gpu));
     stitcher.setBundleAdjuster(new detail::BundleAdjusterRay());
 
+    stitcher.setFeaturesFinder(new detail::OrbFeaturesFinder());
 #ifndef ANDROID
     if (try_use_gpu && gpu::getCudaEnabledDeviceCount() > 0)
     {
-        stitcher.setFeaturesFinder(new detail::SurfFeaturesFinderGpu());
         stitcher.setWarper(new SphericalWarperGpu());
         stitcher.setSeamFinder(new detail::GraphCutSeamFinderGpu());
     }
     else
 #endif
     {
-        stitcher.setFeaturesFinder(new detail::SurfFeaturesFinder());
         stitcher.setWarper(new SphericalWarper());
         stitcher.setSeamFinder(new detail::GraphCutSeamFinder(detail::GraphCutSeamFinderBase::COST_COLOR));
     }

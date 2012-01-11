@@ -960,11 +960,7 @@ int main( int argc, char** argv )
         new DetectorQualityEvaluator( "HARRIS", "quality-detector-harris" ),
         new DetectorQualityEvaluator( "MSER", "quality-detector-mser" ),
         new DetectorQualityEvaluator( "STAR", "quality-detector-star" ),
-        new DetectorQualityEvaluator( "SIFT", "quality-detector-sift" ),
-        new DetectorQualityEvaluator( "SURF", "quality-detector-surf" ),
 
-        new DescriptorQualityEvaluator( "SIFT", "quality-descriptor-sift", "BruteForce" ),
-        new DescriptorQualityEvaluator( "SURF", "quality-descriptor-surf", "BruteForce" ),
         new DescriptorQualityEvaluator( "FERN", "quality-descriptor-fern"),
         new CalonderDescriptorQualityEvaluator()
     };

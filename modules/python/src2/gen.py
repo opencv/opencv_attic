@@ -164,16 +164,13 @@ def gen(name, args, ty, flags):
       elif a.ty in [ 'CvPoint2D32f' ]:
         destinations.append('&%s.x, &%s.y' % (a.nm, a.nm))
       elif a.ty in [ 'CvTermCriteria' ]:
-        destinations.append('&%s.type, &%s.max_iter, &%s.epsilon' % ((a.nm,)*3))
-      elif a.ty in [ 'CvSURFParams' ]:
-        destinations.append('&%s.extended, &%s.hessianThreshold, &%s.nOctaves, &%s.nOctaveLayers' % ((a.nm,)*4))
+        destinations.append('&%s.type, &%s.max_iter, &%s.epsilon' % ((a.nm,)*3))      
       elif a.nm in [ 'CvBox2D' ]:
         s = ", ".join([('&' + a.nm +'.' + fld) for fld in [ 'center.x', 'center.y', 'size.width', 'size.height', 'angle' ] ])
         destinations.append(s)
       else:
         destinations.append('&%s' % a.nm)
     fmap = {
-      'CvSURFParams' : '(idii)',
       'double' : 'd',
       'float' : 'f',
       'int' : 'i',
@@ -256,8 +253,6 @@ def gen(name, args, ty, flags):
         'CvSeqOfCvAvgComp*',
         'CvSeqOfCvConvexityDefect*',
         'CvSeqOfCvStarKeypoint*',
-        'CvSeqOfCvSURFPoint*',
-        'CvSeqOfCvSURFDescriptor*',
         'CvContourTree*',
         'IplConvKernel*',
         'IplImage*',

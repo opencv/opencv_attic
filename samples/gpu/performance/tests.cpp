@@ -318,6 +318,7 @@ TEST(norm)
         CPU_ON;
         for (int i = 0; i < 5; ++i)
             norm(src, NORM_INF);
+
         CPU_OFF;
 
         d_src.upload(src);
@@ -357,34 +358,6 @@ TEST(meanShift)
         gpu::meanShiftFiltering(d_src, d_dst, sp, sr);
         GPU_OFF;
     }
-}
-
-
-TEST(SURF)
-{
-    Mat src = imread(abspath("aloeL.jpg"), CV_LOAD_IMAGE_GRAYSCALE);
-    if (src.empty()) throw runtime_error("can't open aloeL.jpg");
-
-    SURF surf;
-    vector<KeyPoint> keypoints;
-    vector<float> descriptors;
-
-    surf(src, Mat(), keypoints, descriptors);
-
-    CPU_ON;
-    surf(src, Mat(), keypoints, descriptors);
-    CPU_OFF;
-
-    gpu::SURF_GPU d_surf;
-    gpu::GpuMat d_src(src);
-    gpu::GpuMat d_keypoints;
-    gpu::GpuMat d_descriptors;
-
-    d_surf(d_src, gpu::GpuMat(), d_keypoints, d_descriptors);
-
-    GPU_ON;
-    d_surf(d_src, gpu::GpuMat(), d_keypoints, d_descriptors);
-    GPU_OFF;
 }
 
 

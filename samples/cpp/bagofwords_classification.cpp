@@ -43,10 +43,10 @@ void help(char** argv)
     << "                         bowImageDescriptors - to store image descriptors, \n"
     << "                         svms - to store trained svms, \n"
     << "                         plots - to store files for plots creating. \n"
-    << "[feature detector]     Feature detector name (e.g. SURF, FAST...) - see createFeatureDetector() function in detectors.cpp \n"
-    << "                         Currently 12/2010, this is FAST, STAR, SIFT, SURF, MSER, GFTT, HARRIS \n"
-    << "[descriptor extractor] Descriptor extractor name (e.g. SURF, SIFT) - see createDescriptorExtractor() function in descriptors.cpp \n"
-    << "                         Currently 12/2010, this is SURF, OpponentSIFT, SIFT, OpponentSURF, BRIEF \n"
+    << "[feature detector]     Feature detector name (e.g.  FAST...) - see createFeatureDetector() function in detectors.cpp \n"
+    << "                         Currently 12/2010, this is FAST, STAR, MSER, GFTT, HARRIS \n"
+    << "[descriptor extractor] Descriptor extractor name - see createDescriptorExtractor() function in descriptors.cpp \n"
+    << "                         Currently 12/2010, this is BRIEF \n"
     << "[descriptor matcher]   Descriptor matcher name (e.g. BruteForce) - see createDescriptorMatcher() function in matchers.cpp \n"
     << "                         Currently 12/2010, this is BruteForce, BruteForce-L1, FlannBased, BruteForce-Hamming, BruteForce-HammingLUT \n"
     << "\n";
@@ -1954,7 +1954,7 @@ int VocData::extractXMLBlock(const string src, const string tag, const int searc
 //
 struct DDMParams
 {
-    DDMParams() : detectorType("SURF"), descriptorType("SURF"), matcherType("BruteForce") {}
+    DDMParams() : detectorType("FAST"), descriptorType("BRIEF"), matcherType("BruteForce") {}
     DDMParams( const string _detectorType, const string _descriptorType, const string& _matcherType ) :
         detectorType(_detectorType), descriptorType(_descriptorType), matcherType(_matcherType){}
     void read( const FileNode& fn )

@@ -53,23 +53,16 @@ CvFeatureTracker::CvFeatureTracker(CvFeatureTrackerParams _params) :
 {
 	switch (params.feature_type)
 	{
-	case CvFeatureTrackerParams::SIFT:
-		detector = new SiftFeatureDetector(
-				SIFT::DetectorParams::GET_DEFAULT_THRESHOLD(),
-				SIFT::DetectorParams::GET_DEFAULT_EDGE_THRESHOLD() + 0.7,
-				SIFT::CommonParams::DEFAULT_NOCTAVES + 4,
-				SIFT::CommonParams::DEFAULT_NOCTAVE_LAYERS + 2,
-				SIFT::CommonParams::DEFAULT_FIRST_OCTAVE,
-				SIFT::CommonParams::FIRST_ANGLE);
-	case CvFeatureTrackerParams::SURF:
-		detector = new SurfFeatureDetector(400, 3, 4);
 	default:
 		detector = new GoodFeaturesToTrackDetector();
 	}
 
-	descriptor = new SurfDescriptorExtractor(3, 4, false);
+	//descriptor = new SurfDescriptorExtractor(3, 4, false);
 
-	matcher = new BruteForceMatcher<L2<float> > ();
+	//matcher = new BruteForceMatcher<L2<float> > ();
+
+        descriptor = new OrbDescriptorExtractor();
+        matcher = new BruteForceMatcher<Hamming>();
 }
 
 CvFeatureTracker::~CvFeatureTracker()

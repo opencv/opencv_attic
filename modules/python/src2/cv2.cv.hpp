@@ -2406,46 +2406,6 @@ static PyObject *FROM_CvSeqOfCvStarKeypointPTR(CvSeqOfCvStarKeypoint *r)
   return pr;
 }
 
-typedef CvSeq CvSeqOfCvSURFPoint;
-static PyObject *FROM_CvSeqOfCvSURFPointPTR(CvSeqOfCvSURFPoint *r)
-{
-  PyObject *pr;
-  pr = PyList_New(r->total);
-  for (int i = 0; i < r->total; i++) {
-    CvSURFPoint *pd = CV_GET_SEQ_ELEM(CvSURFPoint, r, i);
-    PyList_SetItem(pr, i, Py_BuildValue("(ff)iiff",
-                                        pd->pt.x, pd->pt.y, 
-                                        pd->laplacian,
-                                        pd->size,
-                                        pd->dir,
-                                        pd->hessian));
-  }
-  // This function has copied the CvSeq data into a list.  Hence the
-  // CvSeq is not being returned to the caller.  Hence, no reference
-  // count increase for the storage, unlike _FROM_CvSeqPTR.
-  return pr;
-}
-
-typedef CvSeq CvSeqOfCvSURFDescriptor;
-static PyObject *FROM_CvSeqOfCvSURFDescriptorPTR(CvSeqOfCvSURFDescriptor *r)
-{
-  PyObject *pr;
-  pr = PyList_New(r->total);
-  for (int i = 0; i < r->total; i++) {
-    float *pd = (float*)cvGetSeqElem(r, i);
-    int count = r->elem_size / sizeof(float);
-    PyObject *oi = PyList_New(count);
-    for (int j = 0; j < count; j++) {
-      PyList_SetItem(oi, j, PyFloat_FromDouble(pd[j]));
-    }
-    PyList_SetItem(pr, i, oi);
-  }
-  // This function has copied the CvSeq data into a list.  Hence the
-  // CvSeq is not being returned to the caller.  Hence, no reference
-  // count increase for the storage, unlike _FROM_CvSeqPTR.
-  return pr;
-}
-
 typedef CvPoint2D32f CvPoint2D32f_4[4];
 static PyObject *FROM_CvPoint2D32f_4(CvPoint2D32f* r)
 {

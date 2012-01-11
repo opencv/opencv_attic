@@ -52,51 +52,6 @@
 extern "C" {
 #endif
 
-typedef struct CvSURFPoint
-{
-    CvPoint2D32f pt;
-
-    int          laplacian;
-    int          size;
-    float        dir;
-    float        hessian;
-
-} CvSURFPoint;
-
-CV_INLINE CvSURFPoint cvSURFPoint( CvPoint2D32f pt, int laplacian,
-                                   int size, float dir CV_DEFAULT(0),
-                                   float hessian CV_DEFAULT(0))
-{
-    CvSURFPoint kp;
-
-    kp.pt        = pt;
-    kp.laplacian = laplacian;
-    kp.size      = size;
-    kp.dir       = dir;
-    kp.hessian   = hessian;
-
-    return kp;
-}
-
-typedef struct CvSURFParams
-{
-    int    extended;
-    int    upright;
-    double hessianThreshold;
-
-    int    nOctaves;
-    int    nOctaveLayers;
-
-} CvSURFParams;
-
-CVAPI(CvSURFParams) cvSURFParams( double hessianThreshold, int extended CV_DEFAULT(0) );
-
-// If useProvidedKeyPts!=0, keypoints are not detected, but descriptors are computed
-//  at the locations provided in keypoints (a CvSeq of CvSURFPoint).
-CVAPI(void) cvExtractSURF( const CvArr* img, const CvArr* mask,
-                           CvSeq** keypoints, CvSeq** descriptors,
-                           CvMemStorage* storage, CvSURFParams params, int useProvidedKeyPts CV_DEFAULT(0)  );
-
 /*!
  Maximal Stable Regions Parameters
 */
@@ -214,7 +169,7 @@ public:
  The Keypoint Class
  
  The class instance stores a keypoint, i.e. a point feature found by one of many available keypoint detectors, such as
- Harris corner detector, cv::FAST, cv::StarDetector, cv::SURF, cv::SIFT, cv::LDetector etc.
+ Harris corner detector, cv::FAST, cv::StarDetector, cv::LDetector etc.
  
  The keypoint is characterized by the 2D position, scale
  (proportional to the diameter of the neighborhood that needs to be taken into account),
@@ -293,121 +248,6 @@ public:
      * Remove duplicated keypoints.
      */
     static void removeDuplicated( vector<KeyPoint>& keypoints );
-};
-
-/*!
- SIFT implementation.
- 
- The class implements SIFT algorithm by D. Lowe.
-*/
-
-class CV_EXPORTS SIFT
-{
-public:
-    struct CV_EXPORTS CommonParams
-    {
-        static const int DEFAULT_NOCTAVES = 4;
-        static const int DEFAULT_NOCTAVE_LAYERS = 3;
-        static const int DEFAULT_FIRST_OCTAVE = -1;
-        enum { FIRST_ANGLE = 0, AVERAGE_ANGLE = 1 };
-
-        CommonParams();
-        CommonParams( int _nOctaves, int _nOctaveLayers, int /*_firstOctave*/, int /*_angleMode*/ );
-        CommonParams( int _nOctaves, int _nOctaveLayers );
-        int nOctaves, nOctaveLayers;
-        int firstOctave; // it is not used now (firstOctave == 0 always)
-        int angleMode;   // it is not used now
-    };
-
-    struct CV_EXPORTS DetectorParams
-    {
-        static double GET_DEFAULT_THRESHOLD() { return 0.04; }
-        static double GET_DEFAULT_EDGE_THRESHOLD() { return 10.0; }
-
-        DetectorParams();
-        DetectorParams( double _threshold, double _edgeThreshold );
-        double threshold, edgeThreshold;
-    };
-
-    struct CV_EXPORTS DescriptorParams
-    {
-        static double GET_DEFAULT_MAGNIFICATION() { return 3.0; }
-        static const bool DEFAULT_IS_NORMALIZE = true;
-        static const int DESCRIPTOR_SIZE = 128;
-
-        DescriptorParams();
-        DescriptorParams( double _magnification, bool /*_isNormalize*/, bool _recalculateAngles );
-        DescriptorParams( bool _recalculateAngles );
-        double magnification;
-        bool isNormalize; // it is not used now (true always)
-        bool recalculateAngles;
-    };
-
-    SIFT();
-    //! sift-detector constructor
-    SIFT( double _threshold, double _edgeThreshold,
-          int _nOctaves=CommonParams::DEFAULT_NOCTAVES,
-          int _nOctaveLayers=CommonParams::DEFAULT_NOCTAVE_LAYERS,
-          int _firstOctave=CommonParams::DEFAULT_FIRST_OCTAVE,
-          int _angleMode=CommonParams::FIRST_ANGLE );
-    //! sift-descriptor constructor
-    SIFT( double _magnification, bool _isNormalize=true,
-          bool _recalculateAngles = true,
-          int _nOctaves=CommonParams::DEFAULT_NOCTAVES,
-          int _nOctaveLayers=CommonParams::DEFAULT_NOCTAVE_LAYERS,
-          int _firstOctave=CommonParams::DEFAULT_FIRST_OCTAVE,
-          int _angleMode=CommonParams::FIRST_ANGLE );
-    SIFT( const CommonParams& _commParams,
-          const DetectorParams& _detectorParams = DetectorParams(),
-          const DescriptorParams& _descriptorParams = DescriptorParams() );
-
-    //! returns the descriptor size in floats (128)
-    int descriptorSize() const;
-    //! finds the keypoints using SIFT algorithm
-    void operator()(const Mat& img, const Mat& mask,
-                    vector<KeyPoint>& keypoints) const;
-    //! finds the keypoints and computes descriptors for them using SIFT algorithm.
-    //! Optionally it can compute descriptors for the user-provided keypoints
-    void operator()(const Mat& img, const Mat& mask,
-                    vector<KeyPoint>& keypoints,
-                    Mat& descriptors,
-                    bool useProvidedKeypoints=false) const;
-
-    CommonParams getCommonParams () const;
-    DetectorParams getDetectorParams () const;
-    DescriptorParams getDescriptorParams () const;
-
-protected:
-    CommonParams commParams;
-    DetectorParams detectorParams;
-    DescriptorParams descriptorParams;
-};
-
-    
-/*!
- SURF implementation.
- 
- The class implements SURF algorithm by H. Bay et al.
- */
-class CV_EXPORTS_W SURF : public CvSURFParams
-{
-public:
-    //! the default constructor
-    CV_WRAP SURF();
-    //! the full constructor taking all the necessary parameters
-    CV_WRAP SURF(double _hessianThreshold, int _nOctaves=4,
-         int _nOctaveLayers=2, bool _extended=false, bool _upright=false);
-
-    //! returns the descriptor size in float's (64 or 128)
-    CV_WRAP int descriptorSize() const;
-    //! finds the keypoints using fast hessian detector used in SURF
-    CV_WRAP_AS(detect) void operator()(const Mat& img, const Mat& mask,
-                    CV_OUT vector<KeyPoint>& keypoints) const;
-    //! finds the keypoints and computes their descriptors. Optionally it can compute descriptors for the user-provided keypoints
-    CV_WRAP_AS(detect) void operator()(const Mat& img, const Mat& mask,
-                    CV_OUT vector<KeyPoint>& keypoints,
-                    CV_OUT vector<float>& descriptors,
-                    bool useProvidedKeypoints=false) const;
 };
 
 /*!
@@ -566,7 +406,7 @@ private:
  Maximal Stable Extremal Regions class.
  
  The class implements MSER algorithm introduced by J. Matas.
- Unlike SIFT, SURF and many other detectors in OpenCV, this is salient region detector,
+ Unlike many other detectors in OpenCV, this is salient region detector,
  not the salient point detector.
  
  It returns the regions, each of those is encoded as a contour.
@@ -1497,38 +1337,6 @@ protected:
     StarDetector star;
 };
 
-class CV_EXPORTS SiftFeatureDetector : public FeatureDetector
-{
-public:
-    SiftFeatureDetector( const SIFT::DetectorParams& detectorParams=SIFT::DetectorParams(),
-                         const SIFT::CommonParams& commonParams=SIFT::CommonParams() );
-    SiftFeatureDetector( double threshold, double edgeThreshold,
-                         int nOctaves=SIFT::CommonParams::DEFAULT_NOCTAVES,
-                         int nOctaveLayers=SIFT::CommonParams::DEFAULT_NOCTAVE_LAYERS,
-                         int firstOctave=SIFT::CommonParams::DEFAULT_FIRST_OCTAVE,
-                         int angleMode=SIFT::CommonParams::FIRST_ANGLE );
-    virtual void read( const FileNode& fn );
-    virtual void write( FileStorage& fs ) const;
-
-protected:
-    virtual void detectImpl( const Mat& image, vector<KeyPoint>& keypoints, const Mat& mask=Mat() ) const;
-
-    SIFT sift;
-};
-
-class CV_EXPORTS_W SurfFeatureDetector : public FeatureDetector
-{
-public:
-    CV_WRAP SurfFeatureDetector( double hessianThreshold=400., int octaves=3, int octaveLayers=4, bool upright=false );
-    virtual void read( const FileNode& fn );
-    virtual void write( FileStorage& fs ) const;
-
-protected:
-    virtual void detectImpl( const Mat& image, vector<KeyPoint>& keypoints, const Mat& mask=Mat() ) const;
-
-    SURF surf;
-};
-
 /** Feature detector for the ORB feature
  * Basically fast followed by a Harris check
  */
@@ -1731,7 +1539,7 @@ public:
     /** \param adjaster an AdjusterAdapter that will do the detection and parameter adjustment
      *  \param max_features the maximum desired number of features
      *  \param max_iters the maximum number of times to try to adjust the feature detector params
-     * 			for the FastAdjuster this can be high, but with Star or Surf this can get time consuming
+     * 			for the FastAdjuster this can be high, but with Star this can get time consuming
      *  \param min_features the minimum desired features
      */
     DynamicAdaptedFeatureDetector( const Ptr<AdjusterAdapter>& adjaster, int min_features=400, int max_features=500, int max_iters=5 );
@@ -1797,23 +1605,6 @@ protected:
     CvStarDetectorParams params_; //todo use these instead of thresh_
 };
 
-class CV_EXPORTS SurfAdjuster: public AdjusterAdapter
-{
-public:
-    SurfAdjuster( double initial_thresh=400.f, double min_thresh=2, double max_thresh=1000 );
-
-    virtual void tooFew(int min, int n_detected);
-    virtual void tooMany(int max, int n_detected);
-    virtual bool good() const;
-
-    virtual Ptr<AdjusterAdapter> clone() const;
-
-protected:
-    virtual void detectImpl( const Mat& image, vector<KeyPoint>& keypoints, const Mat& mask=Mat() ) const;
-
-    double thresh_, init_thresh_, min_thresh_, max_thresh_;
-};
-
 CV_EXPORTS Mat windowedMatchingMask( const vector<KeyPoint>& keypoints1, const vector<KeyPoint>& keypoints2,
                                      float maxDeltaX, float maxDeltaY );
 
@@ -1870,52 +1661,6 @@ protected:
      */
     static void removeBorderKeypoints( vector<KeyPoint>& keypoints,
                                        Size imageSize, int borderSize );
-};
-
-/*
- * SiftDescriptorExtractor
- */
-class CV_EXPORTS SiftDescriptorExtractor : public DescriptorExtractor
-{
-public:
-    SiftDescriptorExtractor( const SIFT::DescriptorParams& descriptorParams=SIFT::DescriptorParams(),
-                             const SIFT::CommonParams& commonParams=SIFT::CommonParams() );
-    SiftDescriptorExtractor( double magnification, bool isNormalize=true, bool recalculateAngles=true,
-                             int nOctaves=SIFT::CommonParams::DEFAULT_NOCTAVES,
-                             int nOctaveLayers=SIFT::CommonParams::DEFAULT_NOCTAVE_LAYERS,
-                             int firstOctave=SIFT::CommonParams::DEFAULT_FIRST_OCTAVE,
-                             int angleMode=SIFT::CommonParams::FIRST_ANGLE );
-
-    virtual void read( const FileNode &fn );
-    virtual void write( FileStorage &fs ) const;
-
-    virtual int descriptorSize() const;
-    virtual int descriptorType() const;
-
-protected:
-	virtual void computeImpl( const Mat& image, vector<KeyPoint>& keypoints, Mat& descriptors ) const;
-    
-    SIFT sift;
-};
-
-/*
- * SurfDescriptorExtractor
- */
-class CV_EXPORTS_W SurfDescriptorExtractor : public DescriptorExtractor
-{
-public:
-    CV_WRAP SurfDescriptorExtractor( int nOctaves=4, int nOctaveLayers=2, bool extended=false, bool upright=false );
-
-    virtual void read( const FileNode &fn );
-    virtual void write( FileStorage &fs ) const;
-
-    virtual int descriptorSize() const;
-    virtual int descriptorType() const;
-
-protected:
-    virtual void computeImpl( const Mat& image, vector<KeyPoint>& keypoints, Mat& descriptors ) const;
-
-    SURF surf;
 };
 
 /** The descriptor extractor for the ORB descriptor

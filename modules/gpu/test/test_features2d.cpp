@@ -79,81 +79,6 @@ int getValidMatchesCount(const std::vector<cv::KeyPoint>& keypoints1, const std:
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
-// SURF
-
-struct SURF : TestWithParam<cv::gpu::DeviceInfo>
-{
-    cv::gpu::DeviceInfo devInfo;
-
-    cv::Mat image;
-    cv::Mat mask;
-
-    std::vector<cv::KeyPoint> keypoints_gold;
-    std::vector<float> descriptors_gold;
-    
-    virtual void SetUp()
-    {
-        devInfo = GetParam();
-
-        cv::gpu::setDevice(devInfo.deviceID());
-        
-        image = readImage("features2d/aloe.png", CV_LOAD_IMAGE_GRAYSCALE);
-        ASSERT_FALSE(image.empty());        
-        
-        mask = cv::Mat(image.size(), CV_8UC1, cv::Scalar::all(1));
-        mask(cv::Range(0, image.rows / 2), cv::Range(0, image.cols / 2)).setTo(cv::Scalar::all(0));
-                
-        cv::SURF fdetector_gold; 
-        fdetector_gold.extended = false;
-        fdetector_gold(image, mask, keypoints_gold, descriptors_gold);        
-    }
-};
-
-TEST_P(SURF, EmptyDataTest)
-{
-    cv::gpu::SURF_GPU fdetector;
-
-    cv::gpu::GpuMat image;
-    std::vector<cv::KeyPoint> keypoints;
-    std::vector<float> descriptors;
-
-    ASSERT_NO_THROW(
-        fdetector(image, cv::gpu::GpuMat(), keypoints, descriptors);
-    );
-
-    EXPECT_TRUE(keypoints.empty());
-    EXPECT_TRUE(descriptors.empty());
-}
-
-TEST_P(SURF, Accuracy)
-{
-    std::vector<cv::KeyPoint> keypoints;
-    cv::Mat descriptors;
-
-    ASSERT_NO_THROW(
-        cv::gpu::GpuMat dev_descriptors;
-        cv::gpu::SURF_GPU fdetector; fdetector.extended = false;
-
-        fdetector(loadMat(image), loadMat(mask), keypoints, dev_descriptors);
-
-        dev_descriptors.download(descriptors);
-    );
-
-    cv::BruteForceMatcher< cv::L2<float> > matcher;
-    std::vector<cv::DMatch> matches;
-
-    matcher.match(cv::Mat(static_cast<int>(keypoints_gold.size()), 64, CV_32FC1, &descriptors_gold[0]), descriptors, matches);
-
-    int validCount = getValidMatchesCount(keypoints_gold, keypoints, matches);
-
-    double validRatio = (double) validCount / matches.size();
-
-    EXPECT_GT(validRatio, 0.5);
-}
-
-INSTANTIATE_TEST_CASE_P(Features2D, SURF, DEVICES(cv::gpu::GLOBAL_ATOMICS));
-
-/////////////////////////////////////////////////////////////////////////////////////////////////
 // BruteForceMatcher
 
 PARAM_TEST_CASE(BruteForceMatcher, cv::gpu::DeviceInfo, DistType, int)
@@ -233,6 +158,7 @@ TEST_P(BruteForceMatcher, Match)
 
     ASSERT_EQ(0, badCount);
 }
+
 
 TEST_P(BruteForceMatcher, MatchAdd)
 {
@@ -489,6 +415,7 @@ TEST_P(BruteForceMatcher, RadiusMatch)
         return;
 
     const float radius = 1.f / countFactor;
+
 
     std::vector< std::vector<cv::DMatch> > matches;
 

@@ -539,6 +539,7 @@ CV_EXPORTS void phase(const GpuMat& x, const GpuMat& y, GpuMat& angle, bool angl
 //! supports only floating-point source
 CV_EXPORTS void cartToPolar(const GpuMat& x, const GpuMat& y, GpuMat& magnitude, GpuMat& angle, bool angleInDegrees = false, Stream& stream = Stream::Null());
 
+
 //! converts polar coordinates to Cartesian
 //! supports only floating-point source
 CV_EXPORTS void polarToCart(const GpuMat& magnitude, const GpuMat& angle, GpuMat& x, GpuMat& y, bool angleInDegrees = false, Stream& stream = Stream::Null());
@@ -1453,73 +1454,6 @@ private:
 
     struct CascadeClassifierImpl;
     CascadeClassifierImpl* impl;
-};
-
-////////////////////////////////// SURF //////////////////////////////////////////
-
-class CV_EXPORTS SURF_GPU : public CvSURFParams
-{
-public:
-    enum KeypointLayout 
-    {
-        SF_X = 0,
-        SF_Y,
-        SF_LAPLACIAN,
-        SF_SIZE,
-        SF_DIR,
-        SF_HESSIAN,
-        SF_FEATURE_STRIDE
-    };
-
-    //! the default constructor
-    SURF_GPU();
-    //! the full constructor taking all the necessary parameters
-    explicit SURF_GPU(double _hessianThreshold, int _nOctaves=4,
-         int _nOctaveLayers=2, bool _extended=false, float _keypointsRatio=0.01f, bool _upright = false);
-
-    //! returns the descriptor size in float's (64 or 128)
-    int descriptorSize() const;
-
-    //! upload host keypoints to device memory
-    void uploadKeypoints(const vector<KeyPoint>& keypoints, GpuMat& keypointsGPU);
-    //! download keypoints from device to host memory
-    void downloadKeypoints(const GpuMat& keypointsGPU, vector<KeyPoint>& keypoints);
-
-    //! download descriptors from device to host memory
-    void downloadDescriptors(const GpuMat& descriptorsGPU, vector<float>& descriptors);
-    
-    //! finds the keypoints using fast hessian detector used in SURF
-    //! supports CV_8UC1 images
-    //! keypoints will have nFeature cols and 6 rows
-    //! keypoints.ptr<float>(SF_X)[i] will contain x coordinate of i'th feature
-    //! keypoints.ptr<float>(SF_Y)[i] will contain y coordinate of i'th feature
-    //! keypoints.ptr<float>(SF_LAPLACIAN)[i] will contain laplacian sign of i'th feature
-    //! keypoints.ptr<float>(SF_SIZE)[i] will contain size of i'th feature
-    //! keypoints.ptr<float>(SF_DIR)[i] will contain orientation of i'th feature
-    //! keypoints.ptr<float>(SF_HESSIAN)[i] will contain response of i'th feature
-    void operator()(const GpuMat& img, const GpuMat& mask, GpuMat& keypoints);
-    //! finds the keypoints and computes their descriptors. 
-    //! Optionally it can compute descriptors for the user-provided keypoints and recompute keypoints direction
-    void operator()(const GpuMat& img, const GpuMat& mask, GpuMat& keypoints, GpuMat& descriptors, 
-        bool useProvidedKeypoints = false);
-
-    void operator()(const GpuMat& img, const GpuMat& mask, std::vector<KeyPoint>& keypoints);
-    void operator()(const GpuMat& img, const GpuMat& mask, std::vector<KeyPoint>& keypoints, GpuMat& descriptors, 
-        bool useProvidedKeypoints = false);
-
-    void operator()(const GpuMat& img, const GpuMat& mask, std::vector<KeyPoint>& keypoints, std::vector<float>& descriptors, 
-        bool useProvidedKeypoints = false);
-
-    void releaseMemory();
-
-    //! max keypoints = min(keypointsRatio * img.size().area(), 65535)
-    float keypointsRatio;
-
-    GpuMat sum, mask1, maskSum, intBuffer;
-
-    GpuMat det, trace;
-
-    GpuMat maxPosBuffer;
 };
 
 ////////////////////////////////// FAST //////////////////////////////////////////

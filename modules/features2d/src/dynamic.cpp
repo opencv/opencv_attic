@@ -162,42 +162,6 @@ Ptr<AdjusterAdapter> StarAdjuster::clone() const
     return cloned_obj;
 }
 
-SurfAdjuster::SurfAdjuster( double initial_thresh, double min_thresh, double max_thresh ) :
-    thresh_(initial_thresh), init_thresh_(initial_thresh),
-    min_thresh_(min_thresh), max_thresh_(max_thresh)
-{}
-
-void SurfAdjuster::detectImpl(const Mat& image, vector<KeyPoint>& keypoints, const cv::Mat& mask) const
-{
-    SurfFeatureDetector detector_tmp(thresh_);
-    detector_tmp.detect(image, keypoints, mask);
-}
-
-void SurfAdjuster::tooFew(int, int)
-{
-    thresh_ *= 0.9;
-    if (thresh_ < 1.1)
-            thresh_ = 1.1;
-}
-
-void SurfAdjuster::tooMany(int, int)
-{
-    thresh_ *= 1.1;
-}
-
-//return whether or not the threshhold is beyond
-//a useful point
-bool SurfAdjuster::good() const
-{
-    return (thresh_ > min_thresh_) && (thresh_ < max_thresh_);
-}
-
-Ptr<AdjusterAdapter> SurfAdjuster::clone() const
-{
-    Ptr<AdjusterAdapter> cloned_obj = new SurfAdjuster( init_thresh_, min_thresh_, max_thresh_ );
-    return cloned_obj;
-}
-
 Ptr<AdjusterAdapter> AdjusterAdapter::create( const string& detectorType )
 {
     Ptr<AdjusterAdapter> adapter;
@@ -209,10 +173,6 @@ Ptr<AdjusterAdapter> AdjusterAdapter::create( const string& detectorType )
     else if( !detectorType.compare( "STAR" ) )
     {
         adapter = new StarAdjuster();
-    }
-    else if( !detectorType.compare( "SURF" ) )
-    {
-        adapter = new SurfAdjuster();
     }
 
     return adapter;
