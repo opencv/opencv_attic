@@ -1,8 +1,12 @@
-#include <utility_lib/utility_lib.h>
-#include "opencv2/core/core.hpp"
-#include "opencv2/features2d/features2d.hpp"
-#include "opencv2/highgui/highgui.hpp"
-#include "opencv2/gpu/gpu.hpp"
+#include <utility>
+#include <memory>
+
+#include <opencv2/core/core.hpp>
+#include <opencv2/core/opengl_interop.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/gpu/gpu.hpp>
+
+#include "utility_lib/utility_lib.h"
 
 #define PARAM_SCALE     "--scale"
 #define PARAM_ALPHA     "--alpha"
@@ -10,8 +14,7 @@
 #define PARAM_INNER     "--inner"
 #define PARAM_OUTER     "--outer"
 #define PARAM_SOLVER    "--solver"
-#define PARAM_TIME_STEP "--time-step"
-#define PARAM_HELP      "--help"
+#define PARAM_OFFSET    "--offset"
 
 using namespace std;
 using namespace cv;
@@ -27,58 +30,87 @@ public:
     virtual void run(int argc, char **argv);
     virtual void parseCmdArgs(int argc, char **argv);
     virtual void printHelp();
-    virtual bool processKey(int key);
 
     int the_same_video_offset;
     BroxOpticalFlow flow;
 };
 
-template <typename T> inline T clamp (T x, T a, T b)
+void App::parseCmdArgs(int argc, char **argv)
 {
-    return ((x) > (a) ? ((x) < (b) ? (x) : (b)) : (a));
+    for (int i = 1; i < argc && !help_showed; ++i)
+    {
+        if (parseBaseCmdArgs(i, argc, argv))
+            continue;
+
+        string arg(argv[i]);
+
+        if (arg == PARAM_SCALE)
+            flow.scale_factor = static_cast<float>(atof(argv[++i]));
+        else if (arg == PARAM_ALPHA)
+            flow.alpha = static_cast<float>(atof(argv[++i]));
+        else if (arg == PARAM_GAMMA)
+            flow.gamma = static_cast<float>(atof(argv[++i]));
+        else if (arg == PARAM_INNER)
+            flow.inner_iterations = atoi(argv[++i]);
+        else if (arg == PARAM_OUTER)
+            flow.outer_iterations = atoi(argv[++i]);
+        else if (arg == PARAM_SOLVER)
+            flow.solver_iterations = atoi(argv[++i]);
+        else if (arg == PARAM_OFFSET)
+            the_same_video_offset = atoi(argv[++i]);
+        else
+            throwBadArgError(argv[i]);
+    }
 }
 
-template <typename T> inline T mapValue(T x, T a, T b, T c, T d)
+void App::printHelp()
 {
-    x = clamp(x, a, b);
-    return c + (d - c) * (x - a) / (b - a);
+    cout << "This program demonstrates using BroxOpticalFlow" << endl;
+    cout << "Usage: demo_optical_flow <frames_source1> [<frames_source2>]" << endl;
+    cout << setiosflags(ios::left);
+    cout << '\t' << setw(15) << PARAM_ALPHA << " - set alpha" << endl;
+    cout << '\t' << setw(15) << PARAM_GAMMA << " - set gamma" << endl;
+    cout << '\t' << setw(15) << PARAM_INNER << " - set number of inner iterations" << endl;
+    cout << '\t' << setw(15) << PARAM_OUTER << " - set number of outer iterations" << endl;
+    cout << '\t' << setw(15) << PARAM_SCALE << " - set pyramid scale factor" << endl;
+    cout << '\t' << setw(15) << PARAM_SOLVER << " - set number of basic solver iterations" << endl;
+    cout << '\t' << setw(15) << PARAM_OFFSET << " - set frames offset for the duplicate video source" << endl;
+    cout << "\t\t" << "(in case when ony one video or camera source is given). The default is 1." << endl;
+    BaseApp::printHelp();
 }
 
-void getFlowField(const Mat& u, const Mat& v, Mat& flowField)
+struct DrawData
 {
-    float maxDisplacement = 1.0f;
+    GlTexture tex;
+    GlArrays arr;
+    string total_fps;
+    string proc_fps;
+};
 
-    for (int i = 0; i < u.rows; ++i)
+void drawCallback(void* userdata)
+{
+    DrawData* data = static_cast<DrawData*>(userdata);
+
+    if (data->tex.empty() || data->arr.empty())
+        return;
+
+    static GlCamera camera;
+    static bool init_camera = true;
+
+    if (init_camera)
     {
-        const float* ptr_u = u.ptr<float>(i);
-        const float* ptr_v = v.ptr<float>(i);
-
-        for (int j = 0; j < u.cols; ++j)
-        {
-            float d = max(fabsf(ptr_u[j]), fabsf(ptr_v[j]));
-
-            if (d > maxDisplacement) 
-                maxDisplacement = d;
-        }
+        camera.setOrthoProjection(0.0, 1.0, 1.0, 0.0, 0.0, 1.0);
+        camera.lookAt(Point3d(0.0, 0.0, 1.0), Point3d(0.0, 0.0, 0.0), Point3d(0.0, 1.0, 0.0));
+        init_camera = false;
     }
 
-    flowField.create(u.size(), CV_8UC4);
+    camera.setupProjectionMatrix();
+    camera.setupModelViewMatrix();
 
-    for (int i = 0; i < flowField.rows; ++i)
-    {
-        const float* ptr_u = u.ptr<float>(i);
-        const float* ptr_v = v.ptr<float>(i);
-
-        Vec4b* row = flowField.ptr<Vec4b>(i);
-
-        for (int j = 0; j < flowField.cols; ++j)
-        {
-            row[j][0] = 0;
-            row[j][1] = static_cast<unsigned char> (mapValue (-ptr_v[j], -maxDisplacement, maxDisplacement, 0.0f, 255.0f));
-            row[j][2] = static_cast<unsigned char> (mapValue ( ptr_u[j], -maxDisplacement, maxDisplacement, 0.0f, 255.0f));
-            row[j][3] = 255;
-        }
-    }
+    render(data->tex);
+    render(data->arr, RenderMode::TRIANGLES);
+    render(data->total_fps, GlFont::get("Courier New", 24, GlFont::WEIGHT_BOLD), Scalar::all(255), Point2d(3.0, 0.0));
+    render(data->proc_fps, GlFont::get("Courier New", 24, GlFont::WEIGHT_BOLD), Scalar::all(255), Point2d(3.0, 30.0));
 }
 
 void App::run(int argc, char **argv)
@@ -101,20 +133,20 @@ void App::run(int argc, char **argv)
         sources[0] = new ImageSource("data/optical_flow/rubberwhale1.png");
         sources[1] = new ImageSource("data/optical_flow/rubberwhale2.png");
     }
-
-    Mat frame0Color, frame1Color;
-    Mat frame0Gray, frame1Gray;
-
-    GpuMat d_frame0, d_frame1;
     
-    Mat fu, fv;
-    Mat bu, bv;
+    namedWindow("optical_flow_demo", WINDOW_OPENGL);
+    setGlDevice();
 
-    GpuMat d_fu, d_fv;
-    GpuMat d_bu, d_bv;
+    Mat frame0, frame1;
 
-    Mat flowFieldForward;
-    Mat flowFieldBackward;
+    GpuMat d_frame0Color, d_frame1Color;
+    GpuMat d_frame0Color32F, d_frame1Color32F;
+    GpuMat d_frame0Gray, d_frame1Gray;   
+    GpuMat d_u, d_v;
+    GpuMat d_vertex, d_colors;
+
+    DrawData drawData;    
+    setOpenGlDrawCallback("optical_flow_demo", drawCallback, &drawData);
 
     double total_fps = 0;
 
@@ -122,100 +154,43 @@ void App::run(int argc, char **argv)
     {
         int64 start = getTickCount();
 
-        sources[0]->next(frame0Color);
-        sources[1]->next(frame1Color);
+        sources[0]->next(frame0);
+        sources[1]->next(frame1);
 
-        imshow("optical_flow_demo - frame 0", frame0Color);
-        imshow("optical_flow_demo - frame 1", frame1Color);        
+        d_frame0Color.upload(frame0);
+        d_frame1Color.upload(frame1);
 
-        frame0Color.convertTo(frame0Color, CV_32F, 1.0 / 255.0);
-        frame1Color.convertTo(frame1Color, CV_32F, 1.0 / 255.0);
+        d_frame0Color.convertTo(d_frame0Color32F, CV_32F, 1.0 / 255.0);
+        d_frame1Color.convertTo(d_frame1Color32F, CV_32F, 1.0 / 255.0);
 
-        cvtColor(frame0Color, frame0Gray, COLOR_BGR2GRAY);
-        cvtColor(frame1Color, frame1Gray, COLOR_BGR2GRAY);
-
-        d_frame0.upload(frame0Gray);
-        d_frame1.upload(frame1Gray);
+        cvtColor(d_frame0Color32F, d_frame0Gray, COLOR_BGR2GRAY);
+        cvtColor(d_frame1Color32F, d_frame1Gray, COLOR_BGR2GRAY);
 
         int64 proc_start = getTickCount();
 
-        flow(d_frame0, d_frame1, d_fu, d_fv);
-        //flow(d_frame1, d_frame0, d_bu, d_bv);
+        flow(d_frame0Gray, d_frame1Gray, d_u, d_v);
 
-        double proc_fps = getTickFrequency()  / (getTickCount() - proc_start);        
+        createOpticalFlowNeedleMap(d_u, d_v, d_vertex, d_colors);
 
-        d_fu.download(fu);
-        d_fv.download(fv);
-        
-        //d_bu.download(bu);
-        //d_bv.download(bv);
+        double proc_fps = getTickFrequency()  / (getTickCount() - proc_start);
 
-        getFlowField(fu, fv, flowFieldForward);
-        //getFlowField(bu, bv, flowFieldBackward);
+        stringstream total_fps_str; 
+        total_fps_str << "Total FPS : " << setprecision(4) << total_fps;
 
-        stringstream msg; msg << "total FPS = " << setprecision(4) << total_fps;
-        putText(flowFieldForward, msg.str(), Point(0, 30), FONT_HERSHEY_SIMPLEX, 1, Scalar::all(255));
-        //putText(flowFieldBackward, msg.str(), Point(0, 30), FONT_HERSHEY_SIMPLEX, 1, Scalar::all(255));
-        msg.str(""); msg << "processing FPS = " << setprecision(4) << proc_fps;
-        putText(flowFieldForward, msg.str(), Point(0, 60), FONT_HERSHEY_SIMPLEX, 1, Scalar::all(255));
-        //putText(flowFieldBackward, msg.str(), Point(0, 60), FONT_HERSHEY_SIMPLEX, 1, Scalar::all(255));
+        stringstream proc_fps_str; 
+        proc_fps_str << "Processing FPS : " << setprecision(4) << proc_fps;
 
-        imshow("optical_flow_demo - forward flow", flowFieldForward);
-        //imshow("optical_flow_demo - backward flow", flowFieldBackward);
+        drawData.tex.copyFrom(d_frame0Gray);        
+        drawData.arr.setVertexArray(d_vertex);
+        drawData.arr.setColorArray(d_colors, false);
+        drawData.total_fps = total_fps_str.str();
+        drawData.proc_fps = proc_fps_str.str();
+        updateWindow("optical_flow_demo");
 
-        processKey(waitKey(3));
+        processKey(waitKey(10));
 
         total_fps = getTickFrequency()  / (getTickCount() - proc_start);
     }
-}
-
-void App::printHelp()
-{
-    cout << "Usage: demo_optical_flow <frames_source1> <frames_source2>\n";
-    cout << setiosflags(ios::left);
-    cout << "\t" << setw(15) << PARAM_ALPHA << " - set alpha\n";
-    cout << "\t" << setw(15) << PARAM_GAMMA << " - set gamma\n";
-    cout << "\t" << setw(15) << PARAM_INNER << " - set number of inner iterations\n";
-    cout << "\t" << setw(15) << PARAM_OUTER << " - set number of outer iterations\n";
-    cout << "\t" << setw(15) << PARAM_SCALE << " - set pyramid scale factor\n";
-    cout << "\t" << setw(15) << PARAM_SOLVER << " - set number of basic solver iterations\n";
-    cout << "\t" << setw(15) << PARAM_TIME_STEP << " - set frame interpolation time step\n";
-    cout << "\t" << setw(15) << PARAM_HELP << " - display this help message\n";
-    cout << "\t" << setw(15) << "--offset" << " - set frames offset for the duplicate video source\n"
-         << "(in case when ony one video or camera source is given). The dafault is 1.\n\n";
-    BaseApp::printHelp();
-}
-
-void App::parseCmdArgs(int argc, char **argv)
-{
-    for (int i = 1; i < argc && !help_showed; ++i)
-    {
-        if (parseBaseCmdArgs(i, argc, argv))
-            continue;
-        else if (string(argv[i]) == PARAM_SCALE)
-            flow.scale_factor = static_cast<float>(atof(argv[++i]));
-        else if (string(argv[i]) == PARAM_ALPHA)
-            flow.alpha = static_cast<float>(atof(argv[++i]));
-        else if (string(argv[i]) == PARAM_GAMMA)
-            flow.gamma = static_cast<float>(atof(argv[++i]));
-        else if (string(argv[i]) == PARAM_INNER)
-            flow.inner_iterations = atoi(argv[++i]);
-        else if (string(argv[i]) == PARAM_OUTER)
-            flow.outer_iterations = atoi(argv[++i]);
-        else if (string(argv[i]) == PARAM_SOLVER)
-            flow.solver_iterations = atoi(argv[++i]);
-        else if (string(argv[i]) == "--offset")
-            the_same_video_offset = atoi(argv[++i]);
-        else
-            throwBadArgError(argv[i]);
-    }
-}
-
-bool App::processKey(int key)
-{
-    if (BaseApp::processKey(key))
-        return true;
-    return false;
 }
 
 
