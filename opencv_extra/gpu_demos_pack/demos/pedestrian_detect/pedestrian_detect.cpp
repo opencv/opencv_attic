@@ -227,15 +227,18 @@ void App::parseCmdArgs(int argc, char **argv)
 
 bool App::processKey(int key)
 {
+    if (key >= 0)
+        key = key & 0xff;
+
     if (BaseApp::processKey(key))
         return true;
-    switch (key)
+   
+    switch (toupper(key))
     {
     case 32:
         use_gpu = !use_gpu;
         cout << "Switched to " << (use_gpu ? "CUDA" : "CPU") << " mode\n";
         break;
-    case 'g':
     case 'G':
         make_gray = !make_gray;
         cout << "Convert image to gray: " << (make_gray ? "YES" : "NO") << endl;
@@ -244,7 +247,6 @@ bool App::processKey(int key)
         scale *= 1.05;
         cout << "Scale: " << scale << endl;
         break;
-    case 'q':
     case 'Q':
         scale /= 1.05;
         cout << "Scale: " << scale << endl;
@@ -253,7 +255,6 @@ bool App::processKey(int key)
         nlevels++;
         cout << "Levels number: " << nlevels << endl;
         break;
-    case 'w':
     case 'W':
         nlevels = max(nlevels - 1, 1);
         cout << "Levels number: " << nlevels << endl;
@@ -262,7 +263,6 @@ bool App::processKey(int key)
         gr_threshold++;
         cout << "Group threshold: " << gr_threshold << endl;
         break;
-    case 'e':
     case 'E':
         gr_threshold = max(0, gr_threshold - 1);
         cout << "Group threshold: " << gr_threshold << endl;
@@ -271,12 +271,10 @@ bool App::processKey(int key)
         hit_threshold+=0.25;
         cout << "Hit threshold: " << hit_threshold << endl;
         break;
-    case 'r':
     case 'R':
         hit_threshold = max(0.0, hit_threshold - 0.25);
         cout << "Hit threshold: " << hit_threshold << endl;
         break;
-    case 'c':
     case 'C':
         gamma_corr = !gamma_corr;
         cout << "Gamma correction: " << gamma_corr << endl;

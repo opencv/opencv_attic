@@ -234,29 +234,29 @@ void App::parseCmdArgs(int argc, char **argv)
 
 bool App::processKey(int key)
 {
+    if (key >= 0)
+        key = key & 0xff;
+
     if (BaseApp::processKey(key))
         return true;
-    switch ((char)key)
+
+    switch (toupper(key))
     {
-    case ' ':
+    case 32:
         useGPU = !useGPU;
         break;
-    case 'm':
     case 'M':
         findLargestObject = !findLargestObject;
         break;
-    case 'f':
     case 'F':
         filterRects = !filterRects;
         break;
     case '1':
         scaleFactor *= 1.05;
         break;
-    case 'q':
     case 'Q':
         scaleFactor /= 1.05;
         break;
-    case 'h':
     case 'H':
         helpScreen = !helpScreen;
         break;

@@ -97,8 +97,12 @@ void App::run(int argc, char **argv)
 
 bool App::processKey(int key)
 {
+    if (key >= 0)
+        key = key & 0xff;
+
     if (BaseApp::processKey(key))
         return true;
+
     switch (key)
     {
     case 32:

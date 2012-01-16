@@ -184,7 +184,7 @@ void App::run(int argc, char **argv)
         drawData.proc_fps = proc_fps_str.str();
         updateWindow("optical_flow_demo");
 
-        processKey(waitKey(10));
+        processKey(waitKey(10) & 0xff);
 
         total_fps = getTickFrequency()  / (getTickCount() - proc_start);
     }

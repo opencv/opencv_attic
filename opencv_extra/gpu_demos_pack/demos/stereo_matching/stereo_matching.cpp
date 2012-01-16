@@ -163,9 +163,13 @@ void App::parseCmdArgs(int argc, char **argv)
 
 bool App::processKey(int key)
 {
+    if (key >= 0)
+        key = key & 0xff;
+
     if (BaseApp::processKey(key))
         return true;
-    switch (key)
+
+    switch (toupper(key))
     {
     case 32:
         if (method == BM_CPU)
@@ -175,10 +179,10 @@ bool App::processKey(int key)
         else
             cout << "Only BM supports CPU/GPU modes\n";
         break;
-    case 'p': case 'P':
+    case 'P':
         printParams();
         break;  
-    case 'm': case 'M':
+    case 'M':
         if (fixed_method)
             cout << "Method is fixed\n";
         else
@@ -209,7 +213,7 @@ bool App::processKey(int key)
         bp.ndisp = ndisp;
         csbp.ndisp = ndisp;
         break;
-    case 'q': case 'Q':
+    case 'Q':
         ndisp = max(ndisp - 16, 16);
         cout << "ndisp: " << ndisp << endl;
         bm_cpu.init(StereoBM::BASIC_PRESET, ndisp);
@@ -225,7 +229,7 @@ bool App::processKey(int key)
             cout << "win_size: " << bm.winSize << endl;
         }
         break;
-    case 'w': case 'W':
+    case 'W':
         if (method == BM || method == BM_CPU)
         {
             bm.winSize = max(bm.winSize - 2, 1);
@@ -245,7 +249,7 @@ bool App::processKey(int key)
             cout << "iter_count: " << csbp.iters << endl;
         }
         break;
-    case 'e': case 'E':
+    case 'E':
         if (method == BP)
         {
             bp.iters = max(bp.iters - 1, 1);
@@ -269,7 +273,7 @@ bool App::processKey(int key)
             cout << "level_count: " << csbp.levels << endl;
         }
         break;
-    case 'r': case 'R':
+    case 'R':
         if (method == BP)
         {
             bp.levels = max(bp.levels - 1, 1);

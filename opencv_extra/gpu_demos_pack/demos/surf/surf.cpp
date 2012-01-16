@@ -32,8 +32,8 @@ void App::run(int argc, char **argv)
     {
         cout << "Loading default images..." << endl;
         sources.resize(2);
-        sources[0] = new ImageSource("data/matching/t34mA.jpg");
-        sources[1] = new ImageSource("data/matching/t34mB.jpg");
+        sources[0] = new ImageSource("data/matching/t34mA.JPG");
+        sources[1] = new ImageSource("data/matching/t34mB.JPG");
     }
 
     cout << "\nControls:" << endl;
@@ -160,6 +160,9 @@ void App::run(int argc, char **argv)
 
 bool App::processKey(int key)
 {
+    if (key >= 0)
+        key = key & 0xff;
+        
     if (BaseApp::processKey(key))
         return true;
 
