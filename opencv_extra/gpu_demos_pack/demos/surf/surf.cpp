@@ -12,15 +12,13 @@ using namespace cv::gpu;
 class App : public BaseApp
 {
 public:
-    App() : use_gpu(true), the_same_video_offset(1), match_confidence(0.5) {}
+    App() : use_gpu(true), match_confidence(0.5) {}
 
     virtual void run(int argc, char **argv);
     virtual bool processKey(int key);
     virtual void printHelp();
-    virtual void parseCmdArgs(int argc, char **argv);
 
     bool use_gpu;
-    int the_same_video_offset;
     double match_confidence;
 };
 
@@ -30,14 +28,7 @@ void App::run(int argc, char **argv)
     if (help_showed) 
         return;
 
-    if (sources.size() == 1 && dynamic_cast<VideoSource*>(static_cast<FrameSource*>(sources[0])) != 0)
-    {
-        sources.push_back(new VideoSource(sources[0]->path()));
-        Mat tmp; 
-        for (int i = 0; i < the_same_video_offset; ++i)
-            sources.back()->next(tmp);
-    }
-    else if (sources.size() != 2) 
+    if (sources.size() != 2) 
     {
         cout << "Loading default images..." << endl;
         sources.resize(2);
@@ -191,29 +182,14 @@ bool App::processKey(int key)
     default:
         return false;
     }
-}
 
-void App::parseCmdArgs(int argc, char **argv)
-{
-    for (int i = 1; i < argc && !help_showed; ++i)
-    {
-        if (parseBaseCmdArgs(i, argc, argv))
-            continue;
-
-        string arg(argv[i]);
-
-        if (arg == "--offset")
-            the_same_video_offset = atoi(argv[++i]);
-        else
-            throwBadArgError(argv[i]);
-    }
+    return true;
 }
 
 void App::printHelp()
 {
     cout << "This program demonstrates using SURF_GPU features detector, descriptor extractor and BruteForceMatcher_GPU" << endl;
     cout << "Usage: demo_surf <frames_source1> [<frames_source2>]" << endl;
-    cout << " --offset     - set frames offset for the duplicate video source" << endl;
     BaseApp::printHelp();
 }
 
