@@ -1,6 +1,3 @@
-#include <utility>
-#include <memory>
-
 #include <opencv2/core/core.hpp>
 #include <opencv2/core/opengl_interop.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -168,7 +165,7 @@ void App::run(int argc, char **argv)
 
         int64 proc_start = getTickCount();
 
-        flow(d_frame0Gray, d_frame1Gray, d_u, d_v);
+        flow(d_frame1Gray, d_frame0Gray, d_u, d_v);
 
         createOpticalFlowNeedleMap(d_u, d_v, d_vertex, d_colors);
 

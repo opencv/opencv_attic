@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8.3)
 
-set(target demo_matching)
+set(target demo_orb)
 
 include_directories(${OpenCV_INCLUDE_DIR} ${CMAKE_SOURCE_DIR})
 file(GLOB sources "*.h*" "*.cpp")

@@ -12,7 +12,7 @@ using namespace cv::gpu;
 class App : public BaseApp
 {
 public:
-    App() : use_gpu(true), the_same_video_offset(1), match_confidence(0.5) {}
+    App() : use_gpu(true), the_same_video_offset(1), match_confidence(10) {}
 
     virtual void run(int argc, char **argv);
     virtual bool processKey(int key);
@@ -21,7 +21,7 @@ public:
 
     bool use_gpu;
     int the_same_video_offset;
-    double match_confidence;
+    int match_confidence;
 };
 
 void App::run(int argc, char **argv)
@@ -52,17 +52,16 @@ void App::run(int argc, char **argv)
     Mat h_img1, h_img2, h_img1_gray, h_img2_gray;
     GpuMat d_img1_gray, d_img2_gray;
 
-    SURF surf_cpu(1000);
-    SURF_GPU surf_gpu(1000);
+    ORB orb_cpu(1000);
+    ORB_GPU orb_gpu(1000);
 
     vector<KeyPoint> keypoints1_cpu, keypoints2_cpu;
-    vector<float> descriptors1_vec, descriptors2_vec;
     Mat descriptors1_cpu, descriptors2_cpu;
     GpuMat keypoints1_gpu, keypoints2_gpu;
     GpuMat descriptors1_gpu, descriptors2_gpu;
 
-    BruteForceMatcher< L2<float> > matcher_cpu;
-    BruteForceMatcher_GPU< L2<float> > matcher_gpu;
+    BruteForceMatcher<Hamming> matcher_cpu;
+    BruteForceMatcher_GPU<Hamming> matcher_gpu;
     GpuMat trainIdx, distance, allDist;
     vector< vector<DMatch> > matches;
     vector<DMatch> good_matches;
@@ -86,23 +85,20 @@ void App::run(int argc, char **argv)
 
         int64 proc_start = getTickCount();
         
-        int64 surf_start = getTickCount();
+        int64 orb_start = getTickCount();
 
         if (use_gpu)
         {
-            surf_gpu(d_img1_gray, GpuMat(), keypoints1_gpu, descriptors1_gpu);
-            surf_gpu(d_img2_gray, GpuMat(), keypoints2_gpu, descriptors2_gpu);
+            orb_gpu(d_img1_gray, GpuMat(), keypoints1_gpu, descriptors1_gpu);
+            orb_gpu(d_img2_gray, GpuMat(), keypoints2_gpu, descriptors2_gpu);
         }
         else
         {
-            surf_cpu(h_img1_gray, Mat(), keypoints1_cpu, descriptors1_vec);
-            surf_cpu(h_img2_gray, Mat(), keypoints2_cpu, descriptors2_vec);
-
-            descriptors1_cpu = Mat(descriptors1_vec).reshape(0, keypoints1_cpu.size());
-            descriptors2_cpu = Mat(descriptors2_vec).reshape(0, keypoints2_cpu.size());
+            orb_cpu(h_img1_gray, Mat(), keypoints1_cpu, descriptors1_cpu);
+            orb_cpu(h_img2_gray, Mat(), keypoints2_cpu, descriptors2_cpu);
         }
 
-        double surf_fps = getTickFrequency()  / (getTickCount() - surf_start);
+        double orb_fps = getTickFrequency()  / (getTickCount() - orb_start);
         
         int64 match_start = getTickCount();
 
@@ -133,7 +129,7 @@ void App::run(int argc, char **argv)
             const DMatch &m1 = matches[i][0];
             const DMatch &m2 = matches[i][1];
 
-            if (m1.distance < m2.distance * match_confidence)
+            if (abs(m1.distance - m2.distance) > match_confidence)
                 good_matches.push_back(m1);
         }
 
@@ -141,8 +137,8 @@ void App::run(int argc, char **argv)
 
         if (use_gpu)
         {
-            surf_gpu.downloadKeypoints(keypoints1_gpu, keypoints1_cpu);
-            surf_gpu.downloadKeypoints(keypoints2_gpu, keypoints2_cpu);
+            orb_gpu.downloadKeyPoints(keypoints1_gpu, keypoints1_cpu);
+            orb_gpu.downloadKeyPoints(keypoints2_gpu, keypoints2_cpu);
         }
 
         theRNG() = RNG(0);
@@ -154,7 +150,7 @@ void App::run(int argc, char **argv)
         putText(dst, msg.str(), Point(0, 30), FONT_HERSHEY_SIMPLEX, 1, Scalar::all(255));
         msg.str(""); msg << "Processing FPS : " << setprecision(4) << proc_fps;
         putText(dst, msg.str(), Point(0, 60), FONT_HERSHEY_SIMPLEX, 1, Scalar::all(255));
-        msg.str(""); msg << "SURF FPS : " << setprecision(4) << surf_fps;
+        msg.str(""); msg << "ORB FPS : " << setprecision(4) << orb_fps;
         putText(dst, msg.str(), Point(0, 90), FONT_HERSHEY_SIMPLEX, 1, Scalar::all(255));
         msg.str(""); msg << "Match FPS : " << setprecision(4) << match_fps;
         putText(dst, msg.str(), Point(0, 120), FONT_HERSHEY_SIMPLEX, 1, Scalar::all(255));
@@ -179,13 +175,12 @@ bool App::processKey(int key)
         cout << "Use gpu = " << use_gpu << endl;
         break;
     case 'A':
-        match_confidence += 0.1;
-        match_confidence = min(match_confidence, 1.0);
+        ++match_confidence;
         cout << "match_confidence = " << match_confidence << endl;
         break;
     case 'S':
-        match_confidence -= 0.1;
-        match_confidence = max(match_confidence, 0.0);
+        --match_confidence;
+        match_confidence = max(match_confidence, 0);
         cout << "match_confidence = " << match_confidence << endl;
         break;
     default:
@@ -213,7 +208,7 @@ void App::printHelp()
 {
     cout << "This program demonstrates using SURF_GPU features detector, descriptor extractor and BruteForceMatcher_GPU" << endl;
     cout << "Usage: demo_surf <frames_source1> [<frames_source2>]" << endl;
-    cout << " --offset     - set frames offset for the duplicate video source" << endl;
+    cout << " --offset - set frames offset for the duplicate video source" << endl;
     BaseApp::printHelp();
 }
 
