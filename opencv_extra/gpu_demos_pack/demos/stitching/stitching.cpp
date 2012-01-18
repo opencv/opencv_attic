@@ -1,9 +1,13 @@
-#include <utility_lib/utility_lib.h>
-#include "opencv2/core/core.hpp"
-#include "opencv2/features2d/features2d.hpp"
-#include "opencv2/highgui/highgui.hpp"
-#include "opencv2/stitching/stitcher.hpp"
-#include "opencv2/gpu/gpu.hpp"
+#include <iostream>
+#include <iomanip>
+
+#include <opencv2/core/core.hpp>
+#include <opencv2/features2d/features2d.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/stitching/stitcher.hpp>
+#include <opencv2/gpu/gpu.hpp>
+
+#include "utility_lib/utility_lib.h"
 
 using namespace std;
 using namespace cv;
@@ -16,20 +20,19 @@ public:
             stitcher_cpu(Stitcher::createDefault(false)),
             stitcher_gpu(Stitcher::createDefault(true)) {}
 
-    virtual void run(int argc, char **argv);
-    virtual bool processKey(int key);
-    virtual void printHelp();
+protected:
+    void process();
+    bool processKey(int key);
+    void printHelp();
 
+private:
     bool use_gpu;
     Stitcher stitcher_cpu;
     Stitcher stitcher_gpu;
 };
 
-void App::run(int argc, char **argv)
+void App::process()
 {
-    parseCmdArgs(argc, argv);
-    if (help_showed) 
-        return;
     if (sources.empty()) 
     {
         cout << "Loading default images...\n";
@@ -82,24 +85,25 @@ void App::run(int argc, char **argv)
         double proc_fps = getTickFrequency()  / (getTickCount() - proc_start);
 
         stringstream msg; msg << "total FPS = " << setprecision(4) << total_fps;
-        putText(pano, msg.str(), Point(0, 30), FONT_HERSHEY_SIMPLEX, 1, Scalar::all(255));
+        printText(pano, msg.str(), 0);
+
         msg.str(""); msg << "processing FPS = " << setprecision(4) << proc_fps;
-        putText(pano, msg.str(), Point(0, 60), FONT_HERSHEY_SIMPLEX, 1, Scalar::all(255));
-        putText(pano, use_gpu ? "mode = GPU" : "mode = CPU", Point(0, 90), FONT_HERSHEY_SIMPLEX, 1, Scalar::all(255));
+        printText(pano, msg.str(), 1);
+
+        printText(pano, use_gpu ? "mode = GPU" : "mode = CPU", 2);
 
         imshow("stitching_demo", pano);
-        cout << endl;
-        processKey(waitKey(3));
+
+        processKey(waitKey(3) & 0xff);
 
         total_fps = getTickFrequency()  / (getTickCount() - proc_start);
+
+        cout << endl;
     }
 }
 
 bool App::processKey(int key)
 {
-    if (key >= 0)
-        key = key & 0xff;
-
     if (BaseApp::processKey(key))
         return true;
 
@@ -109,6 +113,7 @@ bool App::processKey(int key)
         use_gpu = !use_gpu;
         cout << "Use gpu = " << use_gpu << endl;
         break;
+
     default:
         return false;
     }

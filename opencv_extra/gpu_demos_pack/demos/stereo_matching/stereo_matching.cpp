@@ -1,9 +1,13 @@
-#include <utility_lib/utility_lib.h>
-#include "opencv2/core/core.hpp"
-#include "opencv2/calib3d/calib3d.hpp"
-#include "opencv2/features2d/features2d.hpp"
-#include "opencv2/highgui/highgui.hpp"
-#include "opencv2/gpu/gpu.hpp"
+#include <iostream>
+#include <iomanip>
+
+#include <opencv2/core/core.hpp>
+#include <opencv2/calib3d/calib3d.hpp>
+#include <opencv2/features2d/features2d.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/gpu/gpu.hpp>
+
+#include "utility_lib/utility_lib.h"
 
 using namespace std;
 using namespace cv;
@@ -15,10 +19,13 @@ public:
     enum {BM_CPU, BM, BP, CSBP} method;
     App() : method(BM), ndisp(64), use_gpu(true), fixed_method(false) {}
 
-    virtual void run(int argc, char **argv);
-    virtual void parseCmdArgs(int argc, char **argv);
-    virtual void printHelp();
-    virtual bool processKey(int key);
+protected:
+    void process();
+    bool parseCmdArgs(int& i, int argc, const char* argv[]);
+    void printHelp();
+    bool processKey(int key);
+
+private:
     void printCommands();
     void printParams();
 
@@ -50,11 +57,8 @@ public:
     bool use_gpu;
 };
 
-void App::run(int argc, char **argv)
+void App::process()
 {
-    parseCmdArgs(argc, argv);
-    if (help_showed) 
-        return;
     if (sources.size() != 2) 
     {
         cout << "Loading default images...\n";
@@ -68,6 +72,8 @@ void App::run(int argc, char **argv)
 
     Mat disp, disp_16s;
     gpu::GpuMat d_disp;
+
+    Mat disp_color;
 
     double total_fps = 0;
 
@@ -113,14 +119,19 @@ void App::run(int argc, char **argv)
             disp *= 255. / ndisp;
         }
 
+        cvtColor(disp, disp_color, COLOR_GRAY2BGR);
+
         stringstream msg; 
         msg << "method = " << method_str();
-        putText(disp, msg.str(), Point(0, 30), FONT_HERSHEY_SIMPLEX, 1, Scalar::all(255));
+        printText(disp_color, msg.str(), 0);
+
         msg.str(""); msg << "total FPS = " << setprecision(3) << total_fps;
-        putText(disp, msg.str(), Point(0, 60), FONT_HERSHEY_SIMPLEX, 1, Scalar::all(255));
+        printText(disp_color, msg.str(), 1);
+
         msg.str(""); msg << "processing FPS = " << setprecision(3) << proc_fps;
-        putText(disp, msg.str(), Point(0, 90), FONT_HERSHEY_SIMPLEX, 1, Scalar::all(255));
-        imshow("stereo_matching_demo - disp map", disp);
+        printText(disp_color, msg.str(), 2);
+
+        imshow("stereo_matching_demo - disp map", disp_color);
 
         processKey(waitKey(3));
 
@@ -137,35 +148,41 @@ void App::printHelp()
     BaseApp::printHelp();
 }
 
-void App::parseCmdArgs(int argc, char **argv)
+bool App::parseCmdArgs(int& i, int argc, const char* argv[])
 {
-    for (int i = 1; i < argc && !help_showed; ++i)
+    string key(argv[i]);
+
+    if (key == "-m")
     {
-        if (parseBaseCmdArgs(i, argc, argv))
-            continue;
-        if (string(argv[i]) == "-m")
-        {
-            if (string(argv[i + 1]) == "BM_CPU") method = BM_CPU;
-            else if (string(argv[i + 1]) == "BM") method = BM;
-            else if (string(argv[i + 1]) == "BP") method = BP;
-            else if (string(argv[i + 1]) == "CSBP") method = CSBP;
-            else throw runtime_error("Unknown stereo matching method: " + string(argv[i + 1]));
-            i++;
-        }
-        else if (string(argv[i]) == "--ndisp") 
-            ndisp = atoi(argv[++i]);
-        else if (string(argv[i]) == "--fixedmethod")
-            fixed_method = true;
-        else
-            throwBadArgError(argv[i]);
+        if (i + 1 >= argc)
+            throw runtime_error("Missing value after -m");
+
+        if (string(argv[i + 1]) == "BM_CPU") method = BM_CPU;
+        else if (string(argv[i + 1]) == "BM") method = BM;
+        else if (string(argv[i + 1]) == "BP") method = BP;
+        else if (string(argv[i + 1]) == "CSBP") method = CSBP;
+        else throw runtime_error("Unknown stereo matching method: " + string(argv[i + 1]));
+        i++;
     }
+    else if (key == "--ndisp") 
+    {
+        ++i;
+
+        if (i >= argc)
+            throw runtime_error("Missing value after -ndisp");
+
+        ndisp = atoi(argv[i]);
+    }
+    else if (key == "--fixedmethod")
+        fixed_method = true;
+    else
+        return false;
+
+    return true;
 }
 
 bool App::processKey(int key)
 {
-    if (key >= 0)
-        key = key & 0xff;
-
     if (BaseApp::processKey(key))
         return true;
 
@@ -179,9 +196,11 @@ bool App::processKey(int key)
         else
             cout << "Only BM supports CPU/GPU modes\n";
         break;
+
     case 'P':
         printParams();
-        break;  
+        break; 
+
     case 'M':
         if (fixed_method)
             cout << "Method is fixed\n";
@@ -205,6 +224,7 @@ bool App::processKey(int key)
             cout << "method: " << method_str() << endl;
         }
         break;
+
     case '1':
         ndisp = ndisp < 16 ? 16 : ndisp + 16;
         cout << "ndisp: " << ndisp << endl;
@@ -213,6 +233,7 @@ bool App::processKey(int key)
         bp.ndisp = ndisp;
         csbp.ndisp = ndisp;
         break;
+
     case 'Q':
         ndisp = max(ndisp - 16, 16);
         cout << "ndisp: " << ndisp << endl;
@@ -221,6 +242,7 @@ bool App::processKey(int key)
         bp.ndisp = ndisp;
         csbp.ndisp = ndisp;
         break;
+
     case '2':
         if (method == BM || method == BM_CPU)
         {
@@ -229,6 +251,7 @@ bool App::processKey(int key)
             cout << "win_size: " << bm.winSize << endl;
         }
         break;
+
     case 'W':
         if (method == BM || method == BM_CPU)
         {
@@ -237,6 +260,7 @@ bool App::processKey(int key)
             cout << "win_size: " << bm.winSize << endl;
         }
         break;
+
     case '3':
         if (method == BP)
         {
@@ -249,6 +273,7 @@ bool App::processKey(int key)
             cout << "iter_count: " << csbp.iters << endl;
         }
         break;
+
     case 'E':
         if (method == BP)
         {
@@ -261,6 +286,7 @@ bool App::processKey(int key)
             cout << "iter_count: " << csbp.iters << endl;
         }
         break;
+
     case '4':
         if (method == BP)
         {
@@ -273,6 +299,7 @@ bool App::processKey(int key)
             cout << "level_count: " << csbp.levels << endl;
         }
         break;
+
     case 'R':
         if (method == BP)
         {
@@ -285,9 +312,11 @@ bool App::processKey(int key)
             cout << "level_count: " << csbp.levels << endl;
         }
         break;
+
     default:
         return false;
     }
+
     return true;
 }
 

@@ -1,9 +1,13 @@
-#include <utility_lib/utility_lib.h>
-#include "opencv2/contrib/contrib.hpp"
-#include "opencv2/objdetect/objdetect.hpp"
-#include "opencv2/highgui/highgui.hpp"
-#include "opencv2/imgproc/imgproc.hpp"
-#include "opencv2/gpu/gpu.hpp"
+#include <iostream>
+#include <iomanip>
+
+#include <opencv2/contrib/contrib.hpp>
+#include <opencv2/objdetect/objdetect.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/gpu/gpu.hpp>
+
+#include "utility_lib/utility_lib.h"
 
 using namespace std;
 using namespace cv;
@@ -14,11 +18,13 @@ class App : public BaseApp
 public:
     App();
 
-    virtual void run(int argc, char **argv);
-    virtual void parseCmdArgs(int argc, char **argv);
-    virtual bool processKey(int key);
-    virtual void printHelp();
+protected:
+    void process();
+    bool parseCmdArgs(int& i, int argc, const char* argv[]);
+    bool processKey(int key);
+    void printHelp();
 
+private:
     bool write_video;
     string dst_video;
     double dst_video_fps;
@@ -42,7 +48,6 @@ public:
     bool use_gpu;
 };
 
-
 App::App()
 {
     write_video = false;
@@ -62,18 +67,13 @@ App::App()
     win_stride_width = 8;
     win_stride_height = 8;
 
-    gamma_corr = true;
+    gamma_corr = false;
 
     use_gpu = true;
 }
 
-
-void App::run(int argc, char **argv)
+void App::process()
 {
-    parseCmdArgs(argc, argv);
-    if (help_showed) 
-        return;
-
     if (sources.size() != 1)
     {
         cout << "Using default frames source...\n";
@@ -177,59 +177,133 @@ void App::run(int argc, char **argv)
             rectangle(img_to_show, r.tl(), r.br(), CV_RGB(0, 255, 0), 3);
         }
 
-        if (use_gpu)
-            putText(img_to_show, "Mode: GPU", Point(5, 25), FONT_HERSHEY_SIMPLEX, 1., Scalar(255, 100, 0), 2);
-        else
-            putText(img_to_show, "Mode: CPU", Point(5, 25), FONT_HERSHEY_SIMPLEX, 1., Scalar(255, 100, 0), 2);
-        stringstream txt;
+        printText(img_to_show, use_gpu ? "Mode: GPU" : "Mode: CPU", 0);
+
+        ostringstream txt;
         txt << "FPS (HOG only): " << proc_fps;
-        putText(img_to_show, txt.str(), Point(5, 65), FONT_HERSHEY_SIMPLEX, 1., Scalar(255, 100, 0), 2);
-        txt.str("");
-        txt << "FPS (total): " << total_fps;
-        putText(img_to_show, txt.str(), Point(5, 105), FONT_HERSHEY_SIMPLEX, 1., Scalar(255, 100, 0), 2);
+        printText(img_to_show, txt.str(), 1);
+
+        txt.str(""); txt << "FPS (total): " << total_fps;
+        printText(img_to_show, txt.str(), 2);
+
         imshow("pedestrian_detect_demo", img_to_show);
 
-        processKey(waitKey(3));
+        processKey(waitKey(3) & 0xff);
 
         total_fps = getTickFrequency() / (getTickCount() - start);
     }
 }
 
-
-void App::parseCmdArgs(int argc, char **argv)
+bool App::parseCmdArgs(int& i, int argc, const char* argv[])
 {
-    for (int i = 1; i < argc && !help_showed; ++i)
-    {
-        if (parseBaseCmdArgs(i, argc, argv))
-            continue;
-        string key = argv[i];
-        if (key == "--make-gray") make_gray = (string(argv[++i]) == "true");
-        else if (key == "--resize-src") resize_src = (string(argv[++i]) == "true");
-        else if (key == "--hit-threshold") 
-        { 
-            hit_threshold = atof(argv[++i]); 
-            hit_threshold_auto = false; 
-        }
-        else if (key == "--scale") scale = atof(argv[++i]);
-        else if (key == "--nlevels") nlevels = atoi(argv[++i]);
-        else if (key == "--win-width") win_width = atoi(argv[++i]);
-        else if (key == "--win-stride-width") win_stride_width = atoi(argv[++i]);
-        else if (key == "--win-stride-height") win_stride_height = atoi(argv[++i]);
-        else if (key == "--gr-threshold") gr_threshold = atoi(argv[++i]);
-        else if (key == "--gamma-correct") gamma_corr = (string(argv[++i]) == "true");
-        else if (key == "--write-video") write_video = (string(argv[++i]) == "true");
-        else if (key == "--dst-video") dst_video = string(argv[++i]);
-        else if (key == "--dst-video-fps") dst_video_fps= atof(argv[++i]);
-        else throwBadArgError(key.c_str());
-    }
-}
+    string key = argv[i];
 
+    if (key == "--make-gray") 
+    {
+        make_gray = true;
+    }
+    else if (key == "--resize-src") 
+    {
+        resize_src = true;
+    }
+    else if (key == "--hit-threshold") 
+    {
+        ++i;
+
+        if (i >= argc)
+            throw runtime_error("Missing value after --hit-threshold");
+
+        hit_threshold = atof(argv[i]); 
+        hit_threshold_auto = false; 
+    }
+    else if (key == "--scale") 
+    {
+        ++i;
+
+        if (i >= argc)
+            throw runtime_error("Missing value after --scale");
+
+        scale = atof(argv[i]);
+    }
+    else if (key == "--nlevels") 
+    {
+        ++i;
+
+        if (i >= argc)
+            throw runtime_error("Missing value after --nlevels");
+
+        nlevels = atoi(argv[i]);
+    }
+    else if (key == "--win-width") 
+    {
+        ++i;
+
+        if (i >= argc)
+            throw runtime_error("Missing value after --win-width");
+
+        win_width = atoi(argv[i]);
+    }
+    else if (key == "--win-stride-width") 
+    {
+        ++i;
+
+        if (i >= argc)
+            throw runtime_error("Missing value after --win-stride-width");
+
+        win_stride_width = atoi(argv[i]);
+    }
+    else if (key == "--win-stride-height") 
+    {
+        ++i;
+
+        if (i >= argc)
+            throw runtime_error("Missing value after --win-stride-height");
+
+        win_stride_height = atoi(argv[i]);
+    }
+    else if (key == "--gr-threshold") 
+    {
+        ++i;
+
+        if (i >= argc)
+            throw runtime_error("Missing value after --gr-threshold");
+
+        gr_threshold = atoi(argv[i]);
+    }
+    else if (key == "--gamma-correct") 
+    {
+        gamma_corr = true;
+    }
+    else if (key == "--write-video") 
+    {
+        write_video = true;
+    }
+    else if (key == "--dst-video") 
+    {
+        ++i;
+
+        if (i >= argc)
+            throw runtime_error("Missing value after --dst-video");
+
+        dst_video = string(argv[i]);
+    }
+    else if (key == "--dst-video-fps") 
+    {
+        ++i;
+
+        if (i >= argc)
+            throw runtime_error("Missing value after --dst-video-fps");
+
+        dst_video_fps= atof(argv[i]);
+    }
+    else 
+        return false;
+
+    return true;
+}
 
 bool App::processKey(int key)
 {
-    if (key >= 0)
-        key = key & 0xff;
-
     if (BaseApp::processKey(key))
         return true;
    
@@ -239,59 +313,70 @@ bool App::processKey(int key)
         use_gpu = !use_gpu;
         cout << "Switched to " << (use_gpu ? "CUDA" : "CPU") << " mode\n";
         break;
+
     case 'G':
         make_gray = !make_gray;
         cout << "Convert image to gray: " << (make_gray ? "YES" : "NO") << endl;
         break;
+
     case '1':
         scale *= 1.05;
         cout << "Scale: " << scale << endl;
         break;
+
     case 'Q':
         scale /= 1.05;
         cout << "Scale: " << scale << endl;
         break;
+
     case '2':
         nlevels++;
         cout << "Levels number: " << nlevels << endl;
         break;
+
     case 'W':
         nlevels = max(nlevels - 1, 1);
         cout << "Levels number: " << nlevels << endl;
         break;
+
     case '3':
         gr_threshold++;
         cout << "Group threshold: " << gr_threshold << endl;
         break;
+
     case 'E':
         gr_threshold = max(0, gr_threshold - 1);
         cout << "Group threshold: " << gr_threshold << endl;
         break;
+
     case '4':
         hit_threshold+=0.25;
         cout << "Hit threshold: " << hit_threshold << endl;
         break;
+
     case 'R':
         hit_threshold = max(0.0, hit_threshold - 0.25);
         cout << "Hit threshold: " << hit_threshold << endl;
         break;
+
     case 'C':
         gamma_corr = !gamma_corr;
         cout << "Gamma correction: " << gamma_corr << endl;
         break;
+
     default:
         return false;
     }
+
     return true;
 }
-
 
 void App::printHelp()
 {
     cout << "Histogram of Oriented Gradients descriptor and detector sample.\n"
          << "\nUsage: demo_pedestrian_detect <frames_source>\n"
-         << "  [--make-gray <true/false>] # convert image to gray one or not\n"
-         << "  [--resize-src <true/false>] # do resize of the source image or not\n"
+         << "  [--make-gray] # convert image to gray one\n"
+         << "  [--resize-src] # do resize of the source image\n"
          << "  [--hit-threshold <double>] # classifying plane distance threshold (0.0 usually)\n"
          << "  [--scale <double>] # HOG window scale factor\n"
          << "  [--nlevels <int>] # max number of HOG window scales\n"
@@ -300,7 +385,7 @@ void App::printHelp()
          << "  [--win-stride-height <int>] # distance by OY axis between neighbour wins\n"
          << "  [--gr-threshold <int>] # merging similar rects constant\n"
          << "  [--gamma-correct <int>] # do gamma correction or not\n"
-         << "  [--write-video <bool>] # write video or not\n"
+         << "  [--write-video] # write video\n"
          << "  [--dst-video <path>] # output video path\n"
          << "  [--dst-video-fps <double>] # output video fps\n\n";
     BaseApp::printHelp();

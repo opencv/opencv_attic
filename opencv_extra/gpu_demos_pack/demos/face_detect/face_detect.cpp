@@ -3,12 +3,16 @@
 #pragma warning(disable : 4100)
 #endif
 
-#include <utility_lib/utility_lib.h>
-#include "opencv2/contrib/contrib.hpp"
-#include "opencv2/objdetect/objdetect.hpp"
-#include "opencv2/highgui/highgui.hpp"
-#include "opencv2/imgproc/imgproc.hpp"
-#include "opencv2/gpu/gpu.hpp"
+#include <iostream>
+#include <iomanip>
+
+#include <opencv2/contrib/contrib.hpp>
+#include <opencv2/objdetect/objdetect.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/gpu/gpu.hpp>
+
+#include "utility_lib/utility_lib.h"
 
 using namespace std;
 using namespace cv;
@@ -20,11 +24,13 @@ public:
     App() : useGPU(true), scaleFactor(1.), findLargestObject(false), 
             filterRects(true), helpScreen(false) {}
 
-    virtual void run(int argc, char **argv);
-    virtual void parseCmdArgs(int argc, char **argv);
-    virtual bool processKey(int key);
-    virtual void printHelp();
+protected:
+    void process();
+    bool parseCmdArgs(int& i, int argc, const char* argv[]);
+    bool processKey(int key);
+    void printHelp();
 
+private:
     string cascade_name;
     CascadeClassifier_GPU cascade_gpu;
     CascadeClassifier cascade_cpu;
@@ -37,88 +43,53 @@ public:
     bool helpScreen;
 };
 
-
-template<class T>
-void convertAndResize(const T& src, T& gray, T& resized, double scale)
+template<class T> void convertAndResize(const T& src, T& gray, T& resized, double scale)
 {
     if (src.channels() == 3)
-    {
-        cvtColor( src, gray, CV_BGR2GRAY );
-    }
+        cvtColor(src, gray, COLOR_BGR2GRAY);
+    else if (src.channels() == 4)
+        cvtColor(src, gray, COLOR_BGRA2GRAY);
     else
-    {
         gray = src;
-    }
 
     Size sz(cvRound(gray.cols * scale), cvRound(gray.rows * scale));
 
     if (scale != 1)
-    {
         resize(gray, resized, sz);
-    }
     else
-    {
         resized = gray;
-    }
 }
 
-
-void matPrint(Mat &img, int lineOffsY, Scalar fontColor, const string &ss)
+void displayState(Mat& canvas, bool bHelp, bool bGpu, bool bLargestFace, bool bFilter, double fps)
 {
-    int fontFace = FONT_HERSHEY_DUPLEX;
-    double fontScale = 0.8;
-    int fontThickness = 2;
-    Size fontSize = cv::getTextSize("T[]", fontFace, fontScale, fontThickness, 0);
-
-    Point org;
-    org.x = 1;
-    org.y = 3 * fontSize.height * (lineOffsY + 1) / 2;
-    putText(img, ss, org, fontFace, fontScale, CV_RGB(0,0,0), 5*fontThickness/2, 16);
-    putText(img, ss, org, fontFace, fontScale, fontColor, fontThickness, 16);
-}
-
-
-void displayState(Mat &canvas, bool bHelp, bool bGpu, bool bLargestFace, bool bFilter, double fps)
-{
-    Scalar fontColorRed = CV_RGB(255,0,0);
-    Scalar fontColorNV  = CV_RGB(118,185,0);
+    Scalar fontColorRed = CV_RGB(255, 0, 0);
+    Scalar fontColorNV  = CV_RGB(118, 185, 0);
 
     ostringstream ss;
     ss << "FPS = " << setprecision(1) << fixed << fps;
-    matPrint(canvas, 0, fontColorRed, ss.str());
+    printText(canvas, ss.str(), 0, fontColorRed);
+
     ss.str("");
     ss << "[" << canvas.cols << "x" << canvas.rows << "], " <<
         (bGpu ? "GPU, " : "CPU, ") <<
         (bLargestFace ? "OneFace, " : "MultiFace, ") <<
         (bFilter ? "Filter:ON" : "Filter:OFF");
-    matPrint(canvas, 1, fontColorRed, ss.str());
+    printText(canvas, ss.str(), 1, fontColorRed);
 
-    // by Anatoly. MacOS fix. ostringstream(const string&) is a private
-    // matPrint(canvas, 2, fontColorNV, ostringstream("Space - switch GPU / CPU"));
-    if (bHelp)
-    {
-        matPrint(canvas, 2, fontColorNV, "Space - switch GPU / CPU");
-        matPrint(canvas, 3, fontColorNV, "M - switch OneFace / MultiFace");
-        matPrint(canvas, 4, fontColorNV, "F - toggle rectangles Filter");
-        matPrint(canvas, 5, fontColorNV, "H - toggle hotkeys help");
-        matPrint(canvas, 6, fontColorNV, "1/Q - increase/decrease scale");
-    }
+    if (!bHelp)
+        printText(canvas, "H - toggle hotkeys help", 2, fontColorNV);
     else
     {
-        matPrint(canvas, 2, fontColorNV, "H - toggle hotkeys help");
+        printText(canvas, "Space - switch GPU / CPU", 2, fontColorNV);
+        printText(canvas, "M - switch OneFace / MultiFace", 3, fontColorNV);
+        printText(canvas, "F - toggle rectangles Filter", 4, fontColorNV);
+        printText(canvas, "H - toggle hotkeys help", 5, fontColorNV);
+        printText(canvas, "1/Q - increase/decrease scale", 6, fontColorNV);
     }
 }
 
-
-void App::run(int argc, char **argv)
+void App::process()
 {
-    parseCmdArgs(argc, argv);
-    if (help_showed) 
-        return;
-
-    if (getCudaEnabledDeviceCount() == 0)
-        throw runtime_error("No GPU found or the library is compiled without GPU support");    
-
     if (cascade_name.empty())
     {
         cout << "Using default cascade file...\n";
@@ -127,7 +98,7 @@ void App::run(int argc, char **argv)
 
     if (!cascade_gpu.load(cascade_name) || !cascade_cpu.load(cascade_name))
     {
-        stringstream msg;
+        ostringstream msg;
         msg << "Could not load cascade classifier \"" << cascade_name << "\"";
         throw runtime_error(msg.str());
     }
@@ -145,6 +116,7 @@ void App::run(int argc, char **argv)
     GpuMat frame_gpu, gray_gpu, resized_gpu, facesBuf_gpu;
 
     int detections_num;
+
     while (!exited)
     {
         sources[0]->next(frame_cpu);
@@ -213,30 +185,29 @@ void App::run(int argc, char **argv)
         displayState(frameDisp, helpScreen, useGPU, findLargestObject, filterRects, fps);
         imshow("face_detect_demo", frameDisp);
 
-        processKey(waitKey(3));
+        processKey(waitKey(3) & 0xff);
     }   
 }
 
-
-void App::parseCmdArgs(int argc, char **argv)
+bool App::parseCmdArgs(int& i, int argc, const char* argv[])
 {
-    for (int i = 1; i < argc && !help_showed; ++i)
+    if (string(argv[i]) == "--cascade")
     {
-        if (parseBaseCmdArgs(i, argc, argv))
-            continue;
-        if (string(argv[i]) == "--cascade")
-            cascade_name = argv[++i];
-        else
-            throwBadArgError(argv[i]);
-    }
-}
+        ++i;
 
+        if (i >= argc)
+            throw runtime_error("Missing file name after --cascade");
+
+        cascade_name = argv[i];
+
+        return true;
+    }
+
+    return false;
+}
 
 bool App::processKey(int key)
 {
-    if (key >= 0)
-        key = key & 0xff;
-
     if (BaseApp::processKey(key))
         return true;
 
@@ -248,24 +219,29 @@ bool App::processKey(int key)
     case 'M':
         findLargestObject = !findLargestObject;
         break;
+
     case 'F':
         filterRects = !filterRects;
         break;
+
     case '1':
         scaleFactor *= 1.05;
         break;
+
     case 'Q':
         scaleFactor /= 1.05;
         break;
+
     case 'H':
         helpScreen = !helpScreen;
         break;
+
     default:
         return false;
     }
+
     return true;
 }
-
 
 void App::printHelp()
 {

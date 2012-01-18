@@ -1,3 +1,6 @@
+#include <iostream>
+#include <iomanip>
+
 #include <opencv2/core/core.hpp>
 #include <opencv2/core/opengl_interop.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -24,45 +27,121 @@ public:
                  10 /*inner_iterations*/, 77 /*outer_iterations*/, 10 /*solver_iterations*/),
             the_same_video_offset(1) {}
 
-    virtual void run(int argc, char **argv);
-    virtual void parseCmdArgs(int argc, char **argv);
-    virtual void printHelp();
+protected:
+    void process();
+    bool parseCmdArgs(int& i, int argc, const char* argv[]);
+    void printHelp();
 
+private:
     int the_same_video_offset;
     BroxOpticalFlow flow;
+    Ptr<PairFrameSource> source_;
 };
 
-void App::parseCmdArgs(int argc, char **argv)
+bool App::parseCmdArgs(int& i, int argc, const char* argv[])
 {
-    for (int i = 1; i < argc && !help_showed; ++i)
+    string arg(argv[i]);
+
+    if (arg == PARAM_SCALE)
     {
-        if (parseBaseCmdArgs(i, argc, argv))
-            continue;
+        ++i;
 
-        string arg(argv[i]);
+        if (i >= argc)
+        {
+            ostringstream msg;
+            msg << "Missing value after " << PARAM_SCALE;
+            throw runtime_error(msg.str());
+        }
 
-        if (arg == PARAM_SCALE)
-            flow.scale_factor = static_cast<float>(atof(argv[++i]));
-        else if (arg == PARAM_ALPHA)
-            flow.alpha = static_cast<float>(atof(argv[++i]));
-        else if (arg == PARAM_GAMMA)
-            flow.gamma = static_cast<float>(atof(argv[++i]));
-        else if (arg == PARAM_INNER)
-            flow.inner_iterations = atoi(argv[++i]);
-        else if (arg == PARAM_OUTER)
-            flow.outer_iterations = atoi(argv[++i]);
-        else if (arg == PARAM_SOLVER)
-            flow.solver_iterations = atoi(argv[++i]);
-        else if (arg == PARAM_OFFSET)
-            the_same_video_offset = atoi(argv[++i]);
-        else
-            throwBadArgError(argv[i]);
+        flow.scale_factor = static_cast<float>(atof(argv[i]));
     }
+    else if (arg == PARAM_ALPHA)
+    {
+        ++i;
+
+        if (i >= argc)
+        {
+            ostringstream msg;
+            msg << "Missing value after " << PARAM_ALPHA;
+            throw runtime_error(msg.str());
+        }
+
+        flow.alpha = static_cast<float>(atof(argv[i]));
+    }
+    else if (arg == PARAM_GAMMA)
+    {
+        ++i;
+
+        if (i >= argc)
+        {
+            ostringstream msg;
+            msg << "Missing value after " << PARAM_GAMMA;
+            throw runtime_error(msg.str());
+        }
+
+        flow.gamma = static_cast<float>(atof(argv[i]));
+    }
+    else if (arg == PARAM_INNER)
+    {
+        ++i;
+
+        if (i >= argc)
+        {
+            ostringstream msg;
+            msg << "Missing value after " << PARAM_INNER;
+            throw runtime_error(msg.str());
+        }
+
+        flow.inner_iterations = atoi(argv[i]);
+    }
+    else if (arg == PARAM_OUTER)
+    {
+        ++i;
+
+        if (i >= argc)
+        {
+            ostringstream msg;
+            msg << "Missing value after " << PARAM_OUTER;
+            throw runtime_error(msg.str());
+        }
+
+        flow.outer_iterations = atoi(argv[i]);
+    }
+    else if (arg == PARAM_SOLVER)
+    {
+        ++i;
+
+        if (i >= argc)
+        {
+            ostringstream msg;
+            msg << "Missing value after " << PARAM_SOLVER;
+            throw runtime_error(msg.str());
+        }
+
+        flow.solver_iterations = atoi(argv[i]);
+    }
+    else if (arg == PARAM_OFFSET)
+    {
+        ++i;
+
+        if (i >= argc)
+        {
+            ostringstream msg;
+            msg << "Missing value after " << PARAM_OFFSET;
+            throw runtime_error(msg.str());
+        }
+
+        the_same_video_offset = atoi(argv[i]);
+    }
+    else
+        return false;
+
+    return true;
 }
 
 void App::printHelp()
 {
-    cout << "This program demonstrates using BroxOpticalFlow" << endl;
+    cout << "This program demonstrates usage BroxOpticalFlow" << endl;
     cout << "Usage: demo_optical_flow <frames_source1> [<frames_source2>]" << endl;
     cout << setiosflags(ios::left);
     cout << '\t' << setw(15) << PARAM_ALPHA << " - set alpha" << endl;
@@ -106,29 +185,25 @@ void drawCallback(void* userdata)
 
     render(data->tex);
     render(data->arr, RenderMode::TRIANGLES);
+
     render(data->total_fps, GlFont::get("Courier New", 24, GlFont::WEIGHT_BOLD), Scalar::all(255), Point2d(3.0, 0.0));
     render(data->proc_fps, GlFont::get("Courier New", 24, GlFont::WEIGHT_BOLD), Scalar::all(255), Point2d(3.0, 30.0));
 }
 
-void App::run(int argc, char **argv)
+void App::process()
 {
-    parseCmdArgs(argc, argv);
-    if (help_showed) 
-        return;
-
-    if (sources.size() == 1 && dynamic_cast<VideoSource*>(static_cast<FrameSource*>(sources[0])) != 0)
-    {
-        sources.push_back(new VideoSource(sources[0]->path()));
-        Mat tmp; 
-        for (int i = 0; i < the_same_video_offset; ++i)
-            sources.back()->next(tmp);
-    }
-    else if (sources.size() != 2)
+    if (sources.size() == 1)
+        source_ = PairFrameSource::get(sources[0], the_same_video_offset);
+    else if (sources.size() == 2)
+        source_ = PairFrameSource::get(sources[0], sources[1]);
+    else
     {
         cout << "Using default frame sources...\n";
         sources.resize(2);
         sources[0] = new ImageSource("data/optical_flow/rubberwhale1.png");
         sources[1] = new ImageSource("data/optical_flow/rubberwhale2.png");
+
+        source_ = PairFrameSource::get(sources[0], sources[1]);
     }
     
     namedWindow("optical_flow_demo", WINDOW_OPENGL);
@@ -151,8 +226,7 @@ void App::run(int argc, char **argv)
     {
         int64 start = getTickCount();
 
-        sources[0]->next(frame0);
-        sources[1]->next(frame1);
+        source_->next(frame0, frame1);
 
         d_frame0Color.upload(frame0);
         d_frame1Color.upload(frame1);
@@ -189,6 +263,5 @@ void App::run(int argc, char **argv)
         total_fps = getTickFrequency()  / (getTickCount() - proc_start);
     }
 }
-
 
 RUN_APP(App)

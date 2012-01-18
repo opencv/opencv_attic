@@ -1,128 +1,94 @@
-#ifndef UTILITY_LIB_H_
-#define UTILITY_LIB_H_
+#ifndef __UTILITY_LIB_H__
+#define __UTILITY_LIB_H__
 
-#include <iostream>
 #include <string>
-#include <sstream>
-#include <stdexcept>
-#include <iomanip>
-#include <algorithm>
-#include <utility>
 #include <opencv2/core/core.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
 class FrameSource
 {
 public:
     virtual ~FrameSource() {}
-    virtual void next(cv::Mat &frame) = 0;
-    virtual operator std::string() const = 0;
-    virtual const std::string& path() const = 0;
-};
 
+    virtual void next(cv::Mat& frame) = 0;
+};
 
 class ImageSource : public FrameSource
 {
 public:
-    ImageSource(const std::string &path, int flags = 1)
-        : img_(cv::imread(path, flags)), path_(path), str_repr_("img: " + path)
-    { 
-        CV_Assert(!img_.empty()); 
-    }
+    explicit ImageSource(const std::string& path, int flags = 1);
 
-    virtual void next(cv::Mat &frame) { frame = img_; }
-    virtual operator std::string() const { return str_repr_; }
-    virtual const std::string& path() const { return path_; }
+    void next(cv::Mat& frame);
 
 private:
     cv::Mat img_;
-    std::string path_;
-    std::string str_repr_;
 };
-
 
 class VideoSource : public FrameSource
 {
 public:
-    VideoSource(const std::string &path)
-        : vc_(path), path_(path), is_from_file_(true), str_repr_("video: " + path)
-    { 
-        CV_Assert(vc_.isOpened()); 
-    }
+    explicit VideoSource(const std::string& path);
 
-    VideoSource(int device, int width = -1, int height = -1)
-        : vc_(device), device_(device), is_from_file_(false)
-    {
-        if (width != -1) 
-            vc_.set(CV_CAP_PROP_FRAME_WIDTH, width);
-        if (height != -1) 
-            vc_.set(CV_CAP_PROP_FRAME_HEIGHT, height);
-        if (!vc_.isOpened())
-        {
-            std::stringstream msg;
-            msg << "Can't open camera with dev. ID = " << device_;
-            throw std::runtime_error(msg.str());
-        }
-        std::stringstream text;
-        text << "cam: " << device;
-        str_repr_ = text.str();
-    }
-    virtual void next(cv::Mat &frame)
-    {
-        vc_ >> frame;
-        if (frame.empty() && is_from_file_)
-        {
-            vc_.open(path_);
-            vc_ >> frame;
-        }
-    }
-    virtual operator std::string() const { return str_repr_; }
-    virtual const std::string& path() const { return path_; }
+    void next(cv::Mat& frame);
 
 private:
     cv::VideoCapture vc_;
     std::string path_;
-    int device_;
-    bool is_from_file_;
-    std::string str_repr_;
 };
 
+class CameraSource : public FrameSource
+{
+public:
+    explicit CameraSource(int device, int width = -1, int height = -1);
+
+    void next(cv::Mat& frame);
+
+private:
+    cv::VideoCapture vc_;
+};
+
+class PairFrameSource
+{
+public:
+    virtual ~PairFrameSource() {}
+
+    virtual void next(cv::Mat& frame0, cv::Mat& frame1) = 0;
+    
+    static cv::Ptr<PairFrameSource> get(const cv::Ptr<FrameSource>& source0, const cv::Ptr<FrameSource>& source1);
+
+    static cv::Ptr<PairFrameSource> get(const cv::Ptr<FrameSource>& source, int offset);
+};
+
+void makeGray(const cv::Mat& src, cv::Mat& dst);
+
+void printText(cv::Mat& img, const std::string& msg, int lineOffsY, cv::Scalar fontColor = CV_RGB(118, 185, 0));
 
 class BaseApp
 {
 public:
-    enum { DEFAULT_WIDTH = -1, DEFAULT_HEIGHT = -1 };
+    BaseApp() : exited(false), frame_width(-1), frame_height(-1) {}
 
-    BaseApp() : exited(false), help_showed(false), 
-                frame_width(DEFAULT_WIDTH), frame_height(DEFAULT_HEIGHT) {}
-
-    virtual void run(int argc, char **argv)
-    {
-        parseCmdArgs(argc, argv);
-    }
+    void run(int argc, const char* argv[]);
 
 protected:
-    virtual void parseCmdArgs(int argc, char **argv);
-    void throwBadArgError(const char *arg);
-    virtual bool parseHelpCmdArg(int& i, int argc, char **argv);
-    virtual bool parseFrameSourcesCmdArgs(int& i, int argc, char **argv);
-    virtual bool parseBaseCmdArgs(int& i, int argc, char **argv);
-
+    virtual void process() = 0;
+    virtual bool parseCmdArgs(int& i, int argc, const char* argv[]);
     virtual void printHelp();
     virtual bool processKey(int key);
 
-    static void printText(const std::string &msg, cv::Mat &img);
-    static void makeGray(const cv::Mat &src, cv::Mat &dst);
-
     bool exited;
-    bool help_showed;
-    int frame_width, frame_height;
-    std::vector<cv::Ptr<FrameSource> > sources;
+    std::vector< cv::Ptr<FrameSource> > sources;
+    
+    int frame_width;
+    int frame_height;
+
+private:
+    bool parseHelpCmdArg(int& i, int argc, const char* argv[]);
+    bool parseFrameSourcesCmdArgs(int& i, int argc, const char* argv[]);
 };
 
 #define RUN_APP(App) \
-    int main(int argc, char **argv) \
+    int main(int argc, const char* argv[]) \
     { \
         try \
         { \
@@ -137,4 +103,4 @@ protected:
         return 0; \
     }
 
-#endif // #ifndef UTILITY_LIB_H_
+#endif // __UTILITY_LIB_H__

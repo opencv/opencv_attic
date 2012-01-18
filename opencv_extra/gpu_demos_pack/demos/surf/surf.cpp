@@ -1,9 +1,14 @@
+#include <iostream>
+#include <iomanip>
+
 #include <opencv2/core/core.hpp>
 #include <opencv2/features2d/features2d.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/gpu/gpu.hpp>
 
 #include "utility_lib/utility_lib.h"
+
+#define PARAM_OFFSET    "--offset"
 
 using namespace std;
 using namespace cv;
@@ -14,26 +19,33 @@ class App : public BaseApp
 public:
     App() : use_gpu(true), match_confidence(0.5) {}
 
-    virtual void run(int argc, char **argv);
-    virtual bool processKey(int key);
-    virtual void printHelp();
+protected:
+    void process();
+    bool parseCmdArgs(int& i, int argc, const char* argv[]);
+    bool processKey(int key);
+    void printHelp();
 
+private:
     bool use_gpu;
     double match_confidence;
+    int the_same_video_offset;
+    Ptr<PairFrameSource> source_;
 };
 
-void App::run(int argc, char **argv)
+void App::process()
 {
-    parseCmdArgs(argc, argv);
-    if (help_showed) 
-        return;
-
-    if (sources.size() != 2) 
+    if (sources.size() == 1)
+        source_ = PairFrameSource::get(sources[0], the_same_video_offset);
+    else if (sources.size() == 2)
+        source_ = PairFrameSource::get(sources[0], sources[1]);
+    else
     {
         cout << "Loading default images..." << endl;
         sources.resize(2);
         sources[0] = new ImageSource("data/matching/t34mA.JPG");
         sources[1] = new ImageSource("data/matching/t34mB.JPG");
+
+        source_ = PairFrameSource::get(sources[0], sources[1]);
     }
 
     cout << "\nControls:" << endl;
@@ -64,8 +76,8 @@ void App::run(int argc, char **argv)
     {
         int64 start = getTickCount();
 
-        sources[0]->next(h_img1);
-        sources[1]->next(h_img2);
+        source_->next(h_img1, h_img2);
+
         makeGray(h_img1, h_img1_gray);
         makeGray(h_img2, h_img2_gray);
 
@@ -142,27 +154,52 @@ void App::run(int argc, char **argv)
         drawMatches(h_img1, keypoints1_cpu, h_img2, keypoints2_cpu, good_matches, dst, Scalar(255, 0, 0, 255), Scalar(0, 0, 255, 255));
 
         stringstream msg; msg << "Total FPS : " << setprecision(4) << total_fps;
-        putText(dst, msg.str(), Point(0, 30), FONT_HERSHEY_SIMPLEX, 1, Scalar::all(255));
+        printText(dst, msg.str(), 0);
+
         msg.str(""); msg << "Processing FPS : " << setprecision(4) << proc_fps;
-        putText(dst, msg.str(), Point(0, 60), FONT_HERSHEY_SIMPLEX, 1, Scalar::all(255));
+        printText(dst, msg.str(), 1);
+
         msg.str(""); msg << "SURF FPS : " << setprecision(4) << surf_fps;
-        putText(dst, msg.str(), Point(0, 90), FONT_HERSHEY_SIMPLEX, 1, Scalar::all(255));
+        printText(dst, msg.str(), 2);
+
         msg.str(""); msg << "Match FPS : " << setprecision(4) << match_fps;
-        putText(dst, msg.str(), Point(0, 120), FONT_HERSHEY_SIMPLEX, 1, Scalar::all(255));
-        putText(dst, use_gpu ? "Mode : GPU" : "Mode : CPU", Point(0, 150), FONT_HERSHEY_SIMPLEX, 1, Scalar::all(255));
+        printText(dst, msg.str(), 3);
+
+        printText(dst, use_gpu ? "Mode : GPU" : "Mode : CPU", 4);
         
         imshow("surf_demo", dst);
-        processKey(waitKey(3));
+
+        processKey(waitKey(3) & 0xff);
 
         total_fps = getTickFrequency()  / (getTickCount() - proc_start);
     }
 }
 
-bool App::processKey(int key)
+bool App::parseCmdArgs(int& i, int argc, const char* argv[])
 {
-    if (key >= 0)
-        key = key & 0xff;
-        
+    string arg(argv[i]);
+    
+    if (arg == PARAM_OFFSET)
+    {
+        ++i;
+
+        if (i >= argc)
+        {
+            ostringstream msg;
+            msg << "Missing value after " << PARAM_OFFSET;
+            throw runtime_error(msg.str());
+        }
+
+        the_same_video_offset = atoi(argv[i]);
+    }
+    else
+        return false;
+
+    return true;
+}
+
+bool App::processKey(int key)
+{        
     if (BaseApp::processKey(key))
         return true;
 
@@ -172,16 +209,19 @@ bool App::processKey(int key)
         use_gpu = !use_gpu;
         cout << "Use gpu = " << use_gpu << endl;
         break;
+
     case 'A':
-        match_confidence += 0.1;
+        match_confidence += 0.05;
         match_confidence = min(match_confidence, 1.0);
         cout << "match_confidence = " << match_confidence << endl;
         break;
+
     case 'S':
-        match_confidence -= 0.1;
+        match_confidence -= 0.05;
         match_confidence = max(match_confidence, 0.0);
         cout << "match_confidence = " << match_confidence << endl;
         break;
+
     default:
         return false;
     }
@@ -193,6 +233,7 @@ void App::printHelp()
 {
     cout << "This program demonstrates using SURF_GPU features detector, descriptor extractor and BruteForceMatcher_GPU" << endl;
     cout << "Usage: demo_surf <frames_source1> [<frames_source2>]" << endl;
+    cout << '\t' << setw(15) << PARAM_OFFSET << " - set frames offset for the duplicate video source" << endl;
     BaseApp::printHelp();
 }
 
