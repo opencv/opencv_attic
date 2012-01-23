@@ -163,7 +163,7 @@ void App::process()
 
         printText(dst, use_gpu ? "Mode : GPU" : "Mode : CPU", 4);
         
-        imshow("surf_demo", dst);
+        imshow("orb_demo", dst);
         processKey(waitKey(3) & 0xff);
 
         total_fps = getTickFrequency()  / (getTickCount() - proc_start);
