@@ -694,6 +694,14 @@ CV_EXPORTS_W void calcBackProject( InputArrayOfArrays images, const vector<int>&
                                    const vector<float>& ranges,
                                    double scale );
 
+/*CV_EXPORTS void calcBackProjectPatch( const Mat* images, int nimages, const int* channels,
+                                      InputArray hist, OutputArray dst, Size patchSize,
+                                      int method, double factor=1 );    
+    
+CV_EXPORTS_W void calcBackProjectPatch( InputArrayOfArrays images, const vector<int>& channels,
+                                        InputArray hist, OutputArray dst, Size patchSize,
+                                        int method, double factor=1 );*/
+
 //! compares two histograms stored in dense arrays
 CV_EXPORTS_W double compareHist( InputArray H1, InputArray H2, int method );
 
@@ -910,12 +918,22 @@ enum
     COLOR_YUV420i2BGR  = 91,
     COLOR_YUV420sp2RGB = 92,
     COLOR_YUV420sp2BGR = 93,
-    
+
+    COLOR_YUV2RGB_NV12 = COLOR_YUV420i2RGB,
+    COLOR_YUV2BGR_NV12 = COLOR_YUV420i2BGR,
+    COLOR_YUV2RGB_NV21 = COLOR_YUV420sp2RGB,
+    COLOR_YUV2BGR_NV21 = COLOR_YUV420sp2BGR,
+
     COLOR_YUV420i2RGBA  = 94,
     COLOR_YUV420i2BGRA  = 95,
     COLOR_YUV420sp2RGBA = 96,
     COLOR_YUV420sp2BGRA = 97,
 
+    COLOR_YUV2RGBA_NV12 = COLOR_YUV420i2RGBA,
+    COLOR_YUV2BGRA_NV12 = COLOR_YUV420i2BGRA,
+    COLOR_YUV2RGBA_NV21 = COLOR_YUV420sp2RGBA,
+    COLOR_YUV2BGRA_NV21 = COLOR_YUV420sp2BGRA,
+    
     COLOR_COLORCVT_MAX  =100
 };
     
