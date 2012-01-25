@@ -1,5 +1,6 @@
 #include <iostream>
 #include <iomanip>
+#include <stdexcept>
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/core/opengl_interop.hpp>

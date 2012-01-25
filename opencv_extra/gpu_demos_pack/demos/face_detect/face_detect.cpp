@@ -5,6 +5,7 @@
 
 #include <iostream>
 #include <iomanip>
+#include <stdexcept>
 
 #include <opencv2/contrib/contrib.hpp>
 #include <opencv2/objdetect/objdetect.hpp>

@@ -1,5 +1,6 @@
 #include <iostream>
 #include <iomanip>
+#include <stdexcept>
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/calib3d/calib3d.hpp>
@@ -133,7 +134,7 @@ void App::process()
 
         imshow("stereo_matching_demo - disp map", disp_color);
 
-        processKey(waitKey(3));
+        processKey(waitKey(3) & 0xff);
 
         total_fps = getTickFrequency()  / (getTickCount() - proc_start);
     }
