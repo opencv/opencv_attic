@@ -29,7 +29,13 @@ struct DrawData
 class App : public BaseApp
 {
 public:
-    enum {BROX, LK_DENSE, LK_SPARSE_GPU, LK_SPARSE_CPU} method;
+    enum 
+	{
+		BROX, 
+		LK_DENSE, 
+		LK_SPARSE_GPU, LK_SPARSE_CPU,
+		FARNEBACK_GPU, FARNEBACK_CPU
+	} method;
 
     App() : method(BROX),
             the_same_video_offset(1)
@@ -43,7 +49,7 @@ protected:
 
 private:
     int the_same_video_offset;
-    DrawData drawData;   
+    DrawData draw_data;   
 };
 
 bool App::parseCmdArgs(int& i, int argc, const char* argv[])
@@ -67,10 +73,14 @@ bool App::parseCmdArgs(int& i, int argc, const char* argv[])
             method = BROX;
         else if (m == "lk_dense")
             method = LK_DENSE;
-        else if (m == "lk_spase_gpu")
+        else if (m == "lk_sparse_gpu")
             method = LK_SPARSE_GPU;
-        else if (m == "lk_spase_cpu")
+        else if (m == "lk_sparse_cpu")
             method = LK_SPARSE_CPU;
+		else if (m == "farneback_cpu")
+			method = FARNEBACK_CPU;
+		else if (m == "farneback_gpu")
+			method = FARNEBACK_GPU;
         else
         {
             ostringstream msg;
@@ -99,12 +109,13 @@ bool App::parseCmdArgs(int& i, int argc, const char* argv[])
 
 void App::printHelp()
 {
-    cout << "This program demonstrates usage BroxOpticalFlow" << endl;
-    cout << "Usage: demo_optical_flow <frames_source1> [<frames_source2>]" << endl;
-    cout << setiosflags(ios::left);
-    cout << '\t' << setw(15) << PARAM_METHOD << " - set method (brox, lk_dense, lk_spase_gpu, lk_spase_cpu)" << endl;
-    cout << '\t' << setw(15) << PARAM_OFFSET << " - set frames offset for the duplicate video source" << endl;
-    cout << "\t\t" << "(in case when ony one video or camera source is given). The default is 1." << endl;
+    cout << "Demonstrates different optical flow algorithms.\n\n" 
+		 << "demo_optical_flow <frames_source1> [<frames_source2>] [flags]\n\n"
+		 << "Flags:\n"
+		 << "  " << PARAM_METHOD << " (brox|lk_dense|lk_sparse_gpu|lk_sparse_cpu|farneback_gpu|farneback_cpu)\n"
+		 << "  " << PARAM_OFFSET << " <integer>\n"
+		 << "      Frames offset for the duplicate video source in case when ony one video\n"
+		 << "      or camera source is given. The default is 1.\n";
     BaseApp::printHelp();
 }
 
@@ -210,16 +221,16 @@ void App::process()
     namedWindow("optical_flow_demo", WINDOW_OPENGL);
     setGlDevice();
 
-    Mat frame0, frame1;
+    Mat frame0, frame1, uv, u, v;
 
-    Mat frame0Gray;
+    Mat frame0Gray, frame1Gray;
 
     GpuMat d_frame0Color, d_frame1Color;
     GpuMat d_frame0Gray, d_frame1Gray;
     GpuMat d_frame0Color32F, d_frame1Color32F;
     GpuMat d_frame0Gray32F, d_frame1Gray32F;
 
-    GpuMat d_u, d_v;
+    GpuMat d_uv, d_u, d_v;
 
     GpuMat d_prevPts;
     GpuMat d_nextPts;
@@ -237,6 +248,7 @@ void App::process()
     BroxOpticalFlow brox(0.197f /*alpha*/, 50.0f /*gamma*/, 0.8f /*scale_factor*/, 10 /*inner_iterations*/, 77 /*outer_iterations*/, 10 /*solver_iterations*/);
     PyrLKOpticalFlow lk;
     GoodFeaturesToTrackDetector_GPU detector(8000, 0.01, 0.0);
+	FarnebackOpticalFlow farneback_gpu; 
 
     while (!exited)
     {
@@ -269,13 +281,13 @@ void App::process()
             stringstream proc_fps_str; 
             proc_fps_str << "Processing FPS : " << setprecision(4) << proc_fps;
 
-            drawData.tex.copyFrom(d_frame0Gray32F);        
-            drawData.arr.setVertexArray(d_vertex);
-            drawData.arr.setColorArray(d_colors, false);
-            drawData.method = "Brox";
-            drawData.total_fps = total_fps_str.str();
-            drawData.proc_fps = proc_fps_str.str();
-            setOpenGlDrawCallback("optical_flow_demo", drawCallback, &drawData);
+            draw_data.tex.copyFrom(d_frame0Gray32F);        
+            draw_data.arr.setVertexArray(d_vertex);
+            draw_data.arr.setColorArray(d_colors, false);
+            draw_data.method = "Brox";
+            draw_data.total_fps = total_fps_str.str();
+            draw_data.proc_fps = proc_fps_str.str();
+            setOpenGlDrawCallback("optical_flow_demo", drawCallback, &draw_data);
             updateWindow("optical_flow_demo");
         }
         else if (method == LK_DENSE)
@@ -297,13 +309,13 @@ void App::process()
             stringstream proc_fps_str; 
             proc_fps_str << "Processing FPS : " << setprecision(4) << proc_fps;
 
-            drawData.tex.copyFrom(d_frame0Gray);        
-            drawData.arr.setVertexArray(d_vertex);
-            drawData.arr.setColorArray(d_colors, false);
-            drawData.method = "PyrLK Dense";
-            drawData.total_fps = total_fps_str.str();
-            drawData.proc_fps = proc_fps_str.str();
-            setOpenGlDrawCallback("optical_flow_demo", drawCallback, &drawData);
+            draw_data.tex.copyFrom(d_frame0Gray);        
+            draw_data.arr.setVertexArray(d_vertex);
+            draw_data.arr.setColorArray(d_colors, false);
+            draw_data.method = "PyrLK Dense";
+            draw_data.total_fps = total_fps_str.str();
+            draw_data.proc_fps = proc_fps_str.str();
+            setOpenGlDrawCallback("optical_flow_demo", drawCallback, &draw_data);
             updateWindow("optical_flow_demo");
         }
         else if (method == LK_SPARSE_GPU)
@@ -366,6 +378,66 @@ void App::process()
 
             imshow("optical_flow_demo", image);
         }
+		else if (method == FARNEBACK_GPU)
+		{
+			cvtColor(d_frame0Color, d_frame0Gray, COLOR_BGR2GRAY);
+			cvtColor(d_frame1Color, d_frame1Gray, COLOR_BGR2GRAY);
+
+			proc_start = getTickCount();
+			farneback_gpu(d_frame0Gray, d_frame1Gray, d_u, d_v);
+			double proc_fps = getTickFrequency()  / (getTickCount() - proc_start);
+
+            createOpticalFlowNeedleMap(d_u, d_v, d_vertex, d_colors);
+
+            stringstream total_fps_str; 
+            total_fps_str << "Total FPS : " << setprecision(4) << total_fps;
+
+            stringstream proc_fps_str; 
+            proc_fps_str << "Processing FPS : " << setprecision(4) << proc_fps;
+
+            draw_data.tex.copyFrom(d_frame0Gray);        
+            draw_data.arr.setVertexArray(d_vertex);
+            draw_data.arr.setColorArray(d_colors, false);
+            draw_data.method = "Farneback GPU";
+            draw_data.total_fps = total_fps_str.str();
+            draw_data.proc_fps = proc_fps_str.str();
+            setOpenGlDrawCallback("optical_flow_demo", drawCallback, &draw_data);
+            updateWindow("optical_flow_demo");
+		}
+		else if (method ==	FARNEBACK_CPU)
+		{
+			cvtColor(frame0, frame0Gray, COLOR_BGR2GRAY);
+			d_frame0Gray.upload(frame0Gray);
+			cvtColor(frame1, frame1Gray, COLOR_BGR2GRAY);
+
+			proc_start = getTickCount();
+			calcOpticalFlowFarneback(
+					frame0Gray, frame1Gray, uv, farneback_gpu.pyrScale, farneback_gpu.numLevels, farneback_gpu.winSize, 
+					farneback_gpu.numIters, farneback_gpu.polyN, farneback_gpu.polySigma, farneback_gpu.flags);
+			double proc_fps = getTickFrequency()  / (getTickCount() - proc_start);
+			
+			d_uv = GpuMat(uv);
+			GpuMat uv_planes[] = {d_u, d_v};
+			split(d_uv, uv_planes);
+			d_u = uv_planes[0]; 
+			d_v = uv_planes[1];
+            createOpticalFlowNeedleMap(d_u, d_v, d_vertex, d_colors);
+
+            stringstream total_fps_str; 
+            total_fps_str << "Total FPS : " << setprecision(4) << total_fps;
+
+            stringstream proc_fps_str; 
+            proc_fps_str << "Processing FPS : " << setprecision(4) << proc_fps;
+
+            draw_data.tex.copyFrom(d_frame0Gray);        
+            draw_data.arr.setVertexArray(d_vertex);
+            draw_data.arr.setColorArray(d_colors, false);
+            draw_data.method = "Farneback CPU";
+            draw_data.total_fps = total_fps_str.str();
+            draw_data.proc_fps = proc_fps_str.str();
+            setOpenGlDrawCallback("optical_flow_demo", drawCallback, &draw_data);
+            updateWindow("optical_flow_demo");
+		}
 
         processKey(waitKey(10) & 0xff);
 
@@ -388,9 +460,15 @@ bool App::processKey(int key)
         else if (method == LK_SPARSE_GPU)
             method = LK_SPARSE_CPU;
         else if (method == LK_SPARSE_CPU)
-            method = BROX;
+            method = FARNEBACK_GPU;
+		else if (method == FARNEBACK_GPU)
+			method = FARNEBACK_CPU;
+		else if (method == FARNEBACK_CPU)
+			method = BROX;
         break;
     }
+
+	return false;
 }
 
 RUN_APP(App)

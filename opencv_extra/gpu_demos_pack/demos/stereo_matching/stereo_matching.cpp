@@ -145,7 +145,7 @@ void App::printHelp()
     cout << "Usage: demo_stereo_matching\n"
          << "    <left_frame_source> <right_frame_source> # rectified\n"
          << "    -m <stereo_match_method> # BM | BP | CSBP\n"
-         << "    --ndisp <num_disparity_levels>\n\n";
+         << "    --ndisp <num_disparity_levels>\n";
     BaseApp::printHelp();
 }
 

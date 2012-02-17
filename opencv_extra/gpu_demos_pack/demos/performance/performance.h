@@ -4,8 +4,10 @@
 #include <iostream>
 #include <cstdio>
 #include <vector>
+#include <numeric>
 #include <string>
 #include "opencv2/core/core.hpp"
+#include "opencv2/gpu/gpu.hpp"
 
 #define TAB "    "
 
@@ -39,6 +41,8 @@ public:
     void setTestFilter(const std::string& val) { test_filter_ = val; }
     const std::string& testFilter() const { return test_filter_; }
 
+    void setNumIters(int num_iters) { num_iters_ = num_iters; }
+
     void addInit(Runnable* init) { inits_.push_back(init); }
     void addTest(Runnable* test) { tests_.push_back(test); }
     void run();
@@ -52,30 +56,49 @@ public:
         return cur_subtest_description_;
     }
 
+    bool stop() const { return cur_iter_idx_ >= num_iters_; }
+
     void cpuOn() { cpu_started_ = cv::getTickCount(); }
     void cpuOff() 
     {
         int64 delta = cv::getTickCount() - cpu_started_;
-        cpu_elapsed_ += delta;
+        cpu_times_.push_back(delta);
+        ++cur_iter_idx_;
+    }
+    void cpuComplete()
+    {
+        cpu_elapsed_ += meanTime(cpu_times_);
         cur_subtest_is_empty_ = false;
-    }  
+        cur_iter_idx_ = 0;
+    }
 
     void gpuOn() { gpu_started_ = cv::getTickCount(); }
     void gpuOff() 
     {
         int64 delta = cv::getTickCount() - gpu_started_;
-        gpu_elapsed_ += delta;
+        gpu_times_.push_back(delta);
+        ++cur_iter_idx_;
+    }
+    void gpuComplete()
+    {
+        gpu_elapsed_ += meanTime(gpu_times_);
         cur_subtest_is_empty_ = false;
+        cur_iter_idx_ = 0;
     }
 
     bool isListMode() const { return is_list_mode_; }
     void setListMode(bool value) { is_list_mode_ = value; }
 
 private:
-    TestSystem(): cur_subtest_is_empty_(true), cpu_elapsed_(0),
-                  gpu_elapsed_(0), speedup_total_(0.0),
-                  num_subtests_called_(0),
-                  is_list_mode_(false) {}
+    TestSystem():
+            cur_subtest_is_empty_(true), cpu_elapsed_(0),
+            gpu_elapsed_(0), speedup_total_(0.0),
+            num_subtests_called_(0), is_list_mode_(false),
+            num_iters_(10), cur_iter_idx_(0)
+    {
+        cpu_times_.reserve(num_iters_);
+        gpu_times_.reserve(num_iters_);
+    }   
 
     void finishCurrentSubtest();
     void resetCurrentSubtest() 
@@ -84,7 +107,12 @@ private:
         gpu_elapsed_ = 0;
         cur_subtest_description_.str("");
         cur_subtest_is_empty_ = true;
+        cur_iter_idx_ = 0;
+        cpu_times_.clear();
+        gpu_times_.clear();
     }
+
+    double meanTime(const std::vector<int64> &samples);
 
     void printHeading();
     void printSummary();
@@ -106,6 +134,11 @@ private:
     int num_subtests_called_;
 
     bool is_list_mode_;
+
+    int num_iters_;
+    int cur_iter_idx_;
+    std::vector<int64> cpu_times_;
+    std::vector<int64> gpu_times_;
 };
 
 
@@ -129,12 +162,22 @@ private:
     void name##_test::run()
 
 #define SUBTEST TestSystem::instance().startNewSubtest()
-#define CPU_ON TestSystem::instance().cpuOn()
-#define GPU_ON TestSystem::instance().gpuOn()
-#define CPU_OFF TestSystem::instance().cpuOff()
-#define GPU_OFF TestSystem::instance().gpuOff()
 
-// Generates matrix
+#define CPU_ON \
+    while (!TestSystem::instance().stop()) { \
+        TestSystem::instance().cpuOn()
+#define CPU_OFF \
+        TestSystem::instance().cpuOff(); \
+    } TestSystem::instance().cpuComplete()
+
+#define GPU_ON \
+    while (!TestSystem::instance().stop()) { \
+        TestSystem::instance().gpuOn()
+#define GPU_OFF \
+        TestSystem::instance().gpuOff(); \
+    } TestSystem::instance().gpuComplete()
+
+// Generates a matrix
 void gen(cv::Mat& mat, int rows, int cols, int type, cv::Scalar low, 
          cv::Scalar high);
 

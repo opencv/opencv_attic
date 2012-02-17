@@ -123,7 +123,7 @@ bool App::processKey(int key)
 void App::printHelp()
 {
     cout << "Rotation model images stitcher.\n\n"
-         << "Usage: demo_stitching img1 img2 [...imgN]\n\n";
+         << "Usage: demo_stitching img1 img2 [...imgN]\n";
     BaseApp::printHelp();
 }
 

@@ -388,7 +388,7 @@ void App::printHelp()
          << "  [--gamma-correct <int>] # do gamma correction or not\n"
          << "  [--write-video] # write video\n"
          << "  [--dst-video <path>] # output video path\n"
-         << "  [--dst-video-fps <double>] # output video fps\n\n";
+         << "  [--dst-video-fps <double>] # output video fps\n";
     BaseApp::printHelp();
 }
 

@@ -190,7 +190,7 @@ bool BaseApp::parseCmdArgs(int& i, int argc, const char* argv[])
 
 void BaseApp::printHelp()
 {
-    cout << "Frames Source Command Args:\n"
+    cout << "\nFrame Source Flags:\n"
          << "  -i <img_path>\n"
          << "       Image source path.\n"
          << "  -v <video_path>\n"

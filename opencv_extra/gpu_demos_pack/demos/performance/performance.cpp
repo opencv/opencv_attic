@@ -5,6 +5,7 @@
 
 using namespace std;
 using namespace cv;
+using namespace cv::gpu;
 
 void TestSystem::run()
 {
@@ -50,9 +51,6 @@ void TestSystem::run()
     }
 
     printSummary();
-
-    cout << "Press any key to continue...";
-    cin.get();
 }
 
 
@@ -62,11 +60,10 @@ void TestSystem::finishCurrentSubtest()
         // There is no need to print subtest statistics
         return;
 
-    int cpu_time = static_cast<int>(cpu_elapsed_ / getTickFrequency() * 1000.0);
-    int gpu_time = static_cast<int>(gpu_elapsed_ / getTickFrequency() * 1000.0);
+    double cpu_time = cpu_elapsed_ / getTickFrequency() * 1000.0;
+    double gpu_time = gpu_elapsed_ / getTickFrequency() * 1000.0;
 
-    double speedup = static_cast<double>(cpu_elapsed_) /
-                     std::max((int64)1, gpu_elapsed_);
+    double speedup = static_cast<double>(cpu_elapsed_) / std::max((int64)1, gpu_elapsed_);
     speedup_total_ += speedup;
 
     printMetrics(cpu_time, gpu_time, speedup);
@@ -76,8 +73,18 @@ void TestSystem::finishCurrentSubtest()
 }
 
 
+double TestSystem::meanTime(const vector<int64> &samples)
+{
+    double sum = accumulate(samples.begin(), samples.end(), 0.);
+    if (samples.size() > 1)
+        return (sum - samples[0]) / (samples.size() - 1);
+    return sum;
+}
+
+
 void TestSystem::printHeading()
 {
+    cout << endl;
     cout << setiosflags(ios_base::left);
     cout << TAB << setw(10) << "CPU, ms" << setw(10) << "GPU, ms" 
         << setw(14) << "SPEEDUP" 
@@ -174,7 +181,12 @@ int main(int argc, const char* argv[])
     if (list)
         TestSystem::instance().setListMode(true);
 
+	TestSystem::instance().setWorkingDir("data/");
+	TestSystem::instance().setNumIters(2);
     TestSystem::instance().run();
+
+	cout << "\nPress ENTER to exit...\n";
+	cin.get();
 
     return 0;
 }

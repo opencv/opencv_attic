@@ -246,7 +246,7 @@ bool App::processKey(int key)
 
 void App::printHelp()
 {
-    cout << "Usage: demo_face_detect --cascade <cascade_file> <frames_source>\n\n";
+    cout << "Usage: demo_face_detect --cascade <cascade_file> <frames_source>\n";
     BaseApp::printHelp();
 }
 

@@ -2,6 +2,7 @@
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/calib3d/calib3d.hpp"
+#include "opencv2/video/video.hpp"
 #include "opencv2/gpu/gpu.hpp"
 #include "performance.h"
 
@@ -266,7 +267,7 @@ TEST(meanShift)
 
 TEST(SURF)
 {
-    Mat src = imread("data/stereo_matching/aloeL.jpg", CV_LOAD_IMAGE_GRAYSCALE);
+    Mat src = imread(abspath("stereo_matching/aloeL.jpg"), CV_LOAD_IMAGE_GRAYSCALE);
     if (src.empty()) throw runtime_error("can't open aloeL.jpg");
 
     SURF surf;
@@ -294,7 +295,7 @@ TEST(SURF)
 
 TEST(FAST)
 {
-    Mat src = imread(abspath("data/stereo_matching/aloeL.jpg"), CV_LOAD_IMAGE_GRAYSCALE);
+    Mat src = imread(abspath("stereo_matching/aloeL.jpg"), CV_LOAD_IMAGE_GRAYSCALE);
     if (src.empty()) throw runtime_error("can't open aloeL.jpg");
 
     vector<KeyPoint> keypoints;
@@ -319,7 +320,7 @@ TEST(FAST)
 
 TEST(ORB)
 {
-    Mat src = imread(abspath("data/stereo_matching/aloeL.jpg"), CV_LOAD_IMAGE_GRAYSCALE);
+    Mat src = imread(abspath("stereo_matching/aloeL.jpg"), CV_LOAD_IMAGE_GRAYSCALE);
     if (src.empty()) throw runtime_error("can't open aloeL.jpg");
 
     ORB orb(4000);
@@ -767,6 +768,27 @@ TEST(threshold)
         gpu::threshold(d_src, d_dst, 50.0, 0.0, THRESH_BINARY);
         GPU_OFF;
     }
+
+    for (int size = 2000; size <= 4000; size += 1000)
+    {
+        SUBTEST << size << 'x' << size << ", 32FC1, THRESH_TRUNC [NPP]";
+
+        gen(src, size, size, CV_32FC1, 0, 100);
+
+        threshold(src, dst, 50.0, 0.0, THRESH_TRUNC);
+
+        CPU_ON; 
+        threshold(src, dst, 50.0, 0.0, THRESH_TRUNC);
+        CPU_OFF;
+
+        d_src.upload(src);
+
+        gpu::threshold(d_src, d_dst, 50.0, 0.0, THRESH_TRUNC);
+
+        GPU_ON;
+        gpu::threshold(d_src, d_dst, 50.0, 0.0, THRESH_TRUNC);
+        GPU_OFF;
+    }
 }
 
 TEST(pow)
@@ -991,7 +1013,7 @@ TEST(equalizeHist)
 
 TEST(Canny)
 {
-    Mat img = imread(abspath("data/stereo_matching/aloeL.jpg"), CV_LOAD_IMAGE_GRAYSCALE);
+    Mat img = imread(abspath("stereo_matching/aloeL.jpg"), CV_LOAD_IMAGE_GRAYSCALE);
 
     if (img.empty()) throw runtime_error("can't open aloeL.jpg");
 
@@ -1087,4 +1109,108 @@ TEST(gemm)
         gpu::gemm(d_src1, d_src2, 1.0, d_src3, 1.0, d_dst);
         GPU_OFF;
     }
+}
+
+TEST(GoodFeaturesToTrack)
+{
+    Mat src = imread(abspath("stereo_matching/aloeL.jpg"), IMREAD_GRAYSCALE);
+    if (src.empty()) throw runtime_error("can't open aloeL.jpg");
+
+    vector<Point2f> pts;
+
+    goodFeaturesToTrack(src, pts, 8000, 0.01, 0.0);
+
+    CPU_ON;
+    goodFeaturesToTrack(src, pts, 8000, 0.01, 0.0);
+    CPU_OFF;
+
+    gpu::GoodFeaturesToTrackDetector_GPU detector(8000, 0.01, 0.0);
+
+    gpu::GpuMat d_src(src);
+    gpu::GpuMat d_pts;
+
+    detector(d_src, d_pts);
+
+    GPU_ON;
+    detector(d_src, d_pts);
+    GPU_OFF;
+}
+
+TEST(PyrLKOpticalFlow)
+{
+    Mat frame0 = imread(abspath("optical_flow/rubberwhale1.png"));
+    if (frame0.empty()) throw runtime_error("can't open rubberwhale1.png");
+
+    Mat frame1 = imread(abspath("optical_flow/rubberwhale2.png"));
+    if (frame1.empty()) throw runtime_error("can't open rubberwhale2.png");
+    
+    Mat gray_frame;
+    cvtColor(frame0, gray_frame, COLOR_BGR2GRAY);
+    
+    for (int points = 1000; points <= 8000; points *= 2)
+    {
+        SUBTEST << points;
+
+        vector<Point2f> pts;
+        goodFeaturesToTrack(gray_frame, pts, points, 0.01, 0.0);
+
+        vector<Point2f> nextPts;
+        vector<unsigned char> status;
+
+        calcOpticalFlowPyrLK(frame0, frame1, pts, nextPts, status, noArray());
+
+        CPU_ON;
+        calcOpticalFlowPyrLK(frame0, frame1, pts, nextPts, status, noArray());
+        CPU_OFF;
+
+        gpu::PyrLKOpticalFlow d_pyrLK;
+
+        gpu::GpuMat d_frame0(frame0);
+        gpu::GpuMat d_frame1(frame1);
+
+        gpu::GpuMat d_pts;
+        Mat pts_mat(1, pts.size(), CV_32FC2, (void*)&pts[0]);
+        d_pts.upload(pts_mat);
+
+        gpu::GpuMat d_nextPts;
+        gpu::GpuMat d_status;
+        gpu::GpuMat d_err;
+
+        d_pyrLK.sparse(d_frame0, d_frame1, d_pts, d_nextPts, d_status);
+
+        GPU_ON;
+        d_pyrLK.sparse(d_frame0, d_frame1, d_pts, d_nextPts, d_status);
+        GPU_OFF;
+    }
+}
+
+
+TEST(FarnebackOpticalFlow)
+{
+    const string datasets[] = {"rubberwhale", "basketball"};
+    for (size_t i = 0; i < sizeof(datasets)/sizeof(*datasets); ++i) {
+    for (int fastPyramids = 0; fastPyramids < 2; ++fastPyramids) {
+    for (int useGaussianBlur = 0; useGaussianBlur < 2; ++useGaussianBlur) {
+
+    SUBTEST << "dataset=" << datasets[i] << ", fastPyramids=" << fastPyramids << ", useGaussianBlur=" << useGaussianBlur;
+    Mat frame0 = imread(abspath("optical_flow/" + datasets[i] + "1.png"), IMREAD_GRAYSCALE);
+    Mat frame1 = imread(abspath("optical_flow/" + datasets[i] + "2.png"), IMREAD_GRAYSCALE);
+    if (frame0.empty()) throw runtime_error("can't open " + datasets[i] + "1.png");
+    if (frame1.empty()) throw runtime_error("can't open " + datasets[i] + "2.png");
+
+    gpu::FarnebackOpticalFlow calc;
+    calc.fastPyramids = fastPyramids;
+    calc.flags |= useGaussianBlur ? OPTFLOW_FARNEBACK_GAUSSIAN : 0;
+
+    gpu::GpuMat d_frame0(frame0), d_frame1(frame1), d_flowx, d_flowy;
+    GPU_ON;
+    calc(d_frame0, d_frame1, d_flowx, d_flowy);
+    GPU_OFF;
+
+    Mat flow;
+    CPU_ON;
+    calcOpticalFlowFarneback(frame0, frame1, flow, calc.pyrScale, calc.numLevels, calc.winSize, calc.numIters, calc.polyN, calc.polySigma, calc.flags);
+    CPU_OFF;
+
+    }}}
 }
