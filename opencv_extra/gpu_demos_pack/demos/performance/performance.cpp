@@ -181,12 +181,12 @@ int main(int argc, const char* argv[])
     if (list)
         TestSystem::instance().setListMode(true);
 
-	TestSystem::instance().setWorkingDir("data/");
-	TestSystem::instance().setNumIters(2);
+    TestSystem::instance().setWorkingDir("data/");
+    TestSystem::instance().setNumIters(2);
     TestSystem::instance().run();
 
-	cout << "\nPress ENTER to exit...\n";
-	cin.get();
+    cout << "\nPress ENTER to exit...\n";
+    cin.get();
 
     return 0;
 }

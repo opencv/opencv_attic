@@ -92,7 +92,7 @@ void App::process()
         imshow("left", left);
         imshow("right", right);
 
-	    // Set common parameters
+        // Set common parameters
         bm.ndisp = ndisp;
         bm_cpu.init(StereoBM::BASIC_PRESET, bm.ndisp, bm.winSize);
         bp.ndisp = ndisp;
