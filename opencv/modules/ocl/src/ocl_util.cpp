@@ -258,71 +258,76 @@ int cv::ocl::util::buildOCLProgramBinary(const char *filename, cl_context* conte
 	//writeBinaries(context, commandQueue, &program);
  	
 */
- 	FILE* fp = fopen("d:/branches/ocl/opencv/modules/ocl/src/ocl/kernel.ptx", "r");
-        fseek (fp , 0 , SEEK_END);
-        const size_t lSize = ftell(fp);
-        rewind(fp);
-        unsigned char* buffer;
-        buffer = (unsigned char*) malloc (lSize);
-        fread(buffer, 1, lSize, fp);
-        fclose(fp);
+	const char* binpath = getenv("OPENCV_OCL_BIN_PATH");
+	if(!binpath)
+		binpath = ".";
+	char kernelname[1024];
+	sprintf(kernelname, "%s/kernel.ptx", binpath);
+ 	FILE* fp = fopen(kernelname, "r");
+    fseek (fp , 0 , SEEK_END);
+	const size_t lSize = ftell(fp);
+	rewind(fp);
+	unsigned char* buffer;
+	buffer = (unsigned char*) malloc (lSize);
+	fread(buffer, 1, lSize, fp);
+	fclose(fp);
 
-		status= clGetContextInfo(*context, CL_CONTEXT_DEVICES, 0, NULL, &cb);
-		cl_device_id *cdDevices = (cl_device_id*)malloc(cb);
-		clGetContextInfo(*context, CL_CONTEXT_DEVICES, cb, cdDevices, NULL);
+	status= clGetContextInfo(*context, CL_CONTEXT_DEVICES, 0, NULL, &cb);
+	cl_device_id *cdDevices = (cl_device_id*)malloc(cb);
+	clGetContextInfo(*context, CL_CONTEXT_DEVICES, cb, cdDevices, NULL);
 
-		cl_int statusErr;
-        *program1 = clCreateProgramWithBinary(*context, 1, (const cl_device_id *)cdDevices, 
-                                &lSize, (const unsigned char**)&buffer, &status, &statusErr);
-        
-		if (status != CL_SUCCESS){ cout<<"Error in clCreateProgramWithBinary, Line "<<__LINE__<<" in file "<<__FILE__<<" "<<endl; } 
- 
-	
-    status = clBuildProgram(*program1, 0, NULL, NULL, NULL, NULL);
+	cl_int statusErr;
+	*program1 = clCreateProgramWithBinary(*context, 1, (const cl_device_id *)cdDevices, 
+	                   &lSize, (const unsigned char**)&buffer, &status, &statusErr);
 
-			cl_int logStatus;
-    		char * buildLog = NULL;
-    		size_t buildLogSize = 0;
-    		logStatus = clGetProgramBuildInfo(	*program1,
-                                      			devices[0],
-                                      			CL_PROGRAM_BUILD_LOG,
-                                      			buildLogSize,
-                                      			buildLog,
-												&buildLogSize);
+	if (status != CL_SUCCESS)
+	{
+		cout<<"Error in clCreateProgramWithBinary, Line "<<__LINE__<<" in file "<<__FILE__<<" "<<endl;
+	}
 
-           	if(logStatus != CL_SUCCESS)
-			{
-					 cout<<"Error: Gettin Program build info\n";
-			}
+	status = clBuildProgram(*program1, 0, NULL, NULL, NULL, NULL);
 
+	cl_int logStatus;
+	char * buildLog = NULL;
+	size_t buildLogSize = 0;
+	logStatus = clGetProgramBuildInfo(	*program1,
+	                         			devices[0],
+	                         			CL_PROGRAM_BUILD_LOG,
+	                         			buildLogSize,
+	                         			buildLog,
+	&buildLogSize);
 
-            
-        	buildLog = (char*)malloc(buildLogSize);
+	if(logStatus != CL_SUCCESS)
+	{
+		cout<<"Error: Gettin Program build info\n";
+	}
 
-        	if(buildLog == NULL)
-        	{
-            	 cout<<"Error: Gettin build log\n";
-        	}
+	buildLog = (char*)malloc(buildLogSize);
 
-        	memset(buildLog, 0, buildLogSize);
+	if(buildLog == NULL)
+	{
+		cout<<"Error: Gettin build log\n";
+	}
 
-        	logStatus = clGetProgramBuildInfo(	*program1, 
-												devices[0], 
-												CL_PROGRAM_BUILD_LOG, 
-												buildLogSize, 
-												buildLog, 
-												NULL);
-        	if(logStatus != CL_SUCCESS)
-			{
-			 cout<<"Error: cl_get Program build info failled\n";
-			free(buildLog);
-			}
+	memset(buildLog, 0, buildLogSize);
 
-        	 cout << " \n\t\t\tBUILD LOG\n";
-        	 cout << " ************************************************\n";
-        	 cout << buildLog <<  endl;
-        	 cout << " ************************************************\n";
-        	free(buildLog);
+	logStatus = clGetProgramBuildInfo(	*program1, 
+										devices[0], 
+										CL_PROGRAM_BUILD_LOG, 
+										buildLogSize, 
+										buildLog, 
+										NULL);
+	if(logStatus != CL_SUCCESS)
+	{
+		cout<<"Error: cl_get Program build info failled\n";
+		free(buildLog);
+	}
+
+	cout << " \n\t\t\tBUILD LOG\n";
+	cout << " ************************************************\n";
+	cout << buildLog <<  endl;
+	cout << " ************************************************\n";
+	free(buildLog);
 
 
 	return status;
