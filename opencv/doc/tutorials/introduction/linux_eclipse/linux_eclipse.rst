@@ -4,7 +4,7 @@ Using OpenCV with Eclipse (plugin CDT)
 ****************************************
 
 .. note::
-   For me at least, this works, is simple and quick. Suggestions are welcome
+   Two ways, one by forming a project directly, and another by CMake
 
 Prerequisites
 ===============
@@ -25,28 +25,20 @@ Making a project
 #. Go to **File -> New -> C/C++ Project**
 
    .. image:: images/a0.png
-      :height: 400px 
       :alt: Eclipse Tutorial Screenshot 0
       :align: center
 
 #. Choose a name for your project (i.e. DisplayImage). An **Empty Project** should be okay for this example. 
 
    .. image:: images/a1.png
-      :height: 400px 
       :alt: Eclipse Tutorial Screenshot 1
       :align: center
 
 #. Leave everything else by default. Press **Finish**. 
 
-   .. image:: images/a2.png
-      :height: 400px 
-      :alt: Eclipse Tutorial Screenshot 2
-      :align: center
-
 #. Your project (in this case DisplayImage) should appear in the **Project Navigator** (usually at the left side of your window).
 
    .. image:: images/a3.png
-      :height: 400px 
       :alt: Eclipse Tutorial Screenshot 3
       :align: center
 
@@ -56,28 +48,16 @@ Making a project
    * Right click on **DisplayImage** (in the Navigator). **New -> Folder** . 
 
      .. image:: images/a4.png
-        :height: 400px 
         :alt: Eclipse Tutorial Screenshot 4
         :align: center
 
    * Name your folder **src** and then hit **Finish**
 
-     .. image:: images/a5.png
-        :height: 400px 
-        :alt: Eclipse Tutorial Screenshot 5
-        :align: center
-
    * Right click on your newly created **src** folder. Choose **New source file**:
-
-     .. image:: images/a6.png
-        :height: 400px 
-        :alt: Eclipse Tutorial Screenshot 6
-        :align: center
 
    * Call it **DisplayImage.cpp**. Hit **Finish**
 
      .. image:: images/a7.png
-        :height: 400px 
         :alt: Eclipse Tutorial Screenshot 7
         :align: center
 
@@ -113,17 +93,11 @@ Making a project
 
     * Go to  **Project-->Properties**
 
-     .. image:: images/a8.png
-        :height: 400px 
-        :alt: Eclipse Tutorial Screenshot 8
-        :align: center
-
     * In **C/C++ Build**, click on **Settings**. At the right, choose the **Tool Settings** Tab. Here we will enter the headers and libraries info:
 
       a. In **GCC C++ Compiler**, go to **Includes**. In **Include paths(-l)** you should include the path of the folder where opencv was installed. In our example, this is ``/usr/local/include/opencv``.
 
          .. image:: images/a9.png
-            :height: 400px 
             :alt: Eclipse Tutorial Screenshot 9
             :align: center
 
@@ -164,7 +138,6 @@ Making a project
          opencv_flann
 
          .. image:: images/a10.png
-             :height: 400px 
              :alt: Eclipse Tutorial Screenshot 10
              :align: center 
              
@@ -184,15 +157,9 @@ Making a project
 
     * Your project should be ready to be built. For this, go to **Project->Build all**   
 
-      .. image:: images/a11.png
-         :height: 400px 
-         :alt: Eclipse Tutorial Screenshot 11
-         :align: center 
-
       In the Console you should get something like 
 
       .. image:: images/a12.png
-         :height: 200px 
          :alt: Eclipse Tutorial Screenshot 12
          :align: center 
 
@@ -207,32 +174,87 @@ So, now we have an executable ready to run. If we were to use the Terminal, we w
 
    cd <DisplayImage_directory>
    cd src
-   ./DisplayImage ../images/HappyLittleFish.jpg
+   ./DisplayImage ../images/HappyLittleFish.png
 
-Assuming that the image to use as the argument would be located in <DisplayImage_directory>/images/HappyLittleFish.jpg. We can still do this, but let's do it from Eclipse:
+Assuming that the image to use as the argument would be located in <DisplayImage_directory>/images/HappyLittleFish.png. We can still do this, but let's do it from Eclipse:
 
 
 #. Go to **Run->Run Configurations** 
 
-   .. image:: images/a13.png
-      :height: 300px 
-      :alt: Eclipse Tutorial Screenshot 13
-      :align: center 
-
 #. Under C/C++ Application you will see the name of your executable + Debug (if not, click over C/C++ Application a couple of times). Select the name (in this case **DisplayImage Debug**). 
 
-#. Now, in the right side of the window, choose the **Arguments** Tab. Write the path of the image file we want to open (path relative to the workspace/DisplayImage folder). Let's use **HappyLittleFish.jpg**:
+#. Now, in the right side of the window, choose the **Arguments** Tab. Write the path of the image file we want to open (path relative to the workspace/DisplayImage folder). Let's use **HappyLittleFish.png**:
 
    .. image:: images/a14.png
-      :height: 300px 
       :alt: Eclipse Tutorial Screenshot 14
       :align: center 
 
 #. Click on the **Apply** button and then in Run. An OpenCV window should pop up with the fish image (or whatever you used).
 
-   .. image:: images/a15.png
+   .. image:: images/a15.jpg
       :alt: Eclipse Tutorial Screenshot 15
       :align: center 
 
-
 #. Congratulations! You are ready to have fun with OpenCV using Eclipse.
+
+==================================================
+V2: Using CMake+OpenCV with Eclipse (plugin CDT)
+==================================================
+
+(See the `getting started <http://opencv.willowgarage.com/wiki/Getting_started>` section of the OpenCV Wiki)
+
+Say you have or create a new file, *helloworld.cpp* in a directory called *foo*:
+
+.. code-block:: cpp
+
+
+   #include <cv.h>
+   #include <highgui.h>
+   int main ( int argc, char **argv )
+   {
+     cvNamedWindow( "My Window", 1 );
+     IplImage *img = cvCreateImage( cvSize( 640, 480 ), IPL_DEPTH_8U, 1 );
+     CvFont font;
+     double hScale = 1.0;
+     double vScale = 1.0;
+     int lineWidth = 1;
+     cvInitFont( &font, CV_FONT_HERSHEY_SIMPLEX | CV_FONT_ITALIC,
+                 hScale, vScale, 0, lineWidth );
+     cvPutText( img, "Hello World!", cvPoint( 200, 400 ), &font,
+                cvScalar( 255, 255, 0 ) );
+     cvShowImage( "My Window", img );
+     cvWaitKey();
+     return 0;
+   }
+
+1. Create a build directory, say, under *foo*: ``mkdir /build``.  Then ``cd build``.
+
+#. Put a *CmakeLists.txt* file in build:
+
+.. code-block:: bash
+
+   PROJECT( helloworld_proj )
+   FIND_PACKAGE( OpenCV REQUIRED )
+   ADD_EXECUTABLE( helloworld helloworld.cxx )
+   TARGET_LINK_LIBRARIES( helloworld ${OpenCV_LIBS} )
+
+#. Run: ``cmake-gui ..`` and make sure you fill in where opencv was built. 
+
+#. Then click ``configure`` and then ``generate``. If it's OK, **quit cmake-gui**
+
+#. Run ``make -j4``   *(the ``-j4`` is optional, it just tells the compiler to build in 4 threads)*. Make sure it builds.
+
+#. Start ``eclipse`` . Put the workspace in some directory but **not** in ``foo`` or ``foo\\build``
+
+#. Right click in the ``Project Explorer`` section. Select ``Import``  And then open the ``C/C++`` filter. Choose *Existing Code* as a Makefile Project``
+
+#. Name your project, say *helloworld*. Browse to the Existing Code location ``foo\\build`` (where you ran your cmake-gui from). Select *Linux GCC* in the *"Toolchain for Indexer Settings"* and press *Finish*.
+
+#. Right click in the ``Project Explorer`` section. Select ``Properties``. Under ``C/C++ Build``, set the *build directory:* from something like ``${workspace_loc:/helloworld}`` to ``${workspace_loc:/helloworld}/build`` since that's where you are building to.
+
+ a. You can also optionally modify the ``Build command:`` from ``make`` to something like ``make VERBOSE=1 -j4`` which tells the compiler to produce detailed symbol files for debugging and also to compile in 4 parallel threads.
+
+#. Done!
+
+
+

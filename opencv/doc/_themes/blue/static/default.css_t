@@ -80,6 +80,7 @@ div.related a {
 }
 
 div.sphinxsidebar {
+    word-wrap: break-word;
     {%- if theme_stickysidebar|tobool %}
     top: 30px;
     margin: 0;
@@ -140,7 +141,7 @@ div.sphinxsidebar p.topless {
 }
 
 div.sphinxsidebar ul {
-    margin: 10px;
+    margin: 10px 0 10px 10px;
     padding: 0;
     color: {{ theme_sidebartextcolor }};
 }
@@ -309,6 +310,10 @@ ul.simple {
     list-style: none;
 }
 
+em.menuselection, em.guilabel {
+    font-family: {{ theme_guifont }};
+}
+
 .enumeratevisibleitemswithsquare ul {
 list-style: square; 
 margin-bottom: 0px;
@@ -354,3 +359,7 @@ margin-top: 0px;
   {
     width: 100% !important;
   }
+  
+div.body ul.search li {
+    text-align: left;
+}

@@ -215,7 +215,7 @@ class OCVPyObject(ObjectDescription):
             signode['ids'].append(fullname)
             signode['first'] = (not self.names)
             self.state.document.note_explicit_target(signode)
-            objects = self.env.domaindata['py']['objects']
+            objects = self.env.domaindata['ocv']['objects']
             if fullname in objects:
                 self.env.warn(
                     self.env.docname,
@@ -224,7 +224,7 @@ class OCVPyObject(ObjectDescription):
                     self.env.doc2path(objects[fullname][0]) +
                     ', use :noindex: for one of them',
                     self.lineno)
-            objects[fullname] = (self.env.docname, self.objtype)
+            objects.setdefault(fullname, (self.env.docname, self.objtype, name_cls[0]))
 
         indextext = self.get_index_text(modname, name_cls)
         if indextext:
@@ -302,9 +302,10 @@ _visibility_re = re.compile(r'\b(public|private|protected)\b')
 _operator_re = re.compile(r'''(?x)
         \[\s*\]
     |   \(\s*\)
+    |   (<<|>>)=?
     |   [!<>=/*%+|&^-]=?
     |   \+\+ | --
-    |   (<<|>>)=? | ~ | && | \| | \|\|
+    |   ~ | && | \| | \|\|
     |   ->\*? | \,
 ''')
 
@@ -560,6 +561,18 @@ class ConstDefExpr(WrappingDefExpr):
 
     def __unicode__(self):
         return (self.prefix and u'const %s' or u'%s const') % self.typename
+        
+class ConstTemplateDefExpr(WrappingDefExpr):
+
+    def __init__(self, typename, prefix=False):
+        WrappingDefExpr.__init__(self, typename)
+        self.prefix = prefix
+
+    def get_id(self):
+        return self.typename.get_id() + u'C'
+
+    def __unicode__(self):
+        return (self.prefix and u'const %s' or u'%s const') % self.typename
 
 
 class CastOpDefExpr(PrimaryDefExpr):
@@ -669,7 +682,7 @@ class FuncDefExpr(NamedDefExpr):
                 u'.'.join(x.get_id() for x in self.signature) or u'',
             self.const and u'C' or u''
         )
-
+    
     def __unicode__(self):
         buf = self.get_modifiers()
         if self.explicit:
@@ -864,6 +877,13 @@ class DefinitionParser(object):
 
     def _parse_type_expr(self):
         typename = self._parse_name()
+        if typename and self.skip_string('['):
+            typename.name += '['
+            if self.match(re.compile(r'\d*')):
+                typename.name += self.last_match.group(0)
+            typename.name += ']'
+            if not self.skip_string(']'):
+                self.fail('expected type')
         self.skip_ws()
         if not self.skip_string('<'):
             return typename
@@ -926,9 +946,11 @@ class DefinitionParser(object):
         else:
             rv = PathDefExpr(result)
         is_const = self._peek_const(modifiers)
+        if is_const:
+            rv = ConstDefExpr(rv, prefix=True)
         if modifiers:
             rv = ModifierDefExpr(rv, modifiers)
-        return self._attach_crefptr(rv, is_const)
+        return self._attach_crefptr(rv, False)
 
     def _parse_default_expr(self):
         self.skip_ws()
@@ -1126,7 +1148,11 @@ class OCVObject(ObjectDescription):
             node += nodes.Text(' ')
 
     def add_target_and_index(self, sigobj, sig, signode):
-        theid = sigobj.get_id()
+        theid = sig#obj.get_id()
+        theid = re.sub(r" +", " ", theid)
+        theid = re.sub(r"=[^,()]+\([^)]*?\)[^,)]*(,|\))", "\\1", theid)
+        theid = re.sub(r"=\w*[^,)(]+(,|\))", "\\1", theid)
+        theid = theid.replace("( ", "(").replace(" )", ")")
         name = unicode(sigobj.name)
         if theid not in self.state.document.ids:
             signode['names'].append(theid)
@@ -1134,7 +1160,11 @@ class OCVObject(ObjectDescription):
             signode['first'] = (not self.names)
             self.state.document.note_explicit_target(signode)
 
-            self.env.domaindata['ocv']['objects'].setdefault(name,
+            #self.env.domaindata['ocv']['objects'].setdefault(name,
+                #(self.env.docname, self.objtype, theid))
+            self.env.domaindata['ocv']['objects'].setdefault(theid,
+                (self.env.docname, self.objtype, theid))
+            self.env.domaindata['ocv']['objects2'].setdefault(name,
                 (self.env.docname, self.objtype, theid))
 
         indextext = self.get_index_text(name)
@@ -1179,33 +1209,32 @@ class OCVObject(ObjectDescription):
 
 
 class OCVClassObject(OCVObject):
+    object_annotation = "class "
+    object_long_name = "class"
+
+    def attach_modifiers(self, node, obj):
+        if obj.visibility != 'public':
+            node += addnodes.desc_annotation(obj.visibility,
+                                             obj.visibility)
+            node += nodes.Text(' ')
+        if obj.static:
+            node += addnodes.desc_annotation('static', 'static')
+            node += nodes.Text(' ')
 
     def get_index_text(self, name):
-        return _('%s (C++ class)') % name
+        return _('%s (C++ %s)') % (name, self.__class__.object_long_name)
 
     def parse_definition(self, parser):
         return parser.parse_class()
 
     def describe_signature(self, signode, cls):
-        #self.attach_modifiers(signode, cls)
-        #signode += addnodes.desc_annotation('class ', 'class ')
-        #self.attach_name(signode, cls.name)
-        pass
+        self.attach_modifiers(signode, cls)
+        signode += addnodes.desc_annotation(self.__class__.object_annotation, self.__class__.object_annotation)
+        self.attach_name(signode, cls.name)
 
-class OCVStructObject(OCVObject):
-
-    def get_index_text(self, name):
-        return _('%s (C structure)') % name
-
-    def parse_definition(self, parser):
-        return parser.parse_class()
-
-    def describe_signature(self, signode, cls):
-        #self.attach_modifiers(signode, cls)
-        #signode += addnodes.desc_annotation('class ', 'class ')
-        #self.attach_name(signode, cls.name)
-        pass
-
+class OCVStructObject(OCVClassObject):
+    object_annotation = "struct "
+    object_long_name = "structure"
 
 class OCVTypeObject(OCVObject):
 
@@ -1225,9 +1254,7 @@ class OCVTypeObject(OCVObject):
             signode += nodes.Text(' ')
         self.attach_name(signode, obj.name)
 
-
 class OCVMemberObject(OCVObject):
-
     ismember = True
 
     def get_index_text(self, name):
@@ -1245,7 +1272,6 @@ class OCVMemberObject(OCVObject):
         self.attach_name(signode, obj.name)
         if obj.value is not None:
             signode += nodes.Text(u' = ' + obj.value)
-
 
 class OCVFunctionObject(OCVObject):
 
@@ -1393,9 +1419,9 @@ class OCVDomain(Domain):
         'func' :  OCVXRefRole(fix_parens=True),
         'funcx' :  OCVXRefRole(),
         'cfunc' :  OCVXRefRole(fix_parens=True),
-        'cfunc' :  OCVXRefRole(),
+        'cfuncx' :  OCVXRefRole(),
         'jfunc' :  OCVXRefRole(fix_parens=True),
-        'jfunc' :  OCVXRefRole(),
+        'jfuncx' :  OCVXRefRole(),
         'pyfunc' :  OCVPyXRefRole(),
         'pyoldfunc' :  OCVPyXRefRole(),
         'member': OCVXRefRole(),
@@ -1404,6 +1430,10 @@ class OCVDomain(Domain):
     initial_data = {
         'objects': {},  # fullname -> docname, objtype
     }
+    
+    def __init__(self, env):
+        Domain.__init__(self, env)
+        self.data['objects2'] = {}
 
     def clear_doc(self, docname):
         for fullname, (fn, _, _) in self.data['objects'].items():
@@ -1414,13 +1444,28 @@ class OCVDomain(Domain):
                      typ, target, node, contnode):
         def _create_refnode(expr):
             name = unicode(expr)
-            if name not in self.data['objects']:
+            if "type" in self.objtypes_for_role(typ):
                 return None
-            obj = self.data['objects'][name]
+            if "cfunction" in self.objtypes_for_role(typ):
+                if not name.startswith(u'cv'):
+                    name = u'cv' + name
+            dict = self.data['objects']
+            if name not in dict:
+                dict = self.data['objects2']
+            if name not in dict:
+                refdoc = node.get('refdoc', fromdocname)
+                env.warn(refdoc, 'unresolved reference: %r - %r' % (target, typ), node.line)
+                return None
+            obj = dict[name]
             if obj[1] not in self.objtypes_for_role(typ):
                 return None
+            title = obj[2]
+            if "class" in self.objtypes_for_role(typ):
+                title = u"class " + title
+            elif "struct" in self.objtypes_for_role(typ):
+                title = u"struct " + title
             return make_refnode(builder, fromdocname, obj[0], obj[2],
-                                contnode, name)
+                                contnode, title)
 
         parser = DefinitionParser(target)
         try:
@@ -1451,6 +1496,26 @@ class OCVDomain(Domain):
     def get_objects(self):
         for refname, (docname, type, theid) in self.data['objects'].iteritems():
             yield (refname, refname, type, docname, refname, 1)
-
+            
+    def get_type_name(self, type, primary=False):
+        """
+        Return full name for given ObjType.
+        """
+        if primary:
+            return type.lname
+            
+        return {
+            'class':         _('C++ class'),
+            'struct':        _('C/C++ struct'),
+            'function':      _('C++ function'),
+            'cfunction':     _('C function'),
+            'jfunction':     _('Java method'),
+            'pyfunction':    _('Python function'),
+            'pyoldfunction': _('Legacy Python function'),
+            'member':        _('C++ member'),
+            'type':          _('C/C++ type'),
+            'namespace':     _('C++ namespace'),
+            }.get(type.lname, _('%s %s') % (self.label, type.lname))
+        
 def setup(app):
     app.add_domain(OCVDomain)

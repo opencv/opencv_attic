@@ -23,7 +23,7 @@ Here you can read tutorials about how to set up your computer to work with the O
 
   =========== ======================================================
 
-  .. |Install_1| image:: images/ubuntu_logo.jpeg
+  .. |Install_1| image:: images/ubuntu-logo.jpg
                  :height: 90pt
                  :width:  90pt
 
@@ -41,7 +41,7 @@ Here you can read tutorials about how to set up your computer to work with the O
 
   =========== ======================================================
 
-  .. |Usage_1| image:: images/gccegg-65.png
+  .. |Usage_1| image:: images/gccegg-65.jpg
                :height: 90pt
                :width:  90pt
 
@@ -97,9 +97,47 @@ Here you can read tutorials about how to set up your computer to work with the O
 
   =========== ======================================================
 
-  .. |WinVSHowT| image:: images/visual-studio-2010-logo.jpg
-                 :height: 90pt
-                 :width:  90pt
+     .. |WinVSHowT| image:: images/visual-studio-2010-logo.jpg
+                      :height: 90pt
+                      :width:  90pt
+
+* **Android**
+
+  .. tabularcolumns:: m{100pt} m{300pt}
+  .. cssclass:: toctableopencv
+    
+  ================ ======================================================
+  |AndroidBinPack| **Title:** :ref:`Android_Binary_Package`
+
+                   *Compatibility:* > OpenCV 2.3.1
+
+                   *Author:* |Author_AndreyK|
+
+                   You will learn how to setup OpenCV for Android platform!
+
+  ================ ======================================================
+
+     .. |AndroidBinPack| image:: images/android_logo.png
+                           :height: 90pt
+                           :width:  90pt
+
+  .. tabularcolumns:: m{100pt} m{300pt}
+  .. cssclass:: toctableopencv
+    
+  ================ ======================================================
+  |AndroidNDKPack| **Title:** :ref:`Android_Binary_Package_with_NDK`
+
+                   *Compatibility:* > OpenCV 2.3.1
+
+                   *Author:* |Author_LeonidBLB|
+
+                   You will learn how to work with C++ OpenCV code for Android platform
+
+  ================ ======================================================
+
+     .. |AndroidNDKPack| image:: images/android_logo.png
+                           :height: 90pt
+                           :width:  90pt
 
 * **From where to start?**
 
@@ -117,7 +155,7 @@ Here you can read tutorials about how to set up your computer to work with the O
 
   ============= ======================================================
 
-  .. |Beginners_1| image:: images/Display_Image_Tutorial_Result.png
+  .. |Beginners_1| image:: images/Display_Image_Tutorial_Result.jpg
                    :height: 90pt
                    :width:  90pt
 
@@ -135,9 +173,13 @@ Here you can read tutorials about how to set up your computer to work with the O
 
   =============== ======================================================
 
-  .. |Beginners_2| image:: images/Load_Save_Image_Result_1.png
+  .. |Beginners_2| image:: images/Load_Save_Image_Result_1.jpg
                    :height: 90pt
                    :width:  90pt
+
+.. raw:: latex
+
+   \pagebreak
 
 .. We use a custom table of content format and as the table of content only imforms Sphinx about the hierarchy of the files, no need to show it.
 .. toctree::
@@ -148,5 +190,7 @@ Here you can read tutorials about how to set up your computer to work with the O
    ../linux_eclipse/linux_eclipse
    ../windows_install/windows_install
    ../windows_visual_studio_Opencv/windows_visual_studio_Opencv
+   ../android_binary_package/android_binary_package
+   ../android_binary_package/android_binary_package_using_with_NDK
    ../display_image/display_image
    ../load_save_image/load_save_image

@@ -69,7 +69,6 @@ Gaussian Filter
    * Just to make the picture clearer, remember how a 1D Gaussian kernel look like?
 
      .. image:: images/Smoothing_Tutorial_theory_gaussian_0.jpg
-              :height: 100pt
               :align: center 
 
      Assuming that an image is 1D, you can notice that the pixel located in the middle would have the biggest weight. The weight of its neighbors decreases as the spatial distance between them and the center pixel increases. 
@@ -149,7 +148,7 @@ Code
       namedWindow( window_name, CV_WINDOW_AUTOSIZE );
 
       /// Load the source image
-      src = imread( "../images/lena.png", 1 ); 
+      src = imread( "../images/lena.jpg", 1 ); 
 
       if( display_caption( "Original Image" ) != 0 ) { return 0; }
 
@@ -217,7 +216,7 @@ Code
 Explanation
 =============
 
-#. Let's check the OpenCV functions that involve only the smoothing procedure, since the rest is already known by now.
+#. Let's check the OpenCV functions that involve only the smoothing procedure, since the rest is already known by now. 
 
 #. **Normalized Block Filter:**
 
@@ -318,11 +317,10 @@ Results
 
 .. container:: enumeratevisibleitemswithsquare
 
-   * The code opens an image (in this case *lena.png*) and display it under the effects of the 4 filters explained. 
+   * The code opens an image (in this case *lena.jpg*) and display it under the effects of the 4 filters explained. 
 
    * Here is a snapshot of the image smoothed using *medianBlur*:
 
      .. image:: images/Smoothing_Tutorial_Result_Median_Filter.jpg
               :alt: Smoothing with a median filter
-              :height: 200pt
               :align: center 

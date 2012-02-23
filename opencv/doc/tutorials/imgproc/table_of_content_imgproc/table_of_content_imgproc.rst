@@ -42,7 +42,7 @@ In this section you will learn about the image processing (manipulation) functio
   
   ===================== ==============================================
   
-  .. |ImageProcessing_2| image:: images/Morphology_1_Tutorial_Cover.png
+  .. |ImageProcessing_2| image:: images/Morphology_1_Tutorial_Cover.jpg
                          :height: 90pt
                          :width:  90pt
      
@@ -61,7 +61,7 @@ In this section you will learn about the image processing (manipulation) functio
   
   ================= ==================================================
   
-  .. |Morphology_2| image:: images/Morphology_2_Tutorial_Cover.png
+  .. |Morphology_2| image:: images/Morphology_2_Tutorial_Cover.jpg
                      :height: 90pt
                      :width:  90pt
   
@@ -81,7 +81,7 @@ In this section you will learn about the image processing (manipulation) functio
   
   ===================== ==============================================
   
-  .. |Pyramids| image:: images/Pyramids_Tutorial_Cover.png
+  .. |Pyramids| image:: images/Pyramids_Tutorial_Cover.jpg
                       :height: 90pt
                       :width:  90pt
   
@@ -101,7 +101,7 @@ In this section you will learn about the image processing (manipulation) functio
   
   ===================== ==============================================
   
-  .. |Threshold| image:: images/Threshold_Tutorial_Cover.png
+  .. |Threshold| image:: images/Threshold_Tutorial_Cover.jpg
                       :height: 90pt
                       :width:  90pt
   
@@ -383,7 +383,134 @@ In this section you will learn about the image processing (manipulation) functio
                               :height: 90pt
                               :width:  90pt
 
++ 
+
+  .. tabularcolumns:: m{100pt} m{300pt}
+  .. cssclass:: toctableopencv
   
+  ===================== ==============================================
+   |FindContours|       **Title:** :ref:`find_contours`
+
+                        *Compatibility:* > OpenCV 2.0
+                        
+                        *Author:* |Author_AnaH|
+
+                        Where we learn how to find contours of objects in our image
+
+  ===================== ==============================================
+  
+  .. |FindContours| image:: images/shapedescriptors/Find_Contours_Tutorial_Cover.jpg
+                          :height: 90pt
+                          :width:  90pt
+
++ 
+
+  .. tabularcolumns:: m{100pt} m{300pt}
+  .. cssclass:: toctableopencv
+  
+  ===================== ==============================================
+   |Hull|               **Title:** :ref:`hull`
+
+                        *Compatibility:* > OpenCV 2.0
+                        
+                        *Author:* |Author_AnaH|
+
+                        Where we learn how to get hull contours and draw them!
+
+  ===================== ==============================================
+  
+  .. |Hull| image:: images/shapedescriptors/Hull_Tutorial_Cover.jpg
+                 :height: 90pt
+                 :width:  90pt
+
++ 
+
+  .. tabularcolumns:: m{100pt} m{300pt}
+  .. cssclass:: toctableopencv
+  
+  ===================== ==============================================
+   |BRC|                **Title:** :ref:`bounding_rects_circles`
+
+                        *Compatibility:* > OpenCV 2.0
+                        
+                        *Author:* |Author_AnaH|
+
+                        Where we learn how to obtain bounding boxes and circles for our contours.
+
+  ===================== ==============================================
+  
+  .. |BRC| image:: images/shapedescriptors/Bounding_Rects_Circles_Tutorial_Cover.jpg
+                :height: 90pt
+                :width:  90pt
+
++ 
+
+  .. tabularcolumns:: m{100pt} m{300pt}
+  .. cssclass:: toctableopencv
+  
+  
+  ===================== ==============================================
+   |BRE|                **Title:** :ref:`bounding_rotated_ellipses`
+
+                        *Compatibility:* > OpenCV 2.0
+                        
+                        *Author:* |Author_AnaH|
+
+                        Where we learn how to obtain rotated bounding boxes and ellipses for our contours.
+
+  ===================== ==============================================
+  
+  .. |BRE| image:: images/shapedescriptors/Bounding_Rotated_Ellipses_Tutorial_Cover.jpg
+                :height: 90pt
+                :width:  90pt
+
++ 
+
+  .. tabularcolumns:: m{100pt} m{300pt}
+  .. cssclass:: toctableopencv
+  
+  
+  ===================== ==============================================
+   |MU|                 **Title:** :ref:`moments`
+
+                        *Compatibility:* > OpenCV 2.0
+                        
+                        *Author:* |Author_AnaH|
+
+                        Where we learn to calculate the moments of an image
+
+  ===================== ==============================================
+  
+  .. |MU| image:: images/shapedescriptors/Moments_Tutorial_Cover.jpg
+               :height: 90pt
+               :width:  90pt
+
+
++ 
+
+  .. tabularcolumns:: m{100pt} m{300pt}
+  .. cssclass:: toctableopencv
+  
+  
+  ===================== ==============================================
+   |PPT|                **Title:** :ref:`point_polygon_test`
+
+                        *Compatibility:* > OpenCV 2.0
+                        
+                        *Author:* |Author_AnaH|
+
+                        Where we learn how to calculate distances from the image to contours
+
+  ===================== ==============================================
+  
+  .. |PPT| image:: images/shapedescriptors/Point_Polygon_Test_Tutorial_Cover.jpg
+                :height: 90pt
+                :width:  90pt
+
+.. raw:: latex
+
+   \pagebreak
+
 .. toctree::
    :hidden:
 
@@ -406,9 +533,12 @@ In this section you will learn about the image processing (manipulation) functio
    ../histograms/histogram_comparison/histogram_comparison
    ../histograms/back_projection/back_projection
    ../histograms/template_matching/template_matching
-
-
-
+   ../shapedescriptors/find_contours/find_contours
+   ../shapedescriptors/hull/hull
+   ../shapedescriptors/bounding_rects_circles/bounding_rects_circles
+   ../shapedescriptors/bounding_rotated_ellipses/bounding_rotated_ellipses
+   ../shapedescriptors/moments/moments
+   ../shapedescriptors/point_polygon_test/point_polygon_test
 
 
 
