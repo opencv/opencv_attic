@@ -49,7 +49,7 @@ using namespace cv::gpu::device;
 /////////////////////////////////// Remap ///////////////////////////////////////////////
 namespace cv { namespace gpu { namespace imgproc
 {
-    texture<unsigned char, 2, cudaReadModeNormalizedFloat> tex_remap;
+    texture<unsigned char, 2, cudaReadModeNormalizedFloat> tex_remap(0, cudaFilterModeLinear, cudaAddressModeWrap);
 
     __global__ void remap_1c(const float* mapx, const float* mapy, size_t map_step, uchar* out, size_t out_step, int width, int height)
     {    
@@ -131,16 +131,12 @@ namespace cv { namespace gpu { namespace imgproc
         grid.x = divUp(dst.cols, threads.x);
         grid.y = divUp(dst.rows, threads.y);
 
-        tex_remap.filterMode = cudaFilterModeLinear;
-        tex_remap.addressMode[0] = tex_remap.addressMode[1] = cudaAddressModeWrap;
-        cudaChannelFormatDesc desc = cudaCreateChannelDesc<unsigned char>();
-        cudaSafeCall( cudaBindTexture2D(0, tex_remap, src.data, desc, src.cols, src.rows, src.step) );
+        TextureBinder tex(&tex_remap, src);
 
         remap_1c<<<grid, threads>>>(xmap.data, ymap.data, xmap.step, dst.data, dst.step, dst.cols, dst.rows);
         cudaSafeCall( cudaGetLastError() );
 
         cudaSafeCall( cudaDeviceSynchronize() );
-        cudaSafeCall( cudaUnbindTexture(tex_remap) );
     }
     
     void remap_gpu_3c(const DevMem2D& src, const DevMem2Df& xmap, const DevMem2Df& ymap, DevMem2D dst)
@@ -151,8 +147,8 @@ namespace cv { namespace gpu { namespace imgproc
         grid.y = divUp(dst.rows, threads.y);
 
         remap_3c<<<grid, threads>>>(src.data, src.step, xmap.data, ymap.data, xmap.step, dst.data, dst.step, dst.cols, dst.rows);
-
         cudaSafeCall( cudaGetLastError() );
+
         cudaSafeCall( cudaDeviceSynchronize() );
     }
 
@@ -161,7 +157,7 @@ namespace cv { namespace gpu { namespace imgproc
     texture<uchar4, 2> tex_meanshift;
 
     __device__ short2 do_mean_shift(int x0, int y0, unsigned char* out, 
-                                    int out_step, int cols, int rows, 
+                                    size_t out_step, int cols, int rows, 
                                     int sp, int sr, int maxIter, float eps)
     {
         int isr2 = sr*sr;
@@ -225,7 +221,7 @@ namespace cv { namespace gpu { namespace imgproc
         return make_short2((short)x0, (short)y0);
     }
 
-    extern "C" __global__ void meanshift_kernel( unsigned char* out, int out_step, int cols, int rows, 
+    extern "C" __global__ void meanshift_kernel( unsigned char* out, size_t out_step, int cols, int rows, 
                                                  int sp, int sr, int maxIter, float eps )
     {
         int x0 = blockIdx.x * blockDim.x + threadIdx.x;
@@ -235,8 +231,8 @@ namespace cv { namespace gpu { namespace imgproc
             do_mean_shift(x0, y0, out, out_step, cols, rows, sp, sr, maxIter, eps);
     }
 
-    extern "C" __global__ void meanshiftproc_kernel( unsigned char* outr, int outrstep, 
-                                                 unsigned char* outsp, int outspstep, 
+    extern "C" __global__ void meanshiftproc_kernel( unsigned char* outr, size_t outrstep, 
+                                                 unsigned char* outsp, size_t outspstep, 
                                                  int cols, int rows, 
                                                  int sp, int sr, int maxIter, float eps )
     {
@@ -908,29 +904,31 @@ namespace cv { namespace gpu { namespace imgproc
 
 
     template <typename T, int cn>
-    void downsampleCaller(const DevMem2D src, DevMem2D dst)
+    void downsampleCaller(const DevMem2D src, DevMem2D dst, cudaStream_t stream)
     {
         dim3 threads(32, 8);
         dim3 grid(divUp(dst.cols, threads.x), divUp(dst.rows, threads.y));
 
-        downsampleKernel<T,cn><<<grid,threads>>>(DevMem2D_<T>(src), DevMem2D_<T>(dst));
+        downsampleKernel<T,cn><<<grid, threads, 0, stream>>>(DevMem2D_<T>(src), DevMem2D_<T>(dst));
         cudaSafeCall(cudaGetLastError());
-        cudaSafeCall(cudaDeviceSynchronize());
+        
+        if (stream == 0)
+            cudaSafeCall(cudaDeviceSynchronize());
     }
 
 
-    template void downsampleCaller<uchar,1>(const DevMem2D src, DevMem2D dst);
-    template void downsampleCaller<uchar,2>(const DevMem2D src, DevMem2D dst);
-    template void downsampleCaller<uchar,3>(const DevMem2D src, DevMem2D dst);
-    template void downsampleCaller<uchar,4>(const DevMem2D src, DevMem2D dst);
-    template void downsampleCaller<short,1>(const DevMem2D src, DevMem2D dst);
-    template void downsampleCaller<short,2>(const DevMem2D src, DevMem2D dst);
-    template void downsampleCaller<short,3>(const DevMem2D src, DevMem2D dst);
-    template void downsampleCaller<short,4>(const DevMem2D src, DevMem2D dst);
-    template void downsampleCaller<float,1>(const DevMem2D src, DevMem2D dst);
-    template void downsampleCaller<float,2>(const DevMem2D src, DevMem2D dst);
-    template void downsampleCaller<float,3>(const DevMem2D src, DevMem2D dst);
-    template void downsampleCaller<float,4>(const DevMem2D src, DevMem2D dst);
+    template void downsampleCaller<uchar,1>(const DevMem2D src, DevMem2D dst, cudaStream_t stream);
+    template void downsampleCaller<uchar,2>(const DevMem2D src, DevMem2D dst, cudaStream_t stream);
+    template void downsampleCaller<uchar,3>(const DevMem2D src, DevMem2D dst, cudaStream_t stream);
+    template void downsampleCaller<uchar,4>(const DevMem2D src, DevMem2D dst, cudaStream_t stream);
+    template void downsampleCaller<short,1>(const DevMem2D src, DevMem2D dst, cudaStream_t stream);
+    template void downsampleCaller<short,2>(const DevMem2D src, DevMem2D dst, cudaStream_t stream);
+    template void downsampleCaller<short,3>(const DevMem2D src, DevMem2D dst, cudaStream_t stream);
+    template void downsampleCaller<short,4>(const DevMem2D src, DevMem2D dst, cudaStream_t stream);
+    template void downsampleCaller<float,1>(const DevMem2D src, DevMem2D dst, cudaStream_t stream);
+    template void downsampleCaller<float,2>(const DevMem2D src, DevMem2D dst, cudaStream_t stream);
+    template void downsampleCaller<float,3>(const DevMem2D src, DevMem2D dst, cudaStream_t stream);
+    template void downsampleCaller<float,4>(const DevMem2D src, DevMem2D dst, cudaStream_t stream);
 
 
     //////////////////////////////////////////////////////////////////////////
@@ -952,29 +950,31 @@ namespace cv { namespace gpu { namespace imgproc
 
 
     template <typename T, int cn>
-    void upsampleCaller(const DevMem2D src, DevMem2D dst)
+    void upsampleCaller(const DevMem2D src, DevMem2D dst, cudaStream_t stream)
     {
         dim3 threads(32, 8);
         dim3 grid(divUp(dst.cols, threads.x), divUp(dst.rows, threads.y));
 
-        upsampleKernel<T,cn><<<grid,threads>>>(DevMem2D_<T>(src), DevMem2D_<T>(dst));
+        upsampleKernel<T,cn><<<grid, threads, 0, stream>>>(DevMem2D_<T>(src), DevMem2D_<T>(dst));
         cudaSafeCall(cudaGetLastError());
-        cudaSafeCall(cudaDeviceSynchronize());
+
+        if (stream == 0)
+            cudaSafeCall(cudaDeviceSynchronize());
     }
 
 
-    template void upsampleCaller<uchar,1>(const DevMem2D src, DevMem2D dst);
-    template void upsampleCaller<uchar,2>(const DevMem2D src, DevMem2D dst);
-    template void upsampleCaller<uchar,3>(const DevMem2D src, DevMem2D dst);
-    template void upsampleCaller<uchar,4>(const DevMem2D src, DevMem2D dst);
-    template void upsampleCaller<short,1>(const DevMem2D src, DevMem2D dst);
-    template void upsampleCaller<short,2>(const DevMem2D src, DevMem2D dst);
-    template void upsampleCaller<short,3>(const DevMem2D src, DevMem2D dst);
-    template void upsampleCaller<short,4>(const DevMem2D src, DevMem2D dst);
-    template void upsampleCaller<float,1>(const DevMem2D src, DevMem2D dst);
-    template void upsampleCaller<float,2>(const DevMem2D src, DevMem2D dst);
-    template void upsampleCaller<float,3>(const DevMem2D src, DevMem2D dst);
-    template void upsampleCaller<float,4>(const DevMem2D src, DevMem2D dst);
+    template void upsampleCaller<uchar,1>(const DevMem2D src, DevMem2D dst, cudaStream_t stream);
+    template void upsampleCaller<uchar,2>(const DevMem2D src, DevMem2D dst, cudaStream_t stream);
+    template void upsampleCaller<uchar,3>(const DevMem2D src, DevMem2D dst, cudaStream_t stream);
+    template void upsampleCaller<uchar,4>(const DevMem2D src, DevMem2D dst, cudaStream_t stream);
+    template void upsampleCaller<short,1>(const DevMem2D src, DevMem2D dst, cudaStream_t stream);
+    template void upsampleCaller<short,2>(const DevMem2D src, DevMem2D dst, cudaStream_t stream);
+    template void upsampleCaller<short,3>(const DevMem2D src, DevMem2D dst, cudaStream_t stream);
+    template void upsampleCaller<short,4>(const DevMem2D src, DevMem2D dst, cudaStream_t stream);
+    template void upsampleCaller<float,1>(const DevMem2D src, DevMem2D dst, cudaStream_t stream);
+    template void upsampleCaller<float,2>(const DevMem2D src, DevMem2D dst, cudaStream_t stream);
+    template void upsampleCaller<float,3>(const DevMem2D src, DevMem2D dst, cudaStream_t stream);
+    template void upsampleCaller<float,4>(const DevMem2D src, DevMem2D dst, cudaStream_t stream);
 
 
     //////////////////////////////////////////////////////////////////////////

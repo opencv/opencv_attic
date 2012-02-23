@@ -3,13 +3,4 @@
       package="org.opencv"
       android:versionCode="1"
       android:versionName="1.0">
-    <application android:label="OpenCV">
-        <activity android:name="OpenCV"
-                  android:label="OpenCV">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-    </application>
 </manifest> 

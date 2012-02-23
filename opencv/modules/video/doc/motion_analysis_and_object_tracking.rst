@@ -34,7 +34,7 @@ Calculates an optical flow for a sparse feature set using the iterative Lucas-Ka
 
     :param criteria: Parameter specifying the termination criteria of the iterative search algorithm (after the specified maximum number of iterations  ``criteria.maxCount``  or when the search window moves by less than  ``criteria.epsilon`` .
     
-    :param derivLambda: Relative weight of the spatial image derivatives impact to the optical flow estimation. If  ``derivLambda=0`` , only the image intensity is used. If  ``derivLambda=1`` , only derivatives are used. Any other values between 0 and 1 mean that both derivatives and the image intensity are used (in the corresponding proportions).
+    :param derivLambda: Not used.
 
     :param flags: Operation flags:
 
@@ -51,7 +51,9 @@ Computes a dense optical flow using the Gunnar Farneback's algorithm.
 
 .. ocv:function:: void calcOpticalFlowFarneback( InputArray prevImg, InputArray nextImg,                               InputOutputArray flow, double pyrScale, int levels, int winsize, int iterations, int polyN, double polySigma, int flags )
 
-.. ocv:pyfunction:: cv2.calcOpticalFlowFarneback(prev, next, pyr_scale, levels, winsize, iterations, poly_n, poly_sigma, flags[, flow]) -> flow
+.. ocv:cfunction:: void cvCalcOpticalFlowFarneback( const CvArr* prevImg, const CvArr* nextImg, CvArr* flow, double pyrScale, int levels, int winsize, int iterations, int polyN, double polySigma, int flags )
+
+.. ocv:pyfunction:: cv2.calcOpticalFlowFarneback(prevImg, nextImg, pyr_scale, levels, winsize, iterations, poly_n, poly_sigma, flags[, flow]) -> flow
 
     :param prevImg: First 8-bit single-channel input image.
 
@@ -281,7 +283,7 @@ The function calculates a gradient orientation at each pixel
     \texttt{orientation} (x,y)= \arctan{\frac{d\texttt{mhi}/dy}{d\texttt{mhi}/dx}}
 
 In fact,
-:ocv:func:`fastArctan` and
+:ocv:func:`fastAtan2` and
 :ocv:func:`phase` are used so that the computed angle is measured in degrees and covers the full range 0..360. Also, the ``mask`` is filled to indicate pixels where the computed angle is valid.
 
 
@@ -322,7 +324,7 @@ Splits a motion history image into a few parts corresponding to separate indepen
 
 .. ocv:function:: void segmentMotion(InputArray mhi, OutputArray segmask, vector<Rect>& boundingRects, double timestamp, double segThresh)
 
-.. ocv:pyfunction:: cv2.segmentMotion(mhi, boundingRects, timestamp, segThresh[, segmask]) -> segmask
+.. ocv:pyfunction:: cv2.segmentMotion(mhi, timestamp, segThresh[, segmask]) -> segmask, boundingRects
 
 .. ocv:cfunction:: CvSeq* cvSegmentMotion( const CvArr* mhi, CvArr* segMask, CvMemStorage* storage, double timestamp, double segThresh )
 .. ocv:pyoldfunction:: cv.SegmentMotion(mhi, segMask, storage, timestamp, segThresh)-> None
@@ -560,7 +562,7 @@ Updates the background model and returns the foreground mask
 
 .. ocv:function:: void BackgroundSubtractorMOG::operator()(InputArray image, OutputArray fgmask, double learningRate=0)
 
-Parameters are the same as in ``BackgroundSubtractor::operator()``
+Parameters are the same as in :ocv:funcx:`BackgroundSubtractor::operator()`
 
 
 BackgroundSubtractorMOG2
@@ -571,39 +573,39 @@ Gaussian Mixture-based Backbround/Foreground Segmentation Algorithm.
 
     Here are important members of the class that control the algorithm, which you can set after constructing the class instance:
 
-    :ocv:member:: nmixtures
+    .. ocv:member:: int nmixtures
     
         Maximum allowed number of mixture comonents. Actual number is determined dynamically per pixel.
 
-    :ocv:member:: backgroundRatio
+    .. ocv:member:: float backgroundRatio
     
         Threshold defining whether the component is significant enough to be included into the background model ( corresponds to ``TB=1-cf`` from the paper??which paper??). ``cf=0.1 => TB=0.9`` is default. For ``alpha=0.001``, it means that the mode should exist for approximately 105 frames before it is considered foreground.
 
-    :ocv:member:: varThresholdGen
+    .. ocv:member:: float varThresholdGen
     
         Threshold for the squared Mahalanobis distance that helps decide when a sample is close to the existing components (corresponds to ``Tg``). If it is not close to any component, a new component is generated. ``3 sigma => Tg=3*3=9`` is default. A smaller ``Tg`` value generates more components. A higher ``Tg`` value may result in a small number of components but they can grow too large.
 
-    :ocv:member:: fVarInit
+    .. ocv:member:: float fVarInit
     
         Initial variance for the newly generated components. It affects the speed of adaptation. The parameter value is based on your estimate of the typical standard deviation from the images. OpenCV uses 15 as a reasonable value.
 
-    :ocv:member::
+    .. ocv:member:: float fVarMin 
     
-        fVarMin Parameter used to further control the variance.
+        Parameter used to further control the variance.
 
-    :ocv:member::
+    .. ocv:member:: float fVarMax
     
-        fVarMax Parameter used to further control the variance.
+        Parameter used to further control the variance.
 
-    :ocv:member:: fCT
+    .. ocv:member:: float fCT
         
         Complexity reduction parameter. This parameter defines the number of samples needed to accept to prove the component exists. ``CT=0.05`` is a default value for all the samples. By setting ``CT=0`` you get an algorithm very similar to the standard Stauffer&Grimson algorithm.
 
-    :param nShadowDetection
+    .. ocv:member:: uchar nShadowDetection
     
         The value for marking shadow pixels in the output foreground mask. Default value is 127.
 
-    :param fTau
+    .. ocv:member:: float fTau
         
         Shadow threshold. The shadow is detected if the pixel is a darker version of the background. ``Tau`` is a threshold defining how much darker the shadow can be. ``Tau= 0.5`` means that if a pixel is more than twice darker then it is not shadow. See Prati,Mikic,Trivedi,Cucchiarra, *Detecting Moving Shadows...*, IEEE PAMI,2003.
 
@@ -637,7 +639,7 @@ Updates the background model and computes the foreground mask
 
 .. ocv:function:: void BackgroundSubtractorMOG2::operator()(InputArray image, OutputArray fgmask, double learningRate=-1)
 
-    See :ocv:func:`BackgroundSubtractor::operator()`.
+    See :ocv:funcx:`BackgroundSubtractor::operator()`.
 
 
 BackgroundSubtractorMOG2::getBackgroundImage

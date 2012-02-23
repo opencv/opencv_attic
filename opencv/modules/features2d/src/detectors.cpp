@@ -126,6 +126,14 @@ Ptr<FeatureDetector> FeatureDetector::create( const string& detectorType )
         params.useHarrisDetector = true;
         fd = new GoodFeaturesToTrackDetector(params);
     }
+    else if( !detectorType.compare( "Dense" ) )
+    {
+        fd = new DenseFeatureDetector();
+    }
+    else if( !detectorType.compare( "SimpleBlob" ) )
+    {
+        fd = new SimpleBlobDetector();
+    }
     else if( (pos=detectorType.find("Grid")) == 0 )
     {
         pos += string("Grid").size();
@@ -445,7 +453,7 @@ void ORB::CommonParams::read(const FileNode& fn)
 {
   scale_factor_ = fn["scaleFactor"];
   n_levels_ = int(fn["nLevels"]);
-  first_level_ = int(fn["firsLevel"]);
+  first_level_ = int(fn["firstLevel"]);
   edge_threshold_ = fn["edgeThreshold"];
   patch_size_ = fn["patchSize"];
 }
@@ -454,7 +462,7 @@ void ORB::CommonParams::write(FileStorage& fs) const
 {
   fs << "scaleFactor" << scale_factor_;
   fs << "nLevels" << int(n_levels_);
-  fs << "firsLevel" << int(first_level_);
+  fs << "firstLevel" << int(first_level_);
   fs << "edgeThreshold" << int(edge_threshold_);
   fs << "patchSize" << int(patch_size_);
 }
@@ -499,8 +507,44 @@ DenseFeatureDetector::Params::Params( float _initFeatureScale, int _featureScale
 	varyXyStepWithScale(_varyXyStepWithScale), varyImgBoundWithScale(_varyImgBoundWithScale)
 {}
 
+void DenseFeatureDetector::Params::read( const FileNode& fn )
+{
+    initFeatureScale = fn["initFeatureScale"];
+    featureScaleLevels = fn["featureScaleLevels"];
+    featureScaleMul = fn["featureScaleMul"];
+
+    initXyStep = fn["initXyStep"];
+    initImgBound = fn["initImgBound"];
+
+    varyXyStepWithScale = (int)fn["varyXyStepWithScale"] != 0 ? true : false;
+    varyImgBoundWithScale = (int)fn["varyImgBoundWithScale"] != 0 ? true : false;
+}
+
+void DenseFeatureDetector::Params::write( FileStorage& fs ) const
+{
+    fs << "initFeatureScale" << initFeatureScale;
+    fs << "featureScaleLevels" << featureScaleLevels;
+    fs << "featureScaleMul" << featureScaleMul;
+
+    fs << "initXyStep" << initXyStep;
+    fs << "initImgBound" << initImgBound;
+
+    fs << "varyXyStepWithScale" << (int)varyXyStepWithScale;
+    fs << "varyImgBoundWithScale" << (int)varyImgBoundWithScale;
+}
+
 DenseFeatureDetector::DenseFeatureDetector(const DenseFeatureDetector::Params &_params) : params(_params)
 {}
+
+void DenseFeatureDetector::read( const FileNode &fn )
+{
+    params.read(fn);
+}
+
+void DenseFeatureDetector::write( FileStorage &fs ) const
+{
+    params.write(fs);
+}
 
 void DenseFeatureDetector::detectImpl( const Mat& image, vector<KeyPoint>& keypoints, const Mat& mask ) const
 {
@@ -575,8 +619,9 @@ void GridAdaptedFeatureDetector::detectImpl( const Mat& image, vector<KeyPoint>&
             vector<KeyPoint> sub_keypoints;
             detector->detect( sub_image, sub_keypoints, sub_mask );
             keepStrongest( maxPerCell, sub_keypoints );
-            for( std::vector<cv::KeyPoint>::iterator it = sub_keypoints.begin(), end = sub_keypoints.end();
-                 it != end; ++it )
+            std::vector<cv::KeyPoint>::iterator it = sub_keypoints.begin(),
+                                                end = sub_keypoints.end();
+            for( ; it != end; ++it )
             {
                 it->pt.x += col_range.start;
                 it->pt.y += row_range.start;
@@ -618,7 +663,9 @@ void PyramidAdaptedFeatureDetector::detectImpl( const Mat& image, vector<KeyPoin
         // Detect on current level of the pyramid
         vector<KeyPoint> new_pts;
         detector->detect( src, new_pts, src_mask );
-        for( vector<KeyPoint>::iterator it = new_pts.begin(), end = new_pts.end(); it != end; ++it)
+        vector<KeyPoint>::iterator it = new_pts.begin(),
+                                   end = new_pts.end();
+        for( ; it != end; ++it)
         {
             it->pt.x *= multiplier;
             it->pt.y *= multiplier;

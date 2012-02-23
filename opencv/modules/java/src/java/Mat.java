@@ -27,7 +27,7 @@ public class Mat {
 
     //javadoc:Mat::Mat(rows,cols,type,s)
     public Mat(int rows, int cols, CvType type, Scalar s) {
-        this( nCreateMat(rows, cols, type.toInt(), s.v0, s.v1, s.v2, s.v3) );
+        this( nCreateMat(rows, cols, type.toInt(), s.val[0], s.val[1], s.val[2], s.val[3]) );
     }
 
     //javadoc:Mat::Mat(rows,cols,depth,s)
@@ -69,6 +69,12 @@ public class Mat {
     public boolean empty() {
         if(nativeObj == 0) return true;
         return nIsEmpty(nativeObj); 
+    }
+
+    //javadoc:Mat::size()
+    public Size Size() {
+        if(nativeObj == 0) return new Size();
+        return new Size(nSize(nativeObj));
     }
 
     private void checkNull() {
@@ -280,7 +286,7 @@ public class Mat {
     //javadoc:Mat::setTo(s)
     public void setTo(Scalar s) {
         checkNull();
-        nSetTo(nativeObj, s.v0, s.v1, s.v2, s.v3);
+        nSetTo(nativeObj, s.val[0], s.val[1], s.val[2], s.val[3]);
     }
     
     //javadoc:Mat::copyTo(m)
@@ -334,6 +340,7 @@ public class Mat {
     private static native boolean nIsEmpty(long self);
     private static native boolean nIsCont(long self);
     private static native boolean nIsSubmat(long self);
+    private static native double[] nSize(long self);
     private static native long nSubmat(long self, int rowStart, int rowEnd, int colStart, int colEnd);
     private static native long nClone(long self);
     private static native int nPutD(long self, int row, int col, int count, double[] data);

@@ -68,9 +68,13 @@ void print_info()
 #endif
 
     int deviceCount = cv::gpu::getCudaEnabledDeviceCount();
+    int driver;
+    cudaDriverGetVersion(&driver);
 
-    printf("CUDA version: %d\n", CUDART_VERSION);    
+    printf("CUDA Driver  version: %d\n", driver);        
+    printf("CUDA Runtime version: %d\n", CUDART_VERSION);    
     printf("CUDA device count: %d\n\n", deviceCount);
+    
 
     for (int i = 0; i < deviceCount; ++i)
     {
@@ -105,7 +109,9 @@ int main(int argc, char** argv)
     cvtest::TS::ptr()->init("gpu");
     testing::InitGoogleTest(&argc, argv);
 
-    cv::CommandLineParser parser(argc, (const char**)argv);
+    const char* keys ="{ nvtest_output_level | nvtest_output_level | none | NVidia test verbosity level }";
+
+    cv::CommandLineParser parser(argc, (const char**)argv, keys);
 
     std::string outputLevel = parser.get<std::string>("nvtest_output_level", "none");
 

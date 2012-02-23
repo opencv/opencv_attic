@@ -9,14 +9,18 @@ Reads an image from a buffer in memory.
 
 .. ocv:function:: Mat imdecode( InputArray buf,  int flags )
 
+.. ocv:cfunction:: IplImage* cvDecodeImage( const CvMat* buf, int iscolor=CV_LOAD_IMAGE_COLOR)
+
+.. ocv:cfunction:: CvMat* cvDecodeImageM( const CvMat* buf, int iscolor=CV_LOAD_IMAGE_COLOR)
+
 .. ocv:pyfunction:: cv2.imdecode(buf, flags) -> retval
 
-    :param buf: Input array of vector of bytes.
+    :param buf: Input array or vector of bytes.
 
     :param flags: The same flags as in  :ocv:func:`imread` .
     
 The function reads an image from the specified buffer in the memory.
-If the buffer is too short or contains invalid data, the empty matrix is returned.
+If the buffer is too short or contains invalid data, the empty matrix/image is returned.
 
 See
 :ocv:func:`imread` for the list of supported formats and flags description.
@@ -26,6 +30,8 @@ imencode
 Encodes an image into a memory buffer.
 
 .. ocv:function:: bool imencode( const string& ext, InputArray img, vector<uchar>& buf, const vector<int>& params=vector<int>())
+
+.. ocv:cfunction:: CvMat* cvEncodeImage(const char* ext, const CvArr* image, const int* params=NULL )
 
 .. ocv:pyfunction:: cv2.imencode(ext, img, buf[, params]) -> retval
 
@@ -40,6 +46,8 @@ Encodes an image into a memory buffer.
 The function compresses the image and stores it in the memory buffer that is resized to fit the result.
 See
 :ocv:func:`imwrite` for the list of supported formats and flags description.
+
+.. note:: ``cvEncodeImage`` returns single-row matrix of type ``CV_8UC1`` that contains encoded image as array of bytes.
 
 imread
 ----------
@@ -197,7 +205,7 @@ Open video file or a capturing device for video capturing
 
     :param device: id of the opened video capturing device (i.e. a camera index).
 
-The methods first call :ocv:cfunc:`VideoCapture::release` to close the already opened file or camera. 
+The methods first call :ocv:func:`VideoCapture::release` to close the already opened file or camera. 
 
 
 VideoCapture::isOpened
@@ -218,7 +226,7 @@ Closes video file or capturing device.
 
 .. ocv:pyfunction:: cv2.VideoCapture.release()
 
-.. ocv:cfunction: void cvReleaseCapture(CvCapture** capture)
+.. ocv:cfunction:: void cvReleaseCapture(CvCapture** capture)
 
 The methods are automatically called by subsequent :ocv:func:`VideoCapture::open` and by ``VideoCapture`` destructor.
 
@@ -233,7 +241,7 @@ Grabs the next frame from video file or capturing device.
 
 .. ocv:pyfunction:: cv2.VideoCapture.grab() -> successFlag
 
-.. ocv:cfunction: int cvGrabFrame(CvCapture* capture)
+.. ocv:cfunction:: int cvGrabFrame(CvCapture* capture)
 
 .. ocv:pyoldfunction:: cv.GrabFrame(capture) -> int
 
@@ -252,7 +260,7 @@ Decodes and returns the grabbed video frame.
 
 .. ocv:pyfunction:: cv2.VideoCapture.retrieve([image[, channel]]) -> successFlag, image
 
-.. ocv:cfunction: IplImage* cvRetrieveFrame(CvCapture* capture)
+.. ocv:cfunction:: IplImage* cvRetrieveFrame(CvCapture* capture)
 
 .. ocv:pyoldfunction:: cv.RetrieveFrame(capture) -> iplimage
 
@@ -271,7 +279,7 @@ Grabs, decodes and returns the next video frame.
 
 .. ocv:pyfunction:: cv2.VideoCapture.read([image]) -> successFlag, image
 
-.. ocv:cfunction: IplImage* cvQueryFrame(CvCapture* capture)
+.. ocv:cfunction:: IplImage* cvQueryFrame(CvCapture* capture)
 
 .. ocv:pyoldfunction:: cv.QueryFrame(capture) -> iplimage
 
@@ -444,7 +452,7 @@ VideoWriter::open
 -----------------
 Initializes or reinitializes video writer.
 
-.. ocv:function: bool VideoWriter::open(const string& filename, int fourcc, double fps, Size frameSize, bool isColor=true)
+.. ocv:function:: bool VideoWriter::open(const string& filename, int fourcc, double fps, Size frameSize, bool isColor=true)
 
 .. ocv:pyfunction:: cv2.VideoWriter.open(filename, fourcc, fps, frameSize[, isColor]) -> retval
 
@@ -455,7 +463,7 @@ VideoWriter::isOpened
 ---------------------
 Returns true if video writer has been successfully initialized.
 
-.. ocv:function: bool VideoWriter::isOpened()
+.. ocv:function:: bool VideoWriter::isOpened()
 
 .. ocv:pyfunction:: cv2.VideoWriter.isOpened() -> retval
 

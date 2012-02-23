@@ -695,18 +695,17 @@ Normally, the function is used to convert an old-style 2D array (
 ``CvMatND`` using an arbitrary element-wise function.
 
 The last parameter, ``coiMode`` , specifies how to deal with an image with COI set. By default, it is 0 and the function reports an error when an image with COI comes in. And ``coiMode=1`` means that no error is signalled. You have to check COI presence and handle it manually. The modern structures, such as
-:ocv:func:`Mat` and
-:ocv:func:`MatND` do not support COI natively. To process an individual channel of a new-style array, you need either to organize a loop over the array (for example, using matrix iterators) where the channel of interest will be processed, or extract the COI using
+:ocv:class:`Mat` and
+``MatND`` do not support COI natively. To process an individual channel of a new-style array, you need either to organize a loop over the array (for example, using matrix iterators) where the channel of interest will be processed, or extract the COI using
 :ocv:func:`mixChannels` (for new-style arrays) or
 :ocv:func:`extractImageCOI` (for old-style arrays), process this individual channel, and insert it back to the destination array if needed (using
-:ocv:func:`mixChannel` or
+:ocv:func:`mixChannels` or
 :ocv:func:`insertImageCOI` , respectively).
 
 .. seealso::
 
-    :c:func:`cvGetImage`,
-    :c:func:`cvGetMat`,
-    :c:func:`cvGetMatND`,
+    :ocv:cfunc:`cvGetImage`,
+    :ocv:cfunc:`cvGetMat`,
     :ocv:func:`extractImageCOI`,
     :ocv:func:`insertImageCOI`,
     :ocv:func:`mixChannels` 
@@ -1606,7 +1605,7 @@ Calculates an average (mean) of array elements.
 .. ocv:cfunction:: CvScalar cvAvg(const CvArr* src, const CvArr* mask=NULL)
 .. ocv:pyoldfunction:: cv.Avg(src, mask=None)-> CvScalar
 
-    :param src: Source array that should have from 1 to 4 channels so that the result can be stored in  :ocv:func:`Scalar` .
+    :param src: Source array that should have from 1 to 4 channels so that the result can be stored in  :ocv:class:`Scalar_` .
 
     :param mask: Optional operation mask.
 
@@ -1638,7 +1637,7 @@ Calculates a mean and standard deviation of array elements.
 .. ocv:cfunction:: void cvAvgSdv(const CvArr* src, CvScalar* mean, CvScalar* stdDev, const CvArr* mask=NULL)
 .. ocv:pyoldfunction:: cv.AvgSdv(src, mask=None)-> (mean, stdDev)
 
-    :param src: Source array that should have from 1 to 4 channels so that the results can be stored in  :ocv:func:`Scalar` 's.
+    :param src: Source array that should have from 1 to 4 channels so that the results can be stored in  :ocv:class:`Scalar_` 's.
 
     :param mean: Output parameter: computed mean value.
 
@@ -1786,11 +1785,11 @@ Finds the global minimum and maximum in a whole array or sub-array.
 
     :param mask: Optional mask used to select a sub-array.
 
-The functions ``ninMaxLoc`` find the minimum and maximum element values and their positions. The extremums are searched across the whole array or,
+The functions ``minMaxLoc`` find the minimum and maximum element values and their positions. The extremums are searched across the whole array or,
 if ``mask`` is not an empty array, in the specified array region.
 
 The functions do not work with multi-channel arrays. If you need to find minimum or maximum elements across all the channels, use
-:ocv:func:`reshape` first to reinterpret the array as single-channel. Or you may extract the particular channel using either
+:ocv:func:`Mat::reshape` first to reinterpret the array as single-channel. Or you may extract the particular channel using either
 :ocv:func:`extractImageCOI` , or
 :ocv:func:`mixChannels` , or
 :ocv:func:`split` .
@@ -1806,7 +1805,7 @@ In case of a sparse matrix, the minimum is found among non-zero elements only.
     :ocv:func:`extractImageCOI`,
     :ocv:func:`mixChannels`,
     :ocv:func:`split`,
-    :ocv:func:`reshape` 
+    :ocv:func:`Mat::reshape` 
 
 
 
@@ -1814,24 +1813,26 @@ mixChannels
 -----------
 Copies specified channels from input arrays to the specified channels of output arrays.
 
-.. ocv:function:: void mixChannels(const Mat* srcv, int nsrc, Mat* dstv, int ndst, const int* fromTo, size_t npairs)
+.. ocv:function:: void mixChannels(const Mat* src, int nsrc, Mat* dst, int ndst, const int* fromTo, size_t npairs)
 
-.. ocv:function:: void mixChannels(const vector<Mat>& srcv, vector<Mat>& dstv, const int* fromTo, int npairs)
+.. ocv:function:: void mixChannels(const vector<Mat>& src, vector<Mat>& dst, const int* fromTo, int npairs)
 
 .. ocv:pyfunction:: cv2.mixChannels(src, dst, fromTo) -> None
 
 .. ocv:cfunction:: void cvMixChannels(const CvArr** src, int srcCount, CvArr** dst, int dstCount, const int* fromTo, int pairCount)
 .. ocv:pyoldfunction:: cv.MixChannels(src, dst, fromTo) -> None
 
-    :param srcv: Input array or vector of matrices. All the matrices must have the same size and the same depth.
+    :param src: Input array or vector of matrices. All the matrices must have the same size and the same depth.
 
-    :param nsrc: Number of elements in  ``srcv`` .
+    :param nsrc: Number of matrices in  ``src`` .
     
-    :param dstv: Output array or vector of matrices. All the matrices  *must be allocated* . Their size and depth must be the same as in  ``srcv[0]`` .
+    :param dst: Output array or vector of matrices. All the matrices  *must be allocated* . Their size and depth must be the same as in  ``src[0]`` .
         
-    :param ndst: Number of elements in  ``dstv`` .
+    :param ndst: Number of matrices in  ``dst`` .
     
-    :param fromTo: Array of index pairs specifying which channels are copied and where. ``fromTo[k*2]``  is a 0-based index of the input channel in  ``srcv`` . ``fromTo[k*2+1]``  is an index of the output channel in  ``dstv`` . The continuous channel numbering is used: the first input image channels are indexed from  ``0``  to  ``srcv[0].channels()-1`` , the second input image channels are indexed from  ``srcv[0].channels()``  to ``srcv[0].channels() + srcv[1].channels()-1``,  and so on. The same scheme is used for the output image channels. As a special case, when  ``fromTo[k*2]``  is negative, the corresponding output channel is filled with zero ``npairs`` .
+    :param fromTo: Array of index pairs specifying which channels are copied and where. ``fromTo[k*2]``  is a 0-based index of the input channel in  ``src`` . ``fromTo[k*2+1]``  is an index of the output channel in  ``dst`` . The continuous channel numbering is used: the first input image channels are indexed from  ``0``  to  ``src[0].channels()-1`` , the second input image channels are indexed from  ``src[0].channels()``  to ``src[0].channels() + src[1].channels()-1``,  and so on. The same scheme is used for the output image channels. As a special case, when  ``fromTo[k*2]``  is negative, the corresponding output channel is filled with zero .
+    
+    :param npairs: Number of index pairs in ``fromTo``.
     
 The functions ``mixChannels`` provide an advanced mechanism for shuffling image channels.
     
@@ -1929,7 +1930,7 @@ For a not-per-element matrix product, see
 .. seealso::
 
     :ocv:func:`add`,
-    :ocv:func:`substract`,
+    :ocv:func:`subtract`,
     :ocv:func:`divide`,
     :ref:`MatrixExpressions`,
     :ocv:func:`scaleAdd`,
@@ -2161,18 +2162,18 @@ PCA constructors
 
     :param data: Input samples stored as matrix rows or matrix columns.
 
-    :param mean: Optional mean value. If the matrix is empty ( ``Mat()`` ), the mean is computed from the data.
+    :param mean: Optional mean value. If the matrix is empty ( ``noArray()`` ), the mean is computed from the data.
 
     :param flags: Operation flags. Currently the parameter is only used to specify the data layout.
 
-        * **CV_PCA_DATA_AS_ROWS** indicates that the input samples are stored as matrix rows.
+        * **CV_PCA_DATA_AS_ROW** indicates that the input samples are stored as matrix rows.
 
-        * **CV_PCA_DATA_AS_COLS** indicates that the input samples are stored as matrix columns.
+        * **CV_PCA_DATA_AS_COL** indicates that the input samples are stored as matrix columns.
 
     :param maxComponents: Maximum number of components that PCA should retain. By default, all the components are retained.
 
 The default constructor initializes an empty PCA structure. The second constructor initializes the structure and calls
-:ocv:func:`PCA::operator()` .
+:ocv:funcx:`PCA::operator()` .
 
 
 
@@ -2186,13 +2187,13 @@ Performs Principal Component Analysis of the supplied dataset.
 
     :param data: Input samples stored as the matrix rows or as the matrix columns.
 
-    :param mean: Optional mean value. If the matrix is empty ( ``Mat()`` ), the mean is computed from the data.
+    :param mean: Optional mean value. If the matrix is empty ( ``noArray()`` ), the mean is computed from the data.
 
     :param flags: Operation flags. Currently the parameter is only used to specify the data layout.
 
-        * **CV_PCA_DATA_AS_ROWS** indicates that the input samples are stored as matrix rows.
+        * **CV_PCA_DATA_AS_ROW** indicates that the input samples are stored as matrix rows.
 
-        * **CV_PCA_DATA_AS_COLS** indicates that the input samples are stored as matrix columns.
+        * **CV_PCA_DATA_AS_COL** indicates that the input samples are stored as matrix columns.
 
     :param maxComponents: Maximum number of components that PCA should retain. By default, all the components are retained.
 
@@ -2212,9 +2213,9 @@ Projects vector(s) to the principal component subspace.
 
 .. ocv:pyfunction:: cv2.PCAProject(vec, mean, eigenvectors[, result]) -> result
 
-    :param vec: Input vector(s). They must have the same dimensionality and the same layout as the input data used at PCA phase. That is, if  ``CV_PCA_DATA_AS_ROWS``  are specified, then  ``vec.cols==data.cols``  (vector dimensionality) and  ``vec.rows``  is the number of vectors to project. The same is true for the  ``CV_PCA_DATA_AS_COLS``  case.
+    :param vec: Input vector(s). They must have the same dimensionality and the same layout as the input data used at PCA phase. That is, if  ``CV_PCA_DATA_AS_ROW``  are specified, then  ``vec.cols==data.cols``  (vector dimensionality) and  ``vec.rows``  is the number of vectors to project. The same is true for the  ``CV_PCA_DATA_AS_COL``  case.
 
-    :param result: Output vectors. In case of  ``CV_PCA_DATA_AS_COLS``  , the output matrix has as many columns as the number of input vectors. This means that  ``result.cols==vec.cols``  and the number of rows match the number of principal components (for example,  ``maxComponents``  parameter passed to the constructor).
+    :param result: Output vectors. In case of  ``CV_PCA_DATA_AS_COL``  , the output matrix has as many columns as the number of input vectors. This means that  ``result.cols==vec.cols``  and the number of rows match the number of principal components (for example,  ``maxComponents``  parameter passed to the constructor).
 
 The methods project one or more vectors to the principal component subspace, where each vector projection is represented by coefficients in the principal component basis. The first form of the method returns the matrix that the second form writes to the result. So the first form can be used as a part of expression while the second form can be more efficient in a processing loop.
 
@@ -2528,7 +2529,7 @@ Fills arrays with random numbers.
 
 .. ocv:function:: void RNG::fill( InputOutputArray mat, int distType, InputArray a, InputArray b )
 
-    :param mat: 2D or N-dimensional matrix. Currently matrices with more than 4 channels are not supported by the methods. Use  :ocv:func:`reshape`  as a possible workaround.
+    :param mat: 2D or N-dimensional matrix. Currently matrices with more than 4 channels are not supported by the methods. Use  :ocv:func:`Mat::reshape`  as a possible workaround.
 
     :param distType: Distribution type, ``RNG::UNIFORM``  or  ``RNG::NORMAL`` .
     
@@ -3114,7 +3115,7 @@ The constructors.
         * **SVD::FULL_UV** When the matrix is not square, by default the algorithm produces  ``u``  and  ``vt``  matrices of sufficiently large size for the further  ``A``  reconstruction. If, however, ``FULL_UV``  flag is specified, ``u``  and  ``vt``  will be full-size square orthogonal matrices.
 
 The first constructor initializes an empty ``SVD`` structure. The second constructor initializes an empty ``SVD`` structure and then calls
-:ocv:func:`SVD::operator()` .
+:ocv:funcx:`SVD::operator()` .
 
 
 SVD::operator ()

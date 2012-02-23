@@ -7,12 +7,15 @@
 //  copy or use the software.
 //
 //
-//                          License Agreement
+//                           License Agreement
 //                For Open Source Computer Vision Library
 //
-// Copyright (C) 2000-2008, Intel Corporation, all rights reserved.
-// Copyright (C) 2009, Willow Garage Inc., all rights reserved.
+// Copyright (C) 2010-2012, Institute Of Software Chinese Academy Of Science, all rights reserved.
+// Copyright (C) 2010-2012, Advanced Micro Devices, Inc., all rights reserved.
 // Third party copyrights are property of their respective owners.
+//
+// @Authors
+//    Guoping Long, longguoping@gmail.com
 //
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -22,7 +25,7 @@
 //
 //   * Redistribution's in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
-//     and/or other materials provided with the distribution.
+//     and/or other GpuMaterials provided with the distribution.
 //
 //   * The name of the copyright holders may not be used to endorse or promote products
 //     derived from this software without specific prior written permission.
@@ -40,39 +43,97 @@
 //
 //M*/
 
-#ifndef PRECOMP_H__
-#define PRECOMP_H__
+#ifndef __OPENCV_PRECOMP_H__
+#define __OPENCV_PRECOMP_H__
 
+#if _MSC_VER >= 1200
+#pragma warning( disable: 4251 4710 4711 4514 4996 )
+#endif
+
+#ifdef HAVE_CVCONFIG_H
+#include <cvconfig.h>
+#endif
+
+#include <map>
+#include <iostream>
+#include <limits>
+#include <vector>
+#include <algorithm>
+#include <sstream>
 #include <exception>
 
-#include "opencv2/highgui/highgui.hpp"
-#include "opencv2/imgproc/imgproc.hpp"
-#ifdef __APPLE__
-#include <OpenCL/cl.h> //General OpenCL include file. Current version is written for Intel architecture using Intel's OpenCL SDK
-#else
-#include <CL/cl.h>
-#endif
 #include "opencv2/ocl/ocl.hpp"
-#include "opencv2/ocl/ocldefs.h"
-#include "opencv2/ocl/ocl_util.h"
+#include "opencv2/imgproc/imgproc.hpp"
 
-#include <fstream>
+#include "opencv2/objdetect/objdetect.hpp"
+#include "opencv2/imgproc/imgproc.hpp"
+#include "opencv2/imgproc/imgproc_c.h"
+#include "opencv2/core/core_c.h"
+//#include "opencv2/highgui/highgui.hpp"
+#include "opencv2/core/internal.hpp"
 
-#include <iostream>
+#define __ATI__
+
+#if defined(HAVE_OPENCL)
+
+#include <CL/cl.h>
+#include "kernel/safe_call.hpp"
+
 using namespace std;
 
-#ifdef _DEBUG
-	#include <stdio.h>
-#endif
-
+static inline void throw_nogpu() 
+{ 
+	CV_Error(CV_GpuNotSupported, "The library is compilled without OpenCL support.\n");
+}
 namespace cv
-{
-    namespace ocl
-    {
-        extern cl_context ocl_context;
-        extern cl_command_queue ocl_cmd_queue;
-        void init();
-    }
+{ 
+	namespace ocl 
+	{
+		///////////////////////////OpenCL call wrappers////////////////////////////
+		void openCLMallocPitch(ClContext *clCxt, void ** dev_ptr, size_t *pitch, 
+			size_t widthInBytes, size_t height);
+		void openCLMemcpy2D(ClContext *clCxt,void *dst, size_t dpitch,
+			const void *src, size_t spitch,
+			size_t width,size_t height, enum openCLMemcpyKind kind);
+		void openCLCopyBuffer2D(ClContext *clCxt,void *dst, size_t dpitch, int dst_offset,
+			const void *src, size_t spitch,
+			size_t width,size_t height, int src_offset, enum openCLMemcpyKind kind);
+		void openCLFree(void *devPtr);
+		cl_kernel openCLGetKernelFromSource(const ClContext *clCxt,
+			const char ** source,string kernelName);
+		cl_kernel openCLGetKernelFromSource(const ClContext *clCxt,
+			const char ** source,string kernelName, const char* build_options);
+		void openCLVerifyKernel(const ClContext *clCxt, cl_kernel kernel,size_t *blockSize,
+			size_t *globalThreads,size_t *localThreads);
+		void openCLExecuteKernel(ClContext * clCxt ,const char **source, string kernelName, vector< std::pair<size_t,const void *> > &args,
+			int globalcols , int globalrows,size_t blockSize = 16,int kernel_expand_depth = -1,int kernel_expand_channel = -1);
+		void openCLExecuteKernel(ClContext *clCxt ,const char **source, string kernelName, 
+			size_t globalThreads[3], size_t localThreads[3],  
+			vector< pair<size_t, const void *> > &args, int channels, int depth, char *build_options);
+    void openCLExecuteKernel(ClContext *clCxt ,const char **source, string kernelName, size_t globalThreads[3], 
+            size_t localThreads[3],  vector< pair<size_t, const void *> > &args, int channels, int depth);
+    void openCLExecuteKernel(ClContext *clCxt ,const char **source, string kernelName, size_t globalThreads[3], 
+            size_t localThreads[3],  vector< pair<size_t, const void *> > &args, int channels, 
+            int depth, char *build_options);
+
+    cl_mem load_constant(cl_context context, cl_command_queue command_queue, const void *value, 
+            const size_t size);
+
+    cl_mem openCLMalloc(cl_context clCxt, size_t size, cl_mem_flags flags, void* host_ptr);
+
+    void openCLMemcpy2DWithNoPadding(cl_command_queue command_queue, cl_mem buffer, size_t size, size_t offset, void *ptr,
+            enum openCLMemcpyKind kind, cl_bool blocking_write);
+  }
 }
 
-#endif
+
+#else /* defined(HAVE_OPENCL) */
+
+static inline void throw_nogpu() 
+{ 
+    CV_Error(CV_GpuNotSupported, "The library is compilled without OpenCL support.\n");
+}
+
+#endif /* defined(HAVE_OPENCL) */
+
+#endif /* __OPENCV_PRECOMP_H__ */

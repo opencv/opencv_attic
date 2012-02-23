@@ -290,7 +290,7 @@ For efficiency, ``BruteForceMatcher`` is used as a template parameterized with t
     template<> struct Accumulator<short>  { typedef int Type; };
 
     /*
-     * Squared Euclidean distance functor
+     * Euclidean distance functor
      */
     template<class T>
     struct L2
@@ -300,6 +300,20 @@ For efficiency, ``BruteForceMatcher`` is used as a template parameterized with t
 
         ResultType operator()( const T* a, const T* b, int size ) const;
     };
+    
+    /*
+     * Squared Euclidean distance functor
+     */
+    template<class T>
+    struct SL2
+    {
+        typedef T ValueType;
+        typedef typename Accumulator<T>::Type ResultType;
+
+        ResultType operator()( const T* a, const T* b, int size ) const;
+    };
+    // Note: in case of SL2 distance a parameter maxDistance in the method DescriptorMatcher::radiusMatch 
+    // is a squared maximum distance in L2.
 
     /*
      * Manhattan distance (city block distance) functor
@@ -311,7 +325,6 @@ For efficiency, ``BruteForceMatcher`` is used as a template parameterized with t
         typedef typename Accumulator<T>::Type ResultType;
 
         ResultType operator()( const T* a, const T* b, int size ) const;
-        ...
     };
 
     /*
@@ -334,7 +347,6 @@ For efficiency, ``BruteForceMatcher`` is used as a template parameterized with t
 
         ResultType operator()( const unsigned char* a, const unsigned char* b,
                                int size ) const;
-        ...
     };
 
 
@@ -346,7 +358,7 @@ FlannBasedMatcher
 -----------------
 .. ocv:class:: FlannBasedMatcher
 
-Flann-based descriptor matcher. This matcher trains :ocv:func:`flann::Index` on a train descriptor collection and calls its nearest search methods to find the best matches. So, this matcher may be faster when matching a large train collection than the brute force matcher. ``FlannBasedMatcher`` does not support masking permissible matches of descriptor sets because ``flann::Index`` does not support this. ::
+Flann-based descriptor matcher. This matcher trains :ocv:class:`flann::Index_` on a train descriptor collection and calls its nearest search methods to find the best matches. So, this matcher may be faster when matching a large train collection than the brute force matcher. ``FlannBasedMatcher`` does not support masking permissible matches of descriptor sets because ``flann::Index`` does not support this. ::
 
     class FlannBasedMatcher : public DescriptorMatcher
     {

@@ -1,0 +1,182 @@
+/*M///////////////////////////////////////////////////////////////////////////////////////
+//
+//  IMPORTANT: READ BEFORE DOWNLOADING, COPYING, INSTALLING OR USING.
+//
+//  By downloading, copying, installing or using the software you agree to this license.
+//  If you do not agree to this license, do not download, install,
+//  copy or use the software.
+//
+//
+//                           License Agreement
+//                For Open Source Computer Vision Library
+//
+// Copyright (C) 2010-2012, Institute Of Software Chinese Academy Of Science, all rights reserved.
+// Copyright (C) 2010-2012, Advanced Micro Devices, Inc., all rights reserved.
+// Third party copyrights are property of their respective owners.
+//
+// @Authors
+//    Zhang Ying, zhangying913@gmail.com
+//
+// Redistribution and use in source and binary forms, with or without modification,
+// are permitted provided that the following conditions are met:
+//
+//   * Redistribution's of source code must retain the above copyright notice,
+//     this list of conditions and the following disclaimer.
+//
+//   * Redistribution's in binary form must reproduce the above copyright notice,
+//     this list of conditions and the following disclaimer in the documentation
+//     and/or other GpuMaterials provided with the distribution.
+//
+//   * The name of the copyright holders may not be used to endorse or promote products
+//     derived from this software without specific prior written permission.
+//
+// This software is provided by the copyright holders and contributors as is and
+// any express or implied warranties, including, but not limited to, the implied
+// warranties of merchantability and fitness for a particular purpose are disclaimed.
+// In no event shall the Intel Corporation or contributors be liable for any direct,
+// indirect, incidental, special, exemplary, or consequential damages
+// (including, but not limited to, procurement of substitute goods or services;
+// loss of use, data, or profits; or business interruption) however caused
+// and on any theory of liability, whether in contract, strict liability,
+// or tort (including negligence or otherwise) arising in any way out of
+// the use of this software, even if advised of the possibility of such damage.
+//
+//M*/
+
+#pragma OPENCL FP_CONSTANT ON
+#define UCHAR_MIN 0
+__kernel void dilate_C4_D5(__global const float4 * restrict src, __global float4 *dst, int srcOffset, int dstOffset, 
+					int mincols, int maxcols, int minrows, int maxrows, int cols, int rows, 
+					int srcStep, int dstStep, __constant uchar * mat_kernel)
+{
+    int mX = get_global_id(0);
+    int mY = get_global_id(1);
+    int kX = mX - anX, kY = mY - anY;
+
+    float4 maxVal = (float4)(-FLT_MAX);
+	  int k=0;
+	  for(int i=0;i<ksY;i++, kY++ , kX = mX - anX)
+    {
+        for(int j=0;j<ksX; j++, kX++)
+        {
+			    float4 v = *((__global float4*)(src + srcOffset + kY * srcStep + kX));
+			    uchar now = mat_kernel[k++];
+			    float4 flag = (kX >= mincols & kX <= maxcols & kY >= minrows & kY <= maxrows & now != 0) ? v : (float4)(-FLT_MAX);
+          maxVal = max(maxVal , flag);
+        }
+    }
+
+	  if(mX < cols && mY < rows)
+        dst[mY * dstStep + mX + dstOffset] = (maxVal);		   
+}
+
+__kernel void dilate_C1_D5(__global float * src, __global float *dst, int srcOffset, int dstOffset, 
+					int mincols, int maxcols, int minrows, int maxrows, int cols, int rows, 
+					int srcStep, int dstStep, __constant uchar * mat_kernel)
+{
+    int mX = (get_global_id(0)<<2);;
+    int mY = get_global_id(1);
+    int kX = mX - anX, kY = mY - anY;
+
+    float4 maxVal = (float4)(-FLT_MAX);
+	  int k=0;
+	  for(int i=0;i<ksY;i++, kY++ , kX = mX - anX)
+    {
+        for(int j=0;j<ksX;j++, kX++)
+        {
+			    float4 v = *((__global const float4* restrict)(src + srcOffset + kY * srcStep + kX));
+			    uchar now = mat_kernel[k++];
+			    float4 flag = (kY >= minrows & kY <= maxrows & now != 0) ? v : maxVal;
+			    flag.x = (kX >= mincols & kX <= maxcols) ? flag.x : -FLT_MAX;
+			    flag.y = (kX+1 >= mincols & kX+1 <= maxcols) ? flag.y : -FLT_MAX;
+			    flag.z = (kX+2 >= mincols & kX+2 <= maxcols) ? flag.z : -FLT_MAX;
+			    flag.w = (kX+3 >= mincols & kX+3 <= maxcols) ? flag.w : -FLT_MAX;
+			
+          maxVal = max(maxVal , flag);
+        }
+    }
+
+	  if(mY < rows)
+	  {
+      if(mX>=0 && mX+3<cols) 
+          ((__global float4*)(dst + mY * dstStep + mX + dstOffset))[0] = maxVal;
+      else
+      {
+          if(mX>=0 && mX<cols) dst[mY * dstStep + mX + dstOffset] = maxVal.x;
+          if(mX+1>=0 && mX+1<cols) dst[mY * dstStep + mX + 1 + dstOffset] = maxVal.y;
+          if(mX+2>=0 && mX+2<cols) dst[mY * dstStep + mX + 2 + dstOffset] = maxVal.z;
+          if(mX+3>=0 && mX+3<cols) dst[mY * dstStep + mX + 3 + dstOffset] = maxVal.w;
+      }
+    }
+}
+
+__kernel void dilate_C1_D0(__global const uchar4 * restrict src, __global uchar *dst, int srcOffset, int dstOffset, 
+					int mincols, int maxcols, int minrows, int maxrows, int cols, int rows, 
+					int srcStep, int dstStep, __constant uchar * mat_kernel)
+{
+    int mX = (get_global_id(0)<<2) - (dstOffset&3);;
+    int mY = get_global_id(1);
+    int kX = mX - anX, kY = mY - anY;
+
+    uchar4 maxVal = (uchar4)(UCHAR_MIN);
+	  int k=0;
+	  for(int i=0;i<ksY;i++, kY++ , kX = mX - anX)
+    {
+        for(int j=0;j<ksX;j++, kX++)
+        {
+			    int start = srcOffset + kY * srcStep + kX;
+			    uchar8 sVal = (uchar8)(src[start>>2], src[(start>>2) + 1]);
+			
+			    uchar sAry[8]= {sVal.s0, sVal.s1, sVal.s2, sVal.s3, sVal.s4, sVal.s5, sVal.s6, sVal.s7};
+			    int det = start & 3;
+			    uchar4 v=(uchar4)(sAry[det], sAry[det+1], sAry[det+2], sAry[det+3]);
+
+			    uchar4 flag = (kY >= minrows & kY <= maxrows & mat_kernel[k++] != 0) ? v : maxVal;
+			    flag.x = (kX >= mincols & kX <= maxcols) ? flag.x : UCHAR_MIN;
+			    flag.y = (kX+1 >= mincols & kX+1 <= maxcols) ? flag.y : UCHAR_MIN;
+			    flag.z = (kX+2 >= mincols & kX+2 <= maxcols) ? flag.z : UCHAR_MIN;
+			    flag.w = (kX+3 >= mincols & kX+3 <= maxcols) ? flag.w : UCHAR_MIN;			
+
+          maxVal = max(maxVal , flag);
+        }
+    }
+
+	  if(mY < rows)
+	  {
+      if(mX>=0 && mX+3<cols) 
+          ((__global uchar4*)(dst + mY * dstStep + mX + dstOffset))[0] = maxVal;
+      else
+      {
+          if(mX>=0 && mX<cols) dst[mY * dstStep + mX + dstOffset] = maxVal.x;
+          if(mX+1>=0 && mX+1<cols) dst[mY * dstStep + mX + 1 + dstOffset] = maxVal.y;
+          if(mX+2>=0 && mX+2<cols) dst[mY * dstStep + mX + 2 + dstOffset] = maxVal.z;
+          if(mX+3>=0 && mX+3<cols) dst[mY * dstStep + mX + 3 + dstOffset] = maxVal.w;
+      }
+	  }
+}
+
+__kernel void dilate_C4_D0(__global const uchar4 * restrict src, __global uchar4 *dst, int srcOffset, int dstOffset, 
+					int mincols, int maxcols, int minrows, int maxrows, int cols, int rows, 
+					int srcStep, int dstStep, __constant uchar * mat_kernel)
+{
+    int mX = get_global_id(0);
+    int mY = get_global_id(1);
+    int kX = mX - anX, kY = mY - anY;
+
+    uchar4 maxVal = (uchar4)(UCHAR_MIN);
+	  int k=0;
+	  for(int i=0;i<ksY;i++, kY++ , kX = mX - anX)
+    {
+        for(int j=0;j<ksX;j++, kX++)
+        {
+			    uchar4 v = src[kY * srcStep + kX + srcOffset];
+			    uchar now = mat_kernel[k++];
+			    uchar4 flag = (kX >= mincols & kX <= maxcols & kY >= minrows & kY <= maxrows & now != 0) ? v : maxVal;
+          maxVal = max(maxVal , flag);
+        }
+    }
+
+	  if(mX < cols && mY < rows)
+        dst[mY * dstStep + mX + dstOffset] = (maxVal);		   
+}
+

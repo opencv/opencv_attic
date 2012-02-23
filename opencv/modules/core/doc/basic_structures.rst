@@ -246,7 +246,7 @@ Template class for short numerical vectors, a partial case of :ocv:class:`Matx`:
     typedef Vec<double, 4> Vec4d;
     typedef Vec<double, 6> Vec6d;
     
-It is possible to convert ``Vec<T,2>`` to/from ``Point_``, ``Vec<T,3>`` to/from ``Point3_`` , and ``Vec<T,4>`` to ``CvScalar`` or :ocv:class:`Scalar`. Use ``operator[]`` to access the elements of ``Vec``. 
+It is possible to convert ``Vec<T,2>`` to/from ``Point_``, ``Vec<T,3>`` to/from ``Point3_`` , and ``Vec<T,4>`` to :ocv:struct:`CvScalar` or :ocv:class:`Scalar_`. Use ``operator[]`` to access the elements of ``Vec``. 
 
 All the expected vector operations are also implemented:
 
@@ -654,49 +654,85 @@ Matrix Expressions
 ------------------
 
 This is a list of implemented matrix operations that can be combined in arbitrary complex expressions
-(here
-*A*,*B*
-stand for matrices ( ``Mat`` ),
-*s*
-for a scalar ( ``Scalar`` ),
-:math:`\alpha` for a real-valued scalar ( ``double`` )):
+(here ``A``, ``B`` stand for matrices ( ``Mat`` ), ``s`` for a scalar ( ``Scalar`` ),
+``alpha`` for a real-valued scalar ( ``double`` )):
 
 *
     Addition, subtraction, negation:
-    :math:`A \pm B,\;A \pm s,\;s \pm A,\;-A` *
-    scaling:
-    :math:`A*\alpha`,    :math:`A*\alpha` *
-    per-element multiplication and division:
-    :math:`A.mul(B), A/B, \alpha/A` *
-    matrix multiplication:
-    :math:`A*B` *
-    transposition:
-    :math:`A.t() \sim A^t` *
-    matrix inversion and pseudo-inversion, solving linear systems and least-squares problems:
+    ``A+B, A-B, A+s, A-s, s+A, s-A, -A``
+    
+*   
+    Scaling:
+    ``A*alpha``
+    
+*
+    Per-element multiplication and division:
+    ``A.mul(B), A/B, alpha/A``
+    
+*
+    Matrix multiplication:
+    ``A*B``
+    
+*
+    Transposition:
+    ``A.t()`` (means ``A``\ :sup:`T`)
+    
+*
+    Matrix inversion and pseudo-inversion, solving linear systems and least-squares problems:
 
-    :math:`A.inv([method]) \sim A^{-1}, A.inv([method])*B \sim X:\,AX=B`
+    ``A.inv([method])`` (~ ``A``\ :sup:`-1`) ``,   A.inv([method])*B`` (~ ``X: AX=B``)
     
 *
     Comparison:
-    :math:`A\gtreqqless B,\;A \ne B,\;A \gtreqqless \alpha,\;A \ne \alpha`. The result of comparison is an 8-bit single channel mask whose elements are set to 255 (if the particular element or pair of elements satisfy the condition) or 0.
+    ``A cmpop B, A cmpop alpha, alpha cmpop A``, where ``cmpop`` is one of ``:  >, >=, ==, !=, <=, <``. The result of comparison is an 8-bit single channel mask whose elements are set to 255 (if the particular element or pair of elements satisfy the condition) or 0.
 
 *
-    Bitwise logical operations: ``A & B, A & s, A | B, A | s, A textasciicircum B, A textasciicircum s, ~ A`` *
-    element-wise minimum and maximum:
-    :math:`min(A, B), min(A, \alpha), max(A, B), max(A, \alpha)` *
-    element-wise absolute value:
-    :math:`abs(A)` *
-    cross-product, dot-product:
-    :math:`A.cross(B), A.dot(B)` *
-    any function of matrix or matrices and scalars that returns a matrix or a scalar, such as ``norm``, ``mean``, ``sum``, ``countNonZero``, ``trace``, ``determinant``, ``repeat``, and others.
+    Bitwise logical operations: ``A logicop B, A logicop s, s logicop A, ~A``, where ``logicop`` is one of ``:  &, |, ^``.
+    
+*
+    Element-wise minimum and maximum:
+    ``min(A, B), min(A, alpha), max(A, B), max(A, alpha)``
+    
+*
+    Element-wise absolute value:
+    ``abs(A)``
+    
+*
+    Cross-product, dot-product:
+    ``A.cross(B)``
+    ``A.dot(B)``
+    
+*
+    Any function of matrix or matrices and scalars that returns a matrix or a scalar, such as ``norm``, ``mean``, ``sum``, ``countNonZero``, ``trace``, ``determinant``, ``repeat``, and others.
 
 *
-    Matrix initializers ( ``eye(), zeros(), ones()``     ), matrix comma-separated initializers, matrix constructors and operators that extract sub-matrices (see :ocv:class:`Mat`     description).
+    Matrix initializers ( ``Mat::eye(), Mat::zeros(), Mat::ones()`` ), matrix comma-separated initializers, matrix constructors and operators that extract sub-matrices (see :ocv:class:`Mat` description).
 
 *
     ``Mat_<destination_type>()`` constructors to cast the result to the proper type.
 
 .. note:: Comma-separated initializers and probably some other operations may require additional explicit ``Mat()`` or ``Mat_<T>()`` constuctor calls to resolve a possible ambiguity.
+
+Here are examples of matrix expressions:
+
+::
+
+    // compute pseudo-inverse of A, equivalent to A.inv(DECOMP_SVD)
+    SVD svd(A);
+    Mat pinvA = svd.vt.t()*Mat::diag(1./svd.w)*svd.u.t();
+    
+    // compute the new vector of parameters in the Levenberg-Marquardt algorithm
+    x -= (A.t()*A + lambda*Mat::eye(A.cols,A.cols,A.type())).inv(DECOMP_CHOLESKY)*(A.t()*err);
+    
+    // sharpen image using "unsharp mask" algorithm
+    Mat blurred; double sigma = 1, threshold = 5, amount = 1;
+    GaussianBlur(img, blurred, Size(), sigma, sigma);
+    Mat lowConstrastMask = abs(img - blurred) < threshold;
+    Mat sharpened = img*(1+amount) + blurred*(-amount);
+    img.copyTo(sharpened, lowContrastMask);
+    
+..
+
 
 Below is the formal description of the ``Mat`` methods.
 
@@ -877,9 +913,9 @@ Creates a matrix header for the specified row span.
 
 .. ocv:function:: Mat Mat::rowRange(const Range& r) const
 
-    :param startrow: A 0-based start index of the row span.
+    :param startrow: An inclusive 0-based start index of the row span.
 
-    :param endrow: A 0-based ending index of the row span.
+    :param endrow: An exclusive 0-based ending index of the row span.
 
     :param r: :ocv:class:`Range`  structure containing both the start and the end indices.
 
@@ -895,9 +931,9 @@ Creates a matrix header for the specified row span.
 
 .. ocv:function:: Mat Mat::colRange(const Range& r) const
 
-    :param startcol: A 0-based start index of the column span.
+    :param startcol: An inclusive 0-based start index of the column span.
 
-    :param endcol: A 0-based ending index of the column span.
+    :param endcol: An exclusive 0-based ending index of the column span.
 
     :param r: :ocv:class:`Range`  structure containing both the start and the end indices.
 
@@ -1481,29 +1517,29 @@ The method is used in quite a few of OpenCV functions. The point is that element
 This approach, while being very simple, can boost the performance of a simple element-operation by 10-20 percents, especially if the image is rather small and the operation is quite simple.
 
 Another OpenCV idiom in this function, a call of
-:ocv:func:`Mat::create` for the destination array, that allocates the destination array unless it already has the proper size and type. And while the newly allocated arrays are always continuous, you still need to check the destination array because :ocv:func:`create` does not always allocate a new matrix.
+:ocv:func:`Mat::create` for the destination array, that allocates the destination array unless it already has the proper size and type. And while the newly allocated arrays are always continuous, you still need to check the destination array because :ocv:func:`Mat::create` does not always allocate a new matrix.
 
 
 Mat::elemSize
------------------
+-------------
 Returns  the matrix element size in bytes.
 
-.. ocv:function:: size_t Mat::elemSize(void) const
+.. ocv:function:: size_t Mat::elemSize() const
 
 The method returns the matrix element size in bytes. For example, if the matrix type is ``CV_16SC3`` , the method returns ``3*sizeof(short)`` or 6.
 
 
 Mat::elemSize1
-------------------
+--------------
 Returns the size of each matrix element channel in bytes.
 
-.. ocv:function:: size_t Mat::elemSize() const
+.. ocv:function:: size_t Mat::elemSize1() const
 
 The method returns the matrix element channel size in bytes, that is, it ignores the number of channels. For example, if the matrix type is ``CV_16SC3`` , the method returns ``sizeof(short)`` or 2.
 
 
 Mat::type
--------------
+---------
 Returns the type of a matrix element.
 
 .. ocv:function:: int Mat::type() const
@@ -1586,7 +1622,7 @@ Returns a pointer to the specified matrix row.
     :param i: A 0-based row index.
 
 The methods return ``uchar*`` or typed pointer to the specified matrix row. See the sample in
-:ocv:func:`Mat::isContinuous` () to know how to use these methods.
+:ocv:func:`Mat::isContinuous` to know how to use these methods.
 
 
 Mat::at

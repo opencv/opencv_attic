@@ -752,6 +752,74 @@ TEST_P(Exp, Accuracy)
 
 INSTANTIATE_TEST_CASE_P(Arithm, Exp, testing::ValuesIn(devices()));
 
+
+
+////////////////////////////////////////////////////////////////////////////////
+// pow
+
+struct Pow : testing::TestWithParam< std::tr1::tuple<cv::gpu::DeviceInfo, int> >
+{
+    cv::gpu::DeviceInfo devInfo;
+    int type;
+
+    double power;
+    cv::Size size;
+    cv::Mat mat;
+
+    cv::Mat dst_gold;
+
+    virtual void SetUp() 
+    {        
+        devInfo = std::tr1::get<0>(GetParam());
+        type = std::tr1::get<1>(GetParam());        
+
+        cv::gpu::setDevice(devInfo.deviceID());
+
+        cv::RNG& rng = cvtest::TS::ptr()->get_rng();
+
+        size = cv::Size(rng.uniform(100, 200), rng.uniform(100, 200));
+        //size = cv::Size(2, 2);
+
+        mat = cvtest::randomMat(rng, size, type, 0.0, 100.0, false);        
+
+        if (mat.depth() == CV_32F)
+            power = rng.uniform(1.2f, 3.f);
+        else
+        {
+            int ipower = rng.uniform(2, 8);
+            power = (float)ipower;
+        }
+        cv::pow(mat, power, dst_gold);
+    }
+};
+
+TEST_P(Pow, Accuracy) 
+{
+    PRINT_PARAM(devInfo);
+    PRINT_TYPE(type);
+    PRINT_PARAM(size);
+    PRINT_PARAM(power);
+
+    cv::Mat dst;
+    
+    ASSERT_NO_THROW(
+        cv::gpu::GpuMat gpu_res;
+
+        cv::gpu::pow(cv::gpu::GpuMat(mat), power, gpu_res);
+
+        gpu_res.download(dst);
+    );
+
+    /*std::cout  << mat << std::endl << std::endl;
+    std::cout  << dst << std::endl << std::endl;
+    std::cout  << dst_gold << std::endl;*/
+    EXPECT_MAT_NEAR(dst_gold, dst, 1);
+}
+
+INSTANTIATE_TEST_CASE_P(Arithm, Pow, testing::Combine(
+                        testing::ValuesIn(devices()),
+                        testing::Values(CV_32F, CV_32FC3)));
+
 ////////////////////////////////////////////////////////////////////////////////
 // log
 
@@ -1418,7 +1486,7 @@ struct BitwiseNot : testing::TestWithParam< std::tr1::tuple<cv::gpu::DeviceInfo,
         
         for (int i = 0; i < mat.rows; ++i)
         {
-            cv::Mat row(1, mat.cols * mat.elemSize(), CV_8U, (void*)mat.ptr(i));
+            cv::Mat row(1, static_cast<int>(mat.cols * mat.elemSize()), CV_8U, (void*)mat.ptr(i));
             rng.fill(row, cv::RNG::UNIFORM, cv::Scalar(0), cv::Scalar(255));
         }
 
@@ -1479,10 +1547,10 @@ struct BitwiseOr : testing::TestWithParam< std::tr1::tuple<cv::gpu::DeviceInfo, 
         
         for (int i = 0; i < mat1.rows; ++i)
         {
-            cv::Mat row1(1, mat1.cols * mat1.elemSize(), CV_8U, (void*)mat1.ptr(i));
+            cv::Mat row1(1, static_cast<int>(mat1.cols * mat1.elemSize()), CV_8U, (void*)mat1.ptr(i));
             rng.fill(row1, cv::RNG::UNIFORM, cv::Scalar(0), cv::Scalar(255));
 
-            cv::Mat row2(1, mat2.cols * mat2.elemSize(), CV_8U, (void*)mat2.ptr(i));
+            cv::Mat row2(1, static_cast<int>(mat2.cols * mat2.elemSize()), CV_8U, (void*)mat2.ptr(i));
             rng.fill(row2, cv::RNG::UNIFORM, cv::Scalar(0), cv::Scalar(255));
         }
 
@@ -1543,10 +1611,10 @@ struct BitwiseAnd : testing::TestWithParam< std::tr1::tuple<cv::gpu::DeviceInfo,
         
         for (int i = 0; i < mat1.rows; ++i)
         {
-            cv::Mat row1(1, mat1.cols * mat1.elemSize(), CV_8U, (void*)mat1.ptr(i));
+            cv::Mat row1(1, static_cast<int>(mat1.cols * mat1.elemSize()), CV_8U, (void*)mat1.ptr(i));
             rng.fill(row1, cv::RNG::UNIFORM, cv::Scalar(0), cv::Scalar(255));
 
-            cv::Mat row2(1, mat2.cols * mat2.elemSize(), CV_8U, (void*)mat2.ptr(i));
+            cv::Mat row2(1, static_cast<int>(mat2.cols * mat2.elemSize()), CV_8U, (void*)mat2.ptr(i));
             rng.fill(row2, cv::RNG::UNIFORM, cv::Scalar(0), cv::Scalar(255));
         }
 
@@ -1607,10 +1675,10 @@ struct BitwiseXor : testing::TestWithParam< std::tr1::tuple<cv::gpu::DeviceInfo,
         
         for (int i = 0; i < mat1.rows; ++i)
         {
-            cv::Mat row1(1, mat1.cols * mat1.elemSize(), CV_8U, (void*)mat1.ptr(i));
+            cv::Mat row1(1, static_cast<int>(mat1.cols * mat1.elemSize()), CV_8U, (void*)mat1.ptr(i));
             rng.fill(row1, cv::RNG::UNIFORM, cv::Scalar(0), cv::Scalar(255));
 
-            cv::Mat row2(1, mat2.cols * mat2.elemSize(), CV_8U, (void*)mat2.ptr(i));
+            cv::Mat row2(1, static_cast<int>(mat2.cols * mat2.elemSize()), CV_8U, (void*)mat2.ptr(i));
             rng.fill(row2, cv::RNG::UNIFORM, cv::Scalar(0), cv::Scalar(255));
         }
 

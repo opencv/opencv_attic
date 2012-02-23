@@ -536,6 +536,9 @@ CV_EXPORTS bool findCirclesGrid( InputArray image, Size patternSize,
                                  OutputArray centers, int flags=CALIB_CB_SYMMETRIC_GRID,
                                  const Ptr<FeatureDetector> &blobDetector = new SimpleBlobDetector());
 
+CV_EXPORTS_W bool findCirclesGridDefault( InputArray image, Size patternSize,
+                                          OutputArray centers, int flags=CALIB_CB_SYMMETRIC_GRID );
+
 enum
 {
     CALIB_USE_INTRINSIC_GUESS = CV_CALIB_USE_INTRINSIC_GUESS,
@@ -561,8 +564,8 @@ enum
 CV_EXPORTS_W double calibrateCamera( InputArrayOfArrays objectPoints,
                                      InputArrayOfArrays imagePoints,
                                      Size imageSize,
-                                     CV_IN_OUT InputOutputArray cameraMatrix,
-                                     CV_IN_OUT InputOutputArray distCoeffs,
+                                     CV_OUT InputOutputArray cameraMatrix,
+                                     CV_OUT InputOutputArray distCoeffs,
                                      OutputArrayOfArrays rvecs, OutputArrayOfArrays tvecs,
                                      int flags=0 );
 
@@ -581,10 +584,10 @@ CV_EXPORTS_W void calibrationMatrixValues( InputArray cameraMatrix,
 CV_EXPORTS_W double stereoCalibrate( InputArrayOfArrays objectPoints,
                                      InputArrayOfArrays imagePoints1,
                                      InputArrayOfArrays imagePoints2,
-                                     CV_IN_OUT InputOutputArray cameraMatrix1,
-                                     CV_IN_OUT InputOutputArray distCoeffs1,
-                                     CV_IN_OUT InputOutputArray cameraMatrix2,
-                                     CV_IN_OUT InputOutputArray distCoeffs2,
+                                     CV_OUT InputOutputArray cameraMatrix1,
+                                     CV_OUT InputOutputArray distCoeffs1,
+                                     CV_OUT InputOutputArray cameraMatrix2,
+                                     CV_OUT InputOutputArray distCoeffs2,
                                      Size imageSize, OutputArray R,
                                      OutputArray T, OutputArray E, OutputArray F,
                                      TermCriteria criteria = TermCriteria(TermCriteria::COUNT+

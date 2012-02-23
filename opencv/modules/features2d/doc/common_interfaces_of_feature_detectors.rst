@@ -100,19 +100,17 @@ Detects keypoints in an image (first variant) or image set (second variant).
 
 .. ocv:function:: void FeatureDetector::detect( const Mat& image, vector<KeyPoint>& keypoints, const Mat& mask=Mat() ) const
 
+.. ocv:function:: void FeatureDetector::detect( const vector<Mat>& images, vector<vector<KeyPoint> >& keypoints, const vector<Mat>& masks=vector<Mat>() ) const
+
     :param image: Image.
-
-    :param keypoints: Detected keypoints.
-
-    :param mask: Mask specifying where to look for keypoints (optional). It must be a char matrix with non-zero values in the region of interest.
-
-.. ocv:function:: void FeatureDetector::detect( const vector<Mat>& images,                                                            vector<vector<KeyPoint> >& keypoints,                                                             const vector<Mat>& masks=vector<Mat>() ) const
 
     :param images: Image set.
 
-    :param keypoints: Collection of keypoints detected in input images. ``keypoints[i]`` is a set of keypoints detected in ``images[i]`` .
+    :param keypoints: The detected keypoints. In the second variant of the method ``keypoints[i]`` is a set of keypoints detected in ``images[i]`` .
 
-    :param masks: Masks for each input image specifying where to look for keypoints (optional). ``masks[i]`` is a mask for ``images[i]`` .                     Each element of the ``masks``  vector must be a char matrix with non-zero values in the region of interest.
+    :param mask: Mask specifying where to look for keypoints (optional). It must be a 8-bit integer matrix with non-zero values in the region of interest.
+
+    :param masks: Masks for each input image specifying where to look for keypoints (optional). ``masks[i]`` is a mask for ``images[i]``.
 
 FeatureDetector::read
 -------------------------
@@ -146,8 +144,10 @@ The following detector types are supported:
 * ``"SURF"`` -- :ocv:class:`SurfFeatureDetector`
 * ``"ORB"`` -- :ocv:class:`OrbFeatureDetector`
 * ``"MSER"`` -- :ocv:class:`MserFeatureDetector`
-* ``"GFTT"`` -- :ocv:class:`GfttFeatureDetector`
-* ``"HARRIS"`` -- :ocv:class:`HarrisFeatureDetector`
+* ``"GFTT"`` -- :ocv:class:`GoodFeaturesToTrackDetector`
+* ``"HARRIS"`` -- :ocv:class:`GoodFeaturesToTrackDetector` with Harris detector enabled
+* ``"Dense"`` -- :ocv:class:`DenseFeatureDetector`
+* ``"SimpleBlob"`` -- :ocv:class:`SimpleBlobDetector`
 
 Also a combined format is supported: feature detector adapter name ( ``"Grid"`` --
 :ocv:class:`GridAdaptedFeatureDetector`, ``"Pyramid"`` --
@@ -589,30 +589,3 @@ SurfAdjuster
                 SurfAdjuster();
                 ...
         };
-
-FeatureDetector
----------------
-.. ocv:class:: FeatureDetector
-
-Abstract base class for 2D image feature detectors. ::
-
-    class CV_EXPORTS FeatureDetector
-    {
-    public:
-        virtual ~FeatureDetector();
-
-        void detect( const Mat& image, vector<KeyPoint>& keypoints,
-                     const Mat& mask=Mat() ) const;
-
-        void detect( const vector<Mat>& images,
-                     vector<vector<KeyPoint> >& keypoints,
-                     const vector<Mat>& masks=vector<Mat>() ) const;
-
-        virtual void read(const FileNode&);
-        virtual void write(FileStorage&) const;
-
-        static Ptr<FeatureDetector> create( const string& detectorType );
-
-    protected:
-    ...
-    };
