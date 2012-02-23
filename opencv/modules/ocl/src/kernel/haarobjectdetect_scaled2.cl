@@ -15,7 +15,7 @@
 // Third party copyrights are property of their respective owners.
 //
 // @Authors
-//    Jia Haipeng, jiahaipeng95@gmail.com
+//    Wu Xinglong, wxl370@126.com
 //
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:

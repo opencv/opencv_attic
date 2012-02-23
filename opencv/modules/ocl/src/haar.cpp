@@ -18,6 +18,8 @@
 //    Niko Li, Niko.li@amd.com
 //    Jia Haipeng, jiahaipeng95@gmail.com
 //    Wang Weiyan, wangweiyanster@gmail.com
+//    Wu Xinglong, wxl370@126.com
+//    Wang Yao, bitwangyaoyao@gmail.com
 //
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
