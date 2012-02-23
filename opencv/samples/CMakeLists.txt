@@ -8,9 +8,6 @@ add_subdirectory(cpp)
 
 if(NOT ANDROID)
     add_subdirectory(gpu)
-    if(HAVE_OPENCL)
-        add_subdirectory(ocl)
-    endif()    
 endif()
 
 if(BUILD_ANDROID_EXAMPLES)

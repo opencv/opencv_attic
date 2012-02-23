@@ -1,5 +1,5 @@
 import numpy as np
-import cv2, cv
+import cv2
 from common import Sketcher
 
 help_message = '''
