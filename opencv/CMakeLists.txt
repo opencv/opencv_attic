@@ -83,14 +83,18 @@ set(BUILD_WITH_DEBUG_INFO ON CACHE BOOL "Include debug info into debug libs")
 # ----------------------------------------------------------------------------
 #  Get actual OpenCV version number from sources
 # ----------------------------------------------------------------------------
-FILE(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/modules/core/include/opencv2/core/version.hpp" OPENCV_VERSION_PARTS REGEX "#define CV_.+OR_VERSION[ ]+[0-9]+" )
+SET(OPENCV_VERSION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/modules/core/include/opencv2/core/version.hpp")
+FILE(STRINGS "${OPENCV_VERSION_FILE}" OPENCV_VERSION_PARTS REGEX "#define CV_.+OR_VERSION[ ]+[0-9]+" )
 string(REGEX REPLACE ".+CV_MAJOR_VERSION[ ]+([0-9]+).*" "\\1" OPENCV_VERSION_MAJOR "${OPENCV_VERSION_PARTS}")
 string(REGEX REPLACE ".+CV_MINOR_VERSION[ ]+([0-9]+).*" "\\1" OPENCV_VERSION_MINOR "${OPENCV_VERSION_PARTS}")
 string(REGEX REPLACE ".+CV_SUBMINOR_VERSION[ ]+([0-9]+).*" "\\1" OPENCV_VERSION_PATCH "${OPENCV_VERSION_PARTS}")
 set(OPENCV_VERSION "${OPENCV_VERSION_MAJOR}.${OPENCV_VERSION_MINOR}.${OPENCV_VERSION_PATCH}")
 
-
 set(OPENCV_SOVERSION "${OPENCV_VERSION_MAJOR}.${OPENCV_VERSION_MINOR}")
+
+# create a dependency on version file
+# we will never use output of the following command but cmake will rerun if version file changes
+configure_file("${OPENCV_VERSION_FILE}" "${CMAKE_BINARY_DIR}/junk/version.junk" COPYONLY)
 
 if(WIN32)
     # Postfix of DLLs:
@@ -113,8 +117,8 @@ endif()
 
 # SUBDIRECTORIES:
 # Save libs and executables in the same place
-set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib CACHE PATH "Output directory for libraries" )
-set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin CACHE PATH "Output directory for applications" )
+set(LIBRARY_OUTPUT_PATH "${CMAKE_BINARY_DIR}/lib" CACHE PATH "Output directory for libraries" )
+set(EXECUTABLE_OUTPUT_PATH "${CMAKE_BINARY_DIR}/bin" CACHE PATH "Output directory for applications" )
 
 if(ANDROID OR WIN32)
     set(OPENCV_DOC_INSTALL_PATH doc)
@@ -127,7 +131,7 @@ endif()
 if(ANDROID)
     set(OPENCV_LIB_INSTALL_PATH libs/${ARMEABI_NDK_NAME})
 else()
-    set(OPENCV_LIB_INSTALL_PATH lib)
+    set(OPENCV_LIB_INSTALL_PATH lib${LIB_SUFFIX})
 endif()
 
 set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/${OPENCV_LIB_INSTALL_PATH}")
@@ -317,6 +321,9 @@ endif()
 set(BUILD_EXAMPLES OFF CACHE BOOL "Build all examples")
 set(INSTALL_C_EXAMPLES OFF CACHE BOOL "Install C examples")
 set(INSTALL_PYTHON_EXAMPLES OFF CACHE BOOL "Install Python examples")
+if(ANDROID)
+    set(INSTALL_ANDROID_EXAMPLES OFF CACHE BOOL "Install Android examples")
+endif()
 
 # Build tests:
 # ===================================================
@@ -332,6 +339,9 @@ endif()
 
 include(OpenCVPCHSupport.cmake REQUIRED)
 include(OpenCVModule.cmake REQUIRED)
+if(ANDROID)
+    include(OpenCVAndroidProject.cmake REQUIRED)
+endif()
 
 if(PCHSupport_FOUND)
     SET(USE_PRECOMPILED_HEADERS ON CACHE BOOL "Use precompiled headers")
@@ -349,23 +359,23 @@ if(CMAKE_COMPILER_IS_GNUCXX)
     set(ENABLE_PROFILING OFF CACHE BOOL "Enable profiling in the GCC compiler (Add flags: -g -pg)")
     set(USE_OMIT_FRAME_POINTER ON CACHE BOOL "Enable -fomit-frame-pointer for GCC")
 
-    if(${CMAKE_SYSTEM_PROCESSOR} MATCHES amd64*|x86_64*)
+    if(${CMAKE_SYSTEM_PROCESSOR} MATCHES amd64.*|x86_64.*)
         set(X86_64 1)
     endif()
-    if(${CMAKE_SYSTEM_PROCESSOR} MATCHES i686*|i386*|x86*)
+    if(${CMAKE_SYSTEM_PROCESSOR} MATCHES i686.*|i386.*|x86.*)
         set(X86 1)
     endif()
-    if(${CMAKE_SYSTEM_PROCESSOR} MATCHES powerpc*)
+    if(${CMAKE_SYSTEM_PROCESSOR} MATCHES powerpc.*)
         set(ENABLE_POWERPC ON CACHE BOOL "Enable PowerPC for GCC")
     endif ()
 
     if(X86 OR X86_64)
         # enable everything, since the available set of instructions is checked at runtime
-        IF ("${CMAKE_GCC_REGEX_VERSION}" VERSION_GREATER 4.6.-1)
+        #IF ("${CMAKE_GCC_REGEX_VERSION}" VERSION_GREATER 4.5)
             SET(_USE_FAST_MATH OFF)
-        ELSE()
-            SET(_USE_FAST_MATH ON)
-        ENDIF()
+        #ELSE()
+        #    SET(_USE_FAST_MATH ON)
+        #ENDIF()
         set(USE_FAST_MATH ${_USE_FAST_MATH} CACHE BOOL "Enable -ffast-math (not recommended for GCC 4.6.x)")
         set(ENABLE_SSE ON CACHE BOOL "Enable SSE instructions")
         set(ENABLE_SSE2 ON CACHE BOOL "Enable SSE2 instructions")
@@ -416,9 +426,10 @@ set(WITH_TBB OFF CACHE BOOL "Include Intel TBB support")
 set(WITH_IPP OFF CACHE BOOL "Include Intel IPP support")
 set(WITH_EIGEN ON CACHE BOOL "Include Eigen2/Eigen3 support")
 set(WITH_CUDA ON CACHE BOOL "Include NVidia Cuda Runtime support")
-set(WITH_OPENCL ON CACHE BOOL "Include OpenCL support")
+set(WITH_OPENCL OFF CACHE BOOL "Include OpenCL Runtime support")
 
 set(WITH_OPENNI OFF CACHE BOOL "Include OpenNI support")
+set(WITH_XIMEA OFF CACHE BOOL "Include XIMEA cameras support")
 
 # ===================================================
 # Macros that checks if module have been installed.
@@ -578,10 +589,10 @@ if(UNIX)
             set(HAVE_CAMV4L2 FALSE)
         endif()
 
-        if(${CMAKE_SYSTEM_NAME} MATCHES "FreeBSD" OR ${CMAKE_SYSTEM_NAME} MATCHES "NetBSD" AND NOT ANDROID)
-            set(OPENCV_LINKER_LIBS m pthread)
-        elseif(ANDROID)
+        if(ANDROID)
             set(OPENCV_LINKER_LIBS dl m log)
+        elseif(${CMAKE_SYSTEM_NAME} MATCHES "FreeBSD" OR ${CMAKE_SYSTEM_NAME} MATCHES "NetBSD")
+            set(OPENCV_LINKER_LIBS m pthread)
         else()
             set(OPENCV_LINKER_LIBS dl m pthread rt)
         endif()
@@ -629,6 +640,7 @@ if (WIN32)
         set(BUILD_NEW_PYTHON_SUPPORT OFF)
     endif()
 endif()
+
 if(ANDROID)
     set(BUILD_NEW_PYTHON_SUPPORT OFF)
 endif()
@@ -664,7 +676,7 @@ if(CMAKE_HOST_WIN32)
     set(PYTHON_PACKAGES_PATH "${PYTHON_PATH}/Lib/site-packages")
 endif()
 
-IF ("${PYTHON_VERSION_MAJOR_MINOR}" VERSION_GREATER 2.5.-1)
+IF ("${PYTHON_VERSION_MAJOR_MINOR}" VERSION_GREATER 2.4)
     SET(PYTHON_EXECUTABLE ${PYTHON_EXECUTABLE} -B)
 ENDIF()
 
@@ -723,6 +735,77 @@ if (BUILD_JAVA_SUPPORT)
             )
         if(ANDROID_EXECUTABLE)
             message(STATUS "    Found android tool: ${ANDROID_EXECUTABLE}")
+
+            get_filename_component(ANDROID_SDK_TOOLS_PATH "${ANDROID_EXECUTABLE}" PATH)
+
+            #read source.properties
+            if (EXISTS "${ANDROID_SDK_TOOLS_PATH}/source.properties")
+                file(STRINGS "${ANDROID_SDK_TOOLS_PATH}/source.properties" ANDROID_SDK_TOOLS_SOURCE_PROPERTIES_LINES REGEX "^[ ]*[^#].*$")
+                foreach(line ${ANDROID_SDK_TOOLS_SOURCE_PROPERTIES_LINES})
+                    string(REPLACE "\\:" ":" line ${line})
+                    string(REPLACE "=" ";" line ${line})
+                    list(GET line 0 line_name)
+                    list(GET line 1 line_value)
+                    string(REPLACE "." "_" line_name ${line_name})
+                    SET(ANDROID_TOOLS_${line_name} "${line_value}")
+                    MARK_AS_ADVANCED(ANDROID_TOOLS_${line_name})
+                endforeach()
+            endif()
+            if (NOT ANDROID_TOOLS_Pkg_Revision)
+                SET(ANDROID_TOOLS_Pkg_Revision "Unknown")
+                MARK_AS_ADVANCED(ANDROID_TOOLS_Pkg_Revision)
+            endif()
+            if (NOT ANDROID_TOOLS_Pkg_Desc)
+                SET(ANDROID_TOOLS_Pkg_Desc "Android SDK Tools, revision ${ANDROID_TOOLS_Pkg_Revision}.")
+                if (NOT ANDROID_TOOLS_Pkg_Revision GREATER 11)
+                    SET(ANDROID_TOOLS_Pkg_Desc "${ANDROID_TOOLS_Pkg_Desc} It is recommended to update your SDK tools to revision 12 or newer.")
+                endif()
+                MARK_AS_ADVANCED(ANDROID_TOOLS_Pkg_Desc)
+            endif()
+
+            #get installed targets
+            execute_process(COMMAND ${ANDROID_EXECUTABLE} list target
+                RESULT_VARIABLE ANDROID_PROCESS
+                OUTPUT_VARIABLE ANDROID_SDK_TARGETS_FULL
+                ERROR_VARIABLE ANDROID_PROCESS_ERRORS
+                OUTPUT_STRIP_TRAILING_WHITESPACE)
+            string(REGEX MATCHALL "(^|\n)id: [0-9]+ or \"([^\n]+[0-9+])\"(\n|$)" ANDROID_SDK_TARGETS_FULL "${ANDROID_SDK_TARGETS_FULL}")
+
+            SET(ANDROID_SDK_TARGETS)
+            if (ANDROID_PROCESS EQUAL 0)
+                foreach(line ${ANDROID_SDK_TARGETS_FULL})
+                    string(REGEX REPLACE "(^|\n)id: [0-9]+ or \"([^\n]+[0-9+])\"(\n|$)" "\\2" line "${line}")
+                    list(APPEND ANDROID_SDK_TARGETS "${line}")
+                endforeach()
+            endif()
+
+            # detect ANDROID_SDK_TARGET if no target is provided by user
+            if (NOT ANDROID_SDK_TARGET)
+                set(desired_android_target_level ${ANDROID_API_LEVEL})
+                if (desired_android_target_level LESS 8)
+                    set(desired_android_target_level 8)
+                endif()
+                if (ANDROID_PROCESS EQUAL 0)
+                    math(EXPR desired_android_target_level_1 "${desired_android_target_level}-1")
+
+                    foreach(target ${ANDROID_SDK_TARGETS})
+                        string(REGEX MATCH "[0-9]+$" target_level "${target}")
+                        if (target_level GREATER desired_android_target_level_1)
+                           set(ANDROID_SDK_TARGET "${target}")
+                           break()
+                        endif()
+                    endforeach()
+                else()
+                    set(ANDROID_SDK_TARGET android-${desired_android_target_level})
+                    message(WARNING "Could not retrieve list of installed Android targets. Will try to use \"${ANDROID_SDK_TARGET}\" target")
+                endif()
+            endif()
+
+            SET(ANDROID_SDK_TARGET ${ANDROID_SDK_TARGET} CACHE STRING "SDK target for Android tests and samples")
+            if (ANDROID_PROCESS EQUAL 0)
+                set_property( CACHE ANDROID_SDK_TARGET PROPERTY STRINGS ${ANDROID_SDK_TARGETS} )
+            endif()
+            string(REGEX MATCH "[0-9]+$" ANDROID_SDK_TARGET_LEVEL "${ANDROID_SDK_TARGET}")
         endif()
     endif()
 
@@ -740,8 +823,7 @@ if (BUILD_JAVA_SUPPORT)
         message(STATUS "    Found apache ant ${ANT_VERSION}: ${ANT_EXECUTABLE}")
     endif()
 
-
-    if (ANDROID_EXECUTABLE AND ANT_EXECUTABLE AND (ANT_VERSION VERSION_GREATER 1.7.-1))
+    if (ANDROID_EXECUTABLE AND ANT_EXECUTABLE AND (ANT_VERSION VERSION_GREATER 1.7) AND (ANDROID_SDK_TARGET_LEVEL GREATER 7))
         SET(CAN_BUILD_ANDROID_PROJECTS TRUE)
     else()
         SET(CAN_BUILD_ANDROID_PROJECTS FALSE)
@@ -749,7 +831,7 @@ if (BUILD_JAVA_SUPPORT)
 endif()
 
 if(CAN_BUILD_ANDROID_PROJECTS)
-    option(BUILD_ANDROID_EXAMPLES "Build examples for Android platform" TRUE)
+    SET(BUILD_ANDROID_EXAMPLES TRUE CACHE BOOL "Build examples for Android platform")
 endif()
 
 #YV
@@ -765,22 +847,19 @@ if (WITH_QT)
     find_package(Qt4)
     if (QT4_FOUND)
         set(HAVE_QT 1)
-                add_definitions(-DHAVE_QT)#We need to define te macro this way, using cvconfig.h.cmake does not work
-
+        add_definitions(-DHAVE_QT)#We need to define te macro this way, using cvconfig.h.cmake does not work
         find_package (OpenGL QUIET)
 
-
-    #if (NOT WIN32)
-    if (WITH_QT_OPENGL)
-        if (QT_QTOPENGL_FOUND AND OPENGL_FOUND)
-            set(HAVE_QT_OPENGL 1)
-            add_definitions(-DHAVE_QT_OPENGL)
-            #link_directories("${OPENGL_LIBRARIES}")
-            set(OPENCV_LINKER_LIBS ${OPENCV_LINKER_LIBS} ${OPENGL_LIBRARIES})
+        #if (NOT WIN32)
+        if (WITH_QT_OPENGL)
+            if (QT_QTOPENGL_FOUND AND OPENGL_FOUND)
+                set(HAVE_QT_OPENGL 1)
+                add_definitions(-DHAVE_QT_OPENGL)
+                #link_directories("${OPENGL_LIBRARIES}")
+                set(OPENCV_LINKER_LIBS ${OPENCV_LINKER_LIBS} ${OPENGL_LIBRARIES})
+            endif()
         endif()
-    endif()
-    #endif()
-
+        #endif()
     endif()
 endif()
 
@@ -940,14 +1019,17 @@ if(WITH_CUDA)
 endif()
 
 ############################### OpenCL ################################
-
 if(WITH_OPENCL)
-    include(OpenCVFindOpenCL.cmake)
+	find_package(OpenCL REQUIRED)
+	if (OPENCL_FOUND)
+		set(HAVE_OPENCL 1)
+		message(STATUS "OpenCL detected.")
+		message(STATUS "OpenCL include dir: " ${OPENCL_INCLUDE_DIR})
+		message(STATUS "OpenCL lib dir: " ${OPENCL_LIBRARY})
+	endif()
 endif()
-    
-if(OPENCL_FOUND)
-    set(HAVE_OPENCL 1)       
-endif() 
+
+
 
 ############################### OpenNI ################################
 set(HAVE_OPENNI FALSE)
@@ -955,6 +1037,17 @@ set(HAVE_OPENNI_PRIME_SENSOR_MODULE FALSE)
 
 if(WITH_OPENNI)
     include(OpenCVFindOpenNI.cmake)
+endif()
+
+############################### XIMEA ################################
+set(HAVE_XIMEA FALSE)
+ 
+if(WITH_XIMEA)
+    include(OpenCVFindXimea.cmake)
+endif()
+
+if(XIMEA_FOUND)
+    set(HAVE_XIMEA TRUE)
 endif()
 
 ############################## Eigen ##############################
@@ -1010,6 +1103,7 @@ libnative_camera_rx.x.x.so for your Android")
             SET(BUILD_ANDROID_CAMERA_WRAPPER ON)
         endif()
     endif()
+    MARK_AS_ADVANCED(ANDROID_SOURCE_TREE)
 endif()
 
 # ----------------------------------------------------------------------------
@@ -1080,10 +1174,7 @@ if(CMAKE_COMPILER_IS_GNUCXX)
     set(EXTRA_C_FLAGS "${EXTRA_C_FLAGS} -Wall")
 
     # The -Wno-long-long is required in 64bit systems when including sytem headers.
-    if(${CMAKE_SYSTEM_PROCESSOR} MATCHES x86_64*)
-        set(EXTRA_C_FLAGS "${EXTRA_C_FLAGS} -Wno-long-long")
-    endif()
-    if(${CMAKE_SYSTEM_PROCESSOR} MATCHES amd64*)
+    if(X86_64)
         set(EXTRA_C_FLAGS "${EXTRA_C_FLAGS} -Wno-long-long")
     endif()
 
@@ -1129,11 +1220,11 @@ if(CMAKE_COMPILER_IS_GNUCXX)
             set(HAVE_GCC42_OR_NEWER 1)
         endif()
         
-        if(HAVE_GCC43_OR_NEWER OR APPLE)
+        if(HAVE_GCC42_OR_NEWER OR APPLE)
             if(ENABLE_SSSE3)
                 set(EXTRA_C_FLAGS_RELEASE "${EXTRA_C_FLAGS_RELEASE} -mssse3")
             endif()
-            if(HAVE_GCC42_OR_NEWER)
+            if(HAVE_GCC43_OR_NEWER)
                 if(ENABLE_SSE41)
                     set(EXTRA_C_FLAGS_RELEASE "${EXTRA_C_FLAGS_RELEASE} -msse4.1")
                 endif()
@@ -1332,7 +1423,7 @@ if(ANDROID)
         set(CMAKE_CAMERA_LIBS_CONFIGCMAKE "native_camera_r${ANDROID_VERSION}")
     elseif(WITH_ANDROID_CAMERA)
         SET(CMAKE_CAMERA_LIBS_CONFIGCMAKE "")
-        file(GLOB CMAKE_CAMERA_LIBS "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/lib/libnative_camera_r*.so")
+        file(GLOB CMAKE_CAMERA_LIBS "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/lib/${ARMEABI_NDK_NAME}/libnative_camera_r*.so")
         foreach(cam_lib ${CMAKE_CAMERA_LIBS})
             get_filename_component(cam_lib "${cam_lib}" NAME)
             string(REGEX REPLACE "lib(native_camera_r[0-9]+\\.[0-9]+\\.[0-9]+)\\.so" "\\1" cam_lib "${cam_lib}")
@@ -1379,7 +1470,7 @@ endif(ANDROID)
 # -------------------------------------------------------------------------------------------
 set(prefix      ${CMAKE_INSTALL_PREFIX})
 set(exec_prefix "\${prefix}")
-set(libdir      "\${exec_prefix}/lib")
+set(libdir      "\${exec_prefix}/lib${LIB_SUFFIX}")
 set(includedir  "\${prefix}/${OPENCV_INCLUDE_PREFIX}")
 set(VERSION     ${OPENCV_VERSION})
 
@@ -1526,6 +1617,7 @@ endif()
 if(ANDROID)
     status("    Floating point type:" ${ARM_TARGET})
     status("    Native API level:" android-${ANDROID_API_LEVEL})
+    status("    SDK target:" "${ANDROID_SDK_TARGET}")
 endif()
 
 #YV
@@ -1560,11 +1652,12 @@ status("    JPEG:"      NOT WITH_JPEG OR JPEG_FOUND        THEN ${JPEG_FOUND}   
 status("    PNG:"       NOT WITH_PNG OR PNG_FOUND          THEN ${PNG_FOUND}    ELSE build)
 status("    TIFF:"      NOT WITH_TIFF OR TIFF_FOUND        THEN ${TIFF_FOUND}   ELSE build)
 status("    JPEG 2000:" NOT WITH_JASPER OR JASPER_FOUND    THEN ${JASPER_FOUND} ELSE build)
-status("    OpenEXR:"   WITH_OPENEXR OR OPENEXR_FOUND      THEN YES             ELSE NO)
+status("    OpenEXR:"   WITH_OPENEXR AND OPENEXR_FOUND     THEN YES             ELSE NO)
 
-status("    OpenNI:"    NOT HAVE_OPENNI OR HAVE_OPENNI_PRIME_SENSOR_MODULE
-                            THEN NO
-                            ELSE "${HAVE_OPENNI} (WARNING: PrimeSensor Modules for OpenNI are not installed (not found in OPENNI_PRIME_SENSOR_MODULE_BIN_DIR).)")
+status("    OpenNI:"    HAVE_OPENNI                        THEN YES             ELSE NO)
+status("    OpenNI PrimeSensor Modules:"
+                        HAVE_OPENNI_PRIME_SENSOR_MODULE    THEN YES             ELSE NO)
+status("    XIMEA:"     HAVE_XIMEA  THEN YES ELSE NO)
 
 # video
 status("")
@@ -1586,11 +1679,7 @@ if(UNIX AND NOT APPLE)
 
     if(ANDROID)
         if(WITH_ANDROID_CAMERA)
-            if(BUILD_ANDROID_CAMERA_WRAPPER)
-                status("    AndroidNativeCamera:" "build for Android ${ANDROID_VERSION}")
-            else()
-                status("    AndroidNativeCamera:" ARMEABI_V7A THEN use prebuilt libraries ELSE NO)
-            endif()
+            status("    AndroidNativeCamera:" BUILD_ANDROID_CAMERA_WRAPPER THEN "build for Android ${ANDROID_VERSION}" ELSE "use prebuilt libraries")
         else()
             status("    AndroidNativeCamera:" "NO (native camera requires Android API level 8 or higher)")
         endif()
@@ -1619,7 +1708,6 @@ if(UNIX)
 endif()
 
 status("    Use Cuda:"  HAVE_CUDA  THEN YES ELSE NO)
-status("    Use OpenCL:"  HAVE_OPENCL  THEN YES ELSE NO)
 status("    Use Eigen:" HAVE_EIGEN THEN YES ELSE NO)
 
 # interfaces to other languages
@@ -1627,7 +1715,7 @@ status("")
 status("  Interfaces:")
 status("    Python:"              BUILD_NEW_PYTHON_SUPPORT THEN YES ELSE NO)
 status("    Python interpreter:"  PYTHON_EXECUTABLE        THEN "${PYTHON_EXECUTABLE} (ver ${PYTHON_VERSION_MAJOR_MINOR})" ELSE NO)
-status("    Python numpy:"        PYTHON_USE_NUMPY         THEN YES ELSE "NO (Python interface will not cover OpenCV 2.x API)")
+status("    Python numpy:"        PYTHON_USE_NUMPY         THEN YES ELSE "NO (Python wrappers will not be generated)")
 if(ANDROID AND ANDROID_API_LEVEL LESS 8)
     status("    Java:" "NO (Java API requires Android API level 8 or higher)")
 else()
@@ -1635,16 +1723,20 @@ else()
 endif()
 
 if(ANDROID)
-    status("    android tool:"    ANDROID_EXECUTABLE       THEN "${ANDROID_EXECUTABLE}" ELSE NO)
+    status("    android tool:"    ANDROID_EXECUTABLE       THEN "${ANDROID_EXECUTABLE} (${ANDROID_TOOLS_Pkg_Desc})" ELSE NO)
     status("    ant:"             ANT_EXECUTABLE           THEN "${ANT_EXECUTABLE} (ver ${ANT_VERSION})" ELSE NO)
 endif()
 
 # documentation
 status("")
 status("  Documentation:")
-status("    Sphinx:"              HAVE_SPHINX                                      THEN "${SPHINX_BUILD} (ver ${SPHINX_VERSION})" ELSE NO)
-status("    PdfLaTeX compiler:"   BUILD_DOCS AND PDFLATEX_COMPILER                 THEN "${PDFLATEX_COMPILER}" ELSE NO)
-status("    Build Documentation:" BUILD_DOCS AND PDFLATEX_COMPILER AND HAVE_SPHINX THEN YES ELSE NO)
+status("    Sphinx:"              HAVE_SPHINX              THEN "${SPHINX_BUILD} (ver ${SPHINX_VERSION})" ELSE NO)
+status("    PdfLaTeX compiler:"   PDFLATEX_COMPILER        THEN "${PDFLATEX_COMPILER}" ELSE NO)
+if (BUILD_DOCS AND HAVE_SPHINX)
+    status("    Build Documentation:" PDFLATEX_COMPILER THEN YES ELSE "YES (only HTML without math formulas)")
+else()
+    status("    Build Documentation:" NO)
+endif()
 
 # samples and tests
 status("")

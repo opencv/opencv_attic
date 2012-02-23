@@ -169,7 +169,7 @@
 /* NVidia Cuda Runtime API*/
 #cmakedefine HAVE_CUDA
 
-/* OpenCL API*/
+/* OpenCL Runtime API */
 #cmakedefine HAVE_OPENCL
 
 /* Compile for 'real' NVIDIA GPU architectures */
@@ -187,3 +187,5 @@
 /* VideoInput library */
 #cmakedefine HAVE_VIDEOINPUT
 
+/* XIMEA camera support */
+#cmakedefine HAVE_XIMEA
