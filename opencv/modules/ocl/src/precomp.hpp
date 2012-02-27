@@ -61,6 +61,7 @@
 #include <algorithm>
 #include <sstream>
 #include <exception>
+#include <stdio.h>
 
 #include "opencv2/ocl/ocl.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
