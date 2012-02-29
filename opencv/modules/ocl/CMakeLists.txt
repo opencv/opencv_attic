@@ -32,7 +32,7 @@ if (HAVE_OPENCL)
   include_directories(${OPENCL_INCLUDE_DIR})
 endif()
 
-add_library(${the_target} ${lib_srcs} ${lib_hdrs} ${lib_int_hdrs} ${lib_cuda} ${lib_cuda_hdrs} ${cuda_objs})
+add_library(${the_target} ${lib_srcs} ${lib_hdrs} ${lib_int_hdrs})
 
 if(PCHSupport_FOUND)
 	set(pch_header ${CMAKE_CURRENT_SOURCE_DIR}/src/precomp.hpp)
@@ -65,7 +65,7 @@ set_target_properties(${the_target} PROPERTIES
 target_link_libraries(${the_target} ${OPENCV_LINKER_LIBS} ${IPP_LIBS} ${DEPS})
 
 if (HAVE_OPENCL)
-	target_link_libraries(${the_target} ${OPENCL_LIBRARIES})
+	target_link_libraries(${the_target} ${OPENCL_LIBRARY})
 endif()
 
 if(MSVC)
@@ -90,5 +90,11 @@ install(TARGETS ${the_target}
 install(FILES ${lib_hdrs}
 	DESTINATION include/opencv2/${name}
 	COMPONENT main)
+
+# ocl module tests	
+#if(BUILD_TESTS AND HAVE_OPENCL AND EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/test)
+#	add_subdirectory(test)
+#endif()
+
 
 
