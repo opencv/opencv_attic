@@ -7,8 +7,8 @@
 //
 // @Authors
 //    Niko Li, Niko.li@amd.com
-//    Jia Haipeng, jiahaipeng95@gmail.com
 //    Wang Weiyan, wangweiyanster@gmail.com
+//    Jia Haipeng, jiahaipeng95@gmail.com
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
 //
@@ -111,9 +111,6 @@ typedef struct __attribute__((aligned (64))) GpuHidHaarClassifierCascade
 }GpuHidHaarClassifierCascade;
 
 
-
-
-
 __kernel void __attribute__((reqd_work_group_size(8,8,1)))gpuRunHaarClassifierCascade(//constant GpuHidHaarClassifierCascade * cascade,
 										  global GpuHidHaarStageClassifier * stagecascadeptr,
 										  global int4 * info,    
@@ -165,7 +162,7 @@ __kernel void __attribute__((reqd_work_group_size(8,8,1)))gpuRunHaarClassifierCa
 #define WINDOWSIZE 20+1
 	//make sure readwidth is the multiple of 4
 	//ystep =1, from host code
-	int readwidth = ((grpszx-1+ WINDOWSIZE+3)>>2)<<2;
+	int readwidth = ((grpszx-1 + WINDOWSIZE+3)>>2)<<2;
 	int readheight = grpszy-1+WINDOWSIZE;
 	int read_horiz_cnt = readwidth >> 2;//each read int4
 	int total_read = mul24(read_horiz_cnt,readheight);
@@ -184,8 +181,6 @@ __kernel void __attribute__((reqd_work_group_size(8,8,1)))gpuRunHaarClassifierCa
 		int imgoff = scaleinfo1.z;
 		float factor = as_float(scaleinfo1.w);
 		//int ystep =1;// factor > 2.0 ? 1 : 2;
-
-
 
 		__global const int * sum = sum1 + imgoff;
 		__global const float * sqsum = sqsum1 + imgoff;
@@ -220,6 +215,7 @@ __kernel void __attribute__((reqd_work_group_size(8,8,1)))gpuRunHaarClassifierCa
 				lcldata[lcl_off+2] = data.z;
 				lcldata[lcl_off+3] = data.w;
 			}
+
 			lcloutindex[lcl_id] = 0;
 			lclcount[0] = 0;
 			int result = 1;
@@ -311,6 +307,7 @@ __kernel void __attribute__((reqd_work_group_size(8,8,1)))gpuRunHaarClassifierCa
 
 					int2 stageinfo = *(global int2*)(stagecascadeptr+stageloop);
 					float stagethreshold = as_float(stageinfo.y);
+
 					int perfscale = queuecount > 4 ? 3 : 2;
 					int queuecount_loop = (queuecount + (1<<perfscale)-1) >> perfscale;
 					int lcl_compute_win = lcl_sz >> perfscale;

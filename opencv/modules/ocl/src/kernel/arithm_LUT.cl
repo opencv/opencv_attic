@@ -47,57 +47,78 @@ void LUT1( __global uchar *dst,
 	  int whole_cols,
 	  int src_offset,
 	  int dst_offset,
+	  int lut_offset,
 	  int src_step,
 	  int dst_step)
 {
 	int gidx = get_global_id(0)<<2;
 	int gidy = get_global_id(1);
-	int grpidy = get_group_id(1);
-	int grpnum = get_num_groups(1);
 	int lidx = get_local_id(0);
 	int lidy = get_local_id(1);
 
 	__local uchar l[256];
-	l[(lidy<<4)+lidx] = table[(lidy<<4)+lidx];
+	l[(lidy<<4)+lidx] = table[(lidy<<4)+lidx+lut_offset];
 	//mem_fence(CLK_LOCAL_MEM_FENCE);
-	barrier(CLK_LOCAL_MEM_FENCE);
-	int mask = dst_offset & 3;
-	cols += mask;
-	src_offset -= mask;
+
+
 	//clamp(gidx,mask,cols-1);
-	gidx = gidx >= cols?cols-1:gidx;
+	gidx = gidx >= cols-4?cols-4:gidx;
 	gidy = gidy >= rows?rows-1:gidy;
 
 	int src_index = src_offset + mad24(gidy,src_step,gidx);	
-	int dst_index = (dst_offset & 0xfffffffc) + mad24(gidy,dst_step,gidx);
-	if(grpidy==0 || grpidy==grpnum-1)
-	{
-		int4 ind = (int4)(gidx+0,gidx+1,gidx+2,gidx+3);
-		ind = clamp(ind,mask,cols-1);
-		uchar4 p;
-		p.x = src[src_index+ind.x-gidx];
-		p.y = src[src_index+ind.y-gidx];
-		p.z = src[src_index+ind.z-gidx];
-		p.w = src[src_index+ind.w-gidx];
-		dst[dst_index+ind.x-gidx] = l[p.x];
-		dst[dst_index+ind.y-gidx] = l[p.y];
-		dst[dst_index+ind.z-gidx] = l[p.z];
-		dst[dst_index+ind.w-gidx] = l[p.w];
-	}
-	else
-	{
-		uchar4 p,q;
-		p.x = src[src_index];
-		p.y = src[src_index+1];
-		p.z = src[src_index+2];
-		p.w = src[src_index+3];
-		q.x = l[p.x];
-		q.y = l[p.y];
-		q.z = l[p.z];
-		q.w = l[p.w];
-		*(__global uchar4*)(dst + dst_index) = q;
-	}
+	int dst_index = dst_offset + mad24(gidy,dst_step,gidx);
+	uchar4 p,q;
+	barrier(CLK_LOCAL_MEM_FENCE);
+	p.x = src[src_index];
+	p.y = src[src_index+1];
+	p.z = src[src_index+2];
+	p.w = src[src_index+3];
+
+	q.x = l[p.x];
+	q.y = l[p.y];
+	q.z = l[p.z];
+	q.w = l[p.w];
+	*(__global uchar4*)(dst + dst_index) = q;
 }
+
+__kernel
+void LUT2( __global uchar *dst,
+	  __global const uchar *src,
+	  __constant uchar *table,
+	  int rows,
+	  int precols,
+	  int channels,
+	  int whole_rows,
+	  int cols,
+	  int src_offset,
+	  int dst_offset,
+	  int lut_offset,
+	  int src_step,
+	  int dst_step)
+{
+	int gidx = get_global_id(0);
+	int gidy = get_global_id(1);
+	//int lidx = get_local_id(0);
+	int lidy = get_local_id(1);
+
+	__local uchar l[256];
+	l[lidy] = table[lidy+lut_offset];
+	//mem_fence(CLK_LOCAL_MEM_FENCE);
+
+
+	//clamp(gidx,mask,cols-1);
+	gidx = gidx >= precols ? cols+gidx : gidx;
+	gidy = gidy >= rows?rows-1:gidy;
+
+	int src_index = src_offset + mad24(gidy,src_step,gidx);	
+	int dst_index = dst_offset + mad24(gidy,dst_step,gidx);
+	//uchar4 p,q;
+	barrier(CLK_LOCAL_MEM_FENCE);
+	uchar p = src[src_index];
+	uchar q = l[p];
+	dst[dst_index] = q;
+}
+
 __kernel
 void LUT4( __global uchar4 *dst,
 	  __global uchar4 *src,
@@ -109,6 +130,7 @@ void LUT4( __global uchar4 *dst,
 	  uint whole_cols,
 	  uint src_offset,
 	  uint dst_offset,
+	  uint lut_offset,
 	  uint src_step,
 	  uint dst_step)
 {
@@ -119,7 +141,7 @@ void LUT4( __global uchar4 *dst,
 	uint lidy = get_local_id(1);
 
 	__local uchar l[256];
-	l[lidy*16+lidx] = table[lidy*16+lidx];
+	l[lidy*16+lidx] = table[lidy*16+lidx+lut_offset];
 	mem_fence(CLK_LOCAL_MEM_FENCE);
 	barrier(CLK_LOCAL_MEM_FENCE);
 	

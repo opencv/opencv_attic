@@ -410,7 +410,7 @@ namespace cv
 				status = clBuildProgram(program,1,&(clCxt->devices[0]), all_build_options, NULL,NULL);
 #endif
 
-				status = clBuildProgram(program,1,&(clCxt->devices[0]), all_build_options, NULL,NULL);
+				//status = clBuildProgram(program,1,&(clCxt->devices[0]), all_build_options, NULL,NULL);
 				if(status != CL_SUCCESS) 
 				{
 					if(1 /*status == CL_BUILD_PROGRAM_FAILURE*/) 

@@ -52,123 +52,103 @@
 
 #if defined (DEPTH_0)
 #define VEC_TYPE uchar8
+#define TYPE uchar
 #define CONVERT_TYPE convert_uchar8
 #define MIN_VAL 0
 #define MAX_VAL 255
 #endif
 #if defined (DEPTH_1)
 #define VEC_TYPE char8
+#define TYPE char
 #define CONVERT_TYPE convert_char8
 #define MIN_VAL -128 
 #define MAX_VAL 127
 #endif
 #if defined (DEPTH_2)
 #define VEC_TYPE ushort8
+#define TYPE ushort
 #define CONVERT_TYPE convert_ushort8
 #define MIN_VAL 0 
 #define MAX_VAL 65535
 #endif
 #if defined (DEPTH_3)
 #define VEC_TYPE short8
+#define TYPE short
 #define CONVERT_TYPE convert_short8
 #define MIN_VAL -32768 
 #define MAX_VAL 32767
 #endif
 #if defined (DEPTH_4)
 #define VEC_TYPE int8
+#define TYPE int
 #define CONVERT_TYPE convert_int8
 #define MIN_VAL INT_MIN 
 #define MAX_VAL INT_MAX
 #endif
 #if defined (DEPTH_5)
 #define VEC_TYPE float8
+#define TYPE float
 #define CONVERT_TYPE convert_float8
 #define MIN_VAL (-FLT_MAX) 
 #define MAX_VAL FLT_MAX
 #endif
 #if defined (DEPTH_6)
 #define VEC_TYPE double8
+#define TYPE double
 #define CONVERT_TYPE convert_double8
 #define MIN_VAL (-DBL_MAX) 
 #define MAX_VAL DBL_MAX
 #endif
 
-#if defined (REPEAT_S0)
-#define repeat_s(a) a = a;
-#endif
-#if defined (REPEAT_S1)
-#define repeat_s(a) a.s0 = a.s1;
-#endif
-#if defined (REPEAT_S2)
-#define repeat_s(a) a.s0 = a.s2;a.s1 = a.s2;
-#endif
-#if defined (REPEAT_S3)
-#define repeat_s(a) a.s0 = a.s3;a.s1 = a.s3;a.s2 = a.s3;
-#endif
-#if defined (REPEAT_S4)
-#define repeat_s(a) a.s0 = a.s4;a.s1 = a.s4;a.s2 = a.s4;a.s3 = a.s4;
-#endif
-#if defined (REPEAT_S5)
-#define repeat_s(a) a.s0 = a.s5;a.s1 = a.s5;a.s2 = a.s5;a.s3 = a.s5;a.s4 = a.s5;
-#endif
-#if defined (REPEAT_S6)
-#define repeat_s(a) a.s0 = a.s6;a.s1 = a.s6;a.s2 = a.s6;a.s3 = a.s6;a.s4 = a.s6;a.s5 = a.s6;
-#endif
-#if defined (REPEAT_S7)
-#define repeat_s(a) a.s0 = a.s7;a.s1 = a.s7;a.s2 = a.s7;a.s3 = a.s7;a.s4 = a.s7;a.s5 = a.s7;a.s6 = a.s7;
-#endif
-
 #if defined (REPEAT_E0)
-#define repeat_e(a) a = a;
+#define repeat_me(a) a = a;
 #endif
 #if defined (REPEAT_E1)
-#define repeat_e(a) a.s7 = a.s6;
+#define repeat_me(a) a.s7 = 0;
 #endif
 #if defined (REPEAT_E2)
-#define repeat_e(a) a.s7 = a.s5;a.s6 = a.s5;
+#define repeat_me(a) a.s7 = 0;a.s6 = 0;
 #endif
 #if defined (REPEAT_E3)
-#define repeat_e(a) a.s7 = a.s4;a.s6 = a.s4;a.s5 = a.s4;
+#define repeat_me(a) a.s7 = 0;a.s6 = 0;a.s5 = 0;
 #endif
 #if defined (REPEAT_E4)
-#define repeat_e(a) a.s7 = a.s3;a.s6 = a.s3;a.s5 = a.s3;a.s4 = a.s3;
+#define repeat_me(a) a.s7 = 0;a.s6 = 0;a.s5 = 0;a.s4 = 0;
 #endif
 #if defined (REPEAT_E5)
-#define repeat_e(a) a.s7 = a.s2;a.s6 = a.s2;a.s5 = a.s2;a.s4 = a.s2;a.s3 = a.s2;
+#define repeat_me(a) a.s7 = 0;a.s6 = 0;a.s5 = 0;a.s4 = 0;a.s3 = 0;
 #endif
 #if defined (REPEAT_E6)
-#define repeat_e(a) a.s7 = a.s1;a.s6 = a.s1;a.s5 = a.s1;a.s4 = a.s1;a.s3 = a.s1;a.s2 = a.s1;
+#define repeat_me(a) a.s7 = 0;a.s6 = 0;a.s5 = 0;a.s4 = 0;a.s3 = 0;a.s2 = 0;
 #endif
 #if defined (REPEAT_E7)
-#define repeat_e(a) a.s7 = a.s0;a.s6 = a.s0;a.s5 = a.s0;a.s4 = a.s0;a.s3 = a.s0;a.s2 = a.s0;a.s1 = a.s0;
+#define repeat_me(a) a.s7 = 0;a.s6 = 0;a.s5 = 0;a.s4 = 0;a.s3 = 0;a.s2 = 0;a.s1 = 0;
 #endif
 
 #pragma OPENCL EXTENSION cl_khr_global_int32_base_atomics:enable
 #pragma OPENCL EXTENSION cl_khr_global_int32_extended_atomics:enable
 
-/**************************************Array minMax**************************************/
-__kernel void arithm_op_minMax (int cols,int invalid_cols,int offset,int elemnum,int groupnum,
-                                  __global VEC_TYPE *src, __global VEC_TYPE *dst)
+/**************************************Array minMax mask**************************************/
+__kernel void arithm_op_minMax_mask (int cols,int invalid_cols,int offset,int elemnum,int groupnum, __global TYPE *src,
+                                     int minvalid_cols,int moffset, __global uchar *mask,__global VEC_TYPE *dst)
 {
    unsigned int lid = get_local_id(0);
    unsigned int gid = get_group_id(0);
    unsigned int  id = get_global_id(0);
-   unsigned int idx = offset + id + (id / cols) * invalid_cols;
+   unsigned int idx = id + (id / cols) * invalid_cols;
+   unsigned int midx = id + (id / cols) * minvalid_cols;
    __local VEC_TYPE localmem_max[128],localmem_min[128];
-   VEC_TYPE minval,maxval,temp;
+   VEC_TYPE minval,maxval,temp,m_temp;
    if(id < elemnum)
    {
-       temp = src[idx];
-       if(id % cols == 0 ) 
-       {
-           repeat_s(temp);
-       }
+       temp = vload8(idx, &src[offset]);
+       m_temp = CONVERT_TYPE(vload8(midx,&mask[moffset]));
        if(id % cols == cols - 1)
        {
-           repeat_e(temp);
+           repeat_me(m_temp);
        }
-       minval = temp;
-       maxval = temp;
+       minval = m_temp != 0 ? temp : MAX_VAL;
+       maxval = m_temp != 0 ? temp : MIN_VAL;
    }
    else
    {
@@ -177,18 +157,16 @@ __kernel void arithm_op_minMax (int cols,int invalid_cols,int offset,int elemnum
    }
    for(id=id + (groupnum << 8); id < elemnum;id = id + (groupnum << 8))
    {
-       idx = offset + id + (id / cols) * invalid_cols;
-       temp = src[idx];
-       if(id % cols == 0 ) 
-       {
-               repeat_s(temp);
-       }
+       idx = id + (id / cols) * invalid_cols;
+       midx = id + (id / cols) * minvalid_cols;
+       temp = vload8(idx, &src[offset]);
+       m_temp = CONVERT_TYPE(vload8(midx,&mask[moffset]));
        if(id % cols == cols - 1)
        {
-               repeat_e(temp);
+               repeat_me(m_temp);
        }
-       minval = min(minval,temp);
-       maxval = max(maxval,temp);
+       minval = min(minval,m_temp != 0 ? temp : minval);
+       maxval = max(maxval,m_temp != 0 ? temp : maxval);
    }
    if(lid > 127)
    {
@@ -218,3 +196,4 @@ __kernel void arithm_op_minMax (int cols,int invalid_cols,int offset,int elemnum
        dst[gid + groupnum] = localmem_max[0];
    }
 }
+

@@ -363,14 +363,16 @@ namespace cv
 		//! support all types
 		CV_EXPORTS void minMaxLoc(const oclMat& src, double* minVal, double* maxVal=0, Point* minLoc=0, Point* maxLoc=0, 
 			const oclMat& mask=oclMat());
-		//! counts non-zero array elements
+		
+    //! counts non-zero array elements
 		//! support all types
 		CV_EXPORTS int countNonZero(const oclMat& src);
 
 		//! transforms 8-bit unsigned integers using lookup table: dst(i)=lut(src(i))
 		//! destination array will have the depth type as lut and the same channels number as source
-		CV_EXPORTS void LUT(const oclMat& src, const Mat& lut, oclMat& dst);
-		//! only 8UC1 and 256 is supported now, ROI is not supported
+		CV_EXPORTS void LUT(const oclMat& src, const oclMat& lut, oclMat& dst);
+		
+    //! only 8UC1 and 256 is supported now, ROI is not supported
 		CV_EXPORTS void calcHist(const oclMat& mat_src, oclMat& mat_hist);
 		//! only 8UC1 and 256 is supported now, ROI is not supported
 		CV_EXPORTS void equalizeHist(const oclMat& mat_src, oclMat& mat_dst);
@@ -402,19 +404,18 @@ namespace cv
 		CV_EXPORTS void polarToCart(const oclMat& magnitude, const oclMat& angle, oclMat& x, oclMat& y, bool angleInDegrees = false);
 
 		//! perfroms per-elements bit-wise inversion
-    //! supports CV_8U CV_8S CV_16U CV_16S CV_32S CV_32F
+    //! supports all types
 		CV_EXPORTS void bitwise_not(const oclMat& src, oclMat& dst);
-
-		//! calculates per-element bit-wise disjunction of two arrays
-		//! supports all types except CV_64FC1,CV_64FC2,CV64FC3 and CV_64FC4
+    //! calculates per-element bit-wise disjunction of two arrays
+		//! supports all types 
 		CV_EXPORTS void bitwise_or(const oclMat& src1, const oclMat& src2, oclMat& dst, const oclMat& mask=oclMat());
 		CV_EXPORTS void bitwise_or(const oclMat& src1, const Scalar& s, oclMat& dst, const oclMat& mask=oclMat());
-		//! calculates per-element bit-wise conjunction of two arrays
-		//! supports all types except CV_64FC1,CV_64FC2,CV64FC3 and CV_64FC4
+    //! calculates per-element bit-wise conjunction of two arrays
+		//! supports all types 
 		CV_EXPORTS void bitwise_and(const oclMat& src1, const oclMat& src2, oclMat& dst, const oclMat& mask=oclMat());
 		CV_EXPORTS void bitwise_and(const oclMat& src1, const Scalar& s, oclMat& dst, const oclMat& mask=oclMat());
 		//! calculates per-element bit-wise "exclusive or" operation
-		//! supports all types except CV_64FC1,CV_64FC2,CV64FC3 and CV_64FC4
+		//! supports all types 
 		CV_EXPORTS void bitwise_xor(const oclMat& src1, const oclMat& src2, oclMat& dst, const oclMat& mask=oclMat());
 		CV_EXPORTS void bitwise_xor(const oclMat& src1, const Scalar& s, oclMat& dst, const oclMat& mask=oclMat());
 

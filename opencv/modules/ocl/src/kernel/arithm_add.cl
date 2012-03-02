@@ -203,6 +203,7 @@ __kernel void arithm_add_D5 (__global float *src1, int src1_step, int src1_offse
     }
 }
 
+#if defined (DOUBLE_SUPPORT)
 __kernel void arithm_add_D6 (__global double *src1, int src1_step, int src1_offset,
                              __global double *src2, int src2_step, int src2_offset,
                              __global double *dst,  int dst_step,  int dst_offset,
@@ -223,6 +224,7 @@ __kernel void arithm_add_D6 (__global double *src1, int src1_step, int src1_offs
         *((__global double *)((__global char *)dst + dst_index)) = data1 + data2;
     }
 }
+#endif
 
 /**************************************add with mask**************************************/
 __kernel void arithm_add_with_mask_C1_D0 (__global uchar *src1, int src1_step, int src1_offset,

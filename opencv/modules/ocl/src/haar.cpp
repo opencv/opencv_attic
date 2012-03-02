@@ -16,8 +16,8 @@
 //
 // @Authors
 //    Niko Li, Niko.li@amd.com
-//    Jia Haipeng, jiahaipeng95@gmail.com
 //    Wang Weiyan, wangweiyanster@gmail.com
+//    Jia Haipeng, jiahaipeng95@gmail.com
 //    Wu Xinglong, wxl370@126.com
 //    Wang Yao, bitwangyaoyao@gmail.com
 //
@@ -984,11 +984,13 @@ CvSeq* cv::ocl::gpuHaarDetectObjects( oclMat& gimg, CvHaarClassifierCascade* cas
 		int outputsz = 256*globalThreads[0]/localThreads[0];
 		int loopcount = sizev.size(); 
 		detect_piramid_info* scaleinfo = (detect_piramid_info*)malloc(sizeof(detect_piramid_info)*loopcount);
+
 		    //t = (double)cvGetTickCount() - t;
 	   // printf( "pre time = %g ms\n", t/((double)cvGetTickFrequency()*1000.) );
 		//int *it =scaleinfo;
 		   // t = (double)cvGetTickCount();
-		for( int i=0; i< loopcount; i++ )
+		
+    for( int i=0; i< loopcount; i++ )
 		{
 			sz = sizev[i];
 			factor = scalev[i];

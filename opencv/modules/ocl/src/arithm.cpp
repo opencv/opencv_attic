@@ -48,6 +48,7 @@
 //M*/
 
 #include "precomp.hpp"
+#include <iomanip>
 
 
 using namespace cv;
@@ -110,10 +111,11 @@ namespace cv
         extern const char * arithm_nonzero;
         extern const char * arithm_sum;
         extern const char * arithm_2_mat;
-        extern const char * arithm_3_mat;
         extern const char * arithm_sum_3;
         extern const char * arithm_minMax;
+        extern const char * arithm_minMax_mask;
         extern const char * arithm_minMaxLoc;
+        extern const char * arithm_minMaxLoc_mask;
 	      extern const char * arithm_LUT;
       	extern const char * arithm_add;
       	extern const char * arithm_add_scalar;
@@ -581,7 +583,7 @@ void arithmetic_sum_buffer_run(const oclMat &src,cl_mem &dst,int vlen ,int group
         openCLExecuteKernel(src.clCxt,&arithm_sum_3, "arithm_op_sum_3", gt, lt, args, -1,-1,build_options);
 }
 
-Scalar sum_buffer(const oclMat& src)
+Scalar cv::ocl::sum(const oclMat& src)
 {
     size_t groupnum = 0;
     openCLSafeCall(clGetDeviceInfo(getDevice(),CL_DEVICE_MAX_COMPUTE_UNITS,
@@ -613,11 +615,6 @@ Scalar sum_buffer(const oclMat& src)
     return s;
 }
 
-Scalar cv::ocl::sum(const oclMat &src)
-{
-    return sum_buffer(src);
-}
-
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////////////// meanStdDev //////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
@@ -643,7 +640,7 @@ void cv::ocl::meanStdDev(const oclMat& src, Scalar& mean, Scalar& stddev)
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////// minMax  /////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
-void arithmetic_minMax_buffer_run(const oclMat &src,const oclMat &mask,cl_mem &dst,int vlen ,int groupnum,string kernelName)
+void arithmetic_minMax_run(const oclMat &src,const oclMat &mask,cl_mem &dst,int vlen ,int groupnum,string kernelName)
 {
     vector<pair<size_t ,const void *> > args;
     int all_cols = src.step / (vlen * src.elemSize1());
@@ -655,7 +652,6 @@ void arithmetic_minMax_buffer_run(const oclMat &src,const oclMat &mask,cl_mem &d
     int repeat_s = src.offset / src.elemSize1() - offset * vlen;
     int repeat_e = (offset + cols) * vlen - src.offset / src.elemSize1() - src.cols * src.channels();
     char build_options[50];
-   // printf("step %d,m_step %d,all_cols %d,pre_cols %d,sec_cols %d,invalid_cols %d,offset %d,REPEAT_S %d,REPEAD_E %d\n",src.step,mask.step,all_cols,pre_cols,sec_cols,invalid_cols,offset,repeat_s,repeat_e);
     sprintf(build_options,"-D DEPTH_%d -D REPEAT_S%d -D REPEAT_E%d",src.depth(),repeat_s,repeat_e);
     args.push_back( make_pair( sizeof(cl_int) , (void *)&cols ));
     args.push_back( make_pair( sizeof(cl_int) , (void *)&invalid_cols ));
@@ -680,26 +676,57 @@ void arithmetic_minMax_buffer_run(const oclMat &src,const oclMat &mask,cl_mem &d
     openCLExecuteKernel(src.clCxt,&arithm_minMax, kernelName, gt, lt, args, -1,-1,build_options);
 }
 
-template <typename T> void minMax_buffer(const oclMat& src, double* minVal, double* maxVal, const oclMat& mask)
+
+void arithmetic_minMax_mask_run(const oclMat &src,const oclMat &mask,cl_mem &dst,int vlen,int groupnum,string kernelName)
 {
-    cl_ulong start, end;
-    start = getTickCount();
+    vector<pair<size_t ,const void *> > args;
+    size_t gt[3]={groupnum * 256,1,1},lt[3]={256,1,1};
+    char build_options[50];
+    if(src.channels() == 1)
+    {
+        int cols = (src.cols - 1) / vlen + 1;
+        int invalid_cols = src.step / (vlen * src.elemSize1()) - cols;
+        int offset = src.offset / src.elemSize1();
+        int repeat_me = vlen - (mask.cols % vlen == 0 ? vlen : mask.cols % vlen);
+        int minvalid_cols = mask.step / (vlen * mask.elemSize1()) - cols;
+        int moffset = mask.offset / mask.elemSize1();
+        int elemnum = cols * src.rows;
+        sprintf(build_options,"-D DEPTH_%d -D REPEAT_E%d",src.depth(),repeat_me);
+        args.push_back( make_pair( sizeof(cl_int) , (void *)&cols ));
+        args.push_back( make_pair( sizeof(cl_int) , (void *)&invalid_cols ));
+        args.push_back( make_pair( sizeof(cl_int) , (void *)&offset));
+        args.push_back( make_pair( sizeof(cl_int) , (void *)&elemnum));
+        args.push_back( make_pair( sizeof(cl_int) , (void *)&groupnum));
+        args.push_back( make_pair( sizeof(cl_mem) , (void *)&src.data));
+        args.push_back( make_pair( sizeof(cl_int) , (void *)&minvalid_cols ));
+        args.push_back( make_pair( sizeof(cl_int) , (void *)&moffset ));
+        args.push_back( make_pair( sizeof(cl_mem) , (void *)&mask.data ));
+        args.push_back( make_pair( sizeof(cl_mem) , (void *)&dst ));
+//        printf("elemnum:%d,cols:%d,invalid_cols:%d,offset:%d,minvalid_cols:%d,moffset:%d,repeat_e:%d\r\n",
+//               elemnum,cols,invalid_cols,offset,minvalid_cols,moffset,repeat_me);
+        openCLExecuteKernel(src.clCxt,&arithm_minMax_mask, kernelName, gt, lt, args, -1,-1,build_options);
+    }
+}
+
+template <typename T> void arithmetic_minMax(const oclMat& src, double* minVal, double* maxVal, const oclMat& mask)
+{
     size_t groupnum = 0;
     openCLSafeCall(clGetDeviceInfo(getDevice(),CL_DEVICE_MAX_COMPUTE_UNITS,
                 sizeof(size_t),(void*)&groupnum,NULL));
     CV_Assert(groupnum != 0);
     groupnum = groupnum * 2;
-    int vlen = 8,dbsize = groupnum * 2 * vlen * sizeof(T) , status;
+    int vlen = 8;
+    int dbsize = groupnum * 2 * vlen * sizeof(T) , status;
     ClContext *clCxt = src.clCxt;
     cl_mem dstBuffer = clCreateBuffer(clCxt->clGpuContext,CL_MEM_WRITE_ONLY,dbsize,NULL,&status);
     *minVal = std::numeric_limits<double>::max() , *maxVal = -std::numeric_limits<double>::max();
     if (mask.empty())
     {
-        arithmetic_minMax_buffer_run(src,mask,dstBuffer,vlen,groupnum,"arithm_op_minMax");
+        arithmetic_minMax_run(src,mask,dstBuffer,vlen,groupnum,"arithm_op_minMax");
     }
     else
     {
-        arithmetic_minMax_buffer_run(src,mask,dstBuffer,vlen,groupnum,"arithm_op_minMax_mask");
+        arithmetic_minMax_mask_run(src,mask,dstBuffer,vlen,groupnum,"arithm_op_minMax_mask");
     }
     T *p = new T[groupnum * vlen * 2];
     memset(p,0,groupnum * 2 * vlen * sizeof(T));
@@ -718,15 +745,16 @@ template <typename T> void minMax_buffer(const oclMat& src, double* minVal, doub
 typedef void (*minMaxFunc)(const oclMat &src,double *minVal,double *maxVal,const oclMat &mask);
 void cv::ocl::minMax(const oclMat& src, double* minVal, double* maxVal, const oclMat& mask)
 {
+    CV_Assert(src.channels() == 1);
     static minMaxFunc functab[8] = {
-        minMax_buffer<uchar>,
-        minMax_buffer<char>,
-        minMax_buffer<ushort>,
-        minMax_buffer<short>,
-        minMax_buffer<int>,
-        minMax_buffer<float>,
-        minMax_buffer<double>,
-        0};
+       arithmetic_minMax<uchar>,
+       arithmetic_minMax<char>,
+       arithmetic_minMax<ushort>,
+       arithmetic_minMax<short>,
+       arithmetic_minMax<int>,
+       arithmetic_minMax<float>,
+       arithmetic_minMax<double>,
+       0};
     minMaxFunc func;
     func = functab[src.depth()];
     func(src,minVal,maxVal,mask);
@@ -911,49 +939,94 @@ void arithmetic_lut_run(const oclMat &src1,const oclMat &src2, oclMat &dst,strin
     int whole_cols = src1.wholecols;
     int src_offset = src1.offset;
     int dst_offset = dst.offset;
-
+	int lut_offset = src2.offset;
+	int left_col=0, right_col=0;
     size_t localSize[] = {16,16};
     cl_kernel kernel = openCLGetKernelFromSource(clCxt,&arithm_LUT,kernelName);
-    size_t globalSize[] = {(cols/16+1)*16,(rows/16+1)*16};
-	if(dst.channels()==1)
+    size_t globalSize[] = {(cols+localSize[0]-1)/localSize[0]*localSize[0],(rows+localSize[1]-1)/localSize[1]*localSize[1]};
+	if(channels==1 && cols > 6)
 	{
-		globalSize[0] = ((dst.cols+4)/4+localSize[0]-1)/localSize[0]*localSize[0];
+		left_col = 4- (dst_offset & 3);
+		left_col &= 3;
+		dst_offset +=left_col;
+		src_offset +=left_col;
+		cols -=left_col;
+		right_col = cols & 3;
+		cols -= right_col;
+		globalSize[0] = (cols/4+localSize[0]-1)/localSize[0]*localSize[0];
+	}
+	else if(channels==1)
+	{
+		left_col = cols;
+		right_col = 0;
+		cols = 0;
+		globalSize[0] = 0;
 	}
     CV_Assert(clCxt == dst.clCxt);
     CV_Assert(src1.cols == dst.cols);
     CV_Assert(src1.rows == dst.rows);
     CV_Assert(src1.channels() == dst.channels());
 //  CV_Assert(src1.step == dst.step);
-    openCLSafeCall(clSetKernelArg(kernel,0,sizeof(void *),(void *)&dst.data));
-    openCLSafeCall(clSetKernelArg(kernel,1,sizeof(void *),(void *)&src1.data));
-    openCLSafeCall(clSetKernelArg(kernel,2,sizeof(void *),(void *)&src2.data));
-    openCLSafeCall(clSetKernelArg(kernel,3,sizeof(rows),(void *)&rows));
-    openCLSafeCall(clSetKernelArg(kernel,4,sizeof(step),(void *)&step));
-    openCLSafeCall(clSetKernelArg(kernel,5,sizeof(channels),(void *)&channels));
-    openCLSafeCall(clSetKernelArg(kernel,6,sizeof(whole_rows),(void *)&whole_rows));
-    openCLSafeCall(clSetKernelArg(kernel,7,sizeof(whole_cols),(void *)&whole_cols));
-    openCLSafeCall(clSetKernelArg(kernel,8,sizeof(src_offset),(void *)&src_offset));
-    openCLSafeCall(clSetKernelArg(kernel,9,sizeof(dst_offset),(void *)&dst_offset));
-    openCLSafeCall(clSetKernelArg(kernel,10,sizeof(src_step),(void *)&src_step));
-    openCLSafeCall(clSetKernelArg(kernel,11,sizeof(dst_step),(void *)&dst_step));
-    openCLSafeCall(clEnqueueNDRangeKernel(clCxt->clGpuCmdQueue,kernel,2,NULL,
-                globalSize,localSize,0,NULL,NULL));
-    clFinish(clCxt ->clGpuCmdQueue);
+	if(globalSize[0]!=0)
+	{
+		openCLSafeCall(clSetKernelArg(kernel,0,sizeof(void *),(void *)&dst.data));
+		openCLSafeCall(clSetKernelArg(kernel,1,sizeof(void *),(void *)&src1.data));
+		openCLSafeCall(clSetKernelArg(kernel,2,sizeof(void *),(void *)&src2.data));
+		openCLSafeCall(clSetKernelArg(kernel,3,sizeof(rows),(void *)&rows));
+		openCLSafeCall(clSetKernelArg(kernel,4,sizeof(cols),(void *)&cols));
+		openCLSafeCall(clSetKernelArg(kernel,5,sizeof(channels),(void *)&channels));
+		openCLSafeCall(clSetKernelArg(kernel,6,sizeof(whole_rows),(void *)&whole_rows));
+		openCLSafeCall(clSetKernelArg(kernel,7,sizeof(whole_cols),(void *)&whole_cols));
+		openCLSafeCall(clSetKernelArg(kernel,8,sizeof(src_offset),(void *)&src_offset));
+		openCLSafeCall(clSetKernelArg(kernel,9,sizeof(dst_offset),(void *)&dst_offset));
+		openCLSafeCall(clSetKernelArg(kernel,10,sizeof(lut_offset),(void *)&lut_offset));
+		openCLSafeCall(clSetKernelArg(kernel,11,sizeof(src_step),(void *)&src_step));
+		openCLSafeCall(clSetKernelArg(kernel,12,sizeof(dst_step),(void *)&dst_step));
+		openCLSafeCall(clEnqueueNDRangeKernel(clCxt->clGpuCmdQueue,kernel,2,NULL,
+					globalSize,localSize,0,NULL,NULL));
+		clFinish(clCxt ->clGpuCmdQueue);
+	}
     openCLSafeCall(clReleaseKernel(kernel));
-
+	if(channels==1 && (left_col !=0 || right_col !=0))
+	{
+		src_offset = src1.offset;
+		dst_offset = dst.offset;
+		localSize[0] = 1;
+		localSize[1] = 256;
+		globalSize[0] = left_col+right_col;
+		globalSize[1] = (rows+localSize[1]-1)/localSize[1]*localSize[1];
+		kernel = openCLGetKernelFromSource(clCxt,&arithm_LUT,"LUT2");
+		openCLSafeCall(clSetKernelArg(kernel,0,sizeof(void *),(void *)&dst.data));
+		openCLSafeCall(clSetKernelArg(kernel,1,sizeof(void *),(void *)&src1.data));
+		openCLSafeCall(clSetKernelArg(kernel,2,sizeof(void *),(void *)&src2.data));
+		openCLSafeCall(clSetKernelArg(kernel,3,sizeof(rows),(void *)&rows));
+		openCLSafeCall(clSetKernelArg(kernel,4,sizeof(left_col),(void *)&left_col));
+		openCLSafeCall(clSetKernelArg(kernel,5,sizeof(channels),(void *)&channels));
+		openCLSafeCall(clSetKernelArg(kernel,6,sizeof(whole_rows),(void *)&whole_rows));
+		openCLSafeCall(clSetKernelArg(kernel,7,sizeof(cols),(void *)&cols));
+		openCLSafeCall(clSetKernelArg(kernel,8,sizeof(src_offset),(void *)&src_offset));
+		openCLSafeCall(clSetKernelArg(kernel,9,sizeof(dst_offset),(void *)&dst_offset));
+		openCLSafeCall(clSetKernelArg(kernel,10,sizeof(lut_offset),(void *)&lut_offset));
+		openCLSafeCall(clSetKernelArg(kernel,11,sizeof(src_step),(void *)&src_step));
+		openCLSafeCall(clSetKernelArg(kernel,12,sizeof(dst_step),(void *)&dst_step));
+		openCLSafeCall(clEnqueueNDRangeKernel(clCxt->clGpuCmdQueue,kernel,2,NULL,
+					globalSize,localSize,0,NULL,NULL));
+		clFinish(clCxt ->clGpuCmdQueue);
+		openCLSafeCall(clReleaseKernel(kernel));
+	}
 }
 
-void cv::ocl::LUT(const oclMat& src, const Mat& lut, oclMat& dst)
+void cv::ocl::LUT(const oclMat& src, const oclMat& lut, oclMat& dst)
 {
 	int cn = src.channels();
 	CV_Assert(src.depth() == CV_8U);
-	CV_Assert((lut.channels() == 1 || lut.channels() == cn) && lut.rows * lut.cols == 256 && lut.isContinuous());	
+	CV_Assert((lut.channels() == 1 || lut.channels() == cn) && lut.rows == 1 && lut.cols == 256);	
 	dst.create(src.size(), CV_MAKETYPE(lut.depth(), cn));
-	oclMat _lut(lut);
+	//oclMat _lut(lut);
 	string kernelName;
 	if(1 == cn) kernelName = "LUT1";
 	if(4 == cn) kernelName = "LUT4";
-	arithmetic_lut_run(src,_lut, dst,kernelName);
+	arithmetic_lut_run(src,lut, dst,kernelName);
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -1148,66 +1221,84 @@ void cv::ocl::polarToCart(const oclMat& magnitude, const oclMat& angle, oclMat& 
 //////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////// minMaxLoc ////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
-void arithmetic_minMaxLoc_buffer_run(const oclMat &src,const oclMat &mask,cl_mem &dst,int vlen ,int groupnum,string kernelName)
+void arithmetic_minMaxLoc_run(const oclMat &src,cl_mem &dst,int vlen ,int groupnum)
 {
     vector<pair<size_t ,const void *> > args;
     int all_cols = src.step / (vlen * src.elemSize1());
     int pre_cols = (src.offset % src.step) / (vlen * src.elemSize1());
-    int sec_cols = all_cols - (src.offset % src.step + src.cols * src.elemSize() - 1) / (vlen * src.elemSize1()) - 1;
+    int sec_cols = all_cols - (src.offset % src.step + src.cols * src.elemSize1() - 1) / (vlen * src.elemSize1()) - 1;
     int invalid_cols = pre_cols + sec_cols;
     int cols = all_cols - invalid_cols , elemnum = cols * src.rows;;
     int offset = src.offset / (vlen * src.elemSize1());
     int repeat_s = src.offset / src.elemSize1() - offset * vlen;
-    int repeat_e = (offset + cols) * vlen - src.offset / src.elemSize1() - src.cols * src.channels();
-    char build_options[50];
-    sprintf(build_options,"-D DEPTH_%d -D REPEAT_S%d -D REPEAT_E%d",src.depth(),repeat_s,repeat_e);
+    int repeat_e = (offset + cols) * vlen - src.offset / src.elemSize1() - src.cols;
     args.push_back( make_pair( sizeof(cl_int) , (void *)&cols ));
     args.push_back( make_pair( sizeof(cl_int) , (void *)&invalid_cols ));
     args.push_back( make_pair( sizeof(cl_int) , (void *)&offset));
     args.push_back( make_pair( sizeof(cl_int) , (void *)&elemnum));
     args.push_back( make_pair( sizeof(cl_int) , (void *)&groupnum));
     args.push_back( make_pair( sizeof(cl_mem) , (void *)&src.data));
-    if(!mask.empty())
+    args.push_back( make_pair( sizeof(cl_mem) , (void *)&dst ));
+    char build_options[50];
+    sprintf(build_options,"-D DEPTH_%d -D REPEAT_S%d -D REPEAT_E%d",src.depth(),repeat_s,repeat_e);
+    size_t gt[3]={groupnum * 256,1,1},lt[3]={256,1,1};
+    openCLExecuteKernel(src.clCxt,&arithm_minMaxLoc, "arithm_op_minMaxLoc", gt, lt, args, -1,-1,build_options);
+}
+
+void arithmetic_minMaxLoc_mask_run(const oclMat &src,const oclMat &mask,cl_mem &dst,int vlen, int groupnum)
+{
+    vector<pair<size_t ,const void *> > args;
+    size_t gt[3]={groupnum * 256,1,1},lt[3]={256,1,1};
+    char build_options[50];
+    if(src.channels() == 1)
     {
-        int mall_cols = mask.step / (vlen * mask.elemSize1());
-        int mpre_cols = (mask.offset % mask.step) / (vlen * mask.elemSize1());
-        int msec_cols = mall_cols - (mask.offset % mask.step + mask.cols * mask.elemSize() - 1) / (vlen * mask.elemSize1()) - 1;
-        int minvalid_cols = mpre_cols + msec_cols;
-        int moffset = mask.offset / (vlen * mask.elemSize1());
-        
+        int cols = (src.cols - 1) / vlen + 1;
+        int invalid_cols = src.step / (vlen * src.elemSize1()) - cols;
+        int offset = src.offset / src.elemSize1();
+        int repeat_me = vlen - (mask.cols % vlen == 0 ? vlen : mask.cols % vlen);
+        int minvalid_cols = mask.step / (vlen * mask.elemSize1()) - cols;
+        int moffset = mask.offset / mask.elemSize1();
+        int elemnum = cols * src.rows;
+        sprintf(build_options,"-D DEPTH_%d -D REPEAT_E%d",src.depth(),repeat_me);
+        args.push_back( make_pair( sizeof(cl_int) , (void *)&cols ));
+        args.push_back( make_pair( sizeof(cl_int) , (void *)&invalid_cols ));
+        args.push_back( make_pair( sizeof(cl_int) , (void *)&offset));
+        args.push_back( make_pair( sizeof(cl_int) , (void *)&elemnum));
+        args.push_back( make_pair( sizeof(cl_int) , (void *)&groupnum));
+        args.push_back( make_pair( sizeof(cl_mem) , (void *)&src.data));
         args.push_back( make_pair( sizeof(cl_int) , (void *)&minvalid_cols ));
         args.push_back( make_pair( sizeof(cl_int) , (void *)&moffset ));
         args.push_back( make_pair( sizeof(cl_mem) , (void *)&mask.data ));
+        args.push_back( make_pair( sizeof(cl_mem) , (void *)&dst ));
+    //    printf("elemnum:%d,cols:%d,invalid_cols:%d,offset:%d,minvalid_cols:%d,moffset:%d,repeat_e:%d\r\n",
+    //           elemnum,cols,invalid_cols,offset,minvalid_cols,moffset,repeat_me);
+        openCLExecuteKernel(src.clCxt,&arithm_minMaxLoc_mask, "arithm_op_minMaxLoc_mask", gt, lt, args, -1,-1,build_options);
     }
-    args.push_back( make_pair( sizeof(cl_mem) , (void *)&dst ));
-    size_t gt[3]={groupnum * 256,1,1},lt[3]={256,1,1};
-    openCLExecuteKernel(src.clCxt,&arithm_minMaxLoc, kernelName, gt, lt, args, -1,-1,build_options);
 }
 
-template <typename T> void minMaxLoc_buffer(const oclMat& src, double* minVal, double* maxVal, 
-        Point* minLoc,Point* maxLoc,const oclMat& mask)
+void cv::ocl::minMaxLoc(const oclMat& src, double* minVal, double* maxVal, 
+        Point* minLoc, Point* maxLoc, const oclMat& mask)
 {
-    cl_ulong start, end;
-    start = getTickCount();
+    CV_Assert(src.channels() == 1);
     size_t groupnum = 0;
     openCLSafeCall(clGetDeviceInfo(getDevice(),CL_DEVICE_MAX_COMPUTE_UNITS,
                 sizeof(size_t),(void*)&groupnum,NULL));
     CV_Assert(groupnum != 0);
     int minloc = -1 , maxloc = -1;
-    int vlen = 8,dbsize = groupnum * vlen * 4 * sizeof(T) , status;
+    int vlen = 8,dbsize = groupnum * vlen * 4 * sizeof(double) , status;
     ClContext *clCxt = src.clCxt;
     cl_mem dstBuffer = clCreateBuffer(clCxt->clGpuContext,CL_MEM_WRITE_ONLY,dbsize,NULL,&status);
     *minVal = std::numeric_limits<double>::max() , *maxVal = -std::numeric_limits<double>::max();
     if (mask.empty())
     {
-        arithmetic_minMaxLoc_buffer_run(src,mask,dstBuffer,vlen,groupnum,"arithm_op_minMaxLoc");
+        arithmetic_minMaxLoc_run(src,dstBuffer,vlen,groupnum);
     }
     else
     {
-        arithmetic_minMaxLoc_buffer_run(src,mask,dstBuffer,vlen,groupnum,"arithm_op_minMaxLoc_mask");
+        arithmetic_minMaxLoc_mask_run(src,mask,dstBuffer,vlen,groupnum);
     }
-    T *p = new T[groupnum * vlen * 4];
-    memset(p,0,groupnum * vlen * 4 * sizeof(T));
+    double *p = new double[groupnum * vlen * 4];
+    memset(p,0,groupnum * vlen * 4 * sizeof(double));
     status = clEnqueueReadBuffer(clCxt->clGpuCmdQueue, (cl_mem)dstBuffer, CL_TRUE, 0, dbsize, (void *)p, 0, NULL,NULL);
     for(int i=0;i< vlen * groupnum; i++)
     {
@@ -1221,13 +1312,14 @@ template <typename T> void minMaxLoc_buffer(const oclMat& src, double* minVal, d
     }
     
     int pre_rows = src.offset / src.step;
-    int pre_cols = (src.offset % src.step) / src.elemSize();
+    int pre_cols = (src.offset % src.step) / src.elemSize1();
+    int wholecols = src.step / src.elemSize1();
     if( minLoc )
     {
         if( minloc >= 0 )
         {
-            minLoc->y = minloc / src.wholecols - pre_rows;
-            minLoc->x = minloc % src.wholecols - pre_cols;
+            minLoc->y = minloc / wholecols - pre_rows;
+            minLoc->x = minloc % wholecols - pre_cols;
         }
         else
             minLoc->x = minLoc->y = -1;
@@ -1236,8 +1328,8 @@ template <typename T> void minMaxLoc_buffer(const oclMat& src, double* minVal, d
     {
         if( maxloc >= 0 )
         {
-            maxLoc->y = maxloc / src.wholecols - pre_rows;
-            maxLoc->x = maxloc % src.wholecols - pre_cols;
+            maxLoc->y = maxloc / wholecols - pre_rows;
+            maxLoc->x = maxloc % wholecols - pre_cols;
         }
         else
             maxLoc->x = maxLoc->y = -1;
@@ -1245,31 +1337,11 @@ template <typename T> void minMaxLoc_buffer(const oclMat& src, double* minVal, d
     delete[] p;
 }
 
-typedef void (*minMaxLocFunc)(const oclMat &src,double *minVal,double *maxVal,
-        Point* minLoc, Point* maxLoc,const oclMat &mask);
-void cv::ocl::minMaxLoc(const oclMat& src, double* minVal, double* maxVal, 
-        Point* minLoc, Point* maxLoc, const oclMat& mask)
-{
-    CV_Assert(src.depth()<=CV_64F && src.channels()==1); 
-    static minMaxLocFunc functab[8] = {
-        minMaxLoc_buffer<double>,
-        minMaxLoc_buffer<double>,
-        minMaxLoc_buffer<double>,
-        minMaxLoc_buffer<double>,
-        minMaxLoc_buffer<double>,
-        minMaxLoc_buffer<double>,
-        minMaxLoc_buffer<double>,
-        0};
-    minMaxLocFunc func;
-    func = functab[src.depth()];
-    func(src,minVal,maxVal,minLoc,maxLoc,mask);
-}
-
 
 //////////////////////////////////////////////////////////////////////////////
 ///////////////////////////// countNonZero ///////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
-void arithmetic_countNonZero_buffer_run(const oclMat &src,cl_mem &dst,int vlen ,int groupnum,string kernelName)
+void arithmetic_countNonZero_run(const oclMat &src,cl_mem &dst,int vlen ,int groupnum,string kernelName)
 {
     vector<pair<size_t ,const void *> > args;
     int all_cols = src.step / (vlen * src.elemSize1());
@@ -1292,7 +1364,8 @@ void arithmetic_countNonZero_buffer_run(const oclMat &src,cl_mem &dst,int vlen ,
     size_t gt[3]={groupnum * 256,1,1},lt[3]={256,1,1};
     openCLExecuteKernel(src.clCxt,&arithm_nonzero, kernelName, gt, lt, args, -1, -1,build_options);
 }
-int countNonZero_buffer(const oclMat& src)
+
+int cv::ocl::countNonZero(const oclMat& src)
 {
     size_t groupnum = 0;
     openCLSafeCall(clGetDeviceInfo(getDevice(),CL_DEVICE_MAX_COMPUTE_UNITS,
@@ -1305,7 +1378,7 @@ int countNonZero_buffer(const oclMat& src)
     string kernelName = "arithm_op_nonzero";
     int *p= new int[dbsize],nonzero=0;
     cl_mem dstBuffer = clCreateBuffer(clCxt->clGpuContext,CL_MEM_WRITE_ONLY,dbsize * sizeof(int),NULL,&status);
-    arithmetic_countNonZero_buffer_run(src,dstBuffer,vlen,groupnum,kernelName);
+    arithmetic_countNonZero_run(src,dstBuffer,vlen,groupnum,kernelName);
 
     memset(p,0,dbsize * sizeof(int));
     status = clEnqueueReadBuffer(clCxt->clGpuCmdQueue, (cl_mem)dstBuffer, CL_TRUE, 0, 
@@ -1318,10 +1391,6 @@ int countNonZero_buffer(const oclMat& src)
     return nonzero;
 }
 
-int cv::ocl::countNonZero(const oclMat &src)
-{
-    return countNonZero_buffer(src);
-}
 //////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////bitwise_op////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////

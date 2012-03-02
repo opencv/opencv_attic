@@ -530,18 +530,6 @@ __kernel void arithm_bitwise_and_with_mask_C2_D6 (__global char *src1, int src1_
         int dst_index  = mad24(y, dst_step,  (x << 4) + dst_offset);
 
         uchar mask_data = *(mask + mask_index);
-
-      /*  double2 src_data1 = *((__global double2 *)((__global char *)src1 + src1_index));
-        double2 src_data2 = *((__global double2 *)((__global char *)src2 + src2_index));
-        double2 dst_data  = *((__global double2 *)((__global char *)dst  + dst_index));
-
-        double2 data;
-	data.x = src_data1.x & src_data2.x;
-	data.y = src_data1.y & src_data2.y;
-        data = mask_data ? data : dst_data; 
-
-        *((__global double2 *)((__global char *)dst + dst_index)) = data; */
-
         
         char16 src_data1 = *((__global char16 *)((__global char *)src1 + src1_index));
         char16 src_data2 = *((__global char16 *)((__global char *)src2 + src2_index));
@@ -1094,20 +1082,6 @@ __kernel void arithm_bitwise_and_with_mask_C4_D5 (__global char *src1, int src1_
 
         uchar mask_data = *(mask + mask_index);
 
-       /* float4 src_data1 = *((__global float4 *)((__global char *)src1 + src1_index));
-        float4 src_data2 = *((__global float4 *)((__global char *)src2 + src2_index));
-        float4 dst_data  = *((__global float4 *)((__global char *)dst  + dst_index));
-
-        float4 data;
-	data.x = src_data1.x & src_data2.x;
-	data.y = src_data1.x & src_data2.y;
-	data.z = src_data1.z & src_data2.z;
-	data.w = src_data1.w & src_data2.w;
-        data = mask_data ? data : dst_data; 
-
-        *((__global float4 *)((__global char *)dst + dst_index)) = data;*/
-
-
         char16 src_data1 = *((__global char16 *)((__global char *)src1 + src1_index));
         char16 src_data2 = *((__global char16 *)((__global char *)src2 + src2_index));
         char16 dst_data  = *((__global char16 *)((__global char *)dst  + dst_index));
@@ -1138,29 +1112,15 @@ __kernel void arithm_bitwise_and_with_mask_C4_D6 (__global char *src1, int src1_
 
         uchar mask_data = *(mask + mask_index);
 
-      /*  double4 src_data1 = *((__global double4 *)((__global char *)src1 + src1_index));
-        double4 src_data2 = *((__global double4 *)((__global char *)src2 + src2_index));
-        double4 dst_data  = *((__global double4 *)((__global char *)dst  + dst_index));
-
-        double4 data;
-	data.x = src_data1.x & src_data2.x;
-	data.y = src_data1.y & src_data2.y;
-	data.z = src_data1.z & src_data2.z;
-	data.w = src_data1.w & src_data2.w;
-        data = mask_data ? data : dst_data; 
-
-        *((__global double4 *)((__global char *)dst + dst_index)) = data;*/
-
-
         char8 src1_data_0 = *((__global char8 *)((__global char *)src1 + src1_index + 0));
         char8 src1_data_1 = *((__global char8 *)((__global char *)src1 + src1_index + 8));
         char8 src1_data_2 = *((__global char8 *)((__global char *)src1 + src1_index + 16));
         char8 src1_data_3 = *((__global char8 *)((__global char *)src1 + src1_index + 24));
                                              
-        char8 src2_data_0 = *((__global char8 *)((__global char *)src2 + src1_index + 0));
-        char8 src2_data_1 = *((__global char8 *)((__global char *)src2 + src1_index + 8));
-        char8 src2_data_2 = *((__global char8 *)((__global char *)src2 + src1_index + 16));
-        char8 src2_data_3 = *((__global char8 *)((__global char *)src2 + src1_index + 24));
+        char8 src2_data_0 = *((__global char8 *)((__global char *)src2 + src2_index + 0));
+        char8 src2_data_1 = *((__global char8 *)((__global char *)src2 + src2_index + 8));
+        char8 src2_data_2 = *((__global char8 *)((__global char *)src2 + src2_index + 16));
+        char8 src2_data_3 = *((__global char8 *)((__global char *)src2 + src2_index + 24));
 
         char8 data_0 = *((__global char8 *)((__global char *)dst + dst_index + 0));
         char8 data_1 = *((__global char8 *)((__global char *)dst + dst_index + 8));
