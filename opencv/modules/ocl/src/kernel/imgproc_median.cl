@@ -35,7 +35,7 @@
 //
 
 
-
+/*
 __kernel void medianFilter_C1(__global uchar * src, __global uchar * dst,  int srcOffset, int dstOffset, int cols,
                                 int rows, int srcStep, int dstStep, int m)
 {
@@ -68,7 +68,7 @@ __kernel void medianFilter_C1(__global uchar * src, __global uchar * dst,  int s
 	if(dy<rows && dx<cols)
 		dst[dstOffset + get_global_id(1)*dstStep + get_global_id(0)]=v;
 }
-
+*/
 #define op(a,b) {mid=a; a=min(a,b); b=max(mid,b);}
 __kernel void medianFilter3_C4_D0(__global uchar4 * src, __global uchar4 * dst,  int srcOffset, int dstOffset, int cols,
                                 int rows, int srcStep, int dstStep)

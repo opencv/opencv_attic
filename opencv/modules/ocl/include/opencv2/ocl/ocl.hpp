@@ -56,7 +56,7 @@ namespace cv
 {
 	namespace ocl
 	{
-//extern CriticalSection cs;
+
 		//////////////////////////////// Initialization & Info ////////////////////////
 		CV_EXPORTS cl_device_id getDevice();
 		CV_EXPORTS void getComputeCapability(cl_device_id device, int& major, int& minor);
@@ -168,17 +168,22 @@ namespace cv
 			oclMat clone() const;
 			//! copies the oclMatrix content to "m".
 			// It calls m.create(this->size(), this->type()).
+			// It supports any data type
 			void copyTo( oclMat& m ) const;
 			//! copies those oclMatrix elements to "m" that are marked with non-zero mask elements.
+			//It supports 8UC1 8UC4 32SC1 32SC4 32FC1 32FC4
 			void copyTo( oclMat& m, const oclMat& mask ) const;
 			//! converts oclMatrix to another datatype with optional scalng. See cvConvertScale.
+			//It supports 8UC1 8UC4 32SC1 32SC4 32FC1 32FC4
 			void convertTo( oclMat& m, int rtype, double alpha=1, double beta=0 ) const;
 
 			void assignTo( oclMat& m, int type=-1 ) const;
 
 			//! sets every oclMatrix element to s
+			//It supports 8UC1 8UC4 32SC1 32SC4 32FC1 32FC4
 			oclMat& operator = (const Scalar& s);
 			//! sets some of the oclMatrix elements to s, according to the mask
+			//It supports 8UC1 8UC4 32SC1 32SC4 32FC1 32FC4
 			oclMat& setTo(const Scalar& s, const oclMat& mask = oclMat());
 			//! creates alternative oclMatrix header for the same data, with different
 			// number of channels and/or different number of rows. see cvReshape.
@@ -204,7 +209,7 @@ namespace cv
 			oclMat operator()( Range rowRange, Range colRange ) const;
 			oclMat operator()( const Rect& roi ) const;
 
-			//! returns true iff the oclMatrix data is continuous
+			//! returns true if the oclMatrix data is continuous
 			// (i.e. when there are no gaps between successive rows).
 			// similar to CV_IS_oclMat_CONT(cvoclMat->type)
 			bool isContinuous() const;
@@ -275,147 +280,148 @@ namespace cv
 
 
 		///////////////////// mat split and merge /////////////////////////////////
-    //! Compose a multi-channel array from several single-channel arrays
-    //! Support all types
+		//! Compose a multi-channel array from several single-channel arrays
+		// Support all types
 		CV_EXPORTS void merge(const oclMat *src, size_t n, oclMat &dst);
 		CV_EXPORTS void merge(const vector<oclMat> &src, oclMat &dst);
 
-    //! Divides multi-channel array into several single-channel arrays 
-    //! Support all types
+		//! Divides multi-channel array into several single-channel arrays 
+		// Support all types
 		CV_EXPORTS void split(const oclMat &src, oclMat *dst);
 		CV_EXPORTS void split(const oclMat &src, vector<oclMat> &dst);
 
 		////////////////////////////// Arithmetics ///////////////////////////////////
 		//! adds one matrix to another (c = a + b)
-		//! supports all types except CV_8SC1,CV_8SC2,CV8SC3 and CV_8SC4
+		// supports all types except CV_8SC1,CV_8SC2,CV8SC3 and CV_8SC4
 		CV_EXPORTS void add(const oclMat& a, const oclMat& b, oclMat& c); 
 		//! adds one matrix to another (c = a + b)
-		//! supports all types except CV_8SC1,CV_8SC2,CV8SC3 and CV_8SC4
+		// supports all types except CV_8SC1,CV_8SC2,CV8SC3 and CV_8SC4
 		CV_EXPORTS void add(const oclMat& a, const oclMat& b, oclMat& c, const oclMat& mask); 
 		//! adds scalar to a matrix (c = a + s)
-		//! supports all types except CV_8SC1,CV_8SC2,CV8SC3 and CV_8SC4
+		// supports all types except CV_8SC1,CV_8SC2,CV8SC3 and CV_8SC4
 		CV_EXPORTS void add(const oclMat& a, const Scalar& sc, oclMat& c, const oclMat& mask = oclMat()); 
 		//! subtracts one matrix from another (c = a - b)
-		//! supports all types except CV_8SC1,CV_8SC2,CV8SC3 and CV_8SC4
+		// supports all types except CV_8SC1,CV_8SC2,CV8SC3 and CV_8SC4
 		CV_EXPORTS void subtract(const oclMat& a, const oclMat& b, oclMat& c); 
 		//! subtracts one matrix from another (c = a - b)
-		//! supports all types except CV_8SC1,CV_8SC2,CV8SC3 and CV_8SC4
+		// supports all types except CV_8SC1,CV_8SC2,CV8SC3 and CV_8SC4
 		CV_EXPORTS void subtract(const oclMat& a, const oclMat& b, oclMat& c, const oclMat& mask); 
 		//! subtracts scalar from a matrix (c = a - s)
-		//! supports all types except CV_8SC1,CV_8SC2,CV8SC3 and CV_8SC4
+		// supports all types except CV_8SC1,CV_8SC2,CV8SC3 and CV_8SC4
 		CV_EXPORTS void subtract(const oclMat& a, const Scalar& sc, oclMat& c, const oclMat& mask = oclMat()); 
 		//! subtracts scalar from a matrix (c = a - s)
-		//! supports all types except CV_8SC1,CV_8SC2,CV8SC3 and CV_8SC4
+		// supports all types except CV_8SC1,CV_8SC2,CV8SC3 and CV_8SC4
 		CV_EXPORTS void subtract(const Scalar& sc, const oclMat& a, oclMat& c, const oclMat& mask = oclMat()); 
 		//! computes element-wise product of the two arrays (c = a * b)
-		//! supports all types except CV_8SC1,CV_8SC2,CV8SC3 and CV_8SC4
+		// supports all types except CV_8SC1,CV_8SC2,CV8SC3 and CV_8SC4
 		CV_EXPORTS void multiply(const oclMat& a, const oclMat& b, oclMat& c, double scale = 1); 
 		//! computes element-wise quotient of the two arrays (c = a / b)
-		//! supports all types except CV_8SC1,CV_8SC2,CV8SC3 and CV_8SC4
+		// supports all types except CV_8SC1,CV_8SC2,CV8SC3 and CV_8SC4
 		CV_EXPORTS void divide(const oclMat& a, const oclMat& b, oclMat& c, double scale = 1); 
 		//! computes element-wise quotient of the two arrays (c = a / b)
-		//! supports all types except CV_8SC1,CV_8SC2,CV8SC3 and CV_8SC4
+		// supports all types except CV_8SC1,CV_8SC2,CV8SC3 and CV_8SC4
 		CV_EXPORTS void divide(double scale, const oclMat& b, oclMat& c); 
 
 		//! compares elements of two arrays (c = a <cmpop> b)
-		//! supports except CV_8SC1,CV_8SC2,CV8SC3,CV_8SC4 types
+		// supports except CV_8SC1,CV_8SC2,CV8SC3,CV_8SC4 types
 		CV_EXPORTS void compare(const oclMat& a, const oclMat& b, oclMat& c, int cmpop);
 
 		//! transposes the matrix
-		//! supports  CV_8UC1, 8UC4, 8SC4, 16UC2, 16SC2, 32SC1 and 32FC1.(the same as cuda)
+		// supports  CV_8UC1, 8UC4, 8SC4, 16UC2, 16SC2, 32SC1 and 32FC1.(the same as cuda)
 		CV_EXPORTS void transpose(const oclMat& src1, oclMat& dst);
 
 		//! computes element-wise absolute difference of two arrays (c = abs(a - b))
-		//! supports all types except CV_8SC1,CV_8SC2,CV8SC3 and CV_8SC4
+		// supports all types except CV_8SC1,CV_8SC2,CV8SC3 and CV_8SC4
 		CV_EXPORTS void absdiff(const oclMat& a, const oclMat& b, oclMat& c);
 		//! computes element-wise absolute difference of array and scalar (c = abs(a - s))
-		//! supports all types except CV_8SC1,CV_8SC2,CV8SC3 and CV_8SC4
+		// supports all types except CV_8SC1,CV_8SC2,CV8SC3 and CV_8SC4
 		CV_EXPORTS void absdiff(const oclMat& a, const Scalar& s, oclMat& c);
 
 		//! computes mean value and standard deviation of all or selected array elements
-		//! supports except CV_32F,CV_64F
+		// supports except CV_32F,CV_64F
 		CV_EXPORTS void meanStdDev(const oclMat& mtx, Scalar& mean, Scalar& stddev);
 
 		//! computes norm of array
-		//! supports NORM_INF, NORM_L1, NORM_L2
-		//! supports only CV_8UC1 type
+		// supports NORM_INF, NORM_L1, NORM_L2
+		// supports only CV_8UC1 type
 		CV_EXPORTS double norm(const oclMat& src1, int normType=NORM_L2);
 
 		//! computes norm of the difference between two arrays
-		//! supports NORM_INF, NORM_L1, NORM_L2
-		//! supports only CV_8UC1 type
+		// supports NORM_INF, NORM_L1, NORM_L2
+		// supports only CV_8UC1 type
 		CV_EXPORTS double norm(const oclMat& src1, const oclMat& src2, int normType=NORM_L2);
 
 		//! reverses the order of the rows, columns or both in a matrix
-    //! supports all types
+		// supports all types
 		CV_EXPORTS void flip(const oclMat& a, oclMat& b, int flipCode);
 
 		//! computes sum of array elements
-		//! disabled until fix crash
-		//! support all types
+		// disabled until fix crash
+		// support all types
 		CV_EXPORTS Scalar sum(const oclMat& m);
 
 		//! finds global minimum and maximum array elements and returns their values
-		//! support all types
+		// support all types
 		CV_EXPORTS void minMax(const oclMat& src, double* minVal, double* maxVal=0, const oclMat& mask=oclMat());
 
 		//! finds global minimum and maximum array elements and returns their values with locations
-		//! support all types
+		// support all types
 		CV_EXPORTS void minMaxLoc(const oclMat& src, double* minVal, double* maxVal=0, Point* minLoc=0, Point* maxLoc=0, 
 			const oclMat& mask=oclMat());
 		
-    //! counts non-zero array elements
-		//! support all types
+		//! counts non-zero array elements
+		// support all types
 		CV_EXPORTS int countNonZero(const oclMat& src);
 
 		//! transforms 8-bit unsigned integers using lookup table: dst(i)=lut(src(i))
-		//! destination array will have the depth type as lut and the same channels number as source
+		// destination array will have the depth type as lut and the same channels number as source
+		//It supports 8UC1 8UC4 only
 		CV_EXPORTS void LUT(const oclMat& src, const oclMat& lut, oclMat& dst);
 		
-    //! only 8UC1 and 256 is supported now, ROI is not supported
+		//! only 8UC1 and 256 bins is supported now
 		CV_EXPORTS void calcHist(const oclMat& mat_src, oclMat& mat_hist);
-		//! only 8UC1 and 256 is supported now, ROI is not supported
+		//! only 8UC1 and 256 bins is supported now
 		CV_EXPORTS void equalizeHist(const oclMat& mat_src, oclMat& mat_dst);
 		//! bilateralFilter
-		//! supports 8UC1 8UC4 
+		// supports 8UC1 8UC4 
 		CV_EXPORTS void bilateralFilter(const oclMat&, oclMat&, int ,double, double, int);
 		//! computes exponent of each matrix element (b = e**a)
-		//! supports only CV_32FC1 type
+		// supports only CV_32FC1 type
 		CV_EXPORTS void exp(const oclMat& a, oclMat& b);
 
 		//! computes natural logarithm of absolute value of each matrix element: b = log(abs(a))
-		//! supports only CV_32FC1 type
+		// supports only CV_32FC1 type
 		CV_EXPORTS void log(const oclMat& a, oclMat& b);
 
 		//! computes magnitude of each (x(i), y(i)) vector
-		//! supports only CV_32F CV_64F type
+		// supports only CV_32F CV_64F type
 		CV_EXPORTS void magnitude(const oclMat& x, const oclMat& y, oclMat& magnitude);
 
 		//! computes angle (angle(i)) of each (x(i), y(i)) vector
-		//! supports only CV_32F CV_64F type
+		// supports only CV_32F CV_64F type
 		CV_EXPORTS void phase(const oclMat& x, const oclMat& y, oclMat& angle, bool angleInDegrees = false);
 
 		//! converts Cartesian coordinates to polar
-		//! supports only CV_32F CV_64F type
+		// supports only CV_32F CV_64F type
 		CV_EXPORTS void cartToPolar(const oclMat& x, const oclMat& y, oclMat& magnitude, oclMat& angle, bool angleInDegrees = false);
 
 		//! converts polar coordinates to Cartesian
-		//! supports only CV_32F CV_64F type
+		// supports only CV_32F CV_64F type
 		CV_EXPORTS void polarToCart(const oclMat& magnitude, const oclMat& angle, oclMat& x, oclMat& y, bool angleInDegrees = false);
 
 		//! perfroms per-elements bit-wise inversion
-    //! supports all types
+		// supports all types
 		CV_EXPORTS void bitwise_not(const oclMat& src, oclMat& dst);
-    //! calculates per-element bit-wise disjunction of two arrays
-		//! supports all types 
+		//! calculates per-element bit-wise disjunction of two arrays
+		// supports all types 
 		CV_EXPORTS void bitwise_or(const oclMat& src1, const oclMat& src2, oclMat& dst, const oclMat& mask=oclMat());
 		CV_EXPORTS void bitwise_or(const oclMat& src1, const Scalar& s, oclMat& dst, const oclMat& mask=oclMat());
-    //! calculates per-element bit-wise conjunction of two arrays
-		//! supports all types 
+		//! calculates per-element bit-wise conjunction of two arrays
+		// supports all types 
 		CV_EXPORTS void bitwise_and(const oclMat& src1, const oclMat& src2, oclMat& dst, const oclMat& mask=oclMat());
 		CV_EXPORTS void bitwise_and(const oclMat& src1, const Scalar& s, oclMat& dst, const oclMat& mask=oclMat());
 		//! calculates per-element bit-wise "exclusive or" operation
-		//! supports all types 
+		// supports all types 
 		CV_EXPORTS void bitwise_xor(const oclMat& src1, const oclMat& src2, oclMat& dst, const oclMat& mask=oclMat());
 		CV_EXPORTS void bitwise_xor(const oclMat& src1, const Scalar& s, oclMat& dst, const oclMat& mask=oclMat());
 
@@ -512,11 +518,11 @@ namespace cv
 		CV_EXPORTS Ptr<FilterEngine_GPU> createGaussianFilter_GPU(int type, Size ksize, double sigma1, double sigma2 = 0,int bordertype=BORDER_DEFAULT);
 
 		//! applies Laplacian operator to the image
-		//! supports only ksize = 1 and ksize = 3 8UC1 8UC4 32FC1 32FC4 data type
+		// supports only ksize = 1 and ksize = 3 8UC1 8UC4 32FC1 32FC4 data type
 		CV_EXPORTS void Laplacian(const oclMat& src, oclMat& dst, int ddepth, int ksize = 1, double scale = 1);
 
 		//! returns 2D box filter
-		//! supports CV_8UC1 and CV_8UC4 source type, dst type must be the same as source type
+		// supports CV_8UC1 and CV_8UC4 source type, dst type must be the same as source type
 		CV_EXPORTS Ptr<BaseFilter_GPU> getBoxFilter_GPU(int srcType, int dstType, 
 			const Size& ksize, Point anchor = Point(-1, -1), int borderType = BORDER_DEFAULT);
 
@@ -525,7 +531,7 @@ namespace cv
 			const Point& anchor = Point(-1,-1), int borderType = BORDER_DEFAULT);
 
 		//! returns 2D filter with the specified kernel
-		//! supports CV_8UC1 and CV_8UC4 types
+		// supports CV_8UC1 and CV_8UC4 types
 		CV_EXPORTS Ptr<BaseFilter_GPU> getLinearFilter_GPU(int srcType, int dstType, const Mat& kernel, const Size& ksize, 
 			Point anchor = Point(-1, -1), int borderType = BORDER_DEFAULT);
 
@@ -534,15 +540,15 @@ namespace cv
 			const Point& anchor = Point(-1,-1), int borderType = BORDER_DEFAULT);
 
 		//! smooths the image using the normalized box filter
-    //! supports data type: CV_8UC1, CV_8UC4, CV_32FC1 and CV_32FC4 
-    //! supports border type: BORDER_CONSTANT, BORDER_REPLICATE, BORDER_REFLECT,BORDER_REFLECT_101,BORDER_WRAP
+		// supports data type: CV_8UC1, CV_8UC4, CV_32FC1 and CV_32FC4 
+		// supports border type: BORDER_CONSTANT, BORDER_REPLICATE, BORDER_REFLECT,BORDER_REFLECT_101,BORDER_WRAP
 		CV_EXPORTS void boxFilter(const oclMat& src, oclMat& dst, int ddepth, Size ksize, 
 			Point anchor = Point(-1,-1), int borderType = BORDER_DEFAULT);
 
 		//! returns 2D morphological filter
 		//! only MORPH_ERODE and MORPH_DILATE are supported
-		//! supports CV_8UC1 and CV_8UC4 types
-		//! kernel must have CV_8UC1 type, one rows and cols == ksize.width * ksize.height
+		// supports CV_8UC1, CV_8UC4, CV_32FC1 and CV_32FC4 types
+		// kernel must have CV_8UC1 type, one rows and cols == ksize.width * ksize.height
 		CV_EXPORTS Ptr<BaseFilter_GPU> getMorphologyFilter_GPU(int op, int type, const Mat& kernel, const Size& ksize, 
 			Point anchor=Point(-1,-1));
 
@@ -551,8 +557,8 @@ namespace cv
 			const Point& anchor = Point(-1,-1), int iterations = 1);
 
 		//! a synonym for normalized box filter
-    //! supports data type: CV_8UC1, CV_8UC4, CV_32FC1 and CV_32FC4 
-    //! supports border type: BORDER_CONSTANT, BORDER_REPLICATE, BORDER_REFLECT,BORDER_REFLECT_101
+		// supports data type: CV_8UC1, CV_8UC4, CV_32FC1 and CV_32FC4 
+		// supports border type: BORDER_CONSTANT, BORDER_REPLICATE, BORDER_REFLECT,BORDER_REFLECT_101
 		static inline void blur(const oclMat& src, oclMat& dst, Size ksize, Point anchor = Point(-1,-1), 
 			int borderType = BORDER_CONSTANT)
 		{ boxFilter(src, dst, -1, ksize, anchor, borderType); }
@@ -566,20 +572,26 @@ namespace cv
 			Point anchor = Point(-1,-1),double delta = 0.0,int bordertype = BORDER_DEFAULT);
 
 		//! applies generalized Sobel operator to the image
+		// supports data type: CV_8UC1, CV_8UC4, CV_32FC1 and CV_32FC4 
+		// supports border type: BORDER_CONSTANT, BORDER_REPLICATE, BORDER_REFLECT,BORDER_REFLECT_101
 		CV_EXPORTS void Sobel(const oclMat& src, oclMat& dst, int ddepth, int dx, int dy, int ksize = 3, double scale = 1,double delta = 0.0,int bordertype = BORDER_DEFAULT);
 
 		//! applies the vertical or horizontal Scharr operator to the image
+		// supports data type: CV_8UC1, CV_8UC4, CV_32FC1 and CV_32FC4 
+		// supports border type: BORDER_CONSTANT, BORDER_REPLICATE, BORDER_REFLECT,BORDER_REFLECT_101
 		CV_EXPORTS void Scharr(const oclMat& src, oclMat& dst, int ddepth, int dx, int dy, double scale = 1,double delta = 0.0,int bordertype = BORDER_DEFAULT);
 
 		//! smooths the image using Gaussian filter.
+		// supports data type: CV_8UC1, CV_8UC4, CV_32FC1 and CV_32FC4 
+		// supports border type: BORDER_CONSTANT, BORDER_REPLICATE, BORDER_REFLECT,BORDER_REFLECT_101
 		CV_EXPORTS void GaussianBlur(const oclMat& src, oclMat& dst, Size ksize, double sigma1, double sigma2 = 0,int bordertype = BORDER_DEFAULT);
 
 		//! erodes the image (applies the local minimum operator)
-    //! supports data type: CV_8UC1, CV_8UC4, CV_32FC1 and CV_32FC4 
+		// supports data type: CV_8UC1, CV_8UC4, CV_32FC1 and CV_32FC4 
 		CV_EXPORTS void erode( const oclMat& src, oclMat& dst, const Mat& kernel, Point anchor = Point(-1, -1), int iterations = 1);
 
 		//! dilates the image (applies the local maximum operator)
-    //! supports data type: CV_8UC1, CV_8UC4, CV_32FC1 and CV_32FC4 
+		// supports data type: CV_8UC1, CV_8UC4, CV_32FC1 and CV_32FC4 
 		CV_EXPORTS void dilate( const oclMat& src, oclMat& dst, const Mat& kernel, Point anchor = Point(-1, -1), int iterations = 1);
 
 		//! applies an advanced morphological operation to the image
@@ -599,34 +611,34 @@ namespace cv
 			TermCriteria criteria = TermCriteria(TermCriteria::MAX_ITER + TermCriteria::EPS, 5, 1));
 
 		//! applies fixed threshold to the image. 
-		//! supports CV_8UC1 and CV_32FC1 data type
-		//! supports threshold type: THRESH_BINARY, THRESH_BINARY_INV, THRESH_TRUNC, THRESH_TOZERO, THRESH_TOZERO_INV 
+		// supports CV_8UC1 and CV_32FC1 data type
+		// supports threshold type: THRESH_BINARY, THRESH_BINARY_INV, THRESH_TRUNC, THRESH_TOZERO, THRESH_TOZERO_INV 
 		CV_EXPORTS double threshold(const oclMat& src, oclMat& dst, double thresh, double maxVal, int type = THRESH_TRUNC);
 
 		//! resizes the image
-		//! Supports INTER_NEAREST, INTER_LINEAR
-		//! supports CV_8UC1, CV_8UC4, CV_32FC1 and CV_32FC4 types
+		// Supports INTER_NEAREST, INTER_LINEAR
+		// supports CV_8UC1, CV_8UC4, CV_32FC1 and CV_32FC4 types
 		CV_EXPORTS void resize(const oclMat& src, oclMat& dst, Size dsize, double fx=0, double fy=0, int interpolation = INTER_LINEAR);
 
 		//! copies 2D array to a larger destination array and pads borders with user-specifiable constant
-		//! supports CV_8UC1, CV_8UC4, CV_32SC1 types
+		// supports CV_8UC1, CV_8UC4, CV_32SC1 types
 		CV_EXPORTS void copyMakeBorder(const oclMat& src, oclMat& dst, int top, int bottom, int left, int right, int boardtype, const Scalar& value = Scalar());
 
 		//! Smoothes image using median filter
-		//! The source 1-, 3- or 4-channel image. When m is 3 or 5, the image depth should be CV 8U, CV 16U or CV 32F. For larger aperture sizes it can only be CV 8U
+		// The source 1- or 4-channel image. When m is 3 or 5, the image depth should be CV 8U or CV 32F.
 		CV_EXPORTS void medianFilter(const oclMat& src, oclMat& dst, int m);
 
 		//! warps the image using affine transformation
-		//! Supports INTER_NEAREST, INTER_LINEAR, INTER_CUBIC
+		// Supports INTER_NEAREST, INTER_LINEAR, INTER_CUBIC
 		CV_EXPORTS void warpAffine(const oclMat& src, oclMat& dst, const Mat& M, Size dsize, int flags = INTER_LINEAR);
 
 		//! warps the image using perspective transformation
-		//! Supports INTER_NEAREST, INTER_LINEAR, INTER_CUBIC
+		// Supports INTER_NEAREST, INTER_LINEAR, INTER_CUBIC
 		CV_EXPORTS void warpPerspective(const oclMat& src, oclMat& dst, const Mat& M, Size dsize, int flags = INTER_LINEAR);
 
 		//! computes the integral image and integral for the squared image
-		//! sum will have CV_32S type, sqsum - CV32F type
-		//! supports only CV_8UC1 source type
+		// sum will have CV_32S type, sqsum - CV32F type
+		// supports only CV_8UC1 source type
 		CV_EXPORTS void integral(oclMat& src, oclMat& sum, oclMat& sqsum);
 
 		//////////////////////////////// StereoBM_GPU ////////////////////////////////

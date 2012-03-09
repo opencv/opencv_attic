@@ -54,6 +54,7 @@ using namespace std;
 using std::cout;
 using std::endl;
 #define USE_CL_BIN
+
 //#define PRINT_KERNEL_RUN_TIME
 #define RUN_TIMES 1000 
 
@@ -489,6 +490,9 @@ namespace cv
 				idxStr << kernel_expand_channel;
 			}
 			kernelName += idxStr.str();
+
+      cout << kernelName << endl;
+
 			cl_kernel kernel;
 			kernel = openCLGetKernelFromSource(clCxt,source,kernelName);
 			int t1 = globalcols % blockSize, t2 = globalrows % blockSize;

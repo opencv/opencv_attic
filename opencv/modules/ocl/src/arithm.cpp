@@ -18,8 +18,9 @@
 //    Niko Li, Niko.li@amd.com
 //    Jia Haipeng, jiahaipeng95@gmail.com
 //    Shengen Yan, yanshengen@gmail.com
-//    Jiang Liyuan, jŒjlyuan001.good@163.com
+//    Jiang Liyuan, lyuan001.good@163.com
 //    Rock Li, Rock.Li@amd.com
+//    Zailong Wu, bullet@yeah.net
 //
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -105,7 +106,7 @@ namespace cv
     namespace ocl 
     {
         ////////////////////////////////OpenCL kernel strings/////////////////////
-	      extern const char * bitwise;
+	    extern const char * bitwise;
       	extern const char * bitwiseM;
         extern const char * transpose_kernel;
         extern const char * arithm_nonzero;
@@ -116,7 +117,7 @@ namespace cv
         extern const char * arithm_minMax_mask;
         extern const char * arithm_minMaxLoc;
         extern const char * arithm_minMaxLoc_mask;
-	      extern const char * arithm_LUT;
+	    extern const char * arithm_LUT;
       	extern const char * arithm_add;
       	extern const char * arithm_add_scalar;
       	extern const char * arithm_add_scalar_mask;
@@ -147,6 +148,8 @@ namespace cv
         extern const char * arithm_magnitude;
         extern const char * arithm_cartToPolar;
         extern const char * arithm_polarToCart;
+        extern const char * arithm_exp;
+        extern const char * arithm_log;
         //extern const char * jhp_transpose_kernel;
         int64 kernelrealtotal = 0;
         int64 kernelalltotal = 0;
@@ -313,7 +316,7 @@ void arithmetic_scalar_run(const oclMat &src1, const Scalar &src2, oclMat &dst, 
     CV_Assert(src1.cols == dst.cols && src1.rows == dst.rows &&
               src1.type() == dst.type());
 
-//    CV_Assert(src1.depth() != CV_8S);
+    //CV_Assert(src1.depth() != CV_8S);
 
     if(mask.data)
         CV_Assert(mask.type() == CV_8U && src1.rows == mask.rows && src1.cols == mask.cols);
@@ -941,9 +944,9 @@ void arithmetic_lut_run(const oclMat &src1,const oclMat &src2, oclMat &dst,strin
     int dst_offset = dst.offset;
 	int lut_offset = src2.offset;
 	int left_col=0, right_col=0;
-    size_t localSize[] = {16,16};
-    cl_kernel kernel = openCLGetKernelFromSource(clCxt,&arithm_LUT,kernelName);
-    size_t globalSize[] = {(cols+localSize[0]-1)/localSize[0]*localSize[0],(rows+localSize[1]-1)/localSize[1]*localSize[1]};
+    size_t localSize[] = {16,16,1};
+    //cl_kernel kernel = openCLGetKernelFromSource(clCxt,&arithm_LUT,kernelName);
+    size_t globalSize[] = {(cols+localSize[0]-1)/localSize[0]*localSize[0],(rows+localSize[1]-1)/localSize[1]*localSize[1],1};
 	if(channels==1 && cols > 6)
 	{
 		left_col = 4- (dst_offset & 3);
@@ -967,26 +970,25 @@ void arithmetic_lut_run(const oclMat &src1,const oclMat &src2, oclMat &dst,strin
     CV_Assert(src1.rows == dst.rows);
     CV_Assert(src1.channels() == dst.channels());
 //  CV_Assert(src1.step == dst.step);
+	vector<pair<size_t ,const void *> > args;
+
 	if(globalSize[0]!=0)
 	{
-		openCLSafeCall(clSetKernelArg(kernel,0,sizeof(void *),(void *)&dst.data));
-		openCLSafeCall(clSetKernelArg(kernel,1,sizeof(void *),(void *)&src1.data));
-		openCLSafeCall(clSetKernelArg(kernel,2,sizeof(void *),(void *)&src2.data));
-		openCLSafeCall(clSetKernelArg(kernel,3,sizeof(rows),(void *)&rows));
-		openCLSafeCall(clSetKernelArg(kernel,4,sizeof(cols),(void *)&cols));
-		openCLSafeCall(clSetKernelArg(kernel,5,sizeof(channels),(void *)&channels));
-		openCLSafeCall(clSetKernelArg(kernel,6,sizeof(whole_rows),(void *)&whole_rows));
-		openCLSafeCall(clSetKernelArg(kernel,7,sizeof(whole_cols),(void *)&whole_cols));
-		openCLSafeCall(clSetKernelArg(kernel,8,sizeof(src_offset),(void *)&src_offset));
-		openCLSafeCall(clSetKernelArg(kernel,9,sizeof(dst_offset),(void *)&dst_offset));
-		openCLSafeCall(clSetKernelArg(kernel,10,sizeof(lut_offset),(void *)&lut_offset));
-		openCLSafeCall(clSetKernelArg(kernel,11,sizeof(src_step),(void *)&src_step));
-		openCLSafeCall(clSetKernelArg(kernel,12,sizeof(dst_step),(void *)&dst_step));
-		openCLSafeCall(clEnqueueNDRangeKernel(clCxt->clGpuCmdQueue,kernel,2,NULL,
-					globalSize,localSize,0,NULL,NULL));
-		clFinish(clCxt ->clGpuCmdQueue);
+		args.push_back( make_pair( sizeof(cl_mem), (void *)&dst.data ));
+		args.push_back( make_pair( sizeof(cl_mem), (void *)&src1.data ));
+		args.push_back( make_pair( sizeof(cl_mem), (void *)&src2.data ));
+		args.push_back( make_pair( sizeof(cl_int), (void *)&rows ));
+		args.push_back( make_pair( sizeof(cl_int), (void *)&cols ));
+		args.push_back( make_pair( sizeof(cl_int), (void *)&channels ));
+		args.push_back( make_pair( sizeof(cl_int), (void *)&whole_rows ));
+		args.push_back( make_pair( sizeof(cl_int), (void *)&whole_cols ));
+		args.push_back( make_pair( sizeof(cl_int), (void *)&src_offset ));
+		args.push_back( make_pair( sizeof(cl_int), (void *)&dst_offset ));
+		args.push_back( make_pair( sizeof(cl_int), (void *)&lut_offset ));
+		args.push_back( make_pair( sizeof(cl_int), (void *)&src_step ));
+		args.push_back( make_pair( sizeof(cl_int), (void *)&dst_step ));
+		openCLExecuteKernel(clCxt, &arithm_LUT, kernelName, globalSize, localSize, args, src1.channels(), src1.depth());
 	}
-    openCLSafeCall(clReleaseKernel(kernel));
 	if(channels==1 && (left_col !=0 || right_col !=0))
 	{
 		src_offset = src1.offset;
@@ -995,24 +997,22 @@ void arithmetic_lut_run(const oclMat &src1,const oclMat &src2, oclMat &dst,strin
 		localSize[1] = 256;
 		globalSize[0] = left_col+right_col;
 		globalSize[1] = (rows+localSize[1]-1)/localSize[1]*localSize[1];
-		kernel = openCLGetKernelFromSource(clCxt,&arithm_LUT,"LUT2");
-		openCLSafeCall(clSetKernelArg(kernel,0,sizeof(void *),(void *)&dst.data));
-		openCLSafeCall(clSetKernelArg(kernel,1,sizeof(void *),(void *)&src1.data));
-		openCLSafeCall(clSetKernelArg(kernel,2,sizeof(void *),(void *)&src2.data));
-		openCLSafeCall(clSetKernelArg(kernel,3,sizeof(rows),(void *)&rows));
-		openCLSafeCall(clSetKernelArg(kernel,4,sizeof(left_col),(void *)&left_col));
-		openCLSafeCall(clSetKernelArg(kernel,5,sizeof(channels),(void *)&channels));
-		openCLSafeCall(clSetKernelArg(kernel,6,sizeof(whole_rows),(void *)&whole_rows));
-		openCLSafeCall(clSetKernelArg(kernel,7,sizeof(cols),(void *)&cols));
-		openCLSafeCall(clSetKernelArg(kernel,8,sizeof(src_offset),(void *)&src_offset));
-		openCLSafeCall(clSetKernelArg(kernel,9,sizeof(dst_offset),(void *)&dst_offset));
-		openCLSafeCall(clSetKernelArg(kernel,10,sizeof(lut_offset),(void *)&lut_offset));
-		openCLSafeCall(clSetKernelArg(kernel,11,sizeof(src_step),(void *)&src_step));
-		openCLSafeCall(clSetKernelArg(kernel,12,sizeof(dst_step),(void *)&dst_step));
-		openCLSafeCall(clEnqueueNDRangeKernel(clCxt->clGpuCmdQueue,kernel,2,NULL,
-					globalSize,localSize,0,NULL,NULL));
-		clFinish(clCxt ->clGpuCmdQueue);
-		openCLSafeCall(clReleaseKernel(kernel));
+		//kernel = openCLGetKernelFromSource(clCxt,&arithm_LUT,"LUT2");
+		args.clear();
+		args.push_back( make_pair( sizeof(cl_mem), (void *)&dst.data ));
+		args.push_back( make_pair( sizeof(cl_mem), (void *)&src1.data ));
+		args.push_back( make_pair( sizeof(cl_mem), (void *)&src2.data ));
+		args.push_back( make_pair( sizeof(cl_int), (void *)&rows ));
+		args.push_back( make_pair( sizeof(cl_int), (void *)&left_col ));
+		args.push_back( make_pair( sizeof(cl_int), (void *)&channels ));
+		args.push_back( make_pair( sizeof(cl_int), (void *)&whole_rows ));
+		args.push_back( make_pair( sizeof(cl_int), (void *)&cols ));
+		args.push_back( make_pair( sizeof(cl_int), (void *)&src_offset ));
+		args.push_back( make_pair( sizeof(cl_int), (void *)&dst_offset ));
+		args.push_back( make_pair( sizeof(cl_int), (void *)&lut_offset ));
+		args.push_back( make_pair( sizeof(cl_int), (void *)&src_step ));
+		args.push_back( make_pair( sizeof(cl_int), (void *)&dst_step ));
+		openCLExecuteKernel(clCxt, &arithm_LUT, "LUT2", globalSize, localSize, args, src1.channels(), src1.depth());
 	}
 }
 
@@ -1023,39 +1023,52 @@ void cv::ocl::LUT(const oclMat& src, const oclMat& lut, oclMat& dst)
 	CV_Assert((lut.channels() == 1 || lut.channels() == cn) && lut.rows == 1 && lut.cols == 256);	
 	dst.create(src.size(), CV_MAKETYPE(lut.depth(), cn));
 	//oclMat _lut(lut);
-	string kernelName;
-	if(1 == cn) kernelName = "LUT1";
-	if(4 == cn) kernelName = "LUT4";
+	string kernelName="LUT";
 	arithmetic_lut_run(src,lut, dst,kernelName);
 }
 
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////////////// exp log /////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
-void arithmetic_exp_log_run(const oclMat &src1,oclMat &dst,string kernelName)
+void arithmetic_exp_log_run(const oclMat &src, oclMat &dst, string kernelName)
 {
+    dst.create(src.size(),src.type());
+    CV_Assert(src.cols == dst.cols &&
+              src.rows == dst.rows );
+
+    CV_Assert(src.type() == dst.type());
+    CV_Assert(src.type() == CV_32F || src.type() == CV_64F );
+
+    ClContext  *clCxt = src.clCxt;
+
+    int channels = dst.channels();
+    int depth = dst.depth();
+
+    size_t localThreads[3]  = { 64, 4, 1 };
+    size_t globalThreads[3] = { divUp(dst.cols, localThreads[0]) * localThreads[0], 
+                                divUp(dst.rows, localThreads[1]) * localThreads[1],
+                                1};
+
     vector<pair<size_t ,const void *> > args;
-    int cols = src1.cols * src1.channels() ,rows = src1.rows , channels = src1.channels();
-    args.push_back( make_pair( sizeof(cl_int) , (void *)&rows ));
-    args.push_back( make_pair( sizeof(cl_int) , (void *)&cols ));
-    args.push_back( make_pair( sizeof(cl_int) , (void *)&src1.step ));
-    args.push_back( make_pair( sizeof(cl_mem) , (void *)&src1.data ));
-    args.push_back( make_pair( sizeof(cl_mem) , (void *)&dst.data ));
-    args.push_back( make_pair( sizeof(cl_int) , (void *)&channels ));
-    openCLExecuteKernel(src1.clCxt,&arithm_2_mat, kernelName, args, cols , rows ,16,src1.depth());
+    args.push_back( make_pair( sizeof(cl_int), (void *)&src.rows ));
+    args.push_back( make_pair( sizeof(cl_int), (void *)&src.cols ));
+    args.push_back( make_pair( sizeof(cl_int), (void *)&src.step ));
+    args.push_back( make_pair( sizeof(cl_int), (void *)&dst.step ));
+    args.push_back( make_pair( sizeof(cl_int), (void *)&src.offset ));
+    args.push_back( make_pair( sizeof(cl_int), (void *)&dst.offset ));
+    args.push_back( make_pair( sizeof(cl_mem), (void *)&src.data ));
+    args.push_back( make_pair( sizeof(cl_mem), (void *)&dst.data ));
+ 
+    openCLExecuteKernel(clCxt, &arithm_log, kernelName, globalThreads, localThreads, args, -1, depth);
 }
 void cv::ocl::exp(const oclMat& src, oclMat& dst)
 {
-    CV_Assert(src.depth() == CV_32F || src.depth() == CV_64F);
-    dst.create(src.size(),src.type());
-    arithmetic_exp_log_run(src, dst,"arithm_op_exp");
+    arithmetic_exp_log_run(src, dst,"arithm_exp");
 }
 
 void cv::ocl::log(const oclMat& src, oclMat& dst)
 {
-    CV_Assert(src.depth() == CV_32F || src.depth() == CV_64F);
-    dst.create(src.size(),src.type());
-    arithmetic_exp_log_run(src, dst,"arithm_op_log");
+    arithmetic_exp_log_run(src, dst,"arithm_log");
 }
 
 //////////////////////////////////////////////////////////////////////////////

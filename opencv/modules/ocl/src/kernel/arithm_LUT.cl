@@ -37,7 +37,7 @@
 
 #pragma OPENCL EXTENSION cl_amd_printf : enable
 __kernel
-void LUT1( __global uchar *dst,
+void LUT_C1_D0( __global uchar *dst,
 	  __global const uchar *src,
 	  __constant uchar *table,
 	  int rows,
@@ -82,7 +82,7 @@ void LUT1( __global uchar *dst,
 }
 
 __kernel
-void LUT2( __global uchar *dst,
+void LUT2_C1_D0( __global uchar *dst,
 	  __global const uchar *src,
 	  __constant uchar *table,
 	  int rows,
@@ -120,7 +120,7 @@ void LUT2( __global uchar *dst,
 }
 
 __kernel
-void LUT4( __global uchar4 *dst,
+void LUT_C4_D0( __global uchar4 *dst,
 	  __global uchar4 *src,
 	  __constant uchar *table,
 	  uint rows,
