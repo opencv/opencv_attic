@@ -1,5 +1,6 @@
 %YAML:1.0
-acircles_corners8: !!opencv-matrix
+isFound: 1
+corners: !!opencv-matrix
    rows: 9
    cols: 3
    dt: "2f"
