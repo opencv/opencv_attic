@@ -1307,20 +1307,69 @@ namespace cv { namespace ocl {
 		size_t globalThreads[3] = { PARTIAL_HISTOGRAM256_COUNT * localThreads[0], 1, 1}; 
 
 		int cols = mat_src.cols * mat_src.channels();
-		int datacount = mat_src.cols * mat_src.rows * mat_src.channels();
-		int inc_x = globalThreads[0]%cols;
-		int inc_y = globalThreads[0]/cols;
-		vector<pair<size_t ,const void *> > args;
-		args.push_back( make_pair( sizeof(cl_mem),(void*)&mat_src.data));
-		args.push_back( make_pair( sizeof(cl_int),(void*)&mat_src.step));
-		args.push_back( make_pair( sizeof(cl_int),(void*)&mat_src.offset));
-		args.push_back( make_pair( sizeof(cl_mem),(void*)&mat_sub_hist.data));
-		args.push_back( make_pair( sizeof(cl_int),(void*)&datacount));
-		args.push_back( make_pair( sizeof(cl_int),(void*)&cols));
-		args.push_back( make_pair( sizeof(cl_int),(void*)&inc_x));
-		args.push_back( make_pair( sizeof(cl_int),(void*)&inc_y));
-		openCLExecuteKernel(clCxt, &imgproc_histogram, kernelName, globalThreads, localThreads, args, -1, depth);
+		int src_offset = mat_src.offset;
+		int hist_step = mat_sub_hist.step>>2;
+		int left_col=0, right_col=0;
+		if(cols > 6)
+		{
+			left_col = 4- (src_offset & 3);
+			left_col &= 3;
+			//dst_offset +=left_col;
+			src_offset +=left_col;
+			cols -=left_col;
+			right_col = cols & 3;
+			cols -= right_col;
+			//globalThreads[0] = (cols/4+globalThreads[0]-1)/localThreads[0]*localThreads[0];
+		}
+		else
+		{
+			left_col = cols;
+			right_col = 0;
+			cols = 0;
+			globalThreads[0] = 0;
+		}
 
+		vector<pair<size_t ,const void *> > args;
+		if(globalThreads[0]!=0)
+		{
+			int tempcols = cols/4;
+			int inc_x = globalThreads[0]%tempcols;
+			int inc_y = globalThreads[0]/tempcols;
+			src_offset /= 4;
+			int src_step = mat_src.step/4;
+			int datacount = tempcols * mat_src.rows * mat_src.channels();
+			args.push_back( make_pair( sizeof(cl_mem),(void*)&mat_src.data));
+			args.push_back( make_pair( sizeof(cl_int),(void*)&src_step));
+			args.push_back( make_pair( sizeof(cl_int),(void*)&src_offset));
+			args.push_back( make_pair( sizeof(cl_mem),(void*)&mat_sub_hist.data));
+			args.push_back( make_pair( sizeof(cl_int),(void*)&datacount));
+			args.push_back( make_pair( sizeof(cl_int),(void*)&tempcols));
+			args.push_back( make_pair( sizeof(cl_int),(void*)&inc_x));
+			args.push_back( make_pair( sizeof(cl_int),(void*)&inc_y));
+			args.push_back( make_pair( sizeof(cl_int),(void*)&hist_step));
+			openCLExecuteKernel(clCxt, &imgproc_histogram, kernelName, globalThreads, localThreads, args, -1, depth);
+		}
+		if(left_col !=0 || right_col !=0)
+		{
+			kernelName = "calc_sub_hist2";
+			src_offset = mat_src.offset;
+			//dst_offset = dst.offset;
+			localThreads[0] = 1;
+			localThreads[1] = 256;
+			globalThreads[0] = left_col+right_col;
+			globalThreads[1] = (mat_src.rows+localThreads[1]-1)/localThreads[1]*localThreads[1];
+			//kernel = openCLGetKernelFromSource(clCxt,&arithm_LUT,"LUT2");
+			args.clear();
+			args.push_back( make_pair( sizeof(cl_mem),(void*)&mat_src.data));
+			args.push_back( make_pair( sizeof(cl_int),(void*)&mat_src.step));
+			args.push_back( make_pair( sizeof(cl_int),(void*)&src_offset));
+			args.push_back( make_pair( sizeof(cl_mem),(void*)&mat_sub_hist.data));
+			args.push_back( make_pair( sizeof(cl_int),(void*)&left_col));
+			args.push_back( make_pair( sizeof(cl_int),(void*)&cols));
+			args.push_back( make_pair( sizeof(cl_int),(void*)&mat_src.rows));
+			args.push_back( make_pair( sizeof(cl_int),(void*)&hist_step));
+			openCLExecuteKernel(clCxt, &imgproc_histogram, kernelName, globalThreads, localThreads, args, -1, depth);
+		}
 	}
 	void merge_sub_hist(const oclMat& sub_hist, oclMat& mat_hist)
 	{
@@ -1331,24 +1380,21 @@ namespace cv { namespace ocl {
 
 		size_t localThreads[3]  = { 256, 1, 1 };
 		size_t globalThreads[3] = { HISTOGRAM256_BIN_COUNT * localThreads[0], 1, 1}; 
-
+		int src_step = sub_hist.step>>2;
 		vector<pair<size_t ,const void *> > args;
 		args.push_back( make_pair( sizeof(cl_mem),(void*)&sub_hist.data));
 		args.push_back( make_pair( sizeof(cl_mem),(void*)&mat_hist.data));
-
+		args.push_back( make_pair( sizeof(cl_int),(void*)&src_step));
 		openCLExecuteKernel(clCxt, &imgproc_histogram, kernelName, globalThreads, localThreads, args, -1, -1);
 	}
 	void calcHist(const oclMat& mat_src, oclMat& mat_hist)
 	{
 		using namespace histograms;
 		CV_Assert(mat_src.type() == CV_8UC1);
-
 		mat_hist.create(1, 256, CV_32SC1);
-		mat_hist.setTo(0);
-
-		oclMat buf;
-		buf.create(PARTIAL_HISTOGRAM256_COUNT, HISTOGRAM256_BIN_COUNT, CV_32SC1);
-
+	
+		oclMat buf(PARTIAL_HISTOGRAM256_COUNT, HISTOGRAM256_BIN_COUNT, CV_32SC1);
+		buf.setTo(0);
 		calc_sub_hist(mat_src, buf);
 		merge_sub_hist(buf, mat_hist);
 	}
@@ -1357,35 +1403,22 @@ namespace cv { namespace ocl {
 	{
 		mat_dst.create(mat_src.rows, mat_src.cols, CV_8UC1);	
 
-		oclMat mat_hist;
+		oclMat mat_hist(1, 256, CV_32SC1);
+		mat_hist.setTo(0);
 		calcHist(mat_src, mat_hist);
 
 		ClContext * clCxt = mat_src.clCxt;
-		string kernelName = "equalizeHist";
+		string kernelName = "calLUT";
 		size_t localThreads[3] = { 256, 1, 1}; 
-		size_t globalThreads[3] = { clCxt->maxComputeUnits * localThreads[0]*2, 1, 1}; 
-
+		size_t globalThreads[3] = { 256, 1, 1}; 
+		oclMat lut(1, 256, CV_8UC1);
 		vector<pair<size_t ,const void *> > args;
-		int srcstep = mat_src.step;
-		int srcoffset = mat_src.offset;
-		int dststep = mat_dst.step;
-		int dstoffset = mat_dst.offset;
 		float scale = 255.f/(mat_src.rows*mat_src.cols);
-		int inc_x = globalThreads[0]%mat_src.cols;
-		int inc_y = globalThreads[0]/mat_src.cols;
-		args.push_back( make_pair( sizeof(cl_mem),(void*)&mat_src.data));
-		args.push_back( make_pair( sizeof(cl_mem),(void*)&mat_dst.data));
+		args.push_back( make_pair( sizeof(cl_mem),(void*)&lut.data));
 		args.push_back( make_pair( sizeof(cl_mem),(void*)&mat_hist.data));
-		args.push_back( make_pair( sizeof(cl_int),(void*)&srcstep));
-		args.push_back( make_pair( sizeof(cl_int),(void*)&srcoffset));
-		args.push_back( make_pair( sizeof(cl_int),(void*)&dststep));
-		args.push_back( make_pair( sizeof(cl_int),(void*)&dstoffset));
-		args.push_back( make_pair( sizeof(cl_int),(void*)&mat_src.cols));
-		args.push_back( make_pair( sizeof(cl_int),(void*)&mat_src.rows));
 		args.push_back( make_pair( sizeof(cl_float),(void*)&scale));
-		args.push_back( make_pair( sizeof(cl_int),(void*)&inc_x));
-		args.push_back( make_pair( sizeof(cl_int),(void*)&inc_y));
 		openCLExecuteKernel(clCxt, &imgproc_histogram, kernelName, globalThreads, localThreads, args, -1, -1);
+		LUT(mat_src,lut,mat_dst);
 	}
 	//////////////////////////////////bilateralFilter////////////////////////////////////////////////////
 	void bilateralFilter(const oclMat& src, oclMat& dst, int radius, double sigmaclr, double sigmaspc, int borderType)

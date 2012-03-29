@@ -48,17 +48,18 @@
 // Currently, CV_8UC1  CV_8UC4  CV_32FC1 and CV_32FC4are supported.
 // We shall support other types later if necessary.
 
-//this round operation is to approximate CPU's saturate_cast<int>
-#define EPS 0.000001f
-inline int float2int(float v)
-{
-    int v1=floor(v);
-    int v2= floor(v+(v>=0 ? 0.5f : -0.5f));
-    return fabs(v-v1-0.5f) < EPS &&((v1&1)==0) ? v1 : v2;
-}
+#if defined DOUBLE_SUPPORT
+#if defined (__ATI__)
+#pragma OPENCL EXTENSION cl_amd_fp64:enable
+#elif defined (__NVIDIA__)
+#pragma OPENCL EXTENSION cl_khr_fp64:enable
+#endif
+typedef double F ;
+#else 
+typedef float F;
+#endif
 
-
-inline int getPoint(__global unsigned char * data, int offset, int x, int y, int step)
+inline int getPoint(__global unsigned char const * data, int offset, int x, int y, int step)
 {
     return (data[offset+ y * step + x]);
 }
@@ -84,92 +85,88 @@ inline float4 getPoint_32fc4(__global float4 * data, int offset, int x, int y, i
 #define CAST_SCALE (1.0f/(1<<CAST_BITS))
 #define INC(x,l) ((x+1) >= (l) ? (x):((x)+1))
 
-__kernel void resizeLN_C1_D0(__global unsigned char * dst, __global unsigned char * src,
+__kernel void resizeLN_C1_D0(__global unsigned char * dst, __global unsigned char const * restrict src,
                      int dst_offset, int src_offset,int dst_step, int src_step, 
                      int src_cols, int src_rows, int dst_cols, int dst_rows, float ifx, float ify )
 {
     int gx = get_global_id(0);
     int dy = get_global_id(1);
-   
-    gx = (gx<<2) - (dst_offset&3);
-    float4 sx;
-    sx.s0 = ((gx+0.5f) * ifx - 0.5f);
-    sx.s1 = ((gx+1+0.5f) * ifx - 0.5f);
-    sx.s2 = ((gx+2+0.5f) * ifx - 0.5f);
-    sx.s3 = ((gx+3+0.5f) * ifx - 0.5f);
-    float sy = ((dy+0.5) * ify - 0.5f);
-    int4 x;
-    x.s0 = floor(sx.s0);
-    x.s1 = floor(sx.s1);
-    x.s2 = floor(sx.s2);
-    x.s3 = floor(sx.s3);
-    int y = floor(sy);
-    float4 u;
-    u.s0 = sx.s0 - x.s0;
-    u.s1 = sx.s1 - x.s1;
-    u.s2 = sx.s2 - x.s2;
-    u.s3 = sx.s3 - x.s3;
-    float v = sy - y;
-
-    x.s0<0 ? x.s0=0,u.s0=0 : x.s0,u.s0;
-    x.s0>=src_cols ? x.s0=src_cols-1,u.s0=0 : x.s0,u.s0;
-    x.s1<0 ? x.s1=0,u.s1=0 : x.s1,u.s1;
-    x.s1>=src_cols ? x.s1=src_cols-1,u.s1=0 : x.s1,u.s1;
-    x.s2<0 ? x.s2=0,u.s2=0 : x.s2,u.s2;
-    x.s2>=src_cols ? x.s2=src_cols-1,u.s2=0 : x.s2,u.s2;
-    x.s3<0 ? x.s3=0,u.s3=0 : x.s3,u.s3;
-    x.s3>=src_cols ? x.s3=src_cols-1,u.s3=0 : x.s3,u.s3;
-    y<0 ? y=0,v=0 : y,v;
-    y>=src_rows ? y=src_rows-1,v=0 : y,v;
     
+    float4  sx, u, xf;
+    int4 x, DX;
+    gx = (gx<<2) - (dst_offset&3);
+    DX = (int4)(gx, gx+1, gx+2, gx+3);
+    sx = (convert_float4(DX) + 0.5f) * ifx - 0.5f;
+    xf = floor(sx);
+    x = convert_int4(xf);
+    u = sx - xf;
+    float sy = ((dy+0.5f) * ify - 0.5f);
+    int y = floor(sy);
+    float v = sy - y;
+ 
+    u = x < 0 ? 0 : u;
+    u = (x >= src_cols) ? 0 : u;
+    x = x < 0 ? 0 : x;
+    x = (x >= src_cols) ? src_cols-1 : x;
+ 
+    y<0 ? y=0,v=0 : y;
+    y>=src_rows ? y=src_rows-1,v=0 : y;
+ 
     int4 U, U1;
     int V, V1;
-    U.s0 = float2int(u.s0 * INTER_RESIZE_COEF_SCALE);
-    U.s1 = float2int(u.s1 * INTER_RESIZE_COEF_SCALE);
-    U.s2 = float2int(u.s2 * INTER_RESIZE_COEF_SCALE);
-    U.s3 = float2int(u.s3 * INTER_RESIZE_COEF_SCALE);
-    V = float2int(v * INTER_RESIZE_COEF_SCALE);
-    U1.s0= float2int((1-u.s0)*INTER_RESIZE_COEF_SCALE);
-    U1.s1= float2int((1-u.s1)*INTER_RESIZE_COEF_SCALE);
-    U1.s2= float2int((1-u.s2)*INTER_RESIZE_COEF_SCALE);
-    U1.s3= float2int((1-u.s3)*INTER_RESIZE_COEF_SCALE);
-    V1= float2int((1-v)*INTER_RESIZE_COEF_SCALE);
+    float4 utmp1, utmp2;
+    float vtmp;
+    float4 scale_vec = INTER_RESIZE_COEF_SCALE;
+    utmp1 = u * scale_vec;
+    utmp2 = scale_vec - utmp1;
+    U = convert_int4(rint(utmp1)); 
+    U1 = convert_int4(rint(utmp2)); 
+    vtmp = v * INTER_RESIZE_COEF_SCALE;
+    V = rint(vtmp);
+    V1= rint(INTER_RESIZE_COEF_SCALE - vtmp);
 
     int y_ = INC(y,src_rows);
     int4 x_;
-    x_.s0 = INC(x.s0,src_cols);
-    x_.s1 = INC(x.s1,src_cols);
-    x_.s2 = INC(x.s2,src_cols);
-    x_.s3 = INC(x.s3,src_cols);
-
+    x_ =  ((x+1 >= src_cols) != 0) ? x : x+1;
 
     int4 val1, val2, val;
-    val1.s0 = U1.s0 *  getPoint(src,src_offset,x.s0,y,src_step) +
-           U.s0 *  getPoint(src,src_offset,x_.s0,y,src_step) ;
-    val1.s1 = U1.s1 *  getPoint(src,src_offset,x.s1,y,src_step) +
-           U.s1 *  getPoint(src,src_offset,x_.s1,y,src_step) ;
-    val1.s2 = U1.s2 *  getPoint(src,src_offset,x.s2,y,src_step) +
-           U.s2 *  getPoint(src,src_offset,x_.s2,y,src_step) ;
-    val1.s3 = U1.s3 *  getPoint(src,src_offset,x.s3,y,src_step) +
-           U.s3 *  getPoint(src,src_offset,x_.s3,y,src_step) ;
-    val2.s0 = U1.s0 *  getPoint(src,src_offset,x.s0,y_,src_step) +
-           U.s0 *  getPoint(src,src_offset,x_.s0,y_,src_step);
-    val2.s1 = U1.s1 *  getPoint(src,src_offset,x.s1,y_,src_step) +
-           U.s1 *  getPoint(src,src_offset,x_.s1,y_,src_step);
-    val2.s2 = U1.s2 *  getPoint(src,src_offset,x.s2,y_,src_step) +
-           U.s2 *  getPoint(src,src_offset,x_.s2,y_,src_step);
-    val2.s3 = U1.s3 *  getPoint(src,src_offset,x.s3,y_,src_step) +
-           U.s3 *  getPoint(src,src_offset,x_.s3,y_,src_step);
+    int4 sdata1, sdata2, sdata3, sdata4;
+
+    int4 pos1 = src_offset + y * src_step + x;
+    int4 pos2 = src_offset + y * src_step + x_;
+    int4 pos3 = src_offset + y_ * src_step + x;
+    int4 pos4 = src_offset + y_ * src_step + x_;
+
+    sdata1.s0 = src[pos1.s0];
+    sdata1.s1 = src[pos1.s1];
+    sdata1.s2 = src[pos1.s2];
+    sdata1.s3 = src[pos1.s3];
+
+    sdata2.s0 = src[pos2.s0];
+    sdata2.s1 = src[pos2.s1];
+    sdata2.s2 = src[pos2.s2];
+    sdata2.s3 = src[pos2.s3];
+
+    sdata3.s0 = src[pos3.s0];
+    sdata3.s1 = src[pos3.s1];
+    sdata3.s2 = src[pos3.s2];
+    sdata3.s3 = src[pos3.s3];
+
+    sdata4.s0 = src[pos4.s0];
+    sdata4.s1 = src[pos4.s1];
+    sdata4.s2 = src[pos4.s2];
+    sdata4.s3 = src[pos4.s3];
+
+    val1 = U1 * sdata1 + U * sdata2;
+    val2 = U1 * sdata3 + U * sdata4;
     val = V1 * val1 + V * val2;
     
     __global uchar4* d = (__global uchar4*)(dst + dst_offset + dy * dst_step + gx);
     uchar4 dVal = *d;
-    uchar4 value;
-    value.s0 = (gx>=0 && gx<dst_cols && dy>=0 && dy<dst_rows) ? (val.s0 + (1<<(CAST_BITS-1)))*CAST_SCALE: dVal.s0;
-    value.s1 = (gx+1>=0 && gx+1<dst_cols && dy>=0 && dy<dst_rows) ? (val.s1 + (1<<(CAST_BITS-1)))*CAST_SCALE: dVal.s1;
-    value.s2 = (gx+2>=0 && gx+2<dst_cols && dy>=0 && dy<dst_rows) ? (val.s2 + (1<<(CAST_BITS-1)))*CAST_SCALE : dVal.s2;
-    value.s3 = (gx+3>=0 && gx+3<dst_cols && dy>=0 && dy<dst_rows) ? (val.s3 + (1<<(CAST_BITS-1)))*CAST_SCALE : dVal.s3;
-    *d = value;
+    int4 con = ( DX >= 0 && DX < dst_cols && dy >= 0 && dy < dst_rows);
+    val = ((val + (1<<(CAST_BITS-1))) >> CAST_BITS);
+    *d = convert_uchar4(con != 0) ? convert_uchar4_sat(val) : dVal;
+    
 }
 
 __kernel void resizeLN_C4_D0(__global uchar4 * dst, __global uchar4 * src,
@@ -179,7 +176,7 @@ __kernel void resizeLN_C4_D0(__global uchar4 * dst, __global uchar4 * src,
     int dx = get_global_id(0);
     int dy = get_global_id(1);
 
-    float sx = ((dx+0.5f) * ifx - 0.5f), sy = ((dy+0.5) * ify - 0.5f);
+    float sx = ((dx+0.5f) * ifx - 0.5f), sy = ((dy+0.5f) * ify - 0.5f);
     int x = floor(sx), y = floor(sy);
     float u = sx - x, v = sy - y;
 
@@ -188,11 +185,13 @@ __kernel void resizeLN_C4_D0(__global uchar4 * dst, __global uchar4 * src,
     y<0 ? y=0,v=0 : y,v;
     y>=src_rows ? y=src_rows-1,v=0 : y,v;
     
-    
-    int U = float2int(u * INTER_RESIZE_COEF_SCALE);
-    int V = float2int(v * INTER_RESIZE_COEF_SCALE);
-    int U1= float2int((1-u)*INTER_RESIZE_COEF_SCALE);
-    int V1= float2int((1-v)*INTER_RESIZE_COEF_SCALE);
+    u = u * INTER_RESIZE_COEF_SCALE;
+    v = v * INTER_RESIZE_COEF_SCALE;
+   
+    int U = rint(u);
+    int V = rint(v);
+    int U1= rint(INTER_RESIZE_COEF_SCALE - u);
+    int V1= rint(INTER_RESIZE_COEF_SCALE - v);
 
     int y_ = INC(y,src_rows);
     int x_ = INC(x,src_cols);
@@ -203,7 +202,7 @@ __kernel void resizeLN_C4_D0(__global uchar4 * dst, __global uchar4 * src,
                U * V  *  getPoint_8uc4(src,src_offset,x_,y_,src_step);
                
     if(dx>=0 && dx<dst_cols && dy>=0 && dy<dst_rows)
-         dst[(dst_offset>>2) + dy * (dst_step>>2) + dx] = convert_uchar4((val + (1<<(CAST_BITS-1)))/(1<<CAST_BITS));
+         dst[(dst_offset>>2) + dy * (dst_step>>2) + dx] = convert_uchar4((val + (1<<(CAST_BITS-1)))>>CAST_BITS);
 }
 
 __kernel void resizeLN_C1_D5(__global float * dst, __global float * src,
@@ -213,7 +212,7 @@ __kernel void resizeLN_C1_D5(__global float * dst, __global float * src,
     int dx = get_global_id(0);
     int dy = get_global_id(1);
 
-    float sx = ((dx+0.5f) * ifx - 0.5f), sy = ((dy+0.5) * ify - 0.5f);
+    float sx = ((dx+0.5f) * ifx - 0.5f), sy = ((dy+0.5f) * ify - 0.5f);
     int x = floor(sx), y = floor(sy);
     float u = sx - x, v = sy - y;
 
@@ -242,90 +241,83 @@ __kernel void resizeLN_C4_D5(__global float4 * dst, __global float4 * src,
     int dx = get_global_id(0);
     int dy = get_global_id(1);
 
-    float sx = ((dx+0.5f) * ifx - 0.5f), sy = ((dy+0.5) * ify - 0.5f);
+    float sx = ((dx+0.5f) * ifx - 0.5f), sy = ((dy+0.5f) * ify - 0.5f);
     int x = floor(sx), y = floor(sy);
     float u = sx - x, v = sy - y;
 
-    x<0 ? x=0,u=0 : x,u;
-    x>=src_cols ? x=src_cols-1,u=0 : x,u;
-    y<0 ? y=0,v=0 : y,v;
-    y>=src_rows ? y=src_rows-1,v=0 : y,v;
+    x<0 ? x=0,u=0 : x;
+    x>=src_cols ? x=src_cols-1,u=0 : x;
+    y<0 ? y=0,v=0 : y;
+    y>=src_rows ? y=src_rows-1,v=0 : y;
     
     int y_ = INC(y,src_rows);
     int x_ = INC(x,src_cols);
 
-    float4 val1 = (1.0f-u) *  getPoint_32fc4(src,src_offset,x,y,src_step) +
-                u  *  getPoint_32fc4(src,src_offset,x_,y,src_step) ;
-    float4 val2 = (1.0f-u) *  getPoint_32fc4(src,src_offset,x,y_,src_step) +
-                u *  getPoint_32fc4(src,src_offset,x_,y_,src_step);
-    float4 val = (1.0f-v) * val1 + v * val2;
+    float4 s_data1, s_data2, s_data3, s_data4;
+    src_offset = (src_offset >> 4);
+    src_step = (src_step >> 4);
+    s_data1 = src[src_offset + y*src_step + x];
+    s_data2 = src[src_offset + y*src_step + x_];
+    s_data3 = src[src_offset + y_*src_step + x];
+    s_data4 = src[src_offset + y_*src_step + x_];
+    s_data1 = (1.0f-u) * s_data1 + u * s_data2;
+    s_data2 = (1.0f-u) * s_data3 + u * s_data4;
+    s_data3 = (1.0f-v) * s_data1 + v * s_data2;
 
     if(dx>=0 && dx<dst_cols && dy>=0 && dy<dst_rows)
-         dst[(dst_offset>>4) + dy * (dst_step>>4) + dx] = val; 
-}
-#if defined DOUBLE_SUPPORT
-#if defined (__ATI__)
-#pragma OPENCL EXTENSION cl_amd_fp64:enable
-#elif defined (__NVIDIA__)
-#pragma OPENCL EXTENSION cl_khr_fp64:enable
-#endif
-inline int double2int(double v)
-{
-    int v1=floor(v);
-    int v2= floor(v+(v>=0 ? 0.5f : -0.5f));
-    return (v-v1)==0.5f&&((v1&1)==0) ? v1 : v2;
+         dst[(dst_offset>>4) + dy * (dst_step>>4) + dx] = s_data3; 
 }
 
 __kernel void resizeNN_C1_D0(__global uchar * dst, __global uchar * src,
                      int dst_offset, int src_offset,int dst_step, int src_step, 
-                     int src_cols, int src_rows, int dst_cols, int dst_rows, double ifx, double ify )
+                     int src_cols, int src_rows, int dst_cols, int dst_rows, F ifx, F ify )
 {
     int gx = get_global_id(0);
     int dy = get_global_id(1);
     
     gx = (gx<<2) - (dst_offset&3);
+    int4 GX = (int4)(gx, gx+1, gx+2, gx+3);
     
     int4 sx;
     int sy;
-   
-    double ss1 = gx*ifx;
-    double ss2 = (gx+1)*ifx;
-    double ss3 = (gx+2)*ifx;
-    double ss4 = (gx+3)*ifx;
-    double s5 = dy * ify;
-    sx.s0 = min(double2int(ss1), src_cols-1);
-    sx.s1 = min(double2int(ss2), src_cols-1);
-    sx.s2 = min(double2int(ss3), src_cols-1);
-    sx.s3 = min(double2int(ss4), src_cols-1);
-    sy = min(double2int(s5), src_rows-1);
+    F ss1 = gx*ifx;
+    F ss2 = (gx+1)*ifx; 
+    F ss3 = (gx+2)*ifx;
+    F ss4 = (gx+3)*ifx;
+    F s5 = dy * ify;
+    sx.s0 = min((int)rint(ss1), src_cols-1);
+    sx.s1 = min((int)rint(ss2), src_cols-1);
+    sx.s2 = min((int)rint(ss3), src_cols-1);
+    sx.s3 = min((int)rint(ss4), src_cols-1);
+    sy = min((int)rint(s5), src_rows-1);
     
     uchar4 val;
-    val.s0 = src[src_offset + sy * src_step + sx.s0];
-    val.s1 = src[src_offset + sy * src_step + sx.s1];
-    val.s2 = src[src_offset + sy * src_step + sx.s2];
-    val.s3 = src[src_offset + sy * src_step + sx.s3];
+    int4 pos = src_offset + sy * src_step + sx;
+    val.s0 = src[pos.s0];
+    val.s1 = src[pos.s1];
+    val.s2 = src[pos.s2];
+    val.s3 = src[pos.s3];
     
     __global uchar4* d = (__global uchar4*)(dst + dst_offset + dy * dst_step + gx);
     uchar4 dVal = *d;
-    val.s0 = (gx>=0 && gx<dst_cols && dy>=0 && dy<dst_rows) ? val.s0 : dVal.s0;
-    val.s1 = (gx+1>=0 && gx+1<dst_cols && dy>=0 && dy<dst_rows) ? val.s1 : dVal.s1;
-    val.s2 = (gx+2>=0 && gx+2<dst_cols && dy>=0 && dy<dst_rows) ? val.s2 : dVal.s2;
-    val.s3 = (gx+3>=0 && gx+3<dst_cols && dy>=0 && dy<dst_rows) ? val.s3 : dVal.s3;
+    int4 con = (GX >= 0 && GX < dst_cols && dy >= 0 && dy < dst_rows);
+    val = (convert_uchar4(con) != 0) ? val : dVal;
+    
     *d = val;
 }
 
 __kernel void resizeNN_C4_D0(__global uchar4 * dst, __global uchar4 * src,
                      int dst_offset, int src_offset,int dst_step, int src_step, 
-                     int src_cols, int src_rows, int dst_cols, int dst_rows, double ifx, double ify )
+                     int src_cols, int src_rows, int dst_cols, int dst_rows, F ifx, F ify )
 {
     int dx = get_global_id(0);
     int dy = get_global_id(1);
     
-    double s1 = dx*ifx;
-    double s2 = dy*ify;
-    int sx = min(double2int(s1), src_cols-1);
+    F s1 = dx*ifx;
+    F s2 = dy*ify;
+    int sx = min((int)rint(s1), src_cols-1);
+    int sy = min((int)rint(s2), src_rows-1);
     int dpos = (dst_offset>>2) + dy * (dst_step>>2) + dx;
-    int sy = min(double2int(s2), src_rows-1);
     int spos = (src_offset>>2) + sy * (src_step>>2) + sx;
     
     if(dx>=0 && dx<dst_cols && dy>=0 && dy<dst_rows)
@@ -335,16 +327,16 @@ __kernel void resizeNN_C4_D0(__global uchar4 * dst, __global uchar4 * src,
 
 __kernel void resizeNN_C1_D5(__global float * dst, __global float * src,
                      int dst_offset, int src_offset,int dst_step, int src_step, 
-                     int src_cols, int src_rows, int dst_cols, int dst_rows, double ifx, double ify )
+                     int src_cols, int src_rows, int dst_cols, int dst_rows, F ifx, F ify )
 {
     int dx = get_global_id(0);
     int dy = get_global_id(1);
     
-    double s1 = dx*ifx;
-    double s2 = dy*ify;
-    int sx = min(double2int(s1), src_cols-1);
+    F s1 = dx*ifx;
+    F s2 = dy*ify;
+    int sx = min((int)rint(s1), src_cols-1);
+    int sy = min((int)rint(s2), src_rows-1);
     int dpos = (dst_offset>>2) + dy * (dst_step>>2) + dx;
-    int sy = min(double2int(s2), src_rows-1);
     int spos = (src_offset>>2) + sy * (src_step>>2) + sx;
     
     if(dx>=0 && dx<dst_cols && dy>=0 && dy<dst_rows)
@@ -354,20 +346,21 @@ __kernel void resizeNN_C1_D5(__global float * dst, __global float * src,
 
 __kernel void resizeNN_C4_D5(__global float4 * dst, __global float4 * src,
                      int dst_offset, int src_offset,int dst_step, int src_step, 
-                     int src_cols, int src_rows, int dst_cols, int dst_rows, double ifx, double ify )
+                     int src_cols, int src_rows, int dst_cols, int dst_rows, F ifx, F ify )
 {
     int dx = get_global_id(0);
     int dy = get_global_id(1);
-    double s1 = dx*ifx;
-    double s2 = dy*ify;
-    int sx = min(double2int(s1), src_cols-1);
+    F s1 = dx*ifx;
+    F s2 = dy*ify;
+    int s_col = rint(s1);
+    int s_row = rint(s2);
+    int sx = min(s_col, src_cols-1);
+    int sy = min(s_row, src_rows-1);
     int dpos = (dst_offset>>4) + dy * (dst_step>>4) + dx;
-    int sy = min(double2int(s2), src_rows-1);
     int spos = (src_offset>>4) + sy * (src_step>>4) + sx;
     
     if(dx>=0 && dx<dst_cols && dy>=0 && dy<dst_rows)
         dst[dpos] = src[spos];
    
 }
-#endif
 
