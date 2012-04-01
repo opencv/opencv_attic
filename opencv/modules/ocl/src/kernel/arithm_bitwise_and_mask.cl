@@ -25,7 +25,7 @@
 //
 //   * Redistribution's in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
-//     and/or other GpuMaterials provided with the distribution.
+//     and/or other oclMaterials provided with the distribution.
 //
 //   * The name of the copyright holders may not be used to endorse or promote products
 //     derived from this software without specific prior written permission.
@@ -304,8 +304,8 @@ __kernel void arithm_bitwise_and_with_mask_C1_D6 (__global char *src1, int src1_
 
         *((__global char8 *)((__global char *)dst + dst_index)) = data;
     }
-}
 
+}
 
 
 
@@ -490,23 +490,11 @@ __kernel void arithm_bitwise_and_with_mask_C2_D5 (__global char *src1, int src1_
 
         uchar mask_data = *(mask + mask_index);
 
-      /*  float2 src_data1 = *((__global float2 *)((__global char *)src1 + src1_index));
-        float2 src_data2 = *((__global float2 *)((__global char *)src2 + src2_index));
-        float2 dst_data  = *((__global float2 *)((__global char *)dst  + dst_index));
-
-        float2 data;
-	data.x = src_data1.x & src_data2.x;
-	data.y = src_data1.y & src_data2.y;
-        data = mask_data ? data : dst_data; 
-
-        *((__global float2 *)((__global char *)dst + dst_index)) = data;*/
-        
         char8 src_data1 = *((__global char8 *)((__global char *)src1 + src1_index));
         char8 src_data2 = *((__global char8 *)((__global char *)src2 + src2_index));
         char8 dst_data  = *((__global char8 *)((__global char *)dst  + dst_index));
 
-        char8 data;
-	      data = src_data1 & src_data2;
+        char8 data = src_data1 & src_data2;
         data = mask_data ? data : dst_data; 
 
         *((__global char8 *)((__global char *)dst + dst_index)) = data;
@@ -530,13 +518,12 @@ __kernel void arithm_bitwise_and_with_mask_C2_D6 (__global char *src1, int src1_
         int dst_index  = mad24(y, dst_step,  (x << 4) + dst_offset);
 
         uchar mask_data = *(mask + mask_index);
-        
+
         char16 src_data1 = *((__global char16 *)((__global char *)src1 + src1_index));
         char16 src_data2 = *((__global char16 *)((__global char *)src2 + src2_index));
         char16 dst_data  = *((__global char16 *)((__global char *)dst  + dst_index));
 
-        char16 data;
-       	data = src_data1 & src_data2;
+        char16 data = src_data1 & src_data2;
         data = mask_data ? data : dst_data; 
 
         *((__global char16 *)((__global char *)dst + dst_index)) = data;
@@ -1086,8 +1073,7 @@ __kernel void arithm_bitwise_and_with_mask_C4_D5 (__global char *src1, int src1_
         char16 src_data2 = *((__global char16 *)((__global char *)src2 + src2_index));
         char16 dst_data  = *((__global char16 *)((__global char *)dst  + dst_index));
 
-        char16 data;
-      	data = src_data1 & src_data2;
+        char16 data = src_data1 & src_data2;
         data = mask_data ? data : dst_data; 
 
         *((__global char16 *)((__global char *)dst + dst_index)) = data;
@@ -1112,36 +1098,34 @@ __kernel void arithm_bitwise_and_with_mask_C4_D6 (__global char *src1, int src1_
 
         uchar mask_data = *(mask + mask_index);
 
-        char8 src1_data_0 = *((__global char8 *)((__global char *)src1 + src1_index + 0));
-        char8 src1_data_1 = *((__global char8 *)((__global char *)src1 + src1_index + 8));
-        char8 src1_data_2 = *((__global char8 *)((__global char *)src1 + src1_index + 16));
-        char8 src1_data_3 = *((__global char8 *)((__global char *)src1 + src1_index + 24));
-                                             
-        char8 src2_data_0 = *((__global char8 *)((__global char *)src2 + src2_index + 0));
-        char8 src2_data_1 = *((__global char8 *)((__global char *)src2 + src2_index + 8));
-        char8 src2_data_2 = *((__global char8 *)((__global char *)src2 + src2_index + 16));
-        char8 src2_data_3 = *((__global char8 *)((__global char *)src2 + src2_index + 24));
+        char8 src_data1_0 = *((__global char8 *)((__global char *)src1 + src1_index + 0));
+        char8 src_data1_1 = *((__global char8 *)((__global char *)src1 + src1_index + 8));
+        char8 src_data1_2 = *((__global char8 *)((__global char *)src1 + src1_index + 16));
+        char8 src_data1_3 = *((__global char8 *)((__global char *)src1 + src1_index + 24));
 
-        char8 data_0 = *((__global char8 *)((__global char *)dst + dst_index + 0));
-        char8 data_1 = *((__global char8 *)((__global char *)dst + dst_index + 8));
-        char8 data_2 = *((__global char8 *)((__global char *)dst + dst_index + 16));
-        char8 data_3 = *((__global char8 *)((__global char *)dst + dst_index + 24));
+        char8 src_data2_0 = *((__global char8 *)((__global char *)src2 + src2_index + 0));
+        char8 src_data2_1 = *((__global char8 *)((__global char *)src2 + src2_index + 8));
+        char8 src_data2_2 = *((__global char8 *)((__global char *)src2 + src2_index + 16));
+        char8 src_data2_3 = *((__global char8 *)((__global char *)src2 + src2_index + 24));
 
-        char8 tmp_data_0 = src1_data_0 & src2_data_0;
-        char8 tmp_data_1 = src1_data_1 & src2_data_1;
-        char8 tmp_data_2 = src1_data_2 & src2_data_2;
-        char8 tmp_data_3 = src1_data_3 & src2_data_3;
-        
-        data_0 = mask_data ? tmp_data_0 : data_0;
-        data_1 = mask_data ? tmp_data_1 : data_1;
-        data_2 = mask_data ? tmp_data_2 : data_2;
-        data_3 = mask_data ? tmp_data_3 : data_3;
+        char8 dst_data_0  = *((__global char8 *)((__global char *)dst  + dst_index + 0));
+        char8 dst_data_1  = *((__global char8 *)((__global char *)dst  + dst_index + 8));
+        char8 dst_data_2  = *((__global char8 *)((__global char *)dst  + dst_index + 16));
+        char8 dst_data_3  = *((__global char8 *)((__global char *)dst  + dst_index + 24));
 
+        char8 data_0 = src_data1_0 & src_data2_0;
+        char8 data_1 = src_data1_1 & src_data2_1;
+        char8 data_2 = src_data1_2 & src_data2_2;
+        char8 data_3 = src_data1_3 & src_data2_3;
 
-       *((__global char8 *)((__global char *)dst + dst_index + 0))= data_0;
-       *((__global char8 *)((__global char *)dst + dst_index + 8))= data_1;
-       *((__global char8 *)((__global char *)dst + dst_index + 16))= data_2;
-       *((__global char8 *)((__global char *)dst + dst_index + 24))= data_3;
+        data_0 = mask_data ? data_0 : dst_data_0; 
+        data_1 = mask_data ? data_1 : dst_data_1; 
+        data_2 = mask_data ? data_2 : dst_data_2; 
+        data_3 = mask_data ? data_3 : dst_data_3; 
 
+        *((__global char8 *)((__global char *)dst + dst_index + 0)) = data_0;
+        *((__global char8 *)((__global char *)dst + dst_index + 8)) = data_1;
+        *((__global char8 *)((__global char *)dst + dst_index + 16)) = data_2;
+        *((__global char8 *)((__global char *)dst + dst_index + 24)) = data_3;
     }
 }

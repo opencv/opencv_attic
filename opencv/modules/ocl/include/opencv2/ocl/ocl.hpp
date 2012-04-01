@@ -291,6 +291,7 @@ namespace cv
 		CV_EXPORTS void split(const oclMat &src, vector<oclMat> &dst);
 
 		////////////////////////////// Arithmetics ///////////////////////////////////
+		CV_EXPORTS void addWeighted(const oclMat& a,double alpha, const oclMat& b,double beta,double gama, oclMat& c); 
 		//! adds one matrix to another (c = a + b)
 		// supports all types except CV_8SC1,CV_8SC2,CV8SC3 and CV_8SC4
 		CV_EXPORTS void add(const oclMat& a, const oclMat& b, oclMat& c); 
@@ -640,7 +641,7 @@ namespace cv
 		// sum will have CV_32S type, sqsum - CV32F type
 		// supports only CV_8UC1 source type
 		CV_EXPORTS void integral(oclMat& src, oclMat& sum, oclMat& sqsum);
-
+		CV_EXPORTS void cornerHarris(const oclMat& src, oclMat& dst, int blockSize, int ksize, double k,int bordertype);
 		//////////////////////////////// StereoBM_GPU ////////////////////////////////
 
 		class CV_EXPORTS StereoBM_GPU
@@ -793,11 +794,23 @@ namespace cv
 
 			oclMat out;
 		};
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        ///////////////////////////////////////////CascadeClassifier//////////////////////////////////////////////////////////////////
+        ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        class CV_EXPORTS_W OclCascadeClassifier : public  cv::CascadeClassifier
+        {
+            public:
+                OclCascadeClassifier(){};
+                ~OclCascadeClassifier(){};
 
 
-		CV_EXPORTS  CvSeq* gpuHaarDetectObjects(  oclMat& gimg, CvHaarClassifierCascade* cascade, CvMemStorage* storage, double scaleFactor,
-			                                       int minNeighbors, int flags, CvSize minSize = cvSize(0,0), CvSize maxSize = cvSize(0, 0));
-		CV_EXPORTS  void setBinpath(const char *path);
+                CvSeq* oclHaarDetectObjects(oclMat& gimg, CvMemStorage* storage, double scaleFactor,
+                        int minNeighbors, int flags, CvSize minSize = cvSize(0,0), CvSize maxSize = cvSize(0, 0));
+        };
+
+
+        CV_EXPORTS  void setBinpath(const char *path);
 	}
 }
 #include "opencv2/ocl/matrix_operations.hpp"

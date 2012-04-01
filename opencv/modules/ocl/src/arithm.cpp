@@ -150,6 +150,8 @@ namespace cv
         extern const char * arithm_polarToCart;
         extern const char * arithm_exp;
         extern const char * arithm_log;
+	extern const char * arithm_addWeighted;
+	extern const char * arithm_phase;
         //extern const char * jhp_transpose_kernel;
         int64 kernelrealtotal = 0;
         int64 kernelalltotal = 0;
@@ -175,7 +177,7 @@ void arithmetic_run(const oclMat &src1,const oclMat &src2,oclMat &dst, string ke
     dst.create(src1.size(),src1.type());
     CV_Assert(src1.cols == src2.cols && src2.cols == dst.cols &&
             src1.rows == src2.rows && src2.rows == dst.rows);
-
+	
     CV_Assert(src1.type() == src2.type() && src1.type() == dst.type());
     CV_Assert(src1.depth() != CV_8S);
 
@@ -1115,14 +1117,57 @@ void cv::ocl::magnitude(const oclMat& src1, const oclMat& src2, oclMat& dst)
     arithmetic_magnitude_phase_run(src1, src2, dst,"arithm_magnitude");
 }
 
+void arithmetic_phase_run(const oclMat &src1,const oclMat &src2, oclMat &dst,string kernelName,const char** kernelString)
+{
+    CV_Assert(src1.cols == src2.cols && src2.cols == dst.cols && src1.rows == src2.rows && src2.rows == dst.rows);
+    CV_Assert(src1.type() == src2.type() && src1.type() == dst.type());
+
+    ClContext  *clCxt = src1.clCxt;
+    int channels = dst.channels();
+    int depth = dst.depth();
+
+    size_t vector_length =1; 
+    int offset_cols = ((dst.offset % dst.step) / dst.elemSize1()) & (vector_length-1);
+    int cols = divUp(dst.cols * channels + offset_cols, vector_length);
+    int rows = dst.rows;
+
+    size_t localThreads[3]  = { 64, 4, 1 };
+    size_t globalThreads[3] = { divUp(cols, localThreads[0]) * localThreads[0], 
+                                divUp(rows, localThreads[1]) * localThreads[1],
+                                1};
+
+    int dst_step1 = dst.cols * dst.elemSize();
+    vector<pair<size_t ,const void *> > args;
+    args.push_back( make_pair( sizeof(cl_mem), (void *)&src1.data ));
+    args.push_back( make_pair( sizeof(cl_int), (void *)&src1.step ));
+    args.push_back( make_pair( sizeof(cl_int), (void *)&src1.offset ));
+    args.push_back( make_pair( sizeof(cl_mem), (void *)&src2.data ));
+    args.push_back( make_pair( sizeof(cl_int), (void *)&src2.step ));
+    args.push_back( make_pair( sizeof(cl_int), (void *)&src2.offset ));
+    args.push_back( make_pair( sizeof(cl_mem), (void *)&dst.data ));
+    args.push_back( make_pair( sizeof(cl_int), (void *)&dst.step ));
+    args.push_back( make_pair( sizeof(cl_int), (void *)&dst.offset ));
+    args.push_back( make_pair( sizeof(cl_int), (void *)&dst.rows ));
+    args.push_back( make_pair( sizeof(cl_int), (void *)&cols ));
+    args.push_back( make_pair( sizeof(cl_int), (void *)&dst_step1 ));
+
+    openCLExecuteKernel(clCxt, kernelString, kernelName, globalThreads, localThreads, args, -1, depth);
+}
 void cv::ocl::phase(const oclMat& x, const oclMat& y, oclMat& Angle , bool angleInDegrees)
 {
     CV_Assert(x.type()==y.type()&&x.size()==y.size()&&(x.depth()==CV_32F||x.depth()==CV_64F));
     Angle.create(x.size(),x.type());
+    string kernelName = angleInDegrees ? "arithm_phase_indegrees" : "arithm_phase_inradians";
     if(angleInDegrees)
-        arithmetic_magnitude_phase_run(x, y, Angle,"arithm_op_phase_indegrees");
+    {
+           arithmetic_phase_run(x, y, Angle,kernelName,&arithm_phase);
+           cout<<"1"<<endl;
+    }
     else
-        arithmetic_magnitude_phase_run(x, y, Angle,"arithm_op_phase_inradians");
+    {
+           arithmetic_phase_run(x, y, Angle,kernelName,&arithm_phase); 
+           cout<<"2"<<endl;    
+    }  
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -1803,6 +1848,54 @@ void cv::ocl::transpose(const oclMat& src, oclMat& dst)
         dst.create(src.cols,src.rows,src.type());
         transpose_run( src, dst,"transpose");
     }
+}
+
+void cv::ocl::addWeighted(const oclMat &src1,double alpha, const oclMat &src2, double beta,double gama, oclMat &dst) 
+{
+    dst.create(src1.size(),src1.type());
+    CV_Assert(src1.cols ==  src2.cols && src2.cols == dst.cols &&
+              src1.rows ==  src2.rows && src2.rows == dst.rows);
+    CV_Assert(src1.type() == src2.type() && src1.type() == dst.type());
+
+    ClContext *clCxt= src1.clCxt;
+    int channels =dst.channels();
+    int depth =dst.depth();
+
+    
+    int vector_lengths[4][7] = {{4, 0, 4, 4, 4, 4, 4},
+                                {4, 0, 4, 4, 4, 4, 4},
+                                {4, 0, 4, 4, 4, 4, 4}, 
+                                {4, 0, 4, 4, 4, 4, 4}};
+
+
+    size_t vector_length =vector_lengths[channels-1][depth]; 
+    int offset_cols = (dst.offset / dst.elemSize1()) & (vector_length-1);
+    int cols = divUp(dst.cols * channels + offset_cols, vector_length);
+
+    size_t localThreads[3]  = { 256, 1, 1 };
+    size_t globalThreads[3] = { divUp(cols, localThreads[0]) * localThreads[0], 
+                                divUp(dst.rows, localThreads[1]) * localThreads[1],
+                                1};
+
+    int dst_step1 = dst.cols * dst.elemSize();
+    vector<pair<size_t ,const void *> > args;
+    args.push_back( make_pair( sizeof(cl_mem), (void *)&src1.data ));
+    args.push_back( make_pair( sizeof(cl_double), (void *)&alpha ));
+    args.push_back( make_pair( sizeof(cl_int), (void *)&src1.step ));
+    args.push_back( make_pair( sizeof(cl_int), (void *)&src1.offset));
+    args.push_back( make_pair( sizeof(cl_mem), (void *)&src2.data ));
+    args.push_back( make_pair( sizeof(cl_double), (void *)&beta ));
+    args.push_back( make_pair( sizeof(cl_int), (void *)&src2.step ));
+    args.push_back( make_pair( sizeof(cl_int), (void *)&src2.offset));
+    args.push_back( make_pair( sizeof(cl_double), (void *)&gama ));
+    args.push_back( make_pair( sizeof(cl_mem), (void *)&dst.data ));
+    args.push_back( make_pair( sizeof(cl_int), (void *)&dst.step ));
+    args.push_back( make_pair( sizeof(cl_int), (void *)&dst.offset));
+    args.push_back( make_pair( sizeof(cl_int), (void *)&src1.rows ));
+    args.push_back( make_pair( sizeof(cl_int), (void *)&cols ));
+    args.push_back( make_pair( sizeof(cl_int), (void *)&dst_step1 ));
+
+    openCLExecuteKernel(clCxt,&arithm_addWeighted, "addWeighted",globalThreads, localThreads, args, -1, depth);
 }
 
 #endif /* !defined (HAVE_OPENCL) */

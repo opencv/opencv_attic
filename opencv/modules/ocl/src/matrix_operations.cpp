@@ -422,8 +422,6 @@ oclMat& cv::ocl::oclMat::setTo(const Scalar& scalar, const oclMat& mask)
 
 oclMat cv::ocl::oclMat::reshape(int /*new_cn*/, int /*new_rows*/) const 
 { 
-	cout << "cv::ocl::oclMat::reshape()" << endl;
-	throw_nogpu(); 
 	return oclMat(); 
 }
 

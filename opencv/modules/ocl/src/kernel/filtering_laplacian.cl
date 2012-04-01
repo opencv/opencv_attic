@@ -418,7 +418,7 @@ __kernel void filter2D_C4_D0(__global uchar4 *src, int src_step, int src_offset_
                      int local_row = (lX >> THREADS_PER_ROW_BIT) + i;
                      int local_cols = ((lX % THREADS_PER_ROW) << ELEMENTS_PER_THREAD_BIT) + j; 
 
-                     data = vload16(0, local_data+local_row * LOCAL_MEM_STEP + local_cols); 
+                     data = vload16(0, (__local uchar *)(local_data+local_row * LOCAL_MEM_STEP + local_cols)); 
                      sum = sum + (mat_kernel[i * ANCHOR + j] * convert_int16_sat(data));
                  }
             }

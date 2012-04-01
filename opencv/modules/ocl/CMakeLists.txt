@@ -1,5 +1,5 @@
 set(name "ocl")
-set(DEPS "opencv_core" "opencv_imgproc" "opencv_objdetect" "opencv_features2d" "opencv_flann" "opencv_calib3d")
+set(DEPS "opencv_core" "opencv_imgproc" "opencv_objdetect" "opencv_features2d" "opencv_flann")
 
 set(OPENCV_LINKER_LIBS ${OPENCV_LINKER_LIBS} opencv_ocl)
 
@@ -92,9 +92,9 @@ install(FILES ${lib_hdrs}
 	COMPONENT main)
 
 # ocl module tests	
-#if(BUILD_TESTS AND HAVE_OPENCL AND EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/test)
-#	add_subdirectory(test)
-#endif()
+if(BUILD_TESTS AND HAVE_OPENCL AND EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/test)
+	add_subdirectory(test)
+endif()
 
 
 

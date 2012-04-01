@@ -675,7 +675,7 @@ namespace cv
 		ClContext::ClContext()
 		{
 			//debug information
-			//cout << "Constructing a ClContext instance." << endl;
+			cout << "Constructing a ClContext instance." << endl;
 
 			cl_int status;
 			cl_uint numPlatforms;

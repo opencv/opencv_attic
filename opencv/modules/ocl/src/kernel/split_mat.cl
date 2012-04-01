@@ -71,19 +71,19 @@ __kernel void split_vector_C4_D0 (__global uchar *mat_src,  int src_step,  int s
 
         int dst0_start = mad24(y, dst0_step, dst0_offset); 
         int dst0_end   = mad24(y, dst0_step, dst0_offset + dst_step1);
-        int dst0_idx   = mad24(y, dst0_step, dst0_offset + x & (int)0xfffffffc);
+        int dst0_idx   = mad24(y, dst0_step, dst0_offset + x) & (int)0xfffffffc;
 
         int dst1_start = mad24(y, dst1_step, dst1_offset); 
         int dst1_end   = mad24(y, dst1_step, dst1_offset + dst_step1);
-        int dst1_idx   = mad24(y, dst1_step, dst1_offset + x & (int)0xfffffffc);
+        int dst1_idx   = mad24(y, dst1_step, dst1_offset + x) & (int)0xfffffffc;
 
         int dst2_start = mad24(y, dst2_step, dst2_offset); 
         int dst2_end   = mad24(y, dst2_step, dst2_offset + dst_step1);
-        int dst2_idx   = mad24(y, dst2_step, dst2_offset + x & (int)0xfffffffc);
+        int dst2_idx   = mad24(y, dst2_step, dst2_offset + x) & (int)0xfffffffc;
 
         int dst3_start = mad24(y, dst3_step, dst3_offset); 
         int dst3_end   = mad24(y, dst3_step, dst3_offset + dst_step1);
-        int dst3_idx   = mad24(y, dst3_step, dst3_offset + x & (int)0xfffffffc);
+        int dst3_idx   = mad24(y, dst3_step, dst3_offset + x) & (int)0xfffffffc;
            
         uchar4 data_0 = *((global uchar4 *)(mat_src + src_idx - 12)); 
         uchar4 data_1 = *((global uchar4 *)(mat_src + src_idx - 8 )); 
@@ -615,9 +615,9 @@ __kernel void split_vector_C4_D2 (__global ushort *mat_src,  int src_step,  int 
         ushort2 tmp_data0, tmp_data1, tmp_data2, tmp_data3;
 
         tmp_data0 = (dst0_offset & 3) == 0 ? (ushort2)(src_data0.s4, src_data1.s0) : (ushort2)(src_data0.s0, src_data0.s4);
-        tmp_data1 = (dst0_offset & 3) == 0 ? (ushort2)(src_data0.s5, src_data1.s1) : (ushort2)(src_data0.s1, src_data0.s5);
-        tmp_data2 = (dst0_offset & 3) == 0 ? (ushort2)(src_data0.s6, src_data1.s2) : (ushort2)(src_data0.s2, src_data0.s6);
-        tmp_data3 = (dst0_offset & 3) == 0 ? (ushort2)(src_data0.s7, src_data1.s3) : (ushort2)(src_data0.s3, src_data0.s7);
+        tmp_data1 = (dst1_offset & 3) == 0 ? (ushort2)(src_data0.s5, src_data1.s1) : (ushort2)(src_data0.s1, src_data0.s5);
+        tmp_data2 = (dst2_offset & 3) == 0 ? (ushort2)(src_data0.s6, src_data1.s2) : (ushort2)(src_data0.s2, src_data0.s6);
+        tmp_data3 = (dst3_offset & 3) == 0 ? (ushort2)(src_data0.s7, src_data1.s3) : (ushort2)(src_data0.s3, src_data0.s7);
 
         tmp_data0.x = ((dst0_idx + 0 >= dst0_start) && (dst0_idx + 0 < dst0_end)) ? tmp_data0.x : dst0_data.x;
         tmp_data0.y = ((dst0_idx + 2 >= dst0_start) && (dst0_idx + 2 < dst0_end)) ? tmp_data0.y : dst0_data.y;
@@ -790,9 +790,9 @@ __kernel void split_vector_C4_D3 (__global short *mat_src,  int src_step,  int s
         short2 tmp_data0, tmp_data1, tmp_data2, tmp_data3;
 
         tmp_data0 = (dst0_offset & 3) == 0 ? (short2)(src_data0.s4, src_data1.s0) : (short2)(src_data0.s0, src_data0.s4);
-        tmp_data1 = (dst0_offset & 3) == 0 ? (short2)(src_data0.s5, src_data1.s1) : (short2)(src_data0.s1, src_data0.s5);
-        tmp_data2 = (dst0_offset & 3) == 0 ? (short2)(src_data0.s6, src_data1.s2) : (short2)(src_data0.s2, src_data0.s6);
-        tmp_data3 = (dst0_offset & 3) == 0 ? (short2)(src_data0.s7, src_data1.s3) : (short2)(src_data0.s3, src_data0.s7);
+        tmp_data1 = (dst1_offset & 3) == 0 ? (short2)(src_data0.s5, src_data1.s1) : (short2)(src_data0.s1, src_data0.s5);
+        tmp_data2 = (dst2_offset & 3) == 0 ? (short2)(src_data0.s6, src_data1.s2) : (short2)(src_data0.s2, src_data0.s6);
+        tmp_data3 = (dst3_offset & 3) == 0 ? (short2)(src_data0.s7, src_data1.s3) : (short2)(src_data0.s3, src_data0.s7);
 
         tmp_data0.x = ((dst0_idx + 0 >= dst0_start) && (dst0_idx + 0 < dst0_end)) ? tmp_data0.x : dst0_data.x;
         tmp_data0.y = ((dst0_idx + 2 >= dst0_start) && (dst0_idx + 2 < dst0_end)) ? tmp_data0.y : dst0_data.y;
@@ -1041,9 +1041,9 @@ __kernel void split_vector_C3_D5 (__global float *mat_src,  int src_step,  int s
         int dst1_idx = mad24(y, dst1_step, dst1_offset);
         int dst2_idx = mad24(y, dst2_step, dst2_offset);
 
-        int src_data_0 = ((__global float *)((__global char *)mat_src + src_idx))[3 * x + 0];
-        int src_data_1 = ((__global float *)((__global char *)mat_src + src_idx))[3 * x + 1];
-        int src_data_2 = ((__global float *)((__global char *)mat_src + src_idx))[3 * x + 2];
+        float src_data_0 = ((__global float *)((__global char *)mat_src + src_idx))[3 * x + 0];
+        float src_data_1 = ((__global float *)((__global char *)mat_src + src_idx))[3 * x + 1];
+        float src_data_2 = ((__global float *)((__global char *)mat_src + src_idx))[3 * x + 2];
 
         ((__global float *)((__global char *)mat_dst0 + dst0_idx))[x] = src_data_0;
         ((__global float *)((__global char *)mat_dst1 + dst1_idx))[x] = src_data_1;
@@ -1117,9 +1117,9 @@ __kernel void split_vector_C3_D6 (__global double *mat_src,  int src_step,  int 
         int dst1_idx = mad24(y, dst1_step, dst1_offset);
         int dst2_idx = mad24(y, dst2_step, dst2_offset);
 
-        int src_data_0 = ((__global double *)((__global char *)mat_src + src_idx))[3 * x + 0];
-        int src_data_1 = ((__global double *)((__global char *)mat_src + src_idx))[3 * x + 1];
-        int src_data_2 = ((__global double *)((__global char *)mat_src + src_idx))[3 * x + 2];
+        double src_data_0 = ((__global double *)((__global char *)mat_src + src_idx))[3 * x + 0];
+        double src_data_1 = ((__global double *)((__global char *)mat_src + src_idx))[3 * x + 1];
+        double src_data_2 = ((__global double *)((__global char *)mat_src + src_idx))[3 * x + 2];
 
         ((__global double *)((__global char *)mat_dst0 + dst0_idx))[x] = src_data_0;
         ((__global double *)((__global char *)mat_dst1 + dst1_idx))[x] = src_data_1;

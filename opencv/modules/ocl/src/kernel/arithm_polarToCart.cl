@@ -60,16 +60,16 @@ __kernel void arithm_polarToCart_mag_D5 (__global float *src1, int src1_step, in
                                          __global float *dst2, int dst2_step, int dst2_offset, 
                                          int rows, int cols, int angInDegree)
 {
-    size_t x = get_global_id(0);
-    size_t y = get_global_id(1);
+    int x = get_global_id(0);
+    int y = get_global_id(1);
 
     if (x < cols && y < rows)
     {
-        size_t src1_index = mad24(y, src1_step, (x << 2) + src1_offset);
-        size_t src2_index = mad24(y, src2_step, (x << 2) + src2_offset);
+        int src1_index = mad24(y, src1_step, (x << 2) + src1_offset);
+        int src2_index = mad24(y, src2_step, (x << 2) + src2_offset);
 
-        size_t dst1_index = mad24(y, dst1_step, (x << 2) + dst1_offset);
-        size_t dst2_index = mad24(y, dst2_step, (x << 2) + dst2_offset);
+        int dst1_index = mad24(y, dst1_step, (x << 2) + dst1_offset);
+        int dst2_index = mad24(y, dst2_step, (x << 2) + dst2_offset);
 
         float x = *((__global float *)((__global char *)src1 + src1_index));
         float y = *((__global float *)((__global char *)src2 + src2_index));
@@ -89,16 +89,16 @@ __kernel void arithm_polarToCart_mag_D6 (__global double *src1, int src1_step, i
                                          __global double *dst2, int dst2_step, int dst2_offset, 
                                          int rows, int cols, int angInDegree)
 {
-    size_t x = get_global_id(0);
-    size_t y = get_global_id(1);
+    int x = get_global_id(0);
+    int y = get_global_id(1);
 
     if (x < cols && y < rows)
     {
-        size_t src1_index = mad24(y, src1_step, (x << 3) + src1_offset);
-        size_t src2_index = mad24(y, src2_step, (x << 3) + src2_offset);
+        int src1_index = mad24(y, src1_step, (x << 3) + src1_offset);
+        int src2_index = mad24(y, src2_step, (x << 3) + src2_offset);
 
-        size_t dst1_index = mad24(y, dst1_step, (x << 3) + dst1_offset);
-        size_t dst2_index = mad24(y, dst2_step, (x << 3) + dst2_offset);
+        int dst1_index = mad24(y, dst1_step, (x << 3) + dst1_offset);
+        int dst2_index = mad24(y, dst2_step, (x << 3) + dst2_offset);
 
         double x = *((__global double *)((__global char *)src1 + src1_index));
         double y = *((__global double *)((__global char *)src2 + src2_index));
@@ -121,15 +121,15 @@ __kernel void arithm_polarToCart_D5 (__global float *src,  int src_step,  int sr
                                      __global float *dst2, int dst2_step, int dst2_offset, 
                                      int rows, int cols, int angInDegree)
 {
-    size_t x = get_global_id(0);
-    size_t y = get_global_id(1);
+    int x = get_global_id(0);
+    int y = get_global_id(1);
 
     if (x < cols && y < rows)
     {
-        size_t src_index  = mad24(y, src_step,  (x << 2) + src_offset);
+        int src_index  = mad24(y, src_step,  (x << 2) + src_offset);
 
-        size_t dst1_index = mad24(y, dst1_step, (x << 2) + dst1_offset);
-        size_t dst2_index = mad24(y, dst2_step, (x << 2) + dst2_offset);
+        int dst1_index = mad24(y, dst1_step, (x << 2) + dst1_offset);
+        int dst2_index = mad24(y, dst2_step, (x << 2) + dst2_offset);
 
         float y = *((__global float *)((__global char *)src + src_index));
 
@@ -147,15 +147,15 @@ __kernel void arithm_polarToCart_D6 (__global float *src,  int src_step,  int sr
                                      __global float *dst2, int dst2_step, int dst2_offset, 
                                      int rows, int cols, int angInDegree)
 {
-    size_t x = get_global_id(0);
-    size_t y = get_global_id(1);
+    int x = get_global_id(0);
+    int y = get_global_id(1);
 
     if (x < cols && y < rows)
     {
-        size_t src_index  = mad24(y, src_step,  (x << 3) + src_offset);
+        int src_index  = mad24(y, src_step,  (x << 3) + src_offset);
 
-        size_t dst1_index = mad24(y, dst1_step, (x << 3) + dst1_offset);
-        size_t dst2_index = mad24(y, dst2_step, (x << 3) + dst2_offset);
+        int dst1_index = mad24(y, dst1_step, (x << 3) + dst1_offset);
+        int dst2_index = mad24(y, dst2_step, (x << 3) + dst2_offset);
 
         double y = *((__global double *)((__global char *)src + src_index));
 

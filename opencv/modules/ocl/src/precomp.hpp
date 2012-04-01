@@ -51,7 +51,7 @@
 #endif
 
 #ifdef HAVE_CVCONFIG_H
-#include <cvconfig.h>
+    #include "cvconfig.h"
 #endif
 
 #include <map>
@@ -75,20 +75,16 @@
 
 #define __ATI__
 
-#if defined(HAVE_OPENCL)
+#if defined (HAVE_OPENCL)
 
 #include <CL/cl.h>
-#include "kernel/safe_call.hpp"
+#include "safe_call.hpp"
 
 using namespace std;
 
-static inline void throw_nogpu() 
-{ 
-	CV_Error(CV_GpuNotSupported, "The library is compilled without OpenCL support.\n");
-}
 namespace cv
 { 
-	namespace ocl 
+	namespace ocl
 	{
 		///////////////////////////OpenCL call wrappers////////////////////////////
 		void openCLMallocPitch(ClContext *clCxt, void ** dev_ptr, size_t *pitch, 
@@ -111,20 +107,20 @@ namespace cv
 		void openCLExecuteKernel(ClContext *clCxt ,const char **source, string kernelName, 
 			size_t globalThreads[3], size_t localThreads[3],  
 			vector< pair<size_t, const void *> > &args, int channels, int depth, char *build_options);
-    void openCLExecuteKernel(ClContext *clCxt ,const char **source, string kernelName, size_t globalThreads[3], 
-            size_t localThreads[3],  vector< pair<size_t, const void *> > &args, int channels, int depth);
-    void openCLExecuteKernel(ClContext *clCxt ,const char **source, string kernelName, size_t globalThreads[3], 
-            size_t localThreads[3],  vector< pair<size_t, const void *> > &args, int channels, 
-            int depth, char *build_options);
+		void openCLExecuteKernel(ClContext *clCxt ,const char **source, string kernelName, size_t globalThreads[3], 
+			size_t localThreads[3],  vector< pair<size_t, const void *> > &args, int channels, int depth);
+		void openCLExecuteKernel(ClContext *clCxt ,const char **source, string kernelName, size_t globalThreads[3], 
+			size_t localThreads[3],  vector< pair<size_t, const void *> > &args, int channels, 
+			int depth, char *build_options);
 
-    cl_mem load_constant(cl_context context, cl_command_queue command_queue, const void *value, 
-            const size_t size);
+		cl_mem load_constant(cl_context context, cl_command_queue command_queue, const void *value, 
+			const size_t size);
 
-    cl_mem openCLMalloc(cl_context clCxt, size_t size, cl_mem_flags flags, void* host_ptr);
+		cl_mem openCLMalloc(cl_context clCxt, size_t size, cl_mem_flags flags, void* host_ptr);
 
-    void openCLMemcpy2DWithNoPadding(cl_command_queue command_queue, cl_mem buffer, size_t size, size_t offset, void *ptr,
-            enum openCLMemcpyKind kind, cl_bool blocking_write);
-  }
+		void openCLMemcpy2DWithNoPadding(cl_command_queue command_queue, cl_mem buffer, size_t size, size_t offset, void *ptr,
+			enum openCLMemcpyKind kind, cl_bool blocking_write);
+	}
 }
 
 
@@ -132,7 +128,7 @@ namespace cv
 
 static inline void throw_nogpu() 
 { 
-    CV_Error(CV_GpuNotSupported, "The library is compilled without OpenCL support.\n");
+	CV_Error(CV_GpuNotSupported, "The library is compilled without OpenCL support.\n");
 }
 
 #endif /* defined(HAVE_OPENCL) */

@@ -285,11 +285,11 @@ __kernel void resizeNN_C1_D0(__global uchar * dst, __global uchar * src,
     F ss3 = (gx+2)*ifx;
     F ss4 = (gx+3)*ifx;
     F s5 = dy * ify;
-    sx.s0 = min((int)rint(ss1), src_cols-1);
-    sx.s1 = min((int)rint(ss2), src_cols-1);
-    sx.s2 = min((int)rint(ss3), src_cols-1);
-    sx.s3 = min((int)rint(ss4), src_cols-1);
-    sy = min((int)rint(s5), src_rows-1);
+    sx.s0 = fmin((float)rint(ss1), (float)src_cols-1);
+    sx.s1 = fmin((float)rint(ss2), (float)src_cols-1);
+    sx.s2 = fmin((float)rint(ss3), (float)src_cols-1);
+    sx.s3 = fmin((float)rint(ss4), (float)src_cols-1);
+    sy = fmin((float)rint(s5), (float)src_rows-1);
     
     uchar4 val;
     int4 pos = src_offset + sy * src_step + sx;
@@ -315,8 +315,8 @@ __kernel void resizeNN_C4_D0(__global uchar4 * dst, __global uchar4 * src,
     
     F s1 = dx*ifx;
     F s2 = dy*ify;
-    int sx = min((int)rint(s1), src_cols-1);
-    int sy = min((int)rint(s2), src_rows-1);
+    int sx = fmin((float)rint(s1), (float)src_cols-1);
+    int sy = fmin((float)rint(s2), (float)src_rows-1);
     int dpos = (dst_offset>>2) + dy * (dst_step>>2) + dx;
     int spos = (src_offset>>2) + sy * (src_step>>2) + sx;
     
@@ -334,8 +334,8 @@ __kernel void resizeNN_C1_D5(__global float * dst, __global float * src,
     
     F s1 = dx*ifx;
     F s2 = dy*ify;
-    int sx = min((int)rint(s1), src_cols-1);
-    int sy = min((int)rint(s2), src_rows-1);
+    int sx = fmin((float)rint(s1), (float)src_cols-1);
+    int sy = fmin((float)rint(s2), (float)src_rows-1);
     int dpos = (dst_offset>>2) + dy * (dst_step>>2) + dx;
     int spos = (src_offset>>2) + sy * (src_step>>2) + sx;
     

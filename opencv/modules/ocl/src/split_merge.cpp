@@ -217,7 +217,6 @@ namespace cv
 	              int depth = mat_src[0].depth();
 	              Size size = mat_src[0].size();
 
-	              bool single_channel_only = true;
 	              int total_channels = 0;
 
 	              for(size_t i = 0; i < n; ++i)
@@ -225,11 +224,9 @@ namespace cv
 	                  CV_Assert(depth == mat_src[i].depth());
 	                  CV_Assert(size == mat_src[i].size());
 
-	                  single_channel_only = single_channel_only && (mat_src[i].channels() == 1);
 	                  total_channels += mat_src[i].channels();
                 }
 
-	              CV_Assert(single_channel_only);
 	              CV_Assert(total_channels <= 4);
 
 	              if(total_channels == 1)
@@ -294,22 +291,23 @@ namespace cv
 
                  string kernelName = "split_vector";
 
-                 int max_offset = 0;
-                 for(int i = 0; i < channels; i++)
-                 {
-                     if(max_offset > (mat_dst[i].offset & 3))
-                         max_offset = (mat_dst[i].offset & 3);
-                 }
-                 max_offset = divUp(max_offset, mat_dst[0].elemSize());
-
                  int vector_lengths[4][7] = {{0, 0, 0, 0, 0, 0, 0},
                                              {4, 4, 2, 2, 1, 1, 1},
                                              {4, 4, 2, 2 ,1, 1, 1}, 
                                              {4, 4, 2, 2, 1, 1, 1}};
 
                  size_t vector_length =vector_lengths[channels-1][mat_dst[0].depth()]; 
+
+                 int max_offset_cols = 0;
+                 for(int i= 0; i < channels; i++)
+                 {
+                     int offset_cols = (mat_dst[i].offset / mat_dst[i].elemSize()) & (vector_length-1);
+                     if(max_offset_cols < offset_cols)
+                         max_offset_cols = offset_cols;
+                 }
+
                  int cols =  vector_length == 1? divUp(mat_src.cols, vector_length) 
-                                               : divUp(mat_src.cols + max_offset, vector_length);
+                                               : divUp(mat_src.cols + max_offset_cols, vector_length);
 
                  size_t localThreads[3]  = { 64, 4, 1 };
                  size_t globalThreads[3] = { divUp(cols, localThreads[0]) * localThreads[0], 

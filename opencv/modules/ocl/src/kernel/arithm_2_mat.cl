@@ -111,7 +111,6 @@ int round2_int(double v){
         return convert_int_sat(v+(v>=0 ? 0.5 : -0.5));
 }
 
-
 /*****************************************EXP***************************************/
 __kernel void arithm_op_exp_5 (int rows,int cols,int srcStep,__global float *src1Mat,
                              __global float * dstMat,int channels)

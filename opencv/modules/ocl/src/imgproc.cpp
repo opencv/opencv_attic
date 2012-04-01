@@ -76,11 +76,13 @@ namespace cv { namespace ocl {
 	extern const char * imgproc_median;
 	extern const char * imgproc_threshold;
 	extern const char * imgproc_resize;
+  extern const char * imgproc_warpAffine;
+  extern const char * imgproc_warpPerspective;
 	extern const char * integral_kl;
 	extern const char * imgproc_integral;
 	extern const char * imgproc_histogram;
 	extern const char * imgproc_bilateral;
-
+    extern const char * imgproc_calcHarris;
 	////////////////////////////////////OpenCL call wrappers////////////////////////////
 
 	template <typename T> struct index_and_sizeof;
@@ -408,723 +410,206 @@ namespace cv { namespace ocl {
 	////////////////////////////////////////////////////////////////////////
 	// warp
 
-	namespace
-	{
-		typedef void (*warp_8u_t)(const oclMat& src, oclMat& dst, double coeffs[][3], int interpolation);
-		typedef void (*warp_16u_t)(const oclMat& src, oclMat& dst, double coeffs[][3], int interpolation);
-		typedef void (*warp_32s_t)(const oclMat& src, oclMat& dst, double coeffs[][3], int interpolation);
-		typedef void (*warp_32f_t)(const oclMat& src, oclMat& dst, double coeffs[][3], int interpolation);
+    namespace
+    {
+#define F double
 
-		void convert_coeffs(double * M)
-		{
-			double D = M[0]*M[4] - M[1]*M[3];
-			D = D != 0 ? 1./D : 0;
-			double A11 = M[4]*D, A22=M[0]*D;
-			M[0] = A11; M[1] *= -D;
-			M[3] *= -D; M[4] = A22;
-			double b1 = -M[0]*M[2] - M[1]*M[5];
-			double b2 = -M[3]*M[2] - M[4]*M[5];
-			M[2] = b1; M[5] = b2;
-		}
+        void convert_coeffs(F * M)
+        {
+            double D = M[0]*M[4] - M[1]*M[3];
+            D = D != 0 ? 1./D : 0;
+            double A11 = M[4]*D, A22=M[0]*D;
+            M[0] = A11; M[1] *= -D;
+            M[3] *= -D; M[4] = A22;
+            double b1 = -M[0]*M[2] - M[1]*M[5];
+            double b2 = -M[3]*M[2] - M[4]*M[5];
+            M[2] = b1; M[5] = b2;
+        }
 
-		double invert(double * M)
-		{
+        double invert(double * M)
+        {
 #define Sd(y,x) (Sd[y*3+x])
 #define Dd(y,x) (Dd[y*3+x])
 #define det3(m)   (m(0,0)*(m(1,1)*m(2,2) - m(1,2)*m(2,1)) -  \
-	m(0,1)*(m(1,0)*m(2,2) - m(1,2)*m(2,0)) +  \
-	m(0,2)*(m(1,0)*m(2,1) - m(1,1)*m(2,0)))
-			double * Sd = M;
-			double * Dd = M;
-			double d = det3(Sd);
-			double result = 0;
-			if( d != 0)
-			{
-				double t[9];
-				result = d;
-				d = 1./d;
+        m(0,1)*(m(1,0)*m(2,2) - m(1,2)*m(2,0)) +  \
+        m(0,2)*(m(1,0)*m(2,1) - m(1,1)*m(2,0)))
+            double * Sd = M;
+            double * Dd = M;
+            double d = det3(Sd);
+            double result = 0;
+            if( d != 0)
+            {
+                double t[9];
+                result = d;
+                d = 1./d;
+
+                t[0] = (Sd(1,1) * Sd(2,2) - Sd(1,2) * Sd(2,1)) * d;
+                t[1] = (Sd(0,2) * Sd(2,1) - Sd(0,1) * Sd(2,2)) * d;
+                t[2] = (Sd(0,1) * Sd(1,2) - Sd(0,2) * Sd(1,1)) * d;
+
+                t[3] = (Sd(1,2) * Sd(2,0) - Sd(1,0) * Sd(2,2)) * d;
+                t[4] = (Sd(0,0) * Sd(2,2) - Sd(0,2) * Sd(2,0)) * d;
+                t[5] = (Sd(0,2) * Sd(1,0) - Sd(0,0) * Sd(1,2)) * d;
+
+                t[6] = (Sd(1,0) * Sd(2,1) - Sd(1,1) * Sd(2,0)) * d;
+                t[7] = (Sd(0,1) * Sd(2,0) - Sd(0,0) * Sd(2,1)) * d;
+                t[8] = (Sd(0,0) * Sd(1,1) - Sd(0,1) * Sd(1,0)) * d;
+
+                Dd(0,0) = t[0]; Dd(0,1) = t[1]; Dd(0,2) = t[2];
+                Dd(1,0) = t[3]; Dd(1,1) = t[4]; Dd(1,2) = t[5];
+                Dd(2,0) = t[6]; Dd(2,1) = t[7]; Dd(2,2) = t[8];
+            }
+            return result;
+        }
+
+        void warpAffine_gpu(const oclMat& src, oclMat& dst, F coeffs[2][3], int interpolation)
+        {
+            CV_Assert( (src.channels() == dst.channels()) ); 
+            int cn = src.channels();
+            int srcStep = src.step1();
+            int dstStep = dst.step1();
+
+            ClContext *clCxt = src.clCxt;
+            string s[3] = {"NN", "Linear", "Cubic"};
+            string kernelName = "warpAffine" + s[interpolation];
+
+            cl_int st;
+            cl_mem coeffs_cm = clCreateBuffer( clCxt->clGpuContext, CL_MEM_READ_WRITE, sizeof(F)*2*3, NULL, &st );
+            st = clEnqueueWriteBuffer(clCxt->clGpuCmdQueue, (cl_mem)coeffs_cm, 1, 0, sizeof(F)*2*3, coeffs, 0, 0, 0);
+
+            //TODO: improve this kernel
+				    size_t blkSizeX = 16, blkSizeY = 16;
+				    size_t glbSizeX;
+            //if(src.type() == CV_8UC1 && interpolation != 2) 
+            if(src.type() == CV_8UC1 && interpolation != 2)
+				    {
+				        size_t cols = (dst.cols + dst.offset%4 + 3)/4;
+				        glbSizeX = cols %blkSizeX==0 ? cols : (cols/blkSizeX+1)*blkSizeX;
+				    }
+				    else
+				    {
+				        glbSizeX = dst.cols%blkSizeX==0 ? dst.cols : (dst.cols/blkSizeX+1)*blkSizeX;
+				    }
+				    size_t glbSizeY = dst.rows%blkSizeY==0 ? dst.rows : (dst.rows/blkSizeY+1)*blkSizeY;
+				    size_t globalThreads[3] = {glbSizeX,glbSizeY,1};
+				    size_t localThreads[3] = {blkSizeX,blkSizeY,1};
+				
+				    vector< pair<size_t, const void *> > args;
+
+            args.push_back(make_pair(sizeof(cl_mem),(void*)&src.data));
+            args.push_back(make_pair(sizeof(cl_mem),(void*)&dst.data));
+            args.push_back(make_pair(sizeof(cl_int),(void*)&src.cols));
+            args.push_back(make_pair(sizeof(cl_int),(void*)&src.rows));
+            args.push_back(make_pair(sizeof(cl_int),(void*)&dst.cols));
+            args.push_back(make_pair(sizeof(cl_int),(void*)&dst.rows));
+            args.push_back(make_pair(sizeof(cl_int),(void*)&srcStep));
+            args.push_back(make_pair(sizeof(cl_int),(void*)&dstStep));
+            args.push_back(make_pair(sizeof(cl_int),(void*)&src.offset));
+            args.push_back(make_pair(sizeof(cl_int),(void*)&dst.offset));
+            args.push_back(make_pair(sizeof(cl_mem),(void*)&coeffs_cm));
+
+            openCLExecuteKernel(clCxt,&imgproc_warpAffine,kernelName,globalThreads,localThreads,args,src.channels(),src.depth());
+        }
+
+
+        void warpPerspective_gpu(const oclMat& src, oclMat& dst, double coeffs[3][3], int interpolation)
+        {
+            CV_Assert( (src.channels() == dst.channels()) ); 
+            int cn = src.channels();
+            int srcStep = src.step1();
+            int dstStep = dst.step1();
+
+            ClContext *clCxt = src.clCxt;
+            string s[3] = {"NN", "Linear", "Cubic"};
+            string kernelName = "warpPerspective" + s[interpolation];
+
+            cl_int st;
+            cl_mem coeffs_cm = clCreateBuffer( clCxt->clGpuContext, CL_MEM_READ_WRITE, sizeof(double)*3*3, NULL, &st );
+            st = clEnqueueWriteBuffer(clCxt->clGpuCmdQueue, (cl_mem)coeffs_cm, 1, 0, sizeof(double)*3*3, coeffs, 0, 0, 0);
+
+            //TODO: improve this kernel
+				    size_t blkSizeX = 16, blkSizeY = 16;
+				    size_t glbSizeX;
+            if(src.type() == CV_8UC1 && interpolation != 1)
+				    {
+				        size_t cols = (dst.cols + dst.offset%4 + 3)/4;
+				        glbSizeX = cols %blkSizeX==0 ? cols : (cols/blkSizeX+1)*blkSizeX;
+				    }
+				    else
+            /*
+            */
+				    {
+				        glbSizeX = dst.cols%blkSizeX==0 ? dst.cols : (dst.cols/blkSizeX+1)*blkSizeX;
+				    }
+				    size_t glbSizeY = dst.rows%blkSizeY==0 ? dst.rows : (dst.rows/blkSizeY+1)*blkSizeY;
+				    size_t globalThreads[3] = {glbSizeX,glbSizeY,1};
+				    size_t localThreads[3] = {blkSizeX,blkSizeY,1};
+				
+				    vector< pair<size_t, const void *> > args;
+
+            args.push_back(make_pair(sizeof(cl_mem),(void*)&src.data));
+            args.push_back(make_pair(sizeof(cl_mem),(void*)&dst.data));
+            args.push_back(make_pair(sizeof(cl_int),(void*)&src.cols));
+            args.push_back(make_pair(sizeof(cl_int),(void*)&src.rows));
+            args.push_back(make_pair(sizeof(cl_int),(void*)&dst.cols));
+            args.push_back(make_pair(sizeof(cl_int),(void*)&dst.rows));
+            args.push_back(make_pair(sizeof(cl_int),(void*)&srcStep));
+            args.push_back(make_pair(sizeof(cl_int),(void*)&dstStep));
+            args.push_back(make_pair(sizeof(cl_int),(void*)&src.offset));
+            args.push_back(make_pair(sizeof(cl_int),(void*)&dst.offset));
+            args.push_back(make_pair(sizeof(cl_mem),(void*)&coeffs_cm));
+
+            openCLExecuteKernel(clCxt,&imgproc_warpPerspective,kernelName,globalThreads,localThreads,args,src.channels(),src.depth());
+
+        }
+    }
+
+    void warpAffine(const oclMat& src, oclMat& dst, const Mat& M, Size dsize, int flags)
+    {
+        int interpolation = flags & INTER_MAX;
+
+        CV_Assert((src.depth() == CV_8U  || src.depth() == CV_32F) && src.channels() != 2 && src.channels() != 3);
+        CV_Assert(interpolation == INTER_NEAREST || interpolation == INTER_LINEAR || interpolation == INTER_CUBIC);
+
+        dst.create(dsize, src.type());
+
+        CV_Assert(M.rows == 2 && M.cols == 3);
+
+        int warpInd = (flags & WARP_INVERSE_MAP) >> 4;
+        F coeffs[2][3];
+        Mat coeffsMat(2, 3, CV_64F, (void*)coeffs);
+        M.convertTo(coeffsMat, coeffsMat.type());
+        if(!warpInd)
+        {
+            convert_coeffs((F *)(&coeffs[0][0]));
+        }
+        warpAffine_gpu(src, dst, coeffs, interpolation);
+    }
+
+    void warpPerspective(const oclMat& src, oclMat& dst, const Mat& M, Size dsize, int flags)
+    {
+        int interpolation = flags & INTER_MAX;
+
+        CV_Assert((src.depth() == CV_8U  || src.depth() == CV_32F) && src.channels() != 2 && src.channels() != 3);
+        CV_Assert(interpolation == INTER_NEAREST || interpolation == INTER_LINEAR || interpolation == INTER_CUBIC);
+
+        dst.create(dsize, src.type());
+
+
+        CV_Assert(M.rows == 3 && M.cols == 3);
+
+        int warpInd = (flags & WARP_INVERSE_MAP) >> 4;
+        double coeffs[3][3];
+        Mat coeffsMat(3, 3, CV_64F, (void*)coeffs);
+        M.convertTo(coeffsMat, coeffsMat.type());
+        if(!warpInd)
+        {
+            invert((double *)(&coeffs[0][0]));
+        }
+
+        warpPerspective_gpu(src, dst, coeffs, flags);
+    }
 
-				t[0] = (Sd(1,1) * Sd(2,2) - Sd(1,2) * Sd(2,1)) * d;
-				t[1] = (Sd(0,2) * Sd(2,1) - Sd(0,1) * Sd(2,2)) * d;
-				t[2] = (Sd(0,1) * Sd(1,2) - Sd(0,2) * Sd(1,1)) * d;
-
-				t[3] = (Sd(1,2) * Sd(2,0) - Sd(1,0) * Sd(2,2)) * d;
-				t[4] = (Sd(0,0) * Sd(2,2) - Sd(0,2) * Sd(2,0)) * d;
-				t[5] = (Sd(0,2) * Sd(1,0) - Sd(0,0) * Sd(1,2)) * d;
-
-				t[6] = (Sd(1,0) * Sd(2,1) - Sd(1,1) * Sd(2,0)) * d;
-				t[7] = (Sd(0,1) * Sd(2,0) - Sd(0,0) * Sd(2,1)) * d;
-				t[8] = (Sd(0,0) * Sd(1,1) - Sd(0,1) * Sd(1,0)) * d;
-
-				Dd(0,0) = t[0]; Dd(0,1) = t[1]; Dd(0,2) = t[2];
-				Dd(1,0) = t[3]; Dd(1,1) = t[4]; Dd(1,2) = t[5];
-				Dd(2,0) = t[6]; Dd(2,1) = t[7]; Dd(2,2) = t[8];
-			}
-			return result;
-		}
-
-
-		void warpAffineBack_8u_C1R(const oclMat& src, oclMat& dst, double coeffs[2][3], int interpolation)
-		{
-			CV_Assert( (src.channels() == dst.channels()) ); 
-			int cn = src.channels();
-			int srcStep = src.step1();
-			int dstStep = dst.step1();
-
-			ClContext *clCxt = src.clCxt;
-			string s[3] = {"NN", "Linear", "Cubic"};
-			string kernelName = "warpAffine_8u_" + s[interpolation];
-			cl_kernel kernel = openCLGetKernelFromSource(clCxt,&img_proc,kernelName);
-
-			cl_int st;
-			cl_mem coeffs_cm = clCreateBuffer( clCxt->clGpuContext, CL_MEM_READ_WRITE, sizeof(double)*2*3, NULL, &st );
-			st = clEnqueueWriteBuffer(clCxt->clGpuCmdQueue, (cl_mem)coeffs_cm, 1, 0, sizeof(double)*2*3, coeffs, 0, 0, 0);
-
-			//TODO: improve this kernel
-			size_t globalThreads[3] = {dst.cols,dst.rows,1};
-			size_t localThreads[3] = {1,1,1};
-
-			openCLVerifyKernel(clCxt,kernel,NULL,globalThreads,localThreads);
-			openCLSafeCall(clSetKernelArg(kernel,0,sizeof(cl_mem),(void*)&src.data));
-			openCLSafeCall(clSetKernelArg(kernel,1,sizeof(cl_mem),(void*)&dst.data));
-			openCLSafeCall(clSetKernelArg(kernel,2,sizeof(cl_int),(void*)&src.cols));
-			openCLSafeCall(clSetKernelArg(kernel,3,sizeof(cl_int),(void*)&src.rows));
-			openCLSafeCall(clSetKernelArg(kernel,4,sizeof(cl_int),(void*)&cn));
-			openCLSafeCall(clSetKernelArg(kernel,5,sizeof(cl_int),(void*)&srcStep));
-			openCLSafeCall(clSetKernelArg(kernel,6,sizeof(cl_int),(void*)&dstStep));
-			openCLSafeCall(clSetKernelArg(kernel,7,sizeof(cl_mem),(void*)&coeffs_cm));
-			openCLSafeCall(clSetKernelArg(kernel,8,sizeof(cl_int),(void*)&interpolation));
-
-			openCLSafeCall(clEnqueueNDRangeKernel(clCxt->clGpuCmdQueue,kernel,2,NULL,
-				globalThreads,localThreads,0,NULL,NULL));
-
-			clFinish(clCxt->clGpuCmdQueue);
-			openCLSafeCall(clReleaseKernel(kernel));
-
-		}
-
-		void warpAffine_8u_C1R(const oclMat& src, oclMat& dst, double coeffs[2][3], int interpolation)
-		{
-			convert_coeffs((double *)(&coeffs[0][0]));
-			warpAffineBack_8u_C1R(src, dst, coeffs, interpolation);
-		}
-
-		void warpAffine_8u_C3R(const oclMat& src, oclMat& dst, double coeffs[2][3], int interpolation)
-		{
-			warpAffine_8u_C1R(src, dst, coeffs, interpolation);
-		}
-
-		void warpAffineBack_8u_C3R(const oclMat& src, oclMat& dst, double coeffs[2][3], int interpolation)
-		{
-			warpAffineBack_8u_C1R(src, dst, coeffs, interpolation);
-		}
-
-		void warpAffine_8u_C4R(const oclMat& src, oclMat& dst, double coeffs[2][3], int interpolation)
-		{
-			warpAffine_8u_C1R(src, dst, coeffs, interpolation);
-		}
-
-		void warpAffineBack_8u_C4R(const oclMat& src, oclMat& dst, double coeffs[2][3], int interpolation)
-		{
-			warpAffineBack_8u_C1R(src, dst, coeffs, interpolation);
-		}
-
-
-		void warpAffineBack_16u_C1R(const oclMat& src, oclMat& dst, double coeffs[2][3], int interpolation)
-		{
-			CV_Assert( (src.channels() == dst.channels()) ); 
-			int cn = src.channels();
-			int srcStep = src.step1();
-			int dstStep = dst.step1();
-
-			ClContext *clCxt = src.clCxt;
-			string s[3] = {"NN", "Linear", "Cubic"};
-			string kernelName = "warpAffine_16u_" + s[interpolation];
-			cl_kernel kernel = openCLGetKernelFromSource(clCxt,&img_proc,kernelName);
-
-			cl_int st;
-			cl_mem coeffs_cm = clCreateBuffer( clCxt->clGpuContext, CL_MEM_READ_WRITE, sizeof(double)*2*3, NULL, &st );
-			st = clEnqueueWriteBuffer(clCxt->clGpuCmdQueue, (cl_mem)coeffs_cm, 1, 0, sizeof(double)*2*3, coeffs, 0, 0, 0);
-
-			/*size_t test_size = src.cols * src.rows;
-			float *test = (float *)malloc(sizeof(float) * test_size);
-			cl_mem test_cm = clCreateBuffer(clCxt->clGpuContext, CL_MEM_READ_WRITE, sizeof(float)*test_size, NULL, &st);
-			openCLSafeCall(clSetKernelArg(kernel,9,sizeof(cl_mem),(void*)&test_cm));*/
-			//TODO: improve this kernel
-			size_t globalThreads[3] = {dst.cols,dst.rows,1};
-			size_t localThreads[3] = {1,1,1};
-
-			openCLVerifyKernel(clCxt,kernel,NULL,globalThreads,localThreads);
-			openCLSafeCall(clSetKernelArg(kernel,0,sizeof(cl_mem),(void*)&src.data));
-			openCLSafeCall(clSetKernelArg(kernel,1,sizeof(cl_mem),(void*)&dst.data));
-			openCLSafeCall(clSetKernelArg(kernel,2,sizeof(cl_int),(void*)&src.cols));
-			openCLSafeCall(clSetKernelArg(kernel,3,sizeof(cl_int),(void*)&src.rows));
-			openCLSafeCall(clSetKernelArg(kernel,4,sizeof(cl_int),(void*)&cn));
-			openCLSafeCall(clSetKernelArg(kernel,5,sizeof(cl_int),(void*)&srcStep));
-			openCLSafeCall(clSetKernelArg(kernel,6,sizeof(cl_int),(void*)&dstStep));
-			openCLSafeCall(clSetKernelArg(kernel,7,sizeof(cl_mem),(void*)&coeffs_cm));
-			openCLSafeCall(clSetKernelArg(kernel,8,sizeof(cl_int),(void*)&interpolation));
-
-			openCLSafeCall(clEnqueueNDRangeKernel(clCxt->clGpuCmdQueue,kernel,2,NULL,
-				globalThreads,localThreads,0,NULL,NULL));
-
-			clFinish(clCxt->clGpuCmdQueue);
-			openCLSafeCall(clReleaseKernel(kernel));
-
-			//st = clEnqueueReadBuffer(clCxt->clGpuCmdQueue, test_cm, CL_TRUE, 0, sizeof(float)*test_size, test, 0, NULL, NULL);
-			//	printf(">>>test %lf %lf %lf %lf %lf %lf\n", test[0], test[1], test[2], test[3], test[4], test[5]);
-
-		}
-
-		void warpAffine_16u_C1R(const oclMat& src, oclMat& dst, double coeffs[2][3], int interpolation)
-		{
-			convert_coeffs((double *)(&coeffs[0][0]));
-			warpAffineBack_16u_C1R(src, dst, coeffs, interpolation);
-		}
-
-		void warpAffine_16u_C3R(const oclMat& src, oclMat& dst, double coeffs[2][3], int interpolation)
-		{
-			warpAffine_16u_C1R(src, dst, coeffs, interpolation);
-		}
-
-		void warpAffineBack_16u_C3R(const oclMat& src, oclMat& dst, double coeffs[2][3], int interpolation)
-		{
-			warpAffineBack_16u_C1R(src, dst, coeffs, interpolation);
-		}
-
-		void warpAffine_16u_C4R(const oclMat& src, oclMat& dst, double coeffs[2][3], int interpolation)
-		{
-			warpAffine_16u_C1R(src, dst, coeffs, interpolation);
-		}
-
-		void warpAffineBack_16u_C4R(const oclMat& src, oclMat& dst, double coeffs[2][3], int interpolation)
-		{
-			warpAffineBack_16u_C1R(src, dst, coeffs, interpolation);
-		}
-
-
-		void warpAffineBack_32s_C1R(const oclMat& src, oclMat& dst, double coeffs[2][3], int interpolation)
-		{
-			CV_Assert( (src.channels() == dst.channels()) ); 
-			int cn = src.channels();
-			int srcStep = src.step1();
-			int dstStep = dst.step1();
-
-			ClContext *clCxt = src.clCxt;
-			string s[3] = {"NN", "Linear", "Cubic"};
-			string kernelName = "warpAffine_32s_" + s[interpolation];
-			cl_kernel kernel = openCLGetKernelFromSource(clCxt,&img_proc,kernelName);
-
-			cl_int st;
-			cl_mem coeffs_cm = clCreateBuffer( clCxt->clGpuContext, CL_MEM_READ_WRITE, sizeof(double)*2*3, NULL, &st );
-			st = clEnqueueWriteBuffer(clCxt->clGpuCmdQueue, (cl_mem)coeffs_cm, 1, 0, sizeof(double)*2*3, coeffs, 0, 0, 0);
-
-
-			//TODO: improve this kernel
-			size_t globalThreads[3] = {dst.cols,dst.rows,1};
-			size_t localThreads[3] = {1,1,1};
-
-			openCLVerifyKernel(clCxt,kernel,NULL,globalThreads,localThreads);
-			openCLSafeCall(clSetKernelArg(kernel,0,sizeof(cl_mem),(void*)&src.data));
-			openCLSafeCall(clSetKernelArg(kernel,1,sizeof(cl_mem),(void*)&dst.data));
-			openCLSafeCall(clSetKernelArg(kernel,2,sizeof(cl_int),(void*)&src.cols));
-			openCLSafeCall(clSetKernelArg(kernel,3,sizeof(cl_int),(void*)&src.rows));
-			openCLSafeCall(clSetKernelArg(kernel,4,sizeof(cl_int),(void*)&cn));
-			openCLSafeCall(clSetKernelArg(kernel,5,sizeof(cl_int),(void*)&srcStep));
-			openCLSafeCall(clSetKernelArg(kernel,6,sizeof(cl_int),(void*)&dstStep));
-			openCLSafeCall(clSetKernelArg(kernel,7,sizeof(cl_mem),(void*)&coeffs_cm));
-			openCLSafeCall(clSetKernelArg(kernel,8,sizeof(cl_int),(void*)&interpolation));
-
-			openCLSafeCall(clEnqueueNDRangeKernel(clCxt->clGpuCmdQueue,kernel,2,NULL,
-				globalThreads,localThreads,0,NULL,NULL));
-
-			clFinish(clCxt->clGpuCmdQueue);
-			openCLSafeCall(clReleaseKernel(kernel));
-		}
-
-		void warpAffine_32s_C1R(const oclMat& src, oclMat& dst, double coeffs[2][3], int interpolation)
-		{
-			convert_coeffs((double *)(&coeffs[0][0]));
-			warpAffineBack_32s_C1R(src, dst, coeffs, interpolation);
-		}
-
-		void warpAffine_32s_C3R(const oclMat& src, oclMat& dst, double coeffs[2][3], int interpolation)
-		{
-			warpAffine_32s_C1R(src, dst, coeffs, interpolation);
-		}
-
-		void warpAffineBack_32s_C3R(const oclMat& src, oclMat& dst, double coeffs[2][3], int interpolation)
-		{
-			warpAffineBack_32s_C1R(src, dst, coeffs, interpolation);
-		}
-
-		void warpAffine_32s_C4R(const oclMat& src, oclMat& dst, double coeffs[2][3], int interpolation)
-		{
-			warpAffine_32s_C1R(src, dst, coeffs, interpolation);
-		}
-
-		void warpAffineBack_32s_C4R(const oclMat& src, oclMat& dst, double coeffs[2][3], int interpolation)
-		{
-			warpAffineBack_32s_C1R(src, dst, coeffs, interpolation);
-		}
-
-
-		void warpAffineBack_32f_C1R(const oclMat& src, oclMat& dst, double coeffs[2][3], int interpolation)
-		{
-			CV_Assert( (src.channels() == dst.channels()) ); 
-			int cn = src.channels();
-			int srcStep = src.step1();
-			int dstStep = dst.step1();
-
-			ClContext *clCxt = src.clCxt;
-			string s[3] = {"NN", "Linear", "Cubic"};
-			string kernelName = "warpAffine_32f_" + s[interpolation];
-			cl_kernel kernel = openCLGetKernelFromSource(clCxt,&img_proc,kernelName);
-
-			cl_int st;
-			cl_mem coeffs_cm = clCreateBuffer( clCxt->clGpuContext, CL_MEM_READ_WRITE, sizeof(double)*2*3, NULL, &st );
-			st = clEnqueueWriteBuffer(clCxt->clGpuCmdQueue, (cl_mem)coeffs_cm, 1, 0, sizeof(double)*2*3, coeffs, 0, 0, 0);
-
-
-			//TODO: improve this kernel
-			size_t globalThreads[3] = {dst.cols,dst.rows,1};
-			size_t localThreads[3] = {1,1,1};
-
-			openCLVerifyKernel(clCxt,kernel,NULL,globalThreads,localThreads);
-			openCLSafeCall(clSetKernelArg(kernel,0,sizeof(cl_mem),(void*)&src.data));
-			openCLSafeCall(clSetKernelArg(kernel,1,sizeof(cl_mem),(void*)&dst.data));
-			openCLSafeCall(clSetKernelArg(kernel,2,sizeof(cl_int),(void*)&src.cols));
-			openCLSafeCall(clSetKernelArg(kernel,3,sizeof(cl_int),(void*)&src.rows));
-			openCLSafeCall(clSetKernelArg(kernel,4,sizeof(cl_int),(void*)&cn));
-			openCLSafeCall(clSetKernelArg(kernel,5,sizeof(cl_int),(void*)&srcStep));
-			openCLSafeCall(clSetKernelArg(kernel,6,sizeof(cl_int),(void*)&dstStep));
-			openCLSafeCall(clSetKernelArg(kernel,7,sizeof(cl_mem),(void*)&coeffs_cm));
-			openCLSafeCall(clSetKernelArg(kernel,8,sizeof(cl_int),(void*)&interpolation));
-
-			openCLSafeCall(clEnqueueNDRangeKernel(clCxt->clGpuCmdQueue,kernel,2,NULL,
-				globalThreads,localThreads,0,NULL,NULL));
-
-			clFinish(clCxt->clGpuCmdQueue);
-			openCLSafeCall(clReleaseKernel(kernel));
-		}
-
-		void warpAffine_32f_C1R(const oclMat& src, oclMat& dst, double coeffs[2][3], int interpolation)
-		{
-			convert_coeffs((double *)(&coeffs[0][0]));
-			warpAffineBack_32f_C1R(src, dst, coeffs, interpolation);
-		}
-
-		void warpAffine_32f_C3R(const oclMat& src, oclMat& dst, double coeffs[2][3], int interpolation)
-		{
-			warpAffine_32f_C1R(src, dst, coeffs, interpolation);
-		}
-
-		void warpAffineBack_32f_C3R(const oclMat& src, oclMat& dst, double coeffs[2][3], int interpolation)
-		{
-			warpAffineBack_32f_C1R(src, dst, coeffs, interpolation);
-		}
-
-		void warpAffine_32f_C4R(const oclMat& src, oclMat& dst, double coeffs[2][3], int interpolation)
-		{
-			warpAffine_32f_C1R(src, dst, coeffs, interpolation);
-		}
-
-		void warpAffineBack_32f_C4R(const oclMat& src, oclMat& dst, double coeffs[2][3], int interpolation)
-		{
-			warpAffineBack_32f_C1R(src, dst, coeffs, interpolation);
-		}
-
-		void warpPerspectiveBack_8u_C1R(const oclMat& src, oclMat& dst, double coeffs[3][3], int interpolation)
-		{
-			CV_Assert( (src.channels() == dst.channels()) ); 
-			int cn = src.channels();
-			int srcStep = src.step1();
-			int dstStep = dst.step1();
-
-			ClContext *clCxt = src.clCxt;
-			string s[3] = {"NN", "Linear", "Cubic"};
-			string kernelName = "warpPerspective_8u_" + s[interpolation];
-			cl_kernel kernel = openCLGetKernelFromSource(clCxt,&img_proc,kernelName);
-
-			cl_int st;
-			cl_mem coeffs_cm = clCreateBuffer( clCxt->clGpuContext, CL_MEM_READ_WRITE, sizeof(double)*3*3, NULL, &st );
-			st = clEnqueueWriteBuffer(clCxt->clGpuCmdQueue, (cl_mem)coeffs_cm, 1, 0, sizeof(double)*3*3, coeffs, 0, 0, 0);
-
-			//TODO: improve this kernel
-			size_t globalThreads[3] = {dst.cols,dst.rows,1};
-			size_t localThreads[3] = {1,1,1};
-
-			openCLVerifyKernel(clCxt,kernel,NULL,globalThreads,localThreads);
-			openCLSafeCall(clSetKernelArg(kernel,0,sizeof(cl_mem),(void*)&src.data));
-			openCLSafeCall(clSetKernelArg(kernel,1,sizeof(cl_mem),(void*)&dst.data));
-			openCLSafeCall(clSetKernelArg(kernel,2,sizeof(cl_int),(void*)&src.cols));
-			openCLSafeCall(clSetKernelArg(kernel,3,sizeof(cl_int),(void*)&src.rows));
-			openCLSafeCall(clSetKernelArg(kernel,4,sizeof(cl_int),(void*)&cn));
-			openCLSafeCall(clSetKernelArg(kernel,5,sizeof(cl_int),(void*)&srcStep));
-			openCLSafeCall(clSetKernelArg(kernel,6,sizeof(cl_int),(void*)&dstStep));
-			openCLSafeCall(clSetKernelArg(kernel,7,sizeof(cl_mem),(void*)&coeffs_cm));
-			openCLSafeCall(clSetKernelArg(kernel,8,sizeof(cl_int),(void*)&interpolation));
-
-			openCLSafeCall(clEnqueueNDRangeKernel(clCxt->clGpuCmdQueue,kernel,2,NULL,
-				globalThreads,localThreads,0,NULL,NULL));
-
-			clFinish(clCxt->clGpuCmdQueue);
-			openCLSafeCall(clReleaseKernel(kernel));
-
-		}
-
-		void warpPerspective_8u_C1R(const oclMat& src, oclMat& dst, double coeffs[3][3], int interpolation)
-		{
-			invert((double *)(&coeffs[0][0]));
-			warpPerspectiveBack_8u_C1R(src, dst, coeffs, interpolation);
-		}
-
-		void warpPerspective_8u_C3R(const oclMat& src, oclMat& dst, double coeffs[3][3], int interpolation)
-		{
-			warpPerspective_8u_C1R(src, dst, coeffs, interpolation);
-		}
-
-		void warpPerspectiveBack_8u_C3R(const oclMat& src, oclMat& dst, double coeffs[3][3], int interpolation)
-		{
-			warpPerspectiveBack_8u_C1R(src, dst, coeffs, interpolation);
-		}
-
-		void warpPerspective_8u_C4R(const oclMat& src, oclMat& dst, double coeffs[3][3], int interpolation)
-		{
-			warpPerspective_8u_C1R(src, dst, coeffs, interpolation);
-		}
-
-		void warpPerspectiveBack_8u_C4R(const oclMat& src, oclMat& dst, double coeffs[3][3], int interpolation)
-		{
-			warpPerspectiveBack_8u_C1R(src, dst, coeffs, interpolation);
-		}
-
-
-		void warpPerspectiveBack_16u_C1R(const oclMat& src, oclMat& dst, double coeffs[3][3], int interpolation)
-		{
-			CV_Assert( (src.channels() == dst.channels()) ); 
-			int cn = src.channels();
-			int srcStep = src.step1();
-			int dstStep = dst.step1();
-
-			ClContext *clCxt = src.clCxt;
-			string s[3] = {"NN", "Linear", "Cubic"};
-			string kernelName = "warpPerspective_16u_" + s[interpolation];
-			cl_kernel kernel = openCLGetKernelFromSource(clCxt,&img_proc,kernelName);
-
-			cl_int st;
-			cl_mem coeffs_cm = clCreateBuffer( clCxt->clGpuContext, CL_MEM_READ_WRITE, sizeof(double)*3*3, NULL, &st );
-			st = clEnqueueWriteBuffer(clCxt->clGpuCmdQueue, (cl_mem)coeffs_cm, 1, 0, sizeof(double)*3*3, coeffs, 0, 0, 0);
-
-			/*size_t test_size = src.cols * src.rows;
-			float *test = (float *)malloc(sizeof(float) * test_size);
-			cl_mem test_cm = clCreateBuffer(clCxt->clGpuContext, CL_MEM_READ_WRITE, sizeof(float)*test_size, NULL, &st);
-			openCLSafeCall(clSetKernelArg(kernel,9,sizeof(cl_mem),(void*)&test_cm));*/
-			//TODO: improve this kernel
-			size_t globalThreads[3] = {dst.cols,dst.rows,1};
-			size_t localThreads[3] = {1,1,1};
-
-			openCLVerifyKernel(clCxt,kernel,NULL,globalThreads,localThreads);
-			openCLSafeCall(clSetKernelArg(kernel,0,sizeof(cl_mem),(void*)&src.data));
-			openCLSafeCall(clSetKernelArg(kernel,1,sizeof(cl_mem),(void*)&dst.data));
-			openCLSafeCall(clSetKernelArg(kernel,2,sizeof(cl_int),(void*)&src.cols));
-			openCLSafeCall(clSetKernelArg(kernel,3,sizeof(cl_int),(void*)&src.rows));
-			openCLSafeCall(clSetKernelArg(kernel,4,sizeof(cl_int),(void*)&cn));
-			openCLSafeCall(clSetKernelArg(kernel,5,sizeof(cl_int),(void*)&srcStep));
-			openCLSafeCall(clSetKernelArg(kernel,6,sizeof(cl_int),(void*)&dstStep));
-			openCLSafeCall(clSetKernelArg(kernel,7,sizeof(cl_mem),(void*)&coeffs_cm));
-			openCLSafeCall(clSetKernelArg(kernel,8,sizeof(cl_int),(void*)&interpolation));
-
-			openCLSafeCall(clEnqueueNDRangeKernel(clCxt->clGpuCmdQueue,kernel,2,NULL,
-				globalThreads,localThreads,0,NULL,NULL));
-
-			clFinish(clCxt->clGpuCmdQueue);
-			openCLSafeCall(clReleaseKernel(kernel));
-
-			//st = clEnqueueReadBuffer(clCxt->clGpuCmdQueue, test_cm, CL_TRUE, 0, sizeof(float)*test_size, test, 0, NULL, NULL);
-			//	printf(">>>test %lf %lf %lf %lf %lf %lf\n", test[0], test[1], test[2], test[3], test[4], test[5]);
-
-		}
-
-		void warpPerspective_16u_C1R(const oclMat& src, oclMat& dst, double coeffs[3][3], int interpolation)
-		{
-			invert((double *)(&coeffs[0][0]));
-			warpPerspectiveBack_16u_C1R(src, dst, coeffs, interpolation);
-		}
-
-		void warpPerspective_16u_C3R(const oclMat& src, oclMat& dst, double coeffs[3][3], int interpolation)
-		{
-			warpPerspective_16u_C1R(src, dst, coeffs, interpolation);
-		}
-
-		void warpPerspectiveBack_16u_C3R(const oclMat& src, oclMat& dst, double coeffs[3][3], int interpolation)
-		{
-			warpPerspectiveBack_16u_C1R(src, dst, coeffs, interpolation);
-		}
-
-		void warpPerspective_16u_C4R(const oclMat& src, oclMat& dst, double coeffs[3][3], int interpolation)
-		{
-			warpPerspective_16u_C1R(src, dst, coeffs, interpolation);
-		}
-
-		void warpPerspectiveBack_16u_C4R(const oclMat& src, oclMat& dst, double coeffs[3][3], int interpolation)
-		{
-			warpPerspectiveBack_16u_C1R(src, dst, coeffs, interpolation);
-		}
-
-
-		void warpPerspectiveBack_32s_C1R(const oclMat& src, oclMat& dst, double coeffs[3][3], int interpolation)
-		{
-			CV_Assert( (src.channels() == dst.channels()) ); 
-			int cn = src.channels();
-			int srcStep = src.step1();
-			int dstStep = dst.step1();
-
-			ClContext *clCxt = src.clCxt;
-			string s[3] = {"NN", "Linear", "Cubic"};
-			string kernelName = "warpPerspective_32s_" + s[interpolation];
-			cl_kernel kernel = openCLGetKernelFromSource(clCxt,&img_proc,kernelName);
-
-			cl_int st;
-			cl_mem coeffs_cm = clCreateBuffer( clCxt->clGpuContext, CL_MEM_READ_WRITE, sizeof(double)*3*3, NULL, &st );
-			st = clEnqueueWriteBuffer(clCxt->clGpuCmdQueue, (cl_mem)coeffs_cm, 1, 0, sizeof(double)*3*3, coeffs, 0, 0, 0);
-
-
-			//TODO: improve this kernel
-			size_t globalThreads[3] = {dst.cols,dst.rows,1};
-			size_t localThreads[3] = {1,1,1};
-
-			openCLVerifyKernel(clCxt,kernel,NULL,globalThreads,localThreads);
-			openCLSafeCall(clSetKernelArg(kernel,0,sizeof(cl_mem),(void*)&src.data));
-			openCLSafeCall(clSetKernelArg(kernel,1,sizeof(cl_mem),(void*)&dst.data));
-			openCLSafeCall(clSetKernelArg(kernel,2,sizeof(cl_int),(void*)&src.cols));
-			openCLSafeCall(clSetKernelArg(kernel,3,sizeof(cl_int),(void*)&src.rows));
-			openCLSafeCall(clSetKernelArg(kernel,4,sizeof(cl_int),(void*)&cn));
-			openCLSafeCall(clSetKernelArg(kernel,5,sizeof(cl_int),(void*)&srcStep));
-			openCLSafeCall(clSetKernelArg(kernel,6,sizeof(cl_int),(void*)&dstStep));
-			openCLSafeCall(clSetKernelArg(kernel,7,sizeof(cl_mem),(void*)&coeffs_cm));
-			openCLSafeCall(clSetKernelArg(kernel,8,sizeof(cl_int),(void*)&interpolation));
-
-			openCLSafeCall(clEnqueueNDRangeKernel(clCxt->clGpuCmdQueue,kernel,2,NULL,
-				globalThreads,localThreads,0,NULL,NULL));
-
-			clFinish(clCxt->clGpuCmdQueue);
-			openCLSafeCall(clReleaseKernel(kernel));
-		}
-
-		void warpPerspective_32s_C1R(const oclMat& src, oclMat& dst, double coeffs[3][3], int interpolation)
-		{
-			invert((double *)(&coeffs[0][0]));
-			warpPerspectiveBack_32s_C1R(src, dst, coeffs, interpolation);
-		}
-
-		void warpPerspective_32s_C3R(const oclMat& src, oclMat& dst, double coeffs[3][3], int interpolation)
-		{
-			warpPerspective_32s_C1R(src, dst, coeffs, interpolation);
-		}
-
-		void warpPerspectiveBack_32s_C3R(const oclMat& src, oclMat& dst, double coeffs[3][3], int interpolation)
-		{
-			warpPerspectiveBack_32s_C1R(src, dst, coeffs, interpolation);
-		}
-
-		void warpPerspective_32s_C4R(const oclMat& src, oclMat& dst, double coeffs[3][3], int interpolation)
-		{
-			warpPerspective_32s_C1R(src, dst, coeffs, interpolation);
-		}
-
-		void warpPerspectiveBack_32s_C4R(const oclMat& src, oclMat& dst, double coeffs[3][3], int interpolation)
-		{
-			warpPerspectiveBack_32s_C1R(src, dst, coeffs, interpolation);
-		}
-
-
-		void warpPerspectiveBack_32f_C1R(const oclMat& src, oclMat& dst, double coeffs[3][3], int interpolation)
-		{
-			CV_Assert( (src.channels() == dst.channels()) ); 
-			int cn = src.channels();
-			int srcStep = src.step1();
-			int dstStep = dst.step1();
-
-			ClContext *clCxt = src.clCxt;
-			string s[3] = {"NN", "Linear", "Cubic"};
-			string kernelName = "warpPerspective_32f_" + s[interpolation];
-			cl_kernel kernel = openCLGetKernelFromSource(clCxt,&img_proc,kernelName);
-
-			cl_int st;
-			cl_mem coeffs_cm = clCreateBuffer( clCxt->clGpuContext, CL_MEM_READ_WRITE, sizeof(double)*3*3, NULL, &st );
-			st = clEnqueueWriteBuffer(clCxt->clGpuCmdQueue, (cl_mem)coeffs_cm, 1, 0, sizeof(double)*3*3, coeffs, 0, 0, 0);
-
-
-			//TODO: improve this kernel
-			size_t globalThreads[3] = {dst.cols,dst.rows,1};
-			size_t localThreads[3] = {1,1,1};
-
-			openCLVerifyKernel(clCxt,kernel,NULL,globalThreads,localThreads);
-			openCLSafeCall(clSetKernelArg(kernel,0,sizeof(cl_mem),(void*)&src.data));
-			openCLSafeCall(clSetKernelArg(kernel,1,sizeof(cl_mem),(void*)&dst.data));
-			openCLSafeCall(clSetKernelArg(kernel,2,sizeof(cl_int),(void*)&src.cols));
-			openCLSafeCall(clSetKernelArg(kernel,3,sizeof(cl_int),(void*)&src.rows));
-			openCLSafeCall(clSetKernelArg(kernel,4,sizeof(cl_int),(void*)&cn));
-			openCLSafeCall(clSetKernelArg(kernel,5,sizeof(cl_int),(void*)&srcStep));
-			openCLSafeCall(clSetKernelArg(kernel,6,sizeof(cl_int),(void*)&dstStep));
-			openCLSafeCall(clSetKernelArg(kernel,7,sizeof(cl_mem),(void*)&coeffs_cm));
-			openCLSafeCall(clSetKernelArg(kernel,8,sizeof(cl_int),(void*)&interpolation));
-
-			openCLSafeCall(clEnqueueNDRangeKernel(clCxt->clGpuCmdQueue,kernel,2,NULL,
-				globalThreads,localThreads,0,NULL,NULL));
-
-			clFinish(clCxt->clGpuCmdQueue);
-			openCLSafeCall(clReleaseKernel(kernel));
-		}
-
-		void warpPerspective_32f_C1R(const oclMat& src, oclMat& dst, double coeffs[3][3], int interpolation)
-		{
-			invert((double *)(&coeffs[0][0]));
-			warpPerspectiveBack_32f_C1R(src, dst, coeffs, interpolation);
-		}
-
-		void warpPerspective_32f_C3R(const oclMat& src, oclMat& dst, double coeffs[3][3], int interpolation)
-		{
-			warpPerspective_32f_C1R(src, dst, coeffs, interpolation);
-		}
-
-		void warpPerspectiveBack_32f_C3R(const oclMat& src, oclMat& dst, double coeffs[3][3], int interpolation)
-		{
-			warpPerspectiveBack_32f_C1R(src, dst, coeffs, interpolation);
-		}
-
-		void warpPerspective_32f_C4R(const oclMat& src, oclMat& dst, double coeffs[3][3], int interpolation)
-		{
-			warpPerspective_32f_C1R(src, dst, coeffs, interpolation);
-		}
-
-		void warpPerspectiveBack_32f_C4R(const oclMat& src, oclMat& dst, double coeffs[3][3], int interpolation)
-		{
-			warpPerspectiveBack_32f_C1R(src, dst, coeffs, interpolation);
-		}
-
-
-		void WarpCaller(const oclMat& src, oclMat& dst, double coeffs[][3], const Size& dsize, int flags,
-			warp_8u_t warp_8u[][2], warp_16u_t warp_16u[][2],
-			warp_32s_t warp_32s[][2], warp_32f_t warp_32f[][2])
-		{
-			int interpolation = flags & INTER_MAX;
-
-			CV_Assert((src.depth() == CV_8U || src.depth() == CV_16U || src.depth() == CV_32S || src.depth() == CV_32F) && src.channels() != 2);
-			CV_Assert(interpolation == INTER_NEAREST || interpolation == INTER_LINEAR || interpolation == INTER_CUBIC);
-
-			dst.create(dsize, src.type());
-
-			int warpInd = (flags & WARP_INVERSE_MAP) >> 4;
-
-			switch (src.depth())
-			{
-			case CV_8U:
-				warp_8u[src.channels()][warpInd](src, dst, coeffs, interpolation);
-				break;
-			case CV_16U:
-				warp_16u[src.channels()][warpInd](src, dst, coeffs, interpolation);
-				break;
-			case CV_32S:
-				warp_32s[src.channels()][warpInd](src, dst, coeffs, interpolation);
-				break;
-			case CV_32F:
-				warp_32f[src.channels()][warpInd](src, dst, coeffs, interpolation);
-				break;
-			default:
-				CV_Assert(!"Unsupported source type");
-			}
-		}
-	}
-
-	void warpAffine(const oclMat& src, oclMat& dst, const Mat& M, Size dsize, int flags)
-	{
-		static warp_8u_t warpAffine_8u[][2] =
-		{
-			{0, 0},
-			{warpAffine_8u_C1R, warpAffineBack_8u_C1R},
-			{0, 0},
-			{warpAffine_8u_C3R, warpAffineBack_8u_C3R},
-			{warpAffine_8u_C4R, warpAffineBack_8u_C4R}
-		};
-		static warp_16u_t warpAffine_16u[][2] =
-		{
-			{0, 0},
-			{warpAffine_16u_C1R, warpAffineBack_16u_C1R},
-			{0, 0},
-			{warpAffine_16u_C3R, warpAffineBack_16u_C3R},
-			{warpAffine_16u_C4R, warpAffineBack_16u_C4R}
-		};
-		static warp_32s_t warpAffine_32s[][2] =
-		{
-			{0, 0},
-			{warpAffine_32s_C1R, warpAffineBack_32s_C1R},
-			{0, 0},
-			{warpAffine_32s_C3R, warpAffineBack_32s_C3R},
-			{warpAffine_32s_C4R, warpAffineBack_32s_C4R}
-		};
-		static warp_32f_t warpAffine_32f[][2] =
-		{
-			{0, 0},
-			{warpAffine_32f_C1R, warpAffineBack_32f_C1R},
-			{0, 0},
-			{warpAffine_32f_C3R, warpAffineBack_32f_C3R},
-			{warpAffine_32f_C4R, warpAffineBack_32f_C4R}
-		};
-
-		CV_Assert(M.rows == 2 && M.cols == 3);
-
-		double coeffs[2][3];
-		Mat coeffsMat(2, 3, CV_64F, (void*)coeffs);
-		M.convertTo(coeffsMat, coeffsMat.type());
-
-		WarpCaller(src, dst, coeffs, dsize, flags, warpAffine_8u, warpAffine_16u, warpAffine_32s, warpAffine_32f);
-	}
-
-	void warpPerspective(const oclMat& src, oclMat& dst, const Mat& M, Size dsize, int flags)
-	{
-		static warp_8u_t warpPerspective_8u[][2] =
-		{
-			{0, 0},
-			{warpPerspective_8u_C1R, warpPerspectiveBack_8u_C1R},
-			{0, 0},
-			{warpPerspective_8u_C3R, warpPerspectiveBack_8u_C3R},
-			{warpPerspective_8u_C4R, warpPerspectiveBack_8u_C4R}
-		};
-		static warp_16u_t warpPerspective_16u[][2] =
-		{
-			{0, 0},
-			{warpPerspective_16u_C1R, warpPerspectiveBack_16u_C1R},
-			{0, 0},
-			{warpPerspective_16u_C3R, warpPerspectiveBack_16u_C3R},
-			{warpPerspective_16u_C4R, warpPerspectiveBack_16u_C4R}
-		};
-		static warp_32s_t warpPerspective_32s[][2] =
-		{
-			{0, 0},
-			{warpPerspective_32s_C1R, warpPerspectiveBack_32s_C1R},
-			{0, 0},
-			{warpPerspective_32s_C3R, warpPerspectiveBack_32s_C3R},
-			{warpPerspective_32s_C4R, warpPerspectiveBack_32s_C4R}
-		};
-		static warp_32f_t warpPerspective_32f[][2] =
-		{
-			{0, 0},
-			{warpPerspective_32f_C1R, warpPerspectiveBack_32f_C1R},
-			{0, 0},
-			{warpPerspective_32f_C3R, warpPerspectiveBack_32f_C3R},
-			{warpPerspective_32f_C4R, warpPerspectiveBack_32f_C4R}
-		};
-
-		CV_Assert(M.rows == 3 && M.cols == 3);
-
-		double coeffs[3][3];
-		Mat coeffsMat(3, 3, CV_64F, (void*)coeffs);
-		M.convertTo(coeffsMat, coeffsMat.type());
-
-		WarpCaller(src, dst, coeffs, dsize, flags, warpPerspective_8u, warpPerspective_16u, warpPerspective_32s, warpPerspective_32f);
-	}
 
 	////////////////////////////////////////////////////////////////////////
 	// integral
@@ -1175,6 +660,101 @@ namespace cv { namespace ocl {
 		//cout << "tested" << endl;
 	}
 
+    /////////////////////// cornerHarris //////////////////////////////
+    void extractCovData(const oclMat& src, oclMat& Dx, oclMat& Dy,
+                        int blockSize, int ksize, int borderType)
+    {
+        double scale = static_cast<double>(1 << ((ksize > 0 ? ksize : 3) - 1)) * blockSize;
+
+        if (ksize < 0) 
+            scale *= 2.;
+
+        if (src.depth() == CV_8U)
+            scale *= 255.;
+
+        scale = 1./scale;
+        CV_Assert(src.type() == CV_8UC1 || src.type() == CV_32FC1);
+
+        Dx.create(src.size(), CV_32F);
+        Dy.create(src.size(), CV_32F);
+
+        if (ksize > 0)
+        {
+            Sobel(src, Dx, CV_32F, 1, 0, ksize, scale, 0, borderType);
+            Sobel(src, Dy, CV_32F, 0, 1, ksize, scale, 0, borderType);
+        }
+        else
+        {
+            Scharr(src, Dx, CV_32F, 1, 0, scale, 0, borderType);
+            Scharr(src, Dy, CV_32F, 0, 1, scale, 0, borderType);
+        }
+    }
+    
+    void cornerHarris_ocl(int block_size, double k, oclMat &Dx, oclMat &Dy, 
+                          oclMat &dst, int border_type)
+    {
+        char borderType[30];
+        switch (border_type) 
+        {
+        case BORDER_CONSTANT:
+            sprintf(borderType,"BORDER_CONSTANT");
+            break;
+        case BORDER_REFLECT101:
+            sprintf(borderType,"BORDER_REFLECT101");
+            break;
+        case BORDER_REFLECT:
+            sprintf(borderType,"BORDER_REFLECT");
+            break;
+        case BORDER_REPLICATE:
+            sprintf(borderType,"BORDER_REPLICATE");
+            break;
+        default:
+            cout << "BORDER type is not supported!" << endl;
+        }
+        char build_options[150];
+        sprintf(build_options, "-D anX=%d -D anY=%d -D ksX=%d -D ksY=%d -D %s", 
+                block_size/2, block_size/2, block_size, block_size, borderType);
+
+        size_t blockSizeX = 256, blockSizeY = 1;
+        size_t gSize = blockSizeX -block_size/2*2;
+        size_t globalSizeX = (Dx.cols) % gSize == 0 ? Dx.cols/gSize*blockSizeX: (Dx.cols/gSize+1)*blockSizeX;
+        size_t rows_per_thread = 2;
+        size_t globalSizeY = ((Dx.rows+rows_per_thread-1)/rows_per_thread) % blockSizeY == 0 ? 
+               ((Dx.rows+rows_per_thread-1)/rows_per_thread):
+               (((Dx.rows+rows_per_thread-1)/rows_per_thread)/blockSizeY+1)*blockSizeY; 
+
+        size_t gt[3] = { globalSizeX, globalSizeY,1 };
+        size_t lt[3]  = { blockSizeX, blockSizeY,1 };
+        cout<< globalSizeX <<"   " << globalSizeY <<endl;
+        vector<pair<size_t ,const void *> > args;
+        args.push_back( make_pair( sizeof(cl_mem) , (void *)&Dx.data ));
+        args.push_back( make_pair( sizeof(cl_mem) , (void *)&Dy.data));
+        args.push_back( make_pair( sizeof(cl_mem) , (void *)&dst.data));
+        args.push_back( make_pair( sizeof(cl_int) , (void *)&Dx.offset ));
+        args.push_back( make_pair( sizeof(cl_int) , (void *)&Dx.wholerows ));
+        args.push_back( make_pair( sizeof(cl_int) , (void *)&Dx.wholecols ));
+        args.push_back( make_pair(sizeof(cl_int),(void*)&Dx.step));
+        args.push_back( make_pair( sizeof(cl_int) , (void *)&Dy.offset ));
+        args.push_back( make_pair( sizeof(cl_int) , (void *)&Dy.wholerows ));
+        args.push_back( make_pair( sizeof(cl_int) , (void *)&Dy.wholecols ));
+        args.push_back( make_pair(sizeof(cl_int),(void*)&Dy.step));
+        args.push_back( make_pair(sizeof(cl_int),(void*)&dst.offset));
+        args.push_back( make_pair(sizeof(cl_int),(void*)&dst.rows));
+        args.push_back( make_pair(sizeof(cl_int),(void*)&dst.cols));
+        args.push_back( make_pair(sizeof(cl_int),(void*)&dst.step));
+        args.push_back( make_pair( sizeof(cl_float) , (void *)&k));
+        openCLExecuteKernel(dst.clCxt,&imgproc_calcHarris,"calcHarris",gt,lt,args,-1,-1,build_options);
+    }
+
+    void cornerHarris(const oclMat& src, oclMat& dst, int blockSize, int ksize, 
+                      double k, int borderType)
+    {
+        oclMat Dx,Dy;
+        CV_Assert(borderType == cv::BORDER_REFLECT101 || borderType == cv::BORDER_REPLICATE || borderType == cv::BORDER_REFLECT);
+        extractCovData(src, Dx, Dy, blockSize, ksize, borderType);
+        dst.create(src.size(), CV_32F);
+        cornerHarris_ocl(blockSize, k, Dx, Dy, dst, borderType);
+    }
 
 	/////////////////////////////////// MeanShiftfiltering ///////////////////////////////////////////////
 	void meanShiftFiltering_gpu(const oclMat& src, oclMat dst, int sp, int sr, int maxIter, float eps)
