@@ -268,7 +268,7 @@ TEST(meanShift)
 
 TEST(SURF)
 {
-    Mat src = imread(abspath("aloeL.jpg"), CV_LOAD_IMAGE_GRAYSCALE);
+    Mat src = imread(abspath("stereo_matching/aloeL.jpg"), CV_LOAD_IMAGE_GRAYSCALE);
     if (src.empty()) throw runtime_error("can't open aloeL.jpg");
 
     SURF surf;
@@ -296,7 +296,7 @@ TEST(SURF)
 
 TEST(FAST)
 {
-    Mat src = imread(abspath("aloeL.jpg"), CV_LOAD_IMAGE_GRAYSCALE);
+    Mat src = imread(abspath("stereo_matching/aloeL.jpg"), CV_LOAD_IMAGE_GRAYSCALE);
     if (src.empty()) throw runtime_error("can't open aloeL.jpg");
 
     vector<KeyPoint> keypoints;
@@ -321,7 +321,7 @@ TEST(FAST)
 
 TEST(ORB)
 {
-    Mat src = imread(abspath("aloeL.jpg"), CV_LOAD_IMAGE_GRAYSCALE);
+    Mat src = imread(abspath("stereo_matching/aloeL.jpg"), CV_LOAD_IMAGE_GRAYSCALE);
     if (src.empty()) throw runtime_error("can't open aloeL.jpg");
 
     ORB orb(4000);
@@ -1046,7 +1046,7 @@ TEST(equalizeHist)
 
 TEST(Canny)
 {
-    Mat img = imread(abspath("aloeL.jpg"), CV_LOAD_IMAGE_GRAYSCALE);
+    Mat img = imread(abspath("stereo_matching/aloeL.jpg"), CV_LOAD_IMAGE_GRAYSCALE);
 
     if (img.empty()) throw runtime_error("can't open aloeL.jpg");
 
@@ -1146,7 +1146,7 @@ TEST(gemm)
 
 TEST(GoodFeaturesToTrack)
 {
-    Mat src = imread(abspath("aloeL.jpg"), IMREAD_GRAYSCALE);
+    Mat src = imread(abspath("stereo_matching/aloeL.jpg"), IMREAD_GRAYSCALE);
     if (src.empty()) throw runtime_error("can't open aloeL.jpg");
 
     vector<Point2f> pts;
@@ -1171,10 +1171,10 @@ TEST(GoodFeaturesToTrack)
 
 TEST(PyrLKOpticalFlow)
 {
-    Mat frame0 = imread(abspath("rubberwhale1.png"));
+    Mat frame0 = imread(abspath("optical_flow/rubberwhale1.png"));
     if (frame0.empty()) throw runtime_error("can't open rubberwhale1.png");
 
-    Mat frame1 = imread(abspath("rubberwhale2.png"));
+    Mat frame1 = imread(abspath("optical_flow/rubberwhale2.png"));
     if (frame1.empty()) throw runtime_error("can't open rubberwhale2.png");
     
     Mat gray_frame;
@@ -1228,8 +1228,8 @@ TEST(FarnebackOpticalFlow)
     for (int useGaussianBlur = 0; useGaussianBlur < 2; ++useGaussianBlur) {
 
     SUBTEST << "dataset=" << datasets[i] << ", fastPyramids=" << fastPyramids << ", useGaussianBlur=" << useGaussianBlur;
-    Mat frame0 = imread(abspath(datasets[i] + "1.png"), IMREAD_GRAYSCALE);
-    Mat frame1 = imread(abspath(datasets[i] + "2.png"), IMREAD_GRAYSCALE);
+    Mat frame0 = imread(abspath("optical_flow/" + datasets[i] + "1.png"), IMREAD_GRAYSCALE);
+    Mat frame1 = imread(abspath("optical_flow/" + datasets[i] + "2.png"), IMREAD_GRAYSCALE);
     if (frame0.empty()) throw runtime_error("can't open " + datasets[i] + "1.png");
     if (frame1.empty()) throw runtime_error("can't open " + datasets[i] + "2.png");
 
