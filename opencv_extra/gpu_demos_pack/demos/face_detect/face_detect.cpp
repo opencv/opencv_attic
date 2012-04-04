@@ -7,7 +7,6 @@
 #include <iomanip>
 #include <stdexcept>
 
-#include <opencv2/contrib/contrib.hpp>
 #include <opencv2/objdetect/objdetect.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -126,8 +125,7 @@ void App::process()
         convertAndResize(frame_gpu, gray_gpu, resized_gpu, scaleFactor);
         convertAndResize(frame_cpu, gray_cpu, resized_cpu, scaleFactor);
 
-        TickMeter tm;
-        tm.start();
+        int64 start = getTickCount();
 
         if (useGPU)
         {
@@ -162,9 +160,7 @@ void App::process()
             resized_gpu.download(resized_cpu);
         }
 
-        tm.stop();
-        double detectionTime = tm.getTimeSec();
-        double fps = 1.0 / detectionTime;
+        double fps = getTickFrequency() / (getTickCount() - start);
 
         cvtColor(resized_cpu, frameDisp, CV_GRAY2BGR);
         displayState(frameDisp, helpScreen, useGPU, findLargestObject, filterRects, fps);

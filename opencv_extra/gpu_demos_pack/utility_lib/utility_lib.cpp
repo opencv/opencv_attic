@@ -180,11 +180,20 @@ void BaseApp::run(int argc, const char* argv[])
         throw runtime_error(msg.str());
     }
 
-    if (gpu::getCudaEnabledDeviceCount() == 0)
+    int num_devices = gpu::getCudaEnabledDeviceCount();
+    if (num_devices == 0)
         throw runtime_error("No GPU found or the library is compiled without GPU support");
 
-    if (device_ < 0 || device_ >= gpu::getCudaEnabledDeviceCount())
+    if (device_ < 0 || device_ >= num_devices)
         throw runtime_error("Incorrect device ID");
+
+    gpu::DeviceInfo dev_info(device_);
+    if (!dev_info.isCompatible())
+    {
+        ostringstream msg;
+        msg << "GPU module isn't built for GPU #" << device_ << " " << dev_info.name() << ", CC " << dev_info.majorVersion() << '.' << dev_info.minorVersion();
+        throw runtime_error(msg.str());
+    }
 
     cout << "Initializing device..." << endl;
     gpu::setDevice(device_);
