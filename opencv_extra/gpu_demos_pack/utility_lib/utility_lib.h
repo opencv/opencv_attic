@@ -66,7 +66,7 @@ void printText(cv::Mat& img, const std::string& msg, int lineOffsY, cv::Scalar f
 class BaseApp
 {
 public:
-    BaseApp() : exited(false), frame_width(-1), frame_height(-1) {}
+    BaseApp() : exited(false), frame_width(-1), frame_height(-1), device_(0) {}
 
     void run(int argc, const char* argv[]);
 
@@ -85,6 +85,9 @@ protected:
 private:
     bool parseHelpCmdArg(int& i, int argc, const char* argv[]);
     bool parseFrameSourcesCmdArgs(int& i, int argc, const char* argv[]);
+    bool parseGpuDeviceCmdArgs(int& i, int argc, const char* argv[]);
+
+    int device_;
 };
 
 #define RUN_APP(App) \

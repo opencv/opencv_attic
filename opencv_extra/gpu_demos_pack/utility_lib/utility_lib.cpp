@@ -169,6 +169,9 @@ void BaseApp::run(int argc, const char* argv[])
         if (parseFrameSourcesCmdArgs(i, argc, argv))
             continue;
 
+        if (parseGpuDeviceCmdArgs(i, argc, argv))
+            continue;
+
         if (parseHelpCmdArg(i, argc, argv))
             return;
 
@@ -178,7 +181,17 @@ void BaseApp::run(int argc, const char* argv[])
     }
 
     if (gpu::getCudaEnabledDeviceCount() == 0)
-        throw runtime_error("No GPU found or the library is compiled without GPU support"); 
+        throw runtime_error("No GPU found or the library is compiled without GPU support");
+
+    if (device_ < 0 || device_ >= gpu::getCudaEnabledDeviceCount())
+        throw runtime_error("Incorrect device ID");
+
+    cout << "Initializing device..." << endl;
+    gpu::setDevice(device_);
+    gpu::GpuMat m(10, 10, CV_8U);
+    m.release();
+
+    gpu::printShortCudaDeviceInfo(device_);
 
     process();
 }
@@ -198,7 +211,9 @@ void BaseApp::printHelp()
          << "  -c <device_ID>\n"
          << "       Camera device ID\n"
          << "  -w <camera_frame_width>\n"
-         << "  -h <camera_frame_height>\n";
+         << "  -h <camera_frame_height>\n"
+         << "\nDevice Flags:\n"
+         << "  -d <device_id>\n";
 }
 
 bool BaseApp::processKey(int key)
@@ -275,6 +290,25 @@ bool BaseApp::parseFrameSourcesCmdArgs(int& i, int argc, const char* argv[])
             throw runtime_error("Missing value after -c");
 
         sources.push_back(new CameraSource(atoi(argv[i]), frame_width, frame_height));
+    }
+    else 
+        return false;
+
+    return true;
+}
+
+bool BaseApp::parseGpuDeviceCmdArgs(int& i, int argc, const char* argv[])
+{
+    string arg(argv[i]);
+
+    if (arg == "-d") 
+    {
+        ++i;
+
+        if (i >= argc)
+            throw runtime_error("Missing value after -d");
+
+        device_ = atoi(argv[i]);
     }
     else 
         return false;
