@@ -307,7 +307,7 @@ bool App::processKey(int key)
 {
     if (BaseApp::processKey(key))
         return true;
-   
+
     switch (toupper(key))
     {
     case 32:

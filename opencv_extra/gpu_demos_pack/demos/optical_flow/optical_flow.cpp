@@ -29,10 +29,10 @@ struct DrawData
 class App : public BaseApp
 {
 public:
-    enum 
+    enum Method
     {
-        BROX, 
-        LK_DENSE, 
+        BROX,
+        LK_DENSE,
         LK_SPARSE_GPU, LK_SPARSE_CPU,
         FARNEBACK_GPU, FARNEBACK_CPU
     } method;
@@ -49,7 +49,7 @@ protected:
 
 private:
     int the_same_video_offset;
-    DrawData draw_data;   
+    DrawData draw_data;
 };
 
 bool App::parseCmdArgs(int& i, int argc, const char* argv[])
@@ -217,7 +217,7 @@ void App::process()
 
         source = PairFrameSource::get(sources[0], sources[1]);
     }
-    
+
     namedWindow("optical_flow_demo", WINDOW_OPENGL);
     setGlDevice();
 
@@ -271,17 +271,17 @@ void App::process()
 
             brox(d_frame0Gray32F, d_frame1Gray32F, d_u, d_v);
 
-            double proc_fps = getTickFrequency()  / (getTickCount() - proc_start);
+            double proc_fps = getTickFrequency() / (getTickCount() - proc_start);
 
             createOpticalFlowNeedleMap(d_u, d_v, d_vertex, d_colors);
 
-            stringstream total_fps_str; 
+            stringstream total_fps_str;
             total_fps_str << "Total FPS : " << setprecision(4) << total_fps;
 
-            stringstream proc_fps_str; 
+            stringstream proc_fps_str;
             proc_fps_str << "Processing FPS : " << setprecision(4) << proc_fps;
 
-            draw_data.tex.copyFrom(d_frame0Gray32F);        
+            draw_data.tex.copyFrom(d_frame0Gray32F);
             draw_data.arr.setVertexArray(d_vertex);
             draw_data.arr.setColorArray(d_colors, false);
             draw_data.method = "Brox";
@@ -303,13 +303,13 @@ void App::process()
 
             createOpticalFlowNeedleMap(d_u, d_v, d_vertex, d_colors);
 
-            stringstream total_fps_str; 
+            stringstream total_fps_str;
             total_fps_str << "Total FPS : " << setprecision(4) << total_fps;
 
-            stringstream proc_fps_str; 
+            stringstream proc_fps_str;
             proc_fps_str << "Processing FPS : " << setprecision(4) << proc_fps;
 
-            draw_data.tex.copyFrom(d_frame0Gray);        
+            draw_data.tex.copyFrom(d_frame0Gray);
             draw_data.arr.setVertexArray(d_vertex);
             draw_data.arr.setColorArray(d_colors, false);
             draw_data.method = "PyrLK Dense";
@@ -343,7 +343,7 @@ void App::process()
 
             stringstream proc_fps_str; 
             proc_fps_str << "Processing FPS : " << setprecision(4) << proc_fps;
-            
+
             printText(image, "PyrLK Sparse GPU", 0);
             printText(image, total_fps_str.str(), 1);
             printText(image, proc_fps_str.str(), 2);
@@ -371,7 +371,7 @@ void App::process()
 
             stringstream proc_fps_str; 
             proc_fps_str << "Processing FPS : " << setprecision(4) << proc_fps;
-            
+
             printText(image, "PyrLK Sparse CPU", 0);
             printText(image, total_fps_str.str(), 1);
             printText(image, proc_fps_str.str(), 2);
@@ -395,7 +395,7 @@ void App::process()
             stringstream proc_fps_str; 
             proc_fps_str << "Processing FPS : " << setprecision(4) << proc_fps;
 
-            draw_data.tex.copyFrom(d_frame0Gray);        
+            draw_data.tex.copyFrom(d_frame0Gray);
             draw_data.arr.setVertexArray(d_vertex);
             draw_data.arr.setColorArray(d_colors, false);
             draw_data.method = "Farneback GPU";
@@ -404,7 +404,7 @@ void App::process()
             setOpenGlDrawCallback("optical_flow_demo", drawCallback, &draw_data);
             updateWindow("optical_flow_demo");
         }
-        else if (method ==    FARNEBACK_CPU)
+        else if (method == FARNEBACK_CPU)
         {
             cvtColor(frame0, frame0Gray, COLOR_BGR2GRAY);
             d_frame0Gray.upload(frame0Gray);
@@ -415,7 +415,7 @@ void App::process()
                     frame0Gray, frame1Gray, uv, farneback_gpu.pyrScale, farneback_gpu.numLevels, farneback_gpu.winSize, 
                     farneback_gpu.numIters, farneback_gpu.polyN, farneback_gpu.polySigma, farneback_gpu.flags);
             double proc_fps = getTickFrequency()  / (getTickCount() - proc_start);
-            
+
             d_uv = GpuMat(uv);
             GpuMat uv_planes[] = {d_u, d_v};
             split(d_uv, uv_planes);
@@ -429,7 +429,7 @@ void App::process()
             stringstream proc_fps_str; 
             proc_fps_str << "Processing FPS : " << setprecision(4) << proc_fps;
 
-            draw_data.tex.copyFrom(d_frame0Gray);        
+            draw_data.tex.copyFrom(d_frame0Gray);
             draw_data.arr.setVertexArray(d_vertex);
             draw_data.arr.setColorArray(d_colors, false);
             draw_data.method = "Farneback CPU";
@@ -439,7 +439,7 @@ void App::process()
             updateWindow("optical_flow_demo");
         }
 
-        processKey(waitKey(10) & 0xff);
+        processKey(waitKey(10));
 
         total_fps = getTickFrequency()  / (getTickCount() - proc_start);
     }
@@ -450,9 +450,9 @@ bool App::processKey(int key)
     if (BaseApp::processKey(key))
         return true;
 
-    switch (toupper(key))
+    switch (toupper(key & 0xff))
     {
-    case 32:
+    case 32 /*space*/:
         if (method == BROX)
             method = LK_DENSE;
         else if (method == LK_DENSE)

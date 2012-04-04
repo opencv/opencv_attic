@@ -203,7 +203,7 @@ void BaseApp::printHelp()
 
 bool BaseApp::processKey(int key)
 {
-    if (key == 27/*escape*/)
+    if ((key & 0xff) == 27 /*escape*/)
     {
         exited = true;
         return true;
@@ -230,7 +230,7 @@ bool BaseApp::parseHelpCmdArg(int& i, int argc, const char* argv[])
 bool BaseApp::parseFrameSourcesCmdArgs(int& i, int argc, const char* argv[])
 {
     string arg(argv[i]);
-    
+
     if (arg == "-i") 
     {
         ++i;

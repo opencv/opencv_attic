@@ -95,7 +95,7 @@ void App::process()
     {
         cout << "Using default cascade file...\n";
         cascade_name = "data/face_detect/haarcascade_frontalface_alt.xml";
-    }      
+    }
 
     if (!cascade_gpu.load(cascade_name) || !cascade_cpu.load(cascade_name))
     {
@@ -163,31 +163,15 @@ void App::process()
         }
 
         tm.stop();
-        double detectionTime = tm.getTimeMilli();
-        double fps = 1000 / detectionTime;
-
-        /*//print detections to console
-        cout << setfill(' ') << setprecision(2);
-        cout << setw(6) << fixed << fps << " FPS, " << detections_num << " det";
-        if ((filterRects || findLargestObject) && detections_num > 0)
-        {
-            Rect *faceRects = useGPU ? faces_downloaded.ptr<Rect>() : &facesBuf_cpu[0];
-            for (int i = 0; i < min(detections_num, 2); ++i)
-            {
-                cout << ", [" << setw(4) << faceRects[i].x
-                     << ", " << setw(4) << faceRects[i].y
-                     << ", " << setw(4) << faceRects[i].width
-                     << ", " << setw(4) << faceRects[i].height << "]";
-            }
-        }
-        cout << endl;*/
+        double detectionTime = tm.getTimeSec();
+        double fps = 1.0 / detectionTime;
 
         cvtColor(resized_cpu, frameDisp, CV_GRAY2BGR);
         displayState(frameDisp, helpScreen, useGPU, findLargestObject, filterRects, fps);
         imshow("face_detect_demo", frameDisp);
 
-        processKey(waitKey(3) & 0xff);
-    }   
+        processKey(waitKey(3));
+    }
 }
 
 bool App::parseCmdArgs(int& i, int argc, const char* argv[])
@@ -212,11 +196,12 @@ bool App::processKey(int key)
     if (BaseApp::processKey(key))
         return true;
 
-    switch (toupper(key))
+    switch (toupper(key & 0xff))
     {
-    case 32:
+    case 32 /*space*/:
         useGPU = !useGPU;
         break;
+
     case 'M':
         findLargestObject = !findLargestObject;
         break;
