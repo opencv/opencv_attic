@@ -5,11 +5,12 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/features2d/features2d.hpp>
 #include <opencv2/highgui/highgui.hpp>
+#include <opencv2/nonfree/nonfree.hpp>
 #include <opencv2/gpu/gpu.hpp>
 
 #include "utility_lib/utility_lib.h"
 
-#define PARAM_OFFSET    "--offset"
+#define PARAM_OFFSET "--offset"
 
 using namespace std;
 using namespace cv;
@@ -56,16 +57,15 @@ void App::process()
     Mat h_img1, h_img2, h_img1_gray, h_img2_gray;
     GpuMat d_img1_gray, d_img2_gray;
 
-    SURF surf_cpu(1000);
-    SURF_GPU surf_gpu(1000);
+    SURF surf_cpu(1000, 4, 2, false, false);
+    SURF_GPU surf_gpu(1000, 4, 2, false);
 
     vector<KeyPoint> keypoints1_cpu, keypoints2_cpu;
-    vector<float> descriptors1_vec, descriptors2_vec;
     Mat descriptors1_cpu, descriptors2_cpu;
     GpuMat keypoints1_gpu, keypoints2_gpu;
     GpuMat descriptors1_gpu, descriptors2_gpu;
 
-    BruteForceMatcher< L2<float> > matcher_cpu;
+    BFMatcher matcher_cpu(NORM_L2);
     BruteForceMatcher_GPU< L2<float> > matcher_gpu;
     GpuMat trainIdx, distance, allDist;
     vector< vector<DMatch> > matches;
@@ -75,6 +75,11 @@ void App::process()
 
     while (!exited)
     {
+        keypoints1_cpu.clear();
+        keypoints2_cpu.clear();
+        matches.clear();
+        good_matches.clear();
+
         int64 start = getTickCount();
 
         source_->next(h_img1, h_img2);
@@ -99,11 +104,8 @@ void App::process()
         }
         else
         {
-            surf_cpu(h_img1_gray, Mat(), keypoints1_cpu, descriptors1_vec);
-            surf_cpu(h_img2_gray, Mat(), keypoints2_cpu, descriptors2_vec);
-
-            descriptors1_cpu = Mat(descriptors1_vec).reshape(0, keypoints1_cpu.size());
-            descriptors2_cpu = Mat(descriptors2_vec).reshape(0, keypoints2_cpu.size());
+            surf_cpu(h_img1_gray, Mat(), keypoints1_cpu, descriptors1_cpu);
+            surf_cpu(h_img2_gray, Mat(), keypoints2_cpu, descriptors2_cpu);
         }
 
         double surf_fps = getTickFrequency()  / (getTickCount() - surf_start);
@@ -148,8 +150,6 @@ void App::process()
             surf_gpu.downloadKeypoints(keypoints1_gpu, keypoints1_cpu);
             surf_gpu.downloadKeypoints(keypoints2_gpu, keypoints2_cpu);
         }
-
-        theRNG() = RNG(0);
 
         Mat dst;
         drawMatches(h_img1, keypoints1_cpu, h_img2, keypoints2_cpu, good_matches, dst, Scalar(255, 0, 0, 255), Scalar(0, 0, 255, 255));

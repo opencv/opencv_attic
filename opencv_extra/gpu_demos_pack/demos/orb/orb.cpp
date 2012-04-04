@@ -9,7 +9,7 @@
 
 #include "utility_lib/utility_lib.h"
 
-#define PARAM_OFFSET    "--offset"
+#define PARAM_OFFSET "--offset"
 
 using namespace std;
 using namespace cv;
@@ -64,7 +64,7 @@ void App::process()
     GpuMat keypoints1_gpu, keypoints2_gpu;
     GpuMat descriptors1_gpu, descriptors2_gpu;
 
-    BruteForceMatcher<Hamming> matcher_cpu;
+    BFMatcher matcher_cpu(NORM_HAMMING);
     BruteForceMatcher_GPU<Hamming> matcher_gpu;
     GpuMat trainIdx, distance, allDist;
     vector< vector<DMatch> > matches;
@@ -145,8 +145,6 @@ void App::process()
             orb_gpu.downloadKeyPoints(keypoints2_gpu, keypoints2_cpu);
         }
 
-        theRNG() = RNG(0);
-
         Mat dst;
         drawMatches(h_img1, keypoints1_cpu, h_img2, keypoints2_cpu, good_matches, dst, Scalar(255, 0, 0, 255), Scalar(0, 0, 255, 255));
 
@@ -163,9 +161,9 @@ void App::process()
         printText(dst, msg.str(), 3);
 
         printText(dst, use_gpu ? "Mode : GPU" : "Mode : CPU", 4);
-        
+
         imshow("orb_demo", dst);
-        processKey(waitKey(3) & 0xff);
+        processKey(waitKey(3));
 
         total_fps = getTickFrequency()  / (getTickCount() - proc_start);
     }
@@ -174,7 +172,7 @@ void App::process()
 bool App::parseCmdArgs(int& i, int argc, const char* argv[])
 {
     string arg(argv[i]);
-    
+
     if (arg == PARAM_OFFSET)
     {
         ++i;
@@ -199,9 +197,9 @@ bool App::processKey(int key)
     if (BaseApp::processKey(key))
         return true;
 
-    switch (toupper(key))
+    switch (toupper(key & 0xff))
     {
-    case 32:
+    case 32 /*space*/:
         use_gpu = !use_gpu;
         cout << "Use gpu = " << use_gpu << endl;
         break;
