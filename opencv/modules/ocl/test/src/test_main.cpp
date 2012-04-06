@@ -66,7 +66,8 @@ void print_info()
 #endif
 }
 
-
+#if   PREF_TEST_OCL
+#else
 #ifdef HAVE_OPENCL
 
 enum OutputLevel
@@ -108,4 +109,5 @@ int main(int argc, char** argv)
     return 0;
 }
 
-#endif
+#endif // HAVE_OPENCL
+#endif // PREF_TEST_OCL

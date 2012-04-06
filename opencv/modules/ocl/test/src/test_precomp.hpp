@@ -61,6 +61,12 @@
 
 // for filtering out console error output 
 
+
+#define PREF_TEST_OCL 0 // set to 1 to enable performance tests
+
+#if PREF_TEST_OCL
+#else
+
 #define OK    1 // no err
 #define CLERR 0 // cl compiling err
 #define W_OUT 0 // wrong output
@@ -68,9 +74,11 @@
 #define K_MIS 0 // kernel function missing
 
 #define TS_ARITHM  1  // test_arithm.cpp
-#define TS_IMGPROC 1  // test_imgproc.cpp
+#define TS_IMGPROC 0  // test_imgproc.cpp
 #define TS_CALIB3D 0  // test_calib3d.cpp
 #define TS_FEATU2D 0  // test_features2d.cpp
-#define TS_MATOP   1  // test_matop.cpp
-#define TS_FILTERS 1  // test_filters.cpp
-#endif
+#define TS_MATOP   0  // test_matop.cpp
+#define TS_FILTERS 0  // test_filters.cpp
+
+#endif // PREF_TEST_OCL
+#endif // __OPENCV_TEST_PRECOMP_HPP__
