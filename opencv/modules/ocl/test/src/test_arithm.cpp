@@ -68,6 +68,43 @@ struct ArithmTest : testing::TestWithParam< int >
 };
 
 
+////////////////////////////////////////////////////////////////////////////////
+// exp
+struct Exp : testing::Test
+{
+    cv::Size size;
+    cv::Mat mat;
+
+    cv::Mat dst_gold;
+
+    virtual void SetUp()
+    {
+        cv::RNG& rng = cvtest::TS::ptr()->get_rng();
+
+        size = cv::Size(rng.uniform(100, 200), rng.uniform(100, 200));
+
+        mat = cvtest::randomMat(rng, size, CV_32FC1, -10.0, 2.0, false);
+
+        cv::exp(mat, dst_gold);
+    }
+};
+
+TEST_F(Exp, Accuracy)
+{
+    PRINT_PARAM(size);
+
+    cv::Mat dst;
+
+    ASSERT_NO_THROW(
+        cv::ocl::oclMat gpu_res;
+
+        cv::ocl::exp(cv::ocl::oclMat(mat), gpu_res);
+
+        gpu_res.download(dst);
+    );
+
+    EXPECT_MAT_NEAR(dst_gold, dst, 1e-5);
+}
 
 #if OK
 
@@ -1022,6 +1059,7 @@ INSTANTIATE_TEST_CASE_P(Arithm, Transpose,
 
 
 
+
 #endif // OK
 
 #if K_MIS
@@ -1265,6 +1303,56 @@ TEST_F(PolarToCart, Accuracy)
 
 #if W_OUT
 
+
+
+struct CartToPolar : ArithmTest {};
+
+TEST_P(CartToPolar, angleInDegree)
+{
+		PRINT_TYPE(type);
+		PRINT_PARAM(size);
+
+		cv::Mat dst_gold1, dst_gold2, dst1, dst2;
+        cv::cartToPolar(mat1, mat2, dst_gold1, dst_gold2, 1);
+
+		//ASSERT_NO_THROW(
+			cv::ocl::oclMat gpuRes1, gpuRes2;
+			cv::ocl::cartToPolar(cv::ocl::oclMat(mat1), cv::ocl::oclMat(mat2), gpuRes1, gpuRes2, 1);
+
+			gpuRes1.download(dst1);
+			gpuRes1.download(dst2);
+		//);
+
+        EXPECT_MAT_NEAR(dst1, dst_gold1, 0.5);
+        EXPECT_MAT_NEAR(dst2, dst_gold2, 0.5);
+}
+
+TEST_P(CartToPolar, angleInRadians)
+{
+		PRINT_TYPE(type);
+		PRINT_PARAM(size);
+
+		cv::Mat dst_gold1, dst_gold2, dst1, dst2;
+        cv::cartToPolar(mat1, mat2, dst_gold1, dst_gold2, 0);
+
+		//ASSERT_NO_THROW(
+			cv::ocl::oclMat gpuRes1, gpuRes2;
+			cv::ocl::cartToPolar(cv::ocl::oclMat(mat1), cv::ocl::oclMat(mat2), gpuRes1, gpuRes2, 0);
+
+			gpuRes1.download(dst1);
+			gpuRes1.download(dst2);
+		//);
+
+        EXPECT_MAT_NEAR(dst1, dst_gold1, 0.5);
+        EXPECT_MAT_NEAR(dst2, dst_gold2, 0.5);
+}
+
+
+
+INSTANTIATE_TEST_CASE_P(Arithm, CartToPolar,
+            testing::Values(CV_32FC1, CV_32FC2, CV_32FC3, CV_32FC4, CV_64FC1, CV_64FC2, CV_64FC3, CV_64FC4)); 
+
+
 ////////////////////////////////////////////////////////////////////////////////
 // meanStdDev
 
@@ -1405,4 +1493,13 @@ TEST_F(CartToPolar, Accuracy)
 
 #endif // HAVE_OPENCL
 
+
+
+
+
+
+
+
+
 #endif // TS_ARITHM
+

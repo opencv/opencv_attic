@@ -41,6 +41,7 @@
 
 #include "test_precomp.hpp"
 
+
 #if TS_IMGPROC
 
 #ifdef HAVE_OPENCL
@@ -131,11 +132,6 @@ TEST_F(EqualizeHist, Accuracy)
 
     EXPECT_MAT_NEAR(dst_gold, dst, 3.0);
 }
-
-
-
-
-
 
 #endif // OK
 

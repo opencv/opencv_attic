@@ -367,6 +367,64 @@ TEST_F(Erode, Accuracy)
     EXPECT_MAT_NEAR_KSIZE(dst_gold_gray, dst_gray, 3, 0.0);
 }
 
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+// Laplacian
+
+struct Laplacian : testing::TestWithParam< int >
+{
+    
+    int ksize;
+    
+    cv::Mat img_rgba;
+    cv::Mat img_gray;
+
+    cv::Mat dst_gold_rgba;
+    cv::Mat dst_gold_gray;
+
+	int bordertype;
+    
+    virtual void SetUp()
+    {
+		bordertype = (int)cv::BORDER_DEFAULT;
+        ksize = GetParam();    
+        cv::Mat img = readImage("stereobp/aloe-L.png");
+        ASSERT_FALSE(img.empty());
+        
+        cv::cvtColor(img, img_rgba, CV_BGR2BGRA);
+        cv::cvtColor(img, img_gray, CV_BGR2GRAY);
+
+        cv::Laplacian(img_rgba, dst_gold_rgba, -1, ksize );
+        cv::Laplacian(img_gray, dst_gold_gray, -1, ksize );
+    }
+};
+
+TEST_P(Laplacian, Accuracy)
+{
+    
+    PRINT_PARAM(ksize);
+
+    cv::Mat dst_rgba;
+    cv::Mat dst_gray;
+
+    ASSERT_NO_THROW(
+        cv::ocl::oclMat dev_dst_rgba;
+        cv::ocl::oclMat dev_dst_gray;
+
+		cv::ocl::Laplacian(cv::ocl::oclMat(img_rgba), dev_dst_rgba, -1, ksize);
+        cv::ocl::Laplacian(cv::ocl::oclMat(img_gray), dev_dst_gray, -1, ksize);
+
+        dev_dst_rgba.download(dst_rgba);
+        dev_dst_gray.download(dst_gray);
+    );
+
+    EXPECT_MAT_NEAR_KSIZE(dst_gold_rgba, dst_rgba, ksize, 1.0);
+    EXPECT_MAT_NEAR_KSIZE(dst_gold_gray, dst_gray, ksize, 1.0);
+}
+
+INSTANTIATE_TEST_CASE_P(Filter, Laplacian, 
+                        testing::Values(1, 3));
+
 #endif // OK
 
 
@@ -467,6 +525,7 @@ TEST_P(BilateralFilter, Accuracy)
 
 INSTANTIATE_TEST_CASE_P(Filter, BilateralFilter, 
                         testing::Values(3, 4, 5, 6, 7));
+
 
 
 #endif // CLERR
