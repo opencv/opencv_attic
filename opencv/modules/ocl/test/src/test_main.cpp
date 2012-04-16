@@ -66,7 +66,12 @@ void print_info()
 #endif
 }
 
-#if   PREF_TEST_OCL
+#if   PERF_TEST_OCL
+int main(int argc, char** argv)
+{
+    run_perf_test();
+    return 0;
+}
 #else
 #ifdef HAVE_OPENCL
 

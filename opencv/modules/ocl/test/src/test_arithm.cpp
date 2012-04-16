@@ -67,45 +67,6 @@ struct ArithmTest : testing::TestWithParam< int >
     }
 };
 
-
-////////////////////////////////////////////////////////////////////////////////
-// exp
-struct Exp : testing::Test
-{
-    cv::Size size;
-    cv::Mat mat;
-
-    cv::Mat dst_gold;
-
-    virtual void SetUp()
-    {
-        cv::RNG& rng = cvtest::TS::ptr()->get_rng();
-
-        size = cv::Size(rng.uniform(100, 200), rng.uniform(100, 200));
-
-        mat = cvtest::randomMat(rng, size, CV_32FC1, -10.0, 2.0, false);
-
-        cv::exp(mat, dst_gold);
-    }
-};
-
-TEST_F(Exp, Accuracy)
-{
-    PRINT_PARAM(size);
-
-    cv::Mat dst;
-
-    ASSERT_NO_THROW(
-        cv::ocl::oclMat gpu_res;
-
-        cv::ocl::exp(cv::ocl::oclMat(mat), gpu_res);
-
-        gpu_res.download(dst);
-    );
-
-    EXPECT_MAT_NEAR(dst_gold, dst, 1e-5);
-}
-
 #if OK
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1171,6 +1132,7 @@ TEST_P(AbsdiffScalar, Accuracy)
 INSTANTIATE_TEST_CASE_P(Arithm, AbsdiffScalar, testing::Values(CV_32FC1));
 ////////////////////////////////////////////////////////////////////////////////
 // exp
+
 struct Exp : testing::Test
 {
     cv::Size size;
@@ -1447,7 +1409,7 @@ TEST_P(NormDiff, Accuracy)
 }
 
 INSTANTIATE_TEST_CASE_P(Arithm, NormDiff, testing::Range(0, 3));
-
+/*
 struct CartToPolar : testing::Test
 {
     cv::Size size;
@@ -1488,7 +1450,7 @@ TEST_F(CartToPolar, Accuracy)
     EXPECT_MAT_NEAR(mag_gold, mag, 1e-4);
     EXPECT_MAT_NEAR(angle_gold, angle, 1e-3);
 }
-
+*/
 #endif // W_OUT
 
 #endif // HAVE_OPENCL

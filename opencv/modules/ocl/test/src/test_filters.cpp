@@ -89,7 +89,7 @@ struct Blur : testing::TestWithParam< std::tr1::tuple<int, int>  >
     {
 		bordertype = (int)cv::BORDER_DEFAULT;
         ksize = cv::Size(std::tr1::get<0>(GetParam()), std::tr1::get<1>(GetParam()));    
-        cv::Mat img = readImage("stereobp/aloe-L.png");
+        cv::Mat img = readImage("test_img.jpg");
         ASSERT_FALSE(img.empty());
         
         cv::cvtColor(img, img_rgba, CV_BGR2BGRA);
@@ -150,7 +150,7 @@ struct Sobel : testing::TestWithParam< std::tr1::tuple<int, std::pair<int, int>>
         std::pair<int, int> d = std::tr1::get<1>(GetParam());
         dx = d.first; dy = d.second;
 
-        cv::Mat img = readImage("stereobp/aloe-L.png");
+        cv::Mat img = readImage("test_img.jpg");
         ASSERT_FALSE(img.empty());
         
         cv::cvtColor(img, img_rgba, CV_BGR2BGRA);
@@ -212,7 +212,7 @@ struct Scharr : testing::TestWithParam< std::pair<int, int> >
         std::pair<int, int> d = GetParam();
         dx = d.first; dy = d.second;
 
-        cv::Mat img = readImage("stereobp/aloe-L.png");
+        cv::Mat img = readImage("test_img.jpg");
         ASSERT_FALSE(img.empty());
         
         cv::cvtColor(img, img_rgba, CV_BGR2BGRA);
@@ -272,7 +272,7 @@ struct GaussianBlur : testing::TestWithParam< std::tr1::tuple<int, int> >
     {
         ksize = cv::Size(std::tr1::get<0>(GetParam()), std::tr1::get<1>(GetParam()));
         
-        cv::Mat img = readImage("stereobp/aloe-L.png");
+        cv::Mat img = readImage("test_img.jpg");
         ASSERT_FALSE(img.empty());
         
         cv::cvtColor(img, img_rgba, CV_BGR2BGRA);
@@ -336,7 +336,7 @@ struct Erode : testing::Test
     {
         kernel = cv::Mat::ones(3, 3, CV_8U);
         
-        cv::Mat img = readImage("stereobp/aloe-L.png");
+        cv::Mat img = readImage("test_img.jpg");
         ASSERT_FALSE(img.empty());
         
         cv::cvtColor(img, img_rgba, CV_BGR2BGRA);
@@ -388,7 +388,7 @@ struct Laplacian : testing::TestWithParam< int >
     {
 		bordertype = (int)cv::BORDER_DEFAULT;
         ksize = GetParam();    
-        cv::Mat img = readImage("stereobp/aloe-L.png");
+        cv::Mat img = readImage("test_img.jpg");
         ASSERT_FALSE(img.empty());
         
         cv::cvtColor(img, img_rgba, CV_BGR2BGRA);
@@ -430,61 +430,6 @@ INSTANTIATE_TEST_CASE_P(Filter, Laplacian,
 
 #if CLERR
 /////////////////////////////////////////////////////////////////////////////////////////////////
-// laplacian
-
-struct Laplacian : testing::TestWithParam< int >
-{
-    
-    int ksize;
-
-    cv::Mat img_rgba;
-    cv::Mat img_gray;
-
-    cv::Mat dst_gold_rgba;
-    cv::Mat dst_gold_gray;
-    
-    virtual void SetUp()
-    {
-		ksize = GetParam();
-
-        cv::Mat img = readImage("stereobp/aloe-L.png");
-        ASSERT_FALSE(img.empty());
-        
-        cv::cvtColor(img, img_rgba, CV_BGR2BGRA);
-        cv::cvtColor(img, img_gray, CV_BGR2GRAY);
-
-        cv::Laplacian(img_rgba, dst_gold_rgba, -1, ksize);
-        cv::Laplacian(img_gray, dst_gold_gray, -1, ksize);
-    }
-};
-
-TEST_P(Laplacian, Accuracy)
-{
-    
-    PRINT_PARAM(ksize);
-
-    cv::Mat dst_rgba;
-    cv::Mat dst_gray;
-
-    ASSERT_NO_THROW(
-        cv::ocl::oclMat dev_dst_rgba;
-        cv::ocl::oclMat dev_dst_gray;
-
-        cv::ocl::Laplacian(cv::ocl::oclMat(img_rgba), dev_dst_rgba, -1, ksize);
-        cv::ocl::Laplacian(cv::ocl::oclMat(img_gray), dev_dst_gray, -1, ksize);
-
-        dev_dst_rgba.download(dst_rgba);
-        dev_dst_gray.download(dst_gray);
-    );
-
-    EXPECT_MAT_NEAR_KSIZE(dst_gold_rgba, dst_rgba, 3, 0.0);
-    EXPECT_MAT_NEAR_KSIZE(dst_gold_gray, dst_gray, 3, 0.0);
-}
-
-INSTANTIATE_TEST_CASE_P(Filter, Laplacian, 
-                        testing::Values(1, 3));
-
-/////////////////////////////////////////////////////////////////////////////////////////////////
 // bilateralFilter
 
 struct BilateralFilter : testing::TestWithParam< int >
@@ -500,7 +445,7 @@ struct BilateralFilter : testing::TestWithParam< int >
     {
 		dsize = GetParam();
 
-        img = readImage("stereobp/aloe-L.png");
+        img = readImage("test_img.jpg");
         ASSERT_FALSE(img.empty());
        
 		cv::bilateralFilter( img, dst_gold, dsize, 20, 20 );
@@ -553,7 +498,7 @@ struct Dilate : testing::Test
     {
         kernel = cv::Mat::ones(3, 3, CV_8U);
         
-        cv::Mat img = readImage("stereobp/aloe-L.png");
+        cv::Mat img = readImage("test_img.jpg");
         ASSERT_FALSE(img.empty());
         
         cv::cvtColor(img, img_rgba, CV_BGR2BGRA);
@@ -607,7 +552,7 @@ struct MorphEx : testing::TestWithParam< int >
     {
         morphOpsIdx = GetParam();
 
-        cv::Mat img = readImage("stereobp/aloe-L.png");
+        cv::Mat img = readImage("test_img.jpg");
         ASSERT_FALSE(img.empty());
         
         cv::cvtColor(img, img_rgba, CV_BGR2BGRA);

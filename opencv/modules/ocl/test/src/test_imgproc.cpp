@@ -257,7 +257,7 @@ TEST_P(CvtColor, Accuracy)
 
 INSTANTIATE_TEST_CASE_P(ImgProc, CvtColor, 
 						testing::Combine(
-                        testing::Values(CV_8U, CV16U),
+                        testing::Values(CV_8U, CV_16U),
                         testing::Values( CV_BGR2GRAY, CV_BGRA2GRAY, CV_RGB2GRAY, CV_RGBA2GRAY )));
 
 
