@@ -1,2 +1,0 @@
-define_opencv_module(features2d opencv_core opencv_imgproc opencv_highgui opencv_flann)
-
