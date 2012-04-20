@@ -45,7 +45,6 @@
 
 #include "test_precomp.hpp"
 #include <ctime>
-//#include <windows.h>
 
 #if PERF_TEST_OCL
 
