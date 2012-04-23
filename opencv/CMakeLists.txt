@@ -101,11 +101,11 @@ OCV_OPTION(WITH_1394           "Include IEEE1394 support"                    ON 
 OCV_OPTION(WITH_AVFOUNDATION   "Use AVFoundation for Video I/O"              ON   IF IOS)
 OCV_OPTION(WITH_CARBON         "Use Carbon for UI instead of Cocoa"          OFF  IF APPLE )
 OCV_OPTION(WITH_CUBLAS         "Include NVidia Cuda Basic Linear Algebra Subprograms (BLAS) library support" OFF IF (CMAKE_VERSION VERSION_GREATER "2.8" AND NOT ANDROID AND NOT IOS) )
-OCV_OPTION(WITH_CUDA           "Include NVidia Cuda Runtime support"         ON   IF (CMAKE_VERSION VERSION_GREATER "2.8" AND NOT ANDROID AND NOT IOS) )
+OCV_OPTION(WITH_CUDA           "Include NVidia Cuda Runtime support"         OFF   IF (CMAKE_VERSION VERSION_GREATER "2.8" AND NOT ANDROID AND NOT IOS) )
 OCV_OPTION(WITH_CUFFT          "Include NVidia Cuda Fast Fourier Transform (FFT) library support"            ON  IF (CMAKE_VERSION VERSION_GREATER "2.8" AND NOT ANDROID AND NOT IOS) )
 OCV_OPTION(WITH_OPENCL         "Include OpenCL Runtime support"              ON  IF (CMAKE_VERSION VERSION_GREATER "2.6" AND NOT ANDROID AND NOT IOS) )
 OCV_OPTION(WITH_EIGEN          "Include Eigen2/Eigen3 support"               ON)
-OCV_OPTION(WITH_FFMPEG         "Include FFMPEG support"                      ON   IF (NOT ANDROID AND NOT IOS) )
+OCV_OPTION(WITH_FFMPEG         "Include FFMPEG support"                      OFF   IF (NOT ANDROID AND NOT IOS) )
 OCV_OPTION(WITH_GSTREAMER      "Include Gstreamer support"                   ON   IF (UNIX AND NOT APPLE AND NOT ANDROID AND NOT IOS) )
 OCV_OPTION(WITH_GTK            "Include GTK support"                         ON   IF (UNIX AND NOT APPLE AND NOT ANDROID AND NOT IOS) )
 OCV_OPTION(WITH_IPP            "Include Intel IPP support"                   OFF  IF (MSVC OR X86 OR X86_64) )
@@ -665,18 +665,18 @@ add_subdirectory(include)
 add_subdirectory(modules)
 
 # Generate targets for documentation
-add_subdirectory(doc)
+#add_subdirectory(doc)
 
 # various data that is used by cv libraries and/or demo applications.
-add_subdirectory(data)
+#add_subdirectory(data)
 
 # extra applications
 add_subdirectory(apps)
 
 # examples
-if(BUILD_EXAMPLES OR BUILD_ANDROID_EXAMPLES OR INSTALL_PYTHON_EXAMPLES)
-  add_subdirectory(samples)
-endif()
+#if(BUILD_EXAMPLES OR BUILD_ANDROID_EXAMPLES OR INSTALL_PYTHON_EXAMPLES)
+#  add_subdirectory(samples)
+#endif()
 
 
 # ----------------------------------------------------------------------------
