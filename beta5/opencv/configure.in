@@ -1,0 +1,353 @@
+# Process this file with autoconf to produce a configure script.
+
+# Set various version strings
+m4_define([opencv_major_version],    [0])
+m4_define([opencv_minor_version],    [9])
+m4_define([opencv_subminor_version], [7])
+m4_define([opencv_version],          [opencv_major_version.opencv_minor_version.opencv_subminor_version])
+
+# Before making a release, the LT_VERSION string should be modified.
+# The string is of the form C:R:A.
+# - If interfaces have been changed or added, but binary compatibility has
+#   been preserved, change to C+1:0:A+1
+# - If binary compatibility has been broken (eg removed or changed interfaces)
+#   change to C+1:0:0
+# - If the interface is the same as the previous version, change to C:R+1:A
+m4_define([opencv_lt_version],       [9:7:9])
+
+
+# init autotools
+AC_PREREQ(2.59)
+AC_INIT([OpenCV],[opencv_version],[opencvlibrary-devel@lists.sourceforge.net])
+AC_CONFIG_SRCDIR([opencv.pc.in])
+AC_CONFIG_AUX_DIR([autotools])
+AC_CONFIG_MACRO_DIR([autotools/aclocal])
+
+# put CVS revision of this configure.in into the resulting configure script
+AC_REVISION($Revision: 1.14 $)
+
+# Detect the canonical host and target build environment
+AC_CANONICAL_HOST
+AC_CANONICAL_TARGET
+
+# setup automake - we need >= 1.6 because of python and aclocal support
+AM_CONFIG_HEADER([cvconfig.h])
+AM_INIT_AUTOMAKE([1.6 foreign])
+
+# use 'ugly' maintainer-mode flag to help CVS users that don't want to
+# help developing OpenCV but just need to compile the latest version
+AM_MAINTAINER_MODE
+
+# substitute versionnumbers
+AC_SUBST(MMAJOR,     [opencv_major_version])
+AC_SUBST(MMINOR,     [opencv_minor_version])
+AC_SUBST(MSUBMINOR,  [opencv_subminor_version])
+AC_SUBST(VERSION,    [opencv_version])
+AC_SUBST(LT_VERSION, [opencv_lt_version])
+
+# disable building static libraries
+AC_DISABLE_STATIC
+
+# checks for programs.
+AC_PROG_CXX
+AC_PROG_CC
+AC_PROG_CPP
+AC_PROG_LIBTOOL
+
+
+dnl
+dnl **************** Ask for building all parts ***************
+dnl
+AC_ARG_WITH([apps],
+        [AS_HELP_STRING([--with-apps],[build demo applications])],
+        [with_apps=$withval],
+        [with_apps="no"])
+AM_CONDITIONAL([BUILD_APPS], [test x"$with_apps" = x"yes"])
+
+
+dnl Add compiler-specific optimization flags
+dnl Check whether to include debugging code
+
+# cure annoying default arguments for CFLAGS and CXXFLAGS
+if test x"$CFLAGS" = x"-g -O2" ; then
+    CFLAGS=""
+fi
+if test x"$CXXFLAGS" = x"-g -O2" ; then
+    CXXFLAGS=""
+fi
+
+
+AC_MSG_CHECKING([whether to build debug version (no optimization)])
+dnl See if the user wants aggressive optimizations of the code
+AC_ARG_ENABLE(debug,
+  [  --enable-debug          build debug version (no optimization) [default=no]],
+  [debug=yes], [debug=no])
+if test x"$debug" = x"yes"; then
+    AC_MSG_RESULT([yes])
+    if test x"$ac_cv_c_compiler_gnu" = x"yes"; then
+        CXXFLAGS="-ggdb -O0 -DDEBUG -D_DEBUG $CXXFLAGS"
+    fi
+else
+    AC_MSG_RESULT([no])
+    AC_MSG_NOTICE( TARGET=$target )
+    case $target in
+    i686-*-*)
+        if test x"$ac_cv_c_compiler_gnu" = x"yes"; then
+            CXXFLAGS="-g -march=i686 -ffast-math -fomit-frame-pointer $CXXFLAGS"
+        fi
+        ;;
+    *-*-*)
+    if test x"$ac_cv_c_compiler_gnu" = x"yes"; then
+        CXXFLAGS="-fomit-frame-pointer $CXXFLAGS"
+    fi
+    ;;    
+    esac
+    CXXFLAGS="-O3 -DNDEBUG $CXXFLAGS"
+fi
+
+if test x"$ac_cv_c_compiler_gnu" = x"yes"; then
+    CXXFLAGS="-Wall -fno-rtti -pipe $CXXFLAGS"
+fi
+
+dnl ******* add libm 'cause it is used by several libraries below ****
+dnl ******* (and by OpenCV itself) ***********************************
+AC_CHECK_LIB(m,pow)
+
+dnl
+dnl ****************** pkg-config *********************
+dnl 
+
+AC_PATH_PROG(PKG_CONFIG, pkg-config, no)
+if test x"$PKG_CONFIG" == x"no"; then
+    AC_MSG_ERROR(You have to install pkg-config to compile OpenCV.)
+fi
+
+dnl
+dnl ***************** Image codecs configuration *****************
+dnl
+SAVELIBS="$LIBS"
+IMAGELIBS=""
+
+AC_SUBST(IMAGELIBS)
+
+have_jpeg=no
+AC_CHECK_HEADER(jpeglib.h,
+    AC_CHECK_LIB(jpeg, jpeg_destroy_decompress,
+    [have_jpeg=yes
+    AC_DEFINE(HAVE_JPEG,,[IJG JPEG codec])
+    IMAGELIBS="$IMAGELIBS -ljpeg"]))
+
+have_zlib=no
+have_png=no
+AC_CHECK_HEADER(zlib.h,
+    AC_CHECK_LIB(z, gzopen,
+    [have_zlib=yes
+    AC_DEFINE(HAVE_ZLIB,,[LZ77 compression/decompression library (used for PNG)])
+    IMAGELIBS="$IMAGELIBS -lz -lm"
+    LIBS="$LIBS -lz -lm"]))
+
+AC_CHECK_HEADER(png.h, AC_DEFINE(HAVE_PNG_H,,[png.h needs to be included]))
+AC_CHECK_HEADER([libpng/png.h], AC_DEFINE(HAVE_LIBPNG_PNG_H,,[libpng/png.h needs to be included]))
+
+if test x"$ac_cv_header_png_h" = x"yes" -o x"$ac_cv_header_libpng_png_h" = x"yes"; then
+    AC_CHECK_LIB(png12, png_read_image,
+    [have_png=yes
+    AC_DEFINE(HAVE_PNG,,[PNG codec])
+    IMAGELIBS="-lpng12 $IMAGELIBS"
+    LIBS="-lpng12 $LIBS"
+    AC_CHECK_FUNCS(png_get_valid png_set_tRNS_to_alpha)])
+fi
+
+have_tiff=no
+AC_CHECK_HEADER(tiff.h,
+    AC_CHECK_LIB(tiff, TIFFReadRGBAStrip,
+    [have_tiff=yes
+    AC_DEFINE(HAVE_TIFF,,[TIFF codec])
+    IMAGELIBS="$IMAGELIBS -ltiff"
+    LIBS="$LIBS -ltiff"]))
+
+dnl Restore original LIBS settings...
+LIBS="$SAVELIBS"
+AC_SUBST(IMAGELIBS)
+
+
+dnl
+dnl ****************** GTK+ 2.x (or later) *********************
+dnl 
+
+PKG_CHECK_MODULES(GTK, "gtk+-2.0 gdk-pixbuf-2.0", [have_gtk=yes
+                  AC_DEFINE(HAVE_GTK,,[GTK+ 2.x toolkit])], have_gtk=no )
+AC_SUBST(GTK_CFLAGS)
+AC_SUBST(GTK_LIBS)
+
+dnl
+dnl ****************** FFMPEG configuration **********************
+dnl
+
+FFMPEGLIBS=""
+have_ffmpeg=no
+
+AC_CHECK_HEADER(ffmpeg/avcodec.h,
+    AC_CHECK_LIB(avcodec, avcodec_decode_video,
+    [AC_CHECK_LIB(avformat, av_open_input_file,
+    [have_ffmpeg=yes
+    AC_DEFINE(HAVE_FFMPEG,,[FFMpeg video codecs library])
+    FFMPEGLIBS="-lavcodec -lavformat"],,[-lavcodec])]))
+
+AC_SUBST(FFMPEGLIBS)
+
+dnl
+dnl ****************** IEEE1394 support **************************
+dnl
+
+SAVELIBS="$LIBS"
+IEEE1394LIBS=""
+have_raw1394=no
+have_dc1394=no
+AC_CHECK_HEADER(libraw1394/raw1394.h,
+    AC_CHECK_LIB(raw1394, raw1394_new_handle, [have_raw1394=yes
+        LIBS="-lm -lraw1394 $LIBS"]))
+
+if test x"$have_raw1394" = x"yes"; then
+    AC_CHECK_HEADER(libdc1394/dc1394_control.h,
+        AC_CHECK_LIB(dc1394_control, dc1394_camera_on, [have_dc1394=yes
+        AC_DEFINE(HAVE_DC1394,,[IEEE1394 capturing support])
+    AC_EGREP_HEADER(do_extra_buffering, libdc1394/dc1394_control.h,
+    [AC_DEFINE(HAVE_DC1394_095,,[libdc1394 0.9.4 or 0.9.5])])
+        IEEE1394LIBS="-lm -lraw1394 -ldc1394_control"]))
+fi
+
+LIBS="$SAVELIBS"
+AC_SUBST(IEEE1394LIBS)
+
+dnl
+dnl ****************** V4L Support **************************
+dnl
+AC_CHECK_HEADER([linux/videodev.h],
+                [
+                  AC_DEFINE(HAVE_CAMV4L,,[V4L capturing support])
+                  have_v4l=yes
+                ],
+                [ have_v4l=no ])
+
+dnl
+dnl ****************** SWIG wrappers ************************
+dnl
+setup_swig=no
+AC_ARG_ENABLE([python], 
+              [AS_HELP_STRING([--enable-python],[build python wrappers])],
+              [enable_python=$enableval],
+              [enable_python=no])
+if test x"$enable_python" = x"yes"; then
+    AC_MSG_NOTICE([Checking for necessary tools to build python wrappers])
+
+    # we need Python now
+    AM_PATH_PYTHON()
+
+    # get some info on how to compile and link python modules
+    AZ_PYTHON_CSPEC()
+    AZ_PYTHON_LSPEC()
+
+    # it would be nice to have SWIG on board
+    SWIG_PYTHON()
+    setup_swig=yes
+fi
+AM_CONDITIONAL([BUILD_PYTHON_WRAPPERS], [test x$enable_python = x"yes"])
+
+dnl
+dnl *********** set up SWIG if wrappers are wanted ***********
+dnl
+if test x"$setup_swig" = x"yes" ; then
+    AC_MSG_NOTICE([Checking for SWIG])
+    AC_PATH_SWIG([1.3.24])
+    if test -n "$SWIG" ; then
+        SWIG_ENABLE_CXX()
+        SWIG_MULTI_MODULE_SUPPORT()
+    fi
+fi
+AM_CONDITIONAL([UPDATE_SWIG_WRAPPERS],  [test -n "$SWIG"])
+
+dnl
+dnl ****************** Parallelization ***********************
+dnl
+#CXXOPENMP="no"
+#
+#AC_ARG_WITH(openmp, dnl
+#  [--with-openmp=COMPILER  use OpenMP supporting compiler [default=no] ],
+#    [CXXOPENMP="$withval"],[CXXOPENMP="no"])
+#if test "$CXXOPENMP" = "no"; then
+#    CXXOPENMP="$CXX"
+#fi
+#
+#AC_SUBST(CXXOPENMP)
+
+AC_SUBST(DEBUG)
+
+AC_CONFIG_FILES([Makefile
+opencv.pc
+opencv.spec
+docs/Makefile
+data/Makefile
+cxcore/Makefile
+cxcore/include/Makefile
+cxcore/src/Makefile
+cv/Makefile
+cv/include/Makefile
+cv/src/Makefile
+cvaux/Makefile
+cvaux/include/Makefile
+cvaux/src/Makefile
+otherlibs/Makefile
+otherlibs/highgui/Makefile
+interfaces/Makefile
+interfaces/swig/Makefile
+interfaces/swig/filtered/Makefile
+interfaces/swig/python/Makefile
+tests/Makefile
+tests/trs/Makefile
+tests/cv/Makefile
+tests/cv/src/Makefile
+tests/cxts/Makefile
+tests/cxcore/Makefile
+tests/cxcore/src/Makefile
+samples/Makefile
+samples/c/Makefile
+samples/python/Makefile
+apps/Makefile
+apps/haartraining/Makefile
+apps/haartraining/include/Makefile
+apps/haartraining/src/Makefile
+])
+AC_OUTPUT
+
+AC_MSG_RESULT([
+Configuration:
+    Compiler:                 ${CXX} 
+    CXXFLAGS:                 ${CXXFLAGS}
+
+    Install path:             ${prefix}
+    
+    Use gtk+ 2.x:             ${have_gtk}
+    Use libjpeg:              ${have_jpeg}
+    Use zlib:                 ${have_zlib}
+    Use libpng:               ${have_png}
+    Use libtiff:              ${have_tiff}
+    Use ffmpeg:               ${have_ffmpeg}
+    Use dc1394 & raw1394:     ${have_dc1394}
+    Use v4l:                  ${have_v4l}
+
+    Build wrappers for
+    - Python                  ${enable_python}])
+
+if test -n "$SWIG" ; then
+AC_MSG_RESULT([    SWIG is at                ${SWIG}
+])
+else
+AC_MSG_RESULT([    SWIG is at                No swig detected. Use existing files.
+])
+fi
+
+AC_MSG_RESULT([    Build demo apps           ${with_apps}
+
+Now run make ...
+])
