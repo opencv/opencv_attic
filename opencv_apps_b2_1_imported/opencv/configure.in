@@ -1,0 +1,125 @@
+dnl Process this file with autoconf to produce a configure script.
+dnl includedir = include/opencv
+dnl AC_SUBST(includedir)dnl
+
+AC_INIT(Makefile.am)
+
+AM_CONFIG_HEADER(config.h)
+
+AM_INIT_AUTOMAKE(opencv,0.9.3)
+
+dnl Checks for programs.
+AC_PROG_CC
+AC_PROG_CXX
+AC_PROG_RANLIB
+AC_PROG_LIBTOOL
+dnl Checks for libraries.
+
+dnl Checks for header files.
+
+dnl Checks for typedefs, structures, and compiler characteristics.
+
+dnl Checks for library functions.
+
+dnl AM_ENABLE_MULTILIB(opencv/t/Makefile, opencv)
+
+dnl Check whether to include debugging code
+DEBUG="-DNDEBUG"
+AC_MSG_CHECKING([whether to include verbose debugging code])
+AC_ARG_ENABLE(debug,
+  [  --enable-debug          include verbose debugging code [default=no]],
+    if test x$enableval = "xyes"; then
+        AC_MSG_RESULT([yes])
+        DEBUG="-D_DEBUG -DDEBUG -DCVL_DEBUG -UNDEBUG -g3"
+    else
+        AC_MSG_RESULT([no])
+    fi,
+    AC_MSG_RESULT([no])
+)
+AC_SUBST(DEBUG)dnl
+
+AC_PATH_XTRA
+
+dnl Set path to IPL include files
+IPL_INCLUDE="-I/usr/include/ipl"
+IPL_LIB=""
+AC_MSG_CHECKING([setting path to IPL includes...])
+AC_ARG_WITH(ipl,
+  [  --with-ipl              path to IPL include files[default /usr/include/ipl]],
+    [IPL_INCLUDE="-I$withval -D_IPL_PATH"
+    AC_MSG_RESULT([$IPL_INCLUDE])],
+    AC_MSG_RESULT([$IPL_INCLUDE])
+)
+AC_SUBST(IPL_INCLUDE)dnl
+AC_SUBST(IPL_LIB)dnl
+
+TKPATH=/usr/lib
+AC_ARG_WITH(tk, dnl
+  [--with-tk              where is tclConfig.sh and tkConfig.sh [default=/usr/lib]],
+  TKPATH=$withval)
+
+AC_ARG_WITH(tests, dnl
+  [--with-tests             do you wish the tests be built [default=no] ],
+    with_tests=$withval, with_tests=no)
+AC_SUBST(with_tests)
+
+if test "$with_tests" = yes; then
+    AC_CHECK_LIB(iplpx,iplAdd,,[AC_MSG_ERROR(Couldn't link with -liplpx Install ipl library or build without tests)])
+    TESTDIR=tests
+else
+    TESTDIR=""
+fi
+
+AC_SUBST(TESTDIR)
+
+AC_ARG_WITH(apps, dnl
+  [--with-apps             do you wish the demo apps be built [default=yes] ],
+    with_apps=$withval, with_apps=yes)
+AC_SUBST(with_apps)
+
+if test "$with_apps" = yes; then
+
+if test -f ${TKPATH}/tclConfig.sh; then  
+source ${TKPATH}/tclConfig.sh 
+else 
+AC_MSG_ERROR(Can't find ${TKPATH}/tclConfig.sh Give the correct path to --with-tcl key or install tcl properly or configure --without-apps) 
+fi
+
+if test $TCL_MAJOR_VERSION -lt 8 -o $TCL_MINOR_VERSION -lt 3; then
+AC_MSG_ERROR( You need tcl>=8.3 and you have $TCL_VERSION)
+fi
+
+TCLLIB=tcl${TCL_VERSION}
+AC_CHECK_LIB($TCLLIB,Tcl_Init,,[AC_MSG_ERROR(Couldn't link with -l${TCLLIB} Get tcl/tk from scriptics.com or build without apps)])
+
+if test -f ${TKPATH}/tkConfig.sh; then  
+source ${TKPATH}/tkConfig.sh 
+else 
+AC_MSG_ERROR(Can't find ${TKPATH}/tkConfig.sh Give the correct path to --with-tk key or install tcl/tk properly or configure --without-apps) 
+fi
+
+if test $TK_MAJOR_VERSION -lt 8 -o $TK_MINOR_VERSION -lt 3; then
+AC_MSG_ERROR( You need tcl/tk>=8.3 and you have $TK_VERSION)
+fi
+
+TKLIB=tk${TK_VERSION}
+AC_CHECK_LIB($TKLIB,Tk_Init,,[AC_MSG_ERROR(Couldn't link with -l${TKLIB} Get tcl/tk from scriptics.com or build without apps)])
+
+TCLTKLIB="-l${TCLLIB} -l${TKLIB}"
+AC_SUBST(TCLTKLIB)
+
+ADDONS=apps
+AC_SUBST(ADDONS)
+ 
+fi
+
+MMAJOR=9
+MMINOR=3
+MSUBMINOR=9
+
+AC_SUBST(MMAJOR)dnl
+AC_SUBST(MMINOR)dnl
+AC_SUBST(MSUBMINOR)dnl
+
+
+AC_OUTPUT( Makefile apps/Makefile apps/cvcsdemo/Makefile apps/cvcsdemo/pictures/Makefile apps/cvenv/Makefile apps/cvenv/EiC/Makefile apps/cvenv/EiC/stdClib/Makefile apps/cvenv/include/Makefile apps/cvenv/include/sys/Makefile apps/cvenv/pictures/Makefile apps/cvenv/samples/Makefile apps/cvlkdemo/Makefile apps/cvlkdemo/pictures/Makefile apps/vmdemotk/Makefile bin/Makefile bin/ippcv/Makefile bin/ippcv/a6/Makefile bin/ippcv/m6/Makefile bin/ippcv/w7/Makefile bin/optcv/Makefile bin/optcv/a6/Makefile bin/optcv/m6/Makefile bin/optcv/w7/Makefile cv/Makefile cv/include/Makefile cv/src/Makefile cvaux/Makefile cvaux/include/Makefile cvaux/src/Makefile otherlibs/Makefile otherlibs/cvcam/Makefile otherlibs/cvcam/include/Makefile otherlibs/cvcam/src/Makefile otherlibs/cvcam/src/unix/Makefile otherlibs/highgui/Makefile tests/Makefile tests/ats/Makefile tests/ats/include/Makefile tests/ats/src/Makefile tests/cv/Makefile tests/cv/include/Makefile tests/cv/src/Makefile tests/trs/Makefile tests/trs/include/Makefile tests/trs/src/Makefile )
