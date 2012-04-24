@@ -1,0 +1,111 @@
+\ProvidesPackage{opencv}
+
+\newcommand{\cvfunc}[1]{
+\subsubsection{#1}
+%\addcontentsline{toc}{subsubsection}{#1} 
+\index{cv...!#1}
+}
+
+\newcommand{\cvstruct}[1]{
+\subsubsection{#1}
+%\addcontentsline{toc}{subsubsection}{#1} 
+\index{cv...!#1}
+}
+
+\newcommand{\cvmacro}[1]{
+\subsubsection{#1}
+%\addcontentsline{toc}{subsubsection}{#1} 
+\index{cv...!#1}
+}
+
+\newcommand{\cvarg}[2]{
+\item[\texttt{#1}] #2
+}
+
+\newcommand{\cvexp}[3]{
+\ifthenelse{\equal{\genc}{true}\and\equal{\genpy}{true}}{\noindent In C:}{}
+\ifthenelse{\equal{\genc}{true}}{
+\begin{shaded}
+\begin{alltt}
+\setlength{\parindent}{1in}
+#1
+\end{alltt}
+\end{shaded}
+}{}
+\ifthenelse{\equal{\genpy}{true}}{
+\ifthenelse{\equal{\genc}{true}\and\equal{\genpy}{true}}{\noindent In Python:}{}
+\begin{shaded}
+\begin{alltt}
+#3
+\end{alltt}
+\end{shaded}
+}{}
+}
+
+\newcommand{\cvC}[1]{
+\ifthenelse{\equal{\targetlang}{c}}{
+#1
+}{}
+}
+
+\newcommand{\cvPy}[1]{
+\ifthenelse{\equal{\targetlang}{python}}{
+#1
+}{}
+}
+
+\newcommand{\cvcode}[1]{
+\begin{shaded}
+\begin{alltt}
+#1
+\end{alltt}
+\end{shaded}
+}
+
+%\newcommand{\cross}[1]{#1 (page \pageref{#1})}
+\newcommand{\cross}[1]{ \hyperref[#1]{#1} }
+
+\newcommand{\matTT}[9]{
+\[
+\left|\begin{array}{ccc}
+ #1 & #2 & #3\\
+ #4 & #5 & #6\\
+ #7 & #8 & #9
+\end{array}\right|
+\]
+}
+
+\newcommand{\fork}[4]{
+  \left\{
+  \begin{array}{l l}
+  #1 & \mbox{#2}\\
+  #3 & \mbox{#4}\\
+  \end{array} \right.}
+\newcommand{\forkthree}[6]{
+  \left\{
+  \begin{array}{l l}
+  #1 & \mbox{#2}\\
+  #3 & \mbox{#4}\\
+  #5 & \mbox{#6}\\
+  \end{array} \right.}
+
+\newcommand{\vecthree}[3]{
+\begin{bmatrix}
+ #1\\
+ #2\\
+ #3
+\end{bmatrix}
+}
+
+\newcommand{\vecthreethree}[9]{
+\begin{bmatrix}
+ #1 & #2 & #3\\
+ #4 & #5 & #6\\
+ #7 & #8 & #9
+\end{bmatrix}
+}
+
+% allow special plastex handling
+\newif\ifplastex
+\plastexfalse
+
