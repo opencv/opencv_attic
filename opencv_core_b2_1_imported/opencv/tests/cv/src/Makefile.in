@@ -1,0 +1,1402 @@
+# Makefile.in generated automatically by automake 1.4-p5 from Makefile.am
+
+# Copyright (C) 1994, 1995-8, 1999, 2001 Free Software Foundation, Inc.
+# This Makefile.in is free software; the Free Software Foundation
+# gives unlimited permission to copy and/or distribute it,
+# with or without modifications, as long as this notice is preserved.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY, to the extent permitted by law; without
+# even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+# PARTICULAR PURPOSE.
+
+
+SHELL = @SHELL@
+
+srcdir = @srcdir@
+top_srcdir = @top_srcdir@
+VPATH = @srcdir@
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+
+bindir = @bindir@
+sbindir = @sbindir@
+libexecdir = @libexecdir@
+datadir = @datadir@
+sysconfdir = @sysconfdir@
+sharedstatedir = @sharedstatedir@
+localstatedir = @localstatedir@
+libdir = @libdir@
+infodir = @infodir@
+mandir = @mandir@
+includedir = @includedir@
+oldincludedir = /usr/include
+
+DESTDIR =
+
+pkgdatadir = $(datadir)/@PACKAGE@
+pkglibdir = $(libdir)/@PACKAGE@
+pkgincludedir = $(includedir)/@PACKAGE@
+
+top_builddir = ../../..
+
+ACLOCAL = @ACLOCAL@
+AUTOCONF = @AUTOCONF@
+AUTOMAKE = @AUTOMAKE@
+AUTOHEADER = @AUTOHEADER@
+
+INSTALL = @INSTALL@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@ $(AM_INSTALL_PROGRAM_FLAGS)
+INSTALL_DATA = @INSTALL_DATA@
+INSTALL_SCRIPT = @INSTALL_SCRIPT@
+transform = @program_transform_name@
+
+NORMAL_INSTALL = :
+PRE_INSTALL = :
+POST_INSTALL = :
+NORMAL_UNINSTALL = :
+PRE_UNINSTALL = :
+POST_UNINSTALL = :
+host_alias = @host_alias@
+host_triplet = @host@
+ADDONS = @ADDONS@
+AS = @AS@
+CC = @CC@
+CXX = @CXX@
+DEBUG = @DEBUG@
+DLLTOOL = @DLLTOOL@
+ECHO = @ECHO@
+EXEEXT = @EXEEXT@
+IPL_INCLUDE = @IPL_INCLUDE@
+IPL_LIB = @IPL_LIB@
+LIBTOOL = @LIBTOOL@
+LN_S = @LN_S@
+MAKEINFO = @MAKEINFO@
+MMAJOR = @MMAJOR@
+MMINOR = @MMINOR@
+MSUBMINOR = @MSUBMINOR@
+OBJDUMP = @OBJDUMP@
+OBJEXT = @OBJEXT@
+PACKAGE = @PACKAGE@
+RANLIB = @RANLIB@
+STRIP = @STRIP@
+TCLTKLIB = @TCLTKLIB@
+TESTDIR = @TESTDIR@
+VERSION = @VERSION@
+with_apps = @with_apps@
+with_tests = @with_tests@
+
+noinst_PROGRAMS = cvla
+
+cvla_SOURCES = aabsdiff.cpp aaccum.cpp aadaptthresh.cpp aapproxpoly.cpp aarithm.cpp aarrayiterator.cpp abackproject.cpp acalccontrasthist.cpp acalculate.cpp acameracalibration.cpp acamshift.cpp acanny.cpp achesscorners.cpp acondens.cpp acontourcollection.cpp acontourmoments.cpp acontours.cpp acontoursmatch.cpp aconvert.cpp aconvhull.cpp acorner.cpp acreatecontourtree.cpp adistancetransform.cpp adrawing.cpp adrawing_regress.cpp aeigenobjects.cpp aemd.cpp aerrhandle.cpp afitellipse.cpp afitlines.cpp afloodfill.cpp afloodfill8.cpp agesturerecognition.cpp ahistogram.cpp ahistograms.cpp ahmmobs.cpp ahoughtransform.cpp aimage.cpp aimagestatistics.cpp akalman.cpp akmeans.cpp alaplace.cpp alogic.cpp amaskaccum.cpp amatchcontourtrees.cpp amathutils.cpp amatrix.cpp amatrix2.cpp ameanshift.cpp amemorytest.cpp aminarearect.cpp amineval.cpp amoments.cpp amorphology.cpp amotiontemplates.cpp amotseg.cpp anodeiterator.cpp anorm.cpp anormmask.cpp aoperations.cpp aoptflowhs.cpp aoptflowlk.cpp aoptflowpyrlk.cpp apixelaccess.cpp aposit.cpp aprecorner.cpp apyramids.cpp apyrsegmentation.cpp asamplers.cpp ascharr.cpp asequence.cpp asnakes.cpp asobel.cpp astoragearray.cpp asubdivisions.cpp asvd.cpp atemplmatch.cpp athresh.cpp atree.cpp atreeiterator.cpp aundistort.cpp canny.cpp tsysa.cpp ucontours.cpp ugraphics.cpp uiplutils.cpp ureadfile.cpp
+
+# here you should add all header files, which contains the functionality
+# of your shared lib (published for the users)
+include_HEADERS = 
+
+# here you should add all header files, which shouldn't be installed
+noinst_HEADERS = 
+
+EXTRA_DIST = aeigenobjects.inc amatrix.inc apixelaccess.inc aabsdiff.cpp aaccum.cpp aadaptthresh.cpp aapproxpoly.cpp aarithm.cpp aarrayiterator.cpp abackproject.cpp acalccontrasthist.cpp acalculate.cpp acameracalibration.cpp acamshift.cpp acanny.cpp achesscorners.cpp acondens.cpp acontourcollection.cpp acontourmoments.cpp acontours.cpp acontoursmatch.cpp aconvert.cpp aconvhull.cpp acorner.cpp acreatecontourtree.cpp adistancetransform.cpp adrawing.cpp adrawing_regress.cpp aeigenobjects.cpp aemd.cpp aerrhandle.cpp afitellipse.cpp afitlines.cpp afloodfill.cpp afloodfill8.cpp agesturerecognition.cpp ahistogram.cpp ahistograms.cpp ahmmobs.cpp ahoughtransform.cpp aimage.cpp aimagestatistics.cpp akalman.cpp akmeans.cpp alaplace.cpp alogic.cpp amaskaccum.cpp amatchcontourtrees.cpp amathutils.cpp amatrix.cpp amatrix2.cpp ameanshift.cpp amemorytest.cpp aminarearect.cpp amineval.cpp amoments.cpp amorphology.cpp amotiontemplates.cpp amotseg.cpp anodeiterator.cpp anorm.cpp anormmask.cpp aoperations.cpp aoptflowhs.cpp aoptflowlk.cpp aoptflowpyrlk.cpp apixelaccess.cpp aposit.cpp aprecorner.cpp apyramids.cpp apyrsegmentation.cpp asamplers.cpp ascharr.cpp asequence.cpp asnakes.cpp asobel.cpp astoragearray.cpp asubdivisions.cpp asvd.cpp atemplmatch.cpp athresh.cpp atree.cpp atreeiterator.cpp aundistort.cpp canny.cpp tsysa.cpp ucontours.cpp ugraphics.cpp uiplutils.cpp ureadfile.cpp
+
+INCLUDES =  -I. -I../include -I../../../otherlibs/highgui -I../../ats/include -I../../trs/include -I../../../cv/include -I../../../cv/src -I../../../cvaux/include -I../../../otherlibs/_Mkl/include
+
+cvla_LDADD = -L../../../cv/src -lopencv -L../../../otherlibs/highgui -lhighgui -L../../trs/src -ltrs -L../../ats/src -lats -L../../../cvaux/src -lcvaux -liplpx
+
+CFLAGS =  @DEBUG@
+CXXFLAGS =  @DEBUG@
+mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
+CONFIG_HEADER = ../../../config.h
+CONFIG_CLEAN_FILES = 
+noinst_PROGRAMS =  cvla$(EXEEXT)
+PROGRAMS =  $(noinst_PROGRAMS)
+
+
+DEFS = @DEFS@ -I. -I$(srcdir) -I../../..
+CPPFLAGS = @CPPFLAGS@
+LDFLAGS = @LDFLAGS@
+LIBS = @LIBS@
+X_CFLAGS = @X_CFLAGS@
+X_LIBS = @X_LIBS@
+X_EXTRA_LIBS = @X_EXTRA_LIBS@
+X_PRE_LIBS = @X_PRE_LIBS@
+cvla_OBJECTS =  aabsdiff.$(OBJEXT) aaccum.$(OBJEXT) \
+aadaptthresh.$(OBJEXT) aapproxpoly.$(OBJEXT) aarithm.$(OBJEXT) \
+aarrayiterator.$(OBJEXT) abackproject.$(OBJEXT) \
+acalccontrasthist.$(OBJEXT) acalculate.$(OBJEXT) \
+acameracalibration.$(OBJEXT) acamshift.$(OBJEXT) acanny.$(OBJEXT) \
+achesscorners.$(OBJEXT) acondens.$(OBJEXT) acontourcollection.$(OBJEXT) \
+acontourmoments.$(OBJEXT) acontours.$(OBJEXT) acontoursmatch.$(OBJEXT) \
+aconvert.$(OBJEXT) aconvhull.$(OBJEXT) acorner.$(OBJEXT) \
+acreatecontourtree.$(OBJEXT) adistancetransform.$(OBJEXT) \
+adrawing.$(OBJEXT) adrawing_regress.$(OBJEXT) aeigenobjects.$(OBJEXT) \
+aemd.$(OBJEXT) aerrhandle.$(OBJEXT) afitellipse.$(OBJEXT) \
+afitlines.$(OBJEXT) afloodfill.$(OBJEXT) afloodfill8.$(OBJEXT) \
+agesturerecognition.$(OBJEXT) ahistogram.$(OBJEXT) \
+ahistograms.$(OBJEXT) ahmmobs.$(OBJEXT) ahoughtransform.$(OBJEXT) \
+aimage.$(OBJEXT) aimagestatistics.$(OBJEXT) akalman.$(OBJEXT) \
+akmeans.$(OBJEXT) alaplace.$(OBJEXT) alogic.$(OBJEXT) \
+amaskaccum.$(OBJEXT) amatchcontourtrees.$(OBJEXT) amathutils.$(OBJEXT) \
+amatrix.$(OBJEXT) amatrix2.$(OBJEXT) ameanshift.$(OBJEXT) \
+amemorytest.$(OBJEXT) aminarearect.$(OBJEXT) amineval.$(OBJEXT) \
+amoments.$(OBJEXT) amorphology.$(OBJEXT) amotiontemplates.$(OBJEXT) \
+amotseg.$(OBJEXT) anodeiterator.$(OBJEXT) anorm.$(OBJEXT) \
+anormmask.$(OBJEXT) aoperations.$(OBJEXT) aoptflowhs.$(OBJEXT) \
+aoptflowlk.$(OBJEXT) aoptflowpyrlk.$(OBJEXT) apixelaccess.$(OBJEXT) \
+aposit.$(OBJEXT) aprecorner.$(OBJEXT) apyramids.$(OBJEXT) \
+apyrsegmentation.$(OBJEXT) asamplers.$(OBJEXT) ascharr.$(OBJEXT) \
+asequence.$(OBJEXT) asnakes.$(OBJEXT) asobel.$(OBJEXT) \
+astoragearray.$(OBJEXT) asubdivisions.$(OBJEXT) asvd.$(OBJEXT) \
+atemplmatch.$(OBJEXT) athresh.$(OBJEXT) atree.$(OBJEXT) \
+atreeiterator.$(OBJEXT) aundistort.$(OBJEXT) canny.$(OBJEXT) \
+tsysa.$(OBJEXT) ucontours.$(OBJEXT) ugraphics.$(OBJEXT) \
+uiplutils.$(OBJEXT) ureadfile.$(OBJEXT)
+cvla_DEPENDENCIES = 
+cvla_LDFLAGS = 
+CXXCOMPILE = $(CXX) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
+LTCXXCOMPILE = $(LIBTOOL) --mode=compile $(CXX) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
+CXXLD = $(CXX)
+CXXLINK = $(LIBTOOL) --mode=link $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@
+HEADERS =  $(include_HEADERS) $(noinst_HEADERS)
+
+DIST_COMMON =  Makefile.am Makefile.in
+
+
+DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
+
+TAR = gtar
+GZIP_ENV = --best
+SOURCES = $(cvla_SOURCES)
+OBJECTS = $(cvla_OBJECTS)
+
+all: all-redirect
+.SUFFIXES:
+.SUFFIXES: .S .c .cpp .lo .o .obj .s
+$(srcdir)/Makefile.in: Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) 
+	cd $(top_srcdir) && $(AUTOMAKE) --gnu --include-deps tests/cv/src/Makefile
+
+Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status
+	cd $(top_builddir) \
+	  && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
+
+
+mostlyclean-noinstPROGRAMS:
+
+clean-noinstPROGRAMS:
+	-test -z "$(noinst_PROGRAMS)" || rm -f $(noinst_PROGRAMS)
+
+distclean-noinstPROGRAMS:
+
+maintainer-clean-noinstPROGRAMS:
+
+.c.o:
+	$(COMPILE) -c $<
+
+# FIXME: We should only use cygpath when building on Windows,
+# and only if it is available.
+.c.obj:
+	$(COMPILE) -c `cygpath -w $<`
+
+.s.o:
+	$(COMPILE) -c $<
+
+.S.o:
+	$(COMPILE) -c $<
+
+mostlyclean-compile:
+	-rm -f *.o core *.core
+	-rm -f *.$(OBJEXT)
+
+clean-compile:
+
+distclean-compile:
+	-rm -f *.tab.c
+
+maintainer-clean-compile:
+
+.c.lo:
+	$(LIBTOOL) --mode=compile $(COMPILE) -c $<
+
+.s.lo:
+	$(LIBTOOL) --mode=compile $(COMPILE) -c $<
+
+.S.lo:
+	$(LIBTOOL) --mode=compile $(COMPILE) -c $<
+
+mostlyclean-libtool:
+	-rm -f *.lo
+
+clean-libtool:
+	-rm -rf .libs _libs
+
+distclean-libtool:
+
+maintainer-clean-libtool:
+
+cvla$(EXEEXT): $(cvla_OBJECTS) $(cvla_DEPENDENCIES)
+	@rm -f cvla$(EXEEXT)
+	$(CXXLINK) $(cvla_LDFLAGS) $(cvla_OBJECTS) $(cvla_LDADD) $(LIBS)
+.cpp.o:
+	$(CXXCOMPILE) -c $<
+.cpp.obj:
+	$(CXXCOMPILE) -c `cygpath -w $<`
+.cpp.lo:
+	$(LTCXXCOMPILE) -c $<
+
+install-includeHEADERS: $(include_HEADERS)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(includedir)
+	@list='$(include_HEADERS)'; for p in $$list; do \
+	  if test -f "$$p"; then d= ; else d="$(srcdir)/"; fi; \
+	  echo " $(INSTALL_DATA) $$d$$p $(DESTDIR)$(includedir)/$$p"; \
+	  $(INSTALL_DATA) $$d$$p $(DESTDIR)$(includedir)/$$p; \
+	done
+
+uninstall-includeHEADERS:
+	@$(NORMAL_UNINSTALL)
+	list='$(include_HEADERS)'; for p in $$list; do \
+	  rm -f $(DESTDIR)$(includedir)/$$p; \
+	done
+
+tags: TAGS
+
+ID: $(HEADERS) $(SOURCES) $(LISP)
+	list='$(SOURCES) $(HEADERS)'; \
+	unique=`for i in $$list; do echo $$i; done | \
+	  awk '    { files[$$0] = 1; } \
+	       END { for (i in files) print i; }'`; \
+	here=`pwd` && cd $(srcdir) \
+	  && mkid -f$$here/ID $$unique $(LISP)
+
+TAGS:  $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) $(LISP)
+	tags=; \
+	here=`pwd`; \
+	list='$(SOURCES) $(HEADERS)'; \
+	unique=`for i in $$list; do echo $$i; done | \
+	  awk '    { files[$$0] = 1; } \
+	       END { for (i in files) print i; }'`; \
+	test -z "$(ETAGS_ARGS)$$unique$(LISP)$$tags" \
+	  || (cd $(srcdir) && etags $(ETAGS_ARGS) $$tags  $$unique $(LISP) -o $$here/TAGS)
+
+mostlyclean-tags:
+
+clean-tags:
+
+distclean-tags:
+	-rm -f TAGS ID
+
+maintainer-clean-tags:
+
+distdir = $(top_builddir)/$(PACKAGE)-$(VERSION)/$(subdir)
+
+subdir = tests/cv/src
+
+distdir: $(DISTFILES)
+	@for file in $(DISTFILES); do \
+	  d=$(srcdir); \
+	  if test -d $$d/$$file; then \
+	    cp -pr $$d/$$file $(distdir)/$$file; \
+	  else \
+	    test -f $(distdir)/$$file \
+	    || ln $$d/$$file $(distdir)/$$file 2> /dev/null \
+	    || cp -p $$d/$$file $(distdir)/$$file || :; \
+	  fi; \
+	done
+aabsdiff.o: aabsdiff.cpp ../include/cvtest.h ../../../cv/include/cv.hpp \
+	../../../cv/include/cv.h ../../../cv/include/ipl.h \
+	../../../cv/include/iplerror.h ../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+aaccum.o: aaccum.cpp ../include/cvtest.h ../../../cv/include/cv.hpp \
+	../../../cv/include/cv.h ../../../cv/include/ipl.h \
+	../../../cv/include/iplerror.h ../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+aadaptthresh.o: aadaptthresh.cpp ../include/cvtest.h \
+	../../../cv/include/cv.hpp ../../../cv/include/cv.h \
+	../../../cv/include/ipl.h ../../../cv/include/iplerror.h \
+	../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+aapproxpoly.o: aapproxpoly.cpp ../include/cvtest.h \
+	../../../cv/include/cv.hpp ../../../cv/include/cv.h \
+	../../../cv/include/ipl.h ../../../cv/include/iplerror.h \
+	../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+aarithm.o: aarithm.cpp ../include/cvtest.h ../../../cv/include/cv.hpp \
+	../../../cv/include/cv.h ../../../cv/include/ipl.h \
+	../../../cv/include/iplerror.h ../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+aarrayiterator.o: aarrayiterator.cpp ../include/cvtest.h \
+	../../../cv/include/cv.hpp ../../../cv/include/cv.h \
+	../../../cv/include/ipl.h ../../../cv/include/iplerror.h \
+	../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+abackproject.o: abackproject.cpp ../include/cvtest.h \
+	../../../cv/include/cv.hpp ../../../cv/include/cv.h \
+	../../../cv/include/ipl.h ../../../cv/include/iplerror.h \
+	../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+acalccontrasthist.o: acalccontrasthist.cpp ../include/cvtest.h \
+	../../../cv/include/cv.hpp ../../../cv/include/cv.h \
+	../../../cv/include/ipl.h ../../../cv/include/iplerror.h \
+	../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+acalculate.o: acalculate.cpp ../include/cvtest.h \
+	../../../cv/include/cv.hpp ../../../cv/include/cv.h \
+	../../../cv/include/ipl.h ../../../cv/include/iplerror.h \
+	../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+acameracalibration.o: acameracalibration.cpp ../include/cvtest.h \
+	../../../cv/include/cv.hpp ../../../cv/include/cv.h \
+	../../../cv/include/ipl.h ../../../cv/include/iplerror.h \
+	../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+acamshift.o: acamshift.cpp ../include/cvtest.h \
+	../../../cv/include/cv.hpp ../../../cv/include/cv.h \
+	../../../cv/include/ipl.h ../../../cv/include/iplerror.h \
+	../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+acanny.o: acanny.cpp ../include/cvtest.h ../../../cv/include/cv.hpp \
+	../../../cv/include/cv.h ../../../cv/include/ipl.h \
+	../../../cv/include/iplerror.h ../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+achesscorners.o: achesscorners.cpp ../include/cvtest.h \
+	../../../cv/include/cv.hpp ../../../cv/include/cv.h \
+	../../../cv/include/ipl.h ../../../cv/include/iplerror.h \
+	../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+acondens.o: acondens.cpp ../include/cvtest.h ../../../cv/include/cv.hpp \
+	../../../cv/include/cv.h ../../../cv/include/ipl.h \
+	../../../cv/include/iplerror.h ../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+acontourcollection.o: acontourcollection.cpp ../include/cvtest.h \
+	../../../cv/include/cv.hpp ../../../cv/include/cv.h \
+	../../../cv/include/ipl.h ../../../cv/include/iplerror.h \
+	../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+acontourmoments.o: acontourmoments.cpp ../include/cvtest.h \
+	../../../cv/include/cv.hpp ../../../cv/include/cv.h \
+	../../../cv/include/ipl.h ../../../cv/include/iplerror.h \
+	../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+acontours.o: acontours.cpp ../include/cvtest.h \
+	../../../cv/include/cv.hpp ../../../cv/include/cv.h \
+	../../../cv/include/ipl.h ../../../cv/include/iplerror.h \
+	../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+acontoursmatch.o: acontoursmatch.cpp ../include/cvtest.h \
+	../../../cv/include/cv.hpp ../../../cv/include/cv.h \
+	../../../cv/include/ipl.h ../../../cv/include/iplerror.h \
+	../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+aconvert.o: aconvert.cpp ../include/cvtest.h ../../../cv/include/cv.hpp \
+	../../../cv/include/cv.h ../../../cv/include/ipl.h \
+	../../../cv/include/iplerror.h ../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+aconvhull.o: aconvhull.cpp ../include/cvtest.h \
+	../../../cv/include/cv.hpp ../../../cv/include/cv.h \
+	../../../cv/include/ipl.h ../../../cv/include/iplerror.h \
+	../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+acorner.o: acorner.cpp ../include/cvtest.h ../../../cv/include/cv.hpp \
+	../../../cv/include/cv.h ../../../cv/include/ipl.h \
+	../../../cv/include/iplerror.h ../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+acreatecontourtree.o: acreatecontourtree.cpp ../include/cvtest.h \
+	../../../cv/include/cv.hpp ../../../cv/include/cv.h \
+	../../../cv/include/ipl.h ../../../cv/include/iplerror.h \
+	../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h ../../../cv/src/_cvgeom.h
+adistancetransform.o: adistancetransform.cpp ../include/cvtest.h \
+	../../../cv/include/cv.hpp ../../../cv/include/cv.h \
+	../../../cv/include/ipl.h ../../../cv/include/iplerror.h \
+	../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+adrawing.o: adrawing.cpp ../include/cvtest.h ../../../cv/include/cv.hpp \
+	../../../cv/include/cv.h ../../../cv/include/ipl.h \
+	../../../cv/include/iplerror.h ../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+adrawing_regress.o: adrawing_regress.cpp ../include/cvtest.h \
+	../../../cv/include/cv.hpp ../../../cv/include/cv.h \
+	../../../cv/include/ipl.h ../../../cv/include/iplerror.h \
+	../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+aeigenobjects.o: aeigenobjects.cpp ../include/cvtest.h \
+	../../../cv/include/cv.hpp ../../../cv/include/cv.h \
+	../../../cv/include/ipl.h ../../../cv/include/iplerror.h \
+	../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h aeigenobjects.inc
+aemd.o: aemd.cpp ../include/cvtest.h ../../../cv/include/cv.hpp \
+	../../../cv/include/cv.h ../../../cv/include/ipl.h \
+	../../../cv/include/iplerror.h ../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+aerrhandle.o: aerrhandle.cpp ../include/cvtest.h \
+	../../../cv/include/cv.hpp ../../../cv/include/cv.h \
+	../../../cv/include/ipl.h ../../../cv/include/iplerror.h \
+	../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h ../include/cvtest.hpp
+afitellipse.o: afitellipse.cpp ../include/cvtest.h \
+	../../../cv/include/cv.hpp ../../../cv/include/cv.h \
+	../../../cv/include/ipl.h ../../../cv/include/iplerror.h \
+	../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+afitlines.o: afitlines.cpp ../include/cvtest.h \
+	../../../cv/include/cv.hpp ../../../cv/include/cv.h \
+	../../../cv/include/ipl.h ../../../cv/include/iplerror.h \
+	../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+afloodfill.o: afloodfill.cpp ../include/cvtest.h \
+	../../../cv/include/cv.hpp ../../../cv/include/cv.h \
+	../../../cv/include/ipl.h ../../../cv/include/iplerror.h \
+	../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+afloodfill8.o: afloodfill8.cpp ../include/cvtest.h \
+	../../../cv/include/cv.hpp ../../../cv/include/cv.h \
+	../../../cv/include/ipl.h ../../../cv/include/iplerror.h \
+	../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+agesturerecognition.o: agesturerecognition.cpp ../include/cvtest.h \
+	../../../cv/include/cv.hpp ../../../cv/include/cv.h \
+	../../../cv/include/ipl.h ../../../cv/include/iplerror.h \
+	../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+ahistogram.o: ahistogram.cpp ../include/cvtest.h \
+	../../../cv/include/cv.hpp ../../../cv/include/cv.h \
+	../../../cv/include/ipl.h ../../../cv/include/iplerror.h \
+	../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+ahistograms.o: ahistograms.cpp ../include/cvtest.h \
+	../../../cv/include/cv.hpp ../../../cv/include/cv.h \
+	../../../cv/include/ipl.h ../../../cv/include/iplerror.h \
+	../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+ahmmobs.o: ahmmobs.cpp ../include/cvtest.h ../../../cv/include/cv.hpp \
+	../../../cv/include/cv.h ../../../cv/include/ipl.h \
+	../../../cv/include/iplerror.h ../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+ahoughtransform.o: ahoughtransform.cpp ../include/cvtest.h \
+	../../../cv/include/cv.hpp ../../../cv/include/cv.h \
+	../../../cv/include/ipl.h ../../../cv/include/iplerror.h \
+	../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+aimage.o: aimage.cpp ../include/cvtest.h ../../../cv/include/cv.hpp \
+	../../../cv/include/cv.h ../../../cv/include/ipl.h \
+	../../../cv/include/iplerror.h ../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+aimagestatistics.o: aimagestatistics.cpp ../include/cvtest.h \
+	../../../cv/include/cv.hpp ../../../cv/include/cv.h \
+	../../../cv/include/ipl.h ../../../cv/include/iplerror.h \
+	../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+akalman.o: akalman.cpp ../include/cvtest.h ../../../cv/include/cv.hpp \
+	../../../cv/include/cv.h ../../../cv/include/ipl.h \
+	../../../cv/include/iplerror.h ../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+akmeans.o: akmeans.cpp ../include/cvtest.h ../../../cv/include/cv.hpp \
+	../../../cv/include/cv.h ../../../cv/include/ipl.h \
+	../../../cv/include/iplerror.h ../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+alaplace.o: alaplace.cpp ../include/cvtest.h ../../../cv/include/cv.hpp \
+	../../../cv/include/cv.h ../../../cv/include/ipl.h \
+	../../../cv/include/iplerror.h ../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+alogic.o: alogic.cpp ../include/cvtest.h ../../../cv/include/cv.hpp \
+	../../../cv/include/cv.h ../../../cv/include/ipl.h \
+	../../../cv/include/iplerror.h ../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+amaskaccum.o: amaskaccum.cpp ../include/cvtest.h \
+	../../../cv/include/cv.hpp ../../../cv/include/cv.h \
+	../../../cv/include/ipl.h ../../../cv/include/iplerror.h \
+	../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+amatchcontourtrees.o: amatchcontourtrees.cpp ../include/cvtest.h \
+	../../../cv/include/cv.hpp ../../../cv/include/cv.h \
+	../../../cv/include/ipl.h ../../../cv/include/iplerror.h \
+	../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+amathutils.o: amathutils.cpp ../include/cvtest.h \
+	../../../cv/include/cv.hpp ../../../cv/include/cv.h \
+	../../../cv/include/ipl.h ../../../cv/include/iplerror.h \
+	../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+amatrix.o: amatrix.cpp ../include/cvtest.h ../../../cv/include/cv.hpp \
+	../../../cv/include/cv.h ../../../cv/include/ipl.h \
+	../../../cv/include/iplerror.h ../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+amatrix2.o: amatrix2.cpp ../include/cvtest.h ../../../cv/include/cv.hpp \
+	../../../cv/include/cv.h ../../../cv/include/ipl.h \
+	../../../cv/include/iplerror.h ../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h ../include/cvmtest.h \
+	../include/cblas.h amatrix.inc
+ameanshift.o: ameanshift.cpp ../include/cvtest.h \
+	../../../cv/include/cv.hpp ../../../cv/include/cv.h \
+	../../../cv/include/ipl.h ../../../cv/include/iplerror.h \
+	../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+amemorytest.o: amemorytest.cpp ../include/cvtest.h \
+	../../../cv/include/cv.hpp ../../../cv/include/cv.h \
+	../../../cv/include/ipl.h ../../../cv/include/iplerror.h \
+	../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h ../include/cvtest.hpp
+aminarearect.o: aminarearect.cpp ../include/cvtest.h \
+	../../../cv/include/cv.hpp ../../../cv/include/cv.h \
+	../../../cv/include/ipl.h ../../../cv/include/iplerror.h \
+	../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+amineval.o: amineval.cpp ../include/cvtest.h ../../../cv/include/cv.hpp \
+	../../../cv/include/cv.h ../../../cv/include/ipl.h \
+	../../../cv/include/iplerror.h ../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+amoments.o: amoments.cpp ../include/cvtest.h ../../../cv/include/cv.hpp \
+	../../../cv/include/cv.h ../../../cv/include/ipl.h \
+	../../../cv/include/iplerror.h ../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+amorphology.o: amorphology.cpp ../include/cvtest.h \
+	../../../cv/include/cv.hpp ../../../cv/include/cv.h \
+	../../../cv/include/ipl.h ../../../cv/include/iplerror.h \
+	../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+amotiontemplates.o: amotiontemplates.cpp ../include/cvtest.h \
+	../../../cv/include/cv.hpp ../../../cv/include/cv.h \
+	../../../cv/include/ipl.h ../../../cv/include/iplerror.h \
+	../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+amotseg.o: amotseg.cpp ../include/cvtest.h ../../../cv/include/cv.hpp \
+	../../../cv/include/cv.h ../../../cv/include/ipl.h \
+	../../../cv/include/iplerror.h ../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+anodeiterator.o: anodeiterator.cpp ../include/cvtest.h \
+	../../../cv/include/cv.hpp ../../../cv/include/cv.h \
+	../../../cv/include/ipl.h ../../../cv/include/iplerror.h \
+	../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+anorm.o: anorm.cpp ../include/cvtest.h ../../../cv/include/cv.hpp \
+	../../../cv/include/cv.h ../../../cv/include/ipl.h \
+	../../../cv/include/iplerror.h ../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+anormmask.o: anormmask.cpp ../include/cvtest.h \
+	../../../cv/include/cv.hpp ../../../cv/include/cv.h \
+	../../../cv/include/ipl.h ../../../cv/include/iplerror.h \
+	../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+aoperations.o: aoperations.cpp ../include/cvtest.h \
+	../../../cv/include/cv.hpp ../../../cv/include/cv.h \
+	../../../cv/include/ipl.h ../../../cv/include/iplerror.h \
+	../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+aoptflowhs.o: aoptflowhs.cpp ../include/cvtest.h \
+	../../../cv/include/cv.hpp ../../../cv/include/cv.h \
+	../../../cv/include/ipl.h ../../../cv/include/iplerror.h \
+	../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+aoptflowlk.o: aoptflowlk.cpp ../include/cvtest.h \
+	../../../cv/include/cv.hpp ../../../cv/include/cv.h \
+	../../../cv/include/ipl.h ../../../cv/include/iplerror.h \
+	../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+aoptflowpyrlk.o: aoptflowpyrlk.cpp ../include/cvtest.h \
+	../../../cv/include/cv.hpp ../../../cv/include/cv.h \
+	../../../cv/include/ipl.h ../../../cv/include/iplerror.h \
+	../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+apixelaccess.o: apixelaccess.cpp ../include/cvtest.h \
+	../../../cv/include/cv.hpp ../../../cv/include/cv.h \
+	../../../cv/include/ipl.h ../../../cv/include/iplerror.h \
+	../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h apixelaccess.inc
+aposit.o: aposit.cpp ../include/cvtest.h ../../../cv/include/cv.hpp \
+	../../../cv/include/cv.h ../../../cv/include/ipl.h \
+	../../../cv/include/iplerror.h ../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+aprecorner.o: aprecorner.cpp ../include/cvtest.h \
+	../../../cv/include/cv.hpp ../../../cv/include/cv.h \
+	../../../cv/include/ipl.h ../../../cv/include/iplerror.h \
+	../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+apyramids.o: apyramids.cpp ../include/cvtest.h \
+	../../../cv/include/cv.hpp ../../../cv/include/cv.h \
+	../../../cv/include/ipl.h ../../../cv/include/iplerror.h \
+	../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+apyrsegmentation.o: apyrsegmentation.cpp ../include/cvtest.h \
+	../../../cv/include/cv.hpp ../../../cv/include/cv.h \
+	../../../cv/include/ipl.h ../../../cv/include/iplerror.h \
+	../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+asamplers.o: asamplers.cpp ../include/cvtest.h \
+	../../../cv/include/cv.hpp ../../../cv/include/cv.h \
+	../../../cv/include/ipl.h ../../../cv/include/iplerror.h \
+	../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+ascharr.o: ascharr.cpp ../include/cvtest.h ../../../cv/include/cv.hpp \
+	../../../cv/include/cv.h ../../../cv/include/ipl.h \
+	../../../cv/include/iplerror.h ../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+asequence.o: asequence.cpp ../include/cvtest.h \
+	../../../cv/include/cv.hpp ../../../cv/include/cv.h \
+	../../../cv/include/ipl.h ../../../cv/include/iplerror.h \
+	../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+asnakes.o: asnakes.cpp ../include/cvtest.h ../../../cv/include/cv.hpp \
+	../../../cv/include/cv.h ../../../cv/include/ipl.h \
+	../../../cv/include/iplerror.h ../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+asobel.o: asobel.cpp ../include/cvtest.h ../../../cv/include/cv.hpp \
+	../../../cv/include/cv.h ../../../cv/include/ipl.h \
+	../../../cv/include/iplerror.h ../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+astoragearray.o: astoragearray.cpp ../include/cvtest.h \
+	../../../cv/include/cv.hpp ../../../cv/include/cv.h \
+	../../../cv/include/ipl.h ../../../cv/include/iplerror.h \
+	../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+asubdivisions.o: asubdivisions.cpp ../include/cvtest.h \
+	../../../cv/include/cv.hpp ../../../cv/include/cv.h \
+	../../../cv/include/ipl.h ../../../cv/include/iplerror.h \
+	../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+asvd.o: asvd.cpp ../include/cvtest.h ../../../cv/include/cv.hpp \
+	../../../cv/include/cv.h ../../../cv/include/ipl.h \
+	../../../cv/include/iplerror.h ../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+atemplmatch.o: atemplmatch.cpp ../include/cvtest.h \
+	../../../cv/include/cv.hpp ../../../cv/include/cv.h \
+	../../../cv/include/ipl.h ../../../cv/include/iplerror.h \
+	../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+athresh.o: athresh.cpp ../include/cvtest.h ../../../cv/include/cv.hpp \
+	../../../cv/include/cv.h ../../../cv/include/ipl.h \
+	../../../cv/include/iplerror.h ../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+atree.o: atree.cpp ../include/cvtest.h ../../../cv/include/cv.hpp \
+	../../../cv/include/cv.h ../../../cv/include/ipl.h \
+	../../../cv/include/iplerror.h ../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+atreeiterator.o: atreeiterator.cpp ../include/cvtest.h \
+	../../../cv/include/cv.hpp ../../../cv/include/cv.h \
+	../../../cv/include/ipl.h ../../../cv/include/iplerror.h \
+	../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+aundistort.o: aundistort.cpp ../include/cvtest.h \
+	../../../cv/include/cv.hpp ../../../cv/include/cv.h \
+	../../../cv/include/ipl.h ../../../cv/include/iplerror.h \
+	../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+canny.o: canny.cpp ../include/cvtest.h ../../../cv/include/cv.hpp \
+	../../../cv/include/cv.h ../../../cv/include/ipl.h \
+	../../../cv/include/iplerror.h ../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+tsysa.o: tsysa.cpp ../include/cvtest.h ../../../cv/include/cv.hpp \
+	../../../cv/include/cv.h ../../../cv/include/ipl.h \
+	../../../cv/include/iplerror.h ../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+ucontours.o: ucontours.cpp ../include/cvtest.h \
+	../../../cv/include/cv.hpp ../../../cv/include/cv.h \
+	../../../cv/include/ipl.h ../../../cv/include/iplerror.h \
+	../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+ugraphics.o: ugraphics.cpp ../include/cvtest.h \
+	../../../cv/include/cv.hpp ../../../cv/include/cv.h \
+	../../../cv/include/ipl.h ../../../cv/include/iplerror.h \
+	../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+uiplutils.o: uiplutils.cpp ../include/cvtest.h \
+	../../../cv/include/cv.hpp ../../../cv/include/cv.h \
+	../../../cv/include/ipl.h ../../../cv/include/iplerror.h \
+	../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+ureadfile.o: ureadfile.cpp ../include/cvtest.h \
+	../../../cv/include/cv.hpp ../../../cv/include/cv.h \
+	../../../cv/include/ipl.h ../../../cv/include/iplerror.h \
+	../../../cv/include/iplmisc.h \
+	../../../cv/include/cvpixelaccess.h \
+	../../../cv/include/cvtypes.h ../../../cv/include/cverror.h \
+	../../../cv/include/cvcompat.h \
+	../../../cv/include/cvstorage.hpp \
+	../../../cvaux/include/cvaux.h ../../ats/include/ats.h \
+	../../trs/include/trsapi.h ../../trs/include/trsipi.h \
+	../../trs/include/trserror.h \
+	../../../otherlibs/highgui/highgui.h
+
+info-am:
+info: info-am
+dvi-am:
+dvi: dvi-am
+check-am: all-am
+check: check-am
+installcheck-am:
+installcheck: installcheck-am
+install-exec-am:
+install-exec: install-exec-am
+
+install-data-am: install-includeHEADERS
+install-data: install-data-am
+
+install-am: all-am
+	@$(MAKE) $(AM_MAKEFLAGS) install-exec-am install-data-am
+install: install-am
+uninstall-am: uninstall-includeHEADERS
+uninstall: uninstall-am
+all-am: Makefile $(PROGRAMS) $(HEADERS)
+all-redirect: all-am
+install-strip:
+	$(MAKE) $(AM_MAKEFLAGS) AM_INSTALL_PROGRAM_FLAGS=-s install
+installdirs:
+	$(mkinstalldirs)  $(DESTDIR)$(includedir)
+
+
+mostlyclean-generic:
+
+clean-generic:
+
+distclean-generic:
+	-rm -f Makefile $(CONFIG_CLEAN_FILES)
+	-rm -f config.cache config.log stamp-h stamp-h[0-9]*
+
+maintainer-clean-generic:
+mostlyclean-am:  mostlyclean-noinstPROGRAMS mostlyclean-compile \
+		mostlyclean-libtool mostlyclean-tags \
+		mostlyclean-generic
+
+mostlyclean: mostlyclean-am
+
+clean-am:  clean-noinstPROGRAMS clean-compile clean-libtool clean-tags \
+		clean-generic mostlyclean-am
+
+clean: clean-am
+
+distclean-am:  distclean-noinstPROGRAMS distclean-compile \
+		distclean-libtool distclean-tags distclean-generic \
+		clean-am
+	-rm -f libtool
+
+distclean: distclean-am
+
+maintainer-clean-am:  maintainer-clean-noinstPROGRAMS \
+		maintainer-clean-compile maintainer-clean-libtool \
+		maintainer-clean-tags maintainer-clean-generic \
+		distclean-am
+	@echo "This command is intended for maintainers to use;"
+	@echo "it deletes files that may require special tools to rebuild."
+
+maintainer-clean: maintainer-clean-am
+
+.PHONY: mostlyclean-noinstPROGRAMS distclean-noinstPROGRAMS \
+clean-noinstPROGRAMS maintainer-clean-noinstPROGRAMS \
+mostlyclean-compile distclean-compile clean-compile \
+maintainer-clean-compile mostlyclean-libtool distclean-libtool \
+clean-libtool maintainer-clean-libtool uninstall-includeHEADERS \
+install-includeHEADERS tags mostlyclean-tags distclean-tags clean-tags \
+maintainer-clean-tags distdir info-am info dvi-am dvi check check-am \
+installcheck-am installcheck install-exec-am install-exec \
+install-data-am install-data install-am install uninstall-am uninstall \
+all-redirect all-am all installdirs mostlyclean-generic \
+distclean-generic clean-generic maintainer-clean-generic clean \
+mostlyclean distclean maintainer-clean
+
+
+#cvla_LIBS = 
+
+# Tell versions [3.59,3.63) of GNU make to not export all variables.
+# Otherwise a system limit (for SysV at least) may be exceeded.
+.NOEXPORT:
