@@ -1,0 +1,73 @@
+# ----------------------------------------------------------------------------
+#  CMake file for C samples. See root CMakeLists.txt
+#
+# ----------------------------------------------------------------------------
+
+if (BUILD_EXAMPLES)
+    project(c_samples)
+
+    if(CMAKE_COMPILER_IS_GNUCXX)
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unused-function")
+    endif()
+    
+    # ---------------------------------------------
+    #      Define executable targets
+    # ---------------------------------------------
+    MACRO(MY_DEFINE_EXAMPLE name srcs)
+    	add_executable(${name} ${srcs})
+		set_target_properties(${name} PROPERTIES PROJECT_LABEL "(EXAMPLE) ${name}")
+    	add_dependencies(${name} cv cxcore highgui ml cvaux)
+    	target_link_libraries(${name} ${OPENCV_LINKER_LIBS} cv cxcore highgui ml cvaux)
+
+        if(WIN32)
+            install(TARGETS ${name}
+                RUNTIME DESTINATION "samples/c" COMPONENT main)
+        endif()
+    ENDMACRO(MY_DEFINE_EXAMPLE)
+    
+    MY_DEFINE_EXAMPLE(adaptiveskindetector 	adaptiveskindetector.cpp)
+    MY_DEFINE_EXAMPLE(bgfg_codebook 	bgfg_codebook.cpp)
+    MY_DEFINE_EXAMPLE(bgfg_segm			bgfg_segm.cpp)
+    MY_DEFINE_EXAMPLE(blobtrack			blobtrack.cpp)
+    MY_DEFINE_EXAMPLE(camshiftdemo		camshiftdemo.c)
+    MY_DEFINE_EXAMPLE(contours			contours.c)
+    MY_DEFINE_EXAMPLE(convert_cascade	convert_cascade.c)
+    MY_DEFINE_EXAMPLE(convexhull		convexhull.c)
+    MY_DEFINE_EXAMPLE(delaunay			delaunay.c)
+    MY_DEFINE_EXAMPLE(demhist			demhist.c)
+    MY_DEFINE_EXAMPLE(dft				dft.c)
+    MY_DEFINE_EXAMPLE(distrans			distrans.c)
+    MY_DEFINE_EXAMPLE(drawing			drawing.c)
+    MY_DEFINE_EXAMPLE(edge				edge.c)
+    MY_DEFINE_EXAMPLE(facedetect		facedetect.cpp)
+    MY_DEFINE_EXAMPLE(ffilldemo			ffilldemo.c)
+    MY_DEFINE_EXAMPLE(find_obj			find_obj.cpp)
+    MY_DEFINE_EXAMPLE(fitellipse		fitellipse.cpp)
+    MY_DEFINE_EXAMPLE(houghlines		houghlines.c)
+    MY_DEFINE_EXAMPLE(image				image.cpp)
+    MY_DEFINE_EXAMPLE(inpaint			inpaint.cpp)
+    MY_DEFINE_EXAMPLE(kalman			kalman.c)
+    MY_DEFINE_EXAMPLE(kmeans			kmeans.c)
+    MY_DEFINE_EXAMPLE(laplace			laplace.c)
+    MY_DEFINE_EXAMPLE(letter_recog		letter_recog.cpp)
+    MY_DEFINE_EXAMPLE(lkdemo			lkdemo.c)
+    MY_DEFINE_EXAMPLE(minarea			minarea.c)
+    MY_DEFINE_EXAMPLE(morphology		morphology.c)
+    MY_DEFINE_EXAMPLE(motempl			motempl.c)
+    MY_DEFINE_EXAMPLE(mushroom			mushroom.cpp)
+	MY_DEFINE_EXAMPLE(tree_engine		tree_engine.cpp)
+    MY_DEFINE_EXAMPLE(peopledetect      peopledetect.cpp)
+    MY_DEFINE_EXAMPLE(pyramid_segmentation	pyramid_segmentation.c)
+    MY_DEFINE_EXAMPLE(squares			squares.c)
+    MY_DEFINE_EXAMPLE(stereo_calib		stereo_calib.cpp)
+    MY_DEFINE_EXAMPLE(watershed			watershed.cpp)
+    MY_DEFINE_EXAMPLE(polar_transforms	polar_transforms.c)
+endif(BUILD_EXAMPLES)
+
+if (INSTALL_C_EXAMPLES AND NOT WIN32)
+    file(GLOB C_SAMPLES *.c *.cpp *.jpg *.png *.data makefile.* build_all.sh *.dsp *.cmd )
+    install(FILES ${C_SAMPLES}
+            DESTINATION share/opencv/samples/c
+            PERMISSIONS OWNER_READ GROUP_READ WORLD_READ)
+endif ()
+

@@ -1,0 +1,57 @@
+Optimization:
+    Support for IPP (ippcv, ippi, ippvm ...), MKL/atlas
+
+SFM and 3D:
+    Higher-level Optical Flow:
+        (verification via epipolar geometry reconstruction
+         and backprojection error measurement - ransac etc.)
+    Tri-focal tensor
+
+Comp. Geometry:
+    - Min-eps contour approximation (fixed number of sites)
+    - Graphs from point sets (NNG, MST, RNG ...)
+    - CvSubdiv2D -> CvGraph conversion
+    - More contour comparison functions (e.g. Housedorph distance)
+    - Primitive geometric operations (test pt-contour,
+              contour-contour intersection, union etc.)
+
+Misc. Functionality:
+    - Smarter image segmentation methods (?)
+    - Textures handling to main library (better specs, methods?)
+
+Documentation:
+    Document HaarFaceDetect
+
+Apps:
+    Rewrite demos in FLTK(?) to make them cross-platform
+
+Interfaces:
+    C++ interface (STL-like interface to CvMat
+       (see cvaux/include/cvmat.hpp as a starting point), CvSeq,CvGraph)
+    Java etc. interfaces using SWIG
+
+Cameras:
+    Make a single camera module instead of 3. That is what we have now:
+
+       Module      Interface                Win32                    Linux
+
+       cvcam       C (callbacks)      DirectShow (AVI/Cam)         V4L[2] (Cam)
+       highgui     C (no callbacks)   VFW (AVI/Cam), MIL (Cam)     ffmpeg (AVI)
+       camera.cpp     C++                  VFW (Cam)                   -
+
+    The proposed variant:
+       highgui like interface (i.e. no callbacks),
+       extended with some cvcam features like customization dialogs,
+       resolution changes, camera selection etc.),
+
+       Win32: DirectShow, VFW, MIL
+       Linux: FFMPEG + V4L2
+
+Others:
+    Throw out or improve old stuff (dense opt. flow, 2d hmm,
+                                   eigen objects (simplify interface))
+
+    Better test system with regression tests (improve trs(?))
+    Performance (speed) tests
+    Complete Mac OS X port
+
