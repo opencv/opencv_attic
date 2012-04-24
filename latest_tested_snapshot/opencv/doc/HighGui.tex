@@ -1,0 +1,603 @@
+\chapter{HighGui}
+
+\subsection{HighGUI overview}
+
+While OpenCV was designed for use in production level
+applications, HighGUI was designed soley as an addendum for quick software prototypes
+and experimental setups. The general idea behind HighGUI's design was to
+have a small set of directly useable functions allowing your computer's
+vision code to interact with the environment.
+
+Simple methods to display
+images on screen and to allow (limited) user input are provided, as these are common 
+HighGUI tasks.
+
+Note: None of the methods implemented in HighGUI allow for building
+sleek user interfaces with production level error handling. Because of
+this, HighGUI is not the tool to build end-user applications. For
+example: camera input methods in HighGUI are designed to be easily
+useable, but there are no means to react to cameras being plugged
+in or out during run time.
+
+\subsection{Simple GUI}
+
+\cvfunc{NamedWindow}
+
+Creates a window.
+
+\cvexp{
+int cvNamedWindow( const char* name, int flags );
+
+}{CPP}{NamedWindow(name,flags=CV\_WINDOW\_AUTOSIZE)-> None}
+
+\begin{description}
+\cvarg{ name}{Name of the window in the window caption that may be used as a window identifier.}
+\cvarg{ flags}{Flags of the window. Currently the only supported flag is \texttt{CV\_WINDOW\_AUTOSIZE}. If this is set, window size is automatically adjusted to fit the displayed image (see \cross{ShowImage}), and the user can not change the window size manually.}
+\end{description}
+
+The function \texttt{cvNamedWindow} creates a window which can be used as a placeholder for images and trackbars. Created windows are referred to by their names.
+
+If a window with the same name already exists, the function does nothing.
+
+\cvfunc{DestroyWindow}
+
+Destroys a window.
+
+\cvexp{
+void cvDestroyWindow( const char* name );
+
+}{CPP}{DestroyWindow(name)-> None}
+
+\begin{description}
+\cvarg{ name}{Name of the window to be destroyed.}
+\end{description}
+
+The function \texttt{cvDestroyWindow} destroys the window with the given name.
+
+\cvfunc{DestroyAllWindows} 
+
+Destroys all of the HighGUI windows.
+
+\cvexp{
+void cvDestroyAllWindows(void);
+
+}{CPP}{DestroyAllWindows()-> None}
+
+The function \texttt{cvDestroyAllWindows} destroys all of the opened HighGUI windows.
+
+\cvfunc{ResizeWindow} 
+
+Sets the window size.
+
+\cvexp{
+void cvResizeWindow( const char* name, int width, int height );
+
+}{CPP}{ResizeWindow(name,width,height)-> None}
+
+\begin{description}
+\cvarg{ name}{Name of the window to be resized.}
+\cvarg{ width}{New width}
+\cvarg{ height}{New height}
+\end{description}
+
+The function \texttt{cvResizeWindow} changes the size of the window.
+
+\cvfunc{MoveWindow} 
+
+Sets the position of the window.
+
+\cvexp{
+void cvMoveWindow( const char* name, int x, int y );
+
+}{CPP}{MoveWindow(name,x,y)-> None}
+
+\begin{description}
+\cvarg{ name}{Name of the window to be resized.}
+\cvarg{ x}{New x coordinate of the top-left corner}
+\cvarg{ y}{New y coordinate of the top-left corner}
+\end{description}
+
+The function \texttt{cvMoveWindow} changes the position of the window.
+
+\ifC
+\cvfunc{GetWindowHandle}
+
+Gets the window's handle by its name.
+
+\cvexp{
+void* cvGetWindowHandle( const char* name );
+
+}{CPP}{PYTHON}
+
+\begin{description}
+\cvarg{ name}{Name of the window}.
+\end{description}
+
+The function \texttt{cvGetWindowHandle} returns the native window handle (HWND in case of Win32 and GtkWidget in case of GTK+).
+
+\cvfunc{GetWindowName} 
+
+Gets the window's name by its handle.
+
+\cvexp{
+const char* cvGetWindowName( void* window\_handle );
+
+}{CPP}{PYTHON}
+
+\begin{description}
+\cvarg{ window\_handle}{Handle of the window.}
+\end{description}
+
+The function \texttt{cvGetWindowName} returns the name of the window given its native handle (HWND in case of Win32 and GtkWidget in case of GTK+).
+\fi
+
+\cvfunc{ShowImage} 
+
+Displays the image in the specified window
+
+\cvexp{
+void cvShowImage( const char* name, const CvArr* image );
+
+}{CPP}{ShowImage(name,image)-> None}
+
+\begin{description}
+\cvarg{ name}{Name of the window.}
+\cvarg{ image}{Image to be shown.}
+\end{description}
+
+The function \texttt{cvShowImage} displays the image in the specified window. If the window was created with the \texttt{CV\_WINDOW\_AUTOSIZE} flag then the image is shown with its original size, otherwise the image is scaled to fit in the window. The function may scale the image, depending on its depth:
+\begin{itemize}
+    \item If the image is 8-bit unsigned, it is displayed as is.
+    \item If the image is 16-bit unsigned or 32-bit integer, the pixels are divided by 256. That is, the value range [0,255*256] is mapped to [0,255].
+    \item If the image is 32-bit floating-point, the pixel values are multiplied by 255. That is, the value range [0,1] is mapped to [0,255].
+\end{itemize}
+
+\cvfunc{CreateTrackbar} 
+
+Creates a trackbar and attaches it to the specified window
+
+\cvexp{
+int cvCreateTrackbar( \par const char* trackbar\_name, \par const char* window\_name,
+                      \par int* value, \par int count, \par CvTrackbarCallback on\_change );
+
+}{CPP}{
+CreateTrackbar(trackbar\_name, window\_name, value, count, on\_change)
+}
+\begin{lstlisting}
+CV_EXTERN_C_FUNCPTR( void (*CvTrackbarCallback)(int pos) );
+\end{lstlisting}
+
+\begin{description}
+\cvarg{ trackbar\_name}{Name of the created trackbar.}
+\cvarg{ window\_name}{Name of the window which will be used as a parent for created trackbar.}
+\cvarg{ value}{Pointer to an integer variable, whose value will reflect the position of the slider. Upon creation, the slider position is defined by this variable.}
+\cvarg{ count}{Maximal position of the slider. Minimal position is always 0.}
+\cvarg{ on\_change}{Pointer to the function to be called every time the slider changes position. This function should be prototyped as \texttt{void Foo(int);}Can be NULL if callback is not required.}
+\end{description}
+
+The function \texttt{cvCreateTrackbar} creates a trackbar (a.k.a. slider or range control) with the specified name and range, assigns a variable to be syncronized with trackbar position and specifies a callback function to be called on trackbar position change. The created trackbar is displayed on the top of the given window.
+
+\cvfunc{GetTrackbarPos} 
+
+Returns the trackbar position.
+
+\cvexp{
+int cvGetTrackbarPos( \par const char* trackbar\_name, \par const char* window\_name );
+
+}{CPP}{GetTrackbarPos(trackbar\_name,window\_name)-> None}
+
+\begin{description}
+\cvarg{ trackbar\_name}{Name of the trackbar.}
+\cvarg{ window\_name}{Name of the window which is the parent of the trackbar.}
+\end{description}
+
+The function \texttt{cvGetTrackbarPos} returns the current position of the specified trackbar.
+
+\cvfunc{SetTrackbarPos} 
+
+Sets the trackbar position.
+
+\cvexp{
+void cvSetTrackbarPos( \par const char* trackbar\_name, \par const char* window\_name, \par int pos );
+
+}{CPP}{SetTrackbarPos(trackbar\_name,window\_name)-> None}
+
+\begin{description}
+\cvarg{ trackbar\_name}{Name of the trackbar.}
+\cvarg{ window\_name}{Name of the window which is the parent of trackbar.}
+\cvarg{ pos}{New position.}
+\end{description}
+
+The function \texttt{cvSetTrackbarPos} sets the position of the specified trackbar.
+
+\cvfunc{SetMouseCallback} %XXX Weird URL Formatting
+
+Assigns callback for mouse events.
+
+\cvexp{
+void cvSetMouseCallback( const char* window\_name, CvMouseCallback on\_mouse, void* param=NULL );
+}{CPP}{SetMouseCallback(window\_name, on\_mouse, param) -> None}
+
+\begin{lstlisting}
+#define CV_EVENT_MOUSEMOVE      0
+#define CV_EVENT_LBUTTONDOWN    1
+#define CV_EVENT_RBUTTONDOWN    2
+#define CV_EVENT_MBUTTONDOWN    3
+#define CV_EVENT_LBUTTONUP      4
+#define CV_EVENT_RBUTTONUP      5
+#define CV_EVENT_MBUTTONUP      6
+#define CV_EVENT_LBUTTONDBLCLK  7
+#define CV_EVENT_RBUTTONDBLCLK  8
+#define CV_EVENT_MBUTTONDBLCLK  9
+
+#define CV_EVENT_FLAG_LBUTTON   1
+#define CV_EVENT_FLAG_RBUTTON   2
+#define CV_EVENT_FLAG_MBUTTON   4
+#define CV_EVENT_FLAG_CTRLKEY   8
+#define CV_EVENT_FLAG_SHIFTKEY  16
+#define CV_EVENT_FLAG_ALTKEY    32
+
+CV_EXTERN_C_FUNCPTR( void (*CvMouseCallback )(int event, 
+					      int x, 
+					      int y, 
+					      int flags, 
+				              void* param) );
+\end{lstlisting}
+
+\begin{description}
+\cvarg{ window\_name}{Name of the window.}
+\cvarg{ on\_mouse}{Pointer to the function to be called every time a mouse event occurs in the specified window. This function should be prototyped as
+
+\cvexp{
+void Foo(int event, int x, int y, int flags, void* param);
+}{CPP}{Foo(event,x,y,flags,param)-> None}
+
+where \texttt{event} is one of \texttt{CV\_EVENT\_*}, \texttt{x} and \texttt{y} are the coordinates of the mouse pointer in image coordinates (not window coordinates), \texttt{flags} is a combination of \texttt{CV\_EVENT\_FLAG}, and \texttt{param} is a user-defined parameter passed to the \texttt{cvSetMouseCallback} function call.}
+\cvarg{param}{User-defined parameter to be passed to the callback function.}
+\end{description}
+
+The function \texttt{cvSetMouseCallback} sets the callback function for mouse events occuring within the specified window. To see how it works, look at 
+
+\url{http://opencvlibrary.sourceforge.net/../../samples/c/ffilldemo.c|opencv/samples/c/ffilldemo.c} 
+
+\cvfunc{WaitKey} 
+
+Waits for a pressed key.
+
+\cvexp{
+int cvWaitKey( int delay=0 );
+
+}{CPP}{WaitKey(delay=0)-> int}
+
+\begin{description}
+\cvarg{ delay}{Delay in milliseconds.}
+\end{description}
+
+The function \texttt{cvWaitKey} waits for key event infinitely ($ \texttt{delay} <= 0$) or for \texttt{delay} milliseconds. Returns the code of the pressed key or -1 if no key was pressed before the specified time had elapsed.
+
+\textbf{Note:} This function is the only method in HighGUI that can fetch and handle events, so it needs to be called periodically for normal event processing, unless HighGUI is used within some environment that takes care of event processing.
+
+\subsection{Loading and Saving Images}
+
+\cvfunc{LoadImage} % XXX:Doesn't match manual
+
+Loads an image from a file.
+
+\cvexp{
+IplImage* cvLoadImage( \par const char* filename, \par int iscolor=CV\_LOAD\_IMAGE\_COLOR );
+}{CPP}{LoadImage(filename, iscolor=CV\_LOAD\_IMAGE\_COLOR)}
+
+\begin{lstlisting}
+#define CV_LOAD_IMAGE_COLOR       1
+#define CV_LOAD_IMAGE_GRAYSCALE   0
+#define CV_LOAD_IMAGE_UNCHANGED  -1
+\end{lstlisting}
+
+\begin{description}
+\cvarg{filename}{Name of file to be loaded.}
+\cvarg{iscolor}{Specific color type of the loaded image: if $ > 0 $, the loaded image is forced to be a 3-channel color image; if 0, the loaded image is forced to be grayscale; if $ < 0 $, the loaded image will be loaded as is (note that in the current implementation the alpha channel, if any, is stripped from the output image, e.g. 4-channel RGBA image will be loaded as RGB).}
+\end{description}
+
+The function \texttt{cvLoadImage} loads an image from the specified file and returns the pointer to the loaded image. Currently the following file formats are supported:
+\begin{itemize}
+\item Windows bitmaps - BMP, DIB
+\item JPEG files - JPEG, JPG, JPE
+\item Portable Network Graphics - PNG
+\item Portable image format - PBM, PGM, PPM
+\item Sun rasters - SR, RAS
+\item TIFF files - TIFF, TIF
+\end{itemize}
+
+\cvfunc{SaveImage} 
+
+Saves an image to a specified file.
+
+\cvexp{
+int cvSaveImage( const char* filename, const CvArr* image );
+
+}{CPP}{SaveImage(filename,image)-> None}
+
+\begin{description}
+\cvarg{ filename}{Name of the file.}
+\cvarg{ image}{Image to be saved.}
+\end{description}
+
+The function \texttt{cvSaveImage} saves the image to the specified file. The image format is chosen based on the \texttt{filename} extension, see \cross{LoadImage}. Only 8-bit single-channel or 3-channel (with 'BGR' channel order) images can be saved using this function. If the format, depth or channel order is different, use \texttt{cvCvtScale} and \texttt{cvCvtColor} to convert it before saving, or use universal \texttt{cvSave} to save the image to XML or YAML format.
+
+\subsection{Video I/O functions}
+
+\cvstruct{CvCapture}\label{CvCapture}
+
+Video capturing structure.
+
+\ifC
+\cvexp{
+typedef struct CvCapture CvCapture;
+
+}{CPP}{PYTHON}
+\fi
+
+The structure \texttt{CvCapture} does not have a public interface and is used only as a parameter for video capturing functions.
+
+\cvfunc{CaptureFromFile} % XXX:Called cvCreateFileCapture in manual
+
+Initializes capturing a video from a file.
+
+\cvexp{
+CvCapture* cvCaptureFromFile( const char* filename );
+
+}{CPP}{CaptureFromFile(filename) -> CvCapture}
+
+\begin{description}
+\cvarg{ filename}{Name of the video file.}
+\end{description}
+
+The function \texttt{cvCaptureFromFile} allocates and initializes the CvCapture structure for reading the video stream from the specified file. Which codecs and file formats are supported depends on the back end library. On Windows HighGui uses Video for Windows (VfW), on Linux ffmpeg is used and on Mac OS X the back end is QuickTime. See VideoCodecs for some discussion on what to expect and how to prepare your video files.
+
+After the allocated structure is not used any more it should be released by the \cross{ReleaseCapture} function.
+
+\cvfunc{CaptureFromCAM} % XXX:Called cvCreateCameraCapture in manual
+
+Initializes capturing a video from a camera.
+
+\cvexp{
+CvCapture* cvCaptureFromCAM( int index );
+
+}{CPP}{CaptureFromCAM(index) -> CvCapture}
+
+\begin{description}
+\cvarg{ index}{Index of the camera to be used. If there is only one camera or it does not matter what camera is used -1 may be passed.}
+\end{description}
+
+The function \texttt{cvCaptureFromCAM} allocates and initializes the CvCapture structure for reading a video stream from the camera. Currently two camera interfaces can be used on Windows: Video for Windows (VFW) and Matrox Imaging Library (MIL); and two on Linux: V4L and FireWire (IEEE1394).
+
+To release the structure, use \cross{ReleaseCapture}.
+
+\ifC
+\cvfunc{ReleaseCapture} 
+
+Releases the CvCapture structure.
+
+\cvexp{
+void cvReleaseCapture( CvCapture** capture );
+
+}{CPP}{PYTHON}
+
+\begin{description}
+\cvarg{ capture}{Pointer to video the capturing structure.}
+\end{description}
+
+The function \texttt{cvReleaseCapture} releases the CvCapture structure allocated by \cross{CaptureFromFile} or \cross{CaptureFromCAM}.
+\fi
+
+\cvfunc{GrabFrame} 
+
+Grabs the frame from a camera or file.
+
+\cvexp{
+int cvGrabFrame( CvCapture* capture );
+
+}{CPP}{GrabFrame(capture) -> int}
+
+\begin{description}
+\cvarg{ capture}{video capturing structure.}
+\end{description}
+
+The function \texttt{cvGrabFrame} grabs the frame from a camera or file. The grabbed frame is stored internally. The purpose of this function is to grab the frame \emph{quickly} so that syncronization can occur if it has to read from several cameras simultaneously. The grabbed frames are not exposed because they may be stored in a compressed format (as defined by the camera/driver). To retrieve the grabbed frame, \cross{RetrieveFrame} should be used.
+
+\cvfunc{RetrieveFrame} % XXX:Different than manual
+
+Gets the image grabbed with cvGrabFrame.
+
+\cvexp{
+IplImage* cvRetrieveFrame( CvCapture* capture );
+
+}{CPP}{RetrieveFrame(capture) -> iplimage}
+
+\begin{description}
+\cvarg{ capture}{video capturing structure.}
+\end{description}
+
+The function \texttt{cvRetrieveFrame} returns the pointer to the image grabbed with the \cross{GrabFrame} function. The returned image should not be released or modified by the user.  In the event of an error, the return value may be NULL.
+
+\cvfunc{QueryFrame} 
+
+Grabs and returns a frame from a camera or file.
+
+\cvexp{
+IplImage* cvQueryFrame( CvCapture* capture );
+
+}{CPP}{QueryFrame(capture) -> iplimage}
+
+\begin{description}
+\cvarg{ capture}{video capturing structure.}
+\end{description}
+
+The function \texttt{cvQueryFrame} grabs a frame from a camera or video file, decompresses it and returns it. This function is just a combination of \cross{GrabFrame} and \cross{RetrieveFrame}, but in one call. The returned image should not be released or modified by the user.  In the event of an error, the return value may be NULL.
+
+\cvfunc{GetCaptureProperty}
+
+Gets video capturing properties.
+
+\cvexp{
+double cvGetCaptureProperty( CvCapture* capture, int property\_id );
+
+}{CPP}{GetCaptureProperty(capture, property\_id)->double}
+
+\begin{description}
+\cvarg{capture}{video capturing structure.}
+\cvarg{property\_id}{Property identifier. Can be one of the following:
+\begin{description}
+\cvarg{CV\_CAP\_PROP\_POS\_MSEC}{Film current position in milliseconds or video capture timestamp}
+\cvarg{CV\_CAP\_PROP\_POS\_FRAMES}{0-based index of the frame to be decoded/captured next}
+\cvarg{CV\_CAP\_PROP\_POS\_AVI\_RATIO}{Relative position of the video file (0 - start of the film, 1 - end of the film)}
+\cvarg{CV\_CAP\_PROP\_FRAME\_WIDTH}{Width of the frames in the video stream}
+\cvarg{CV\_CAP\_PROP\_FRAME\_HEIGHT}{Height of the frames in the video stream}
+\cvarg{CV\_CAP\_PROP\_FPS}{Frame rate}
+\cvarg{CV\_CAP\_PROP\_FOURCC}{4-character code of codec}
+\cvarg{CV\_CAP\_PROP\_FRAME\_COUNT}{Number of frames in the video file}
+\cvarg{CV\_CAP\_PROP\_BRIGHTNESS}{Brightness of the image (only for cameras)}
+\cvarg{CV\_CAP\_PROP\_CONTRAST}{Contrast of the image (only for cameras)}
+\cvarg{CV\_CAP\_PROP\_SATURATION}{Saturation of the image (only for cameras)}
+\cvarg{CV\_CAP\_PROP\_HUE}{Hue of the image (only for cameras)}
+\end{description} }
+\end{description}
+
+The function \texttt{cvGetCaptureProperty} retrieves the specified property of the camera or video file.
+
+\cvfunc{SetCaptureProperty} 
+
+Sets video capturing properties.
+
+\cvexp{
+int cvSetCaptureProperty( \par CvCapture* capture, \par int property\_id, \par double value );
+
+}{CPP}{SetCaptureProperty(capture, property\_id,double)}
+
+\begin{description}
+\cvarg{ capture}{video capturing structure.}
+\cvarg{ property\_id}{property identifier. Can be one of the following:
+
+\begin{description}
+\cvarg{CV\_CAP\_PROP\_POS\_MSEC}{Film current position in milliseconds or video capture timestamp}
+\cvarg{CV\_CAP\_PROP\_POS\_FRAMES}{0-based index of the frame to be decoded/captured next}
+\cvarg{CV\_CAP\_PROP\_POS\_AVI\_RATIO}{Relative position of the video file (0 - start of the film, 1 - end of the film)}
+\cvarg{CV\_CAP\_PROP\_FRAME\_WIDTH}{Width of the frames in the video stream}
+\cvarg{CV\_CAP\_PROP\_FRAME\_HEIGHT}{Height of the frames in the video stream}
+\cvarg{CV\_CAP\_PROP\_FPS}{Frame rate}
+\cvarg{CV\_CAP\_PROP\_FOURCC}{4-character code of codec}
+\cvarg{CV\_CAP\_PROP\_BRIGHTNESS}{Brightness of the image (only for cameras)}
+\cvarg{CV\_CAP\_PROP\_CONTRAST}{Contrast of the image (only for cameras)}
+\cvarg{CV\_CAP\_PROP\_SATURATION}{Saturation of the image (only for cameras)}
+\cvarg{CV\_CAP\_PROP\_HUE}{Hue of the image (only for cameras)}
+\end{description} }
+
+\cvarg{ value}{value of the property.}
+\end{description}
+
+The function \texttt{cvSetCaptureProperty} sets the specified property of video capturing. Currently the function supports only video files: \texttt{CV\_CAP\_PROP\_POS\_MSEC, CV\_CAP\_PROP\_POS\_FRAMES, CV\_CAP\_PROP\_POS\_AVI\_RATIO}.
+
+NB This function currently does nothing when using the latest CVS download on linux with FFMPEG (the function contents are hidden if 0 is used and returned).
+
+\cvfunc{CreateVideoWriter} % XXX Different than manual
+
+Creates the video file writer.
+
+\cvexp{
+typedef struct CvVideoWriter CvVideoWriter;
+CvVideoWriter* cvCreateVideoWriter( \par const char* filename, \par int fourcc, \par double fps, \par CvSize frame\_size, \par int is\_color=1 );
+
+}{CPP}{CreateVideoWriter(filename, fourcc, fps, frame\_size, is\_color) -> CvVideoWriter}
+
+\begin{description}
+\cvarg{ filename}{Name of the output video file.}
+\cvarg{ fourcc}{4-character code of codec used to compress the frames. For example,
+\texttt{CV\_FOURCC('P','I','M,'1')} is a MPEG-1 codec,
+\texttt{CV\_FOURCC('M','J','P','G')} is a motion-jpeg codec etc.
+Under Win32 it is possible to pass -1 in order to choose compression method and additional compression parameters from dialog. Under Win32 if 0 is passed while using an avi filename it will create a video writer that creates an uncompressed avi file.}
+\cvarg{ fps}{Framerate of the created video stream.}
+\cvarg{ frame\_size}{Size of the  video frames.}
+\cvarg{ is\_color}{If it is not zero, the encoder will expect and encode color frames, otherwise it will work with grayscale frames (the flag is currently supported on Windows only).}
+\end{description}
+
+The function \texttt{cvCreateVideoWriter} creates the video writer structure.
+
+Which codecs and file formats are supported depends on the back end library. On Windows HighGui uses Video for Windows (VfW), on Linux ffmpeg is used and on Mac OS X the back end is QuickTime. See VideoCodecs for some discussion on what to expect.
+
+\ifC
+\cvfunc{ReleaseVideoWriter}
+
+Releases the AVI writer.
+
+\cvexp{
+void cvReleaseVideoWriter( CvVideoWriter** writer );
+
+}{CPP}{PYTHON}
+
+\begin{description}
+\cvarg{ writer}{Pointer to the video file writer structure.}
+\end{description}
+
+The function \texttt{cvReleaseVideoWriter} finishes writing to the video file and releases the structure.
+\fi
+
+\cvfunc{WriteFrame} 
+
+Writes a frame to a video file.
+
+\cvexp{
+int cvWriteFrame( CvVideoWriter* writer, const IplImage* image );
+
+}{CPP}{WriteFrame(writer, image)->int}
+
+\begin{description}
+\cvarg{ writer}{Video writer structure}
+\cvarg{ image}{The written frame}
+\end{description}
+
+The function \texttt{cvWriteFrame} writes/appends one frame to a video file.
+
+\ifC
+\subsection{Utility and System Functions}
+
+\cvfunc{InitSystem}
+
+Initializes HighGUI.
+
+\cvexp{
+int cvInitSystem( int argc, char** argv );
+
+}{CPP}{PYTHON}
+
+\begin{description}
+\cvarg{ argc}{Number of command line arguments}
+\cvarg{ argv}{Array of command line arguments}
+\end{description}
+
+The function \texttt{cvInitSystem} initializes HighGUI. If it wasn't
+called explicitly by the user before the first window was created, it is
+called implicitly then with \texttt{argc=0}, \texttt{argv=NULL}. Under
+Win32 there is no need to call it explicitly. Under X Window the arguments
+may be used to customize a look of HighGUI windows and controls.
+
+\cvfunc{ConvertImage} % XXX:TBD
+
+Converts one image to another with an optional vertical flip.
+
+\cvexp{
+void cvConvertImage( const CvArr* src, CvArr* dst, int flags=0 );
+
+}{CPP}{PYTHON}
+
+\begin{description}
+\cvarg{ src}{Source image.}
+\cvarg{ dst}{Destination image. Must be single-channel or 3-channel 8-bit image.}
+\cvarg{ flags}{The operation flags:
+\begin{description}
+\cvarg{CV\_CVTIMG\_FLIP}{Flips the image vertically}
+\cvarg{CV\_CVTIMG\_SWAP\_RB}{Swaps the red and blue channels. In OpenCV color images have \texttt{BGR} channel order, however on some systems the order needs to be reversed before displaying the image (\cross{ShowImage} does this automatically).}
+\end{description}}
+\end{description}
+
+The function \texttt{cvConvertImage} converts one image to another and flips the result vertically if desired. The function is used by \cross{ShowImage}.
+\fi

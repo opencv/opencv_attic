@@ -1,0 +1,1507 @@
+# Macros
+CV_RGB CvScalar
+  double red
+  double grn
+  double blu
+CV_MAT_CN int
+  int i
+CV_MAT_DEPTH int
+  int i
+Scalar CvScalar
+  double val0
+  double val1 0
+  double val2 0
+  double val3 0
+ScalarAll CvScalar
+  double val0123
+RealScalar CvScalar
+  double val0
+CV_IABS int
+  int a
+CV_CMP int
+  int a
+  int b
+CV_SIGN int
+  int a
+CV_FOURCC int
+  char c1
+  char c2
+  char c3
+  char c4
+CV_MAKETYPE int
+  int depth
+  int cn
+
+# Initialization
+CloneImage IplImage*
+  IplImage image
+SetImageCOI
+  IplImage image
+  int coi
+GetImageCOI int
+  IplImage image
+SetImageROI
+  IplImage image
+  CvRect rect
+ResetImageROI
+  IplImage image
+GetImageROI CvRect
+  IplImage image
+CloneMat CvMat*
+  CvMat mat
+CloneMatND CvMatND*
+  CvMatND mat
+
+# Accessing Elements and sub-Arrays
+
+Get1D CvScalar
+  CvArr arr
+  int idx0
+Get2D CvScalar
+  CvArr arr
+  int idx0
+  int idx1
+Get3D CvScalar
+  CvArr arr
+  int idx0
+  int idx1
+  int idx2
+GetND CvScalar
+  CvArr arr
+  ints idx
+GetReal1D double
+  CvArr arr
+  int idx0
+GetReal2D double
+  CvArr arr
+  int idx0
+  int idx1
+GetReal3D double
+  CvArr arr
+  int idx0
+  int idx1
+  int idx2
+GetRealND double
+  CvArr arr
+  ints idx
+mGet double
+  CvMat mat
+  int row
+  int col
+Set1D
+  CvArr arr
+  int idx0
+  CvScalar value
+Set2D
+  CvArr arr
+  int idx0
+  int idx1
+  CvScalar value
+Set3D
+  CvArr arr
+  int idx0
+  int idx1
+  int idx2
+  CvScalar value
+SetND
+  CvArr arr
+  ints idx
+  CvScalar value
+SetReal1D
+  CvArr arr
+  int idx0
+  double value
+SetReal2D
+  CvArr arr
+  int idx0
+  int idx1
+  double value
+SetReal3D
+  CvArr arr
+  int idx0
+  int idx1
+  int idx2
+  double value
+SetRealND
+  CvArr arr
+  ints idx
+  double value
+mSet
+  CvMat mat
+  int row
+  int col
+  double value
+ClearND
+  CvArr arr
+  ints idx
+
+# Sequences
+CV_IS_SEQ_INDEX int
+  CvSeq s
+CV_IS_SEQ_CURVE int
+  CvSeq s
+CV_IS_SEQ_CLOSED int
+  CvSeq s
+CV_IS_SEQ_CONVEX int
+  CvSeq s
+CV_IS_SEQ_HOLE int
+  CvSeq s
+CV_IS_SEQ_SIMPLE int
+  CvSeq s
+
+
+# Curves and Shapes
+Line
+  CvArr img
+  CvPoint pt1
+  CvPoint pt2
+  CvScalar color
+  int thickness 1
+  int line_type 8
+  int shift 0
+Rectangle
+  CvArr img
+  CvPoint pt1
+  CvPoint pt2
+  CvScalar color
+  int thickness 1
+  int line_type 8
+  int shift 0
+Circle
+  CvArr img
+  CvPoint pt1
+  int radius
+  CvScalar color
+  int thickness 1
+  int line_type 8
+  int shift 0
+Ellipse
+  CvArr img
+  CvPoint pt1
+  CvSize axes
+  double angle
+  double start_angle
+  double end_angle
+  CvScalar color
+  int thickness 1
+  int line_type 8
+  int shift 0
+EllipseBox
+  CvArr img
+  CvBox2D box
+  CvScalar color
+  int thickness 1
+  int line_type 8
+  int shift 0
+FillPoly
+  CvArr img
+  pts_npts_contours pts
+  CvScalar color
+  int line_type 8
+  int shift 0
+FillConvexPoly
+  CvArr img
+  CvPoints pn
+  CvScalar color
+  int line_type 8
+  int shift 0
+PolyLine
+  CvArr img
+  pts_npts_contours pts
+  int is_closed
+  CvScalar color
+  int thickness 1
+  int line_type 8
+  int shift 0
+
+#Text
+InitFont font
+  CvFont font /O
+  int font_face
+  double hscale
+  double vscale
+  double shear 0
+  int thickness 1
+  int line_type 8
+PutText
+  CvArr img
+  char* text
+  CvPoint org
+  CvFont* font
+  CvScalar color
+GetTextSize text_size,baseline
+  char* text_string
+  CvFont* font
+  CvSize text_size /O
+  int baseline /O
+
+# Point Sets and Contours
+DrawContours
+  CvArr img
+  CvSeq contour
+  CvScalar external_color
+  CvScalar hole_color
+  int max_level
+  int thickness 1
+  int line_type 8
+  CvPoint offset cvPoint(0,0)
+
+# RTTI and Generic Functions
+Save
+  char* filename
+  generic struct_ptr
+  char* name NULL
+  char* comment NULL
+Load generic
+  char* filename
+  CvMemStorage storage NULL
+  char* name NULL
+
+# Accessing Elements and sub-Arrays
+GetRow
+  CvArr arr
+  CvMat submat /J:arr,O,A
+  int row
+GetRows submat
+  CvArr arr
+  CvMat submat /J:arr,O,A
+  int start_row
+  int end_row
+  int delta_row -1
+GetCol submat
+  CvArr arr
+  CvMat submat /J:arr,O,A
+  int col
+GetCols submat
+  CvArr arr
+  CvMat submat /J:arr,O,A
+  int start_col
+  int end_col
+GetDiag submat
+  CvArr arr
+  CvMat submat /J:arr,O,A
+  int diag 0
+GetSubRect submat
+  CvArr arr
+  CvMat submat /J:arr,O,A
+  CvRect rect
+GetSize CvSize
+  CvArr arr
+GetElemType int
+  CvArr arr
+
+# Copying and Filling
+Copy
+  CvArr src
+  CvArr dst
+  CvArr msk NULL
+Set
+  CvArr arr
+  CvScalar value
+  CvArr msk NULL
+SetZero
+  CvArr arr
+Zero
+  CvArr arr
+SetIdentity
+  CvArr mat
+  CvScalar value cvRealScalar(1)
+Range
+  CvArr mat
+  double start
+  double end
+
+# Transforms and Permutations
+# Reshape, ReshapeND - requires special data refcount code
+Repeat
+  CvArr src
+  CvArr dst
+Flip
+  CvArr src
+  CvArr dst NULL
+  int flip_mode 0
+Split
+  CvArr src
+  CvArr dst0
+  CvArr dst1
+  CvArr dst2
+  CvArr dst3
+CvtPixToPlane
+  CvArr src
+  CvArr dst0
+  CvArr dst1
+  CvArr dst2
+  CvArr dst3
+Merge
+  CvArr src0
+  CvArr src1
+  CvArr src2
+  CvArr src3
+  CvArr dst
+MixChannels
+  cvarr_count src /K
+  cvarr_count dst
+  intpair from_to 
+RandShuffle
+  CvArr mat
+  CvRNG* rng
+  double iter_factor 1.0
+Sort
+  CvArr src
+  CvArr dst
+  CvArr idxmat
+  int flags 0
+
+# Arithmetic, Logic and Comparison
+LUT
+  CvArr src
+  CvArr dst
+  CvArr lut
+ConvertScale
+  CvArr src
+  CvArr dst
+  double scale 1.0
+  double shift 0.0
+CvtScale
+  CvArr src
+  CvArr dst
+  double scale 1.0
+  double shift 0.0
+Scale
+  CvArr src
+  CvArr dst
+  double scale 1.0
+  double shift 0.0
+Convert
+  CvArr src
+  CvArr dst
+ConvertScaleAbs
+  CvArr src
+  CvArr dst
+  double scale 1.0
+  double shift 0.0
+Add
+  CvArr src1
+  CvArr src2
+  CvArr dst
+  CvArr mask NULL
+AddS
+  CvArr src1
+  CvScalar value
+  CvArr dst
+  CvArr mask NULL
+AddWeighted
+  CvArr src1
+  double alpha
+  CvArr src2
+  double beta
+  double gamma
+  CvArr dst
+Sub
+  CvArr src1
+  CvArr src2
+  CvArr dst
+  CvArr mask NULL
+SubS
+  CvArr src1
+  CvScalar value
+  CvArr dst
+  CvArr mask NULL
+SubRS
+  CvArr src1
+  CvScalar value
+  CvArr dst
+  CvArr mask NULL
+Mul
+  CvArr src1
+  CvArr src2
+  CvArr dst
+  double scale 1.0
+Div
+  CvArr src1
+  CvArr src2
+  CvArr dst
+  double scale 1.0
+And
+  CvArr src1
+  CvArr src2
+  CvArr dst
+  CvArr mask NULL
+AndS
+  CvArr src1
+  CvScalar value
+  CvArr dst
+  CvArr mask NULL
+Or
+  CvArr src1
+  CvArr src2
+  CvArr dst
+  CvArr mask NULL
+OrS
+  CvArr src1
+  CvScalar value
+  CvArr dst
+  CvArr mask NULL
+Xor
+  CvArr src1
+  CvArr src2
+  CvArr dst
+  CvArr mask NULL
+XorS
+  CvArr src1
+  CvScalar value
+  CvArr dst
+  CvArr mask NULL
+Not
+  CvArr src
+  CvArr dst
+Cmp
+  CvArr src1
+  CvArr src2
+  CvArr dst
+  int cmp_op
+CmpS
+  CvArr src
+  double value
+  CvArr dst
+  int cmp_op
+InRange
+  CvArr src
+  CvArr lower
+  CvArr upper
+  CvArr dst
+InRangeS
+  CvArr src
+  CvScalar lower
+  CvScalar upper
+  CvArr dst
+Max
+  CvArr src1
+  CvArr src2
+  CvArr dst
+MaxS
+  CvArr src
+  double value
+  CvArr dst
+Min
+  CvArr src1
+  CvArr src2
+  CvArr dst
+MinS
+  CvArr src
+  double value
+  CvArr dst
+AbsDiff
+  CvArr src1
+  CvArr src2
+  CvArr dst
+AbsDiffS
+  CvArr src
+  CvArr dst
+  CvScalar value
+Abs
+  CvArr src
+  CvArr dst
+
+# Statistics
+CountNonZero int
+  CvArr arr
+Sum CvScalar
+  CvArr arr
+Avg CvScalar
+  CvArr arr
+  CvArr mask NULL
+AvgSdv mean,std_dev
+  CvArr arr
+  CvScalar mean /O
+  CvScalar std_dev /O
+  CvArr mask NULL
+MinMaxLoc min_val,max_val,min_loc,max_loc
+  CvArr arr
+  double min_val /O
+  double max_val /O
+  CvPoint min_loc /O
+  CvPoint max_loc /O
+  CvArr mask NULL
+Norm double
+  CvArr arr1
+  CvArr arr2
+  int norm_type CV_L2
+  CvArr mask NULL
+Reduce
+  CvArr src
+  CvArr dst
+  int op CV_REDUCE_SUM
+
+# Linear Algebra
+DotProduct double
+  CvArr src1
+  CvArr src2
+Normalize
+  CvArr src
+  CvArr dst
+  double a 1.0
+  double b 0.0
+  int norm_type CV_L2
+  CvArr mask NULL
+CrossProduct
+  CvArr src1
+  CvArr src2
+  CvArr dst
+ScaleAdd
+  CvArr src1
+  CvScalar scale
+  CvArr src2
+  CvArr dst
+GEMM
+  CvArr src1
+  CvArr src2
+  double alpha
+  CvArr src3
+  double beta
+  CvArr dst
+  int tABC 0
+MatMulAdd
+  CvArr src1
+  CvArr src2
+  CvArr src3
+  CvArr dst
+MatMul
+  CvArr src1
+  CvArr src2
+  CvArr dst
+Transform
+  CvArr src
+  CvArr dst
+  CvMat transmat
+  CvMat shiftvec NULL
+PerspectiveTransform
+  CvArr src
+  CvArr dst
+  CvMat mat
+MulTransposed
+  CvArr src
+  CvArr dst
+  int order
+  CvArr delta NULL
+Trace CvScalar
+  CvArr mat
+Transpose
+  CvArr src
+  CvArr dst
+Det double
+  CvArr mat
+Invert double
+  CvArr src
+  CvArr dst
+  int method CV_LU
+Solve
+  CvArr A
+  CvArr B
+  CvArr X
+  int method CV_LU
+SVD
+  CvArr A
+  CvArr W /O
+  CvArr U /O
+  CvArr V /O
+  int flags 0
+SVBkSb
+  CvArr W
+  CvArr U
+  CvArr V
+  CvArr B
+  CvArr X
+  int flags
+EigenVV
+  CvArr mat
+  CvArr evects
+  CvArr evals
+  double eps
+CalcCovarMatrix
+  cvarr_count vects /K
+  CvArr cov_mat
+  CvArr avg
+  int flags
+Mahalonobis
+  CvArr vec1
+  CvArr vec2
+  CvArr mat
+CalcPCA
+  CvArr data
+  CvArr avg
+  CvArr eigenvalues
+  CvArr eigenvectors
+  int flags
+ProjectPCA
+  CvArr data
+  CvArr avg
+  CvArr eigenvectors
+  CvArr result
+BackProjectPCA
+  CvArr proj
+  CvArr avg
+  CvArr eigenvects
+  CvArr result
+
+# Math Functions
+Round int
+  double value
+Floor int
+  double value
+Ceil int
+  double value
+Sqrt float
+  float value
+InvSqrt float
+  float value
+Cbrt float
+  float value
+FastArctan float
+  float y
+  float x
+IsNaN int
+  double value
+IsInf int
+  double value
+CartToPolar
+  CvArr x
+  CvArr y
+  CvArr magnitude
+  CvArr angle NULL
+  int angle_in_degrees
+PolarToCart
+  CvArr magnitude
+  CvArr angle NULL
+  CvArr x
+  CvArr y
+  int angle_in_degrees
+Pow
+  CvArr src
+  CvArr dst
+  double power
+Exp
+  CvArr src
+  CvArr dst
+Log
+  CvArr src
+  CvArr dst
+SolveCubic
+  CvMat coeffs
+  CvMat roots
+SolvePoly
+  CvMat coeffs
+  CvMat roots
+  int maxiter 10
+  int fig 10
+  
+# Random Number Generation
+RNG CvRNG
+  int64 seed -1LL
+RandArr
+  CvRNG* rng
+  CvArr arr
+  int dist_type
+  CvScalar param1
+  CvScalar param2
+RandInt unsigned
+  CvRNG* rng
+RandReal double
+  CvRNG* rng
+
+# Discrete Transforms
+DFT
+  CvArr src
+  CvArr dst
+  int flags
+  int nonzero_rows 0
+GetOptimalDFTSize int
+  int size0
+MulSpectrums
+  CvArr src1
+  CvArr src2
+  CvArr dst
+  int flags
+DCT
+  CvArr src
+  CvArr dst
+  int flags
+
+# Sequences
+SeqRemove
+  CvSeq seq
+  int index
+ClearSeq
+  CvSeq seq
+CloneSeq
+  CvSeq seq
+  CvMemStorage storage
+SeqRemoveSlice
+  CvSeq seq
+  CvSlice slice
+SeqInvert
+  CvSeq seq
+
+# Miscellaneous Functions
+CheckArr int
+  CvArr arr
+  int flags 0
+  double min_val 0
+  double max_val 0
+KMeans2
+  CvArr samples
+  int cluster_count
+  CvArr labels
+  CvTermCriteria termcrit 
+
+# Gradients, Edges, Corners and Features
+Sobel
+  CvArr src
+  CvArr dst
+  int xorder
+  int yorder
+  int aperture_size 3
+Laplace
+  CvArr src
+  CvArr dst
+  int aperture_size 3
+Canny
+  CvArr image
+  CvArr edges
+  double threshold1
+  double threshold2
+  int aperture_size 3
+PreCornerDetect
+  CvArr image
+  CvArr corners
+  int aperture_size 3
+CornerEigenValsAndVecs
+  CvArr image
+  CvArr eigenvv
+  int block_size
+  int aperture_size 3
+CornerMinEigenVal
+  CvArr image
+  CvArr eigenval
+  int block_size
+  int aperture_size 3
+CornerHarris
+  CvArr image
+  CvArr harris_dst
+  int block_size
+  int aperture_size 3
+  double k 0.04
+FindCornerSubPix corners
+  CvArr image
+  CvPoint2D32fs corners
+  CvSize win
+  CvSize zero_zone
+  CvTermCriteria criteria
+GoodFeaturesToTrack corners
+  CvArr image
+  CvArr eig_image
+  CvArr temp_image
+  cvpoint2d32f_count corners
+  double quality_level
+  double min_distance
+  CvArr mask NULL
+  int block_size 3
+  int use_harris 0
+  double k 0.04
+ExtractSURF keypoints,descriptors
+  CvArr image
+  CvArr mask
+  CvSeqOfCvSURFPoint* keypoints /O
+  CvSeqOfCvSURFDescriptor* descriptors /O
+  CvMemStorage storage
+  CvSURFParams params
+GetStarKeypoints CvSeqOfCvStarKeypoint*
+  CvArr image
+  CvMemStorage storage
+  CvStarDetectorParams params cvStarDetectorParams()
+
+# Sampling, Interpolation and Geometrical Transforms
+GetRectSubPix
+  CvArr src
+  CvArr dst
+  CvPoint2D32f center
+GetQuadrangleSubPix
+  CvArr src
+  CvArr dst
+  CvMat map_matrix
+Resize
+  CvArr src
+  CvArr dst
+  int interpolation CV_INTER_LINEAR
+WarpAffine
+  CvArr src
+  CvArr dst
+  CvMat map_matrix
+  int flags CV_INTER_LINEAR+CV_WARP_FILL_OUTLIERS
+  CvScalar fillval cvScalarAll(0)
+GetAffineTransform
+  CvPoint2D32f* src
+  CvPoint2D32f* dst
+  CvMat map_matrix
+2DRotationMatrix
+  CvPoint2D32f center
+  double angle
+  double scale
+  CvMat map_matrix
+WarpPerspective
+  CvArr src
+  CvArr dst
+  CvMat map_matrix
+  int flags CV_INTER_LINEAR+CV_WARP_FILL_OUTLIERS
+  CvScalar fillval cvScalarAll(0)
+GetPerspectiveTransform
+  CvPoint2D32f* src
+  CvPoint2D32f* dst
+  CvMat map_matrix
+Remap
+  CvArr src
+  CvArr dst
+  CvArr mapx
+  CvArr mapy
+  int flags CV_INTER_LINEAR+CV_WARP_FILL_OUTLIERS
+  CvScalar fillval cvScalarAll(0)
+ConvertMaps
+  CvArr mapx
+  CvArr mapy
+  CvArr mapxy
+  CvArr mapalpha
+LogPolar
+  CvArr src
+  CvArr dst
+  CvPoint2D32f center
+  double M
+  int flags CV_INTER_LINEAR+CV_WARP_FILL_OUTLIERS
+
+# Morphological Operations
+CreateStructuringElementEx IplConvKernel*
+  int cols
+  int rows
+  int anchor_x
+  int anchor_y
+  int shape
+  ints values {NULL,0}
+Erode
+  CvArr src
+  CvArr dst
+  IplConvKernel* element NULL
+  int iterations 1
+Dilate
+  CvArr src
+  CvArr dst
+  IplConvKernel* element NULL
+  int iterations 1
+MorphologyEx
+  CvArr src
+  CvArr dst
+  CvArr temp
+  IplConvKernel* element
+  int operation
+  int iterations 1
+
+# Filters and Color Conversion
+Smooth
+  CvArr src
+  CvArr dst
+  int smoothtype CV_GAUSSIAN
+  int param1 3
+  int param2 0
+  double param3 0
+  double param4 0
+Filter2D
+  CvArr src
+  CvArr dst
+  CvMat kernel
+  CvPoint anchor cvPoint(-1,-1)
+CopyMakeBorder
+  CvArr src
+  CvArr dst
+  CvPoint offset
+  int bordertype
+  CvScalar value cvScalarAll(0)
+Integral
+  CvArr image
+  CvArr sum
+  CvArr sqsum NULL
+  CvArr tilted_sum NULL
+CvtColor
+  CvArr src
+  CvArr dst
+  int code
+Threshold
+  CvArr src
+  CvArr dst
+  double threshold
+  double max_value
+  int threshold_type
+AdaptiveThreshold
+  CvArr src
+  CvArr dst
+  double max_value
+  int adaptive_method CV_ADAPTIVE_THRESH_MEAN_C /ch_adaptive_method
+  int threshold_type CV_THRESH_BINARY /ch_threshold_type
+  int block_size 3
+  double param1 5
+
+# Pyramids and the Applications
+PyrDown
+  CvArr src
+  CvArr dst
+  int filter CV_GAUSSIAN_5x5
+PyrUp
+  CvArr src
+  CvArr dst
+  int filter CV_GAUSSIAN_5x5
+PyrSegmentation comp
+  IplImage src
+  IplImage dst
+  CvMemStorage storage
+  CvSeq* comp /O
+  int level
+  double threshold1
+  double threshold2
+PyrMeanShiftFiltering
+  CvArr src
+  CvArr dst
+  double sp
+  double sr
+  int max_level 1
+  CvTermCriteria termcrit cvTermCriteria(CV_TERMCRIT_ITER+CV_TERMCRIT_EPS,5,1)
+
+# Image Segmentation, Connected Components and Contour Retrieval
+FloodFill comp
+  CvArr image
+  CvPoint seed_point
+  CvScalar new_val
+  CvScalar lo_diff cvScalarAll(0)
+  CvScalar up_diff cvScalarAll(0)
+  CvConnectedComp comp /O
+  int flags 4
+  CvArr mask NULL
+Watershed
+  CvArr image
+  CvArr markers
+
+# Image and Contour Moments
+Moments moments
+  cvarrseq arr
+  CvMoments moments /O
+  int binary 0
+GetSpatialMoment double
+  CvMoments* moments
+  int x_order
+  int y_order
+GetCentralMoment double
+  CvMoments* moments
+  int x_order
+  int y_order
+GetNormalizedCentralMoment double
+  CvMoments* moments
+  int x_order
+  int y_order
+
+# Special Image Transforms
+HoughLines2 CvSeq*
+  CvArr image
+  CvMemStorage storage
+  int method
+  double rho
+  double theta
+  int threshold
+  double param1 0
+  double param2 0
+HoughCircles
+  CvArr image
+  CvMat circle_storage
+  int method
+  double dp
+  double min_dist
+  double param1 100
+  double param2 100
+  int min_radius 0
+  int max_radius 0
+DistTransform
+  CvArr src
+  CvArr dst
+  int distance_type CV_DIST_L2
+  int mask_size 3
+  floats mask {NULL,0}
+  CvArr labels NULL
+Inpaint
+  CvArr src
+  CvArr mask
+  CvArr dst
+  double inpaintRadius
+  int flags
+
+# Histograms
+ClearHist
+  CvHistogram hist
+CalcArrHist
+  CvArrs image
+  CvHistogram hist
+  int accumulate 0
+  CvArr mask NULL
+CalcHist
+  IplImages image
+  CvHistogram hist
+  int accumulate 0
+  CvArr mask NULL
+NormalizeHist
+  CvHistogram hist
+  double factor
+ThreshHist
+  CvHistogram hist
+  double threshold
+CompareHist
+  CvHistogram hist1
+  CvHistogram hist2
+  int method
+# CopyHist
+CalcBackProject
+  IplImages image
+  CvArr back_project
+  CvHistogram hist
+CalcArrBackProject
+  CvArrs image
+  CvArr back_project
+  CvHistogram hist
+CalcBackProjectPatch
+  IplImages images
+  CvArr dst
+  CvSize patch_size
+  CvHistogram hist
+  int method
+  float factor
+CalcProbDensity
+  CvHistogram hist1
+  CvHistogram hist2
+  CvHistogram dst_hist
+  double scale 255
+EqualizeHist
+  CvArr src
+  CvArr dst
+QueryHistValue_1D double
+  CvHistogram hist
+  int idx0
+QueryHistValue_2D double
+  CvHistogram hist
+  int idx0
+  int idx1
+QueryHistValue_3D double
+  CvHistogram hist
+  int idx0
+  int idx1
+  int idx2
+QueryHistValue_nD double
+  CvHistogram hist
+  ints idx
+
+# Matching
+MatchTemplate
+  CvArr image
+  CvArr templ
+  CvArr result
+  int method
+MatchShapes
+  CvSeq object1
+  CvSeq object2
+  int method
+  double parameter 0
+
+# Contour Processing Functions
+ApproxChains CvSeq*
+  CvSeq src_seq
+  CvMemStorage storage
+  int method CV_CHAIN_APPROX_SIMPLE
+  double parameter 0
+  int minimal_perimeter 0
+  int recursive 0
+BoundingRect CvRect
+  cvarrseq points
+  int update 0
+ContourArea double
+  cvarrseq contour
+  CvSlice slice CV_WHOLE_SEQ
+ArcLength double
+  cvarrseq curve
+  CvSlice slice CV_WHOLE_SEQ
+  int is_closed -1
+CreateContourTree CvContourTree*
+  CvSeq contour
+  CvMemStorage storage
+  double threshold
+ContourFromContourTree CvSeq*
+  CvContourTree* tree
+  CvMemStorage storage
+  CvTermCriteria criteria
+MatchContourTrees double
+  CvContourTree* tree1
+  CvContourTree* tree2
+  int method
+  double threshold
+
+# Computational Geometry
+MaxRect CvRect
+  CvRect* rect1
+  CvRect* rect2
+# TODO PointSeqFromMat
+BoxPoints pt
+  CvBox2D box
+  CvPoint2D32f_4 pt /O,A
+FitEllipse2 CvBox2D
+  CvArr points
+ConvexHull2 CvSeq*
+  cvarrseq points
+  CvMemStorage storage
+  int orientation CV_CLOCKWISE
+  int return_points 0
+CheckContourConvexity int
+  cvarrseq contour
+ConvexityDefects CvSeqOfCvConvexityDefect*
+  cvarrseq contour
+  CvSeq convexhull
+  CvMemStorage storage
+PointPolygonTest double
+  cvarrseq contour
+  CvPoint2D32f pt
+  int measure_dist
+MinAreaRect2 CvBox2D
+  cvarrseq points
+  CvMemStorage storage
+MinEnclosingCircle int,center,radius
+  cvarrseq points
+  CvPoint2D32f center /O
+  float radius /O
+CalcPGH
+  CvSeq contour
+  CvHistogram hist
+
+# Planar Subdivisions
+
+Subdiv2DGetEdge CvSubdiv2DEdge
+  CvSubdiv2DEdge edge
+  CvNextEdgeType type
+Subdiv2DNextEdge CvSubdiv2DEdge
+  CvSubdiv2DEdge edge
+Subdiv2DRotateEdge CvSubdiv2DEdge
+  CvSubdiv2DEdge edge
+  int rotate
+Subdiv2DEdgeOrg CvSubdiv2DPoint*
+  CvSubdiv2DEdge edge
+Subdiv2DEdgeDst CvSubdiv2DPoint*
+  CvSubdiv2DEdge edge
+CreateSubdivDelaunay2D CvSubdiv2D*
+  CvRect rect
+  CvMemStorage storage
+SubdivDelaunay2DInsert CvSubdiv2DPoint*
+  CvSubdiv2D* subdiv
+  CvPoint2D32f pt
+CalcSubdivVoronoi2D
+  CvSubdiv2D* subdiv
+ClearSubdivVoronoi2D
+  CvSubdiv2D* subdiv
+FindNearestPoint2D CvSubdiv2DPoint*
+  CvSubdiv2D* subdiv
+  CvPoint2D32f pt
+
+# Object Detection
+HaarDetectObjects CvSeqOfCvAvgComp*
+  CvArr image
+  CvHaarClassifierCascade* cascade
+  CvMemStorage storage
+  double scale_factor 1.1   /ch_doubleAbove1
+  int min_neighbors 3
+  int flags 0
+#  CvSize min_size cvSize(0,0)
+
+ProjectPoints2
+  CvMat object_points
+  CvMat rotation_vector
+  CvMat translation_vector
+  CvMat intrinsic_matrix
+  CvMat distortion_coeffs
+  CvMat image_points
+  CvMat dpdrot NULL
+  CvMat dpdt NULL
+  CvMat dpdf NULL
+  CvMat dpdc NULL
+  CvMat dpddist NULL
+FindHomography homography
+  CvMat src_points
+  CvMat dst_points
+  CvMat homography
+CalibrateCamera2 
+  CvMat object_points
+  CvMat image_points
+  CvMat point_counts
+  CvSize image_size
+  CvMat intrinsic_matrix
+  CvMat distortion_coeffs
+  CvMat rotation_vectors
+  CvMat translation_vectors
+  int flags 0
+CalibrationMatrixValues fovx,fovy,focalLength,principalPoint,pixelAspectRatio
+  CvMat calibMatr
+  CvSize image_size
+  double apertureWidth 0
+  double apertureHeight 0
+  double fovx /O
+  double fovy /O
+  double focalLength /O
+  CvPoint2D64f principalPoint /O
+  double pixelAspectRatio /O
+FindExtrinsicCameraParams2
+  CvMat object_points
+  CvMat image_points
+  CvMat intrinsic_matrix
+  CvMat distortion_coeffs
+  CvMat rotation_vector
+  CvMat translation_vector
+StereoCalibrate
+  CvMat object_points
+  CvMat image_points1
+  CvMat image_points2
+  CvMat point_counts
+  CvMat camera_matrix1
+  CvMat dist_coeffs1
+  CvMat camera_matrix2
+  CvMat dist_coeffs2
+  CvSize image_size
+  CvMat R
+  CvMat T
+  CvMat E NULL
+  CvMat F NULL
+  CvTermCriteria term_crit cvTermCriteria(CV_TERMCRIT_ITER+CV_TERMCRIT_EPS,30,1e-6)
+  int flags CV_CALIB_FIX_INTRINSIC
+StereoRectify
+  CvMat camera_matrix1
+  CvMat camera_matrix2
+  CvMat dist_coeffs1
+  CvMat dist_coeffs2
+  CvSize image_size
+  CvMat R
+  CvMat T
+  CvMat R1
+  CvMat R2
+  CvMat P1
+  CvMat P2
+  CvMat Q NULL
+  int flags CV_CALIB_ZERO_DISPARITY
+StereoRectifyUncalibrated
+  CvMat points1
+  CvMat points2
+  CvMat F
+  CvSize image_size
+  CvMat H1
+  CvMat H2
+  double threshold 5
+Rodrigues2
+  CvMat src
+  CvMat dst
+  CvMat jacobian 0
+Undistort2
+  CvArr src
+  CvArr dst
+  CvMat intrinsic_matrix
+  CvMat distortion_coeffs
+InitUndistortMap
+  CvMat camera_matrix
+  CvMat distortion_coeffs
+  CvArr mapx
+  CvArr mapy
+InitUndistortRectifyMap
+  CvMat camera_matrix
+  CvMat dist_coeffs
+  CvMat R
+  CvMat new_camera_matrix
+  CvArr mapx
+  CvArr mapy
+UndistortPoints
+  CvMat src
+  CvMat dst
+  CvMat camera_matrix
+  CvMat dist_coeffs
+  CvMat R NULL
+  CvMat P NULL
+DrawChessboardCorners
+  CvArr image
+  CvSize pattern_size
+  CvPoint2D32fs corners
+  int pattern_was_found
+
+CreatePOSITObject CvPOSITObject*
+  CvPoint3D32fs points
+POSIT rotation_matrix,translation_vector
+  CvPOSITObject* posit_object
+  CvPoint2D32f* image_points
+  double focal_length
+  CvTermCriteria criteria
+  CvMatr32f_i rotation_matrix /O,A
+  CvVect32f_i translation_vector /O,A
+CalcImageHomography intrinsic,homography
+  floats line
+  CvPoint3D32f* points
+  CvMatr32f_i intrinsic /O,A,/ch_Mat33
+  CvMatr32f_i homography /O,A
+
+EstimateRigidTransform
+  CvArr A
+  CvArr B
+  CvMat M
+  int full_affine
+
+# Accumulation of Background Statistics
+Acc
+  CvArr image
+  CvArr sum
+  CvArr mask NULL
+SquareAcc
+  CvArr image
+  CvArr sqsum
+  CvArr mask NULL
+MultiplyAcc
+  CvArr image1
+  CvArr image2
+  CvArr acc
+  CvArr mask NULL
+RunningAvg
+  CvArr image
+  CvArr acc
+  double alpha
+  CvArr mask NULL
+
+# Motion Templates
+UpdateMotionHistory
+  CvArr silhouette
+  CvArr mhi
+  double timestamp
+  double duration
+CalcMotionGradient
+  CvArr mhi          /ch_matF
+  CvArr mask
+  CvArr orientation  /ch_matF
+  double delta1
+  double delta2
+  int aperture_size 3 /ch_aperture
+CalcGlobalOrientation
+  CvArr orientation
+  CvArr mask
+  CvArr mhi
+  double timestamp
+  double duration
+SegmentMotion
+  CvArr mhi
+  CvArr seg_mask
+  CvMemStorage storage
+  double timestamp
+  double seg_thresh
+
+# Object Tracking
+MeanShift comp
+  CvArr prob_image
+  CvRect window
+  CvTermCriteria criteria
+  CvConnectedComp comp /O
+CamShift int,comp,box
+  CvArr prob_image
+  CvRect window
+  CvTermCriteria criteria
+  CvConnectedComp comp /O
+  CvBox2D box /O
+SnakeImage
+  IplImage image
+  CvPoints points
+  floats alpha
+  floats beta
+  floats gamma
+  int coeff_usage
+  CvSize win
+  CvTermCriteria criteria
+  int calc_gradient 1
+
+# Optical Flow
+CalcOpticalFlowLK
+  CvArr prev
+  CvArr curr
+  CvSize win_size
+  CvArr velx
+  CvArr vely
+CalcOpticalFlowBM
+  CvArr prev    /ch_image8
+  CvArr curr    /ch_image8
+  CvSize block_size
+  CvSize shift_size
+  CvSize max_range
+  int use_previous
+  CvArr velx        /ch_vel
+  CvArr vely        /ch_vel
+CalcOpticalFlowHS
+  CvArr prev    /ch_image8
+  CvArr curr    /ch_image8
+  int use_previous
+  CvArr velx        /ch_vel_64
+  CvArr vely        /ch_vel_64
+  double lambda
+  CvTermCriteria criteria
+
+# Highgui
+NamedWindow
+  char* name
+  int flags CV_WINDOW_AUTOSIZE
+DestroyWindow
+  char* name
+DestroyAllWindows
+ResizeWindow
+  char* name
+  int width
+  int height
+MoveWindow
+  char* name
+  int x
+  int y
+ShowImage
+  char* name
+  CvArr image
+GetTrackbarPos
+  char* trackbar_name
+  char* window_name
+SetTrackbarPos
+  char* trackbar_name
+  char* window_name
+  int pos
+#WaitKey int
+#  int delay 0
+SaveImage
+  char* filename
+  CvArr image
+CaptureFromFile CvCapture*
+  char* filename
+CaptureFromCAM CvCapture*
+  int index
+GrabFrame int
+  CvCapture* capture
+RetrieveFrame ROIplImage*
+  CvCapture* capture
+QueryFrame ROIplImage*
+  CvCapture* capture
+GetCaptureProperty double
+  CvCapture* capture
+  int property_id
+SetCaptureProperty int
+  CvCapture* capture
+  int property_id
+  double value
+CreateVideoWriter CvVideoWriter*
+  char* filename
+  int fourcc
+  double fps
+  CvSize frame_size
+  int is_color 1
+WriteFrame int
+  CvVideoWriter* writer
+  IplImage image

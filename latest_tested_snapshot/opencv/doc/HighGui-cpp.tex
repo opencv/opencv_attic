@@ -1,0 +1,288 @@
+\section{HighGUI. Image, Video I/O and simple UI functions}
+
+While OpenCV was designed for use in full-scale
+applications and can be used within functionally rich UI frameworks (such as Qt, WinForms or Cocoa) or without any UI at all, sometimes there is a need to try some functionality quickly and visualize the results. This is what the HighGUI module has been designed for.
+
+It provides easy interface to:
+\begin{itemize}
+    \item create and manipulate windows that can display images and "remember" their content (no need to handle repaint events from OS)
+    \item add trackbars to the windows, handle simple mouse events as well as keyboard commmands
+    \item read and write images to/from disk or memory.
+    \item read video from camera or file and write video to a file.
+\end{itemize}
+
+\subsection{The Reference}
+
+\cvfunc{createTrackbar}\label{createTrackbar}
+
+\begin{lstlisting}
+int createTrackbar( const string& trackbarname, const string& winname,
+                    int* value, int count,
+                    TrackbarCallback onChange CV_DEFAULT(0),
+                    void* userdata CV_DEFAULT(0));
+\end{lstlisting}
+\begin{description}
+\cvarg{trackbarname}{Name of the created trackbar.}
+\cvarg{winname}{Name of the window which will be used as a parent of the created trackbar.}
+\cvarg{value}{The optional pointer to an integer variable, whose value will reflect the position of the slider. Upon creation, the slider position is defined by this variable.}
+\cvarg{count}{The maximal position of the slider. The minimal position is always 0.}
+\cvarg{onChange}{Pointer to the function to be called every time the slider changes position. This function should be prototyped as \texttt{void Foo(int,void*);}, where the first parameter is the trackbar position and the second parameter is the user data (see the next parameter). If the callback is NULL pointer, then no callbacks is called, but only \texttt{value} is updated}
+\cvarg{userdata}{The user data that is passed as-is to the callback; it can be used to handle trackbar events without using global variables}
+\end{description}
+
+The function \texttt{createTrackbar} creates a trackbar (a.k.a. slider or range control) with the specified name and range, assigns a variable \texttt{value} to be syncronized with trackbar position and specifies a callback function \texttt{onChange} to be called on the trackbar position change. The created trackbar is displayed on the top of the given window.
+
+
+\cvfunc{getTrackbarPos}\label{getTrackbarPos}
+Returns the trackbar position.
+
+\begin{lstlisting}
+int getTrackbarPos( const string& trackbarname, const string& winname );
+\end{lstlisting}
+\begin{description}
+\cvarg{trackbarname}{Name of the trackbar.}
+\cvarg{winname}{Name of the window which is the parent of the trackbar.}
+\end{description}
+
+The function returns the current position of the specified trackbar.
+
+\cvfunc{imdecode}\label{imdecode}
+
+\begin{lstlisting}
+Mat imdecode( const Mat& buf, int flags );
+\end{lstlisting}
+\begin{description}
+\cvarg{buf}{The input array of vector of bytes}
+\cvarg{flags}{The same flags as in \cross{imread}}
+\end{description}
+
+The function reads image from the specified buffer in memory.
+If the buffer is too short or contains invalid data, the empty matrix will be returned.
+
+See \cross{imread} for the list of supported formats and the flags description. 
+
+\cvfunc{imencode}\label{imencode}
+
+\begin{lstlisting}
+bool imencode( const string& ext, const Mat& img,
+               vector<uchar>& buf,
+               const vector<int>& params=vector<int>());
+\end{lstlisting}
+\begin{description}
+\cvarg{ext}{The file extension that defines the output format}
+\cvarg{img}{The image to be written}
+\cvarg{buf}{The output buffer; resized to fit the compressed image}
+\cvarg{params}{The format-specific parameters; see \cross{imwrite}}
+\end{description}
+
+The function compresses the image and stores it in the memory buffer, which is resized to fit the result.
+See \cross{imwrite} for the list of supported formats and the flags description.
+
+
+\cvfunc{imread}\label{imread}
+Loads an image from a file.
+
+\begin{lstlisting}
+Mat imread( const string& filename, int flags=1 );
+
+#define CV_LOAD_IMAGE_COLOR       1
+#define CV_LOAD_IMAGE_GRAYSCALE   0
+#define CV_LOAD_IMAGE_UNCHANGED  -1
+\end{lstlisting}
+
+\begin{description}
+\cvarg{filename}{Name of file to be loaded.}
+\cvarg{flags}{Specifies color type of the loaded image: if $>$0, the loaded image is forced to be a 3-channel color image; if 0, the loaded image is forced to be grayscale; if $<$0, the loaded image will be loaded as is (note that in the current implementation the alpha channel, if any, is stripped from the output image, e.g. 4-channel RGBA image will be loaded as RGB).}
+\end{description}
+
+The function \texttt{imread} loads an image from the specified file and returns it. Currently, the following file formats are supported:
+\begin{itemize}
+\item Windows bitmaps - \texttt{*.bmp, *.dib} (always supported)
+\item JPEG files - \texttt{*.jpeg, *.jpg, *.jpe} (see \textbf{Note2})
+\item JPEG 2000 files - \texttt{*.jp2} (see \textbf{Note2})
+\item Portable Network Graphics - \texttt{*.png}  (see \textbf{Note2})
+\item Portable image format - \texttt{*.pbm, *.pgm, *.ppm} (always supported)
+\item Sun rasters - \texttt{*.sr, *.ras} (always supported)
+\item TIFF files - \texttt{*.tiff, *.tif}  (see \textbf{Note2})
+\end{itemize}
+
+\textbf{Note1}: The function determines type of the image by the content, not by the file extension.
+
+\textbf{Note2}: On Windows and MacOSX the shipped with OpenCV image codecs (libjpeg, libpng, libtiff and libjasper) are used by default; so OpenCV can always read JPEGs, PNGs and TIFFs. On MacOSX there is also the option to use native MacOSX image readers. But beware that currently these native image loaders give images with somewhat different pixel values, because of the embedded into MacOSX color management.
+
+On Linux, BSD flavors and other Unix-like open-source operating systems OpenCV looks for the supplied with OS image codecs. Please, install the relevant packages (do not forget the development files, e.g. "libjpeg-dev" etc. in Debian and Ubuntu) in order to get the codec support, or turn on \texttt{OPENCV\_BUILD\_3RDPARTY\_LIBS} flag in CMake. 
+
+\cvfunc{imshow}\label{imshow}
+Displays the image in the specified window
+
+\begin{lstlisting}
+void imshow( const string& winname, const Mat& image );
+\end{lstlisting}
+\begin{description}
+\cvarg{winname}{Name of the window.}
+\cvarg{image}{Image to be shown.}
+\end{description}
+
+The function \texttt{imshow} displays the image in the specified window. If the window was created with the \texttt{CV\_WINDOW\_AUTOSIZE} flag then the image is shown with its original size, otherwise the image is scaled to fit in the window. The function may scale the image, depending on its depth:
+\begin{itemize}
+    \item If the image is 8-bit unsigned, it is displayed as is.
+    \item If the image is 16-bit unsigned or 32-bit integer, the pixels are divided by 256. That is, the value range [0,255*256] is mapped to [0,255].
+    \item If the image is 32-bit floating-point, the pixel values are multiplied by 255. That is, the value range [0,1] is mapped to [0,255].
+\end{itemize}
+
+\cvfunc{imwrite}\label{imwrite}
+Saves an image to a specified file.
+
+\begin{lstlisting}
+bool imwrite( const string& filename, const Mat& img,
+              const vector<int>& params=vector<int>());
+#define CV_IMWRITE_JPEG_QUALITY 1
+#define CV_IMWRITE_PNG_COMPRESSION 16
+#define CV_IMWRITE_PXM_BINARY 32
+\end{lstlisting}
+\begin{description}
+\cvarg{filename}{Name of the file.}
+\cvarg{img}{The image to be saved.}
+\cvarg{params}{The format-specific save parameters, encoded as pairs \texttt{paramId\_1, paramValue\_1, paramId\_2, paramValue\_2, ...}. The following parameters are currently supported:
+\begin{itemize}
+    \item In the case of JPEG it can be a quality (\texttt{CV\_IMWRITE\_JPEG\_QUALITY}), from 0 to 100 (the higher is the better), 95 by default.
+    \item In the case of PNG it can be the compression level (\texttt{CV\_IMWRITE\_PNG\_COMPRESSION}), from 0 to 9 (the higher value means smaller size and longer compression time), 3 by default.
+    \item In the case of PPM, PGM or PBM it can a binary format flag (\texttt{CV\_IMWRITE\_PXM\_BINARY}), 0 or 1, 1 by default.
+\end{itemize}
+    }
+\end{description}
+
+The function \texttt{imwrite} saves the image to the specified file. The image format is chosen based on the \texttt{filename} extension, see \cross{imread} for the list of extensions. Only 8-bit (or 16-bit in the case of PNG, JPEG 2000 and TIFF) single-channel or 3-channel (with 'BGR' channel order) images can be saved using this function. If the format, depth or channel order is different, use \cross{Mat::convertTo}, and \cross{cvtColor} to convert it before saving, or use the universal XML I/O functions to save the image to XML or YAML format.
+
+\cvfunc{namedWindow}\label{namedWindow}
+Creates a window.
+
+\begin{lstlisting}
+void namedWindow( const string& winname, int flags );
+\end{lstlisting}
+\begin{description}
+\cvarg{name}{Name of the window in the window caption that may be used as a window identifier.}
+\cvarg{flags}{Flags of the window. Currently the only supported flag is \texttt{CV\_WINDOW\_AUTOSIZE}. If this is set, the window size is automatically adjusted to fit the displayed image (see \cross{imshow}), and the user can not change the window size manually.}
+\end{description}
+
+The function \texttt{namedWindow} creates a window which can be used as a placeholder for images and trackbars. Created windows are referred to by their names.
+
+If a window with the same name already exists, the function does nothing.
+
+\cvfunc{setTrackbarPos}\label{setTrackbarPos}
+Sets the trackbar position.
+
+\begin{lstlisting}
+void setTrackbarPos( const string& trackbarname, const string& winname, int pos );
+\end{lstlisting}
+\begin{description}
+\cvarg{trackbarname}{Name of the trackbar.}
+\cvarg{winname}{Name of the window which is the parent of trackbar.}
+\cvarg{pos}{The new position.}
+\end{description}
+
+The function sets the position of the specified trackbar in the specified window.
+
+
+\cvfunc{VideoCapture}\label{VideoCapture}
+Class for video capturing from video files or cameras
+
+\begin{lstlisting}
+class VideoCapture
+{
+public:
+    // the default constructor
+    VideoCapture();
+    // the constructor that opens video file
+    VideoCapture(const string& filename);
+    // the constructor that starts streaming from the camera
+    VideoCapture(int device);
+    
+    // the destructor
+    virtual ~VideoCapture();
+    
+    // opens the specified video file
+    virtual bool open(const string& filename);
+    
+    // starts streaming from the specified camera by its id
+    virtual bool open(int device);
+    
+    // returns true if the file was open successfully or if the camera
+    // has been initialized succesfully
+    virtual bool isOpened() const;
+    
+    // closes the camera stream or the video file
+    // (automatically called by the destructor)
+    virtual void release();
+    
+    // grab the next frame or a set of frames from a multi-head camera;
+    // returns false if there are no more frames
+    virtual bool grab();
+    // reads the frame from the specified video stream
+    // (non-zero channel is only valid for multi-head camera live streams)
+    virtual bool retrieve(Mat& image, int channel=0);
+    // equivalent to grab() + retrieve(image, 0);
+    virtual VideoCapture& operator >> (Mat& image);
+    
+    // sets the specified property propId to the specified value 
+    virtual bool set(int propId, double value);
+    // retrieves value of the specified property
+    virtual double get(int propId);
+    
+protected:
+    ...
+};
+\end{lstlisting}
+
+See \hyperref[AutomaticMemoryManagement2]{the CXCORE introduction} for the sample code.
+
+\cvfunc{VideoWriter}\label{VideoWriter}
+Video writer class
+
+\begin{lstlisting}
+class VideoWriter
+{
+public:    
+    // default constructor
+    VideoWriter();
+    // constructor that calls open
+    VideoWriter(const string& filename, int fourcc,
+                double fps, Size frameSize, bool isColor=true);
+    
+    // the destructor
+    virtual ~VideoWriter();
+    
+    // opens the file and initializes the video writer.
+    // filename - the output file name. 
+    // fourcc - the codec
+    // fps - the number of frames per second
+    // frameSize - the video frame size
+    // isColor - specifies whether the video stream is color or grayscale
+    virtual bool open(const string& filename, int fourcc,
+                      double fps, Size frameSize, bool isColor=true);
+    
+    // returns true if the writer has been initialized successfully
+    virtual bool isOpened() const;
+    
+    // writes the next video frame to the stream
+    virtual VideoWriter& operator << (const Mat& image);
+    
+protected:
+    ...
+};
+\end{lstlisting}
+
+\cvfunc{waitKey}\label{waitKey}
+Waits for a pressed key.
+
+\begin{lstlisting}
+int waitKey(int delay=0);
+\end{lstlisting}
+\begin{description}
+\cvarg{delay}{Delay in milliseconds. 0 is the special value that means "forever"}
+\end{description}
+
+The function \texttt{waitKey} waits for key event infinitely (when $\texttt{delay}\leq 0$) or for \texttt{delay} milliseconds, when it's positive. Returns the code of the pressed key or -1 if no key was pressed before the specified time had elapsed.
+
+\textbf{Note:} This function is the only method in HighGUI that can fetch and handle events, so it needs to be called periodically for normal event processing, unless HighGUI is used within some environment that takes care of event processing.
+

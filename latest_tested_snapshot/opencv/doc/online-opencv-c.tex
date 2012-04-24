@@ -1,0 +1,34 @@
+\documentclass[11pt]{book}
+\newcommand{\targetlang}{c}
+
+\usepackage{myopencv}
+\usepackage{amsmath}
+\usepackage{ifthen}
+
+\def\genc{true}
+\def\genpy{false}
+\def\targetlang{c}
+
+\title{OpenCV Documentation}			% used by \maketitle
+\author{Authors}		                % used by \maketitle
+\date{May 7, 2009}				% used by \maketitle
+
+\begin{document}
+\maketitle					% automatic title!
+
+\setcounter{tocdepth}{8}
+\tableofcontents
+
+%%% Chapters %%%
+\include{CxCore-c}
+\include{CvReference-c}
+\include{CvAux}
+\include{HighGui-c}
+\include{MachineLearning}
+\include{CxCore-cpp}
+\include{Cv-cpp}
+\include{HighGui-cpp}
+\include{FAQ}
+%%%%%%%%%%%%%%%%
+
+\end{document}             % End of document.
