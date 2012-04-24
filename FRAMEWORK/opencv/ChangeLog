@@ -1,0 +1,2583 @@
+- Bugfix: added dma_unlisten to icvCloseCAM_DC1394 (thanks to Victor Benso)
+
+=============================================================================
+                      OpenCV 1.0, October 18, 2006
+=============================================================================
+
+>>> New functionality/features: <<<
+
+  - General:
+    * Windows installation package now includes precompiled Python module
+    * Borland C++ (v5.6+) makefiles re-added (see _make\make_all_bc.mak)
+
+  - CV:
+    * Inpainting was added, see samples/c/inpaint.cpp
+      (thanks to Alexander Kibkalo and Alexey Kalinichenko)
+
+  - MLL:
+    * Boosted tree classifiers added, see MLL reference manual
+
+  - HighGUI:
+    * Jpeg2000 and EXR support in highgui using JasPer and OpenEXR (thanks to Nils Hasler)
+      OpenEXR is not built-in to highgui on Windows by default. See
+      otherlibs/_graphics/readme.txt.
+    * >8-bit image input/output for PNG, Jpeg2000 and OpenEXR (thanks to Nils Hasler)
+    * Updated CMUcamera wrapper.
+    * Several V4L2 improvements and fixes
+  
+  - New samples (opencv/samples):
+    * Camera calibration sample: calibrate.cpp
+    * Inpainting sample: inpaint.cpp
+    * Letter recognition using the existing database with
+      random trees/boosted trees/neural nets: leter_recog.cpp
+    * A few new Python samples.
+
+  - Tests:
+    * Most old cv tests have been rewritten/converted to use cxts instead of trs.
+      TRS is not used by the tests anymore.
+    
+>>> Bug fixes: <<<
+     Many thanks to everybody who submitted bug reports and/or provided the patches!
+
+     * Incorrect normalization in cvFindFundamentalMat (SF #1550855)
+     * Occasional cvGetQuadrangleSubPix crashes (SF #1549168)
+     * Occasional cvCalcOpticalFlowPyrLK crashes
+     * Internal GCC 3.x error in cvFloor/cvCeil (SF #1546657)
+     * Several Python-related bugs (SF #1570109, SF #1572800, SF #1543593)
+     * Bugs in contour processing/rendering (SF #1550889, 
+     * x86-64 related bugs (SF #1526133, SF #1527997)
+     * OpenCV dispatcher tried to load old versions of IPP (pre 4.x)
+       that caused many failures (see SF #1555093, for example)
+     * Inaccurate results in some cases in cvFitEllipse, cvFitLine, cvHoughCircles.
+     * Severe bug in Bayesian classifier, broken regression tree in MLL
+     * Overflow in blurring filter
+     * cvSaveImage() modified saved images leading to potential problems in threaded apps.
+     * Numeric values in XML/YAML were emitted/parsed incorrectly
+       on some non-US locales in Linux
+     * VS2005 Express/Standard Editions could not build OpenCV
+       (due to missing OpenMP support)
+     * ...
+
+>>> Known issues:
+    * Certain tests may fail on IA64 (Itanium), e.g.
+      gaussian filter, fundamental matrix estimation, chessboard detector.
+
+=============================================================================
+                      OpenCV 1.0 RC1, August 11, 2006
+=============================================================================
+
+>>> New functionality/features: <<<
+  - New Compilers/Environments supported:
+     * GCC 4.x 
+     * Visual Studio .NET 2005.
+       Note that: a) Project files .vcproj's and the corresponding solution files
+                     have been converted to VS.NET 2005 format, thus they can not
+                     be opened with VS.NET 2003. As a workaround, one may convert
+                     project files and workspaces for Visual Studio 6.0 to VS.NET 2003.
+                  b) The projects can be built for Win32 and x64 (a.k.a. EM64T/AMD64) platforms.
+                  c) OpenMP support is turned on by default.
+     * On MacOSX universal OpenCV binaries are now built by default, so both
+       PPC and Intel Mac's are fully supported.
+     * Borland C++ support has been removed. There is still script
+       utils\gen_make.py available that can generate makefile.bcc's out of
+       MSVC's project files (not tested with rc1).
+     * New command-line makefiles _make\makefile.* are introduced that allow user
+       to build OpenCV for Win64 (EM64T/AMD64 and Itanium). For details, see INSTALL file.
+
+  - cxcore:
+     * added several new functions:
+       cvMixChannels, cvRandShuffle, cvRange, cvCalcPCA, cvProjectPCA, cvBackProjectPCA,
+       cvNormalize, cvReduce, cvGetNumThreads, cvSetNumThreads, cvGetThreadNum.
+       See docs/ref/opencvref_cxcore.htm for details.
+     * extended cvCalcCovarMatrix, cvMulTransposed
+     * added macros for the library version: see cxcore/include/cvver.h
+     * added C++ classes CvImage and CvMatrix:
+       see cxcore/include/cxcore.hpp and the sample samples/c/image.cpp
+     * the maximum number of channels in matrices has been increased up to 64.
+       though, only the basic functions can handle such images.
+  - cv:
+    * new functions:
+      cvPyrMeanShiftFiltering, cvWatershed, cvGetAffineTransform.
+      see docs/ref/opencvref_cv.htm for details.
+    * extended:
+      cvDistTransform (true distance transform algorithm),
+      cvThresh (Otsu adaptive algorithm),
+      cvCanny (using true gradient as an option)
+    * all the filtering functionality has been reworked,
+      new C++ classes for linear separable and non-separable filtering,
+      morphology, laplace, box filer (blur) have been added.
+      see cv/include/cv.hpp.
+      The older C API is still supported and is preferrable sometimes
+      (e.g. when IPP is used).
+    ****** API changes:
+      * cvCamShift, cvBoxPoints and all the other functions
+        taking/returning an angle (as a field of the structure CvBox2D
+        or as a standalone parameter) now measure the angles in degrees.
+
+  - cvaux:
+    * new large video surveillance module has been added
+      (cvaux/src/vs and cvaux/include/cvvidsurv.h).
+      It implements smart blob tracking. See the description at docs/vidsurv)
+  - ml (stands for Machine Learining):
+    * this is a completely new C++ module containing classes for statistical
+      classification, regression and clustering. See docs/ref/opencvref_ml.htm.
+  - highgui:
+    * the whole video capturing code has been restructured and split by modules,
+      better function names have been introduced (older names are supported via macros)
+    * Quicktime (MacOSX) and Xine (Linux, (attention: watch the license!)) support added.
+    * many small and big improvements have been made
+      in most of the video capturing modules
+    * a helper thread can be used to refresh highgui windows content w/o having to
+      call cvWaitKey() (Linux only).
+
+  - Bindings/interfaces:
+    * IPP 5.1.* is now supported and this is a recommended version of IPP
+      to use with OpenCV. One may build custom IPP DLL for easier binary
+      redistribution (see interfaces/ipp)
+    * Python bindings have been greatly improved and extended
+      (see interfaces/swig[/python] and samples/python).
+
+>>> Optimizations: <<<
+  -  The following filtering functions have been significantly optimized
+     using the new IPP 5.1 functionality:
+     cvSobel, cvLaplace, cvErode, cvDilate.
+  -  cvFilter2D now runs much faster with larger kernels (using DFT-based method)
+  -  Several functions have been parallelized with OpenMP:
+     cvHaarDetectObjects, cvCalcOpticalFlowPyrLK, cvDistTransform (the new algorithm only),
+     so they should run ~50-80% faster on dual core CPUs, when the code is built
+     with Intel compiler or MSVC2005 (as the precompiled OpenCV binaries are).
+
+>>> Bug fixes: <<<
+
+  -  A lot of bugs have been fixed. We would like to thank all the people
+     who submitted bug reports and/or patches.
+     This is incomplete list of the bugs fixed.
+
+     * cvFilter2D (CVS version crashed occasionally)
+     * cvInitUndistortMap mem leak
+     * cvRodrigues2 (several bugs and numerical instability)
+     * cvAdaptiveThresh incorrect handling of extreme cases
+     * Graph traversal (cvNextGraphItem) failed on some graphs
+     * Probabilistic Hough Transform mem leak and running beyond the buffers.
+     * Numerous records in SF bug tracker have been adressed (below are
+     the IDs of the records):
+     1344667, 1458680, 1358957, 1358962, 1489946, 1176530, 1405941,
+     1291046, 1307735, 1307660, 1297619, 1263481, 1295583, 1229649,
+     1242376, 1184122, 1145216, 1115824, 1144060, 1106466, 1055967,
+     1080061, 1034397, 1080669, 1068438, 1061664, 1067400, 952756,
+     709670, 972533, 709670, 706225, 667748, 661480
+
+>>> Known issues:
+  - Some of the tests fail/crash on Win64:
+    * EM64T/AMD64: tests for cvMatchTemplate and cvRemap fail
+    * IA64 (Itanium): tests for cvDCT, cvDFT and cvCamShift fail, test for cvCanny crashes.
+
+=============================================================================
+                      OpenCV beta 5, Thursday, July 21, 2005
+=============================================================================
+
+>>> New functionality/features: <<<
+  -  (Linux) Support for more cameras has been added in highgui.
+     Different versions of libdc1394 can now be used.
+     (thanks to Frederic Devernay for the new versions of cvcap_dc1394.cpp,
+     cvcap_v4l.cpp and patches for configure script,
+     thanks to Sfuncia Fabio for the patch for cvcap_v4l.cpp)
+
+  -  (Linux) More types of video files can now be read by using libavformat
+     and libavcodec from ffmpeg-0.4.9pre1
+     (thanks to Frederic Devernay for new version of cvcap.cpp and patches for
+     configure script)
+
+  -  (Linux) Python wrappers for OpenCV have been created
+     by Olivier Bornet and Mark Asbach using SWIG.
+     See opencv/interfaces/python and opencv/samples/python.
+     While the wrappers should be OS-independent,
+     so far they have been built on Linux only.
+
+  -  OpenCV now builds and runs on 64-bit platforms: EM64T (a.k.a. AMD64)
+     and IA64 (Itanium). Extra configurations have been added to project files
+     for MsDevStudio 6.0.
+
+  -  Performance tests for cxcore and part of cv have been created.
+     the output format is plain csv and is similar to the one used in IPP.
+     run "cxcoretest -t" and "cvtest -t".
+
+  -  Haartraining now automatically produces .xml database along
+     with the usual directory tree.
+
+  -  Script for creating custom dynamic library for a subset of IPP, used by OpenCV,
+     has been created. Look at opencv/interfaces/ipp
+
+  -  Several new functions have been added: Background/foreground segmentation
+     (see cvaux/include/cvaux.h, "Background/foreground segmentation" section and
+     cvaux/src/), cvHoughCircles (circle detection), cvPointPolygonTest,
+     cvRemap (generic geometrical transformation), cvLogPolar (log-polar transform),
+     cvEqualizeHist (histogram equalization), cvCornerHarris (Harris corner detector).
+
+  -  Camera calibration and epipolar geometry functions have been completely rewritten,
+     API was simplified, and docs updated.
+
+  -  New checkerboard detection algorithm (based on Vladimir Vezhnevets' code)
+     is now used.
+
+  -  cvCvtColor supports new color models (HLS, CIE L*u*v*),
+     for every RGB->something transformation the inverse is provided,
+     32f format is completely supported, 16u is partially supported.
+
+  -  Distance transform was extended to find the nearest connected component
+     of zero pixels for every pixel, not only the distance to it.
+
+  -  (Windows) Highgui now remembers positions of a last few opened windows in registry.
+
+>>> Optimizations: <<<
+  -  The following functions have been optimized by using IPP when it is available:
+     morphology, linear and non-linear filtering (cvFilter2D, cvSobel, cvSmooth),
+     template matching, color conversions, geometrical transformations (cvResize,
+     cvWarpAffine, cvWarpPerspective, cvRemap), image moments
+     
+     And more with new IPP 5.0 (beta):
+     haar object detection, LK optical flow with pyramids, undistortion.
+
+  -  MatchTemplate has been completely rewritten to use DFT that resulted in
+     1 or 2 order(s) of magnitude faster operation.
+     Color images are now accepted (output is always 1-channel).
+
+  -  C version of morphology with rectangular elements is ~1.5-2x faster than in beta 4.
+
+  -  Most of image statistics functions have been rewritten with a noticeable performance gain.
+
+  -  A few other functions have been optimized: threshold,
+     background statistics accumulation, corner detectors (cvCornerMinEigenVal,
+     cvCornerEigenValsVecs, cvPreCornerDetect), distance transform, median filter (3x3),
+     lens undistortion
+
+>>> Bug fixes: <<<
+
+  -  A lot of bugs have been fixed, thanks to all the people who submitted bug reports
+     and/or patches. The following functions have been fixed (this is incomplete list):
+
+     * cvFilter2D (crashed on floating-point images)
+     * cvDFT (bug in processing of long power-of-2 series),
+     * cvWarpPerspective & cvWarpPerspectiveQMatrix,
+     * cvSobel, cvErode, cvDilate, cvSmooth (occasionally ran beyond buffer boundaries)
+     * cvApproxPoly (left extra points on edges)
+     * cvConvexHull (handled 32f case incorrently)
+     * cvMinEnclosingCircle (sometimes the circle is not enclosing: fixed partially)
+     * cvFitEllipse (produced wrong results quite often, now it is much better)
+     * cvCanny (bug in non-maxima suppression stage)
+     * drawing functions (handled 16-bit images incorrectly)
+     * persistence functions (cvLoad, cvSave, cvRead*, cvWrite* etc.) (several bugs)
+     * color conversions (several bugs)
+     * cvResize (bottom row processing)
+     * Haartraining (several bugs)
+     * motion templates (a few bugs)
+
+=============================================================================
+                   OpenCV beta 4, Friday, August 13, 2004
+=============================================================================
+
+>>> Global changes: <<<
+  -  cv library has been split into
+        cv (image processing and computer vision part)
+        and cxcore (basic functionality that is shared with OpenPNL)
+
+        so any application that was linked with cv should now be linked with both cv and cxcore.
+
+  -  DLLs now have a version number (096 for beta 4) in their names, so they do not
+     conflict with applications using libraries from previous (and future) OpenCV releases.
+     Import libraries on Windows do not have version numbers in their names.
+
+  -  Many of applications have been dropped/replaced with simple demo samples (see opencv/samples/c):
+     - Hawk, HMMDemo, VMDemo and vmdemotk have been dropped completely.
+     - LKDemo and cvlkdemo have been replaced with sample lkdemo.c
+     - HaarFaceDetect has been replaced with facedetect.c
+     - CamShiftDemo and cvcsdemo have been replaced with camshiftdemo.c
+
+  -  Some of obsolete functions, including e-HMMs, eigen objects, view morphing ...
+     have been moved from cv to cvaux.
+
+  -  A lot of external dependencies have been removed together
+     with corresponding demo applications: TCL/TK, FLTK, Motif, MFC
+
+  -  Pre-built binaries in windows distribution are now built using Intel Compiler 8.x
+     resulting in noticeable performance increase for many functions.
+     
+  -  On linux there is no cvcam anymore. Highgui should be used instead
+     Windows version of cvcam is also obsolete and will be removed as soon
+     as DirectShow support will be added to highgui.
+
+  -  Interfaces for EiC, Ch and MATLAB have been temporarily dropped.
+
+>>> New features/functionality: <<<
+
+  -  Support for Miscrosoft Visual Studio .NET 2003 (see ../_make/*.sln) and
+     Borland C++ BuilderX (see ../_make/cbuilderx/*.bpgr) has been added.
+
+  -  More functions from IPP 4.x are supported.
+
+  -  Support for 16u (16-bit unsigned) type has been added.
+
+  -  New functions for arbitrary convolution (cvFilter2D),
+     geometrical transformations (cvWarpAffine, cvWarpPerspective) have been added.
+     Another 2 interpolation methods have been added to cvResize.
+
+  -  XML input/output has been completely rewritten. Now arbitrarily
+     complex structures may be easily read and very easily written to XML.
+     In parallel, YAML (www.yaml.org) is supported.
+
+  -  Haar object detection:
+       - the code has been transferred to cv
+       - trained classifiers are now stored in XML/YAML format
+         (there is still possibility to load classifiers from directories).
+       - support for classifiers trees, rather than cascades has been added
+         (see opencv/apps/haartraining/)
+       - more cascades for detecting frontal face, new cascades for detecting
+         profile face and body have been added (thanks to David Bradley,
+         Hannes Kruppa and Bernt Schiele). see opencv/data/readme.txt for details.
+       - classifier for detecting frontal face has been removed from the code.
+
+  -  Reference manual has been reorganized and it is now covers entire cxcore, cv
+     and highgui libraries.
+
+  -  New object-oriented test engine has been created. cxcore functionality
+     has been tested using it (see opencv/bin/cxcoretest.exe,
+     opencv/tests/{cxts;cxcore/src})
+
+  -  All the drawing functions now support antialiasing and multi-channel images
+     of arbitrary depth (earlier only single-channel images of depth>8bit were supported).
+     Floodfill also supports color floating-point images now.
+
+  -  Linux version of highgui now supports capturing video from cameras via
+     dc1394 and/or V4L2 (thanks to Magnus Lundin for the patch) (not tested!)
+
+  -  Linux version of highgui now uses GTK+ 2.x instead of Motif.
+
+  -  Several patches by Premnath Dubey have been applied to Windows version of cvcam.
+     It is now possible to set the camera resolution from within a program.
+
+>>> Optimizations: <<<
+
+  -  DFT functions now use mixed-radix algorithm and, optionally,
+     DFT/FFT functions from IPP.
+
+  -  Now matrix multiplication is done by blocks resulting
+     in better cache utilization => better performance.
+     Optionally, gemm from Intel MKL can be used.
+
+  -  Lucas-Kanade Optical flow includes a few heuristics that significantly
+     improve performance (thanks to Alexander Kibkalo for the patch).
+
+  -  cvRound now uses inline assembly when built with Visual C++, Intel Compiler
+     or GCC 3.x (the latter is done via C99 lrint() function). That also
+     resolves the problem with Direct3D and few others (thanks to HCK (hengck23) for the hint).
+
+  -  Morphology with arbitrary-shaped element now processes only
+     the neighbors corresponding to non-zero coefficients (so cvFilter2D does)
+     in a single loop that gives +1.5x performance increase.
+
+  -  alloca() has been replaced by cvStackAlloc that returns an aligned pointer.
+     For some functions it improved performance a lot.
+
+  -  Arithmetic operations with mask are now done using non-mask operations +
+     copy with mask. It helps to engage IPP for such operations and is in general faster.
+
+  -  cvSeqSort and generic sorting macro (CV_IMPLEMENT_QSORT...) now use Berkeley qsort
+     that almost eliminates the worst (quadratic complexity) case and
+     improves performance on nearly-sorted sequences.
+
+  -  Some typical operations on data structures, such as retrieving sequence element,
+     retrieving graph edge, positioning sequence reader have been optimized for
+     faster average performance and smaller overhead.
+
+  -  Special vectorized versions of double-precision math functions (cvExp, cvLog etc.)
+     have been created. Optionally, ippvm from IPP is used when available,
+     which gives incredible performance improvement.
+
+>>> Bug fixes: <<<
+
+  (this is an incomplete list ...)
+  -  Several bugs in cvSVD and cvSVBkSb have been fixed.
+     Thanks to Siddhartha Chaudhuri, John Coady and others for the reports and patches.
+  -  Probabilistic hough transform crashed
+     Thanks to Dave Grossman, Michael Bunk and others for the report.
+  -  Haartraining worked incorrectly without IPL.
+     Thanks to Robert (robert_021202) and others for the report
+  -  [SF bug #883138] in cvhaartraining library, function cvCreateMTStumpClassifier()
+     number of features was used instead of number of samples for memory allocation.
+     (Though, it did not cause troubles with the small-to-medium training databases we used)
+     Thanks to Alberto Albiol for the patch.
+  -  In haartraining the code for scaling features in case of using different from "standard" 24x24 window
+     was buggy. Thanks to Vasanth Philomin for the report.
+  -  cvMahalanobis() crashed on rows (not columns). Thanks to Irina Shevtsova for the patch.
+  -  CV_IMAGE_ELEM() macro has incorrect.
+     Thanks to Gabe (gjbrostow), Nicola Bellotto and many other people for the report and the patch.
+  -  Highgui had shift and control switched in Windows.
+     Thanks to Gabe (gjbrostow) for the patch
+  -  Matrix multiplication worked incorrectly on some small matrices.
+     Thanks to Changwen Xie for the report)
+  -  Stereo camera callibration contained buggy code for translation vector conversion.
+     Thanks to Ed Staub for the report)
+  -  cvRound worked incorrectly in single-precision FPU mode.
+     Thanks to Altay Murat and other people for the report and to HCK for the suggested solution.
+  -  cvRepeat worked incorrectly with multi-row source array
+     Thanks to Roman Stanchak for the patch.
+  -  Code for computing fundamental matrix could not be compiled under Linux
+     Thanks to Arngrimur Bjarnason, Shane Frasier and other people for the report.
+  -  [SF bug #937948]. MinEnclosingCircle did not returned _enclosing_ circle for some near-singular point configurations.
+     Thanks to unknown author for the report and the test sample.
+  -  [SF bug #926708]. cvConvexityDefects contained invalid error checking code.
+     Thanks to unknown author for the patch.
+  -  [SF bug #925821]. CalibFilter crashed on bottom-origin images.
+     Thanks to Philip Gruebele for the fix.
+  -  [SF bug #910296]. CImage::Create() did not check depth of already existing image.
+     Thanks to unknown author for the patch.
+  -  [SF bug #883199] cvInitMatHeader() did not initialize data pointer correctly.
+     Thanks to Zhang Li for the report.
+  -  In cvMinEigenVal kerSize was not actually used instead of blockSize.
+     Thanks to Frederic Devernay for the patch.
+  -  VFW capturing code in highgui created capturing window incorrectly.
+     Thanks to John Nagle for the patch.
+  -  cvMoments gave inaccurate results (1-pixel shift).
+     Thanks to Walter Vanzella for the report.
+  -  n-dimensional matrices have been initialized incorrectly.
+     Thanks to Ziqiang Liu for the patch.
+  -  Rotating calipers code, used in cvMinAreaRect2, handled almost collinear line segments
+     incorrectly. Thanks to vamfun for the patch (although the fixed it a little bit differently,
+     but used the same idea).
+  -  In highgui 16-bit BMP could not be loaded.
+     Thanks to Latha for the report.
+  -  cvCalcEMD2 checked the size of output flow matrix incorrectly.
+     Thanks to Duckhoon Kim for the patch.
+  -  [SF bug #898556] cvGetDimSize() always returned error. Thanks to unknown author for the report.
+  -  Multiple bugs in the reference manuals have been fixed. Thanks to Irina Shevtsova, Pavel Yarykin,
+     Stepan Dilman and others for the reports.
+  -  Several patches for better portability to Linux and IA64 have been applied
+     Thanks to Sam Hocevar.
+  ...
+
+
+=============================================================================
+                   OpenCV beta 3.1, Thursday, February 27, 2003
+=============================================================================
+
+>>> New features/functionality: <<<
+
+  -  Fourier and Cosine transforms have been added (cvDFT & cvDCT)
+  -  CV_CAP_PROP_FRAME_COUNT property was added to CvCapture interface in HighGUI
+     (thanks to Asim Shankar)
+  -  Now some basic functions like cvAlloc, cvCreateMat, cvAdd etc. can handle
+     huge (>4Gb) matrices on 64-bit platforms (and, probably, 2-4Gb matrices on
+     32-bit Linux versions with specially patched kernels)
+     as long as their linear sizes still fit into 0..INT_MAX.
+  -  Another boosting base for frontal face detection (Gentle Adaboost 20x20) added:
+     opencv\apps\HaarFaceDetect\Frontal-GAB-20x20.zip. Uncompress it somewhere and
+     then you may pass the folder path to cvLoadHaarClassifierCascade() instead of
+     "<default_face_cascade>". Do not forget to change window size to 20x20 instead of 24x24.
+  -  Support for CH 3.5.0 (thanks to Wayne Cheng). 
+     CH is a scripting C/C++-like language - see www.softintegration.com for details
+
+>>> Bug fixes: <<<
+
+  -  ipl.h was included incorrectly. 
+  -  Documentation and tests on 3dTracker have been updated, demo AVIs included.
+  -  cvSVD gave incorrect results if one of orthogoal matrices (U,V) was missing. 
+  -  cvSVBkSb gave incorrect results if matrix was a singular.
+  -  cvSolve gave incorrect results in case of small matrices (<= 4x4)
+  (thanks to Danielle Shor for reporting that and for the proposed solution on SVBkSb)
+
+  -  cvSolve and cvInvert damaged stack in some situation (CV_LU method)
+  -  cvDrawContours could not draw a single contour
+  -  highgui didn't allow ',' and '%' symbols in the file paths under Win32
+     (thanks to Dirk (yahoo@nogga.de)). ';' is still not allowed, because it is used
+     as a list separator for directory names.
+  -  built RPM could only be installed with --no-deps option.
+  -  Memory leak and CvSeq-related bug in persistence functions
+     (thanks to Danielle Shor)
+  -  "list" parameter name in cv.h conflicted with STL (thanks to Rud Merriam)
+  -  few patches from John Nagle have been incorporated (creating window in cvcap.h,
+     forcing "double sqrt(double)" overloaded function selection in C++ etc.)
+  -  Two bugs in face detection (feature weigth calculation) and haartraining have
+     been fixed (thanks to Vasanth Philomin for the reports and bug-fixes)
+  -  Memory leak in cvReleaseHist (thanks to Renatus Rohde)
+  -  Slow refresh of highgui windows under Linux.
+     The updated version uses shared mem extension.
+  -  cvcam failed sometimes when connecting two cameras
+     (Brian <the_sound_god@yahoo.com> provided patches to fix that)
+  -  cvReshape had the following bugs:
+        non-null reference counter,
+        NULL pointer as return value,
+        error message on nch=0 (which contradicts with documentation)
+     (Thanks to Cem DEMiRKIR <cdemirkir@hotmail.com> and <dalcalde@icarvision.com>)
+  -  cvRodrigues crashed sometimes (Thanks to <xeenja@yahoo.de> for the patch)
+  -  a few others (thanks to the people who reported about misc.
+                   problems in beta3 and/or proposed the patches)
+
+=============================================================================
+                   Release OpenCV beta 3, Wednesday, November 27, 2002
+=============================================================================
+
+>>> New features/functionality: <<<
+
+  -  new more or less complete HTML reference (the grammar might be not very good)
+     see docs/ref
+
+  -  open source stereo code (modified variant of birchfield algorithm).
+     see cvaux/src/cvdpstereo.cpp)
+
+  -  Efficient face detection algorithm working with Haar-like features,
+     originally proposed by Paul Viola and improved by Rainer Lienhart
+     has been implemented. See opencv/apps/haarfacedetect demo
+
+  -  two FLTK-based demos: stereo and face detection
+     (apps/StereoDemo, apps/HaarFaceDetect)
+
+  -  IPL dependency has been removed from all the libraries and demos 
+
+  -  new installers for Windows (Inno Setup) and Linux (RPM generation using OpenCV.spec)
+
+  -  RANSAC algorithm for fundamental matrix computation has been implemented 
+     Function cvFindFundamentalMat is the new unified function for
+     fundamental matrix estimation and includes 7point, 8point, LMeds & RANSAC
+     algorithms.
+
+  -  3d Tracking added (I didn't tested it)
+
+  -  contour skeletons and linear contour models (cvaux\src\cvlee.cpp & cvlcm.cpp).
+     no examples/docs yet.
+
+  -  lot of improvements in highgui:
+     full support for JPEG, PNG, TIFF via libjpeg, libpng, libtiff.
+     grayscale images can now be saved and loaded
+     displaying current slider value,
+     platform independent mouse callbacks,
+     usable Linux version (Motif-based),
+     video processing:
+         Win32: VFW/MIL video capturing, frame-accurate avi reading/writing/positioning.
+         Linux: AVI reading via FFMPEG
+     see samples/c - all of them use highgui (ffilldemo.c demonstrates mouse handling,
+                                     motempl.c & facedetect.c - video processing etc.)
+
+  -  Data persistence: ability to save/load scalar values, arrays, sequences, graphs and
+     user-defined data structures to/from XML files has been added
+     see cvRead/cvWrite functions description in the manual
+
+  -  a lot of improvements in computational geometry and sequence processing
+        + support for floating-point/integer coordinates,
+        + Most of the contour/point_sequence operations can work with arrays now.
+        + Sequences now have CvMat compatible type id
+          (e.g. CV_32SC2 ~ CvPoint, CV_8UC1 - byte sequence etc.)
+
+  -  a few small demo scripts added (samples/c)
+
+  -  somewhat improved MATLAB interface, a few demos for it (interfaces/matlab)
+
+  -  Ch C/C++ interpreter interface (see interfaces/ch)
+
+  -  new (actually, the classical one) adaptive threshold algorithm (C-mean)
+     replaced the old buggy code (cv/src/cvadaptive...)
+
+  -  cvSolve & cvInvert now supports CV_SVD method (pseudo inverse).
+
+  -  Bayer->RGB conversion has been added
+     (the original code was submitted by Dirk Schaefer)
+     See cvCvtColor description in the manual
+
+  -  cvSmooth function added that can perform Averaging (simple Blur),
+     Gaussian, Median or Bilateral smoothing.
+
+  -  Matrix/vector operations have been extended:
+        cvGEMM  - BLAS-style extended matrix multiplication
+                  (value1 * Array1[^t] * Array2[^t] + value2 * Array3[^t])
+        cvAddWeighted - linear combination of 2 arrays with a shift
+                        (value1 * Array1 + value2 * Array2 + value3)
+        cvCmp, cvInRange - comparison functions.
+        cvDiv - element-wise division.
+        cvMul [modified] - scale factor added,
+        cvMin, cvMax - per element min/max
+        etc.
+
+  -  Floodfill has been greatly extended:
+      + color images support has been added
+      + fixed range option has been added (when the range is set relatively to
+        the seed point - not a neighbor point)
+      + a mask that marks alredy filled points can be passed to the function
+      See cvFloodFill description in the manual
+
+  -  Motion segmentation is now more or less ok.
+     See samples/c/motempl.c demo script (run it on camera if possible)
+
+  -  All math functions now work with CvMat/IplImage -
+     not with raw floating-point arrays
+     see cvCartToPolar, cvPolarToCart, cvPow, cvExp, cvLog
+     description in the manual
+
+  -  RNG can generate normally-distributed random numbers
+     see cvRandInit description in the manual
+
+  -  Histogram structures and functions have been completely reworked.
+     + Now they contain dense (CvMatND) or sparse (CvSparseMat) arrays,
+       so arbitrary array processing functions can be applied to it.
+     + cvSetHistBinRanges is now optional when histogram or back projection
+       is calculated using 8u images.
+
+  -  Camera.cpp in apps/common now supports format decompressor (ICM), so
+     LkDemo and HMMDemo can work with arbitrary video formats.
+
+>>> Bug fixes: <<<
+  -  CvImage destructor had memory leak  
+  -  cvInvert & cvSolve process 2x2 and 3x3 matrices correctly now (finally).
+  -  cvMul didn't work correctly for small matrices
+  -  cvConvertScale had a bug in inplace mode
+  -  cvvShowImage in highgui for Linux "was only working by luck"
+     (thanks to David Ackley for the patch)
+  -  Reading PPM files caused a crash (thanks to Michael D. Beynon for the patch)
+  -  Makefiles for Borland C++ free 5.5 were fixed
+     (thanks to Ben Terraint for the patch),
+     processor detection code was rewritten to avoid inline assembly, so
+     TASM is not needed anymore.
+  -  cvPyrDown failed if the source image does not have even width and height
+  -  EMD bug has been fixed
+  -  Memory leak in cvFindChessBoardCornerGuesses fixed
+  -  ConvexHull removed points lieing on the convex hull line segments
+  -  Reading images using highgui in multiple threads caused crash
+  -  Various memory leaks with CvImage have been fixed by removing static configuration
+     of cv library. Now it is dynamic only.
+
+>>> The following problems have been noticed or may still remain: <<<
+
+  -  IppCV is not shipped. Download it separately from Intel site.
+  -  Affine optical flow may still not work
+  -  HMMDemo recognition results greatly depend or lighting conditions.
+  -  Documentation and examples for most of cvaux functions are not provided
+  -  3dTrackerDemo has not been tested,
+     because of older DirectShow graph format in the package.
+  -  IPL headers being included after OpenCV headers cause compiler error.
+     So, include ipl.h _before_ cv.h[pp]
+  -  Highgui scripts working with sliders may crash upon exit
+     when build with Borland C++ 5.5
+     
+=============================================================================
+                   Release OpenCV beta 2.1, Friday, November 30, 2001
+=============================================================================
+
+>>> New features/functionality: <<<
+
+  -  IPL is not required nor by OpenCV neither by demos anymore
+     (even under Win32 and even in default configuration).
+     Tests still need it. To get into full IPL-compatibility mode, call
+     CV_TURN_ON_IPL_COMPABILITY() on your program startup. It is needed only if
+     the code mix OpenCV/IPL image allocation/deallocation functions. 
+
+  -  Makefiles to build cv, cvaux and highgui libraries with Visual C++ 6.0,
+     Borland C++ 5.5 (free), Intel C++ Compiler 5.0 and Mingw GNU C++ 2.95.3 added.   
+  -  Arithmetic and logical operations (w/o mask support) were optimized using
+     MMX and SSE instructions.
+  -  Positions of depth and numchannels flags in CvMat "type" field were exchanged.
+     Now CV_8U == CV_8UC1, CV_32F == CV_32FC1 etc.
+  -  Definition of rows/height and cols/width fields of CvMat was changed to provide
+     C -> C++ code compatibility.
+  -  Non-planar objects support added into cvFindExtrinsicParams 
+  -  A few more color transforms bgr/rgb <-> gray added.
+  -  New function cvRand for filling CvMat/IplImage with uniformly distributed
+     random numbers added
+  -  New function cvResize for image zooming/shrinking with nearest-neigbor
+     or bilinear interpolation was added
+  -  Texture descriptors calculation was added to cvaux library.
+  -  Faster image segmentation was added to cvaux library
+  -  new ippcv binaries included (previous release contained somewhat outdated binaries).
+  -  calibration filter uses batch-mode undistortion now (cvUnDistortInit + cvUnDistort)
+  -  C++ calibration + stereo rectification class was added to cvaux.
+
+>>> Here is the list of fixed bugs: <<<
+
+  -  3x3 matrix inversion was incorrect
+  -  minmaxloc returned wrong extrema positions in case of
+     continuous input arrays (i.e. w/o gaps between subsequent rows)
+  -  arithmetic operations cvAddS and cvSub[R]S produce wrong result on small
+     input arguments
+  -  the package could not be built with gcc 2.96 under linux
+  -  cvFillImage function was missed 
+  -  cvRound, cvFloor and cvCeil functions worked incorrectly
+     when 80-bit internal precision was set (it is a default mode under Linux).
+     Also, the function were slightly inaccurate even with 64-bit internal precision set.
+  -  cvRound, cvFloor, cvCeil and cvSetIdentity functions worked incorrectly at
+     big-endian processors (i.e. on processors, where the most significant byte goes first)
+  -  Several pieces in the library were not portable to 64-bit processors
+  -  cvFindChessBoardCornerGuesses could not find chess board in some particular cases.
+     The current solution is just some workaround and playing with thresholds.
+     Better method is ahead.
+
+The following problems still exist:
+======================================
+1. FitEllipse doesn't work properly when input points are almost on the single line.
+   In alpha 3.4 it output infinite values. In this release it outputs all zeros.
+
+2. FindFundamentalMatrix - the same. Inaccurate result in some cases.
+ 
+
+=============================================================================
+                   Release OpenCV beta 2, Friday, August 14, 2001
+=============================================================================
+
+  1. CvMat structure can be used passed to almost any function that accepts IplImages
+     and vice versa. It is done via introduction of dummy type CvArr which is synonym
+     for void*.
+  2. The following basic matrix/image operations were added:
+      arithmetics (+,-,*)
+      logic (and,or,xor)
+      helper operations (copy,set,mirror)
+      color transforms
+
+      arithmetics (+,-) and logic operations accept mask as an optional parameter
+
+  3. The library reference manual has been restructurized. Now all the material is
+     divided into programmer guide and function reference. Each of these parts
+     is split into 6-7 major areas, covered by the library.
+
+  4. Image statistics, background accumulation and some other function groups
+     extended to handle wider sets of images/matrices formats.
+
+  5. Mask support added to cvGoodFeaturesToTrack
+
+  6. Drawing functions can now be used with floating-point images and extended
+     with 4-connectivity variants (connectivity is passed as an optional parameter).
+     cvDrawContours accept negative maximal level value, which means draw (or paint)
+     the passed contour and all its children up to abs(max_level) level, so
+     hack with clearing h_next field during connected components labeling is not
+     need any more.
+
+  7. cvSVD improved. It can now handle both m >= n and m < n cases and it is faster
+     than the previous variant. cvPseudoInv function is added that calculates
+     pseudo-inverse for given matrix (Only m >= n is handled properly right now).
+
+  8. cvSeqPush[Front] and cvSeqInsert return pointer to the inserted element.
+
+  9. More experimental stuff has been added (including graph traversal functions,
+     etc). It resides in the separate library CvAux
+
+  10. Morphology functions speeded up (arbitrary structuring element case).
+
+>>>Here is list of bug fixes:<<<
+
+The following bugs have been fixed still OpenCV beta 1:
+==========================================================
+
+The library:
+-------------
+
+1. Scharr filter now works properly. Use cvSobel with aperture size = CV_SCHARR.
+
+
+The following problems still exist:
+======================================
+1. FitEllipse doesn't work properly when input points are almost on the single line.
+   In alpha 3.4 it output infinite values. In this release it outputs all zeros.
+
+2. FindFundamentalMatrix - the same. Inaccurate result in some cases.
+
+=============================================================================
+                   Release OpenCV beta 1, Friday, January 12, 2001
+=============================================================================
+
+  1. Intefaces of many functions have been changed. See interface_changes.txt for
+     details.
+  2. Plenty of bugs have been fixed.
+  3. Manual has been improved greatly - many bugs have been fixed, index added.
+  4. StereoGR application has been included into the package.
+  5. Some of experimental stuff has been added. It resides in the separate library CvAux
+
+>>>Here is status on bugs:<<<
+
+The following bugs have been fixed still OpenCV alpha 3.4:
+==========================================================
+
+The library:
+-------------
+
+1. Kalman tracker worked incorrectly in the case when number of state parameters
+   and measurement parameters were different.
+2. Kalman filter didn't released some memory in cvReleaseKalman
+3. ConDensation filter crashes when pointer to output data is NULL, now the
+   additional check is added.
+4. MulTransposed produced inaccurate results in some cases.
+5. Perspective Transform function failured when taking certain input (valid) parameters.
+6. EigenVV function corrupted memory (Jacobi method)
+7. PreCornerDetect corrupted memory.
+8. Threshold crashed on P4.
+9. Laplace crashed in most of cases.
+10. Optimized DLL loaded has been fixed to recognize P4
+11. Segment Motion produced incorrect results
+12. Rodrigues produced wrong results in some cases.
+13. Convex hull output duplicating points in some cases.
+14. Active contour functions didn't handle CV_ARRAY flag properly.
+    cvSnakeImageGrad had not worked at all.
+    Note, that cvSnakeImageGrad is now the default mode of cvSnakeImage.
+15. Camera calibration had memory leak
+16. FloodFill had memory leak
+17. AdaptiveThreshold had memory leak
+18. CalcHistMask had memory leak
+19. HMM recognition pipeline had serious algorithmic bug that affected on
+    recognition rate.
+20. One of OptCV functions had memory leak.
+21. Error codes of low-level and high-level parts of the library were inconsistent
+    that often caused confusing error messages.
+22. ApproxChains sometimes output one extra point in "simple" approximation mode.
+    Note, that "simple" mode worked correctly in FindContours.
+23. ApproxPoly didn't approximate large contours properly.
+24. GetRectSubPix crashed when center of extracted rectangle was outside the image
+25. FindChessCornerGuesses almost never detected chess board corners at
+    640x480 resolution.
+26. Ellipse was drown incorrectly in some combination of axes sizes and rotation angle.
+27. PtInCircle function (_cvgeom.h) worked incorrectly
+28. cvReadChainPoint worked incorrectly with chains with more that one sequence blocks.
+29. Central moments of contours were wrong.
+
+Applications and other libraries
+--------------------------------------
+1. High GUI sometimes did wrong image conversion.
+   Also, some superfluous conversion have been removed.
+2. Spaces in Hawk executble path caused incorrect program behaviour.
+
+
+The following problems still exist:
+======================================
+1. FitEllipse doesn't work properly when input points are almost on the single line.
+   In alpha 3.4 it output infinite values. In this release it outputs all zeros.
+
+2. SVD still has problems - inaccurate result in some cases.
+3. FindFundamentalMatrix - the same. Inaccurate result in some cases.
+
+
+=============================================================================
+                   Release OpenCV 00.00.34, Monday, October 23, 2000
+=============================================================================
+
+  I. Instead of one set of optimized DLLs we have now two: OptCV and IppCV.
+     Windows and Linux versions are supplied. Much more optimized codes
+     are engaged by OpenCV.
+
+---------------------------------------------------------------------------------
+
+  IIa. The following bugs have been fixed:
+  1. Memory leaks in HMMDemo.
+  2. Crashes in multi-threaded allocations.
+  3. Compilation bug on Linux (comparing integer with pointer)
+  4. Incorrect behavior of DP polygon approximation in some cases.
+  5. K-means bug (it performs no more than 2 real iterations)
+  6. Threshold bug has been fixed (given unaligned data, it crashed on PIII)
+
+  6.5. The repeatedly reported bug in MatchTemplate has been fixed in previous release.
+  
+  IIb. The following bugs are still present in the library:
+  1. cvFindExtrinsicCameraParams[_64d] doesn't handle non-planar objects properly
+     (i.e., it fails when some of 3rd coordinates of object points are non zero)
+  2. The noticed bugs in the manual present in old variant, new variant
+     (which is incomplete yet) is fixed.
+  3. Motion segmentation still produces incorrect results, but they are better than
+     previous version.
+
+  Not a bug, but a mis-feature: OpenCV still depends on IPL.
+  
+  IIc. The following bugs could'nt be reproduced by the team:
+  1. cvGoodFeaturesToTrack doesn't support ROI smaller than image.
+  2. cvCalcOptFlowPyrLK crashes at 640x480 resolution.
+
+  IId. Newly appeared known bugs:
+  1. cvMinEigenVal doesn't work properly now.
+  2. Therefore, cvGoodFeaturesToTrack produces incorrect results.
+
+
+=============================================================================
+                   Release OpenCV 00.00.33b, Monday, September 13, 2000
+=============================================================================
+
+  I. License is fixed to confirm Open Source project status.
+     It is placed into all headers.
+
+---------------------------------------------------------------------------------
+
+  VIIIa. The following bugs have been fixed:
+  1. A bug, preventing OpenCV from loading primitives, has been fixed (again!).
+  2. Caliration filter has been fixed (error was present only in "September 4" release).
+  3. Several bugs in delaunay+voronoi subdivision functions have been fixed.
+     Script delaunay.c is added to demostrate their work.
+
+  VIIIb. The following bugs are still present in the library:
+  1. cvFindExtrinsicCameraParams[_64d] doesn't handle non-planar objects properly
+     (i.e., it fails when some of 3rd coordinates of object points are non zero)
+  2. The noticed bugs in the manual present in old variant, new variant
+     (which is incomplete yet) is fixed.
+  3. Motion segmentation still produces incorrect results, but they are better than
+     previous version.
+
+  VIIIc. The following bugs could'nt be reproduced by the team:
+  1. cvGoodFeaturesToTrack doesn't support ROI smaller than image.
+  2. cvCalcOptFlowPyrLK crashes at 640x480 resolution.
+
+=============================================================================
+                   Release OpenCV 00.00.33a, Monday, September 4, 2000
+=============================================================================
+
+  I. OpenCV begins use new IPP libraries. Because IPP works not only on Win32
+     systems, but under Linux as well, it allows to use IA32-optimized codes
+     under Linux. The IPP binaries are called ippa6.dll,ippm6.so etc.
+
+  II.Calibration application by Chris Halsall has been included into Linux version
+     of the library. Visit www.wabbit.com/ocv for more information and updates.
+
+  III. We moved to IPL v.2.2.
+
+  IV. Vision Scripting Environment (a.k.a Hawk) has been included into package.
+      It is application that integrates C iterpreter (modified version of
+      EiC. Original EiC site is located at http://www.kd-dev.com/~eic/),
+      simple graphic library (highgui) and OpenCV+IPL (but, actually, any shared
+      library can be attached to the application as plugin).
+      The application allows write and run short scripts in C
+      and see graphical results. Look at doc\Hawk.pdf for details.
+
+  V. Updated calibration toolbox for MATLAB has been included into the package.
+
+  VI. Adaptive threshold and draft code for planar subdivisions (delaunay triangulation &
+     voronoi tesselation) have been added to the library.
+
+  VII. More than half of manual has been refined, many bugs/misprints have been fixed.
+       It is put to doc\OpenCV_new.pdf file. Old version is still available, because
+       it is more complete for the moment.
+
+---------------------------------------------------------------------------------
+
+  VIIIa. The following bugs have been fixed:
+  1. cvFloodFill works incorrectly with images, which height is 2.
+
+  VIIIb. The following bugs are still present in the library:
+  1. cvFindExtrinsicCameraParams[_64d] doesn't handle non-planar objects properly
+     (i.e., it fails when some of 3rd coordinates of object points are non zero)
+  2. All the noticed bugs in the manual stil present.
+  3. Motion segmentation produces incorrect results.
+
+  VIIIc. The following bugs could'nt be reproduced by the team:
+  1. cvGoodFeaturesToTrack doesn't support ROI smaller than image.
+  2. cvCalcOptFlowPyrLK crashes at 640x480 resolution.
+
+=============================================================================
+                   Release OpenCV 00.00.33, Tuesday, August 1, 2000
+=============================================================================
+
+  I. The following bugs have been fixed:
+  1. cvRodrigues: checks for null input pointers were absent.
+     Also, calculation of Jacobian has been made optional.
+  2. Due to Daniel Small: SVDsym routine in cvCalibration has loop with
+     incorrect counter incrementation.
+  3. Due to Michael Strnad: Optimized DLLs were not loaded properly in Release
+     configuration.
+
+  II.The following new functionality/features have been added:
+  1. Linux port of the library has been prepared. It has been done independently
+     from Andy Tai package. It includes IPL version for Linux
+
+
+  III. The following bugs are still present in the library.
+  1. cvFindExtrinsicCameraParams[_64d] doesn't handle non-planar objects properly
+     (i.e., it fails when some of 3rd coordinates of object points are non zero)
+  2. All the noticed bugs in the manual stil present.
+
+=============================================================================
+                   Release OpenCV 00.00.32, Tuesday, Jule 4, 2000
+=============================================================================
+
+  I(a). CV library
+  The following bugs have been fixed:
+  1. cvCalcBackProject crashes due to invalid code, produced from
+     construction
+       __try
+       { ; /* !!! */
+          // code ...
+       }
+       __finally
+       {
+          // more code ...
+       }
+  2. cvCalcHist crashes if cvSetHistThresh is not called before it.
+  3. Kalman filter checks Measurement vector size incorrectly.
+  4. cvMatchTemplate checks output image size incorrectly.
+  5. cvNormMask doesn't work properly when DLLs with optimized codes present.
+
+  I(b). The following new functionality/features have been added:
+  1. cvProjectPoints exposed in the external interface
+  2. Pyramids' performance have been improved by 15-30% for unsigned char and char
+     formats (downsampling functions, non open source codes).
+  3. Faster version of cvUndistort has been added. It uses precalculated table,
+     that is initialized by cvUndistortInit function. The former functions has been
+     renamed to cvUndisortOnce.
+
+  II. Other Libraries
+  1. Bug fixed: color JPEG were read incorrectly by cvlgrfmts
+
+  III. Filters/Applications.
+  1. Bug fixed: Sometimes incorrect (empty) position could be selected in image base
+     view.
+  2. The following features have been added to HMMDemo:
+     + Buttons "Select whole image" and "Delete HMM info" have been appeared on toolbar
+     + Multiple images can be loaded and added to the base
+  3. Behaviour of CalibFilter has been changed. Now it works with top-origin images
+     instead of bottom-origin ones.
+
+  IV. The following bugs are still present in the library.
+  1. cvFindExtrinsicCameraParams[_64d] doesn't handle non-planar objects properly
+     (i.e., it fails when some of 3rd coordinates of object points are non zero)
+  2. The following known bugs/drawbacks in the documentation still exist:
+     2.1) In the manual, page 5-10, cvSobel: The description is for cvLaplace.
+     2.2) Examples of pixel access macros are absent.
+
+=============================================================================
+                   Release CVL 00.00.31, Monday, June 5, 2000
+=============================================================================
+
+General
+---------------------------------------------
+o   Web Site, describing the library, has been created
+o   Official documentation on applictions and DShow filters has been added.
+o   Library manual was completed
+o   CV library binaries are DLLs now.
+
+
+Functionality improvements/extensions/addings
+---------------------------------------------
+
+o   DShow tracking filters' interface has been simplified
+o   A few bugs in the library and applications fixed.
+
+
+=============================================================================
+                   Release CVL 00.00.30, Friday, May 29, 2000
+=============================================================================
+
+General
+---------------------------------------------
+o   Additonal documentation have been added.
+o   Library executables were renamed to CV[d].lib
+
+
+Functionality improvements/extensions/addings
+---------------------------------------------
+
+o   cvGoodFeaturesToTrack has been improved
+o   congruental RNG was replaced with MWC.
+
+
+Optimization
+--------------------------------------------------------------------
+
+o   4 of pyramids functions have been optimized for WMT
+
+
+=============================================================================
+                   Release CVL 00.00.29, Friday, May 19, 2000
+=============================================================================
+
+General
+---------------------------------------------
+o   Many documentation have been added.
+
+
+Functionality improvements/extensions/addings
+---------------------------------------------
+
+o   Application for Lucas-Kanade pyramid optical flow tracking was implemented
+o   Matrix functions have been wrapped.
+o   Script for gesture recognition was corrected to work with CVLib
+    Its name is create_hand_mask_new.c.
+o   Interface of camera calibration filter has been simplified another time.
+    
+
+=============================================================================
+                   Release CVL 00.00.28, Monday, May 15, 2000
+=============================================================================
+
+General
+---------------------------------------------
+o   CVL was renamed to CVLib.
+o   All the existing classes and functions of CVL changed their prefices to cv(Cv) -
+    Their declarations are in CV.hpp now
+o   All the low-level functions (C versions) were copied from ippCV to CVLib.
+    Their prefices are _cv, header is _CV.h.
+o   Wrappers have been made for almost all low-level functions.
+    Their declarations are in CV.h (it is a main library interface file)
+o   Most of the wrappers have been tested (IppCV tests have modified to call wrappers).
+o   Binaries of ippCV were renamed to cvXXX.dll. They can be loaded by special 
+    CV function - 
+o   Almost all the applications (VMDemo, Hawk, Calibration filter,HMMDemo)
+    have been modified to call new library.
+
+
+Functionality improvements/extensions/addings
+---------------------------------------------
+
+o   Application for Hidden Markov Models demonstration has been implemented.
+o   Calibration pipeline has been completely reorganized to do all the calculations
+    in double precision.
+    
+
+Optimization
+--------------------------------------------------------------------
+
+o   HMM has been greatly speeded up (~10 times)  due to faster log,exp implementations.
+
+
+=============================================================================
+                   Release CVL 00.00.27, Saturday, April 29, 2000
+=============================================================================
+
+General
+---------------------------------------------
+o   ippiCVL was renamed to ippCV everywhere
+
+Functionality improvements/extensions/addings
+---------------------------------------------
+
+o   Calibration filter has been slightly improved:
+      Filter state is saved/restored when filter graph is saved/loaded.
+      Restriction on etalon square size was weaken, so larger etalon can be handled
+      Bug fixed. Now, etalon parameters can be changed.
+
+o   Tested Lucas-Kanade pyramid based optical flow is in the library already!
+    (Several bugs were fixed).
+o   Histograms:
+      Multi-dimensional histograms (on balanced trees) have been trasferred to ippCV.
+         All the functions tested.
+      CalcBayesProb function was added (it calculates P(object[i]|observation) i=1,n
+       given histograms H(observation|object[i])) 
+o   Version of HMM face recognition added into project. Data structures were simplified
+    (comparing to draft version)
+o   Script, implementing recognition part of gesture recognition pipeline, has been written
+    and tested on recieved data (from MATLAB package)
+o   SVD function (double precision) was added and tested.
+
+Optimization
+--------------------------------------------------------------------
+
+o   Function for retrieving observations from the raster image (few DCT coefficients from
+    every blocks (which are overlapped)) has been optimized in C and for MMX. Gain is >10x.
+o   PX version of convolution functions (Sobel family filters) have been optimized.
+    Performance gain is >3x.
+o   New versions of functions from "eigen objects" group have been optimized for PIII.
+
+=============================================================================
+                   Release CVL 00.00.26, Friday, April 14, 2000
+=============================================================================
+
+General
+---------------------------------------------
+o   IPPM has been embedded into ippCV. External functions were placed into
+    ippiCvl.h
+
+Functionality improvements/extensions/addings
+---------------------------------------------
+
+o   Calibration filter has been improved:
+      Interface simplified - buttons "Track etalon", "Enable processing" have gone.
+      Loading camera parameters implemented.
+      Bug fix: 3D window closes when filter is deleted. Also it can be hided/shown
+      dynamically. 
+      Sub-pixel corner finder is implemented. It is activated by switching "Fine tuning"
+      check box.
+      Camera parameters are shown in status window
+      View blinks when frame is grabbed
+
+o   Extracting rectangle with sub-pixel accuracy was added.
+o   Lucas-Kanade pyramid based optical flow was added (not tested yet).
+o   Histograms:
+      BackProjectPatch was implemented.
+      Wrappers for CalcHist and CalcBackProject were added.
+o   Draft version of HMM face recognition.
+o   Eigen Objects functions were extended to support partite input/output
+o   Several functions for gesture recognition pipeline:
+      2D line fitting with several metrics (ippiFitLine2D). 
+      Batch perspective transform on array of 3D points. (ippiTransformVector3x1P_32f)
+      Projecting array of 3D point to one of the coordinate plane (ippiProject3D)
+      Calculation of image homography matrix (ippiCalcImageHomography)
+      Finding initial hand region (ippiCreateHandMask)
+o   Function for calculating minimal eigen value for raster image has been added.
+    (ippiCornerMinEigenValC1R)
+o   Hough transform (multi-scale version) has been improved to handle correctly
+    case of big angle delta
+
+Optimization
+--------------------------------------------------------------------
+
+o   2D line fitting has been optimized using MMX/SSE (gain 60-100%).
+o   ippiCornerMinEigenVal(8u/8s/32f)C1R has been optimized for MMX/SSE (gain ~200%)
+
+
+=============================================================================
+                   Release CVL 00.00.25, Thursday, March 31, 2000
+=============================================================================
+
+General
+---------------------------------------------
+o   Sources of algorithmic and performance tests have been moved into separeate
+    folders
+o   Environment variable has been introduced to support custom version of Proton
+    to compile the library.
+
+Functionality improvements/extensions/addings
+---------------------------------------------
+
+o   Piece of code, which reorders found corners on checkerboard has been moved from
+    calibration filter to library function that finds the corners.
+
+o   ippiSharr filters to calculate image derivatives more
+    precisely have been added .
+
+o   Histogram calculation with mask support has been added.
+
+o   Contour retrieving functions have been reorganized.
+    Now, there is a single function working with byte-depth image
+    that supports 4 different modes of contour retrieval which are superset
+    of previous two functions.
+
+o   Pyramid-based color segmentation interface has been changed. It returns
+    a sequence (IppiSeq) of connected components instead of array.
+
+o   Fitting line via M-Estimators has been added.
+
+o   Pixel access macroses have been extended to support BL images.
+
+o   Functions to make image undistortion for input from camera have been added.
+    Simple (nearest neighbor) and antialiazed (bilinear interpolation) modes are
+    available.
+
+
+Optimization
+--------------------------------------------------------------------
+
+o   Sobel filters have been optimized another time for MMX and SSE (~60-80% speed up).
+    This cause speed up of related functions - Canny Edge Detector, PreCornerDetect,
+    Motion templates etc. Newer Sharr filter has also been optimized in the similar manner. 
+o   Pyramid based color segmentation has been optimized for PII. (>2x performance gain).
+o   Undistortion function has been optimized for MMX/SSE.
+o   Histogram and backproject calculation has been greatly optimized ( >5x gain).
+o   Line fitting (M-estimators) has been optimized for SSE (~2x gain).
+o   Many image statistic functions (CountNonZero, SumPixels, MeanMask, Mean_StdDev,
+    Mean_StdDevMask - 34 functions total ) have been optimized for WMT.
+
+
+Scripting Environment/Scripts
+-----------------------------------------------
+o   Several bugs were fixed, so the application becomes much more stable.
+
+
+=============================================================================
+                   Release CVL 00.00.24, Wednesday, March 1, 2000
+=============================================================================
+
+Additions (March 3, 2000)
+--------------------------
+o   Updated library manual
+o   Updated calibration filter and document on it (CalibFilter.doc)
+
+
+General
+---------------------------------------------
+o   Almost all the data types have been renamed
+    (first letters were capitalized)
+    ippiSequence and related data types' names were made shorter    
+o   Wrappers, working with IplImage were added into CVL:
+    morphology, pyramids, drawing, statistics, background differencing,
+    motion templates.
+
+Functionality improvements/extensions/addings
+---------------------------------------------
+
+o   Calibration filter with 3D view of calibration etalon
+    (after calibration is completed)
+
+o   Face details recongition script.
+
+o   Sequence (ippiSeq) has been extended to support fast insertion and removing
+    of elements into/from the beginning (I.e it is deque now).
+o   Histograms
+    -----------------------------------------------
+      o ippiCalcBackProject(8u/8s/32f)C1R
+
+o   Pyramids
+    -----------------------------------------------
+      o Pyramid-based segmentation
+           ippiPyrSegmentation8uC1R
+           ippiPyrSegmentation8uC3R
+
+o   Thresholds
+    -----------------------------------------------
+      o ippiThreshold(8u/8s/32f)C1R have been extended - non-inplace mode
+        support was included, max_val parameter was added into 8u/8s functions
+        (it is used for IPPI_THRESH_BINARY and IPPI_THRESH_BINARY_INV modes)
+
+o   Utilities
+    -----------------------------------------------
+      o AbsDiff declaration have been modified to support non-inplace operation
+          ippiSampleLine(8u/32f)C1/C3R
+          ippiInitLineIterator(8u/32f)C1/C3R
+
+o   Drawing
+    -------------------------------------------------------
+      o ippiThickEllipse, ippiEllipseSector, ippiPolyLine, ippiPolyLineAA,
+        ippiDrawContours (8uC1 flavor)
+
+Optimization
+--------------------------------------------------------------------
+o   Canny edge detector has been optimized using MMX
+
+
+Scripting Environment/Scripts
+-----------------------------------------------
+o   AVI support added
+o   More advanced text editor in Hawk
+
+=============================================================================
+                   Release CVL 00.00.23, Monday, February 16, 2000
+=============================================================================
+
+Functionality improvements/extensions/addings
+---------------------------------------------
+
+o   Sequence has been merged with RWSequence
+o   Histograms
+    -----------------------------------------------
+      (only histograms on arrays are supported now)
+      o ippiCalculateHist(8u/8s/16s/32f)C1R
+
+o   Contours
+    -----------------------------------------------
+      o Calculating convexity defects
+           ippiConvexityDefects
+      o Checking a contour for convexity
+           ippiCheckContourConvexity
+
+o   Motion Templates
+    -----------------------------------------------
+      o Motion segmentation: ippiMotionSegment32fC1R
+
+o   Utilities
+    -----------------------------------------------
+      o Line samplers and iteration through the line:
+          ippiSampleLine(8u/32f)C1/C3R
+          ippiInitLineIterator(8u/32f)C1/C3R
+
+o   Drawing
+    -------------------------------------------------------
+      o ippiPutText supports bottom-origin image orienation
+        by specifying negative step
+
+o   Pyramids
+    -----------------------------------------------
+      o Pyramid-based segmentation: ippiPyrSegmentation8uC1R
+
+Tests
+---------------------------------------------------
+o   All the existing histogram functions were tested
+o   Sequence, Set and Graph structures were tested
+
+
+Optimization
+--------------------------------------------------------------------
+o   All the floodfill functions have been optimized algorithmically.
+
+
+Scripting Environment/Scripts
+-----------------------------------------------
+o   Views were enhanced
+o   Support for sliders was added.
+
+
+=============================================================================
+                   Release CVL 00.00.22, Monday, January 31, 2000
+=============================================================================
+
+Functionality improvements/extensions/addings
+---------------------------------------------
+
+o   New data structures
+    -----------------------------------------------
+    o new function for sequences - ippiGetSequenceElementIndex
+    o Read/Write Sequence (ippiRWSequence)
+      o ippiCreateRWSequence
+      o ippiReleaseRWSequence
+      o ippiPushToRWSequence
+      o ippiPopFromRWSequence
+      o ippiPushToRWSequenceMulti
+      o ippiPopFromRWSequenceMulti
+      o ippiClearRWSequence
+      o ippiInsertToRWSequence
+      o ippiRemoveFromRWSequence
+
+    o Set (ippiSet)
+      o ippiCreateSet
+      o ippiReleaseSet
+      o ippiClearSet
+      o ippiAddToSet
+      o ippiRemoveFromSet
+      o ippiFindSetElem
+
+    o Graph (ippiGraph)
+      o ippiCreateGraph
+      o ippiReleaseGraph
+      o ippiClearGraph
+      o ippiAddVertexToGraph
+      o ippiRemoveVertexFromGraph
+      o ippiAddEdgeToGraph
+      o ippiRemoveEdgeFromGraph
+      o ippiFindGraphEdge
+      o ippiFindGraphVertex (macro)
+      o ippiCalcGraphVertexDegree
+
+o   Histograms
+    -----------------------------------------------
+      (only histograms on arrays are supported now)
+      o ippiCreateHist
+      o ippiReleaseHist
+      o ippiMakeHistHeaderForArray
+      o ippiQueryHistValue
+      o ippiGetHistValue
+      o ippiThreshHist
+      o ippiGetMinMaxHistValue
+      o ippiNormalizeHist
+      o ippiCompareHist
+
+o   Eigen faces
+    -----------------------------------------------
+      o ippiCalcCovarMatrix_8u32f(R) (non-ROI version is in IPPM)
+      o ippiCalcDecompCoeff_8u32f(R)
+      o ippiEigenProjection_8u32f(R)
+
+o   Ellipse fitting
+    -----------------------------------------------
+      o ippiEllipseFit32f
+
+Optimization
+-----------------------------------------------
+    o New functions from "Eigen faces" group have been optimized for SSE
+
+
+Scripting Environment/Scripts
+-----------------------------------------------
+    o Since this delivery file apps\Hawk\history.txt contains
+      detailed information about changes in Scripting Environment.
+    o Plugin technology introduced. It allows to use different libraries
+      without rebuilding of application.
+    o Saving results to .BMP files was added.
+    o Started using of new version of EiC interpreter
+    o Page rotation example (script) was added.
+
+=============================================================================
+                   Release CVL 00.00.21, Monday, January 17, 2000
+=============================================================================
+
+Functionality improvements/extensions/addings
+---------------------------------------------
+
+o   New functions/classes/methods
+    -----------------------------------------------
+    o Contours processing functions:
+      o ippiContourLevelFromCntrTree
+    
+    o Eigen faces:
+      o ippiCalcEigenObjects_8u32fR - finds all the eigen objects.
+
+    o Template matching functions (each includes 6 methods):
+      o ippiMatchTemplate8uC1R
+      o ippiMatchTemplate8sC1R
+      o ippiMatchTemplate32fC1R
+
+o   Optimization
+    -----------------------------------------------
+    o Matrix functions for double precision were optimized for WMT
+
+o   Documentation
+    -----------------------------------------------
+    o HTML variant of IPPM documentation was added
+
+o   Scripting Environment/Scripts
+    -----------------------------------------------
+    o Demo script for letter recognition was added.
+
+=============================================================================
+                   Release CVL 00.00.20, Wednesday, January 5, 2000
+=============================================================================
+
+Functionality improvements/extensions/addings
+---------------------------------------------
+
+o   New functions/classes/methods
+    -----------------------------------------------
+    o Contours processing functions:
+      o ippiMatchContourTrees
+      o ippiContourFromCntrTree
+    o Earth Mover Distance
+    
+    o Tracker classes: CvlKalmanTracker & CvlCondensationTracker were added.
+    o DShow filters, which use new tracker classes, were created.
+
+o   Optimization
+    -----------------------------------------------
+    o Optical flow (block matching algorithm) optimized for MMX/SSE.
+
+o   Scripting Environment
+    -----------------------------------------------
+    o Hawk application extended to support input from camera.
+    o some minor bugs were fixed.
+    o Several High GUI functions were documented.
+
+=============================================================================
+                   Release CVL 00.00.19, Friday, December 17, 1999
+=============================================================================
+
+Functionality improvements/extensions/addings
+---------------------------------------------
+
+o   New functions/classes/methods
+    -----------------------------------------------
+    o Calibration functions:
+      o ippiRogrigues
+      o ippiCalibrateCamera
+      o ippiFindChessBoardCornerGuesses8uC1R
+      o + several internal functions:
+          _ipcvFindHomography
+          _ipcvInitIntrinsicParams
+          _ipcvNormalizeImagePoints
+          _ipcvRigidMotionTransform
+          _ipcvProjectPoints
+          _ipcvFindExtrinsicCameraParams
+
+    o Contours:
+      o ippiContourArea, ippiContourSecArea
+      o ippiCreateContourTree
+      o ippiMatchContours
+      o ippiFindMinEnclosingCircle
+
+    o Utility functions:
+      o ippiRGBToGray_8uC3C1R
+
+    o Detection functions:
+      o ippiFindCornerSubPix8uC1R
+
+    o Matrix functions:
+      o ippmDetMatrix_32f
+      o ippmInvMatrix_32f
+      o ippmInvMatrix_64d
+      o ippmTransMatrix_32f
+      o ippmTransMatrix_64d
+      o ippmNormVector_32f
+      o ippmNormVector_64d
+      o ippmTrace_32f
+      o ippmMulVectors_32f
+      o ippmSVDecomposition_32f
+      o ippmCopyMatrix_64d
+      o ippmSetIdentity_64d
+      o ippmCopyVector_64d
+      o ippmScaleVector_64d
+      o ippmSubVector_64d
+      o ippmScaleMatrix_64d
+      o ippmMulMatrix_64d
+      o ippmMulTransMatrixR_64d
+      o ippmAddVector_64d
+      o ippmComplexMult_32f
+      o ippmComplexMult_64d
+      o ippmDotProduct_64d
+      o ippmSetZero_64d
+      o ippmTransposeMatrix_64d
+
+o   Several misprints in IppiCVL manual have been fixed.
+
+=============================================================================
+                   Release CVL 00.00.18, Wednesday, December 1, 1999
+=============================================================================
+
+Functionality improvements/extensions/addings
+---------------------------------------------
+
+o   New functions/classes/methods
+    -----------------------------------------------
+    o New contour processing functions:
+      o Basic functions for manipulating ippiSequence type.
+        o ippiGetSequenceElementPtr
+        o ippiStartWriteSequence
+        o ippiEndWriteSequence
+        o ippiCreateNewSequenceBlock
+        o ippiWriteSequenceElement
+        o ippiStartReadSequence
+        o ippiReadSequenceElement
+        o ippiSetSequenceReaderPos
+        o ippiStartReadChainPoints
+        o ippiReadChainPoint
+        o ippiCopySequenceToArray
+        o ippiMakeSequenceHeaderForArray
+        o ippiCreateSequenceFromArray
+
+      o Iterative contour retrieving functions
+
+        o ippiStartFindContours_Plane8uC1R
+        o ippiStartFindContours_Hierarchic32fC1R
+        o ippiInsertContourIntoTree
+        o ippiFindNextContour
+        o ippiSubstituteContour
+        o ippiEndFindContours
+
+      o Convex hull functions, working with ippiSequence
+        o ippiConvexHull
+        o ippiConvexHullApprox
+
+      o Minimal bounding box - ippiMinAreaRect
+      o Moments on contours - ippiContoursMoments
+
+    o Wrapper functions:
+      o ippiImage utility functions:
+
+        o ippiCreateImage
+        o ippiReleaseImage
+        o ippiSetImageData
+        o ippiInitImageHeader
+        o ippiCreateImageData
+        o ippiReleaseImageData
+        o ippReleaseImageHeader
+        o ippiSetImageRoi
+        o ippiCopyImage
+
+      o Processing functions:
+        o ippiThreshold
+        o ippiPyrDown
+        o ippiPyrUp
+
+o   Optimization/Improvements
+    -----------------------------------------------
+    o Moments functions (grayscale (8u/8s)C1, binary (8u/8s/32f)C1).
+    o Distance transform has been optimized algorithmically and specially for MMX/SSE.
+
+
+o   CamShift class rewritten to support multi-dimensional histograms
+o   Several misprints in IppiCVL manual have been fixed.
+
+
+=============================================================================
+                   Release CVL 00.00.17, Monday, November 15, 1999
+=============================================================================
+
+Functionality improvements/extensions/addings
+---------------------------------------------
+
+o   New functions/classes/methods
+    -----------------------------------------------
+    o Contour processing functions:
+      o Function for finding approximate convex hull of point set
+          ippiConvexHullApprox
+
+    o Matrix functions:
+      o Eigen values and vectors for symmetric matrix:
+          ippmJacobiEigens_32f, ippmJacobiEigens_64f
+      o Calculating AA' for matrix A: ippmMulTransMatrixR
+        and A'A: ippmMulTransMatrixL
+
+o   Optimization/Improvements
+    -----------------------------------------------
+    o Thresholding functions (8u,8s flavors) have been optimized for WMT,
+      32f flavor have been optimized for SSE.
+
+=============================================================================
+                   Release CVL 00.00.16, Monday, November 1, 1999
+=============================================================================
+
+Functionality improvements/extensions/addings
+---------------------------------------------
+
+o   New functions/classes/methods
+    -----------------------------------------------
+    o Contour processing functions:
+      o Chains retrieving
+          ippiFindChains_Hierarchic32fC1R,
+          ippiFindChains_Plane8uC1R
+      o Chains approximation
+          ippiApproximateChains  (four methods: direct,
+                                  simple,TC89_L1,TC89_KCOS)
+      o Chains & contour drawing
+          ippiDrawChains8uC3R,
+          ippiDrawContours8uC3R,
+      o Corner finding
+          ippiFindDominantPoints (one method: IPAN99)
+      o Utility functions:
+          ippiCreateChains,
+          ippiCreateContours,
+          ippiReleaseChains,
+          ippiReleaseContours
+
+    o New utility functions:
+      o ippiCvtPixToPlane(8u/32f)(C3/AC4)R,
+      o ippiCvtPlaneToPix(8u/32f)(C3/AC4)R
+      o ippiAbsDiff(8u/32f)C1R[S]
+
+    o Flood fill functions are extended to return
+      bounding rectangle of filled area
+
+o   Optimization/Improvements
+    -----------------------------------------------
+    o Morhology function have been optimized another time
+      and made independed from IPL.
+
+o   Documentation:
+    -----------------------------------------------
+    o Manual has been extended greatly. All the existing functions are described.
+    o Readmes for all demos have been updated.
+    o Manual for high-level part of library has been created.
+
+
+=============================================================================
+                   Release CVL 00.00.15, Friday, October 15, 1999
+=============================================================================
+
+Functionality improvements/extensions/addings
+---------------------------------------------
+
+o   New functions/classes/methods
+    -----------------------------------------------
+    o First Active Contour related functions -
+      ippiSnakeImage8uC1R, ippiSnakeImageGrad8uC1R were added
+
+o   Optimization/Improvements
+    -----------------------------------------------
+    o Norm functions with mask support (all flavors)
+      were optimized for MMX/SSE.
+    o Straight Hough transform was speeded up by several times
+      due to algorithm improvement.
+
+=============================================================================
+                   Release CVL 00.00.14, Friday, October 1, 1999
+=============================================================================
+
+Functionality improvements/extensions/addings
+---------------------------------------------
+
+o   General changings
+    -----------------------------------------------
+    o Many matrix functions have been renamed
+
+
+o   New functions/classes/methods
+    -----------------------------------------------
+    o Stages of Canny Edge Detector as separate functions: CannyBegin, CannyEnd.
+    o FillConvexPoly functions for 8uC1, 8uC3.
+
+    o IPPM functions:
+      o Special functions for 6x6 matrices were added: Add, Sub, Transpose, Scale.
+
+o   Optimization/Improvements
+    -----------------------------------------------
+    o Inserted IPPM functions were optimized for SSE.
+    o CamShift class was improved by adding pyramids and
+      background differencing.
+    o Norm functions, SumPixels and Mean functions (32f flavor)
+      were optimized for SSE.
+    o Probabilistic Hough transform was speeded up twice.
+
+=============================================================================
+                   Release CVL 00.00.13, Wednesday, September 15, 1999
+=============================================================================
+
+Functionality improvements/extensions/addings
+---------------------------------------------
+
+o   General changings
+    -----------------------------------------------
+    o Tests have been made shared between configurations.
+
+
+o   New functions/classes/methods
+    -----------------------------------------------
+    o Probabilistic Hough Transform: ippiHoughLinesP_8uC1R (tested visually)
+    o Subdivision classes: General Subdivision,
+      Delaunay Triangulation, Convex Hull building.
+
+    o IPPM functions:
+      o Multiply, Transpose.
+      o Special Add, Sub, Multiply, Scale, and Transposition functions for
+        3x3 and 4x4 matrices.
+      o Mahalanobis distance.
+
+o   Optimization/Improvements
+    -----------------------------------------------
+    o Inserted IPPM functions were optimized for SSE.
+    o CamShift class was improved by adding pyramids and
+      background differencing.
+    o Norm functions for byte formats were optimized for MMX/SSE.
+
+=============================================================================
+                   Release CVL 00.00.12, Tuesday, August 31, 1999
+=============================================================================
+
+Functionality improvements/extensions/addings
+---------------------------------------------
+
+o   General changings
+    -----------------------------------------------
+    o Project tree modified and extended (see readme file):
+      o high-level part of library is not empty now
+        (storage and histogram classes have been added)
+      o Matrix primitives library (IPPM) arrived.
+      o All tests directories moved level upper.
+    o M5 and W7 configurations have been added
+      (M5 is the same as PX and W7 consists with A6 at present).
+    o Switcher for IppiCVL was optimized to reduce number of jumps from 3 to 1.
+
+
+o   New functions/classes/methods
+    -----------------------------------------------
+    o Strict Hough Transform: ippiHoughLines_8uC1R (not tested yet)
+    o Storage classes (array, tree).
+    o Histogram classes with almost complete functionality:
+      creating, accessing, caluclating histogram,
+      retrieving back project, thresholding,
+      normalizing, comparing two histograms, *=, -=, iterating,
+      copying and clearing.
+
+    o IPPM functions:
+      DeleteMatrix, DeleteVect, AddMatrix, AddVect, CalcQuadrForm,
+      CopyMatrix, CopyVector, CreateMatrix, CreateVect, CrossProduct,
+      DotProduct, GetElement, GetMatrix, GetVector, ScaleVect,
+      SetElement, SetMatrix, SetVector, SubVect, TransformVect.
+
+o   Optimization
+    -----------------------------------------------
+    o Next IPPM functions were optimized for SSE:
+      AddVect, SubVect, DotProduct, CopyVector, CopyMatrix, SetVector,
+      SetMatrix, GetVector, GetMatrix.
+
+o   CVL Manual
+    -----------------------------------------------
+    o New variant of CVL manual with many corrections
+      (but still not up to date) delivered.
+
+=============================================================================
+                   Release CVL 00.00.11, Friday, August 13, 1999
+=============================================================================
+
+Functionality improvements/extensions/addings
+---------------------------------------------
+
+o   New functions
+    -----------------------------------------------
+
+    o Image statistics
+      All flavors of the ippiNorm function:
+      o ippiNormwith mask support (all flavors) were implemented but not tested yet,
+    o Motion Templates
+      o Parameter origin was added to CalcMotionGradient32fC1R. It allows to get correct
+        motion direction for both top-origin and bottom-origin functions
+
+o   Functions changed
+    -----------------------------------------------
+    o opSize in detection functions changes its meaning
+      and now it is a true aperture size
+
+o   Optimization
+    -----------------------------------------------
+    o CountNonZero (8u/8s/32f x C1/C3) A6 optimization
+    o SumPixels (8u/8s x C1) A6 optimization
+    o MinMaxLoc ((8u/8s x C1/C3 + 32fC1) x mask/no_mask) A6 optimization
+    o Sobel convolution functions (and, thus, Motion Templates and all detection
+      functions) were optimized another time.  A6 version for 3x3 kernel runs
+
+
+=============================================================================
+                   Release CVL 00.00.10, Saturday 31-07-99
+=============================================================================
+
+Functionality improvements/extensions/addings
+---------------------------------------------
+
+o   New functions
+    -----------------------------------------------
+
+    o Image statistics
+      All flavors of the ippiNorm function:
+      o ippiNorm(8u/8s/32f)C(1/3)(R),
+        norm types:
+        (C,L1,L2), (||A||, ||A-B||,||A-B||/||A||)
+      o ippiGetHuMoments
+
+    o Drawing primitives
+      All flavors of the
+      o ippiThickLine
+      o ippiConic
+      o ippiPutText (single font supported now, italic/bold)
+
+    o Background differencing primitives (mask version)
+
+      o ippiMaskMultiplyAcc
+      o ippiMaskSquareAcc
+      o ippiMaskAcc
+
+    o Canny Edge Detector
+      o ippiCanny8uC1R
+
+
+o   Algorithmic & perfomance tests created for next functions
+    ---------------------------------------------------------
+
+    o Algorithmic
+      o Image statistics
+        o  Norm
+      o Drawing primitives
+        o  Line(AA)
+        o  Ellipse(AA)
+        o  Conic
+      o Canny
+      o Background differencing (mask)
+      o Pixel Access Macros
+
+    o Performance
+      o Norm
+      o Drawing primitives
+        o  Line(AA)
+        o  Ellipse(AA)
+        o  Conic
+      o Canny
+
+o   Other
+    -------
+    o swl_test extended with pixel access and drawing samples
+
+
+=============================================================================
+                   Release CVL 00.00.09, Thursday 15-07-99
+=============================================================================
+
+Functionality improvements/extensions/addings
+---------------------------------------------
+
+o   New functions
+    -----------------------------------------------
+
+    o Image statistics
+      All flavors of the next functions:
+      o ippiSumPixels
+      o ippiMean(Mask)
+      o ippiMean_StdDev(Mask)
+      o ippiMinMaxLoc(Mask)
+      o ippiMoments
+      o ippiMomentsBinary
+      ----------------------
+      o ippiGetSpatialMoment
+      o ippiGetCentralMoment
+      o ippiGetNormalizedCentralMoment
+
+    o Drawing primitives
+      All flavors of the
+      o ippiLine
+      o ippiLineAA
+      o ippiEllipse
+      o ippiEllipseAA
+
+    o POSIT algorithm
+      o ippiInitPOSITObject
+      o ippiFreePOSITObject
+      o ippiPOSIT
+
+    o Distance transform
+      o ippiDistTransform3x3_8uC1R
+      o ippiDistTransform5x5_8uC1R
+      o ippiDistTransformGenMask3x3
+      o ippiDistTransformGenMask5x5
+
+o   Types renamed
+    -------------------
+    o CvlThreshType enumeration and its members
+      changed their prefix to ippi/IPPI
+
+
+o   Algorithmic & perfomance tests created for next functions
+    ---------------------------------------------------------
+
+    o Algorithmic
+      o Image statistics:
+        CountNonZero, SumPixels, Mean(Mask),
+        Mean_StdDev(Mask), MinMaxLoc(Mask)
+      o DistanceTransform
+      o POSIT
+
+    o Performance
+      o Image statistics:
+        CountNonZero, SumPixels, Mean(Mask),
+        Mean_StdDev(Mask), MinMaxLoc(Mask)
+
+=============================================================================
+                   Release CVL 00.00.08, Thursday 01-07-99
+=============================================================================
+
+Global changes
+---------------
+
+o  CVL has been divided by two parts:
+       IPPI CVL (low-level) and
+       CVL (hi-level C++ lib)
+
+o  Project tree was changed (see readme.txt for description)
+
+o  Name prefixes for low-level library were changed:
+    o  From Cvl to ipp for structures (not completely)
+    o  From cvl to ippi for external functions
+    o  From _cvl to _ipcv for internal functions
+    --------------------------------------------
+    o  CvlResult replaced with ippStatus
+    o  External header cvl.h renamed to ippicvl.h
+    o  Static libraries and DLL names were changed appropriately.
+
+
+Functionality improvements/extensions/addings
+---------------------------------------------
+
+o   New functions
+    -----------------------------------------------
+    o Image statistics
+      o ippiCountNonZero(8u/8s)fC1(R)
+      o ippiCountNonZero(8u/8s)fC3(R)
+      o ippiCountNonZero32fC1(R)
+      o ippiCountNonZero32fC3(R)
+      o ippiSumPixels8uC1(R)
+      o ippiSumPixels8uC3(R)
+
+o   Removed functions
+    -----------------------------------------------
+      o cvlUpdateMotionHistory*
+      o cvlRenormMotionHistory*
+      o cvlApproxNormalFlow*
+
+o   Algorithmic & perfomance tests created
+    -----------------------------------------------
+
+    o Algorithmic
+      o ippiSumPixels
+
+o   Bug fixed
+    -----------------------------------------------
+    o CAMSHIFT filter: writing pixels out of image
+
+
+=============================================================================
+                   Release CVL 00.00.07, Thursday 10-06-99
+=============================================================================
+
+
+Functionality improvements/extensions/addings
+---------------------------------------------
+
+o   New functions
+    -----------------------------------------------
+    o Fixed Filters group
+      o cvlLaplace32fC1R
+
+    o Feature detection
+      o cvlPreEdgeDetect32fC1R
+      o cvlPreRidgeDetect32fC1R
+      o cvlPreCornerDetect32fC1R
+      o cvlCalcCornerEigenValsAndVecs(8u/8s/32f)C1R
+
+    o Mathematical Utility functions
+      o cvl(b)CartToPolar32f
+
+    o Motion templates
+      o cvlCalcMotionGradient32fC1R
+
+    o Flood fill
+      o cvlFloodFill(8u/32f)C1R
+
+    o View Morphing related functions (too many to list them)
+
+
+o   Algorithmic & perfomance tests created
+    -----------------------------------------------
+
+    o Algorithmic
+      o Fixed Filters (32f mode)
+      o Feature detection (all the rest)
+      o MathUtils (CartToPolar)
+      o Motion Templates II (all)
+      o Flood Fill(all)
+
+    o Performance
+      o Fixed Filters (32f mode)
+      o MathUtils (CartToPolar)
+      o Motion Templates II (all)
+      o Flood Fill(all)
+
+
+o   Demos developed
+    ---------------
+
+    o CAMSHIFT DirectShow Demo as well as supporting
+      hi-level CAMSHIFT class
+    o View Morphing Demo
+
+
+o   Switcher library and custom DLLs are introduced
+    -----------------------------------------------
+
+
+o   Documetation
+    -----------------------------------------------
+    o CVL manual is complemented with some theoretical
+      material and pictures/plots
+    o Brief readme for the CAMSHIFT demo is written.
+
+=============================================================================
+                   Release CVL 00.00.06, Monday 31-05-99
+=============================================================================
+
+
+Functionality improvements/extensions/addings
+---------------------------------------------
+
+o   New functions
+    -----------------------------------------------
+    o CAMSHIFT group
+      o cvlCamshift(8u/8s/32f)C1R
+      o cvlMeanShift(8u/8s/32f)C1R
+
+    o Fixed Filters group
+      o cvlSobel(8u/8s/32f)C1R
+      o cvlLaplace(8u/8s)C1R
+
+    o Feature detection
+      o cvlPreEdgeDetect(8u/8s)C1R
+      o cvlPreRidgeDetect(8u/8s)C1R
+      o cvlPreCornerDetect(8u/8s)C1R
+
+    o Mathematical Utility functions
+      o cvl(b)FastArctan32f
+      o cvl(b)Sqrt32f
+      o cvl(b)InvSqrt32f
+      o cvlRandInit
+      o cvl(b)Rand32f
+
+    o Motion templates
+      o cvlUpdateMHIByTime32fC1R
+      o cvlCalcGlobalOrientation32fC1R
+
+    o Optical flow
+      o cvlCalcOpticalFlowHS_8u32fR
+
+
+o   Deleted functions
+    -----------------------------------------------
+    o Optical flow
+      o cvlCalcOpticalFlowPG_8u32f(R)
+
+
+o   Algorithm & perfomance tests created
+    -----------------------------------------------
+
+    o Algorithms
+
+      o CAMSHIFT
+      o Fixed Filters
+      o Feature detection (for completed functions)
+      o Optical flow (HS algorithm)
+      o MathUtils (for completed functions)
+
+    o Performance
+      o Optical flow (HS algorithm)
+      o MathUtils
+
+
+o   Test changed
+    ------------------------------------------------
+    o All algorithmic tests corrected to be able to run in batch mode.
+
+
+o   Optimization
+    ------------
+
+    o Morphology functions (32fC1 flavor) become
+      faster for rectangular structuring element
+
+
+=============================================================================
+                   Release CVL 00.00.05, Friday 14-05-99
+=============================================================================
+
+
+Functionality improvements/extensions/addings
+---------------------------------------------
+
+o   Algorithm & perfomance tests created or tested.
+    -----------------------------------------------
+    o Algorithms
+      o The test for CalcOpticalFlowBM_8u32fR added.
+      o The tests for Background function were changed.
+
+    o Performance
+      o The test for CalcOpticalFlowBM_8u32fR added.
+      o The test for RenormMotionHistory added.
+      o The tests for Background function were changed
+        (vectors comparing).
+
+o   Optimization
+    ------------
+    o Background differencing functions (running average) optimized for PIII.
+    o The function CvlApproxNormalFlow8u was optimized similar to 8s flavor.
+    o Pyramids optimized for PII (8u & 8s) and partially for PIII (32f).
+    o UpdateMotionHistory & RenormMotionHistory optimized for PII.
+
+
+o   Building changes
+    ----------------
+    o SSE-containing files are compiled by Proton now, so it is'nt neccessary to
+      switch compiler to build A6 version.
+
+
+Bug fixed:
+----------
+    Running Average Functions pass accuracy tests (test fixed).
+
+
+=============================================================================
+                   Release CVL 00.00.04, Friday 30-04-99
+=============================================================================
+Documentations
+  o The document cvl.doc is changed
+
+
+Functionality improvements/extensions/addings
+---------------------------------------------
+
+o   Added:
+    ------
+      o Calculation of optical flow using Lucas&Kanade technique:
+        CalcOpticalFlowLK_8u32fR
+
+o   Algorithm & perfomance tests created or tested.
+    -----------------------------------------------
+    o Algorithms
+      o The test for CalcOpticalFlowLK_8u32fR added.
+      o The tests for Background function were changed.
+
+    o Performance
+      o The tests for Background function were changed.
+
+o   Changed
+    -------
+
+o   Optimization
+    ------------
+    o Functions cvlErode8uC1R & cvlDilate8uC1R optimized for PIII.
+    o The function CvlApproxNormalFlow was corrected for performance advance.
+    o A6 - versions for Background differncing functions were completed.
+
+
+Bug fixed:
+----------
+
+
+=============================================================================
+                   Release CVL 00.00.03, Thursday 15-04-99
+=============================================================================
+Documentations
+  o The structure of the document cvl.doc is changed
+
+
+Functionality improvements/extensions/addings
+---------------------------------------------
+
+o   Added:
+    ------
+    o The next functions were created
+      o Added macro for direct access to pixel
+      o The function cvlCalcOpticalFlowPG_8u32fR added
+
+o   Algorithm & perfomance tests created
+    ------------------------------------
+    o Algorithms
+      o The test for cvlCalcOpticalFlowPG_8u32fR function created
+
+    o Performance
+      o Performance test for functions ApproxNormalFlow and RunningAverage were done.
+      o Performance test for UpdateMotionHistory changed for generality.
+        (Tests for 8s and 32f were created).
+
+o   Changed
+    -------
+    o Function ApproxNormalFlow was improved for better performance.
+    o The name of function cvlCalcOpticalFlowPG_8u on cvlCalcOpticalFlowPG_8u32f changed
+    o The cvlUpdateMotionHistory32fC1R function changed
+    o all 8u morhology functions use IPL when structuring element has rectangular form.
+      Timing and algorithmic tests have been changed approprietely.
+
+o   Optimization
+    ------------
+    o the Threshold group functions (PX type)
+    o the Threshold8uC1 & Threshold8sC1 functions (MMX type)
+    o the Morphological group functions
+    o the cvlErode8uC1R & cvlDilate8uC1R functions
+
+Bug fixed:
+----------
+    o steps in float morphology functions can be not 4*k now.
+    o some bugs corrected in function cvlCalcOpticalFlowBM_8u
+      (BUT IT IS NOT TESTED TILL)
+
+
+=============================================================================
+                   Release CVL 00.00.02, Wednesday 30-03-99
+=============================================================================
+
+Functionality improvements/extensions/addings
+---------------------------------------------
+
+o   Added:
+    ------
+    o The next functions was created
+      cvlBackProject1D8uC1R
+      cvlBackProject1D8sC1R
+      cvlBackProject1D32fC1R
+
+      cvlBackProjectGraph8uC1R
+      cvlBackProjectGraph8sC1R
+      cvlBackProjectGraph32fC1R
+
+      cvlBackProjectPatch1D8uC1R
+      cvlBackProjectPatch1D8sC1R
+      cvlBackProjectPatch1D32fC1R
+
+      cvlBackProjectPatchGraph8uC1R
+      cvlBackProjectPatchGraph8sC1R
+      cvlBackProjectPatchGraph32fC1R
+
+      cvlAcc8s32f
+      cvlAcc32f32f
+
+      cvlSquareAcc8s32f
+      cvlSquareAcc32f32f
+
+      cvlMultiplyAcc8s32f
+      cvlMultiplyAcc32f32f
+
+      cvlRunningAvg8u32f
+      cvlRunningAvg8s32f
+      cvlRunningAvg32f32f
+
+      cvlUpdateMotionHistory32fC1
+      cvlUpdateMotionHistory8uC1R
+      cvlUpdateMotionHistory8sC1R
+      cvlUpdateMotionHistory32fC1R
+
+      cvlRenormMotionHistory8uC1R
+      cvlRenormMotionHistory8uC1
+
+      cvlErode32fC1R
+      cvlErode32fC3R
+      cvlErode32fAC4R
+      cvlDilate32fC1R
+      cvlDilate32fC3R
+      cvlDilate32fAC4R
+
+      cvlApproxNormalFlow8uC1R
+      cvlApproxNormalFlow8sC1R
+      cvlApproxNormalFlow32fC1R
+
+      cvlCorrelHistGraph
+
+      cvlThreshold8uC3R
+      cvlThreshold8sC3R
+      cvlThreshold32fC3R
+
+      cvlThreshold8uC1S
+      cvlThreshold8sC1S
+      cvlThreshold32fC1S
+
+      cvlBayesHistGraph
+
+      cvlCalcOpticalFlowPG_8u
+
+      cvlMultiplyAcc8s32f
+      cvlMultiplyAcc32f32f
+
+o   Algorithm & perfomance tests created
+    ------------------------------------
+    o Algorithms
+      cvlApproxNormalFlow8uC1R
+      cvlApproxNormalFlow8sC1R
+      cvlApproxNormalFlow32fC1R
+
+      cvlBayesHistGraph
+
+      cvlCalcOpticalFlowPG_8u
+
+      cvlBackProject1D8uC1R
+      cvlBackProject1D8sC1R
+      cvlBackProject1D32fC1R
+
+      cvlBackProjectGraph8uC1R
+      cvlBackProjectGraph8sC1R
+      cvlBackProjectGraph32fC1R
+
+      cvlBackProjectPatch1D8uC1R
+      cvlBackProjectPatch1D8sC1R
+      cvlBackProjectPatch1D32fC1R
+
+      cvlBackProjectPatchGraph8uC1R
+      cvlBackProjectPatchGraph8sC1R
+      cvlBackProjectPatchGraph32fC1R
+
+      cvlThreshold8uC3R
+      cvlThreshold8sC3R
+      cvlThreshold32fC3R
+
+      cvlThreshold8uC1S
+      cvlThreshold8sC1S
+      cvlThreshold32fC1S
+
+      cvlCorrelHistGraph
+
+      cvlErode32fC1R
+      cvlErode32fC3R
+      cvlErode32fAC4R
+      cvlDilate32fC1R
+      cvlDilate32fC3R
+      cvlDilate32fAC4R
+
+      cvlAcc8s32f
+      cvlAcc32f32f
+
+      cvlSquareAcc8s32f
+      cvlSquareAcc32f32f
+
+    o Performance
+      Morphology function group,
+      Background differencing group partially
+
+o   Changed
+    -------
+      cvlUpdateMotionHistory8uC1
+      cvlUpdateMotionHistory8sC1
+
+Bug fixed:
+----------
+
+
+=============================================================================
+                   Release CVL 00.00.01, Monday 15-03-99
+=============================================================================
+
+Functionality improvements/extensions/addings
+---------------------------------------------
+
+o   Added:
+    ------
+    o The next functions was created
+        cvlErode8uC1R,
+        cvlErode8uC3R,
+        cvlErode8uAC4R,
+
+        cvlDilate8uC1R,
+        cvlDilate8uC3R,
+        cvlDilate8uAC4R.
+
+        cvlCreateStructuringElement
+        cvlDeleteStructuringElement
+
+        cvlCalcOpticalFlowBM_8u
+
+o   Algorithm & perfomance tests created
+    ------------------------------------
+    o Histogram group functions
+    o Pyramids group functions
+    o Morphology group function (only algorithms)
+    o Motion templates partially
+
+o   Changed
+    -------
+    o Renamed histogram structures DefHist1DGrad -> DefHist1D
+    o Renamed histogram structures DefHistGrad -> DefHistGraph
+    o Renamed functions name and parameters names which these functions take.
+
+Bug fixed:
+----------
+o   Bug in cvlUpdateMotionHistory was fixed.
+
+
+
+=============================================================================
+                   Release CVL 00.00.00, Friday 05-03-99
+=============================================================================
+
+Functionality improvements/extensions/addings
+---------------------------------------------
+
+o   Added:
+    ------
+    o The next functions was created
+        /* Creating/Releasing histograms */
+        cvlCreateHist1DGrad
+        cvlReleaseHist1DGrad
+        cvlCreateHistGrad
+        cvlReleaseHistGrad
+
+        /* Calculation histograms from different data types */
+        cvlCalcHist1DGrad8uC1
+        cvlCalcHist1DGrad8sC1
+        cvlCalcHist1DGrad32fC1
+        cvlCalcHistGrad8uC1
+        cvlCalcHistGrad8sC1
+        cvlCalcHistGrad32fC1
+
+        /* Basic histogram operations */
+        cvlNormHist1DGrad
+        cvlClearOutAllDataHist1DGrad
+        cvlIntersectionHist1DGrad
+        cvlChiSqrHist1DGrad
+        cvlCorrelHist1DGrad
+        cvlBayesHist1DGrad
+        cvlCopyHist1DGrad
+        cvlSumHist1DGrad
+        cvlMeanHist1DGrad
+        cvlThreshHist1DGrad
+        cvlSubHist1DGrad
+        cvlMultHist1DGrad
+        cvlInsertPointHistGrad
+        cvlFindPointHistGrad
+        cvlDeletePointHistGrad
+        cvlGetValueHistGrad
+        cvlCopyHistGrad
+        cvlMultHistGrad
+        cvlNormHistGrad
+        cvlIntersectionHistGrad
+        cvlChiSqrHistGrad
+        cvlThreshHistGrad
+
+        /* Pyramids functions */
+        cvlPyrDown8uC1
+        cvlPyrDown8sC1
+        cvlPyrDown32fC1
+        cvlPyrDown8uC1R
+        cvlPyrDown8sC1R
+        cvlPyrDown32fC1R
+        cvlPyrDown8uC3
+        cvlPyrDown8sC3
+        cvlPyrDown32fC3
+        cvlPyrDown8uC3R
+        cvlPyrDown8sC3R
+        cvlPyrDown32fC3R
+        cvlPyrUp8uC1
+        cvlPyrUp8sC1
+        cvlPyrUp32fC1
+        cvlPyrUp8uC1R
+        cvlPyrUp8sC1R
+        cvlPyrUp32fC1R
+        cvlPyrUp8uC3
+        cvlPyrUp8sC3
+        cvlPyrUp32fC3
+        cvlPyrUp8uC3R
+        cvlPyrUp8sC3R
+        cvlPyrUp32fC3R
+
+        /* MotionTemplate operations */
+        cvlUpdateMotionHistory8uC1
+        cvlUpdateMotionHistory8sC1
+
+    o Created the Demo application - object tracker.
