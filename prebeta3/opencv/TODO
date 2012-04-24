@@ -1,0 +1,27 @@
+- higher-level math functions:
+    x**y (y = -1, -0.5, 0.5, ... ) in addition to cvbSqrt ...
+    carttopolar, polartocart, exp, log
+
+- speed up pyrlk optical flow
+- contours with floating-point coordinates
+- chains support in contour processing functions (dp approximation, shape analysis)
+- better contour comparison functions (contour morphing, housdorph distance ...)
+- color to index transform
+- contour extraction from multi-level (i.e. paletted) images
+- color edge detectors
+- graphs from point sets (NNG, MST, RNG ...)
+- CvSubdiv2D -> CvGraph conversion
+- C++ wrappers (or alternative definitions)
+  for CvMat, IplImage, CvHistogram, CvSeq ...
+- color floodfill
+- speed up template matching (better alighment in simd version)
+- operations on contours (point-contour check, contour intersection, contour
+  decomposition, contour union)
+- min-epsilon contour approximation
+- better methods for fundamental matrix calculation
+- more general function for covariation matrix calculation
+- linear discriminant functions
+-    
+
+ 
+

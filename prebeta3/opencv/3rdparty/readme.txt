@@ -1,0 +1,51 @@
+This folder contains static libraries and headers of some
+very popular image format codecs and helper libraries used by highgui.
+
+The libraries and headers are needed for Win32 version only. On UNIX systems
+they are automatically found by configure script.
+
+------------------------------------------------------------------------------------
+
+libjpeg 6b - The Independent JPEG Group's JPEG software.
+             Copyright (C) 1994-1997, Thomas G. Lane.
+             See IGJ home page http://www.ijg.org
+             for details and links to the source code
+
+             HAVE_JPEG preprocessor flag must be set to make highgui use libjpeg.
+             On UNIX systems configure script takes care of it.
+
+------------------------------------------------------------------------------------
+
+libpng 1.2.1 - Portable Network Graphics library.
+               Copyright (C) 1998-2001, Glenn Randers-Pehrson.
+               See libpng home page http://www.libpng.org
+               for details and links to the source code
+
+               HAVE_PNG preprocessor flag must be set to make highgui use libpng.
+               On UNIX systems configure script takes care of it.
+
+------------------------------------------------------------------------------------
+
+libtiff 3.5.7 - Tag Image File Format (TIFF) Software
+                Copyright (c) 1988-1997 Sam Leffler
+                Copyright (c) 1991-1997 Silicon Graphics, Inc.
+                See libtiff home page http://www.libtiff.org
+                for details and links to the source code
+
+              HAVE_TIFF preprocessor flag must be set to make highgui use libtiff.
+              On UNIX systems configure script takes care of it.
+                
+              In this build support for ZIP (LZ77 compression) and JPEG are included
+              while support for LZW compression is not (due to the licence issues).
+
+------------------------------------------------------------------------------------
+
+zlib 1.1.4 - General purpose LZ77 compression library
+             Copyright (C) 1995-2002 Jean-loup Gailly and Mark Adler.
+             See zlib home page http://www.gzip.org/zlib
+             for details and links to the source code
+ 
+             No preprocessor definition is needed to make highgui use this library -
+             it is included automatically if either libpng or libtiff are used.
+
+------------------------------------------------------------------------------------
