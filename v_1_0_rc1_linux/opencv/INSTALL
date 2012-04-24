@@ -1,0 +1,212 @@
+Basic Installation
+==================
+
+Windows
+=======
+
+    Installation under Windows is pretty strightforward.
+    Download executable installation from SourceForge and run it.
+    It installs OpenCV, registers DirectShow filters and performs
+    other post-installation procedures.
+    After that you can start using OpenCV.
+
+    Building OpenCV from sources
+    ----------------------------
+
+    Also, it is possible to build the modified OpenCV from source, or
+    build the latest OpenCV snapshot,
+    obtained from SourceForge CVS (see http://sourceforge.net/cvs/?group_id=22870).
+
+    +++ These are instructions for MSVC 6.0, MSVC.NET 2003 and MSVC.NET 2005
+
+    * Specify the appropriate CVSROOT (see the link above) in WinCVS and
+      checkout the module "opencv".
+    * Open opencv\_make\opencv.dsw (in case of MSVC 6.0 or MSVC.NET 2003, in the latter
+      case they will be converted to MSVC.NET 2003 project files),
+      or opencv\_make\opencv.sln (in case of MSVC.NET 2005)
+    * Select the configuration of interest, for example, Win32 Release, and build it.
+    * Add opencv\bin to the system PATH.
+      The path can be modified at
+      MyComputer--[right button click]-->Properties->Advanced->Environment Variables.
+
+    +++ One may also build OpenCV with command-line tools from Microsoft Platform SDK
+        (Intel compiler can optionally be used instead of the one from Microsoft),
+        or with MinGW - native GNU C/C++ port to Win32.
+        The platforms supported are: Win32 on IA32, Win64 on EM64T/AMD64, Win64 on Itanium.
+
+    * Install platform SDK or MinGW (with GCC 3.x or 4.x),
+      Intel Compiler 9.0 or later (if needed)
+    * Edit opencv\_make\make_cfg.mak, correct the paths to the SDK and ICC.
+    * In the command-line prompt:
+      * Enter opencv\_make directory
+      * Run of the following:
+        nmake /f makefile.32 - build IA32 version with cl compiler
+        nmake /f makefile.icc - build IA32 version with icc (icl) compiler
+        nmake /f makefile.vs - build IA32 version with cl compiler,
+                               environment variables are used instead of the Platform SDK.
+                               (ideal as command-line alternative to MSVC 6.0)
+        nmake /f makefile.64 - build EM64T/AMD64 version using Platform SDK
+                               (the produced DLLs will have _64 suffix)
+        nmake /f makefile.i7 - build Itanium version using Platform SDK
+                               (the produced DLLs will have _i7 suffix).
+
+        mingw32-make -f make_all_gnu.mak - build IA32 version with gcc compiler
+                (Make sure that <gcc_root>\bin is in the system path.
+                 To build VFW-enabled highgui, read instructions in
+                 opencv\otherlibs\_graphics\readme.txt)
+
+   How to test built OpenCV binaries
+   ---------------------------------
+
+   Build and run samples at opencv\samples\c.
+   (Note: some of the demos need an AVI file or a camera, e.g. motempl.c)
+   
+   or run algorithmic tests: opencv\bin\cxcoretest.exe, opencv\bin\cvtest.exe.
+   It will produce cxcoretest.sum and cvtest.sum, respectively, that should hopefully
+   contain all OK's.
+
+   How to add IPP support
+   ----------------------
+
+   + Obtain IPP from Intel site (http://www.intel.com/software/products/ipp/index.htm),
+     version 5.1 or later is preferrable, and install it.
+   + Make sure the appropriate binary folder
+     (e.g. c:\program files\intel\ipp\5.1\ia32\bin) is in the system path.
+   + That's it. IPP should be automatically detected by OpenCV and loaded at runtime.
+   + To smaller memory footprint and shorter application loading time,
+     it is possible to build custom IPP dll for OpenCV, ippopencv*.dll, see interfaces\ipp.
+   + It is possible to load/unload IPP at runtime, see cvUseOptimized() function.
+
+Linux
+=====
+
+   There are no prebuilt binaries for Linux version (because of a large variety of
+   different versions of GCC and GLIBC in different distributions), so you'd have
+   to build it from sources.
+
+   That's what you need to build fully-functionaly libraries and demos:
+   ======
+
+   + GTK+ 2.x or higher.
+
+   + libpng, zlib, libjpeg and libtiff with development files.
+
+   + libavcodec from ffmpeg 0.4.9-pre1 or later + headers.
+     Earlier version do not work with OpenCV because of different API.
+     libavcodec is LGPL software, so to use it with non-GPL software (such as OpenCV)
+     you need to build and use a _shared_ library libavcodec.so.*:
+        get ffmpeg from ffmpeg.sourceforge.net
+        ./configure --enable-shared
+        make
+        make install
+        you will have got: /usr/local/lib/libavcodec.so.*
+                           /usr/local/lib/libavformat.so.*
+                           /usr/local/include/ffmpeg/*.h
+
+   Now build OpenCV:  
+   ======
+   
+   a) if your distribution uses RPM, you may build RPMs using:
+         rpmbuild -ta OpenCV-x.y.z.tar.gz (for RPM 4.x or later) or
+         rpm -ta OpenCV-x.y.z.tar.gz" (for eariler versions of RPM)
+      where OpenCV-x.y.z.tar.gz should be put to /usr/src/redhat/SOURCES/ or
+      similar directory  
+
+      it will build OpenCV-x.y.z.*.rpm
+      (there is no OpenCV-devel, everything is in one package)
+      
+      then install it by:
+        rpm -i OpenCV-x.y.z.*.rpm
+        
+   b) if your distribution does not support RPM, build and install it
+      in Unix/Linux traditional way:
+
+      ./configure
+      make
+      sudo make install
+      sudo ldconfig
+
+   both a&b (post-install))
+      
+      default installation path is /usr/local/lib and /usr/local/include/opencv,
+      so you need to add /usr/local/lib to /etc/ld.so.conf (and run ldconfig after)
+      or add it to LD_LIBRARY_PATH environment variable
+
+   c) if you want to step in as an OpenCV developer, you will need some additional tools:
+
+      autoconf-2.59 (including autoheader-2.59)
+      automake-1.9* (including aclocal-1.9*)
+      libtool-1.5 (including libtoolize-1.5)
+      swig (version 1.3.24 is best)
+
+      If the default versions of these tools installed on your machine differs, you
+      should specify the paths to the required versions via environment variables. For
+      example, if 'automake --version' gives you a version number 1.7.x but there is
+      /usr/bin/automake-1.9 installed on your machine, then call 
+
+      export AUTOMAKE=/usr/binautomake-1.9
+
+      whenever you want to work on OpenCV sources.
+
+      In addition, you should 'configure --enable-maintainer-mode', so that all
+      autotools are invoked automagically, if Makefile's or the configure-script
+      need to be regenerated. You can manually regenerate everything by starting
+      'autoreconf' from the top directory.
+
+
+   How to test OpenCV:
+   =======
+
+   + You can compile test programs using the traditional check target
+     of automake projects:
+
+        make check
+
+     Then, you can run the folowing test programs:
+
+        tests/cv/src/cvtest
+        tests/cxcore/src/cxcoretest
+   
+   + or
+     compile and run simple c examples at
+     /usr/local/share/opencv/samples, e.g.:
+
+     g++ `pkg-config --cflags opencv` -o morphology morphology.c `pkg-config --libs opencv`
+     Plain gcc won't work because of unresolved c++-specific symbols (located in highgui?)
+   
+   How to make OpenCV use IPP:
+   =======
+
+   + install IPP.
+     Let's assume, it installs to /opt/intel/ipp/5.1/ia32.
+   
+   + add <install_path>/bin and <install_path>/bin/linux32
+     (for example, /opt/intel/ipp/5.1/ia32/bin and /opt/intel/ipp/5.1/ia32/bin/linux32)
+     to LD_LIBRARY_PATH in your initialization script (.bashrc or similar):
+
+     LD_LIBRARY_PATH=/opt/intel/ipp/5.1/ia32/bin:/opt/intel/ipp/5.1/ia32/bin/linux32:$LD_LIBRARY_PATH
+     export LD_LIBRARY_PATH
+
+     or add these two directories, one per line, to /etc/ld.so.conf and run
+     ldconfig as root.
+
+   + that's it. Now OpenCV should be able to locate IPP shared libraries and make use of them.
+
+
+MacOSX
+======
+
+   (TODO: add more detailed description)
+   (see also OpenCV Wiki)
+
+   + Basically, the requirements and building instructions are very similar to Linux case,
+     with the following exceptions:
+
+     * Carbon is used instead of GTK+.
+     * pkg-config is optional (it is only used explicitly in samples\c\build_all.sh script)
+     * Quicktime is used instead of FFMPEG.
+     * RPM and ldconfig are not supported by default,
+       use configure+make+sudo make install to build and install OpenCV,
+       update LD_LIBRARY_PATH (unless ./configure --prefix=/usr is used).
+     * Those who want to modify Makefile's, will need to install
+       the latest libtool from darwinports/fink.
