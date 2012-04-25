@@ -66,7 +66,7 @@ void App::process()
     GpuMat descriptors1_gpu, descriptors2_gpu;
 
     BFMatcher matcher_cpu(NORM_L2);
-    BruteForceMatcher_GPU< L2<float> > matcher_gpu;
+    BFMatcher_GPU matcher_gpu(NORM_L2);
     GpuMat trainIdx, distance, allDist;
     vector< vector<DMatch> > matches;
     vector<DMatch> good_matches;
@@ -94,7 +94,7 @@ void App::process()
         }
 
         int64 proc_start = getTickCount();
-        
+
         int64 surf_start = getTickCount();
 
         if (use_gpu)
@@ -109,7 +109,7 @@ void App::process()
         }
 
         double surf_fps = getTickFrequency()  / (getTickCount() - surf_start);
-        
+
         int64 match_start = getTickCount();
 
         if (use_gpu)
@@ -167,7 +167,7 @@ void App::process()
         printText(dst, msg.str(), 3);
 
         printText(dst, use_gpu ? "Mode : GPU" : "Mode : CPU", 4);
-        
+
         imshow("surf_demo", dst);
 
         processKey(waitKey(3) & 0xff);
@@ -179,7 +179,7 @@ void App::process()
 bool App::parseCmdArgs(int& i, int argc, const char* argv[])
 {
     string arg(argv[i]);
-    
+
     if (arg == PARAM_OFFSET)
     {
         ++i;
@@ -200,7 +200,7 @@ bool App::parseCmdArgs(int& i, int argc, const char* argv[])
 }
 
 bool App::processKey(int key)
-{        
+{
     if (BaseApp::processKey(key))
         return true;
 

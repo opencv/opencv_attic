@@ -65,7 +65,7 @@ void App::process()
     GpuMat descriptors1_gpu, descriptors2_gpu;
 
     BFMatcher matcher_cpu(NORM_HAMMING);
-    BruteForceMatcher_GPU<Hamming> matcher_gpu;
+    BFMatcher_GPU matcher_gpu(NORM_HAMMING);
     GpuMat trainIdx, distance, allDist;
     vector< vector<DMatch> > matches;
     vector<DMatch> good_matches;
@@ -88,7 +88,7 @@ void App::process()
         }
 
         int64 proc_start = getTickCount();
-        
+
         int64 orb_start = getTickCount();
 
         if (use_gpu)
@@ -103,7 +103,7 @@ void App::process()
         }
 
         double orb_fps = getTickFrequency()  / (getTickCount() - orb_start);
-        
+
         int64 match_start = getTickCount();
 
         if (use_gpu)
