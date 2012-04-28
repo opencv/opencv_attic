@@ -676,10 +676,4 @@ public class Converters {
             llb.add(lb);
         }
     }
-
-
-    static {
-        System.loadLibrary("opencv_java");
-    }
-
 }
