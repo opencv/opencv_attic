@@ -79,6 +79,7 @@ endforeach()
 file(GLOB handwrittren_h_sources "${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/*.h" "${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/*.hpp")
 file(GLOB handwrittren_cpp_sources "${CMAKE_CURRENT_SOURCE_DIR}/src/cpp/*.cpp")
 file(GLOB handwrittren_java_sources "${CMAKE_CURRENT_SOURCE_DIR}/src/java/*.java")
+file(GLOB handwrittren_aidl_sources  "${CMAKE_CURRENT_SOURCE_DIR}/src/java/*.aidl")
 
 # remove handwritten java files for disabled modules
 foreach(jfile ${handwrittren_java_sources})
@@ -118,7 +119,7 @@ set(JAVA_OUTPUT_DIR "src/org/opencv")
 
 # copy each documented header to the final destination
 set(java_files "")
-foreach(java_file ${documented_java_files})
+foreach(java_file ${documented_java_files} ${handwrittren_aidl_sources})
   get_filename_component(java_file_name "${java_file}" NAME)
   string(REPLACE "-jdoc.java" ".java" java_file_name "${java_file_name}")
   string(REPLACE "+" "/" java_file_name "${java_file_name}")
