@@ -13,21 +13,7 @@ public class OpenCVLoader
 	
 	public static int initStatic()
 	{
-		int result;
-		
-		try
-		{
-			System.loadLibrary("opencv_java");
-			result = Success;
-		}
-		catch(Exception e)
-		{
-			Log.e(TAG, "OpenCV error: Cannot load native library");
-			e.printStackTrace();
-			result = InitFailed;
-		}
-		
-		return result;
+		return StaticHelper.initOpenCV();
 	}
 	
 	public static int initAsync(String Version, Context AppContext, 
