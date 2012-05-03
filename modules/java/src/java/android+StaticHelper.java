@@ -15,7 +15,7 @@ public class StaticHelper {
 
         try
         {
-        	System.loadLibrary("opencvinfo");
+            System.loadLibrary("opencvinfo");
             libs = GetLibraryList();
         }
         catch(UnsatisfiedLinkError e)
@@ -49,7 +49,7 @@ public class StaticHelper {
             System.loadLibrary(Name);
             Log.d(TAG, "OpenCV libs init was ok!");
         }
-        catch(Exception e)
+        catch(UnsatisfiedLinkError e)
         {
             Log.d(TAG, "Cannot load library \"" + Name + "\"");
             e.printStackTrace();
