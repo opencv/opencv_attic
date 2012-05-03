@@ -1,5 +1,7 @@
 package org.opencv.samples.imagemanipulations;
 
+import org.opencv.android.OpenCVLoader;
+
 import android.app.Activity;
 import android.os.Bundle;
 import android.util.Log;
@@ -36,7 +38,15 @@ public class ImageManipulationsActivity extends Activity {
         Log.i(TAG, "onCreate");
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
-        setContentView(new ImageManipulationsView(this));
+        if (OpenCVLoader.Success == OpenCVLoader.initStatic())
+        {
+        	setContentView(new ImageManipulationsView(this));
+        }
+        else
+        {
+			Log.e(TAG, "OpenCV loading failed!");
+			finish();
+        }
     }
 
     @Override
