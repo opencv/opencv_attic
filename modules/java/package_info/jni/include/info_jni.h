@@ -22,7 +22,7 @@ extern "C" {
  * Method:    GetLibraryList
  * Signature: ()Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_org_opencv_android_StaticHelper_GetLibraryList
+JNIEXPORT jstring JNICALL Java_org_opencv_android_StaticHelper_getLibraryList
   (JNIEnv *, jclass);
 
 #ifdef __cplusplus

@@ -85,5 +85,5 @@ public class StaticHelper {
 
     private static final String TAG = "OpenCV/StaticHelper";
 
-    private static native String GetLibraryList();
+    private static native String getLibraryList();
 }

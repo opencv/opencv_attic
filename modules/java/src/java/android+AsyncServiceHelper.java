@@ -14,12 +14,12 @@ import android.os.RemoteException;
 import android.util.Log;
 
 public class AsyncServiceHelper
-{		
-	public static int initOpenCV(String Version, Context AppContext, 
+{
+	public static int initOpenCV(String Version, Context AppContext,
 			LoaderCallbackInterface Callback)
 	{
 		AsyncServiceHelper helper = new AsyncServiceHelper(Version, AppContext, Callback);
-		if (AppContext.bindService(new Intent("org.opencv.engine.BIND"), 
+		if (AppContext.bindService(new Intent("org.opencv.engine.BIND"),
 				helper.mServiceConnection, Context.BIND_AUTO_CREATE))
 		{
 			return OpenCVLoader.Success;
@@ -29,22 +29,22 @@ public class AsyncServiceHelper
 			return OpenCVLoader.NoService;
 		}
 	}
-	
+
 	protected AsyncServiceHelper(String Version, Context AppContext, 
 			LoaderCallbackInterface Callback)
-	{ 
+	{
 		mOpenCVersion = Version;
 		mUserAppCallback = Callback;
 		mAppContext = AppContext;
 	}
-	
+
 	protected static final String TAG = "OpenCvEngine/Helper";
 	protected OpenCVEngineInterface mEngineService;
 	protected LoaderCallbackInterface mUserAppCallback;
 	protected String mOpenCVersion;
 	protected Context mAppContext;
 	protected int mStatus = OpenCVLoader.Success;
-	
+
 	protected ServiceConnection mServiceConnection = new ServiceConnection()
 	{
 		public void onServiceConnected(ComponentName className, IBinder service)
@@ -55,8 +55,8 @@ public class AsyncServiceHelper
 			{
 				Log.d(TAG, "Engine connection fails. May be service was not installed?");
 				mStatus = OpenCVLoader.NoService;
-			} 
-			else 
+			}
+			else
 			{
 				try
 				{
@@ -71,7 +71,7 @@ public class AsyncServiceHelper
 						else
 						{
 							Log.d(TAG, "OpenCV package was not installed!");
-							mStatus = OpenCVLoader.MarketError;													
+							mStatus = OpenCVLoader.MarketError;
 						}
 					}
 					else
@@ -104,7 +104,7 @@ public class AsyncServiceHelper
 			Log.d(TAG, "Calling using callback");
 			mUserAppCallback.onEngineConnected(mStatus);
 		}
-		
+
 		private boolean loadLibrary(String AbsPath)
 		{
 			boolean result = true;
@@ -121,10 +121,10 @@ public class AsyncServiceHelper
 				e.printStackTrace();
 				result &= false;
 			}
-			
+
 			return result;
 		}
-		
+
 		private boolean initOpenCVLibs(String Path, String Libs)
 		{
 			Log.d(TAG, "Trying to init OpenCV libs");

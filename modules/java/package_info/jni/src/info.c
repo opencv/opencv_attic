@@ -10,9 +10,9 @@ const char* GetLibraryList()
     return LIB_STRING;
 }
 
-JNIEXPORT jstring JNICALL Java_org_opencv_android_StaticHelper_GetLibraryList(JNIEnv* jenv, jclass clazz)
+JNIEXPORT jstring JNICALL Java_org_opencv_android_StaticHelper_getLibraryList(JNIEnv* jenv, jclass clazz)
 {
     jstring result = (*jenv)->NewStringUTF(jenv, LIB_STRING);
-    
+
     return result;
 }
