@@ -1352,7 +1352,7 @@ void _OutputArray::create(int dims, const int* size, int type, int i, bool allow
             if(CV_MAT_CN(type) == m.channels() && ((1 << CV_MAT_TYPE(flags)) & fixedDepthMask) != 0 )
                 type = m.type();
             else
-                CV_Assert(!fixedType() || (CV_MAT_CN(type) == m.channels() && ((1 << CV_MAT_TYPE(flags)) & fixedDepthMask) != 0));
+                CV_Assert(CV_MAT_TYPE(type) == m.type());
         }
         if(fixedSize())
         {
@@ -1470,10 +1470,21 @@ void _OutputArray::create(int dims, const int* size, int type, int i, bool allow
         if( i < 0 )
         {
             CV_Assert( dims == 2 && (size[0] == 1 || size[1] == 1 || size[0]*size[1] == 0) );
-            size_t len = size[0]*size[1] > 0 ? size[0] + size[1] - 1 : 0;
+            size_t len = size[0]*size[1] > 0 ? size[0] + size[1] - 1 : 0, len0 = v.size();
             
-            CV_Assert(!fixedSize() || len == v.size());
+            CV_Assert(!fixedSize() || len == len0);
             v.resize(len);
+            if( fixedType() )
+            {
+                int type = CV_MAT_TYPE(flags);
+                for( size_t j = len0; j < len; j++ )
+                {
+                    if( v[i].type() == type )
+                        continue;
+                    CV_Assert( v[i].empty() );
+                    v[i].flags = (v[i].flags & ~CV_MAT_TYPE_MASK) | type;
+                }
+            }
             return;
         }
         

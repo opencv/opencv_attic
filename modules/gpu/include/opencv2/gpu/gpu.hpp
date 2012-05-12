@@ -1371,6 +1371,30 @@ private:
     std::vector<GpuMat> trainDescCollection;
 };
 
+template <class Distance> 
+class CV_EXPORTS BruteForceMatcher_GPU;
+
+template <typename T>
+class CV_EXPORTS BruteForceMatcher_GPU< L1<T> > : public BFMatcher_GPU
+{
+public:
+    explicit BruteForceMatcher_GPU() : BFMatcher_GPU(NORM_L1) {}
+    explicit BruteForceMatcher_GPU(L1<T> /*d*/) : BFMatcher_GPU(NORM_L1) {}
+};
+template <typename T>
+class CV_EXPORTS BruteForceMatcher_GPU< L2<T> > : public BFMatcher_GPU
+{
+public:
+    explicit BruteForceMatcher_GPU() : BFMatcher_GPU(NORM_L2) {}
+    explicit BruteForceMatcher_GPU(L2<T> /*d*/) : BFMatcher_GPU(NORM_L2) {}
+};
+template <> class CV_EXPORTS BruteForceMatcher_GPU< Hamming > : public BFMatcher_GPU
+{
+public:
+    explicit BruteForceMatcher_GPU() : BFMatcher_GPU(NORM_HAMMING) {}
+    explicit BruteForceMatcher_GPU(Hamming /*d*/) : BFMatcher_GPU(NORM_HAMMING) {}
+};
+
 ////////////////////////////////// CascadeClassifier_GPU //////////////////////////////////////////
 // The cascade classifier class for object detection.
 class CV_EXPORTS CascadeClassifier_GPU
@@ -1726,6 +1750,7 @@ public:
         useInitialFlow = false;
         minEigThreshold = 1e-4f;
         getMinEigenVals = false;
+        isDeviceArch11_ = !DeviceInfo().supports(FEATURE_SET_COMPUTE_12);
     }
 
     void sparse(const GpuMat& prevImg, const GpuMat& nextImg, const GpuMat& prevPts, GpuMat& nextPts,
@@ -1772,6 +1797,8 @@ private:
 
     vector<GpuMat> uPyr_;
     vector<GpuMat> vPyr_;
+
+    bool isDeviceArch11_;
 };
 
 
@@ -1788,6 +1815,7 @@ public:
         polyN = 5;
         polySigma = 1.1;
         flags = 0;
+        isDeviceArch11_ = !DeviceInfo().supports(FEATURE_SET_COMPUTE_12);
     }
 
     int numLevels;
@@ -1835,6 +1863,8 @@ private:
     GpuMat frames_[2];
     GpuMat pyrLevel_[2], M_, bufM_, R_[2], blurredFrame_[2];
     std::vector<GpuMat> pyramid0_, pyramid1_;
+
+    bool isDeviceArch11_;
 };
 
 

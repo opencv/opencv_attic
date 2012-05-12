@@ -1,3 +1,8 @@
+if(${CMAKE_VERSION} VERSION_LESS "2.8.3")
+  message(STATUS WITH_CUDA flag requires CMake 2.8.3. CUDA support is disabled.)
+  return()  
+endif()
+  
 find_package(CUDA 4.1)
 
 if(CUDA_FOUND)
@@ -13,7 +18,12 @@ if(CUDA_FOUND)
 
   message(STATUS "CUDA detected: " ${CUDA_VERSION})
 
-  set(CUDA_ARCH_BIN "1.1 1.2 1.3 2.0 2.1(2.0)" CACHE STRING "Specify 'real' GPU architectures to build binaries for, BIN(PTX) format is supported")
+  if(${CUDA_VERSION_STRING} VERSION_GREATER "4.1")
+    set(CUDA_ARCH_BIN "1.1 1.2 1.3 2.0 2.1(2.0) 3.0" CACHE STRING "Specify 'real' GPU architectures to build binaries for, BIN(PTX) format is supported")
+  else()
+    set(CUDA_ARCH_BIN "1.1 1.2 1.3 2.0 2.1(2.0)" CACHE STRING "Specify 'real' GPU architectures to build binaries for, BIN(PTX) format is supported")
+  endif()
+    
   set(CUDA_ARCH_PTX "2.0" CACHE STRING "Specify 'virtual' PTX architectures to build PTX intermediate code for")
 
   string(REGEX REPLACE "\\." "" ARCH_BIN_NO_POINTS "${CUDA_ARCH_BIN}")

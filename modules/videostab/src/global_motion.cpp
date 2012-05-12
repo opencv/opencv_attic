@@ -284,9 +284,12 @@ static Mat estimateGlobMotionLeastSquaresAffine(
 
 
 Mat estimateGlobalMotionLeastSquares(
-        int npoints, Point2f *points0, Point2f *points1, int model, float *rmse)
+        InputOutputArray points0, InputOutputArray points1, int model, float *rmse)
 {
     CV_Assert(model <= MM_AFFINE);
+    CV_Assert(points0.type() == points1.type());
+    const int npoints = points0.getMat().checkVector(2);
+    CV_Assert(points1.getMat().checkVector(2) == npoints);
 
     typedef Mat (*Impl)(int, Point2f*, Point2f*, float*);
     static Impl impls[] = { estimateGlobMotionLeastSquaresTranslation,
@@ -295,16 +298,24 @@ Mat estimateGlobalMotionLeastSquares(
                             estimateGlobMotionLeastSquaresSimilarity,
                             estimateGlobMotionLeastSquaresAffine };
 
-    return impls[model](npoints, points0, points1, rmse);
+    Point2f *points0_ = points0.getMat().ptr<Point2f>();
+    Point2f *points1_ = points1.getMat().ptr<Point2f>();
+
+    return impls[model](npoints, points0_, points1_, rmse);
 }
 
 
 Mat estimateGlobalMotionRobust(
-        int npoints, const Point2f *points0, const Point2f *points1, int model,
-        const RansacParams &params, float *rmse, int *ninliers)
+        InputArray points0, InputArray points1, int model, const RansacParams &params,
+        float *rmse, int *ninliers)
 {
     CV_Assert(model <= MM_AFFINE);
+    CV_Assert(points0.type() == points1.type());
+    const int npoints = points0.getMat().checkVector(2);
+    CV_Assert(points1.getMat().checkVector(2) == npoints);
 
+    const Point2f *points0_ = points0.getMat().ptr<Point2f>();
+    const Point2f *points1_ = points1.getMat().ptr<Point2f>();
     const int niters = params.niters();
 
     // current hypothesis
@@ -338,17 +349,17 @@ Mat estimateGlobalMotionRobust(
         }
         for (int i = 0; i < params.size; ++i)
         {
-            subset0[i] = points0[indices[i]];
-            subset1[i] = points1[indices[i]];
+            subset0[i] = points0_[indices[i]];
+            subset1[i] = points1_[indices[i]];
         }
 
-        Mat_<float> M = estimateGlobalMotionLeastSquares(
-                params.size, &subset0[0], &subset1[0], model, 0);
+        Mat_<float> M = estimateGlobalMotionLeastSquares(subset0, subset1, model, 0);
 
         int ninliers = 0;
         for (int i = 0; i < npoints; ++i)
         {
-            p0 = points0[i]; p1 = points1[i];
+            p0 = points0_[i];
+            p1 = points1_[i];
             x = M(0,0)*p0.x + M(0,1)*p0.y + M(0,2);
             y = M(1,0)*p0.x + M(1,1)*p0.y + M(1,2);
             if (sqr(x - p1.x) + sqr(y - p1.y) < params.thresh * params.thresh)
@@ -365,15 +376,15 @@ Mat estimateGlobalMotionRobust(
 
     if (ninliersMax < params.size)
         // compute RMSE
-        bestM = estimateGlobalMotionLeastSquares(
-                params.size, &subset0best[0], &subset1best[0], model, rmse);
+        bestM = estimateGlobalMotionLeastSquares(subset0best, subset1best, model, rmse);
     else
     {
         subset0.resize(ninliersMax);
         subset1.resize(ninliersMax);
         for (int i = 0, j = 0; i < npoints; ++i)
         {
-            p0 = points0[i]; p1 = points1[i];
+            p0 = points0_[i];
+            p1 = points1_[i];
             x = bestM(0,0)*p0.x + bestM(0,1)*p0.y + bestM(0,2);
             y = bestM(1,0)*p0.x + bestM(1,1)*p0.y + bestM(1,2);
             if (sqr(x - p1.x) + sqr(y - p1.y) < params.thresh * params.thresh)
@@ -383,8 +394,7 @@ Mat estimateGlobalMotionRobust(
                 j++;
             }
         }
-        bestM = estimateGlobalMotionLeastSquares(
-                ninliersMax, &subset0[0], &subset1[0], model, rmse);
+        bestM = estimateGlobalMotionLeastSquares(subset0, subset1, model, rmse);
     }
 
     if (ninliers)
@@ -394,244 +404,32 @@ Mat estimateGlobalMotionRobust(
 }
 
 
-FromFileMotionReader::FromFileMotionReader(const string &path)
-    : GlobalMotionEstimatorBase(MM_UNKNOWN)
+MotionEstimatorRansacL2::MotionEstimatorRansacL2(MotionModel model)
+    : MotionEstimatorBase(model)
 {
-    file_.open(path.c_str());
-    CV_Assert(file_.is_open());
-}
-
-
-Mat FromFileMotionReader::estimate(const Mat &/*frame0*/, const Mat &/*frame1*/, bool *ok)
-{
-    Mat_<float> M(3, 3);
-    bool ok_;
-    file_ >> M(0,0) >> M(0,1) >> M(0,2)
-          >> M(1,0) >> M(1,1) >> M(1,2)
-          >> M(2,0) >> M(2,1) >> M(2,2) >> ok_;
-    if (ok) *ok = ok_;
-    return M;
-}
-
-
-ToFileMotionWriter::ToFileMotionWriter(const string &path, Ptr<GlobalMotionEstimatorBase> estimator)
-    : GlobalMotionEstimatorBase(estimator->motionModel())
-{
-    file_.open(path.c_str());
-    CV_Assert(file_.is_open());
-    estimator_ = estimator;
-}
-
-
-Mat ToFileMotionWriter::estimate(const Mat &frame0, const Mat &frame1, bool *ok)
-{
-    bool ok_;
-    Mat_<float> M = estimator_->estimate(frame0, frame1, &ok_);
-    file_ << M(0,0) << " " << M(0,1) << " " << M(0,2) << " "
-          << M(1,0) << " " << M(1,1) << " " << M(1,2) << " "
-          << M(2,0) << " " << M(2,1) << " " << M(2,2) << " " << ok_ << endl;
-    if (ok) *ok = ok_;
-    return M;
-}
-
-
-RansacMotionEstimator::RansacMotionEstimator(MotionModel model)
-    : GlobalMotionEstimatorBase(model)
-{
-    setDetector(new GoodFeaturesToTrackDetector());
-    setOptFlowEstimator(new SparsePyrLkOptFlowEstimator());
-    setGridSize(Size(0,0));
     setRansacParams(RansacParams::default2dMotion(model));
-    setOutlierRejector(new NullOutlierRejector());
     setMinInlierRatio(0.1f);
 }
 
 
-Mat RansacMotionEstimator::estimate(const Mat &frame0, const Mat &frame1, bool *ok)
+Mat MotionEstimatorRansacL2::estimate(InputArray points0, InputArray points1, bool *ok)
 {
-    // find keypoints
-
-    detector_->detect(frame0, keypointsPrev_);
-
-    // add extra keypoints
-
-    if (gridSize_.width > 0 && gridSize_.height > 0)
-    {
-        float dx = static_cast<float>(frame0.cols) / (gridSize_.width + 1);
-        float dy = static_cast<float>(frame0.rows) / (gridSize_.height + 1);
-        for (int x = 0; x < gridSize_.width; ++x)
-            for (int y = 0; y < gridSize_.height; ++y)
-                keypointsPrev_.push_back(KeyPoint((x+1)*dx, (y+1)*dy, 0.f));
-    }
-
-    // extract points from keypoints
-
-    pointsPrev_.resize(keypointsPrev_.size());
-    for (size_t i = 0; i < keypointsPrev_.size(); ++i)
-        pointsPrev_[i] = keypointsPrev_[i].pt;
-
-    // find correspondences
-
-    optFlowEstimator_->run(frame0, frame1, pointsPrev_, points_, status_, noArray());
-
-    // leave good correspondences only
-
-    pointsPrevGood_.clear(); pointsPrevGood_.reserve(points_.size());
-    pointsGood_.clear(); pointsGood_.reserve(points_.size());
-
-    for (size_t i = 0; i < points_.size(); ++i)
-    {
-        if (status_[i])
-        {
-            pointsPrevGood_.push_back(pointsPrev_[i]);
-            pointsGood_.push_back(points_[i]);
-        }
-    }
-
-    // perfrom outlier rejection
-
-    IOutlierRejector *outlierRejector = static_cast<IOutlierRejector*>(outlierRejector_);
-    if (!dynamic_cast<NullOutlierRejector*>(outlierRejector))
-    {
-        pointsPrev_.swap(pointsPrevGood_);
-        points_.swap(pointsGood_);
-
-        outlierRejector_->process(frame0.size(), pointsPrev_, points_, status_);
-
-        pointsPrevGood_.clear(); pointsPrevGood_.reserve(points_.size());
-        pointsGood_.clear(); pointsGood_.reserve(points_.size());
-
-        for (size_t i = 0; i < points_.size(); ++i)
-        {
-            if (status_[i])
-            {
-                pointsPrevGood_.push_back(pointsPrev_[i]);
-                pointsGood_.push_back(points_[i]);
-            }
-        }
-    }
-
-    size_t npoints = pointsGood_.size();
+    CV_Assert(points0.type() == points1.type());
+    const int npoints = points0.getMat().checkVector(2);
+    CV_Assert(points1.getMat().checkVector(2) == npoints);
 
     // find motion
 
     int ninliers = 0;
     Mat_<float> M;
 
-    if (motionModel_ != MM_HOMOGRAPHY)
+    if (motionModel() != MM_HOMOGRAPHY)
         M = estimateGlobalMotionRobust(
-                npoints, &pointsPrevGood_[0], &pointsGood_[0], motionModel_,
-                ransacParams_, 0, &ninliers);
+                points0, points1, motionModel(), ransacParams_, 0, &ninliers);
     else
     {
         vector<uchar> mask;
-        M = findHomography(pointsPrevGood_, pointsGood_, mask, CV_RANSAC, ransacParams_.thresh);
-        for (size_t i  = 0; i < npoints; ++i)
-            if (mask[i]) ninliers++;
-    }
-
-    // check if we're confident enough in estimated motion
-
-    if (ok) *ok = true;
-    if (static_cast<float>(ninliers) / npoints < minInlierRatio_)
-    {
-        M = Mat::eye(3, 3, CV_32F);
-        if (ok) *ok = false;
-    }
-
-    return M;
-}
-
-
-#if HAVE_OPENCV_GPU
-RansacMotionEstimatorGpu::RansacMotionEstimatorGpu(MotionModel model)
-    : GlobalMotionEstimatorBase(model)
-{
-    CV_Assert(gpu::getCudaEnabledDeviceCount() > 0);
-    setRansacParams(RansacParams::default2dMotion(model));
-    setOutlierRejector(new NullOutlierRejector());
-    setMinInlierRatio(0.1f);
-}
-
-
-Mat RansacMotionEstimatorGpu::estimate(const Mat &frame0, const Mat &frame1, bool *ok)
-{
-    frame0_.upload(frame0);
-    frame1_.upload(frame1);
-    return estimate(frame0_, frame1_, ok);
-}
-
-
-Mat RansacMotionEstimatorGpu::estimate(const gpu::GpuMat &frame0, const gpu::GpuMat &frame1, bool *ok)
-{
-    // convert frame to gray if it's color
-
-    gpu::GpuMat grayFrame0;
-    if (frame0.channels() == 1)
-        grayFrame0 = frame0;
-    else
-    {
-        gpu::cvtColor(frame0_, grayFrame0_, CV_BGR2GRAY);
-        grayFrame0 = grayFrame0_;
-    }
-
-    // find keypoints
-
-    detector_(grayFrame0, pointsPrev_);
-
-    // find correspondences
-
-    optFlowEstimator_.run(frame0, frame1, pointsPrev_, points_, status_);    
-
-    // leave good correspondences only
-
-    gpu::compactPoints(pointsPrev_, points_, status_);
-
-    pointsPrev_.download(hostPointsPrev_);
-    points_.download(hostPoints_);
-
-    Point2f *points0 = hostPointsPrev_.ptr<Point2f>();
-    Point2f *points1 = hostPoints_.ptr<Point2f>();
-    int npoints = hostPointsPrev_.cols;
-
-    // perfrom outlier rejection
-
-    IOutlierRejector *outlierRejector = static_cast<IOutlierRejector*>(outlierRejector_);
-    if (!dynamic_cast<NullOutlierRejector*>(outlierRejector))
-    {
-        outlierRejector_->process(frame0.size(), hostPointsPrev_, hostPoints_, rejectionStatus_);
-
-        hostPointsPrevGood_.clear(); hostPointsPrevGood_.reserve(hostPoints_.cols);
-        hostPointsGood_.clear(); hostPointsGood_.reserve(hostPoints_.cols);
-
-        for (int i = 0; i < hostPoints_.cols; ++i)
-        {
-            if (rejectionStatus_[i])
-            {
-                hostPointsPrevGood_.push_back(hostPointsPrev_.at<Point2f>(0,i));
-                hostPointsGood_.push_back(hostPoints_.at<Point2f>(0,i));
-            }
-        }
-
-        points0 = &hostPointsPrevGood_[0];
-        points1 = &hostPointsGood_[0];
-        npoints = static_cast<int>(hostPointsGood_.size());
-    }
-
-    // find motion
-
-    int ninliers = 0;
-    Mat_<float> M;
-
-    if (motionModel_ != MM_HOMOGRAPHY)
-        M = estimateGlobalMotionRobust(
-                npoints, points0, points1, motionModel_, ransacParams_, 0, &ninliers);
-    else
-    {
-        vector<uchar> mask;
-        M = findHomography(
-                Mat(1, npoints, CV_32FC2, points0), Mat(1, npoints, CV_32FC2, points1),
-                mask, CV_RANSAC, ransacParams_.thresh);
+        M = findHomography(points0, points1, mask, CV_LMEDS);
         for (int i  = 0; i < npoints; ++i)
             if (mask[i]) ninliers++;
     }
@@ -647,75 +445,20 @@ Mat RansacMotionEstimatorGpu::estimate(const gpu::GpuMat &frame0, const gpu::Gpu
 
     return M;
 }
-#endif // #if HAVE_OPENCV_GPU
 
 
-LpBasedMotionEstimator::LpBasedMotionEstimator(MotionModel model)
-    : GlobalMotionEstimatorBase(model)
+MotionEstimatorL1::MotionEstimatorL1(MotionModel model)
+    : MotionEstimatorBase(model)
 {
-    setDetector(new GoodFeaturesToTrackDetector());
-    setOptFlowEstimator(new SparsePyrLkOptFlowEstimator());
-    setOutlierRejector(new NullOutlierRejector());
 }
 
+
 // TODO will estimation of all motions as one LP problem be faster?
-
-Mat LpBasedMotionEstimator::estimate(const Mat &frame0, const Mat &frame1, bool *ok)
+Mat MotionEstimatorL1::estimate(InputArray points0, InputArray points1, bool *ok)
 {
-    // find keypoints
-
-    detector_->detect(frame0, keypointsPrev_);
-
-    // extract points from keypoints
-
-    pointsPrev_.resize(keypointsPrev_.size());
-    for (size_t i = 0; i < keypointsPrev_.size(); ++i)
-        pointsPrev_[i] = keypointsPrev_[i].pt;
-
-    // find correspondences
-
-    optFlowEstimator_->run(frame0, frame1, pointsPrev_, points_, status_, noArray());
-
-    // leave good correspondences only
-
-    pointsPrevGood_.clear(); pointsPrevGood_.reserve(points_.size());
-    pointsGood_.clear(); pointsGood_.reserve(points_.size());
-
-    for (size_t i = 0; i < points_.size(); ++i)
-    {
-        if (status_[i])
-        {
-            pointsPrevGood_.push_back(pointsPrev_[i]);
-            pointsGood_.push_back(points_[i]);
-        }
-    }
-
-    // perfrom outlier rejection
-
-    IOutlierRejector *outlierRejector = static_cast<IOutlierRejector*>(outlierRejector_);
-    if (!dynamic_cast<NullOutlierRejector*>(outlierRejector))
-    {
-        pointsPrev_.swap(pointsPrevGood_);
-        points_.swap(pointsGood_);
-
-        outlierRejector_->process(frame0.size(), pointsPrev_, points_, status_);
-
-        pointsPrevGood_.clear(); pointsPrevGood_.reserve(points_.size());
-        pointsGood_.clear(); pointsGood_.reserve(points_.size());
-
-        for (size_t i = 0; i < points_.size(); ++i)
-        {
-            if (status_[i])
-            {
-                pointsPrevGood_.push_back(pointsPrev_[i]);
-                pointsGood_.push_back(points_[i]);
-            }
-        }
-    }
-
-    int npoints = static_cast<int>(pointsGood_.size());
-
-    // prepare LP problem
+    CV_Assert(points0.type() == points1.type());
+    const int npoints = points0.getMat().checkVector(2);
+    CV_Assert(points1.getMat().checkVector(2) == npoints);
 
 #ifndef HAVE_CLP
 
@@ -725,22 +468,26 @@ Mat LpBasedMotionEstimator::estimate(const Mat &frame0, const Mat &frame1, bool 
 
 #else
 
-    CV_Assert(motionModel_ <= MM_AFFINE && motionModel_ != MM_RIGID);
+    CV_Assert(motionModel() <= MM_AFFINE && motionModel() != MM_RIGID);
+
+    // prepare LP problem
+
+    const Point2f *points0_ = points0.getMat().ptr<Point2f>();
+    const Point2f *points1_ = points1.getMat().ptr<Point2f>();
 
     int ncols = 6 + 2*npoints;
     int nrows = 4*npoints;
 
-    if (motionModel_ == MM_SIMILARITY)
+    if (motionModel() == MM_SIMILARITY)
         nrows += 2;
-    else if (motionModel_ == MM_TRANSLATION_AND_SCALE)
+    else if (motionModel() == MM_TRANSLATION_AND_SCALE)
         nrows += 3;
-    else if (motionModel_ == MM_TRANSLATION)
+    else if (motionModel() == MM_TRANSLATION)
         nrows += 4;
 
     rows_.clear();
     cols_.clear();
     elems_.clear();
-
     obj_.assign(ncols, 0);
     collb_.assign(ncols, -INF);
     colub_.assign(ncols, INF);
@@ -765,8 +512,8 @@ Mat LpBasedMotionEstimator::estimate(const Mat &frame0, const Mat &frame1, bool 
 
     for (int i = 0; i < npoints; ++i, r += 4)
     {
-        p0 = pointsPrevGood_[i];
-        p1 = pointsGood_[i];
+        p0 = points0_[i];
+        p1 = points1_[i];
 
         set(r, 0, p0.x); set(r, 1, p0.y); set(r, 2, 1); set(r, 6+2*i, -1);
         rowub_[r] = p1.x;
@@ -781,18 +528,18 @@ Mat LpBasedMotionEstimator::estimate(const Mat &frame0, const Mat &frame1, bool 
         rowlb_[r+3] = p1.y;
     }
 
-    if (motionModel_ == MM_SIMILARITY)
+    if (motionModel() == MM_SIMILARITY)
     {
         set(r, 0, 1); set(r, 4, -1); rowlb_[r] = rowub_[r] = 0;
         set(r+1, 1, 1); set(r+1, 3, 1); rowlb_[r+1] = rowub_[r+1] = 0;
     }
-    else if (motionModel_ == MM_TRANSLATION_AND_SCALE)
+    else if (motionModel() == MM_TRANSLATION_AND_SCALE)
     {
         set(r, 0, 1); set(r, 4, -1); rowlb_[r] = rowub_[r] = 0;
         set(r+1, 1, 1); rowlb_[r+1] = rowub_[r+1] = 0;
         set(r+2, 3, 1); rowlb_[r+2] = rowub_[r+2] = 0;
     }
-    else if (motionModel_ == MM_TRANSLATION)
+    else if (motionModel() == MM_TRANSLATION)
     {
         set(r, 0, 1); rowlb_[r] = rowub_[r] = 1;
         set(r+1, 1, 1); rowlb_[r+1] = rowub_[r+1] = 0;
@@ -832,6 +579,187 @@ Mat LpBasedMotionEstimator::estimate(const Mat &frame0, const Mat &frame1, bool 
 }
 
 
+FromFileMotionReader::FromFileMotionReader(const string &path)
+    : ImageMotionEstimatorBase(MM_UNKNOWN)
+{
+    file_.open(path.c_str());
+    CV_Assert(file_.is_open());
+}
+
+
+Mat FromFileMotionReader::estimate(const Mat &/*frame0*/, const Mat &/*frame1*/, bool *ok)
+{
+    Mat_<float> M(3, 3);
+    bool ok_;
+    file_ >> M(0,0) >> M(0,1) >> M(0,2)
+          >> M(1,0) >> M(1,1) >> M(1,2)
+          >> M(2,0) >> M(2,1) >> M(2,2) >> ok_;
+    if (ok) *ok = ok_;
+    return M;
+}
+
+
+ToFileMotionWriter::ToFileMotionWriter(const string &path, Ptr<ImageMotionEstimatorBase> estimator)
+    : ImageMotionEstimatorBase(estimator->motionModel()), motionEstimator_(estimator)
+{
+    file_.open(path.c_str());
+    CV_Assert(file_.is_open());
+}
+
+
+Mat ToFileMotionWriter::estimate(const Mat &frame0, const Mat &frame1, bool *ok)
+{
+    bool ok_;
+    Mat_<float> M = motionEstimator_->estimate(frame0, frame1, &ok_);
+    file_ << M(0,0) << " " << M(0,1) << " " << M(0,2) << " "
+          << M(1,0) << " " << M(1,1) << " " << M(1,2) << " "
+          << M(2,0) << " " << M(2,1) << " " << M(2,2) << " " << ok_ << endl;
+    if (ok) *ok = ok_;
+    return M;
+}
+
+
+KeypointBasedMotionEstimator::KeypointBasedMotionEstimator(Ptr<MotionEstimatorBase> estimator)
+    : ImageMotionEstimatorBase(estimator->motionModel()), motionEstimator_(estimator)
+{    
+    setDetector(new GoodFeaturesToTrackDetector());
+    setOpticalFlowEstimator(new SparsePyrLkOptFlowEstimator());
+    setOutlierRejector(new NullOutlierRejector());
+}
+
+
+Mat KeypointBasedMotionEstimator::estimate(const Mat &frame0, const Mat &frame1, bool *ok)
+{
+    // find keypoints
+    detector_->detect(frame0, keypointsPrev_);
+
+    // extract points from keypoints
+    pointsPrev_.resize(keypointsPrev_.size());
+    for (size_t i = 0; i < keypointsPrev_.size(); ++i)
+        pointsPrev_[i] = keypointsPrev_[i].pt;
+
+    // find correspondences
+    optFlowEstimator_->run(frame0, frame1, pointsPrev_, points_, status_, noArray());
+
+    // leave good correspondences only
+
+    pointsPrevGood_.clear(); pointsPrevGood_.reserve(points_.size());
+    pointsGood_.clear(); pointsGood_.reserve(points_.size());
+
+    for (size_t i = 0; i < points_.size(); ++i)
+    {
+        if (status_[i])
+        {
+            pointsPrevGood_.push_back(pointsPrev_[i]);
+            pointsGood_.push_back(points_[i]);
+        }
+    }
+
+    // perform outlier rejection
+
+    IOutlierRejector *outlierRejector = static_cast<IOutlierRejector*>(outlierRejector_);
+    if (!dynamic_cast<NullOutlierRejector*>(outlierRejector))
+    {
+        pointsPrev_.swap(pointsPrevGood_);
+        points_.swap(pointsGood_);
+
+        outlierRejector_->process(frame0.size(), pointsPrev_, points_, status_);
+
+        pointsPrevGood_.clear();
+        pointsPrevGood_.reserve(points_.size());
+
+        pointsGood_.clear();
+        pointsGood_.reserve(points_.size());
+
+        for (size_t i = 0; i < points_.size(); ++i)
+        {
+            if (status_[i])
+            {
+                pointsPrevGood_.push_back(pointsPrev_[i]);
+                pointsGood_.push_back(points_[i]);
+            }
+        }
+    }
+
+    // estimate motion
+    return motionEstimator_->estimate(pointsPrevGood_, pointsGood_, ok);
+}
+
+
+#if HAVE_OPENCV_GPU
+KeypointBasedMotionEstimatorGpu::KeypointBasedMotionEstimatorGpu(Ptr<MotionEstimatorBase> estimator)
+    : ImageMotionEstimatorBase(estimator->motionModel()), motionEstimator_(estimator)
+{
+    CV_Assert(gpu::getCudaEnabledDeviceCount() > 0);    
+    setOutlierRejector(new NullOutlierRejector());
+}
+
+
+Mat KeypointBasedMotionEstimatorGpu::estimate(const Mat &frame0, const Mat &frame1, bool *ok)
+{
+    frame0_.upload(frame0);
+    frame1_.upload(frame1);
+    return estimate(frame0_, frame1_, ok);
+}
+
+
+Mat KeypointBasedMotionEstimatorGpu::estimate(const gpu::GpuMat &frame0, const gpu::GpuMat &frame1, bool *ok)
+{
+    // convert frame to gray if it's color
+
+    gpu::GpuMat grayFrame0;
+    if (frame0.channels() == 1)
+        grayFrame0 = frame0;
+    else
+    {
+        gpu::cvtColor(frame0_, grayFrame0_, CV_BGR2GRAY);
+        grayFrame0 = grayFrame0_;
+    }
+
+    // find keypoints
+    detector_(grayFrame0, pointsPrev_);
+
+    // find correspondences
+    optFlowEstimator_.run(frame0, frame1, pointsPrev_, points_, status_);    
+
+    // leave good correspondences only
+    gpu::compactPoints(pointsPrev_, points_, status_);
+
+    pointsPrev_.download(hostPointsPrev_);
+    points_.download(hostPoints_);
+
+    // perform outlier rejection
+
+    IOutlierRejector *outlierRejector = static_cast<IOutlierRejector*>(outlierRejector_);
+    if (!dynamic_cast<NullOutlierRejector*>(outlierRejector))
+    {
+        outlierRejector_->process(frame0.size(), hostPointsPrev_, hostPoints_, rejectionStatus_);
+
+        hostPointsPrevTmp_.clear();
+        hostPointsPrevTmp_.reserve(hostPoints_.cols);
+
+        hostPointsTmp_.clear();
+        hostPointsTmp_.reserve(hostPoints_.cols);
+
+        for (int i = 0; i < hostPoints_.cols; ++i)
+        {
+            if (rejectionStatus_[i])
+            {
+                hostPointsPrevTmp_.push_back(hostPointsPrev_.at<Point2f>(0,i));
+                hostPointsTmp_.push_back(hostPoints_.at<Point2f>(0,i));
+            }
+        }
+
+        hostPointsPrev_ = Mat(1, hostPointsPrevTmp_.size(), CV_32FC2, &hostPointsPrevTmp_[0]);
+        hostPoints_ = Mat(1, hostPointsTmp_.size(), CV_32FC2, &hostPointsTmp_[0]);
+    }
+
+    // estimate motion
+    return motionEstimator_->estimate(hostPointsPrev_, hostPoints_, ok);
+}
+#endif // HAVE_OPENCV_GPU
+
+
 Mat getMotion(int from, int to, const vector<Mat> &motions)
 {
     Mat M = Mat::eye(3, 3, CV_32F);
@@ -851,4 +779,5 @@ Mat getMotion(int from, int to, const vector<Mat> &motions)
 
 } // namespace videostab
 } // namespace cv
+
 

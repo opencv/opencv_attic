@@ -384,6 +384,35 @@ INSTANTIATE_TEST_CASE_P(GPU_Video, FarnebackOpticalFlow, testing::Combine(
     testing::Values(FarnebackOptFlowFlags(0), FarnebackOptFlowFlags(cv::OPTFLOW_FARNEBACK_GAUSSIAN)),
     testing::Values(UseInitFlow(false), UseInitFlow(true))));
 
+struct OpticalFlowNan : public BroxOpticalFlow {};
+
+TEST_P(OpticalFlowNan, Regression)
+{
+    cv::Mat frame0 = readImageType("opticalflow/frame0.png", CV_32FC1);
+    ASSERT_FALSE(frame0.empty());
+    cv::Mat r_frame0, r_frame1;
+    cv::resize(frame0, r_frame0, cv::Size(1380,1000));
+
+    cv::Mat frame1 = readImageType("opticalflow/frame1.png", CV_32FC1);
+    ASSERT_FALSE(frame1.empty());
+    cv::resize(frame1, r_frame1, cv::Size(1380,1000));
+
+    cv::gpu::BroxOpticalFlow brox(0.197f /*alpha*/, 50.0f /*gamma*/, 0.8f /*scale_factor*/,
+                                  5 /*inner_iterations*/, 150 /*outer_iterations*/, 10 /*solver_iterations*/);
+
+    cv::gpu::GpuMat u;
+    cv::gpu::GpuMat v;
+    brox(loadMat(r_frame0), loadMat(r_frame1), u, v);
+
+    cv::Mat h_u, h_v;
+    u.download(h_u);
+    v.download(h_v);
+    EXPECT_TRUE(cv::checkRange(h_u));
+    EXPECT_TRUE(cv::checkRange(h_v));
+};
+
+INSTANTIATE_TEST_CASE_P(GPU_Video, OpticalFlowNan, ALL_DEVICES);
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // VideoWriter
 

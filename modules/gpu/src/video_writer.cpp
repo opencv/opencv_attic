@@ -42,7 +42,7 @@
 
 #include "precomp.hpp"
 
-#if !defined HAVE_CUDA || !defined WIN32
+#if !defined(HAVE_CUDA) || !defined(WIN32)
 
 class cv::gpu::VideoWriter_GPU::Impl
 {
@@ -71,11 +71,7 @@ void cv::gpu::VideoWriter_GPU::EncoderParams::save(const std::string&) const { t
 #else // !defined HAVE_CUDA || !defined WIN32
 
 #ifdef HAVE_FFMPEG
-    #ifdef NEW_FFMPEG
-        #include "cap_ffmpeg_impl_v2.hpp"
-    #else
-        #include "cap_ffmpeg_impl.hpp"
-    #endif
+    #include "cap_ffmpeg_impl.hpp"
 #else
     #include "cap_ffmpeg_api.hpp"
 #endif
@@ -771,6 +767,7 @@ namespace
         {
             #if defined WIN32 || defined _WIN32
                 const char* module_name = "opencv_ffmpeg"
+                    CVAUX_STR(CV_MAJOR_VERSION) CVAUX_STR(CV_MINOR_VERSION) CVAUX_STR(CV_SUBMINOR_VERSION)
                 #if (defined _MSC_VER && defined _M_X64) || (defined __GNUC__ && defined __x86_64__)
                     "_64"
                 #endif
