@@ -33,7 +33,7 @@ public class puzzle15Activity extends Activity implements LoaderCallbackInterfac
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         
         Log.i(TAG, "Trying to load OpenCV library");
-        if (!OpenCVLoader.initAsync("2.4", this, this))
+        if (!OpenCVLoader.initAsync(OpenCVLoader.OPEN_CV_VERSION_2_4, this, this))
         {
         	Log.e(TAG, "Cannot connect to OpenCVEngine");
         	//finish();
@@ -44,18 +44,18 @@ public class puzzle15Activity extends Activity implements LoaderCallbackInterfac
 	{
 		switch (status)
 		{
-			case LoaderCallbackInterface.Success:
+			case LoaderCallbackInterface.SUCCESS:
 			{
 				Log.i(TAG, "OpenCV loaded successfully");
 				mView = new puzzle15View(this);
 				setContentView(mView);
 			} break;
-			case LoaderCallbackInterface.RestartRequired:
+			case LoaderCallbackInterface.RESTART_REQUIRED:
 			{
 				Log.d(TAG, "OpenCV downloading. App restart is needed!");
 				finish();
 			} break;
-			case LoaderCallbackInterface.NoService:
+			case LoaderCallbackInterface.NO_SERVICE:
 			{
 				Log.d(TAG, "OpenCVEngine Service is not installed!");
 				finish();

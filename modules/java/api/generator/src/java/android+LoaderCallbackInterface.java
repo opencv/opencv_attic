@@ -2,11 +2,11 @@ package org.opencv.android;
 
 public interface LoaderCallbackInterface
 {
-    static final int Success = 0;
-    static final int NoService = 1;
-    static final int RestartRequired = 2;
-    static final int MarketError = 3;
-    static final int InitFailed = 0xff;
-    
+    static final int SUCCESS = 0;
+    static final int NO_SERVICE = 1;
+    static final int RESTART_REQUIRED = 2;
+    static final int MARKET_ERROR = 3;
+    static final int INIT_FAILED = 0xff;
+
     public void onEngineConnected(int status);
 };

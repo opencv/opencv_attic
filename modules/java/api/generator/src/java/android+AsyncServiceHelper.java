@@ -27,7 +27,7 @@ public class AsyncServiceHelper
         else
         {
             AppContext.unbindService(helper.mServiceConnection);
-        	Callback.onEngineConnected(LoaderCallbackInterface.NoService);
+            Callback.onEngineConnected(LoaderCallbackInterface.NO_SERVICE);
             return false;
         }
     }
@@ -45,7 +45,7 @@ public class AsyncServiceHelper
     protected LoaderCallbackInterface mUserAppCallback;
     protected String mOpenCVersion;
     protected Context mAppContext;
-    protected int mStatus = LoaderCallbackInterface.Success;
+    protected int mStatus = LoaderCallbackInterface.SUCCESS;
 
     protected ServiceConnection mServiceConnection = new ServiceConnection()
     {
@@ -56,7 +56,7 @@ public class AsyncServiceHelper
             if (null == mEngineService)
             {
                 Log.d(TAG, "Engine connection fails. May be service was not installed?");
-                mStatus = LoaderCallbackInterface.NoService;
+                mStatus = LoaderCallbackInterface.NO_SERVICE;
             }
             else
             {
@@ -68,12 +68,12 @@ public class AsyncServiceHelper
                     {
                         if (mEngineService.installVersion(mOpenCVersion))
                         {
-                            mStatus = LoaderCallbackInterface.RestartRequired;
+                            mStatus = LoaderCallbackInterface.RESTART_REQUIRED;
                         }
                         else
                         {
                             Log.d(TAG, "OpenCV package was not installed!");
-                            mStatus = LoaderCallbackInterface.MarketError;
+                            mStatus = LoaderCallbackInterface.MARKET_ERROR;
                         }
                     }
                     else
@@ -85,19 +85,19 @@ public class AsyncServiceHelper
                         if (initOpenCVLibs(path, libs))
                         {
                             Log.d(TAG, "First attempt to load libs is OK");
-                            mStatus = LoaderCallbackInterface.Success;
+                            mStatus = LoaderCallbackInterface.SUCCESS;
                         }
                         else
                         {
                             Log.d(TAG, "First attempt to load libs fails");
-                            mStatus = LoaderCallbackInterface.InitFailed;
+                            mStatus = LoaderCallbackInterface.INIT_FAILED;
                         }
                     }
                 }
                 catch (RemoteException e)
                 {
                     e.printStackTrace();
-                    mStatus = LoaderCallbackInterface.InitFailed;
+                    mStatus = LoaderCallbackInterface.INIT_FAILED;
                 }
             }
             Log.d(TAG, "Init finished with status " + mStatus);
