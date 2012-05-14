@@ -6,9 +6,9 @@ import android.util.Log;
 
 public class StaticHelper {
 
-    public static int initOpenCV()
+    public static boolean initOpenCV()
     {
-        int result;
+        boolean result;
         String libs = "";
 
         Log.d(TAG, "Trying to get library list");
@@ -16,7 +16,7 @@ public class StaticHelper {
         try
         {
             System.loadLibrary("opencvinfo");
-            libs = "";//GetLibraryList();
+            libs = getLibraryList();
         }
         catch(UnsatisfiedLinkError e)
         {
@@ -28,12 +28,12 @@ public class StaticHelper {
         if (initOpenCVLibs(libs))
         {
             Log.d(TAG, "First attempt to load libs is OK");
-            result = OpenCVLoader.Success;
+            result = true;
         }
         else
         {
             Log.d(TAG, "First attempt to load libs fails");
-            result = OpenCVLoader.InitFailed;
+            result = false;
         }
 
         return result;
