@@ -10,6 +10,7 @@ Welcome to opencv documentation!
    :maxdepth: 2
 
    modules/refman.rst
+   android/refmain.rst
    doc/user_guide/user_guide.rst
    doc/tutorials/tutorials.rst
 
