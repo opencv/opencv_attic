@@ -78,10 +78,12 @@ int32_t OpenCVEngine::GetVersion()
 }
 
 String16 OpenCVEngine::GetLibPathByVersion(android::String16 version)
-{
+{    
     std::string std_version(String8(version).string());
     std::string norm_version;
     std::string path;
+ 
+    LOGD("OpenCVEngine::GetLibPathByVersion(%s) impl", String8(version).string());
     
     norm_version = NormalizeVersionString(std_version);
     

@@ -32,6 +32,8 @@ JNIEXPORT jobject JNICALL Java_org_opencv_engine_BinderConnector_Connect(JNIEnv*
 
 JNIEXPORT jboolean JNICALL Java_org_opencv_engine_BinderConnector_Init(JNIEnv* env, jobject thiz, jobject market)
 {
+    LOGD("Java_org_opencv_engine_BinderConnector_Init");
+    
     if (NULL == PackageManager)
     {
 	JavaVM* jvm;
@@ -58,8 +60,10 @@ JNIEXPORT jboolean JNICALL Java_org_opencv_engine_BinderConnector_Init(JNIEnv* e
 
 JNIEXPORT void JNICALL Java_org_opencv_engine_BinderConnector_Final(JNIEnv *, jobject)
 {
-    OpenCVEngineBinder = NULL;
+    LOGD("Java_org_opencv_engine_BinderConnector_Final");
     
+    OpenCVEngineBinder = NULL;
+
     delete PackageManager;
     PackageManager = NULL;
 }

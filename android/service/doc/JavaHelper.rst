@@ -38,23 +38,27 @@ int initAsync()
 Initialisation status constants
 -------------------------------
 
-.. data:: Success
+.. data:: SUCCESS
 
     OpenCV initialisation finished successfully.
 
-.. data:: NoService
+.. data:: NO_SERVICE
 
     OpenCV Engine service is not installed on the device. App need to notify user about it.
 
-.. data:: RestartRequired
+.. data:: RESTART_REQUIRED
 
-    OpenCV library installation via Google Play service was initialized. Application restart is required. 
+    OpenCV library installation via Google Play service was initialized. Application restart is required.
 
-.. data:: MarketError
+.. data:: MARKET_ERROR
 
-    Google Play (Android Market) cannot be invoked. 
+    Google Play (Android Market) cannot be invoked.
 
-.. data:: InitFailed
+.. data:: INSTALL_CANCELED
+
+    OpenCV library installation was canceled by user.
+
+.. data:: INIT_FAILED
 
     OpenCV library initialization failed.
 

@@ -151,9 +151,10 @@ JavaBasedPackageManager::~JavaBasedPackageManager()
 {
     JNIEnv* jenv;
     bool self_attached;
+
+    LOGD("JavaBasedPackageManager::~JavaBasedPackageManager() begin");
     
     JavaContext->GetEnv((void**)&jenv, JNI_VERSION_1_6);
-    LOGD("JavaBasedPackageManager::~JavaBasedPackageManager() begin");
     self_attached = (JNI_EDETACHED == JavaContext->GetEnv((void**)&jenv, JNI_VERSION_1_6));
     if (self_attached)
     {

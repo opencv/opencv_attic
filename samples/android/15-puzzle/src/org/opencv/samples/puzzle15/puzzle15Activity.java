@@ -4,6 +4,10 @@ import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.LocalActivityManager;
+import android.content.DialogInterface;
+import android.content.DialogInterface.OnClickListener;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -53,17 +57,62 @@ public class puzzle15Activity extends Activity implements LoaderCallbackInterfac
 			case LoaderCallbackInterface.RESTART_REQUIRED:
 			{
 				Log.d(TAG, "OpenCV downloading. App restart is needed!");
-				finish();
+				AlertDialog ResartMessage = new AlertDialog.Builder(this).create();
+				ResartMessage.setTitle("App restart is needed");
+				ResartMessage.setMessage("Application will be closed now. Start it when installtion of OpenCV library will be finished!");
+				ResartMessage.setButton("OK", new OnClickListener() {	
+					public void onClick(DialogInterface dialog, int which) {
+						finish();
+					}
+				});
+
+				ResartMessage.show();
 			} break;
 			case LoaderCallbackInterface.NO_SERVICE:
 			{
 				Log.d(TAG, "OpenCVEngine Service is not installed!");
-				finish();
+				AlertDialog NoServiceMessage = new AlertDialog.Builder(this).create();
+				NoServiceMessage.setTitle("OpenCV Engine");
+				NoServiceMessage.setMessage("OpenCV Engine service was not found. Install it using Google Play!");
+				NoServiceMessage.setButton("OK", new OnClickListener() {	
+					public void onClick(DialogInterface dialog, int which) {
+						finish();
+					}
+				});
+				NoServiceMessage.show();
 			} break;
+			case LoaderCallbackInterface.MARKET_ERROR:
+			{
+				Log.d(TAG, "OpenCVEngine Service is not installed!");
+				AlertDialog MarketErrorMessage = new AlertDialog.Builder(this).create();
+				MarketErrorMessage.setTitle("OpenCV Engine");
+				MarketErrorMessage.setMessage("OpenCV Library package instalation failed!");
+				MarketErrorMessage.setButton("OK", new OnClickListener() {
+					public void onClick(DialogInterface dialog, int which) {
+						finish();
+					}
+				});
+				MarketErrorMessage.show();
+			} break;
+			case LoaderCallbackInterface.INSTALL_CANCELED:
+			{
+				Log.d(TAG, "OpenCV library instalation was canceled by user");
+				finish();
+			}
 			default:
 			{
 				Log.e(TAG, "OpenCV loading failed!");
-				finish();
+				AlertDialog InitFailedDialog = new AlertDialog.Builder(this).create();
+				InitFailedDialog.setTitle("OpenCV error");
+				InitFailedDialog.setMessage("OpenCV was not initialised correctly. Application will be shut down");
+				InitFailedDialog.setButton("OK", new OnClickListener() {
+					
+					public void onClick(DialogInterface dialog, int which) {
+						finish();
+					}
+				});
+
+				InitFailedDialog.show();
 			} break;
 		}
 	}
