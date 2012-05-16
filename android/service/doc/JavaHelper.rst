@@ -8,69 +8,76 @@ Java OpenCV Loader
     :synopsis: Implements Android dependent Java classes.
 .. Class:: OpenCVLoader
 
-Helper class provides common methods for OpenCV library and return values constants.
+Helper class provides common initialization methods for OpenCV library
 
-int initStatic()
-----------------
+boolean initStatic()
+--------------------
 
-.. method:: int initStatic()
+.. method:: boolean initStatic()
     
-    Loads and initializes OpenCV library from current application package. Roughly it is analog of system.loadLibrary("opencv_java").
+    Load and initialize OpenCV library from current application package. Roughly it is analog of system.loadLibrary("opencv_java")
 
-    :rtype: int;
-    :return: Function returns initialisation status.
+    :rtype: boolean
+    :return: Return true if initialization of OpenCV was successful
 
-.. note:: This way is depricated for production code. It is designed for experimantal and local development purposes only. If you want to publish your app use aproach with async initialisation.
+.. note:: This way is depricated for production code. It is designed for experimantal and local development purposes only. If you want to publish your app use aproach with async initialisation
 
-int initAsync()
----------------
+boolean initAsync()
+-------------------
 
 .. method:: int initAsync(String Version, Context AppContext, LoaderCallbackInterface Callback)
 
-    Loads and inits OpenCV library using OpenCV Engine service.
+    Load and initialize OpenCV library using OpenCV Engine service.
 
-    :param Version: OpenCV Library version;
-    :param AppContext: Application context for connecting to service;
-    :param Callback: Object, that implements LoaderCallbackInterface for handling Connection status;
-    :rtype: int;
-    :return: Function returns initialisation status.
-
-Initialisation status constants
--------------------------------
-
-.. data:: SUCCESS
-
-    OpenCV initialisation finished successfully.
-
-.. data:: NO_SERVICE
-
-    OpenCV Engine service is not installed on the device. App need to notify user about it.
-
-.. data:: RESTART_REQUIRED
-
-    OpenCV library installation via Google Play service was initialized. Application restart is required.
-
-.. data:: MARKET_ERROR
-
-    Google Play (Android Market) cannot be invoked.
-
-.. data:: INSTALL_CANCELED
-
-    OpenCV library installation was canceled by user.
-
-.. data:: INIT_FAILED
-
-    OpenCV library initialization failed.
+    :param Version: OpenCV Library version
+    :param AppContext: Application context for connecting to service
+    :param Callback: Object, that implements LoaderCallbackInterface for handling Connection status
+    :rtype: boolean
+    :return: Return true if initialization of OpenCV starts successfully
 
 Loader callback interface
 -------------------------
 
 .. class:: LoaderCallbackInterface
 
-    Interface for callback object in case of asynchronious initialization of OpenCV.
+    Interface for callback object in case of asynchronous initialization of OpenCV
 
 .. method:: void onEngineConnected(int status)
 
-    Callback method for Async OpenCV intialization;
+    Callback method for Async OpenCV initialization
  
-    :param status: Result of initialization. See Initialisation status constants.
+    :param status: Status of initialization. See Initialization status constants
+
+Initialisation status constants
+-------------------------------
+
+.. data:: SUCCESS
+
+    OpenCV initialization finished successfully
+
+.. data:: NO_SERVICE
+
+    OpenCV Engine service is not installed on the device. App need to notify user about it
+
+.. data:: RESTART_REQUIRED
+
+    OpenCV library installation via Google Play service was initialized. Application restart is required
+
+.. data:: MARKET_ERROR
+
+    Google Play (Android Market) cannot be invoked
+
+.. data:: INSTALL_CANCELED
+
+    OpenCV library installation was canceled by user
+
+.. data:: INIT_FAILED
+
+    OpenCV library initialization failed
+
+OpenCV version constatnts
+-------------------------
+
+.. data:: OPEN_CV_VERSION_2_4
+
+    OpenCV Library version 2.4.x

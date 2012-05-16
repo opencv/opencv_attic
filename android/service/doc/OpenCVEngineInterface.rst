@@ -15,41 +15,41 @@ int getEngineVersion()
 
 .. method:: int GetEngineVersion()
 
-    Gets OpenCV Engine version.
+    Get OpenCV Engine version
 
-    :rtype: int;
-    :return: Returns OpenCV Engine version.
+    :rtype: int
+    :return: Return OpenCV Engine version
 
 String getLibPathByVersion()
 ----------------------------
 
 .. method:: String GetLibPathByVersion(String version)
 
-    Gets path to native OpenCV libraries. 
+    Find already installed OpenCV library 
 
-    :param version: OpenCV Library version;
-    :rtype: String;
-    :return: Returns path to OpenCV native libs or empty string if OpenCV was not found.
+    :param version: OpenCV library version
+    :rtype: String
+    :return: Return path to OpenCV native libs or empty string if OpenCV was not found
 
 String getLibraryList()
 -----------------------
 
 .. method:: String GetLibraryList(String version)
 
-    Gets list of OpenCV native libraries in loading order.
+    Get list of OpenCV native libraries in loading order seporated by ";" symbol
 
-    :param version: OpenCV Library version;
-    :rtype: String;
-    :return: Returns OpenCV libraries names seporated by semicolumn symbol in loading order.
+    :param version: OpenCV library version
+    :rtype: String
+    :return: Return OpenCV libraries names seporated by symbol ";" in loading order
 
 boolean installVersion()
 ------------------------
 
 .. method:: boolean InstallVersion(String version)
 
-    Trys to install defined version of OpenCV.
+    Try to install defined version of OpenCV from Google Play (Android Market).
 
-    :param version: OpenCV Library version;
-    :rtype: String;
-    :return: Returns true if installation successfull or package has been already installed.
+    :param version: OpenCV library version
+    :rtype: String
+    :return: Return true if installation was successful or OpenCV package has been already installed
  
