@@ -5,10 +5,10 @@ Native OpenCV Engine service interface
 .. highlight:: cpp
 .. module:: IOpenCVEngine.h
     :platform: Android
-    :synopsis: Defines OpenCV Engine interface for Android Binder component.
+    :synopsis: Defines OpenCV Engine interface for Android Binder component
 .. Class:: OpenCVEngine
 
-OpenCVEngine class provides Binder interface to OpenCV Engine Service.
+OpenCVEngine class provides Binder interface to OpenCV Engine Service
 
 int getEngineVersion()
 ----------------------

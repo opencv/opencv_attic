@@ -2,7 +2,7 @@
 OpenCV Engine. Android service for OpenCV
 *************************************************
 
-OpenCV Engine is an Android service targeted to manage OpenCV library binaries on end users devices. It allows sharing the OpenCV dynamic libraries of different versions between applications on the same device. The Engine provides the following benefits:
+OpenCV Engine is an Android service targeted to manage OpenCV library binaries on end users devices. It allows sharing the OpenCV dynamic libraries of different versions between applications on the same device. The Engine provides the following benefits\:
 
 - Less memory usage. All apps use the same binaries from service and do not keep native libs inside themself;
 - Hardware specific optimisations for all supported platfroms;
@@ -14,9 +14,10 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-   Intro.rst
-   JavaHelper.rst
-   OpenCVEngineInterface.rst
-   AsyncServiceHelper.rst
-   NativeHelper.rst
-   IOpenCVEngine.rst
+   Intro
+   UseCases
+   JavaHelper
+   OpenCVEngineInterface
+   AsyncServiceHelper
+   NativeHelper
+   IOpenCVEngine
