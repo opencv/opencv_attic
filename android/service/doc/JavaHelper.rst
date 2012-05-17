@@ -71,6 +71,10 @@ Initialisation status constants
 
     OpenCV library installation was canceled by user
 
+.. data:: INCOMPATIBLE_ENGINE_VERSION
+
+    Version of OpenCV Engine Service is incompatible with this app. Service update is needed
+
 .. data:: INIT_FAILED
 
     OpenCV library initialization failed

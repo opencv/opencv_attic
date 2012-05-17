@@ -21,7 +21,7 @@ If OpenCV library installation canceled\:
 
 .. image:: img/LibInstallCanceled.dia.png
 
-Regular spplication start
+Regular application start
 -------------------------
 
 OpenCV Engine and OpenCV library has bee already installed.

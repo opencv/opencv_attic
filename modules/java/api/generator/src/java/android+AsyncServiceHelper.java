@@ -44,6 +44,7 @@ public class AsyncServiceHelper
     }
 
     protected static final String TAG = "OpenCvEngine/Helper";
+    protected static final int MINIMUM_ENGINE_VERSION = 1;
     protected OpenCVEngineInterface mEngineService;
     protected LoaderCallbackInterface mUserAppCallback;
     protected String mOpenCVersion;
@@ -62,9 +63,20 @@ public class AsyncServiceHelper
                 mStatus = LoaderCallbackInterface.NO_SERVICE;
             }
             else
-            {
-                try
+            {                
+            	try
                 {
+					if (mEngineService.getEngineVersion() < MINIMUM_ENGINE_VERSION)
+					{
+						mStatus = LoaderCallbackInterface.INCOMPATIBLE_ENGINE_VERSION;
+                        Log.d(TAG, "Init finished with status " + mStatus);
+                        Log.d(TAG, "Unbind from service");
+                        mAppContext.unbindService(mServiceConnection);
+                        Log.d(TAG, "Calling using callback");
+                        mUserAppCallback.onEngineConnected(mStatus);
+                        return;
+					}
+
                     Log.d(TAG, "Trying to get library path");
                     String path = mEngineService.getLibPathByVersion(mOpenCVersion);
                     if ((null == path) || (path.length() == 0))
@@ -77,7 +89,7 @@ public class AsyncServiceHelper
 							@Override
 							public void onClick(DialogInterface dialog, int which)
 							{
-		                    	Log.d(TAG, "Trying to install OpenCV lib vai Google Play");
+		                    	Log.d(TAG, "Trying to install OpenCV lib via Google Play");
 								
 		                    	try
 		                    	{
@@ -149,7 +161,13 @@ public class AsyncServiceHelper
                 {
                     e.printStackTrace();
                     mStatus = LoaderCallbackInterface.INIT_FAILED;
+                    Log.d(TAG, "Init finished with status " + mStatus);
+                    Log.d(TAG, "Unbind from service");
+                    mAppContext.unbindService(mServiceConnection);
+                    Log.d(TAG, "Calling using callback");
+                    mUserAppCallback.onEngineConnected(mStatus);
                 }
+            	
             }
         }
 

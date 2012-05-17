@@ -98,6 +98,19 @@ public class puzzle15Activity extends Activity implements LoaderCallbackInterfac
 			{
 				Log.d(TAG, "OpenCV library instalation was canceled by user");
 				finish();
+			} break;
+			case LoaderCallbackInterface.INCOMPATIBLE_ENGINE_VERSION:
+			{
+				Log.d(TAG, "OpenCVEngine Service is uncompatible with this app!");
+				AlertDialog IncomatibilityMessage = new AlertDialog.Builder(this).create();
+				IncomatibilityMessage.setTitle("OpenCV Engine");
+				IncomatibilityMessage.setMessage("OpenCV Eingine service is incompatible with this app. Update it!");
+				IncomatibilityMessage.setButton("OK", new OnClickListener() {
+					public void onClick(DialogInterface dialog, int which) {
+						finish();
+					}
+				});
+				IncomatibilityMessage.show();				
 			}
 			default:
 			{

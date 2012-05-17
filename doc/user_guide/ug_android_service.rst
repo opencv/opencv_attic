@@ -7,7 +7,9 @@ Android OpenCV Engine
 Usage model for target user
 ---------------------------
 
-First OpenCV app:
+.. image:: img/AndroidAppUsageModel.dia.png
+
+First OpenCV app\:
 
 - User downloads app dependent from OpenCV from Google Play or installs it manually;
 - User starts application. Application asks user to install OpenCV Engine;
@@ -21,7 +23,6 @@ Next OpenCV app:
 - User starts application.
 - If selected version is not installed Engine asks user to install OpenCV library package and runs Google Play;
 - User runs app in the second time and gets what he or she wants.
-
 
 Development environment setup
 -----------------------------

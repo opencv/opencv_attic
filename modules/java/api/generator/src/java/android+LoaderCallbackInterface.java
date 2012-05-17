@@ -26,6 +26,10 @@ public interface LoaderCallbackInterface
      */
     static final int INSTALL_CANCELED = 4;
     /**
+     * Version of OpenCV Engine Service is incompatible with this app. Service update is needed
+     */
+    static final int INCOMPATIBLE_ENGINE_VERSION = 5;
+    /**
      * OpenCV library initialization failed
      */
     static final int INIT_FAILED = 0xff;
