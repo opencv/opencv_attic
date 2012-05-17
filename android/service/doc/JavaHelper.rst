@@ -85,3 +85,10 @@ OpenCV version constatnts
 .. data:: OPEN_CV_VERSION_2_4
 
     OpenCV Library version 2.4.x
+
+Other constatnts
+----------------
+
+.. data:: OPEN_CV_SERVICE_URL
+
+    Url for OpenCV Engine on Google Play (Android Market)

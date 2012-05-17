@@ -83,7 +83,7 @@ public class puzzle15Activity extends Activity implements LoaderCallbackInterfac
 			} break;
 			case LoaderCallbackInterface.MARKET_ERROR:
 			{
-				Log.d(TAG, "OpenCVEngine Service is not installed!");
+				Log.d(TAG, "OpenCVEngine Service is not installed! \n Get it here: " + OpenCVLoader.OPEN_CV_SERVICE_URL);
 				AlertDialog MarketErrorMessage = new AlertDialog.Builder(this).create();
 				MarketErrorMessage.setTitle("OpenCV Engine");
 				MarketErrorMessage.setMessage("OpenCV Library package instalation failed!");

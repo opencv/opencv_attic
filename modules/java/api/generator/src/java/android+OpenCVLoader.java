@@ -13,6 +13,11 @@ public class OpenCVLoader
     public static final String OPEN_CV_VERSION_2_4 = "2.4";
 
     /**
+     * Url for OpenCV Engine on Google Play (Android Market)
+     */
+    public static final String OPEN_CV_SERVICE_URL = "market://details?id=org.opencv.engine";
+    
+    /**
 	 * Load and initialize OpenCV library from current application package. Roughly it is analog of system.loadLibrary("opencv_java")
      * @return Return true is initialization of OpenCV was successful
      */
