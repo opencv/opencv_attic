@@ -1,0 +1,76 @@
+set(the_description "All the selected OpenCV modules in a single binary")
+set(OPENCV_MODULE_IS_PART_OF_WORLD FALSE)
+set(BUILD_opencv_world_INIT OFF)
+
+ocv_add_module(world opencv_core)
+
+if(MSVC)
+  foreach(_var CMAKE_EXE_LINKER_FLAGS_RELEASE CMAKE_MODULE_LINKER_FLAGS_RELEASE CMAKE_SHARED_LINKER_FLAGS_RELEASE
+               CMAKE_EXE_LINKER_FLAGS_DEBUG   CMAKE_MODULE_LINKER_FLAGS_DEBUG   CMAKE_SHARED_LINKER_FLAGS_DEBUG)
+    string(REPLACE "/INCREMENTAL:NO" "/INCREMENTAL:YES" ${_var} "${${_var}}")
+  endforeach()
+endif()
+
+ocv_glob_module_sources()
+ocv_module_include_directories()
+ocv_create_module(SKIP_LINK)
+
+#TODO: try to use try_compile to find real object file extension/location
+if(CMAKE_GENERATOR MATCHES "^Visual.*$")
+  set(have_cfg 1)
+  set(objpath0 "<MODULE_NAME>.dir/<CONFIGURATION>/<SRC_NAME_WE>.obj")
+elseif (CMAKE_GENERATOR MATCHES Xcode)
+  set(have_cfg 1)
+  set(objpath0 "OpenCV.build/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/<MODULE_NAME>.build/Objects-normal/$(CURRENT_ARCH)/<SRC_NAME_WE>.o")
+else()
+  set(have_cfg 0)
+  set(objpath0 "CMakeFiles/<MODULE_NAME>.dir/<RELATIVE_SRC_NAME>.o")
+  if(MINGW OR MSVC)
+    set(objpath0 "${objpath0}bj")
+  endif()
+endif()
+
+set(objlist "")
+foreach(m ${OPENCV_MODULE_${the_module}_DEPS})
+  # build order dependencies
+  add_dependencies(${the_module} ${m})
+  # link dependencies
+  string(REGEX REPLACE "(general|debug|optimized);opencv_[^;]*(;|$)" "" _link_deps "${${m}_LIB_DEPENDS}")
+  if(_link_deps)
+    target_link_libraries(${the_module} ${_link_deps})
+  endif()
+
+  string(REGEX REPLACE "<MODULE_NAME>" "${m}" objpath1 "${${m}_BINARY_DIR}/${objpath0}")
+  foreach(src ${OPENCV_MODULE_${m}_SOURCES})
+    if(IS_ABSOLUTE "${src}")
+      file(RELATIVE_PATH srcname "${OPENCV_MODULE_${m}_LOCATION}" "${src}")
+    else()
+      set(srcname "${src}")
+    endif()
+    string(REPLACE ".." "__" srcname "${srcname}")
+    if(srcname MATCHES "\\.(cpp|mm|c|cxx|cc)$")
+      get_filename_component(srcname_we ${srcname} NAME_WE)
+      string(REGEX REPLACE <SRC_NAME_WE> "${srcname_we}" objpath2 "${objpath1}")
+      string(REGEX REPLACE <RELATIVE_SRC_NAME> "${srcname}" objpath3 "${objpath2}")
+      file(RELATIVE_PATH objpath4 "${CMAKE_CURRENT_BINARY_DIR}" "${objpath3}")
+      list(APPEND objlist "\"${objpath4}\"")
+    endif()
+  endforeach()
+endforeach()
+
+string(REPLACE ";" " " objlist "${objlist}")
+
+if(have_cfg)
+  string(REGEX REPLACE "<CONFIGURATION>" "Debug" objlist_dbg "${objlist}")
+  string(REGEX REPLACE "<CONFIGURATION>" "Release" objlist_rls "${objlist}")
+  set_target_properties(${the_module} PROPERTIES
+    LINK_FLAGS_DEBUG ${objlist_dbg}
+    LINK_FLAGS_RELEASE ${objlist_rls})
+else()
+  file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/world_objects.list" "${objlist}")
+  execute_process(COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_BINARY_DIR}/world_objects.list" "${CMAKE_CURRENT_BINARY_DIR}/world_objects.rsp" OUTPUT_QUIET)
+  set_target_properties(${the_module} PROPERTIES
+    LINK_FLAGS @world_objects.rsp)
+endif()
+
+ocv_add_precompiled_headers(${the_module})
