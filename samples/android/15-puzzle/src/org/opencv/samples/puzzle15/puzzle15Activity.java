@@ -20,7 +20,7 @@ public class puzzle15Activity extends Activity implements LoaderCallbackInterfac
 
     private MenuItem            mItemNewGame;
     private MenuItem            mItemToggleNumbers;
-    private puzzle15View        mView;
+    private puzzle15View        mView = null;
     
     public puzzle15Activity()
     {
@@ -31,7 +31,8 @@ public class puzzle15Activity extends Activity implements LoaderCallbackInterfac
 	protected void onPause() {
         Log.i(TAG, "onPause");
 		super.onPause();
-		mView.releaseCamera();
+		if (null != mView)
+			mView.releaseCamera();
 	}
 
 	@Override
