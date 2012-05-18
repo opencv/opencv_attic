@@ -9,4 +9,3 @@ OpenCV User Guide
    ug_features2d.rst
    ug_highgui.rst
    ug_traincascade.rst
-   ug_android_service.rst

@@ -302,15 +302,143 @@ Well, running samples from Eclipse is very simple:
 How to use OpenCV library project in your application
 =====================================================
 
-If you already have an Android application, you can add a reference to OpenCV and import all its functionality. 
+Application development with static initialisation
+--------------------------------------------------
 
-#. First of all you need to have both projects (your app and OpenCV) in a single workspace. 
-   So, open workspace with your application and import the OpenCV project into your workspace as stated above. 
+In this way of using OpenCV all OpenCV binaries a linked and put to your application package. It is designed for experimantal and local development purposes only. 
+This way is depricated for production code. If you want to publish your app use aproach with async initialisation.
 
-#. Add a reference to OpenCV project.
+#. Add OpenCV binary package to your Eclipse workspace as in the previous chapters;
+#. Create new Android project or use an existing project from the workspace;
+#. In application project add library reference to OpenCV in :guilabel:`Project --> Properties --> Android --> Library --> Add.
 
-   Do the right mouse click on your app in Package Explorer, go to :menuselection:`Properties --> Android --> Library --> Add`
-   and choose the OpenCV library project. 
+After adding depedency from OpenCV library project Android toolchain add all needed libraries to Application package.
+To use OpenCV functionality you need to add OpenCV library initialization before using any OpenCV specific code, for example, in static section of Activity class.
+
+.. code-block:: java
+   :linenos:
+
+    static {
+        if (!Helper.InitOpenCVStatic()) {
+            // Report initialisation error
+        }
+    }
+
+If you application includes other OpenCV-dependent native libraries you need to init OpenCV before them.
+
+.. code-block:: java
+    :linenos:
+
+    static {
+        if (Helper.InitOpenCVStatic()) {
+            System.loadLibrary("my_super_lib1");
+            System.loadLibrary("my_super_lib2");
+        } else {
+            // Report initialisation error
+        }
+    }
+
+Application development with async initialisation
+-------------------------------------------------
+
+Using async initialization is a preferred way for application Development. It uses OpenCV Engine service to get OpenCV libraries.
+
+#. Add OpenCV binary package to your Eclipse workspace as in the previous chapters;
+#. Create new Android project or use an existing project from the workspace;
+#. In application project add reference to OpenCV Java API JAR in :guilabel:`Project --> Properties --> Java build path --> Libraries --> Add JARs...` select OpenCV-2.4.0/bin/opencv-2.4.0.jar;
+#. Add OpenCV Java API JAR to Export list by selecting in in :guilabel:`Project --> Properties --> Java build path --> Order and Export` list.
+
+If you want to use engine-based aproach you need to install packages with the Service and OpenCV package for you platform. You can do it using Google Play service or manualy with adb tool:
+
+.. code-block:: sh
+    :linenos:
+
+    adb install ./org.opencv.engine.apk
+    adb install ./org.opencv.lib_v240_<hardware version>.apk
+
+There is a very base code snippet for Async init. It shows only basis principles of library Initialisation. See 15-puzzle example for details.
+
+.. code-block:: java
+    :linenos:
+    
+    public class MyActivity extends Activity implements HelperCallbackInterface
+    {
+	/** Called when the activity is first created. */
+	@Override
+	public void onCreate(Bundle savedInstanceState)
+	{
+	    Log.i(TAG, "onCreate");
+	    super.onCreate(savedInstanceState);
+
+	    requestWindowFeature(Window.FEATURE_NO_TITLE);
+
+	    Log.i(TAG, "Trying to load OpenCV library");
+	    if (Helper.Success != Helper.InitOpenCVAsync("2.4", this, this))
+	    {
+		Log.e(TAG, "Cannot connect to OpenCVEngine");
+		finish();
+	    }
+	}
+
+	public void OnEngineConnected(int status)
+	{
+	    switch (status)
+	    {
+		case Helper.Success:
+	    {
+		    Log.i(TAG, "OpenCV loaded successfully!");
+		    mView = new MyView(this);
+		    setContentView(mView);
+		} break;
+		case Helper.RestartRequired:
+		{
+		    Log.d(TAG, "OpenCV downloading. App restart is needed!");
+		    AlertDialog ResartMessage = new AlertDialog.Builder(this).create();
+		    ResartMessage.setTitle("App restart is needed");
+		    ResartMessage.setMessage("Application will be closed now. Start it when installtion of OpenCV library will be finished!");
+		    ResartMessage.setButton("OK", new OnClickListener() {	
+			    public void onClick(DialogInterface dialog, int which) {
+					finish();
+				}
+			});
+		} break;
+		case LoaderCallbackInterface.NO_SERVICE:
+		{
+		    Log.d(TAG, "OpenCVEngine Service is not installed!");
+		    AlertDialog NoServiceMessage = new AlertDialog.Builder(this).create();
+		    NoServiceMessage.setTitle("OpenCV Engine");
+		    NoServiceMessage.setMessage("OpenCV Engine service was not found. Install it using Google Play!");
+		    NoServiceMessage.setButton("OK", new OnClickListener() {	
+			public void onClick(DialogInterface dialog, int which) {
+					finish();
+				}
+			});
+			NoServiceMessage.show();
+		} break;
+		case LoaderCallbackInterface.MARKET_ERROR:
+		{
+		    Log.d(TAG, "OpenCVEngine Service is not installed! \n Get it here: " + OpenCVLoader.OPEN_CV_SERVICE_URL);
+		    AlertDialog MarketErrorMessage = new AlertDialog.Builder(this).create();
+		    MarketErrorMessage.setTitle("OpenCV Engine");
+		    MarketErrorMessage.setMessage("OpenCV Library package instalation failed!");
+		    MarketErrorMessage.setButton("OK", new OnClickListener() {
+			public void onClick(DialogInterface dialog, int which) {
+				finish();
+			}
+		    });
+		    MarketErrorMessage.show();
+		} break;
+		default:
+		{
+		    Log.e(TAG, "OpenCV loading failed!");
+		    finish();
+		} break;
+	    }
+	}
+    }
+
+It this case application works with OpenCV Engine in async fashion. OnEngineConnected callback will be called in UI thread, when initialisation finishes. Attension, It does not allowed to use CV calls or load OpenCV-dependent native libs before invoking this callback. Application also need to handle NoService and MarketError status values.
+
 
 Whats next?
 ===========
