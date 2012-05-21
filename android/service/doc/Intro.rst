@@ -24,9 +24,14 @@ First OpenCV app\:
 - User starts application. Application proposes to user to install OpenCV library for target device and runs Google Play;
 - User runs app in the third time  and gets what he or she wants.
 
-Next OpenCV app:
+Next OpenCV app\:
 
 - User downloads app dependent from OpenCV from Google Play or installs it manually;
 - User starts application.
 - If selected version is not installed Engine asks user to install OpenCV library package and runs Google Play;
 - User runs app in the second time and gets what he or she wants.
+
+OpenCV Engine structure
+-----------------------
+
+.. image:: img/Structure.dia.png
