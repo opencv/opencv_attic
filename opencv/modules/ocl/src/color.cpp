@@ -141,7 +141,8 @@ void cvtColor_caller(const oclMat &src, oclMat &dst, int code, int dcn)
 	}
 }
 }
-
+//! convert the src matrix from one color type to another type by the converting code
+// supports code of the following CV_BGR2GRAY, CV_BGRA2GRAY, CV_RGB2GRAY, CV_RGBA2GRAY
 void cv::ocl::cvtColor(const oclMat &src, oclMat &dst, int code, int dcn)
 {
 	cvtColor_caller(src, dst, code, dcn);

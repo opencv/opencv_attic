@@ -55,43 +55,74 @@ using namespace cv::ocl;
 
 #if !defined (HAVE_OPENCL)
 
+//! Does mean shift filtering on GPU
 void cv::ocl::meanShiftFiltering(const oclMat &, oclMat &, int, int, TermCriteria)
 {
 	throw_nogpu();
 }
+
+//! Does mean shift procedure on GPU.
 void cv::ocl::meanShiftProc(const oclMat &, oclMat &, oclMat &, int, int, TermCriteria)
 {
 	throw_nogpu();
 }
+
+//! applies fixed threshold to the image.
+// supports CV_8UC1 and CV_32FC1 data type
+// supports threshold type: THRESH_BINARY, THRESH_BINARY_INV, THRESH_TRUNC, THRESH_TOZERO, THRESH_TOZERO_INV
 double cv::ocl::threshold(const oclMat &, oclMat &, double, int)
 {
 	throw_nogpu();
 	return 0.0;
 }
+
+//! resizes the image
+// Supports INTER_NEAREST, INTER_LINEAR
+// supports CV_8UC1, CV_8UC4, CV_32FC1 and CV_32FC4 types
 void cv::ocl::resize(const oclMat &, oclMat &, Size, double, double, int)
 {
 	throw_nogpu();
 }
+
+//! copies 2D array to a larger destination array and pads borders with user-specifiable constant
+// supports CV_8UC1, CV_8UC4, CV_32SC1 types
 void cv::ocl::copyMakeBorder(const oclMat &, oclMat &, int, int, int, int, const Scalar &)
 {
 	throw_nogpu();
 }
+
+//! warps the image using affine transformation
+// Supports INTER_NEAREST, INTER_LINEAR, INTER_CUBIC
+// supports CV_8UC1, CV_8UC4, CV_32FC1 and CV_32FC4 types
 void cv::ocl::warpAffine(const oclMat &, oclMat &, const Mat &, Size, int)
 {
 	throw_nogpu();
 }
+
+//! warps the image using perspective transformation
+// Supports INTER_NEAREST, INTER_LINEAR, INTER_CUBIC
+// supports CV_8UC1, CV_8UC4, CV_32FC1 and CV_32FC4 types
 void cv::ocl::warpPerspective(const oclMat &, oclMat &, const Mat &, Size, int)
 {
 	throw_nogpu();
 }
+
+//! computes the integral image and integral for the squared image
+// sum will have CV_32S type, sqsum - CV32F type
+// supports only CV_8UC1 source type
 void cv::ocl::integral(oclMat &, oclMat &, oclMat &)
 {
 	throw_nogpu();
 }
+
+//! only 8UC1 and 256 bins is supported now
 void cv::ocl::calcHist(const oclMat &, oclMat &hist)
 {
 	throw_nogpu();
 }
+
+//! bilateralFilter
+// supports 8UC1 8UC4
 void cv::ocl::bilateralFilter(const oclMat &, oclMat &, int, double, double, int)
 {
 	throw_nogpu();

@@ -54,106 +54,135 @@ using namespace cv::ocl;
 
 #if !defined (HAVE_OPENCL)
 
+//! returns 2D box filter
+// supports CV_8UC1 and CV_8UC4 source type, dst type must be the same as source type
 Ptr<BaseFilter_GPU> cv::ocl::getBoxFilter_GPU(int, int, const Size &, Point, int)
 {
 	throw_nogpu();
 	return Ptr<BaseFilter_GPU>(0);
 }
 
+//! returns box filter engine
 Ptr<FilterEngine_GPU> cv::ocl::createBoxFilter_GPU(int, int, const Size &, const Point &, int)
 {
 	throw_nogpu();
 	return Ptr<FilterEngine_GPU>(0);
 }
 
+//! returns the non-separable filter engine with the specified 
 Ptr<FilterEngine_GPU> cv::ocl::createFilter2D_GPU(const Ptr<BaseFilter_GPU>)
 {
 	throw_nogpu();
 	return Ptr<FilterEngine_GPU>(0);
 }
 
+//! returns the separable linear filter 
 Ptr<FilterEngine_GPU> cv::ocl::createSeparableLinearFilter_GPU(int, int, const Mat &, const Mat &, const Point &)
 {
 	throw_nogpu();
 	return Ptr<FilterEngine_GPU>(0);
 }
 
+//! returns the primitive row filter with the specified 
 Ptr<BaseRowFilter_GPU> cv::ocl::getLinearRowFilter_GPU(int, int, const Mat &, int)
 {
 	throw_nogpu();
 	return Ptr<BaseRowFilter_GPU>(0);
 }
 
+//! returns the primitive column filter with the specified kernel
 Ptr<BaseColumnFilter_GPU> cv::ocl::getLinearColumnFilter_GPU(int, int, const Mat &, int)
 {
 	throw_nogpu();
 	return Ptr<BaseColumnFilter_GPU>(0);
 }
 
+//! returns the Gaussian filter engine
 Ptr<FilterEngine_GPU> cv::ocl::createGaussianFilter_GPU(int, Size, double, double)
 {
 	throw_nogpu();
 	return Ptr<FilterEngine_GPU>(0);
 }
 
-
+//! returns 2D filter with the specified kernel
+// supports CV_8UC1 and CV_8UC4 
 Ptr<BaseFilter_GPU> cv::ocl::getLinearFilter_GPU(int, int, const Mat &, const Size &, Point)
 {
 	throw_nogpu();
 	return Ptr<BaseFilter_GPU>(0);
 }
 
+//! returns the non-separable linear filter 
 Ptr<FilterEngine_GPU> cv::ocl::createLinearFilter_GPU(int, int, const Mat &, const Point &)
 {
 	throw_nogpu();
 	return Ptr<FilterEngine_GPU>(0);
 }
 
+//! smooths the image using the box filter. Each pixel is processed in O(1) time
 void cv::ocl::boxFilter(const oclMat &, oclMat &, int, Size, Point, int)
 {
 	throw_nogpu();
 }
 
+//! applies separable 2D linear filter to the 
 void cv::ocl::sepFilter2D(const oclMat &, oclMat &, int, const Mat &, const Mat &, Point)
 {
 	throw_nogpu();
 }
 
+//! applies generalized Sobel operator to the image
+// dst.type must equalize src.type
+// supports data type: CV_8UC1, CV_8UC4, CV_32FC1 and CV_32FC4
+// supports border type: BORDER_CONSTANT, BORDER_REPLICATE, BORDER_REFLECT,BORDER_REFLECT_101
 void cv::ocl::Sobel(const oclMat &, oclMat &, int, int, int, int, double)
 {
 	throw_nogpu();
 }
 
+//! applies the vertical or horizontal Scharr operator to the image
+// dst.type must equalize src.type
+// supports data type: CV_8UC1, CV_8UC4, CV_32FC1 and CV_32FC4
+// supports border type: BORDER_CONSTANT, BORDER_REPLICATE, BORDER_REFLECT,BORDER_REFLECT_101
 void cv::ocl::Scharr(const oclMat &, oclMat &, int, int, int, double)
 {
 	throw_nogpu();
 }
 
+//! smooths the image using Gaussian filter
 void cv::ocl::GaussianBlur(const oclMat &, oclMat &, Size, double, double)
 {
 	throw_nogpu();
 }
 
+//! applies non-separable 2D linear filter to the image
 void cv::ocl::filter2D(const oclMat &, oclMat &, int, const Mat &, Point)
 {
 	throw_nogpu();
 }
 
+//! applies Laplacian operator to the image
+// supports only ksize = 1 and ksize = 3 8UC1 8UC4 32FC1 32FC4 data type
 void cv::ocl::Laplacian(const oclMat &, oclMat &, int, int, double)
 {
 	throw_nogpu();
 }
 
+//! erodes the image (applies the local minimum operator)
+// supports data type: CV_8UC1, CV_8UC4, CV_32FC1 and CV_32FC4
 void cv::ocl::erode(const oclMat &, oclMat &, const Mat &, Point, int)
 {
 	throw_nogpu();
 }
 
+//! dilates the image (applies the local maximum operator)
+// supports data type: CV_8UC1, CV_8UC4, CV_32FC1 and CV_32FC4
 void cv::ocl::dilate(const oclMat &, oclMat &, const Mat &, Point, int)
 {
 	throw_nogpu();
 }
 
+//! applies an advanced morphological operation to the image
 void cv::ocl::morphologyEx(const oclMat &, oclMat &, int, const Mat &, Point, int)
 {
 	throw_nogpu();

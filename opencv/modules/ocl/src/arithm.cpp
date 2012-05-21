@@ -412,26 +412,35 @@ void arithmetic_run(const oclMat &src1, const oclMat &src2, oclMat &dst, const o
 
 	openCLExecuteKernel(clCxt, kernelString, kernelName, globalThreads, localThreads, args, channels, depth);
 }
+//! adds one matrix to another (c = a + b)
+// supports all types except CV_8SC1,CV_8SC2,CV8SC3 and CV_8SC4
 void cv::ocl::add(const oclMat &src1, const oclMat &src2, oclMat &dst)
 {
 	arithmetic_run(src1, src2, dst, "arithm_add", &arithm_add);
 }
+//! adds one matrix to another (c = a + b)
+// supports all types except CV_8SC1,CV_8SC2,CV8SC3 and CV_8SC4
 void cv::ocl::add(const oclMat &src1, const oclMat &src2, oclMat &dst, const oclMat &mask)
 {
 	arithmetic_run(src1, src2, dst, mask, "arithm_add_with_mask", &arithm_add);
 }
 
+//! subtracts one matrix from another (c = a - b)
+// supports all types except CV_8SC1,CV_8SC2,CV8SC3 and CV_8SC4
 void cv::ocl::subtract(const oclMat &src1, const oclMat &src2, oclMat &dst)
 {
 	arithmetic_run(src1, src2, dst, "arithm_sub", &arithm_sub);
 }
+//! subtracts one matrix from another (c = a - b)
+// supports all types except CV_8SC1,CV_8SC2,CV8SC3 and CV_8SC4
 void cv::ocl::subtract(const oclMat &src1, const oclMat &src2, oclMat &dst, const oclMat &mask)
 {
 	arithmetic_run(src1, src2, dst, mask, "arithm_sub_with_mask", &arithm_sub);
 }
 typedef void (*MulDivFunc)(const oclMat &src1, const oclMat &src2, oclMat &dst, string kernelName,
                            const char **kernelString, void *scalar);
-
+//! computes element-wise product of the two arrays (c = a * b)
+// supports all types except CV_8SC1,CV_8SC2,CV8SC3 and CV_8SC4
 void cv::ocl::multiply(const oclMat &src1, const oclMat &src2, oclMat &dst, double scalar)
 {
 	static MulDivFunc tab[] =
@@ -442,6 +451,9 @@ void cv::ocl::multiply(const oclMat &src1, const oclMat &src2, oclMat &dst, doub
 
 	tab[src1.depth()](src1, src2, dst, "arithm_mul", &arithm_mul, (void *)(&scalar));
 }
+
+//! computes element-wise quotient of the two arrays (c = a / b)
+// supports all types except CV_8SC1,CV_8SC2,CV8SC3 and CV_8SC4
 void cv::ocl::divide(const oclMat &src1, const oclMat &src2, oclMat &dst, double scalar)
 {
 	arithmetic_run<double>(src1, src2, dst, "arithm_div", &arithm_div, (void *)(&scalar));
@@ -595,6 +607,8 @@ void arithmetic_scalar(const oclMat &src1, const Scalar &src2, oclMat &dst, cons
 	arithmetic_scalar(src1, src2, dst, mask, kernelName, kernelString, 0);
 }
 
+//! adds scalar to a matrix (c = a + s)
+// supports all types except CV_8SC1,CV_8SC2,CV8SC3 and CV_8SC4
 void cv::ocl::add(const oclMat &src1, const Scalar &src2, oclMat &dst, const oclMat &mask)
 {
 	string kernelName = mask.data ? "arithm_s_add_with_mask" : "arithm_s_add";
@@ -603,18 +617,25 @@ void cv::ocl::add(const oclMat &src1, const Scalar &src2, oclMat &dst, const ocl
 	arithmetic_scalar(src1, src2, dst, mask, kernelName, kernelString);
 }
 
+//! subtracts scalar from a matrix (c = a - s)
+// supports all types except CV_8SC1,CV_8SC2,CV8SC3 and CV_8SC4
 void cv::ocl::subtract(const oclMat &src1, const Scalar &src2, oclMat &dst, const oclMat &mask)
 {
 	string kernelName = mask.data ? "arithm_s_sub_with_mask" : "arithm_s_sub";
 	const char **kernelString = mask.data ? &arithm_sub_scalar_mask : &arithm_sub_scalar;
 	arithmetic_scalar(src1, src2, dst, mask, kernelName, kernelString, 1);
 }
+
+//! subtracts scalar from a matrix (c = a - s)
+// supports all types except CV_8SC1,CV_8SC2,CV8SC3 and CV_8SC4
 void cv::ocl::subtract(const Scalar &src2, const oclMat &src1, oclMat &dst, const oclMat &mask)
 {
 	string kernelName = mask.data ? "arithm_s_sub_with_mask" : "arithm_s_sub";
 	const char **kernelString = mask.data ? &arithm_sub_scalar_mask : &arithm_sub_scalar;
 	arithmetic_scalar(src1, src2, dst, mask, kernelName, kernelString, -1);
 }
+//! computes element-wise quotient of the two arrays (c = a / b)
+// supports all types except CV_8SC1,CV_8SC2,CV8SC3 and CV_8SC4
 void cv::ocl::divide(double scalar, const oclMat &src,  oclMat &dst)
 {
 	string kernelName =  "arithm_s_div";
@@ -623,10 +644,14 @@ void cv::ocl::divide(double scalar, const oclMat &src,  oclMat &dst)
 //////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////  Absdiff ///////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
+//! computes element-wise absolute difference of two arrays (c = abs(a - b))
+// supports all types except CV_8SC1,CV_8SC2,CV8SC3 and CV_8SC4
 void cv::ocl::absdiff(const oclMat &src1, const oclMat &src2, oclMat &dst)
 {
 	arithmetic_run(src1, src2, dst, "arithm_absdiff", &arithm_absdiff);
 }
+//! computes element-wise absolute difference of array and scalar (c = abs(a - s))
+// supports all types except CV_8SC1,CV_8SC2,CV8SC3 and CV_8SC4
 void cv::ocl::absdiff(const oclMat &src1, const Scalar &src2, oclMat &dst)
 {
 	string kernelName = "arithm_s_absdiff";
@@ -668,7 +693,8 @@ void compare_run(const oclMat &src1, const oclMat &src2, oclMat &dst, string ker
 	args.push_back(make_pair(sizeof(cl_int), (void *)&dst_step1));
 	openCLExecuteKernel(clCxt, kernelString, kernelName, globalThreads, localThreads, args, -1, depth);
 }
-
+//! compares elements of two arrays (c = a <cmpop> b)
+// supports except CV_8SC1,CV_8SC2,CV8SC3,CV_8SC4 types
 void cv::ocl::compare(const oclMat &src1, const oclMat &src2, oclMat &dst , int cmpOp)
 {
 	string kernelName;
@@ -744,7 +770,9 @@ void arithmetic_sum_buffer_run(const oclMat &src, cl_mem &dst, int vlen , int gr
 		openCLExecuteKernel(src.clCxt, &arithm_sum_3, "arithm_op_sum_3", gt, lt, args, -1, -1, build_options);
 	}
 }
-
+//! computes sum of array elements
+// disabled until fix crash
+// support all types
 Scalar cv::ocl::sum(const oclMat &src)
 {
 	size_t groupnum = 0;
@@ -784,6 +812,8 @@ Scalar cv::ocl::sum(const oclMat &src)
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////////////// meanStdDev //////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
+//! computes mean value and standard deviation of all or selected array elements
+// supports except CV_32F,CV_64F
 void cv::ocl::meanStdDev(const oclMat &src, Scalar &mean, Scalar &stddev)
 {
 	CV_Assert(src.depth() <= CV_32S);
@@ -918,6 +948,8 @@ template <typename T> void arithmetic_minMax(const oclMat &src, double *minVal, 
 }
 
 typedef void (*minMaxFunc)(const oclMat &src, double *minVal, double *maxVal, const oclMat &mask);
+//! finds global minimum and maximum array elements and returns their values
+// support all types
 void cv::ocl::minMax(const oclMat &src, double *minVal, double *maxVal, const oclMat &mask)
 {
 	CV_Assert(src.channels() == 1);
@@ -940,11 +972,16 @@ void cv::ocl::minMax(const oclMat &src, double *minVal, double *maxVal, const oc
 //////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////// norm /////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
+//! computes norm of array
+// supports NORM_INF, NORM_L1, NORM_L2
+// supports only CV_8UC1 type
 double cv::ocl::norm(const oclMat &src1, int normType)
 {
 	return norm(src1, oclMat(src1.size(), src1.type(), Scalar::all(0)), normType);
 }
-
+//! computes norm of the difference between two arrays
+// supports NORM_INF, NORM_L1, NORM_L2
+// supports only CV_8UC1 type
 double cv::ocl::norm(const oclMat &src1, const oclMat &src2, int normType)
 {
 	bool isRelative = (normType & NORM_RELATIVE) != 0;
@@ -1106,6 +1143,8 @@ void arithmetic_flip_cols_run(const oclMat &src, oclMat &dst, string kernelName,
 
 	openCLExecuteKernel(clCxt, kernelString, kernelName, globalThreads, localThreads, args, src.channels(), depth);
 }
+//! reverses the order of the rows, columns or both in a matrix
+// supports all types
 void cv::ocl::flip(const oclMat &src, oclMat &dst, int flipCode)
 {
 	dst.create(src.size(), src.type());
@@ -1216,7 +1255,9 @@ void arithmetic_lut_run(const oclMat &src1, const oclMat &src2, oclMat &dst, str
 		openCLExecuteKernel(clCxt, &arithm_LUT, "LUT2", globalSize, localSize, args, src1.channels(), src1.depth());
 	}
 }
-
+//! transforms 8-bit unsigned integers using lookup table: dst(i)=lut(src(i))
+// destination array will have the depth type as lut and the same channels number as source
+//It supports 8UC1 8UC4 only
 void cv::ocl::LUT(const oclMat &src, const oclMat &lut, oclMat &dst)
 {
 	int cn = src.channels();
@@ -1263,11 +1304,14 @@ void arithmetic_exp_log_run(const oclMat &src, oclMat &dst, string kernelName, c
 
 	openCLExecuteKernel(clCxt, kernelString, kernelName, globalThreads, localThreads, args, -1, depth);
 }
+//! computes exponent of each matrix element (b = e**a)
+// supports only CV_32FC1 type
 void cv::ocl::exp(const oclMat &src, oclMat &dst)
 {
 	arithmetic_exp_log_run(src, dst, "arithm_exp", &arithm_exp);
 }
-
+//! computes natural logarithm of absolute value of each matrix element: b = log(abs(a))
+// supports only CV_32FC1 type
 void cv::ocl::log(const oclMat &src, oclMat &dst)
 {
 	arithmetic_exp_log_run(src, dst, "arithm_log", &arithm_log);
@@ -1308,7 +1352,8 @@ void arithmetic_magnitude_phase_run(const oclMat &src1, const oclMat &src2, oclM
 
 	openCLExecuteKernel(clCxt, &arithm_magnitude, kernelName, globalThreads, localThreads, args, -1, depth);
 }
-
+//! computes magnitude of each (x(i), y(i)) vector
+// supports only CV_32F CV_64F type
 void cv::ocl::magnitude(const oclMat &src1, const oclMat &src2, oclMat &dst)
 {
 	CV_Assert(src1.type() == src2.type() && src1.size() == src2.size() &&
@@ -1355,6 +1400,8 @@ void arithmetic_phase_run(const oclMat &src1, const oclMat &src2, oclMat &dst, s
 
 	openCLExecuteKernel(clCxt, kernelString, kernelName, globalThreads, localThreads, args, -1, depth);
 }
+//! computes angle (angle(i)) of each (x(i), y(i)) vector
+// supports only CV_32F CV_64F type
 void cv::ocl::phase(const oclMat &x, const oclMat &y, oclMat &Angle , bool angleInDegrees)
 {
 	CV_Assert(x.type() == y.type() && x.size() == y.size() && (x.depth() == CV_32F || x.depth() == CV_64F));
@@ -1412,6 +1459,8 @@ void arithmetic_cartToPolar_run(const oclMat &src1, const oclMat &src2, oclMat &
 
 	openCLExecuteKernel(clCxt, &arithm_cartToPolar, kernelName, globalThreads, localThreads, args, -1, depth);
 }
+//! converts Cartesian coordinates to polar
+// supports only CV_32F CV_64F type
 void cv::ocl::cartToPolar(const oclMat &x, const oclMat &y, oclMat &mag, oclMat &angle, bool angleInDegrees)
 {
 	CV_Assert(x.type() == y.type() && x.size() == y.size() && (x.depth() == CV_32F || x.depth() == CV_64F));
@@ -1466,7 +1515,8 @@ void arithmetic_ptc_run(const oclMat &src1, const oclMat &src2, oclMat &dst1, oc
 
 	openCLExecuteKernel(clCxt, &arithm_polarToCart, kernelName, globalThreads, localThreads, args, -1, depth);
 }
-
+//! converts polar coordinates to Cartesian
+// supports only CV_32F CV_64F type
 void cv::ocl::polarToCart(const oclMat &magnitude, const oclMat &angle, oclMat &x, oclMat &y, bool angleInDegrees)
 {
 	CV_Assert(angle.depth() == CV_32F || angle.depth() == CV_64F);
@@ -1543,7 +1593,8 @@ void arithmetic_minMaxLoc_mask_run(const oclMat &src, const oclMat &mask, cl_mem
 		openCLExecuteKernel(src.clCxt, &arithm_minMaxLoc_mask, "arithm_op_minMaxLoc_mask", gt, lt, args, -1, -1, build_options);
 	}
 }
-
+//! finds global minimum and maximum array elements and returns their values with locations
+// support all types
 void cv::ocl::minMaxLoc(const oclMat &src, double *minVal, double *maxVal,
                         Point *minLoc, Point *maxLoc, const oclMat &mask)
 {
@@ -1643,7 +1694,8 @@ void arithmetic_countNonZero_run(const oclMat &src, cl_mem &dst, int vlen , int 
 	size_t gt[3] = {groupnum * 256, 1, 1}, lt[3] = {256, 1, 1};
 	openCLExecuteKernel(src.clCxt, &arithm_nonzero, kernelName, gt, lt, args, -1, -1, build_options);
 }
-
+//! counts non-zero array elements
+// support all types
 int cv::ocl::countNonZero(const oclMat &src)
 {
 	size_t groupnum = 0;
@@ -1941,14 +1993,16 @@ void bitwise_scalar(const oclMat &src1, const Scalar &src2, oclMat &dst, const o
 {
 	bitwise_scalar(src1, src2, dst, mask, kernelName, kernelString, 0);
 }
-
+//! perfroms per-elements bit-wise inversion
+// supports all types
 void cv::ocl::bitwise_not(const oclMat &src, oclMat &dst)
 {
 	dst.create(src.size(), src.type());
 	string kernelName =  "arithm_bitwise_not";
 	bitwise_run(src, dst, kernelName, &arithm_bitwise_not);
 }
-
+//! calculates per-element bit-wise disjunction of two arrays
+// supports all types
 void cv::ocl::bitwise_or(const oclMat &src1, const oclMat &src2, oclMat &dst, const oclMat &mask)
 {
 	// dst.create(src1.size(),src1.type());
@@ -1964,8 +2018,8 @@ void cv::ocl::bitwise_or(const oclMat &src1, const oclMat &src2, oclMat &dst, co
 		bitwise_run(src1, src2, dst, mask, kernelName, &arithm_bitwise_or_mask);
 	}
 }
-
-
+//! calculates per-element bit-wise disjunction of two arrays
+// supports all types
 void cv::ocl::bitwise_or(const oclMat &src1, const Scalar &src2, oclMat &dst, const oclMat &mask)
 {
 	string kernelName = mask.data ? "arithm_s_bitwise_or_with_mask" : "arithm_s_bitwise_or";
@@ -1979,7 +2033,8 @@ void cv::ocl::bitwise_or(const oclMat &src1, const Scalar &src2, oclMat &dst, co
 		bitwise_scalar(src1, src2, dst, mask, kernelName, &arithm_bitwise_or_scalar);
 	}
 }
-
+//! calculates per-element bit-wise conjunction of two arrays
+// supports all types
 void cv::ocl::bitwise_and(const oclMat &src1, const oclMat &src2, oclMat &dst, const oclMat &mask)
 {
 //    dst.create(src1.size(),src1.type());
@@ -1996,7 +2051,8 @@ void cv::ocl::bitwise_and(const oclMat &src1, const oclMat &src2, oclMat &dst, c
 		bitwise_run(src1, src2, dst, mask, kernelName, &arithm_bitwise_and_mask);
 	}
 }
-
+//! calculates per-element bit-wise conjunction of two arrays
+// supports all types
 void cv::ocl::bitwise_and(const oclMat &src1, const Scalar &src2, oclMat &dst, const oclMat &mask)
 {
 	string kernelName = mask.data ? "arithm_s_bitwise_and_with_mask" : "arithm_s_bitwise_and";
@@ -2010,7 +2066,8 @@ void cv::ocl::bitwise_and(const oclMat &src1, const Scalar &src2, oclMat &dst, c
 		bitwise_scalar(src1, src2, dst, mask, kernelName, &arithm_bitwise_and_scalar);
 	}
 }
-
+//! calculates per-element bit-wise "exclusive or" operation
+// supports all types
 void cv::ocl::bitwise_xor(const oclMat &src1, const oclMat &src2, oclMat &dst, const oclMat &mask)
 {
 	oclMat emptyMat;
@@ -2027,7 +2084,8 @@ void cv::ocl::bitwise_xor(const oclMat &src1, const oclMat &src2, oclMat &dst, c
 	}
 }
 
-
+//! calculates per-element bit-wise "exclusive or" operation
+// supports all types
 void cv::ocl::bitwise_xor(const oclMat &src1, const Scalar &src2, oclMat &dst, const oclMat &mask)
 {
 
@@ -2043,27 +2101,28 @@ void cv::ocl::bitwise_xor(const oclMat &src1, const Scalar &src2, oclMat &dst, c
 	}
 }
 
+//! Logical operator ~
 cv::ocl::oclMat cv::ocl::operator ~(const oclMat &src)
 {
 	oclMat dst;
 	bitwise_not(src, dst);
 	return dst;
 }
-
+//! Logical operator |
 cv::ocl::oclMat cv::ocl::operator | (const oclMat &src1, const oclMat &src2)
 {
 	oclMat dst;
 	bitwise_or(src1, src2, dst);
 	return dst;
 }
-
+//! Logical operator &
 cv::ocl::oclMat cv::ocl::operator & (const oclMat &src1, const oclMat &src2)
 {
 	oclMat dst;
 	bitwise_and(src1, src2, dst);
 	return dst;
 }
-
+//! Logical operator ^
 cv::ocl::oclMat cv::ocl::operator ^(const oclMat &src1, const oclMat &src2)
 {
 	oclMat dst;
@@ -2112,7 +2171,8 @@ void transpose_run(const oclMat &src, oclMat &dst, string kernelName)
 
 	openCLExecuteKernel(clCxt, &arithm_transpose, kernelName, globalThreads, localThreads, args, channels, depth);
 }
-
+//! transposes the matrix
+// supports  CV_8UC1, 8UC4, 8SC4, 16UC2, 16SC2, 32SC1 and 32FC1.(the same as cuda)
 void cv::ocl::transpose(const oclMat &src, oclMat &dst)
 {
 	CV_Assert(src.type() == CV_8UC1  || src.type() == CV_8UC4  || src.type() == CV_8SC4  ||
@@ -2131,7 +2191,8 @@ void cv::ocl::transpose(const oclMat &src, oclMat &dst)
 		transpose_run(src, dst, "transpose");
 	}
 }
-
+//! adds one matrix to another (c = beta * a + gama * b)
+// supports all types except CV_8SC1,CV_8SC2,CV8SC3 and CV_8SC4
 void cv::ocl::addWeighted(const oclMat &src1, double alpha, const oclMat &src2, double beta, double gama, oclMat &dst)
 {
 	dst.create(src1.size(), src1.type());
@@ -2181,7 +2242,8 @@ void cv::ocl::addWeighted(const oclMat &src1, double alpha, const oclMat &src2, 
 
 	openCLExecuteKernel(clCxt, &arithm_addWeighted, "addWeighted", globalThreads, localThreads, args, -1, depth);
 }
-
+//! computes magnitude of each (x(i), y(i)) vector
+// supports only CV_32F CV_64F type
 void cv::ocl::magnitudeSqr(const oclMat &src1, const oclMat &src2, oclMat &dst)
 {
 	CV_Assert(src1.type() == src2.type() && src1.size() == src2.size() &&
@@ -2229,7 +2291,8 @@ void cv::ocl::magnitudeSqr(const oclMat &src1, const oclMat &src2, oclMat &dst)
 
 	openCLExecuteKernel(clCxt, &arithm_magnitudeSqr, "magnitudeSqr", globalThreads, localThreads, args, 1, depth);
 }
-
+//! computes magnitude of each (x(i), y(i)) vector
+// supports only CV_32F CV_64F type
 void cv::ocl::magnitudeSqr(const oclMat &src1, oclMat &dst)
 {
 	CV_Assert(src1.depth() == CV_32F);
@@ -2311,6 +2374,8 @@ void arithmetic_pow_run(const oclMat &src1, double p, oclMat &dst, string kernel
 
 	openCLExecuteKernel(clCxt, kernelString, kernelName, globalThreads, localThreads, args, -1, depth);
 }
+//! the function raises every element of tne input array to p
+//! support only CV_32F CV_64F type
 void cv::ocl::pow(const oclMat &x, double p, oclMat &y)
 {
 	CV_Assert(x.type() == y.type() && x.size() == y.size() && x.depth() == CV_32F || x.depth() == CV_64F);
