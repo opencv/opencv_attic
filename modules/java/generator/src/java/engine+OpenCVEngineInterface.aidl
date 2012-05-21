@@ -1,7 +1,7 @@
 package org.opencv.engine;
 
 /**
-* Class provides Java interface to OpenCV Engine Service. Is synchronious with native OpenCVEngine class.
+* Class provides Java interface to OpenCV Engine Service. Is synchronous with native OpenCVEngine class.
 */
 interface OpenCVEngineInterface
 {
@@ -25,9 +25,9 @@ interface OpenCVEngineInterface
 	boolean installVersion(String version);
  
 	/**
-	* Return list of libraries in loading order seporated by ";" symbol
+	* Return list of libraries in loading order separated by ";" symbol
 	* @param OpenCV version
-	* @return Return OpenCV libraries names seporated by symbol ";" in loading order
+	* @return Return OpenCV libraries names separated by symbol ";" in loading order
 	*/
 	String getLibraryList(String version);
 }
