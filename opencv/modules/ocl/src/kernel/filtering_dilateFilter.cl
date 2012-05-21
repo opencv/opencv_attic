@@ -45,140 +45,150 @@
 
 #pragma OPENCL FP_CONTRACT ON
 #define UCHAR_MIN 0
-__kernel void dilate_C4_D5(__global const float4 * restrict src, __global float4 *dst, int srcOffset, int dstOffset, 
-					int mincols, int maxcols, int minrows, int maxrows, int cols, int rows, 
-					int srcStep, int dstStep, __constant uchar * mat_kernel)
+__kernel void dilate_C4_D5(__global const float4 *restrict src, __global float4 *dst, int srcOffset, int dstOffset,
+                           int mincols, int maxcols, int minrows, int maxrows, int cols, int rows,
+                           int srcStep, int dstStep, __constant uchar *mat_kernel)
 {
-    int mX = get_global_id(0);
-    int mY = get_global_id(1);
-    int kX = mX - anX, kY = mY - anY;
-
-    float4 maxVal = (float4)(-FLT_MAX);
-	  int k=0;
-	  for(int i=0;i<ksY;i++, kY++ , kX = mX - anX)
-    {
-        for(int j=0;j<ksX; j++, kX++)
-        {
-			    float4 v = *((__global float4*)(src + srcOffset + kY * srcStep + kX));
-			    uchar now = mat_kernel[k++];
-			    float4 flag = (kX >= mincols & kX <= maxcols & kY >= minrows & kY <= maxrows & now != 0) ? v : (float4)(-FLT_MAX);
-          maxVal = max(maxVal , flag);
-        }
-    }
-
-	  if(mX < cols && mY < rows)
-        dst[mY * dstStep + mX + dstOffset] = (maxVal);		   
+	int mX = get_global_id(0);
+	int mY = get_global_id(1);
+	int kX = mX - anX, kY = mY - anY;
+	
+	float4 maxVal = (float4)(-FLT_MAX);
+	int k = 0;
+	
+	for (int i = 0; i < ksY; i++, kY++ , kX = mX - anX)
+	{
+		for (int j = 0; j < ksX; j++, kX++)
+		{
+			float4 v = *((__global float4 *)(src + srcOffset + kY * srcStep + kX));
+			uchar now = mat_kernel[k++];
+			float4 flag = (kX >= mincols &kX <= maxcols &kY >= minrows &kY <= maxrows &now != 0) ? v : (float4)(-FLT_MAX);
+			maxVal = max(maxVal , flag);
+		}
+	}
+	
+	if (mX < cols && mY < rows)
+	{
+		dst[mY * dstStep + mX + dstOffset] = (maxVal);
+	}
 }
 
-__kernel void dilate_C1_D5(__global float4 * src, __global float *dst, int srcOffset, int dstOffset, 
-					int mincols, int maxcols, int minrows, int maxrows, int cols, int rows, 
-					int srcStep, int dstStep, __constant uchar * mat_kernel)
+__kernel void dilate_C1_D5(__global float4 *src, __global float *dst, int srcOffset, int dstOffset,
+                           int mincols, int maxcols, int minrows, int maxrows, int cols, int rows,
+                           int srcStep, int dstStep, __constant uchar *mat_kernel)
 {
-    int mX = (get_global_id(0)<<2) - (dstOffset&3);
-    int mY = get_global_id(1);
-    int kX = mX - anX, kY = mY - anY;
-
-    float4 maxVal = (float4)(-FLT_MAX);
-	  int k=0;
-	  for(int i=0;i<ksY;i++, kY++ , kX = mX - anX)
-    {
-        for(int j=0;j<ksX;j++, kX++)
-        {
-			    int start = srcOffset + kY * srcStep + kX;
-			    float8 sVal = (float8)(src[start>>2], src[(start>>2) + 1]);
+	int mX = (get_global_id(0) << 2) - (dstOffset & 3);
+	int mY = get_global_id(1);
+	int kX = mX - anX, kY = mY - anY;
+	
+	float4 maxVal = (float4)(-FLT_MAX);
+	int k = 0;
+	
+	for (int i = 0; i < ksY; i++, kY++ , kX = mX - anX)
+	{
+		for (int j = 0; j < ksX; j++, kX++)
+		{
+			int start = srcOffset + kY * srcStep + kX;
+			float8 sVal = (float8)(src[start >> 2], src[(start >> 2) + 1]);
 			
-		    	float sAry[8]= {sVal.s0, sVal.s1, sVal.s2, sVal.s3, sVal.s4, sVal.s5, sVal.s6, sVal.s7};
-		    	int det = start & 3;
-	    		float4 v=(float4)(sAry[det], sAry[det+1], sAry[det+2], sAry[det+3]);		
-			    uchar now = mat_kernel[k++];
-			    float4 flag = (kY >= minrows & kY <= maxrows & now != 0) ? v : maxVal;
-			    flag.x = (kX >= mincols & kX <= maxcols) ? flag.x : -FLT_MAX;
-			    flag.y = (kX+1 >= mincols & kX+1 <= maxcols) ? flag.y : -FLT_MAX;
-			    flag.z = (kX+2 >= mincols & kX+2 <= maxcols) ? flag.z : -FLT_MAX;
-			    flag.w = (kX+3 >= mincols & kX+3 <= maxcols) ? flag.w : -FLT_MAX;
+			float sAry[8] = {sVal.s0, sVal.s1, sVal.s2, sVal.s3, sVal.s4, sVal.s5, sVal.s6, sVal.s7};
+			int det = start & 3;
+			float4 v = (float4)(sAry[det], sAry[det + 1], sAry[det + 2], sAry[det + 3]);
+			uchar now = mat_kernel[k++];
+			float4 flag = (kY >= minrows &kY <= maxrows &now != 0) ? v : maxVal;
+			flag.x = (kX >= mincols &kX <= maxcols) ? flag.x : -FLT_MAX;
+			flag.y = (kX + 1 >= mincols &kX + 1 <= maxcols) ? flag.y : -FLT_MAX;
+			flag.z = (kX + 2 >= mincols &kX + 2 <= maxcols) ? flag.z : -FLT_MAX;
+			flag.w = (kX + 3 >= mincols &kX + 3 <= maxcols) ? flag.w : -FLT_MAX;
 			
-          maxVal = max(maxVal , flag);
-        }
-    }
-    if(mY < rows && mX < cols)
-	  {
-		    __global float4* d = (__global float4*)(dst + mY * dstStep + mX + dstOffset);
-		    float4 dVal = *d;
-    		maxVal.x = (mX >=0 & mX < cols) ? maxVal.x : dVal.x;
-    		maxVal.y = (mX+1 >=0 & mX+1 < cols) ? maxVal.y : dVal.y;
-    		maxVal.z = (mX+2 >=0 & mX+2 < cols) ? maxVal.z : dVal.z;
-    		maxVal.w = (mX+3 >=0 & mX+3 < cols) ? maxVal.w : dVal.w;
+			maxVal = max(maxVal , flag);
+		}
+	}
+	
+	if (mY < rows && mX < cols)
+	{
+		__global float4 *d = (__global float4 *)(dst + mY * dstStep + mX + dstOffset);
+		float4 dVal = *d;
+		maxVal.x = (mX >= 0 & mX < cols) ? maxVal.x : dVal.x;
+		maxVal.y = (mX + 1 >= 0 & mX + 1 < cols) ? maxVal.y : dVal.y;
+		maxVal.z = (mX + 2 >= 0 & mX + 2 < cols) ? maxVal.z : dVal.z;
+		maxVal.w = (mX + 3 >= 0 & mX + 3 < cols) ? maxVal.w : dVal.w;
 		
-        *d = (maxVal);	
-	  }
+		*d = (maxVal);
+	}
 }
 
-__kernel void dilate_C1_D0(__global const uchar4 * restrict src, __global uchar *dst, int srcOffset, int dstOffset, 
-					int mincols, int maxcols, int minrows, int maxrows, int cols, int rows, 
-					int srcStep, int dstStep, __constant uchar * mat_kernel)
+__kernel void dilate_C1_D0(__global const uchar4 *restrict src, __global uchar *dst, int srcOffset, int dstOffset,
+                           int mincols, int maxcols, int minrows, int maxrows, int cols, int rows,
+                           int srcStep, int dstStep, __constant uchar *mat_kernel)
 {
-    int mX = (get_global_id(0)<<2) - (dstOffset&3);;
-    int mY = get_global_id(1);
-    int kX = mX - anX, kY = mY - anY;
-
-    uchar4 maxVal = (uchar4)(UCHAR_MIN);
-	  int k=0;
-	  for(int i=0;i<ksY;i++, kY++ , kX = mX - anX)
-    {
-        for(int j=0;j<ksX;j++, kX++)
-        {
-			    int start = srcOffset + kY * srcStep + kX;
-			    uchar8 sVal = (uchar8)(src[start>>2], src[(start>>2) + 1]);
+	int mX = (get_global_id(0) << 2) - (dstOffset & 3);;
+	int mY = get_global_id(1);
+	int kX = mX - anX, kY = mY - anY;
+	
+	uchar4 maxVal = (uchar4)(UCHAR_MIN);
+	int k = 0;
+	
+	for (int i = 0; i < ksY; i++, kY++ , kX = mX - anX)
+	{
+		for (int j = 0; j < ksX; j++, kX++)
+		{
+			int start = srcOffset + kY * srcStep + kX;
+			uchar8 sVal = (uchar8)(src[start >> 2], src[(start >> 2) + 1]);
 			
-			    uchar sAry[8]= {sVal.s0, sVal.s1, sVal.s2, sVal.s3, sVal.s4, sVal.s5, sVal.s6, sVal.s7};
-			    int det = start & 3;
-			    uchar4 v=(uchar4)(sAry[det], sAry[det+1], sAry[det+2], sAry[det+3]);
-
-			    uchar4 flag = (kY >= minrows & kY <= maxrows & mat_kernel[k++] != 0) ? v : maxVal;
-			    flag.x = (kX >= mincols & kX <= maxcols) ? flag.x : UCHAR_MIN;
-			    flag.y = (kX+1 >= mincols & kX+1 <= maxcols) ? flag.y : UCHAR_MIN;
-			    flag.z = (kX+2 >= mincols & kX+2 <= maxcols) ? flag.z : UCHAR_MIN;
-			    flag.w = (kX+3 >= mincols & kX+3 <= maxcols) ? flag.w : UCHAR_MIN;			
-
-          maxVal = max(maxVal , flag);
-        }
-    }
-	  if(mY < rows)
-	  {
-		    __global uchar4* d = (__global uchar4*)(dst + mY * dstStep + mX + dstOffset);
-		    uchar4 dVal = *d;
+			uchar sAry[8] = {sVal.s0, sVal.s1, sVal.s2, sVal.s3, sVal.s4, sVal.s5, sVal.s6, sVal.s7};
+			int det = start & 3;
+			uchar4 v = (uchar4)(sAry[det], sAry[det + 1], sAry[det + 2], sAry[det + 3]);
+			
+			uchar4 flag = (kY >= minrows &kY <= maxrows & mat_kernel[k++] != 0) ? v : maxVal;
+			flag.x = (kX >= mincols &kX <= maxcols) ? flag.x : UCHAR_MIN;
+			flag.y = (kX + 1 >= mincols &kX + 1 <= maxcols) ? flag.y : UCHAR_MIN;
+			flag.z = (kX + 2 >= mincols &kX + 2 <= maxcols) ? flag.z : UCHAR_MIN;
+			flag.w = (kX + 3 >= mincols &kX + 3 <= maxcols) ? flag.w : UCHAR_MIN;
+			
+			maxVal = max(maxVal , flag);
+		}
+	}
+	
+	if (mY < rows)
+	{
+		__global uchar4 *d = (__global uchar4 *)(dst + mY * dstStep + mX + dstOffset);
+		uchar4 dVal = *d;
 		
-    		maxVal.x = (mX >=0 & mX < cols) ? maxVal.x : dVal.x;
-    		maxVal.y = (mX+1 >=0 & mX+1 < cols) ? maxVal.y : dVal.y;
-    		maxVal.z = (mX+2 >=0 & mX+2 < cols) ? maxVal.z : dVal.z;
-    		maxVal.w = (mX+3 >=0 & mX+3 < cols) ? maxVal.w : dVal.w;
+		maxVal.x = (mX >= 0 & mX < cols) ? maxVal.x : dVal.x;
+		maxVal.y = (mX + 1 >= 0 & mX + 1 < cols) ? maxVal.y : dVal.y;
+		maxVal.z = (mX + 2 >= 0 & mX + 2 < cols) ? maxVal.z : dVal.z;
+		maxVal.w = (mX + 3 >= 0 & mX + 3 < cols) ? maxVal.w : dVal.w;
 		
-        *d = (maxVal);	
-	  }
+		*d = (maxVal);
+	}
 }
 
-__kernel void dilate_C4_D0(__global const uchar4 * restrict src, __global uchar4 *dst, int srcOffset, int dstOffset, 
-					int mincols, int maxcols, int minrows, int maxrows, int cols, int rows, 
-					int srcStep, int dstStep, __constant uchar * mat_kernel)
+__kernel void dilate_C4_D0(__global const uchar4 *restrict src, __global uchar4 *dst, int srcOffset, int dstOffset,
+                           int mincols, int maxcols, int minrows, int maxrows, int cols, int rows,
+                           int srcStep, int dstStep, __constant uchar *mat_kernel)
 {
-    int mX = get_global_id(0);
-    int mY = get_global_id(1);
-    int kX = mX - anX, kY = mY - anY;
-
-    uchar4 maxVal = (uchar4)(UCHAR_MIN);
-	  int k=0;
-	  for(int i=0;i<ksY;i++, kY++ , kX = mX - anX)
-    {
-        for(int j=0;j<ksX;j++, kX++)
-        {
-			    uchar4 v = src[kY * srcStep + kX + srcOffset];
-			    uchar now = mat_kernel[k++];
-			    uchar4 flag = (kX >= mincols & kX <= maxcols & kY >= minrows & kY <= maxrows & now != 0) ? v : maxVal;
-          maxVal = max(maxVal , flag);
-        }
-    }
-
-	  if(mX < cols && mY < rows)
-        dst[mY * dstStep + mX + dstOffset] = (maxVal);		   
+	int mX = get_global_id(0);
+	int mY = get_global_id(1);
+	int kX = mX - anX, kY = mY - anY;
+	
+	uchar4 maxVal = (uchar4)(UCHAR_MIN);
+	int k = 0;
+	
+	for (int i = 0; i < ksY; i++, kY++ , kX = mX - anX)
+	{
+		for (int j = 0; j < ksX; j++, kX++)
+		{
+			uchar4 v = src[kY * srcStep + kX + srcOffset];
+			uchar now = mat_kernel[k++];
+			uchar4 flag = (kX >= mincols &kX <= maxcols &kY >= minrows &kY <= maxrows &now != 0) ? v : maxVal;
+			maxVal = max(maxVal , flag);
+		}
+	}
+	
+	if (mX < cols && mY < rows)
+	{
+		dst[mY * dstStep + mX + dstOffset] = (maxVal);
+	}
 }
 

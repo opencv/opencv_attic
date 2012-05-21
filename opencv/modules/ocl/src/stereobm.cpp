@@ -59,232 +59,234 @@ using namespace std;
 
 namespace cv
 {
-    namespace ocl
-    {
-        cv::ocl::StereoBM_GPU::StereoBM_GPU() 
-        { 
-            throw_nogpu(); 
-        }
-        cv::ocl::StereoBM_GPU::StereoBM_GPU(int, int, int) 
-        { 
-            throw_nogpu(); 
-        }
-        bool cv::ocl::StereoBM_GPU::checkIfGpuCallReasonable() 
-        { 
-            throw_nogpu(); 
-            return false; 
-        }
-        void cv::ocl::StereoBM_GPU::operator() ( const oclMat&, const oclMat&, oclMat&) 
-        { 
-            throw_nogpu(); 
-        }
-    }
+namespace ocl
+{
+cv::ocl::StereoBM_GPU::StereoBM_GPU()
+{
+	throw_nogpu();
+}
+cv::ocl::StereoBM_GPU::StereoBM_GPU(int, int, int)
+{
+	throw_nogpu();
+}
+bool cv::ocl::StereoBM_GPU::checkIfGpuCallReasonable()
+{
+	throw_nogpu();
+	return false;
+}
+void cv::ocl::StereoBM_GPU::operator()(const oclMat &, const oclMat &, oclMat &)
+{
+	throw_nogpu();
+}
+}
 }
 
 #else /* !defined (HAVE_OPENCL) */
 
-namespace cv 
+namespace cv
 {
-    namespace ocl 
-    {
-        
-        ///////////////////////////OpenCL kernel strings///////////////////////////
-        extern const char *stereobm;
+namespace ocl
+{
 
-    }
+///////////////////////////OpenCL kernel strings///////////////////////////
+extern const char *stereobm;
+
+}
 }
 namespace cv
 {
-    namespace ocl
-    {
-        namespace stereoBM 
-        {
-            /////////////////////////////////////////////////////////////////////////
-            //////////////////////////prefilter_xsbel////////////////////////////////
-            ////////////////////////////////////////////////////////////////////////
-            void prefilter_xsobel(const oclMat &input, oclMat &output, int prefilterCap)
-            {
-                ClContext *clCxt = input.clCxt;
+namespace ocl
+{
+namespace stereoBM
+{
+/////////////////////////////////////////////////////////////////////////
+//////////////////////////prefilter_xsbel////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+void prefilter_xsobel(const oclMat &input, oclMat &output, int prefilterCap)
+{
+	ClContext *clCxt = input.clCxt;
 
-	              string kernelName = "prefilter_xsobel";
-	              cl_kernel kernel = openCLGetKernelFromSource(clCxt,&stereobm, kernelName);
-    
-	              size_t blockSize = 1;
-                size_t globalThreads[3] = { input.cols, input.rows, 1 };
-	              size_t localThreads[3]  = { blockSize, blockSize, 1 };
+	string kernelName = "prefilter_xsobel";
+	cl_kernel kernel = openCLGetKernelFromSource(clCxt, &stereobm, kernelName);
 
-	              openCLVerifyKernel(clCxt,kernel,&blockSize,globalThreads,localThreads);
-	              openCLSafeCall(clSetKernelArg(kernel,0,sizeof(cl_mem),(void*)&input.data));
-	              openCLSafeCall(clSetKernelArg(kernel,1,sizeof(cl_mem),(void*)&output.data));
-	              openCLSafeCall(clSetKernelArg(kernel,2,sizeof(cl_int),(void*)&input.rows));
-	              openCLSafeCall(clSetKernelArg(kernel,3,sizeof(cl_int),(void*)&input.cols));
-	              openCLSafeCall(clSetKernelArg(kernel,4,sizeof(cl_int),(void*)&prefilterCap));
+	size_t blockSize = 1;
+	size_t globalThreads[3] = { input.cols, input.rows, 1 };
+	size_t localThreads[3]  = { blockSize, blockSize, 1 };
 
-	              openCLSafeCall(clEnqueueNDRangeKernel(clCxt->clGpuCmdQueue,kernel,3,NULL,
-                               globalThreads,localThreads,0,NULL,NULL));
-    
-	              clFinish(clCxt->clGpuCmdQueue);
-	              openCLSafeCall(clReleaseKernel(kernel));
+	openCLVerifyKernel(clCxt, kernel, &blockSize, globalThreads, localThreads);
+	openCLSafeCall(clSetKernelArg(kernel, 0, sizeof(cl_mem), (void *)&input.data));
+	openCLSafeCall(clSetKernelArg(kernel, 1, sizeof(cl_mem), (void *)&output.data));
+	openCLSafeCall(clSetKernelArg(kernel, 2, sizeof(cl_int), (void *)&input.rows));
+	openCLSafeCall(clSetKernelArg(kernel, 3, sizeof(cl_int), (void *)&input.cols));
+	openCLSafeCall(clSetKernelArg(kernel, 4, sizeof(cl_int), (void *)&prefilterCap));
 
-            }
-            //////////////////////////////////////////////////////////////////////////
-            //////////////////////////////common////////////////////////////////////
-            ////////////////////////////////////////////////////////////////////////
-            #define N_DISPARITIES 8
-            #define ROWSperTHREAD 21
-            #define BLOCK_W 128 
-            static inline int divUp(int total, int grain)
-            {
-                return (total + grain -1)/grain;
-            }
-            ////////////////////////////////////////////////////////////////////////////
-            ///////////////////////////////stereoBM_GPU////////////////////////////////
-            ////////////////////////////////////////////////////////////////////////////
-            void stereo_bm(const oclMat& left, const oclMat& right,  oclMat& disp, 
-                              int maxdisp, int winSize,  oclMat& minSSD_buf)
-            {
-                int winsz2 = winSize >> 1;
+	openCLSafeCall(clEnqueueNDRangeKernel(clCxt->clGpuCmdQueue, kernel, 3, NULL,
+	                                      globalThreads, localThreads, 0, NULL, NULL));
 
-                //if(winsz2 == 0 || winsz2 >= calles_num)
-                    //cv::ocl:error("Unsupported window size", __FILE__, __LINE__, __FUNCTION__);
-             
-                ClContext *clCxt = left.clCxt;
+	clFinish(clCxt->clGpuCmdQueue);
+	openCLSafeCall(clReleaseKernel(kernel));
 
-                string kernelName = "stereoKernel";
-                cl_kernel kernel = openCLGetKernelFromSource(clCxt,&stereobm, kernelName);
+}
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////common////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+#define N_DISPARITIES 8
+#define ROWSperTHREAD 21
+#define BLOCK_W 128
+static inline int divUp(int total, int grain)
+{
+	return (total + grain - 1) / grain;
+}
+////////////////////////////////////////////////////////////////////////////
+///////////////////////////////stereoBM_GPU////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+void stereo_bm(const oclMat &left, const oclMat &right,  oclMat &disp,
+               int maxdisp, int winSize,  oclMat &minSSD_buf)
+{
+	int winsz2 = winSize >> 1;
 
-                disp.setTo(Scalar_<unsigned char>::all(0));
-                minSSD_buf.setTo(Scalar_<unsigned int>::all(0xFFFFFFFF));
+	//if(winsz2 == 0 || winsz2 >= calles_num)
+	//cv::ocl:error("Unsupported window size", __FILE__, __LINE__, __FUNCTION__);
 
-                size_t minssd_step = minSSD_buf.step/minSSD_buf.elemSize();
-                size_t local_mem_size =(BLOCK_W + N_DISPARITIES * (BLOCK_W + 2 * winsz2)) * 
-                                       sizeof(cl_uint);
-                size_t blockSize = 1;
-	              size_t localThreads[]  = { BLOCK_W, 1};
-                size_t globalThreads[] = { divUp(left.cols - maxdisp - 2 * winsz2, BLOCK_W) * BLOCK_W,
-                                            divUp(left.rows - 2 * winsz2, ROWSperTHREAD)};
+	ClContext *clCxt = left.clCxt;
 
-                openCLVerifyKernel(clCxt,kernel,&blockSize,globalThreads,localThreads);
-                openCLSafeCall(clSetKernelArg(kernel,0,sizeof(cl_mem),(void*)&left.data));
-                openCLSafeCall(clSetKernelArg(kernel,1,sizeof(cl_mem),(void*)&right.data));
-                openCLSafeCall(clSetKernelArg(kernel,2,sizeof(cl_mem),(void*)&minSSD_buf.data));
-                openCLSafeCall(clSetKernelArg(kernel,3,sizeof(cl_int),(void*)&minssd_step));
-                openCLSafeCall(clSetKernelArg(kernel,4,sizeof(cl_mem),(void*)&disp.data));
-                openCLSafeCall(clSetKernelArg(kernel,5,sizeof(cl_int),(void*)&disp.step));
-                openCLSafeCall(clSetKernelArg(kernel,6,sizeof(cl_int),(void*)&left.cols));
-                openCLSafeCall(clSetKernelArg(kernel,7,sizeof(cl_int),(void*)&left.rows));
-                openCLSafeCall(clSetKernelArg(kernel,8,sizeof(cl_int),(void*)&left.step));
-                openCLSafeCall(clSetKernelArg(kernel,9,sizeof(cl_int),(void*)&maxdisp));
-                openCLSafeCall(clSetKernelArg(kernel,10,sizeof(cl_int),(void*)&winsz2));
-                openCLSafeCall(clSetKernelArg(kernel,11,local_mem_size,(void *)NULL));
+	string kernelName = "stereoKernel";
+	cl_kernel kernel = openCLGetKernelFromSource(clCxt, &stereobm, kernelName);
 
-                openCLSafeCall(clEnqueueNDRangeKernel(clCxt->clGpuCmdQueue,kernel,2,NULL,
-                               globalThreads,localThreads,0,NULL,NULL));
+	disp.setTo(Scalar_<unsigned char>::all(0));
+	minSSD_buf.setTo(Scalar_<unsigned int>::all(0xFFFFFFFF));
 
-    
-                clFinish(clCxt->clGpuCmdQueue);
-                openCLSafeCall(clReleaseKernel(kernel));
-            }
-            ////////////////////////////////////////////////////////////////////////////
-            ///////////////////////////////postfilter_textureness///////////////////////
-            ////////////////////////////////////////////////////////////////////////////
-           void postfilter_textureness(oclMat &left, int winSize, 
-                                  float avergeTexThreshold, oclMat& disparity)
-           {
-                ClContext *clCxt = left.clCxt;
+	size_t minssd_step = minSSD_buf.step / minSSD_buf.elemSize();
+	size_t local_mem_size = (BLOCK_W + N_DISPARITIES * (BLOCK_W + 2 * winsz2)) *
+	                        sizeof(cl_uint);
+	size_t blockSize = 1;
+	size_t localThreads[]  = { BLOCK_W, 1};
+	size_t globalThreads[] = { divUp(left.cols - maxdisp - 2 * winsz2, BLOCK_W) *BLOCK_W,
+	                           divUp(left.rows - 2 * winsz2, ROWSperTHREAD)
+	                         };
 
-	              string kernelName = "textureness_kernel";
-	              cl_kernel kernel = openCLGetKernelFromSource(clCxt,&stereobm, kernelName);
-    
-	              size_t blockSize = 1;
-	              size_t localThreads[]  = { BLOCK_W, blockSize};
-                size_t globalThreads[] = { divUp(left.cols, BLOCK_W) * BLOCK_W, 
-                                            divUp(left.rows, 2 * ROWSperTHREAD)};
+	openCLVerifyKernel(clCxt, kernel, &blockSize, globalThreads, localThreads);
+	openCLSafeCall(clSetKernelArg(kernel, 0, sizeof(cl_mem), (void *)&left.data));
+	openCLSafeCall(clSetKernelArg(kernel, 1, sizeof(cl_mem), (void *)&right.data));
+	openCLSafeCall(clSetKernelArg(kernel, 2, sizeof(cl_mem), (void *)&minSSD_buf.data));
+	openCLSafeCall(clSetKernelArg(kernel, 3, sizeof(cl_int), (void *)&minssd_step));
+	openCLSafeCall(clSetKernelArg(kernel, 4, sizeof(cl_mem), (void *)&disp.data));
+	openCLSafeCall(clSetKernelArg(kernel, 5, sizeof(cl_int), (void *)&disp.step));
+	openCLSafeCall(clSetKernelArg(kernel, 6, sizeof(cl_int), (void *)&left.cols));
+	openCLSafeCall(clSetKernelArg(kernel, 7, sizeof(cl_int), (void *)&left.rows));
+	openCLSafeCall(clSetKernelArg(kernel, 8, sizeof(cl_int), (void *)&left.step));
+	openCLSafeCall(clSetKernelArg(kernel, 9, sizeof(cl_int), (void *)&maxdisp));
+	openCLSafeCall(clSetKernelArg(kernel, 10, sizeof(cl_int), (void *)&winsz2));
+	openCLSafeCall(clSetKernelArg(kernel, 11, local_mem_size, (void *)NULL));
 
-                size_t local_mem_size = (localThreads[0]+localThreads[0]+(winSize/2) *2) *sizeof(float);
+	openCLSafeCall(clEnqueueNDRangeKernel(clCxt->clGpuCmdQueue, kernel, 2, NULL,
+	                                      globalThreads, localThreads, 0, NULL, NULL));
 
-	              openCLVerifyKernel(clCxt,kernel,&blockSize,globalThreads,localThreads);
-	              openCLSafeCall(clSetKernelArg(kernel,0,sizeof(cl_mem),(void*)&disparity.data));
-	              openCLSafeCall(clSetKernelArg(kernel,1,sizeof(cl_int),(void*)&disparity.rows));
-	              openCLSafeCall(clSetKernelArg(kernel,2,sizeof(cl_int),(void*)&disparity.cols));
-	              openCLSafeCall(clSetKernelArg(kernel,3,sizeof(cl_int),(void*)&disparity.step));
-	              openCLSafeCall(clSetKernelArg(kernel,4,sizeof(cl_mem),(void*)&left.data));
-	              openCLSafeCall(clSetKernelArg(kernel,5,sizeof(cl_int),(void*)&left.rows));
-	              openCLSafeCall(clSetKernelArg(kernel,6,sizeof(cl_int),(void*)&left.cols));
-	              openCLSafeCall(clSetKernelArg(kernel,7,sizeof(cl_int),(void*)&winSize));
-	              openCLSafeCall(clSetKernelArg(kernel,8,sizeof(cl_float),(void*)&avergeTexThreshold));
-	              openCLSafeCall(clSetKernelArg(kernel,9,local_mem_size, NULL));
-	              openCLSafeCall(clEnqueueNDRangeKernel(clCxt->clGpuCmdQueue,kernel,2,NULL,
-                               globalThreads,localThreads,0,NULL,NULL));
-    
-	              clFinish(clCxt->clGpuCmdQueue);
-	              openCLSafeCall(clReleaseKernel(kernel));
-           }
-           //////////////////////////////////////////////////////////////////////////////
-           /////////////////////////////////////operator/////////////////////////////////
-           /////////////////////////////////////////////////////////////////////////////
-           void operator_(oclMat& minSSD, oclMat& leBuf, oclMat& riBuf, int preset, int ndisp, 
-                      int winSize, float avergeTexThreshold, const oclMat& left, 
-                      const oclMat& right, oclMat& disparity)
 
-            {
-                CV_DbgAssert(left.rows == right.rows && left.cols == right.cols);
-                CV_DbgAssert(left.type() == CV_8UC1);
-                CV_DbgAssert(right.type() == CV_8UC1);
+	clFinish(clCxt->clGpuCmdQueue);
+	openCLSafeCall(clReleaseKernel(kernel));
+}
+////////////////////////////////////////////////////////////////////////////
+///////////////////////////////postfilter_textureness///////////////////////
+////////////////////////////////////////////////////////////////////////////
+void postfilter_textureness(oclMat &left, int winSize,
+                            float avergeTexThreshold, oclMat &disparity)
+{
+	ClContext *clCxt = left.clCxt;
 
-                disparity.create(left.size(),CV_8UC1);
-                minSSD.create(left.size(), CV_32SC1);
+	string kernelName = "textureness_kernel";
+	cl_kernel kernel = openCLGetKernelFromSource(clCxt, &stereobm, kernelName);
 
-                oclMat le_for_bm =  left;
-                oclMat ri_for_bm = right;
+	size_t blockSize = 1;
+	size_t localThreads[]  = { BLOCK_W, blockSize};
+	size_t globalThreads[] = { divUp(left.cols, BLOCK_W) *BLOCK_W,
+	                           divUp(left.rows, 2 * ROWSperTHREAD)
+	                         };
 
-                if (preset == cv::ocl::StereoBM_GPU::PREFILTER_XSOBEL)
-                {
-                    leBuf.create( left.size(),  left.type());
-                    riBuf.create(right.size(), right.type());
-        
-                    prefilter_xsobel( left, leBuf, 31);
-                    prefilter_xsobel(right, riBuf, 31);
+	size_t local_mem_size = (localThreads[0] + localThreads[0] + (winSize / 2) * 2) * sizeof(float);
 
-                    le_for_bm = leBuf;
-                    ri_for_bm = riBuf;
-                }
+	openCLVerifyKernel(clCxt, kernel, &blockSize, globalThreads, localThreads);
+	openCLSafeCall(clSetKernelArg(kernel, 0, sizeof(cl_mem), (void *)&disparity.data));
+	openCLSafeCall(clSetKernelArg(kernel, 1, sizeof(cl_int), (void *)&disparity.rows));
+	openCLSafeCall(clSetKernelArg(kernel, 2, sizeof(cl_int), (void *)&disparity.cols));
+	openCLSafeCall(clSetKernelArg(kernel, 3, sizeof(cl_int), (void *)&disparity.step));
+	openCLSafeCall(clSetKernelArg(kernel, 4, sizeof(cl_mem), (void *)&left.data));
+	openCLSafeCall(clSetKernelArg(kernel, 5, sizeof(cl_int), (void *)&left.rows));
+	openCLSafeCall(clSetKernelArg(kernel, 6, sizeof(cl_int), (void *)&left.cols));
+	openCLSafeCall(clSetKernelArg(kernel, 7, sizeof(cl_int), (void *)&winSize));
+	openCLSafeCall(clSetKernelArg(kernel, 8, sizeof(cl_float), (void *)&avergeTexThreshold));
+	openCLSafeCall(clSetKernelArg(kernel, 9, local_mem_size, NULL));
+	openCLSafeCall(clEnqueueNDRangeKernel(clCxt->clGpuCmdQueue, kernel, 2, NULL,
+	                                      globalThreads, localThreads, 0, NULL, NULL));
 
-                stereo_bm(le_for_bm, ri_for_bm, disparity, ndisp, winSize, minSSD);
+	clFinish(clCxt->clGpuCmdQueue);
+	openCLSafeCall(clReleaseKernel(kernel));
+}
+//////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////operator/////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////
+void operator_(oclMat &minSSD, oclMat &leBuf, oclMat &riBuf, int preset, int ndisp,
+               int winSize, float avergeTexThreshold, const oclMat &left,
+               const oclMat &right, oclMat &disparity)
 
-                if (avergeTexThreshold)
-                {
-                   postfilter_textureness(le_for_bm, winSize, avergeTexThreshold, disparity);
-                }
-            }
-        }
-    }
+{
+	CV_DbgAssert(left.rows == right.rows && left.cols == right.cols);
+	CV_DbgAssert(left.type() == CV_8UC1);
+	CV_DbgAssert(right.type() == CV_8UC1);
+
+	disparity.create(left.size(), CV_8UC1);
+	minSSD.create(left.size(), CV_32SC1);
+
+	oclMat le_for_bm =  left;
+	oclMat ri_for_bm = right;
+
+	if (preset == cv::ocl::StereoBM_GPU::PREFILTER_XSOBEL)
+	{
+		leBuf.create(left.size(),  left.type());
+		riBuf.create(right.size(), right.type());
+
+		prefilter_xsobel(left, leBuf, 31);
+		prefilter_xsobel(right, riBuf, 31);
+
+		le_for_bm = leBuf;
+		ri_for_bm = riBuf;
+	}
+
+	stereo_bm(le_for_bm, ri_for_bm, disparity, ndisp, winSize, minSSD);
+
+	if (avergeTexThreshold)
+	{
+		postfilter_textureness(le_for_bm, winSize, avergeTexThreshold, disparity);
+	}
+}
+}
+}
 }
 const float defaultAvgTexThreshold = 3;
 
 cv::ocl::StereoBM_GPU::StereoBM_GPU()
-    : preset(BASIC_PRESET), ndisp(DEFAULT_NDISP), winSize(DEFAULT_WINSZ), 
-      avergeTexThreshold(defaultAvgTexThreshold)  {}
+	: preset(BASIC_PRESET), ndisp(DEFAULT_NDISP), winSize(DEFAULT_WINSZ),
+	  avergeTexThreshold(defaultAvgTexThreshold)  {}
 
 cv::ocl::StereoBM_GPU::StereoBM_GPU(int preset_, int ndisparities_, int winSize_)
-    : preset(preset_), ndisp(ndisparities_), winSize(winSize_), 
-      avergeTexThreshold(defaultAvgTexThreshold)
+	: preset(preset_), ndisp(ndisparities_), winSize(winSize_),
+	  avergeTexThreshold(defaultAvgTexThreshold)
 {
-    const int max_supported_ndisp = 1 << (sizeof(unsigned char) * 8);
-    CV_Assert(0 < ndisp && ndisp <= max_supported_ndisp);
-    CV_Assert(ndisp % 8 == 0);
-    CV_Assert(winSize % 2 == 1);
+	const int max_supported_ndisp = 1 << (sizeof(unsigned char) * 8);
+	CV_Assert(0 < ndisp && ndisp <= max_supported_ndisp);
+	CV_Assert(ndisp % 8 == 0);
+	CV_Assert(winSize % 2 == 1);
 }
 
 bool cv::ocl::StereoBM_GPU::checkIfGpuCallReasonable()
 {
-    return true;
+	return true;
 }
 
-void cv::ocl::StereoBM_GPU::operator() ( const oclMat& left, const oclMat& right, 
-                                         oclMat& disparity)
+void cv::ocl::StereoBM_GPU::operator()(const oclMat &left, const oclMat &right,
+                                       oclMat &disparity)
 {
-    cv::ocl::stereoBM::operator_(minSSD, leBuf, riBuf, preset, ndisp, winSize, avergeTexThreshold, left, right, disparity);
+	cv::ocl::stereoBM::operator_(minSSD, leBuf, riBuf, preset, ndisp, winSize, avergeTexThreshold, left, right, disparity);
 }
 
 #endif /* !defined (HAVE_OPENCL) */

@@ -156,90 +156,105 @@
 #define repeat_e(a,b,c) a.s3=0; a.s2=0; a.s1=0; b=0; c=0;
 #endif
 
-__kernel void arithm_op_sum_3 (int cols,int invalid_cols,int offset,int elemnum,int groupnum,  
-                                __global VEC_TYPE *src, __global double4 *dst)
+__kernel void arithm_op_sum_3(int cols, int invalid_cols, int offset, int elemnum, int groupnum,
+                              __global VEC_TYPE *src, __global double4 *dst)
 {
-   unsigned int lid = get_local_id(0);
-   unsigned int gid = get_group_id(0);
-   unsigned int id = get_global_id(0);
-   unsigned int idx = offset + id + (id  / cols) * invalid_cols;
-   idx = idx * 3;
-   __local double4 localmem_sum1[128];
-   __local double4 localmem_sum2[128];
-   __local double4 localmem_sum3[128];
-   double4 sum1 = 0,sum2 = 0,sum3 = 0,temp1,temp2,temp3;
-   if(id < elemnum)
-   {
-       temp1 = convert_double4(src[idx]);
-       temp2 = convert_double4(src[idx+1]);
-       temp3 = convert_double4(src[idx+2]);
-       if(id % cols == 0 ) 
-       {
-           repeat_s(temp1,temp2,temp3);
-       }
-       if(id % cols == cols - 1)
-       {
-           repeat_e(temp1,temp2,temp3);
-       }
-       FUNC(temp1,sum1);
-       FUNC(temp2,sum2);
-       FUNC(temp3,sum3);
-   }
-   else
-   {
-       sum1 = 0;
-       sum2 = 0;
-       sum3 = 0;
-   }
-   for(id=id + (groupnum << 8); id < elemnum;id = id + (groupnum << 8))
-   {
-       idx = offset + id + (id / cols) * invalid_cols;
-       idx = idx * 3;
-       temp1 = convert_double4(src[idx]);
-       temp2 = convert_double4(src[idx+1]);
-       temp3 = convert_double4(src[idx+2]);
-       if(id % cols == 0 ) 
-       {
-               repeat_s(temp1,temp2,temp3);
-       }
-       if(id % cols == cols - 1)
-       {
-               repeat_e(temp1,temp2,temp3);
-       }
-       FUNC(temp1,sum1);
-       FUNC(temp2,sum2);
-       FUNC(temp3,sum3);
-   }
-   if(lid > 127)
-   {
-       localmem_sum1[lid - 128] = sum1;
-       localmem_sum2[lid - 128] = sum2;
-       localmem_sum3[lid - 128] = sum3;
-   }
-   barrier(CLK_LOCAL_MEM_FENCE);
-   if(lid < 128)
-   {
-       localmem_sum1[lid] = sum1 + localmem_sum1[lid];
-       localmem_sum2[lid] = sum2 + localmem_sum2[lid];
-       localmem_sum3[lid] = sum3 + localmem_sum3[lid];
-   }
-   barrier(CLK_LOCAL_MEM_FENCE);
-   for(int lsize = 64; lsize > 0; lsize >>= 1)
-   {
-       if(lid < lsize)
-       {
-           int lid2 = lsize + lid;
-           localmem_sum1[lid] = localmem_sum1[lid] + localmem_sum1[lid2];
-           localmem_sum2[lid] = localmem_sum2[lid] + localmem_sum2[lid2];
-           localmem_sum3[lid] = localmem_sum3[lid] + localmem_sum3[lid2];
-       }
-       barrier(CLK_LOCAL_MEM_FENCE);
-   }
-   if( lid == 0)
-   {
-       dst[gid*3]   = localmem_sum1[0];
-       dst[gid*3+1] = localmem_sum2[0];
-       dst[gid*3+2] = localmem_sum3[0];
-   }
+	unsigned int lid = get_local_id(0);
+	unsigned int gid = get_group_id(0);
+	unsigned int id = get_global_id(0);
+	unsigned int idx = offset + id + (id  / cols) * invalid_cols;
+	idx = idx * 3;
+	__local double4 localmem_sum1[128];
+	__local double4 localmem_sum2[128];
+	__local double4 localmem_sum3[128];
+	double4 sum1 = 0, sum2 = 0, sum3 = 0, temp1, temp2, temp3;
+	
+	if (id < elemnum)
+	{
+		temp1 = convert_double4(src[idx]);
+		temp2 = convert_double4(src[idx + 1]);
+		temp3 = convert_double4(src[idx + 2]);
+		
+		if (id % cols == 0)
+		{
+			repeat_s(temp1, temp2, temp3);
+		}
+		
+		if (id % cols == cols - 1)
+		{
+			repeat_e(temp1, temp2, temp3);
+		}
+		
+		FUNC(temp1, sum1);
+		FUNC(temp2, sum2);
+		FUNC(temp3, sum3);
+	}
+	else
+	{
+		sum1 = 0;
+		sum2 = 0;
+		sum3 = 0;
+	}
+	
+	for (id = id + (groupnum << 8); id < elemnum; id = id + (groupnum << 8))
+	{
+		idx = offset + id + (id / cols) * invalid_cols;
+		idx = idx * 3;
+		temp1 = convert_double4(src[idx]);
+		temp2 = convert_double4(src[idx + 1]);
+		temp3 = convert_double4(src[idx + 2]);
+		
+		if (id % cols == 0)
+		{
+			repeat_s(temp1, temp2, temp3);
+		}
+		
+		if (id % cols == cols - 1)
+		{
+			repeat_e(temp1, temp2, temp3);
+		}
+		
+		FUNC(temp1, sum1);
+		FUNC(temp2, sum2);
+		FUNC(temp3, sum3);
+	}
+	
+	if (lid > 127)
+	{
+		localmem_sum1[lid - 128] = sum1;
+		localmem_sum2[lid - 128] = sum2;
+		localmem_sum3[lid - 128] = sum3;
+	}
+	
+	barrier(CLK_LOCAL_MEM_FENCE);
+	
+	if (lid < 128)
+	{
+		localmem_sum1[lid] = sum1 + localmem_sum1[lid];
+		localmem_sum2[lid] = sum2 + localmem_sum2[lid];
+		localmem_sum3[lid] = sum3 + localmem_sum3[lid];
+	}
+	
+	barrier(CLK_LOCAL_MEM_FENCE);
+	
+	for (int lsize = 64; lsize > 0; lsize >>= 1)
+	{
+		if (lid < lsize)
+		{
+			int lid2 = lsize + lid;
+			localmem_sum1[lid] = localmem_sum1[lid] + localmem_sum1[lid2];
+			localmem_sum2[lid] = localmem_sum2[lid] + localmem_sum2[lid2];
+			localmem_sum3[lid] = localmem_sum3[lid] + localmem_sum3[lid2];
+		}
+		
+		barrier(CLK_LOCAL_MEM_FENCE);
+	}
+	
+	if (lid == 0)
+	{
+		dst[gid * 3]   = localmem_sum1[0];
+		dst[gid * 3 + 1] = localmem_sum2[0];
+		dst[gid * 3 + 2] = localmem_sum3[0];
+	}
 }
 

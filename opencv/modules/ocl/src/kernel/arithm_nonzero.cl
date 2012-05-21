@@ -126,68 +126,83 @@
 #pragma OPENCL EXTENSION cl_khr_global_int32_extended_atomics:enable
 
 /**************************************Count NonZero**************************************/
-__kernel void arithm_op_nonzero (int cols,int invalid_cols,int offset,int elemnum,int groupnum,
-                                  __global VEC_TYPE *src, __global int8 *dst)
+__kernel void arithm_op_nonzero(int cols, int invalid_cols, int offset, int elemnum, int groupnum,
+                                __global VEC_TYPE *src, __global int8 *dst)
 {
-   unsigned int lid = get_local_id(0);
-   unsigned int gid = get_group_id(0);
-   unsigned int  id = get_global_id(0);
-   unsigned int idx = offset + id + (id / cols) * invalid_cols;
-   __local int8 localmem_nonzero[128];
-   int8 nonzero;
-   VEC_TYPE zero=0,one=1,temp;
-   if(id < elemnum)
-   {
-       temp = src[idx];
-       if(id % cols == 0 ) 
-       {
-           repeat_s(temp);
-       }
-       if(id % cols == cols - 1)
-       {
-           repeat_e(temp);
-       }
-       nonzero = convert_int8(temp == zero ? zero:one);
-   }
-   else
-   {
-       nonzero = 0;
-   }
-   for(id=id + (groupnum << 8); id < elemnum;id = id + (groupnum << 8))
-   {
-       idx = offset + id + (id / cols) * invalid_cols;
-       temp = src[idx];
-       if(id % cols == 0 ) 
-       {
-               repeat_s(temp);
-       }
-       if(id % cols == cols - 1)
-       {
-               repeat_e(temp);
-       }
-       nonzero = nonzero + convert_int8(temp == zero ? zero:one);
-   }
-   if(lid > 127)
-   {
-       localmem_nonzero[lid - 128] = nonzero;
-   }
-   barrier(CLK_LOCAL_MEM_FENCE);
-   if(lid < 128)
-   {
-       localmem_nonzero[lid] = nonzero + localmem_nonzero[lid];
-   }
-   barrier(CLK_LOCAL_MEM_FENCE);
-   for(int lsize = 64; lsize > 0; lsize >>= 1)
-   {
-       if(lid < lsize)
-       {
-           int lid2 = lsize + lid;
-           localmem_nonzero[lid] = localmem_nonzero[lid] + localmem_nonzero[lid2];
-       }
-       barrier(CLK_LOCAL_MEM_FENCE);
-   }
-   if( lid == 0)
-   {
-       dst[gid] = localmem_nonzero[0];
-   }
+	unsigned int lid = get_local_id(0);
+	unsigned int gid = get_group_id(0);
+	unsigned int  id = get_global_id(0);
+	unsigned int idx = offset + id + (id / cols) * invalid_cols;
+	__local int8 localmem_nonzero[128];
+	int8 nonzero;
+	VEC_TYPE zero = 0, one = 1, temp;
+	
+	if (id < elemnum)
+	{
+		temp = src[idx];
+		
+		if (id % cols == 0)
+		{
+			repeat_s(temp);
+		}
+		
+		if (id % cols == cols - 1)
+		{
+			repeat_e(temp);
+		}
+		
+		nonzero = convert_int8(temp == zero ? zero : one);
+	}
+	else
+	{
+		nonzero = 0;
+	}
+	
+	for (id = id + (groupnum << 8); id < elemnum; id = id + (groupnum << 8))
+	{
+		idx = offset + id + (id / cols) * invalid_cols;
+		temp = src[idx];
+		
+		if (id % cols == 0)
+		{
+			repeat_s(temp);
+		}
+		
+		if (id % cols == cols - 1)
+		{
+			repeat_e(temp);
+		}
+		
+		nonzero = nonzero + convert_int8(temp == zero ? zero : one);
+	}
+	
+	if (lid > 127)
+	{
+		localmem_nonzero[lid - 128] = nonzero;
+	}
+	
+	barrier(CLK_LOCAL_MEM_FENCE);
+	
+	if (lid < 128)
+	{
+		localmem_nonzero[lid] = nonzero + localmem_nonzero[lid];
+	}
+	
+	barrier(CLK_LOCAL_MEM_FENCE);
+	
+	for (int lsize = 64; lsize > 0; lsize >>= 1)
+	{
+		if (lid < lsize)
+		{
+			int lid2 = lsize + lid;
+			localmem_nonzero[lid] = localmem_nonzero[lid] + localmem_nonzero[lid2];
+		}
+		
+		barrier(CLK_LOCAL_MEM_FENCE);
+	}
+	
+	if (lid == 0)
+	{
+		dst[gid] = localmem_nonzero[0];
+	}
 }

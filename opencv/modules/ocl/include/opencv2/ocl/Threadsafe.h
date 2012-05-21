@@ -49,7 +49,7 @@
 #include <pthread.h>
 #endif
 
-class CriticalSection 
+class CriticalSection
 {
 public:
 	CriticalSection();
@@ -67,11 +67,18 @@ protected:
 
 class AutoLock
 {
-public: 
-	explicit AutoLock(CriticalSection * lock) { m_lock = lock; m_lock->Lock(); };
-	~AutoLock() { m_lock->Unlock(); };  
+public:
+	explicit AutoLock(CriticalSection *lock)
+	{
+		m_lock = lock;
+		m_lock->Lock();
+	};
+	~AutoLock()
+	{
+		m_lock->Unlock();
+	};
 protected:
-	CriticalSection * m_lock; 
+	CriticalSection *m_lock;
 };
 
 

@@ -51,693 +51,693 @@
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////flip rows and cols///////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////
-__kernel void arithm_flip_rc_C1_D0 (__global uchar *src, int src_step, int src_offset,
-                                    __global uchar *dst, int dst_step, int dst_offset,
-                                    int rows, int cols, int thread_rows, int dst_step1)
+__kernel void arithm_flip_rc_C1_D0(__global uchar *src, int src_step, int src_offset,
+                                   __global uchar *dst, int dst_step, int dst_offset,
+                                   int rows, int cols, int thread_rows, int dst_step1)
 {
-    int x = get_global_id(0);
-    int y = get_global_id(1);
-
-    if (x < cols && y < thread_rows)
-    {
-        int src_index_0 = mad24(y,            src_step, (x)           + src_offset);
-        int src_index_1 = mad24(rows - y - 1, src_step, (cols - x -1) + src_offset);
-        
-        int dst_index_0 = mad24(y,            dst_step, (x)           + dst_offset);
-        int dst_index_1 = mad24(rows - y - 1, dst_step, (cols - x -1) + dst_offset);
-
-        uchar data0 = *(src + src_index_0);
-        uchar data1 = *(src + src_index_1);
-
-        *(dst + dst_index_0) = data1;
-        *(dst + dst_index_1) = data0;
-    }
+	int x = get_global_id(0);
+	int y = get_global_id(1);
+	
+	if (x < cols && y < thread_rows)
+	{
+		int src_index_0 = mad24(y,            src_step, (x)           + src_offset);
+		int src_index_1 = mad24(rows - y - 1, src_step, (cols - x - 1) + src_offset);
+		
+		int dst_index_0 = mad24(y,            dst_step, (x)           + dst_offset);
+		int dst_index_1 = mad24(rows - y - 1, dst_step, (cols - x - 1) + dst_offset);
+		
+		uchar data0 = *(src + src_index_0);
+		uchar data1 = *(src + src_index_1);
+		
+		*(dst + dst_index_0) = data1;
+		*(dst + dst_index_1) = data0;
+	}
 }
-__kernel void arithm_flip_rc_C1_D1 (__global char *src, int src_step, int src_offset,
-                                    __global char *dst, int dst_step, int dst_offset,
-                                    int rows, int cols, int thread_rows, int dst_step1)
+__kernel void arithm_flip_rc_C1_D1(__global char *src, int src_step, int src_offset,
+                                   __global char *dst, int dst_step, int dst_offset,
+                                   int rows, int cols, int thread_rows, int dst_step1)
 {
-    int x = get_global_id(0);
-    int y = get_global_id(1);
-
-    if (x < cols && y < thread_rows)
-    {
-        int src_index_0 = mad24(y,            src_step, (x)           + src_offset);
-        int src_index_1 = mad24(rows - y - 1, src_step, (cols - x -1) + src_offset);
-        
-        int dst_index_0 = mad24(y,            dst_step, (x)           + dst_offset);
-        int dst_index_1 = mad24(rows - y - 1, dst_step, (cols - x -1) + dst_offset);
-
-        char data0 = *(src + src_index_0);
-        char data1 = *(src + src_index_1);
-
-        *(dst + dst_index_0) = data1;
-        *(dst + dst_index_1) = data0;
-    }
+	int x = get_global_id(0);
+	int y = get_global_id(1);
+	
+	if (x < cols && y < thread_rows)
+	{
+		int src_index_0 = mad24(y,            src_step, (x)           + src_offset);
+		int src_index_1 = mad24(rows - y - 1, src_step, (cols - x - 1) + src_offset);
+		
+		int dst_index_0 = mad24(y,            dst_step, (x)           + dst_offset);
+		int dst_index_1 = mad24(rows - y - 1, dst_step, (cols - x - 1) + dst_offset);
+		
+		char data0 = *(src + src_index_0);
+		char data1 = *(src + src_index_1);
+		
+		*(dst + dst_index_0) = data1;
+		*(dst + dst_index_1) = data0;
+	}
 }
-__kernel void arithm_flip_rc_C1_D2 (__global ushort *src, int src_step, int src_offset,
-                                    __global ushort *dst, int dst_step, int dst_offset,
-                                    int rows, int cols, int thread_rows, int dst_step1)
+__kernel void arithm_flip_rc_C1_D2(__global ushort *src, int src_step, int src_offset,
+                                   __global ushort *dst, int dst_step, int dst_offset,
+                                   int rows, int cols, int thread_rows, int dst_step1)
 {
-    int x = get_global_id(0);
-    int y = get_global_id(1);
-
-    if (x < cols && y < thread_rows)
-    {
-        int src_index_0 = mad24(y,            src_step, (x << 1)             + src_offset);
-        int src_index_1 = mad24(rows - y - 1, src_step, ((cols - x -1) << 1) + src_offset);
-        
-        int dst_index_0 = mad24(y,            dst_step, (x << 1)             + dst_offset);
-        int dst_index_1 = mad24(rows - y - 1, dst_step, ((cols - x -1) << 1) + dst_offset);
-
-        ushort data0 = *((__global ushort *)((__global char *)src + src_index_0));
-        ushort data1 = *((__global ushort *)((__global char *)src + src_index_1));
-
-        *((__global ushort *)((__global char *)dst + dst_index_0)) = data1;
-        *((__global ushort *)((__global char *)dst + dst_index_1)) = data0;
-    }
+	int x = get_global_id(0);
+	int y = get_global_id(1);
+	
+	if (x < cols && y < thread_rows)
+	{
+		int src_index_0 = mad24(y,            src_step, (x << 1)             + src_offset);
+		int src_index_1 = mad24(rows - y - 1, src_step, ((cols - x - 1) << 1) + src_offset);
+		
+		int dst_index_0 = mad24(y,            dst_step, (x << 1)             + dst_offset);
+		int dst_index_1 = mad24(rows - y - 1, dst_step, ((cols - x - 1) << 1) + dst_offset);
+		
+		ushort data0 = *((__global ushort *)((__global char *)src + src_index_0));
+		ushort data1 = *((__global ushort *)((__global char *)src + src_index_1));
+		
+		*((__global ushort *)((__global char *)dst + dst_index_0)) = data1;
+		*((__global ushort *)((__global char *)dst + dst_index_1)) = data0;
+	}
 }
-__kernel void arithm_flip_rc_C1_D3 (__global short *src, int src_step, int src_offset,
-                                    __global short *dst, int dst_step, int dst_offset,
-                                    int rows, int cols, int thread_rows, int dst_step1)
+__kernel void arithm_flip_rc_C1_D3(__global short *src, int src_step, int src_offset,
+                                   __global short *dst, int dst_step, int dst_offset,
+                                   int rows, int cols, int thread_rows, int dst_step1)
 {
-    int x = get_global_id(0);
-    int y = get_global_id(1);
-
-    if (x < cols && y < thread_rows)
-    {
-        int src_index_0 = mad24(y,            src_step, (x << 1)             + src_offset);
-        int src_index_1 = mad24(rows - y - 1, src_step, ((cols - x -1) << 1) + src_offset);
-        
-        int dst_index_0 = mad24(y,            dst_step, (x << 1)             + dst_offset);
-        int dst_index_1 = mad24(rows - y - 1, dst_step, ((cols - x -1) << 1) + dst_offset);
-
-        short data0 = *((__global short *)((__global char *)src + src_index_0));
-        short data1 = *((__global short *)((__global char *)src + src_index_1));
-
-        *((__global short *)((__global char *)dst + dst_index_0)) = data1;
-        *((__global short *)((__global char *)dst + dst_index_1)) = data0;
-    }
+	int x = get_global_id(0);
+	int y = get_global_id(1);
+	
+	if (x < cols && y < thread_rows)
+	{
+		int src_index_0 = mad24(y,            src_step, (x << 1)             + src_offset);
+		int src_index_1 = mad24(rows - y - 1, src_step, ((cols - x - 1) << 1) + src_offset);
+		
+		int dst_index_0 = mad24(y,            dst_step, (x << 1)             + dst_offset);
+		int dst_index_1 = mad24(rows - y - 1, dst_step, ((cols - x - 1) << 1) + dst_offset);
+		
+		short data0 = *((__global short *)((__global char *)src + src_index_0));
+		short data1 = *((__global short *)((__global char *)src + src_index_1));
+		
+		*((__global short *)((__global char *)dst + dst_index_0)) = data1;
+		*((__global short *)((__global char *)dst + dst_index_1)) = data0;
+	}
 }
-__kernel void arithm_flip_rc_C1_D4 (__global int *src, int src_step, int src_offset,
-                                    __global int *dst, int dst_step, int dst_offset,
-                                    int rows, int cols, int thread_rows, int dst_step1)
+__kernel void arithm_flip_rc_C1_D4(__global int *src, int src_step, int src_offset,
+                                   __global int *dst, int dst_step, int dst_offset,
+                                   int rows, int cols, int thread_rows, int dst_step1)
 {
-    int x = get_global_id(0);
-    int y = get_global_id(1);
-
-    if (x < cols && y < thread_rows)
-    {
-        int src_index_0 = mad24(y,            src_step, (x << 2)             + src_offset);
-        int src_index_1 = mad24(rows - y - 1, src_step, ((cols - x -1) << 2) + src_offset);
-        
-        int dst_index_0 = mad24(y,            dst_step, (x << 2)             + dst_offset);
-        int dst_index_1 = mad24(rows - y - 1, dst_step, ((cols - x -1) << 2) + dst_offset);
-
-        int data0 = *((__global int *)((__global char *)src + src_index_0));
-        int data1 = *((__global int *)((__global char *)src + src_index_1));
-
-        *((__global int *)((__global char *)dst + dst_index_0)) = data1;
-        *((__global int *)((__global char *)dst + dst_index_1)) = data0;
-    }
+	int x = get_global_id(0);
+	int y = get_global_id(1);
+	
+	if (x < cols && y < thread_rows)
+	{
+		int src_index_0 = mad24(y,            src_step, (x << 2)             + src_offset);
+		int src_index_1 = mad24(rows - y - 1, src_step, ((cols - x - 1) << 2) + src_offset);
+		
+		int dst_index_0 = mad24(y,            dst_step, (x << 2)             + dst_offset);
+		int dst_index_1 = mad24(rows - y - 1, dst_step, ((cols - x - 1) << 2) + dst_offset);
+		
+		int data0 = *((__global int *)((__global char *)src + src_index_0));
+		int data1 = *((__global int *)((__global char *)src + src_index_1));
+		
+		*((__global int *)((__global char *)dst + dst_index_0)) = data1;
+		*((__global int *)((__global char *)dst + dst_index_1)) = data0;
+	}
 }
-__kernel void arithm_flip_rc_C1_D5 (__global float *src, int src_step, int src_offset,
-                                    __global float *dst, int dst_step, int dst_offset,
-                                    int rows, int cols, int thread_rows, int dst_step1)
+__kernel void arithm_flip_rc_C1_D5(__global float *src, int src_step, int src_offset,
+                                   __global float *dst, int dst_step, int dst_offset,
+                                   int rows, int cols, int thread_rows, int dst_step1)
 {
-    int x = get_global_id(0);
-    int y = get_global_id(1);
-
-    if (x < cols && y < thread_rows)
-    {
-        int src_index_0 = mad24(y,            src_step, (x << 2)             + src_offset);
-        int src_index_1 = mad24(rows - y - 1, src_step, ((cols - x -1) << 2) + src_offset);
-        
-        int dst_index_0 = mad24(y,            dst_step, (x << 2)             + dst_offset);
-        int dst_index_1 = mad24(rows - y - 1, dst_step, ((cols - x -1) << 2) + dst_offset);
-
-        float data0 = *((__global float *)((__global char *)src + src_index_0));
-        float data1 = *((__global float *)((__global char *)src + src_index_1));
-
-        *((__global float *)((__global char *)dst + dst_index_0)) = data1;
-        *((__global float *)((__global char *)dst + dst_index_1)) = data0;
-    }
+	int x = get_global_id(0);
+	int y = get_global_id(1);
+	
+	if (x < cols && y < thread_rows)
+	{
+		int src_index_0 = mad24(y,            src_step, (x << 2)             + src_offset);
+		int src_index_1 = mad24(rows - y - 1, src_step, ((cols - x - 1) << 2) + src_offset);
+		
+		int dst_index_0 = mad24(y,            dst_step, (x << 2)             + dst_offset);
+		int dst_index_1 = mad24(rows - y - 1, dst_step, ((cols - x - 1) << 2) + dst_offset);
+		
+		float data0 = *((__global float *)((__global char *)src + src_index_0));
+		float data1 = *((__global float *)((__global char *)src + src_index_1));
+		
+		*((__global float *)((__global char *)dst + dst_index_0)) = data1;
+		*((__global float *)((__global char *)dst + dst_index_1)) = data0;
+	}
 }
-__kernel void arithm_flip_rc_C1_D6 (__global double *src, int src_step, int src_offset,
-                                    __global double *dst, int dst_step, int dst_offset,
-                                    int rows, int cols, int thread_rows, int dst_step1)
+__kernel void arithm_flip_rc_C1_D6(__global double *src, int src_step, int src_offset,
+                                   __global double *dst, int dst_step, int dst_offset,
+                                   int rows, int cols, int thread_rows, int dst_step1)
 {
-    int x = get_global_id(0);
-    int y = get_global_id(1);
-
-    if (x < cols && y < thread_rows)
-    {
-        int src_index_0 = mad24(y,            src_step, (x << 3)             + src_offset);
-        int src_index_1 = mad24(rows - y - 1, src_step, ((cols - x -1) << 3) + src_offset);
-        
-        int dst_index_0 = mad24(y,            dst_step, (x << 3)             + dst_offset);
-        int dst_index_1 = mad24(rows - y - 1, dst_step, ((cols - x -1) << 3) + dst_offset);
-
-        double data0 = *((__global double *)((__global char *)src + src_index_0));
-        double data1 = *((__global double *)((__global char *)src + src_index_1));
-
-        *((__global double *)((__global char *)dst + dst_index_0)) = data1;
-        *((__global double *)((__global char *)dst + dst_index_1)) = data0;
-    }
+	int x = get_global_id(0);
+	int y = get_global_id(1);
+	
+	if (x < cols && y < thread_rows)
+	{
+		int src_index_0 = mad24(y,            src_step, (x << 3)             + src_offset);
+		int src_index_1 = mad24(rows - y - 1, src_step, ((cols - x - 1) << 3) + src_offset);
+		
+		int dst_index_0 = mad24(y,            dst_step, (x << 3)             + dst_offset);
+		int dst_index_1 = mad24(rows - y - 1, dst_step, ((cols - x - 1) << 3) + dst_offset);
+		
+		double data0 = *((__global double *)((__global char *)src + src_index_0));
+		double data1 = *((__global double *)((__global char *)src + src_index_1));
+		
+		*((__global double *)((__global char *)dst + dst_index_0)) = data1;
+		*((__global double *)((__global char *)dst + dst_index_1)) = data0;
+	}
 }
-__kernel void arithm_flip_rc_C2_D0 (__global uchar *src, int src_step, int src_offset,
-                                    __global uchar *dst, int dst_step, int dst_offset,
-                                    int rows, int cols, int thread_rows, int dst_step1)
+__kernel void arithm_flip_rc_C2_D0(__global uchar *src, int src_step, int src_offset,
+                                   __global uchar *dst, int dst_step, int dst_offset,
+                                   int rows, int cols, int thread_rows, int dst_step1)
 {
-    int x = get_global_id(0);
-    int y = get_global_id(1);
-
-    if (x < cols && y < thread_rows)
-    {
-        int src_index_0 = mad24(y,            src_step, (x << 1)             + src_offset);
-        int src_index_1 = mad24(rows - y - 1, src_step, ((cols - x -1) << 1) + src_offset);
-        
-        int dst_index_0 = mad24(y,            dst_step, (x << 1)             + dst_offset);
-        int dst_index_1 = mad24(rows - y - 1, dst_step, ((cols - x -1) << 1) + dst_offset);
-
-        uchar2 data0 = *((__global uchar2 *)(src + src_index_0));
-        uchar2 data1 = *((__global uchar2 *)(src + src_index_1));
-
-        *((__global uchar2 *)(dst + dst_index_0)) = data1;
-        *((__global uchar2 *)(dst + dst_index_1)) = data0;
-    }
+	int x = get_global_id(0);
+	int y = get_global_id(1);
+	
+	if (x < cols && y < thread_rows)
+	{
+		int src_index_0 = mad24(y,            src_step, (x << 1)             + src_offset);
+		int src_index_1 = mad24(rows - y - 1, src_step, ((cols - x - 1) << 1) + src_offset);
+		
+		int dst_index_0 = mad24(y,            dst_step, (x << 1)             + dst_offset);
+		int dst_index_1 = mad24(rows - y - 1, dst_step, ((cols - x - 1) << 1) + dst_offset);
+		
+		uchar2 data0 = *((__global uchar2 *)(src + src_index_0));
+		uchar2 data1 = *((__global uchar2 *)(src + src_index_1));
+		
+		*((__global uchar2 *)(dst + dst_index_0)) = data1;
+		*((__global uchar2 *)(dst + dst_index_1)) = data0;
+	}
 }
-__kernel void arithm_flip_rc_C2_D1 (__global char *src, int src_step, int src_offset,
-                                    __global char *dst, int dst_step, int dst_offset,
-                                    int rows, int cols, int thread_rows, int dst_step1)
+__kernel void arithm_flip_rc_C2_D1(__global char *src, int src_step, int src_offset,
+                                   __global char *dst, int dst_step, int dst_offset,
+                                   int rows, int cols, int thread_rows, int dst_step1)
 {
-    int x = get_global_id(0);
-    int y = get_global_id(1);
-
-    if (x < cols && y < thread_rows)
-    {
-        int src_index_0 = mad24(y,            src_step, (x << 1)             + src_offset);
-        int src_index_1 = mad24(rows - y - 1, src_step, ((cols - x -1) << 1) + src_offset);
-        
-        int dst_index_0 = mad24(y,            dst_step, (x << 1)             + dst_offset);
-        int dst_index_1 = mad24(rows - y - 1, dst_step, ((cols - x -1) << 1) + dst_offset);
-
-        char2 data0 = *((__global char2 *)(src + src_index_0));
-        char2 data1 = *((__global char2 *)(src + src_index_1));
-
-        *((__global char2 *)(dst + dst_index_0)) = data1;
-        *((__global char2 *)(dst + dst_index_1)) = data0;
-    }
+	int x = get_global_id(0);
+	int y = get_global_id(1);
+	
+	if (x < cols && y < thread_rows)
+	{
+		int src_index_0 = mad24(y,            src_step, (x << 1)             + src_offset);
+		int src_index_1 = mad24(rows - y - 1, src_step, ((cols - x - 1) << 1) + src_offset);
+		
+		int dst_index_0 = mad24(y,            dst_step, (x << 1)             + dst_offset);
+		int dst_index_1 = mad24(rows - y - 1, dst_step, ((cols - x - 1) << 1) + dst_offset);
+		
+		char2 data0 = *((__global char2 *)(src + src_index_0));
+		char2 data1 = *((__global char2 *)(src + src_index_1));
+		
+		*((__global char2 *)(dst + dst_index_0)) = data1;
+		*((__global char2 *)(dst + dst_index_1)) = data0;
+	}
 }
-__kernel void arithm_flip_rc_C2_D2 (__global ushort *src, int src_step, int src_offset,
-                                    __global ushort *dst, int dst_step, int dst_offset,
-                                    int rows, int cols, int thread_rows, int dst_step1)
+__kernel void arithm_flip_rc_C2_D2(__global ushort *src, int src_step, int src_offset,
+                                   __global ushort *dst, int dst_step, int dst_offset,
+                                   int rows, int cols, int thread_rows, int dst_step1)
 {
-    int x = get_global_id(0);
-    int y = get_global_id(1);
-
-    if (x < cols && y < thread_rows)
-    {
-        int src_index_0 = mad24(y,            src_step, (x << 2)             + src_offset);
-        int src_index_1 = mad24(rows - y - 1, src_step, ((cols - x -1) << 2) + src_offset);
-        
-        int dst_index_0 = mad24(y,            dst_step, (x << 2)             + dst_offset);
-        int dst_index_1 = mad24(rows - y - 1, dst_step, ((cols - x -1) << 2) + dst_offset);
-
-        ushort2 data0 = *((__global ushort2 *)((__global char *)src + src_index_0));
-        ushort2 data1 = *((__global ushort2 *)((__global char *)src + src_index_1));
-
-        *((__global ushort2 *)((__global char *)dst + dst_index_0)) = data1;
-        *((__global ushort2 *)((__global char *)dst + dst_index_1)) = data0;
-    }
+	int x = get_global_id(0);
+	int y = get_global_id(1);
+	
+	if (x < cols && y < thread_rows)
+	{
+		int src_index_0 = mad24(y,            src_step, (x << 2)             + src_offset);
+		int src_index_1 = mad24(rows - y - 1, src_step, ((cols - x - 1) << 2) + src_offset);
+		
+		int dst_index_0 = mad24(y,            dst_step, (x << 2)             + dst_offset);
+		int dst_index_1 = mad24(rows - y - 1, dst_step, ((cols - x - 1) << 2) + dst_offset);
+		
+		ushort2 data0 = *((__global ushort2 *)((__global char *)src + src_index_0));
+		ushort2 data1 = *((__global ushort2 *)((__global char *)src + src_index_1));
+		
+		*((__global ushort2 *)((__global char *)dst + dst_index_0)) = data1;
+		*((__global ushort2 *)((__global char *)dst + dst_index_1)) = data0;
+	}
 }
-__kernel void arithm_flip_rc_C2_D3 (__global short *src, int src_step, int src_offset,
-                                    __global short *dst, int dst_step, int dst_offset,
-                                    int rows, int cols, int thread_rows, int dst_step1)
+__kernel void arithm_flip_rc_C2_D3(__global short *src, int src_step, int src_offset,
+                                   __global short *dst, int dst_step, int dst_offset,
+                                   int rows, int cols, int thread_rows, int dst_step1)
 {
-    int x = get_global_id(0);
-    int y = get_global_id(1);
-
-    if (x < cols && y < thread_rows)
-    {
-        int src_index_0 = mad24(y,            src_step, (x << 2)             + src_offset);
-        int src_index_1 = mad24(rows - y - 1, src_step, ((cols - x -1) << 2) + src_offset);
-        
-        int dst_index_0 = mad24(y,            dst_step, (x << 2)             + dst_offset);
-        int dst_index_1 = mad24(rows - y - 1, dst_step, ((cols - x -1) << 2) + dst_offset);
-
-        short2 data0 = *((__global short2 *)((__global char *)src + src_index_0));
-        short2 data1 = *((__global short2 *)((__global char *)src + src_index_1));
-
-        *((__global short2 *)((__global char *)dst + dst_index_0)) = data1;
-        *((__global short2 *)((__global char *)dst + dst_index_1)) = data0;
-    }
+	int x = get_global_id(0);
+	int y = get_global_id(1);
+	
+	if (x < cols && y < thread_rows)
+	{
+		int src_index_0 = mad24(y,            src_step, (x << 2)             + src_offset);
+		int src_index_1 = mad24(rows - y - 1, src_step, ((cols - x - 1) << 2) + src_offset);
+		
+		int dst_index_0 = mad24(y,            dst_step, (x << 2)             + dst_offset);
+		int dst_index_1 = mad24(rows - y - 1, dst_step, ((cols - x - 1) << 2) + dst_offset);
+		
+		short2 data0 = *((__global short2 *)((__global char *)src + src_index_0));
+		short2 data1 = *((__global short2 *)((__global char *)src + src_index_1));
+		
+		*((__global short2 *)((__global char *)dst + dst_index_0)) = data1;
+		*((__global short2 *)((__global char *)dst + dst_index_1)) = data0;
+	}
 }
-__kernel void arithm_flip_rc_C2_D4 (__global int *src, int src_step, int src_offset,
-                                    __global int *dst, int dst_step, int dst_offset,
-                                    int rows, int cols, int thread_rows, int dst_step1)
+__kernel void arithm_flip_rc_C2_D4(__global int *src, int src_step, int src_offset,
+                                   __global int *dst, int dst_step, int dst_offset,
+                                   int rows, int cols, int thread_rows, int dst_step1)
 {
-    int x = get_global_id(0);
-    int y = get_global_id(1);
-
-    if (x < cols && y < thread_rows)
-    {
-        int src_index_0 = mad24(y,            src_step, (x << 3)             + src_offset);
-        int src_index_1 = mad24(rows - y - 1, src_step, ((cols - x -1) << 3) + src_offset);
-        
-        int dst_index_0 = mad24(y,            dst_step, (x << 3)             + dst_offset);
-        int dst_index_1 = mad24(rows - y - 1, dst_step, ((cols - x -1) << 3) + dst_offset);
-
-        int2 data0 = *((__global int2 *)((__global char *)src + src_index_0));
-        int2 data1 = *((__global int2 *)((__global char *)src + src_index_1));
-
-        *((__global int2 *)((__global char *)dst + dst_index_0)) = data1;
-        *((__global int2 *)((__global char *)dst + dst_index_1)) = data0;
-    }
+	int x = get_global_id(0);
+	int y = get_global_id(1);
+	
+	if (x < cols && y < thread_rows)
+	{
+		int src_index_0 = mad24(y,            src_step, (x << 3)             + src_offset);
+		int src_index_1 = mad24(rows - y - 1, src_step, ((cols - x - 1) << 3) + src_offset);
+		
+		int dst_index_0 = mad24(y,            dst_step, (x << 3)             + dst_offset);
+		int dst_index_1 = mad24(rows - y - 1, dst_step, ((cols - x - 1) << 3) + dst_offset);
+		
+		int2 data0 = *((__global int2 *)((__global char *)src + src_index_0));
+		int2 data1 = *((__global int2 *)((__global char *)src + src_index_1));
+		
+		*((__global int2 *)((__global char *)dst + dst_index_0)) = data1;
+		*((__global int2 *)((__global char *)dst + dst_index_1)) = data0;
+	}
 }
-__kernel void arithm_flip_rc_C2_D5 (__global float *src, int src_step, int src_offset,
-                                    __global float *dst, int dst_step, int dst_offset,
-                                    int rows, int cols, int thread_rows, int dst_step1)
+__kernel void arithm_flip_rc_C2_D5(__global float *src, int src_step, int src_offset,
+                                   __global float *dst, int dst_step, int dst_offset,
+                                   int rows, int cols, int thread_rows, int dst_step1)
 {
-    int x = get_global_id(0);
-    int y = get_global_id(1);
-
-    if (x < cols && y < thread_rows)
-    {
-        int src_index_0 = mad24(y,            src_step, (x << 3)             + src_offset);
-        int src_index_1 = mad24(rows - y - 1, src_step, ((cols - x -1) << 3) + src_offset);
-        
-        int dst_index_0 = mad24(y,            dst_step, (x << 3)             + dst_offset);
-        int dst_index_1 = mad24(rows - y - 1, dst_step, ((cols - x -1) << 3) + dst_offset);
-
-        float2 data0 = *((__global float2 *)((__global char *)src + src_index_0));
-        float2 data1 = *((__global float2 *)((__global char *)src + src_index_1));
-
-        *((__global float2 *)((__global char *)dst + dst_index_0)) = data1;
-        *((__global float2 *)((__global char *)dst + dst_index_1)) = data0;
-    }
+	int x = get_global_id(0);
+	int y = get_global_id(1);
+	
+	if (x < cols && y < thread_rows)
+	{
+		int src_index_0 = mad24(y,            src_step, (x << 3)             + src_offset);
+		int src_index_1 = mad24(rows - y - 1, src_step, ((cols - x - 1) << 3) + src_offset);
+		
+		int dst_index_0 = mad24(y,            dst_step, (x << 3)             + dst_offset);
+		int dst_index_1 = mad24(rows - y - 1, dst_step, ((cols - x - 1) << 3) + dst_offset);
+		
+		float2 data0 = *((__global float2 *)((__global char *)src + src_index_0));
+		float2 data1 = *((__global float2 *)((__global char *)src + src_index_1));
+		
+		*((__global float2 *)((__global char *)dst + dst_index_0)) = data1;
+		*((__global float2 *)((__global char *)dst + dst_index_1)) = data0;
+	}
 }
-__kernel void arithm_flip_rc_C2_D6 (__global double *src, int src_step, int src_offset,
-                                    __global double *dst, int dst_step, int dst_offset,
-                                    int rows, int cols, int thread_rows, int dst_step1)
+__kernel void arithm_flip_rc_C2_D6(__global double *src, int src_step, int src_offset,
+                                   __global double *dst, int dst_step, int dst_offset,
+                                   int rows, int cols, int thread_rows, int dst_step1)
 {
-    int x = get_global_id(0);
-    int y = get_global_id(1);
-
-    if (x < cols && y < thread_rows)
-    {
-        int src_index_0 = mad24(y,            src_step, (x << 4)             + src_offset);
-        int src_index_1 = mad24(rows - y - 1, src_step, ((cols - x -1) << 4) + src_offset);
-        
-        int dst_index_0 = mad24(y,            dst_step, (x << 4)             + dst_offset);
-        int dst_index_1 = mad24(rows - y - 1, dst_step, ((cols - x -1) << 4) + dst_offset);
-
-        double2 data0 = *((__global double2 *)((__global char *)src + src_index_0));
-        double2 data1 = *((__global double2 *)((__global char *)src + src_index_1));
-
-        *((__global double2 *)((__global char *)dst + dst_index_0)) = data1;
-        *((__global double2 *)((__global char *)dst + dst_index_1)) = data0;
-    }
-}
-
-__kernel void arithm_flip_rc_C3_D0 (__global uchar *src, int src_step, int src_offset,
-                                    __global uchar *dst, int dst_step, int dst_offset,
-                                    int rows, int cols, int thread_rows, int dst_step1)
-{
-    int x = get_global_id(0);
-    int y = get_global_id(1);
-
-    if (x < cols && y < thread_rows)
-    {
-        int src_index_0 = mad24(y,            src_step, (x * 3)            + src_offset);
-        int src_index_1 = mad24(rows - y - 1, src_step, (cols - x -1) * 3  + src_offset);
-        
-        int dst_index_0 = mad24(y,            dst_step, (x * 3)           + dst_offset);
-        int dst_index_1 = mad24(rows - y - 1, dst_step, (cols - x -1) * 3 + dst_offset);
-
-
-        uchar data0_0 = *(src + src_index_0 + 0);
-        uchar data0_1 = *(src + src_index_0 + 1);
-        uchar data0_2 = *(src + src_index_0 + 2);
-
-        uchar data1_0 = *(src + src_index_1 + 0);
-        uchar data1_1 = *(src + src_index_1 + 1);
-        uchar data1_2 = *(src + src_index_1 + 2);
-
-        *(dst + dst_index_0 + 0 ) = data1_0;
-        *(dst + dst_index_0 + 1 ) = data1_1;
-        *(dst + dst_index_0 + 2 ) = data1_2;
-
-        *(dst + dst_index_1 + 0) = data0_0;
-        *(dst + dst_index_1 + 1) = data0_1;
-        *(dst + dst_index_1 + 2) = data0_2;
-    }
-}
-__kernel void arithm_flip_rc_C3_D1 (__global char *src, int src_step, int src_offset,
-                                    __global char *dst, int dst_step, int dst_offset,
-                                    int rows, int cols, int thread_rows, int dst_step1)
-{
-    int x = get_global_id(0);
-    int y = get_global_id(1);
-
-    if (x < cols && y < thread_rows)
-    {
-        int src_index_0 = mad24(y,            src_step, (x * 3)            + src_offset);
-        int src_index_1 = mad24(rows - y - 1, src_step, (cols - x -1) * 3  + src_offset);
-        
-        int dst_index_0 = mad24(y,            dst_step, (x * 3)           + dst_offset);
-        int dst_index_1 = mad24(rows - y - 1, dst_step, (cols - x -1) * 3 + dst_offset);
-
-
-        char data0_0 = *(src + src_index_0 + 0);
-        char data0_1 = *(src + src_index_0 + 1);
-        char data0_2 = *(src + src_index_0 + 2);
-
-        char data1_0 = *(src + src_index_1 + 0);
-        char data1_1 = *(src + src_index_1 + 1);
-        char data1_2 = *(src + src_index_1 + 2);
-
-        *(dst + dst_index_0 + 0 ) = data1_0;
-        *(dst + dst_index_0 + 1 ) = data1_1;
-        *(dst + dst_index_0 + 2 ) = data1_2;
-
-        *(dst + dst_index_1 + 0) = data0_0;
-        *(dst + dst_index_1 + 1) = data0_1;
-        *(dst + dst_index_1 + 2) = data0_2;
-    }
-}
-__kernel void arithm_flip_rc_C3_D2 (__global ushort *src, int src_step, int src_offset,
-                                    __global ushort *dst, int dst_step, int dst_offset,
-                                    int rows, int cols, int thread_rows, int dst_step1)
-{
-    int x = get_global_id(0);
-    int y = get_global_id(1);
-
-    if (x < cols && y < thread_rows)
-    {
-        int src_index_0 = mad24(y,            src_step, (x * 3 << 1)             + src_offset);
-        int src_index_1 = mad24(rows - y - 1, src_step, ((cols - x -1) * 3 << 1) + src_offset);
-        
-        int dst_index_0 = mad24(y,            dst_step, (x * 3 << 1)             + dst_offset);
-        int dst_index_1 = mad24(rows - y - 1, dst_step, ((cols - x -1) * 3 << 1) + dst_offset);
-
-        ushort data0_0 = *((__global ushort *)((__global char *)src + src_index_0 + 0));
-        ushort data0_1 = *((__global ushort *)((__global char *)src + src_index_0 + 2));
-        ushort data0_2 = *((__global ushort *)((__global char *)src + src_index_0 + 4));
-
-        ushort data1_0 = *((__global ushort *)((__global char *)src + src_index_1 + 0));
-        ushort data1_1 = *((__global ushort *)((__global char *)src + src_index_1 + 2));
-        ushort data1_2 = *((__global ushort *)((__global char *)src + src_index_1 + 4));
-
-        *((__global ushort *)((__global char *)dst + dst_index_0 + 0)) = data1_0;
-        *((__global ushort *)((__global char *)dst + dst_index_0 + 2)) = data1_1;
-        *((__global ushort *)((__global char *)dst + dst_index_0 + 4)) = data1_2;
-
-        *((__global ushort *)((__global char *)dst + dst_index_1 + 0)) = data0_0;
-        *((__global ushort *)((__global char *)dst + dst_index_1 + 2)) = data0_1;
-        *((__global ushort *)((__global char *)dst + dst_index_1 + 4)) = data0_2;
-    }
-}
-__kernel void arithm_flip_rc_C3_D3 (__global short *src, int src_step, int src_offset,
-                                    __global short *dst, int dst_step, int dst_offset,
-                                    int rows, int cols, int thread_rows, int dst_step1)
-{
-    int x = get_global_id(0);
-    int y = get_global_id(1);
-
-    if (x < cols && y < thread_rows)
-    {
-        int src_index_0 = mad24(y,            src_step, (x * 3 << 1)             + src_offset);
-        int src_index_1 = mad24(rows - y - 1, src_step, ((cols - x -1) * 3 << 1) + src_offset);
-        
-        int dst_index_0 = mad24(y,            dst_step, (x * 3 << 1)             + dst_offset);
-        int dst_index_1 = mad24(rows - y - 1, dst_step, ((cols - x -1) * 3 << 1) + dst_offset);
-
-        short data0_0 = *((__global short *)((__global char *)src + src_index_0 + 0));
-        short data0_1 = *((__global short *)((__global char *)src + src_index_0 + 2));
-        short data0_2 = *((__global short *)((__global char *)src + src_index_0 + 4));
-
-        short data1_0 = *((__global short *)((__global char *)src + src_index_1 + 0));
-        short data1_1 = *((__global short *)((__global char *)src + src_index_1 + 2));
-        short data1_2 = *((__global short *)((__global char *)src + src_index_1 + 4));
-
-        *((__global short *)((__global char *)dst + dst_index_0 + 0)) = data1_0;
-        *((__global short *)((__global char *)dst + dst_index_0 + 2)) = data1_1;
-        *((__global short *)((__global char *)dst + dst_index_0 + 4)) = data1_2;
-
-        *((__global short *)((__global char *)dst + dst_index_1 + 0)) = data0_0;
-        *((__global short *)((__global char *)dst + dst_index_1 + 2)) = data0_1;
-        *((__global short *)((__global char *)dst + dst_index_1 + 4)) = data0_2;
-    }
+	int x = get_global_id(0);
+	int y = get_global_id(1);
+	
+	if (x < cols && y < thread_rows)
+	{
+		int src_index_0 = mad24(y,            src_step, (x << 4)             + src_offset);
+		int src_index_1 = mad24(rows - y - 1, src_step, ((cols - x - 1) << 4) + src_offset);
+		
+		int dst_index_0 = mad24(y,            dst_step, (x << 4)             + dst_offset);
+		int dst_index_1 = mad24(rows - y - 1, dst_step, ((cols - x - 1) << 4) + dst_offset);
+		
+		double2 data0 = *((__global double2 *)((__global char *)src + src_index_0));
+		double2 data1 = *((__global double2 *)((__global char *)src + src_index_1));
+		
+		*((__global double2 *)((__global char *)dst + dst_index_0)) = data1;
+		*((__global double2 *)((__global char *)dst + dst_index_1)) = data0;
+	}
 }
 
-__kernel void arithm_flip_rc_C3_D4 (__global int *src, int src_step, int src_offset,
-                                    __global int *dst, int dst_step, int dst_offset,
-                                    int rows, int cols, int thread_rows, int dst_step1)
+__kernel void arithm_flip_rc_C3_D0(__global uchar *src, int src_step, int src_offset,
+                                   __global uchar *dst, int dst_step, int dst_offset,
+                                   int rows, int cols, int thread_rows, int dst_step1)
 {
-    int x = get_global_id(0);
-    int y = get_global_id(1);
-
-    if (x < cols && y < thread_rows)
-    {
-        int src_index_0 = mad24(y,            src_step, (x * 3 << 2)             + src_offset);
-        int src_index_1 = mad24(rows - y - 1, src_step, ((cols - x -1) * 3 << 2) + src_offset);
-        
-        int dst_index_0 = mad24(y,            dst_step, (x * 3 << 2)             + dst_offset);
-        int dst_index_1 = mad24(rows - y - 1, dst_step, ((cols - x -1) * 3 << 2) + dst_offset);
-
-        int data0_0 = *((__global int *)((__global char *)src + src_index_0 + 0));
-        int data0_1 = *((__global int *)((__global char *)src + src_index_0 + 4));
-        int data0_2 = *((__global int *)((__global char *)src + src_index_0 + 8));
-           
-        int data1_0 = *((__global int *)((__global char *)src + src_index_1 + 0));
-        int data1_1 = *((__global int *)((__global char *)src + src_index_1 + 4));
-        int data1_2 = *((__global int *)((__global char *)src + src_index_1 + 8));
-
-        *((__global int *)((__global char *)dst + dst_index_0 + 0)) = data1_0;
-        *((__global int *)((__global char *)dst + dst_index_0 + 4)) = data1_1;
-        *((__global int *)((__global char *)dst + dst_index_0 + 8)) = data1_2;
-                                                                 
-        *((__global int *)((__global char *)dst + dst_index_1 + 0)) = data0_0;
-        *((__global int *)((__global char *)dst + dst_index_1 + 4)) = data0_1;
-        *((__global int *)((__global char *)dst + dst_index_1 + 8)) = data0_2;
-    }
+	int x = get_global_id(0);
+	int y = get_global_id(1);
+	
+	if (x < cols && y < thread_rows)
+	{
+		int src_index_0 = mad24(y,            src_step, (x * 3)            + src_offset);
+		int src_index_1 = mad24(rows - y - 1, src_step, (cols - x - 1) * 3  + src_offset);
+		
+		int dst_index_0 = mad24(y,            dst_step, (x * 3)           + dst_offset);
+		int dst_index_1 = mad24(rows - y - 1, dst_step, (cols - x - 1) * 3 + dst_offset);
+		
+		
+		uchar data0_0 = *(src + src_index_0 + 0);
+		uchar data0_1 = *(src + src_index_0 + 1);
+		uchar data0_2 = *(src + src_index_0 + 2);
+		
+		uchar data1_0 = *(src + src_index_1 + 0);
+		uchar data1_1 = *(src + src_index_1 + 1);
+		uchar data1_2 = *(src + src_index_1 + 2);
+		
+		*(dst + dst_index_0 + 0) = data1_0;
+		*(dst + dst_index_0 + 1) = data1_1;
+		*(dst + dst_index_0 + 2) = data1_2;
+		
+		*(dst + dst_index_1 + 0) = data0_0;
+		*(dst + dst_index_1 + 1) = data0_1;
+		*(dst + dst_index_1 + 2) = data0_2;
+	}
 }
-__kernel void arithm_flip_rc_C3_D5 (__global float *src, int src_step, int src_offset,
-                                    __global float *dst, int dst_step, int dst_offset,
-                                    int rows, int cols, int thread_rows, int dst_step1)
+__kernel void arithm_flip_rc_C3_D1(__global char *src, int src_step, int src_offset,
+                                   __global char *dst, int dst_step, int dst_offset,
+                                   int rows, int cols, int thread_rows, int dst_step1)
 {
-    int x = get_global_id(0);
-    int y = get_global_id(1);
-
-    if (x < cols && y < thread_rows)
-    {
-        int src_index_0 = mad24(y,            src_step, (x * 3 << 2)             + src_offset);
-        int src_index_1 = mad24(rows - y - 1, src_step, ((cols - x -1) * 3 << 2) + src_offset);
-        
-        int dst_index_0 = mad24(y,            dst_step, (x * 3 << 2)             + dst_offset);
-        int dst_index_1 = mad24(rows - y - 1, dst_step, ((cols - x -1) * 3 << 2) + dst_offset);
-
-        float data0_0 = *((__global float *)((__global char *)src + src_index_0 + 0));
-        float data0_1 = *((__global float *)((__global char *)src + src_index_0 + 4));
-        float data0_2 = *((__global float *)((__global char *)src + src_index_0 + 8));
-                                                                                   
-        float data1_0 = *((__global float *)((__global char *)src + src_index_1 + 0));
-        float data1_1 = *((__global float *)((__global char *)src + src_index_1 + 4));
-        float data1_2 = *((__global float *)((__global char *)src + src_index_1 + 8));
-
-        *((__global float *)((__global char *)dst + dst_index_0 + 0)) = data1_0;
-        *((__global float *)((__global char *)dst + dst_index_0 + 4)) = data1_1;
-        *((__global float *)((__global char *)dst + dst_index_0 + 8)) = data1_2;
-                                                                   
-        *((__global float *)((__global char *)dst + dst_index_1 + 0)) = data0_0;
-        *((__global float *)((__global char *)dst + dst_index_1 + 4)) = data0_1;
-        *((__global float *)((__global char *)dst + dst_index_1 + 8)) = data0_2;
-    }
+	int x = get_global_id(0);
+	int y = get_global_id(1);
+	
+	if (x < cols && y < thread_rows)
+	{
+		int src_index_0 = mad24(y,            src_step, (x * 3)            + src_offset);
+		int src_index_1 = mad24(rows - y - 1, src_step, (cols - x - 1) * 3  + src_offset);
+		
+		int dst_index_0 = mad24(y,            dst_step, (x * 3)           + dst_offset);
+		int dst_index_1 = mad24(rows - y - 1, dst_step, (cols - x - 1) * 3 + dst_offset);
+		
+		
+		char data0_0 = *(src + src_index_0 + 0);
+		char data0_1 = *(src + src_index_0 + 1);
+		char data0_2 = *(src + src_index_0 + 2);
+		
+		char data1_0 = *(src + src_index_1 + 0);
+		char data1_1 = *(src + src_index_1 + 1);
+		char data1_2 = *(src + src_index_1 + 2);
+		
+		*(dst + dst_index_0 + 0) = data1_0;
+		*(dst + dst_index_0 + 1) = data1_1;
+		*(dst + dst_index_0 + 2) = data1_2;
+		
+		*(dst + dst_index_1 + 0) = data0_0;
+		*(dst + dst_index_1 + 1) = data0_1;
+		*(dst + dst_index_1 + 2) = data0_2;
+	}
 }
-__kernel void arithm_flip_rc_C3_D6 (__global double *src, int src_step, int src_offset,
-                                    __global double *dst, int dst_step, int dst_offset,
-                                    int rows, int cols, int thread_rows, int dst_step1)
+__kernel void arithm_flip_rc_C3_D2(__global ushort *src, int src_step, int src_offset,
+                                   __global ushort *dst, int dst_step, int dst_offset,
+                                   int rows, int cols, int thread_rows, int dst_step1)
 {
-    int x = get_global_id(0);
-    int y = get_global_id(1);
-
-    if (x < cols && y < thread_rows)
-    {
-        int src_index_0 = mad24(y,            src_step, (x * 3 << 3)             + src_offset);
-        int src_index_1 = mad24(rows - y - 1, src_step, ((cols - x -1) * 3 << 3) + src_offset);
-        
-        int dst_index_0 = mad24(y,            dst_step, (x * 3 << 3)             + dst_offset);
-        int dst_index_1 = mad24(rows - y - 1, dst_step, ((cols - x -1) * 3 << 3) + dst_offset);
-
-        double data0_0 = *((__global double *)((__global char *)src + src_index_0 + 0 ));
-        double data0_1 = *((__global double *)((__global char *)src + src_index_0 + 8 ));
-        double data0_2 = *((__global double *)((__global char *)src + src_index_0 + 16));
-              
-        double data1_0 = *((__global double *)((__global char *)src + src_index_1 + 0 ));
-        double data1_1 = *((__global double *)((__global char *)src + src_index_1 + 8 ));
-        double data1_2 = *((__global double *)((__global char *)src + src_index_1 + 16));
-
-        *((__global double *)((__global char *)dst + dst_index_0 + 0 )) = data1_0;
-        *((__global double *)((__global char *)dst + dst_index_0 + 8 )) = data1_1;
-        *((__global double *)((__global char *)dst + dst_index_0 + 16)) = data1_2;
-                                                                     
-        *((__global double *)((__global char *)dst + dst_index_1 + 0 )) = data0_0;
-        *((__global double *)((__global char *)dst + dst_index_1 + 8 )) = data0_1;
-        *((__global double *)((__global char *)dst + dst_index_1 + 16)) = data0_2;
-    }
+	int x = get_global_id(0);
+	int y = get_global_id(1);
+	
+	if (x < cols && y < thread_rows)
+	{
+		int src_index_0 = mad24(y,            src_step, (x * 3 << 1)             + src_offset);
+		int src_index_1 = mad24(rows - y - 1, src_step, ((cols - x - 1) * 3 << 1) + src_offset);
+		
+		int dst_index_0 = mad24(y,            dst_step, (x * 3 << 1)             + dst_offset);
+		int dst_index_1 = mad24(rows - y - 1, dst_step, ((cols - x - 1) * 3 << 1) + dst_offset);
+		
+		ushort data0_0 = *((__global ushort *)((__global char *)src + src_index_0 + 0));
+		ushort data0_1 = *((__global ushort *)((__global char *)src + src_index_0 + 2));
+		ushort data0_2 = *((__global ushort *)((__global char *)src + src_index_0 + 4));
+		
+		ushort data1_0 = *((__global ushort *)((__global char *)src + src_index_1 + 0));
+		ushort data1_1 = *((__global ushort *)((__global char *)src + src_index_1 + 2));
+		ushort data1_2 = *((__global ushort *)((__global char *)src + src_index_1 + 4));
+		
+		*((__global ushort *)((__global char *)dst + dst_index_0 + 0)) = data1_0;
+		*((__global ushort *)((__global char *)dst + dst_index_0 + 2)) = data1_1;
+		*((__global ushort *)((__global char *)dst + dst_index_0 + 4)) = data1_2;
+		
+		*((__global ushort *)((__global char *)dst + dst_index_1 + 0)) = data0_0;
+		*((__global ushort *)((__global char *)dst + dst_index_1 + 2)) = data0_1;
+		*((__global ushort *)((__global char *)dst + dst_index_1 + 4)) = data0_2;
+	}
 }
-__kernel void arithm_flip_rc_C4_D0 (__global uchar *src, int src_step, int src_offset,
-                                    __global uchar *dst, int dst_step, int dst_offset,
-                                    int rows, int cols, int thread_rows, int dst_step1)
+__kernel void arithm_flip_rc_C3_D3(__global short *src, int src_step, int src_offset,
+                                   __global short *dst, int dst_step, int dst_offset,
+                                   int rows, int cols, int thread_rows, int dst_step1)
 {
-    int x = get_global_id(0);
-    int y = get_global_id(1);
-
-    if (x < cols && y < thread_rows)
-    {
-        int src_index_0 = mad24(y,            src_step, (x << 2)             + src_offset);
-        int src_index_1 = mad24(rows - y - 1, src_step, ((cols - x -1) << 2) + src_offset);
-        
-        int dst_index_0 = mad24(y,            dst_step, (x << 2)             + dst_offset);
-        int dst_index_1 = mad24(rows - y - 1, dst_step, ((cols - x -1) << 2) + dst_offset);
-
-        uchar4 data0 = *((__global uchar4 *)(src + src_index_0));
-        uchar4 data1 = *((__global uchar4 *)(src + src_index_1));
-
-        *((__global uchar4 *)(dst + dst_index_0)) = data1;
-        *((__global uchar4 *)(dst + dst_index_1)) = data0;
-    }
+	int x = get_global_id(0);
+	int y = get_global_id(1);
+	
+	if (x < cols && y < thread_rows)
+	{
+		int src_index_0 = mad24(y,            src_step, (x * 3 << 1)             + src_offset);
+		int src_index_1 = mad24(rows - y - 1, src_step, ((cols - x - 1) * 3 << 1) + src_offset);
+		
+		int dst_index_0 = mad24(y,            dst_step, (x * 3 << 1)             + dst_offset);
+		int dst_index_1 = mad24(rows - y - 1, dst_step, ((cols - x - 1) * 3 << 1) + dst_offset);
+		
+		short data0_0 = *((__global short *)((__global char *)src + src_index_0 + 0));
+		short data0_1 = *((__global short *)((__global char *)src + src_index_0 + 2));
+		short data0_2 = *((__global short *)((__global char *)src + src_index_0 + 4));
+		
+		short data1_0 = *((__global short *)((__global char *)src + src_index_1 + 0));
+		short data1_1 = *((__global short *)((__global char *)src + src_index_1 + 2));
+		short data1_2 = *((__global short *)((__global char *)src + src_index_1 + 4));
+		
+		*((__global short *)((__global char *)dst + dst_index_0 + 0)) = data1_0;
+		*((__global short *)((__global char *)dst + dst_index_0 + 2)) = data1_1;
+		*((__global short *)((__global char *)dst + dst_index_0 + 4)) = data1_2;
+		
+		*((__global short *)((__global char *)dst + dst_index_1 + 0)) = data0_0;
+		*((__global short *)((__global char *)dst + dst_index_1 + 2)) = data0_1;
+		*((__global short *)((__global char *)dst + dst_index_1 + 4)) = data0_2;
+	}
 }
-__kernel void arithm_flip_rc_C4_D1 (__global char *src, int src_step, int src_offset,
-                                    __global char *dst, int dst_step, int dst_offset,
-                                    int rows, int cols, int thread_rows, int dst_step1)
+
+__kernel void arithm_flip_rc_C3_D4(__global int *src, int src_step, int src_offset,
+                                   __global int *dst, int dst_step, int dst_offset,
+                                   int rows, int cols, int thread_rows, int dst_step1)
 {
-    int x = get_global_id(0);
-    int y = get_global_id(1);
-
-    if (x < cols && y < thread_rows)
-    {
-        int src_index_0 = mad24(y,            src_step, (x << 2)             + src_offset);
-        int src_index_1 = mad24(rows - y - 1, src_step, ((cols - x -1) << 2) + src_offset);
-        
-        int dst_index_0 = mad24(y,            dst_step, (x << 2)             + dst_offset);
-        int dst_index_1 = mad24(rows - y - 1, dst_step, ((cols - x -1) << 2) + dst_offset);
-
-        char4 data0 = *((__global char4 *)(src + src_index_0));
-        char4 data1 = *((__global char4 *)(src + src_index_1));
-
-        *((__global char4 *)(dst + dst_index_0)) = data1;
-        *((__global char4 *)(dst + dst_index_1)) = data0;
-    }
+	int x = get_global_id(0);
+	int y = get_global_id(1);
+	
+	if (x < cols && y < thread_rows)
+	{
+		int src_index_0 = mad24(y,            src_step, (x * 3 << 2)             + src_offset);
+		int src_index_1 = mad24(rows - y - 1, src_step, ((cols - x - 1) * 3 << 2) + src_offset);
+		
+		int dst_index_0 = mad24(y,            dst_step, (x * 3 << 2)             + dst_offset);
+		int dst_index_1 = mad24(rows - y - 1, dst_step, ((cols - x - 1) * 3 << 2) + dst_offset);
+		
+		int data0_0 = *((__global int *)((__global char *)src + src_index_0 + 0));
+		int data0_1 = *((__global int *)((__global char *)src + src_index_0 + 4));
+		int data0_2 = *((__global int *)((__global char *)src + src_index_0 + 8));
+		
+		int data1_0 = *((__global int *)((__global char *)src + src_index_1 + 0));
+		int data1_1 = *((__global int *)((__global char *)src + src_index_1 + 4));
+		int data1_2 = *((__global int *)((__global char *)src + src_index_1 + 8));
+		
+		*((__global int *)((__global char *)dst + dst_index_0 + 0)) = data1_0;
+		*((__global int *)((__global char *)dst + dst_index_0 + 4)) = data1_1;
+		*((__global int *)((__global char *)dst + dst_index_0 + 8)) = data1_2;
+		
+		*((__global int *)((__global char *)dst + dst_index_1 + 0)) = data0_0;
+		*((__global int *)((__global char *)dst + dst_index_1 + 4)) = data0_1;
+		*((__global int *)((__global char *)dst + dst_index_1 + 8)) = data0_2;
+	}
 }
-__kernel void arithm_flip_rc_C4_D2 (__global ushort *src, int src_step, int src_offset,
-                                    __global ushort *dst, int dst_step, int dst_offset,
-                                    int rows, int cols, int thread_rows, int dst_step1)
+__kernel void arithm_flip_rc_C3_D5(__global float *src, int src_step, int src_offset,
+                                   __global float *dst, int dst_step, int dst_offset,
+                                   int rows, int cols, int thread_rows, int dst_step1)
 {
-    int x = get_global_id(0);
-    int y = get_global_id(1);
-
-    if (x < cols && y < thread_rows)
-    {
-        int src_index_0 = mad24(y,            src_step, (x << 3)             + src_offset);
-        int src_index_1 = mad24(rows - y - 1, src_step, ((cols - x -1) << 3) + src_offset);
-        
-        int dst_index_0 = mad24(y,            dst_step, (x << 3)             + dst_offset);
-        int dst_index_1 = mad24(rows - y - 1, dst_step, ((cols - x -1) << 3) + dst_offset);
-
-        ushort4 data0 = *((__global ushort4 *)((__global char *)src + src_index_0));
-        ushort4 data1 = *((__global ushort4 *)((__global char *)src + src_index_1));
-
-        *((__global ushort4 *)((__global char *)dst + dst_index_0)) = data1;
-        *((__global ushort4 *)((__global char *)dst + dst_index_1)) = data0;
-    }
+	int x = get_global_id(0);
+	int y = get_global_id(1);
+	
+	if (x < cols && y < thread_rows)
+	{
+		int src_index_0 = mad24(y,            src_step, (x * 3 << 2)             + src_offset);
+		int src_index_1 = mad24(rows - y - 1, src_step, ((cols - x - 1) * 3 << 2) + src_offset);
+		
+		int dst_index_0 = mad24(y,            dst_step, (x * 3 << 2)             + dst_offset);
+		int dst_index_1 = mad24(rows - y - 1, dst_step, ((cols - x - 1) * 3 << 2) + dst_offset);
+		
+		float data0_0 = *((__global float *)((__global char *)src + src_index_0 + 0));
+		float data0_1 = *((__global float *)((__global char *)src + src_index_0 + 4));
+		float data0_2 = *((__global float *)((__global char *)src + src_index_0 + 8));
+		
+		float data1_0 = *((__global float *)((__global char *)src + src_index_1 + 0));
+		float data1_1 = *((__global float *)((__global char *)src + src_index_1 + 4));
+		float data1_2 = *((__global float *)((__global char *)src + src_index_1 + 8));
+		
+		*((__global float *)((__global char *)dst + dst_index_0 + 0)) = data1_0;
+		*((__global float *)((__global char *)dst + dst_index_0 + 4)) = data1_1;
+		*((__global float *)((__global char *)dst + dst_index_0 + 8)) = data1_2;
+		
+		*((__global float *)((__global char *)dst + dst_index_1 + 0)) = data0_0;
+		*((__global float *)((__global char *)dst + dst_index_1 + 4)) = data0_1;
+		*((__global float *)((__global char *)dst + dst_index_1 + 8)) = data0_2;
+	}
 }
-__kernel void arithm_flip_rc_C4_D3 (__global short *src, int src_step, int src_offset,
-                                    __global short *dst, int dst_step, int dst_offset,
-                                    int rows, int cols, int thread_rows, int dst_step1)
+__kernel void arithm_flip_rc_C3_D6(__global double *src, int src_step, int src_offset,
+                                   __global double *dst, int dst_step, int dst_offset,
+                                   int rows, int cols, int thread_rows, int dst_step1)
 {
-    int x = get_global_id(0);
-    int y = get_global_id(1);
-
-    if (x < cols && y < thread_rows)
-    {
-        int src_index_0 = mad24(y,            src_step, (x << 3)             + src_offset);
-        int src_index_1 = mad24(rows - y - 1, src_step, ((cols - x -1) << 3) + src_offset);
-        
-        int dst_index_0 = mad24(y,            dst_step, (x << 3)             + dst_offset);
-        int dst_index_1 = mad24(rows - y - 1, dst_step, ((cols - x -1) << 3) + dst_offset);
-
-        short4 data0 = *((__global short4 *)((__global char *)src + src_index_0));
-        short4 data1 = *((__global short4 *)((__global char *)src + src_index_1));
-
-        *((__global short4 *)((__global char *)dst + dst_index_0)) = data1;
-        *((__global short4 *)((__global char *)dst + dst_index_1)) = data0;
-    }
+	int x = get_global_id(0);
+	int y = get_global_id(1);
+	
+	if (x < cols && y < thread_rows)
+	{
+		int src_index_0 = mad24(y,            src_step, (x * 3 << 3)             + src_offset);
+		int src_index_1 = mad24(rows - y - 1, src_step, ((cols - x - 1) * 3 << 3) + src_offset);
+		
+		int dst_index_0 = mad24(y,            dst_step, (x * 3 << 3)             + dst_offset);
+		int dst_index_1 = mad24(rows - y - 1, dst_step, ((cols - x - 1) * 3 << 3) + dst_offset);
+		
+		double data0_0 = *((__global double *)((__global char *)src + src_index_0 + 0));
+		double data0_1 = *((__global double *)((__global char *)src + src_index_0 + 8));
+		double data0_2 = *((__global double *)((__global char *)src + src_index_0 + 16));
+		
+		double data1_0 = *((__global double *)((__global char *)src + src_index_1 + 0));
+		double data1_1 = *((__global double *)((__global char *)src + src_index_1 + 8));
+		double data1_2 = *((__global double *)((__global char *)src + src_index_1 + 16));
+		
+		*((__global double *)((__global char *)dst + dst_index_0 + 0)) = data1_0;
+		*((__global double *)((__global char *)dst + dst_index_0 + 8)) = data1_1;
+		*((__global double *)((__global char *)dst + dst_index_0 + 16)) = data1_2;
+		
+		*((__global double *)((__global char *)dst + dst_index_1 + 0)) = data0_0;
+		*((__global double *)((__global char *)dst + dst_index_1 + 8)) = data0_1;
+		*((__global double *)((__global char *)dst + dst_index_1 + 16)) = data0_2;
+	}
 }
-__kernel void arithm_flip_rc_C4_D4 (__global int *src, int src_step, int src_offset,
-                                    __global int *dst, int dst_step, int dst_offset,
-                                    int rows, int cols, int thread_rows, int dst_step1)
+__kernel void arithm_flip_rc_C4_D0(__global uchar *src, int src_step, int src_offset,
+                                   __global uchar *dst, int dst_step, int dst_offset,
+                                   int rows, int cols, int thread_rows, int dst_step1)
 {
-    int x = get_global_id(0);
-    int y = get_global_id(1);
-
-    if (x < cols && y < thread_rows)
-    {
-        int src_index_0 = mad24(y,            src_step, (x << 4)             + src_offset);
-        int src_index_1 = mad24(rows - y - 1, src_step, ((cols - x -1) << 4) + src_offset);
-        
-        int dst_index_0 = mad24(y,            dst_step, (x << 4)             + dst_offset);
-        int dst_index_1 = mad24(rows - y - 1, dst_step, ((cols - x -1) << 4) + dst_offset);
-
-        int4 data0 = *((__global int4 *)((__global char *)src + src_index_0));
-        int4 data1 = *((__global int4 *)((__global char *)src + src_index_1));
-
-        *((__global int4 *)((__global char *)dst + dst_index_0)) = data1;
-        *((__global int4 *)((__global char *)dst + dst_index_1)) = data0;
-    }
+	int x = get_global_id(0);
+	int y = get_global_id(1);
+	
+	if (x < cols && y < thread_rows)
+	{
+		int src_index_0 = mad24(y,            src_step, (x << 2)             + src_offset);
+		int src_index_1 = mad24(rows - y - 1, src_step, ((cols - x - 1) << 2) + src_offset);
+		
+		int dst_index_0 = mad24(y,            dst_step, (x << 2)             + dst_offset);
+		int dst_index_1 = mad24(rows - y - 1, dst_step, ((cols - x - 1) << 2) + dst_offset);
+		
+		uchar4 data0 = *((__global uchar4 *)(src + src_index_0));
+		uchar4 data1 = *((__global uchar4 *)(src + src_index_1));
+		
+		*((__global uchar4 *)(dst + dst_index_0)) = data1;
+		*((__global uchar4 *)(dst + dst_index_1)) = data0;
+	}
 }
-__kernel void arithm_flip_rc_C4_D5 (__global float *src, int src_step, int src_offset,
-                                    __global float *dst, int dst_step, int dst_offset,
-                                    int rows, int cols, int thread_rows, int dst_step1)
+__kernel void arithm_flip_rc_C4_D1(__global char *src, int src_step, int src_offset,
+                                   __global char *dst, int dst_step, int dst_offset,
+                                   int rows, int cols, int thread_rows, int dst_step1)
 {
-    int x = get_global_id(0);
-    int y = get_global_id(1);
-
-    if (x < cols && y < thread_rows)
-    {
-        int src_index_0 = mad24(y,            src_step, (x << 4)             + src_offset);
-        int src_index_1 = mad24(rows - y - 1, src_step, ((cols - x -1) << 4) + src_offset);
-        
-        int dst_index_0 = mad24(y,            dst_step, (x << 4)             + dst_offset);
-        int dst_index_1 = mad24(rows - y - 1, dst_step, ((cols - x -1) << 4) + dst_offset);
-
-        float4 data0 = *((__global float4 *)((__global char *)src + src_index_0));
-        float4 data1 = *((__global float4 *)((__global char *)src + src_index_1));
-
-        *((__global float4 *)((__global char *)dst + dst_index_0)) = data1;
-        *((__global float4 *)((__global char *)dst + dst_index_1)) = data0;
-    }
+	int x = get_global_id(0);
+	int y = get_global_id(1);
+	
+	if (x < cols && y < thread_rows)
+	{
+		int src_index_0 = mad24(y,            src_step, (x << 2)             + src_offset);
+		int src_index_1 = mad24(rows - y - 1, src_step, ((cols - x - 1) << 2) + src_offset);
+		
+		int dst_index_0 = mad24(y,            dst_step, (x << 2)             + dst_offset);
+		int dst_index_1 = mad24(rows - y - 1, dst_step, ((cols - x - 1) << 2) + dst_offset);
+		
+		char4 data0 = *((__global char4 *)(src + src_index_0));
+		char4 data1 = *((__global char4 *)(src + src_index_1));
+		
+		*((__global char4 *)(dst + dst_index_0)) = data1;
+		*((__global char4 *)(dst + dst_index_1)) = data0;
+	}
 }
-__kernel void arithm_flip_rc_C4_D6 (__global double *src, int src_step, int src_offset,
-                                    __global double *dst, int dst_step, int dst_offset,
-                                    int rows, int cols, int thread_rows, int dst_step1)
+__kernel void arithm_flip_rc_C4_D2(__global ushort *src, int src_step, int src_offset,
+                                   __global ushort *dst, int dst_step, int dst_offset,
+                                   int rows, int cols, int thread_rows, int dst_step1)
 {
-    int x = get_global_id(0);
-    int y = get_global_id(1);
-
-    if (x < cols && y < thread_rows)
-    {
-        int src_index_0 = mad24(y,            src_step, (x << 5)             + src_offset);
-        int src_index_1 = mad24(rows - y - 1, src_step, ((cols - x -1) << 5) + src_offset);
-        
-        int dst_index_0 = mad24(y,            dst_step, (x << 5)             + dst_offset);
-        int dst_index_1 = mad24(rows - y - 1, dst_step, ((cols - x -1) << 5) + dst_offset);
-
-        double4 data0 = *((__global double4 *)((__global char *)src + src_index_0));
-        double4 data1 = *((__global double4 *)((__global char *)src + src_index_1));
-
-        *((__global double4 *)((__global char *)dst + dst_index_0)) = data1;
-        *((__global double4 *)((__global char *)dst + dst_index_1)) = data0;
-    }
+	int x = get_global_id(0);
+	int y = get_global_id(1);
+	
+	if (x < cols && y < thread_rows)
+	{
+		int src_index_0 = mad24(y,            src_step, (x << 3)             + src_offset);
+		int src_index_1 = mad24(rows - y - 1, src_step, ((cols - x - 1) << 3) + src_offset);
+		
+		int dst_index_0 = mad24(y,            dst_step, (x << 3)             + dst_offset);
+		int dst_index_1 = mad24(rows - y - 1, dst_step, ((cols - x - 1) << 3) + dst_offset);
+		
+		ushort4 data0 = *((__global ushort4 *)((__global char *)src + src_index_0));
+		ushort4 data1 = *((__global ushort4 *)((__global char *)src + src_index_1));
+		
+		*((__global ushort4 *)((__global char *)dst + dst_index_0)) = data1;
+		*((__global ushort4 *)((__global char *)dst + dst_index_1)) = data0;
+	}
+}
+__kernel void arithm_flip_rc_C4_D3(__global short *src, int src_step, int src_offset,
+                                   __global short *dst, int dst_step, int dst_offset,
+                                   int rows, int cols, int thread_rows, int dst_step1)
+{
+	int x = get_global_id(0);
+	int y = get_global_id(1);
+	
+	if (x < cols && y < thread_rows)
+	{
+		int src_index_0 = mad24(y,            src_step, (x << 3)             + src_offset);
+		int src_index_1 = mad24(rows - y - 1, src_step, ((cols - x - 1) << 3) + src_offset);
+		
+		int dst_index_0 = mad24(y,            dst_step, (x << 3)             + dst_offset);
+		int dst_index_1 = mad24(rows - y - 1, dst_step, ((cols - x - 1) << 3) + dst_offset);
+		
+		short4 data0 = *((__global short4 *)((__global char *)src + src_index_0));
+		short4 data1 = *((__global short4 *)((__global char *)src + src_index_1));
+		
+		*((__global short4 *)((__global char *)dst + dst_index_0)) = data1;
+		*((__global short4 *)((__global char *)dst + dst_index_1)) = data0;
+	}
+}
+__kernel void arithm_flip_rc_C4_D4(__global int *src, int src_step, int src_offset,
+                                   __global int *dst, int dst_step, int dst_offset,
+                                   int rows, int cols, int thread_rows, int dst_step1)
+{
+	int x = get_global_id(0);
+	int y = get_global_id(1);
+	
+	if (x < cols && y < thread_rows)
+	{
+		int src_index_0 = mad24(y,            src_step, (x << 4)             + src_offset);
+		int src_index_1 = mad24(rows - y - 1, src_step, ((cols - x - 1) << 4) + src_offset);
+		
+		int dst_index_0 = mad24(y,            dst_step, (x << 4)             + dst_offset);
+		int dst_index_1 = mad24(rows - y - 1, dst_step, ((cols - x - 1) << 4) + dst_offset);
+		
+		int4 data0 = *((__global int4 *)((__global char *)src + src_index_0));
+		int4 data1 = *((__global int4 *)((__global char *)src + src_index_1));
+		
+		*((__global int4 *)((__global char *)dst + dst_index_0)) = data1;
+		*((__global int4 *)((__global char *)dst + dst_index_1)) = data0;
+	}
+}
+__kernel void arithm_flip_rc_C4_D5(__global float *src, int src_step, int src_offset,
+                                   __global float *dst, int dst_step, int dst_offset,
+                                   int rows, int cols, int thread_rows, int dst_step1)
+{
+	int x = get_global_id(0);
+	int y = get_global_id(1);
+	
+	if (x < cols && y < thread_rows)
+	{
+		int src_index_0 = mad24(y,            src_step, (x << 4)             + src_offset);
+		int src_index_1 = mad24(rows - y - 1, src_step, ((cols - x - 1) << 4) + src_offset);
+		
+		int dst_index_0 = mad24(y,            dst_step, (x << 4)             + dst_offset);
+		int dst_index_1 = mad24(rows - y - 1, dst_step, ((cols - x - 1) << 4) + dst_offset);
+		
+		float4 data0 = *((__global float4 *)((__global char *)src + src_index_0));
+		float4 data1 = *((__global float4 *)((__global char *)src + src_index_1));
+		
+		*((__global float4 *)((__global char *)dst + dst_index_0)) = data1;
+		*((__global float4 *)((__global char *)dst + dst_index_1)) = data0;
+	}
+}
+__kernel void arithm_flip_rc_C4_D6(__global double *src, int src_step, int src_offset,
+                                   __global double *dst, int dst_step, int dst_offset,
+                                   int rows, int cols, int thread_rows, int dst_step1)
+{
+	int x = get_global_id(0);
+	int y = get_global_id(1);
+	
+	if (x < cols && y < thread_rows)
+	{
+		int src_index_0 = mad24(y,            src_step, (x << 5)             + src_offset);
+		int src_index_1 = mad24(rows - y - 1, src_step, ((cols - x - 1) << 5) + src_offset);
+		
+		int dst_index_0 = mad24(y,            dst_step, (x << 5)             + dst_offset);
+		int dst_index_1 = mad24(rows - y - 1, dst_step, ((cols - x - 1) << 5) + dst_offset);
+		
+		double4 data0 = *((__global double4 *)((__global char *)src + src_index_0));
+		double4 data1 = *((__global double4 *)((__global char *)src + src_index_1));
+		
+		*((__global double4 *)((__global char *)dst + dst_index_0)) = data1;
+		*((__global double4 *)((__global char *)dst + dst_index_1)) = data0;
+	}
 }

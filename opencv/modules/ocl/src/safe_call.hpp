@@ -49,33 +49,35 @@
 #include <CL/cl.h>
 
 #if defined(__GNUC__)
-    #define openCLSafeCall(expr)  ___openCLSafeCall(expr, __FILE__, __LINE__, __func__)
-    #define openCLVerifyCall(res) ___openCLSafeCall(res, __FILE__, __LINE__, __func__)
+#define openCLSafeCall(expr)  ___openCLSafeCall(expr, __FILE__, __LINE__, __func__)
+#define openCLVerifyCall(res) ___openCLSafeCall(res, __FILE__, __LINE__, __func__)
 #else /* defined(__OPENCLCC__) || defined(__MSVC__) */
-    #define openCLSafeCall(expr)  ___openCLSafeCall(expr, __FILE__, __LINE__)
-    #define openCLVerifyCall(res) ___openCLSafeCall(res, __FILE__, __LINE__)
+#define openCLSafeCall(expr)  ___openCLSafeCall(expr, __FILE__, __LINE__)
+#define openCLVerifyCall(res) ___openCLSafeCall(res, __FILE__, __LINE__)
 #endif
 
 
 namespace cv
 {
-    namespace ocl
-    {
-        enum openCLMemcpyKind 
-        { 
-            clMemcpyHostToDevice = 0, 
-            clMemcpyDeviceToHost,
-            clMemcpyDeviceToDevice 
-        };
-        void error( const char *error_string, const char *file, const int line, const char *func = "");
-        const char * getOpenCLErrorString( int err );
+namespace ocl
+{
+enum openCLMemcpyKind
+{
+	clMemcpyHostToDevice = 0,
+	clMemcpyDeviceToHost,
+	clMemcpyDeviceToDevice
+};
+void error(const char *error_string, const char *file, const int line, const char *func = "");
+const char *getOpenCLErrorString(int err);
 
-        static inline void ___openCLSafeCall(int err, const char *file, const int line, const char *func = "")
-        {
-            if( CL_SUCCESS != err)
-                cv::ocl::error(getOpenCLErrorString(err), file, line, func);
-        }
-    }
+static inline void ___openCLSafeCall(int err, const char *file, const int line, const char *func = "")
+{
+	if (CL_SUCCESS != err)
+	{
+		cv::ocl::error(getOpenCLErrorString(err), file, line, func);
+	}
+}
+}
 }
 
 #endif /* __OPENCV_OPENCL_SAFE_CALL_HPP__ */

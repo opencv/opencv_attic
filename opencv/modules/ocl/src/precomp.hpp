@@ -51,7 +51,7 @@
 #endif
 
 #ifdef HAVE_CVCONFIG_H
-    #include "cvconfig.h"
+#include "cvconfig.h"
 #endif
 
 #include <map>
@@ -83,51 +83,51 @@
 using namespace std;
 
 namespace cv
-{ 
-	namespace ocl
-	{
-		///////////////////////////OpenCL call wrappers////////////////////////////
-		void openCLMallocPitch(ClContext *clCxt, void ** dev_ptr, size_t *pitch, 
-			size_t widthInBytes, size_t height);
-		void openCLMemcpy2D(ClContext *clCxt,void *dst, size_t dpitch,
-			const void *src, size_t spitch,
-			size_t width,size_t height, enum openCLMemcpyKind kind);
-		void openCLCopyBuffer2D(ClContext *clCxt,void *dst, size_t dpitch, int dst_offset,
-			const void *src, size_t spitch,
-			size_t width,size_t height, int src_offset, enum openCLMemcpyKind kind);
-		void openCLFree(void *devPtr);
-		cl_kernel openCLGetKernelFromSource(const ClContext *clCxt,
-			const char ** source,string kernelName);
-		cl_kernel openCLGetKernelFromSource(const ClContext *clCxt,
-			const char ** source,string kernelName, const char* build_options);
-		void openCLVerifyKernel(const ClContext *clCxt, cl_kernel kernel,size_t *blockSize,
-			size_t *globalThreads,size_t *localThreads);
-		void openCLExecuteKernel(ClContext * clCxt ,const char **source, string kernelName, vector< std::pair<size_t,const void *> > &args,
-			int globalcols , int globalrows,size_t blockSize = 16,int kernel_expand_depth = -1,int kernel_expand_channel = -1);
-		void openCLExecuteKernel(ClContext *clCxt ,const char **source, string kernelName, 
-			size_t globalThreads[3], size_t localThreads[3],  
-			vector< pair<size_t, const void *> > &args, int channels, int depth, char *build_options);
-		void openCLExecuteKernel(ClContext *clCxt ,const char **source, string kernelName, size_t globalThreads[3], 
-			size_t localThreads[3],  vector< pair<size_t, const void *> > &args, int channels, int depth);
-		void openCLExecuteKernel(ClContext *clCxt ,const char **source, string kernelName, size_t globalThreads[3], 
-			size_t localThreads[3],  vector< pair<size_t, const void *> > &args, int channels, 
-			int depth, char *build_options);
+{
+namespace ocl
+{
+///////////////////////////OpenCL call wrappers////////////////////////////
+void openCLMallocPitch(ClContext *clCxt, void **dev_ptr, size_t *pitch,
+                       size_t widthInBytes, size_t height);
+void openCLMemcpy2D(ClContext *clCxt, void *dst, size_t dpitch,
+                    const void *src, size_t spitch,
+                    size_t width, size_t height, enum openCLMemcpyKind kind);
+void openCLCopyBuffer2D(ClContext *clCxt, void *dst, size_t dpitch, int dst_offset,
+                        const void *src, size_t spitch,
+                        size_t width, size_t height, int src_offset, enum openCLMemcpyKind kind);
+void openCLFree(void *devPtr);
+cl_kernel openCLGetKernelFromSource(const ClContext *clCxt,
+                                    const char **source, string kernelName);
+cl_kernel openCLGetKernelFromSource(const ClContext *clCxt,
+                                    const char **source, string kernelName, const char *build_options);
+void openCLVerifyKernel(const ClContext *clCxt, cl_kernel kernel, size_t *blockSize,
+                        size_t *globalThreads, size_t *localThreads);
+void openCLExecuteKernel(ClContext *clCxt , const char **source, string kernelName, vector< std::pair<size_t, const void *> > &args,
+                         int globalcols , int globalrows, size_t blockSize = 16, int kernel_expand_depth = -1, int kernel_expand_channel = -1);
+void openCLExecuteKernel(ClContext *clCxt , const char **source, string kernelName,
+                         size_t globalThreads[3], size_t localThreads[3],
+                         vector< pair<size_t, const void *> > &args, int channels, int depth, char *build_options);
+void openCLExecuteKernel(ClContext *clCxt , const char **source, string kernelName, size_t globalThreads[3],
+                         size_t localThreads[3],  vector< pair<size_t, const void *> > &args, int channels, int depth);
+void openCLExecuteKernel(ClContext *clCxt , const char **source, string kernelName, size_t globalThreads[3],
+                         size_t localThreads[3],  vector< pair<size_t, const void *> > &args, int channels,
+                         int depth, char *build_options);
+                         
+cl_mem load_constant(cl_context context, cl_command_queue command_queue, const void *value,
+                     const size_t size);
+                     
+cl_mem openCLMalloc(cl_context clCxt, size_t size, cl_mem_flags flags, void *host_ptr);
 
-		cl_mem load_constant(cl_context context, cl_command_queue command_queue, const void *value, 
-			const size_t size);
-
-		cl_mem openCLMalloc(cl_context clCxt, size_t size, cl_mem_flags flags, void* host_ptr);
-
-		void openCLMemcpy2DWithNoPadding(cl_command_queue command_queue, cl_mem buffer, size_t size, size_t offset, void *ptr,
-			enum openCLMemcpyKind kind, cl_bool blocking_write);
-	}
+void openCLMemcpy2DWithNoPadding(cl_command_queue command_queue, cl_mem buffer, size_t size, size_t offset, void *ptr,
+                                 enum openCLMemcpyKind kind, cl_bool blocking_write);
+}
 }
 
 
 #else /* defined(HAVE_OPENCL) */
 
-static inline void throw_nogpu() 
-{ 
+static inline void throw_nogpu()
+{
 	CV_Error(CV_GpuNotSupported, "The library is compilled without OpenCL support.\n");
 }
 

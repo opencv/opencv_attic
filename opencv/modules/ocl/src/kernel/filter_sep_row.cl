@@ -119,7 +119,7 @@ These kernels are written for separable filters such as Sobel, Scharr, GaussianB
 Now(6/29/2011) the kernels only support 8U data type and the anchor of the convovle
 kernel must be in the center. ROI is not supported either.
 For channels =1,2,4, each kernels read 4 elements(not 4 pixels), and for channels =3,
-the kernel read 4 pixels, save them to LDS and read the data needed from LDS to 
+the kernel read 4 pixels, save them to LDS and read the data needed from LDS to
 calculate the result.
 The length of the convovle kernel supported is related to the LSIZE0 and the MAX size
 of LDS, which is HW related.
@@ -131,15 +131,15 @@ Niko
 ***********************************************************************************/
 /*
 __kernel __attribute__((reqd_work_group_size(LSIZE0,LSIZE1,1))) void row_filter_C1_D0
-						(__global const uchar * restrict src, 
+						(__global const uchar * restrict src,
 						 __global float * dst,
                          const int cols,
-                         const int rows, 
+                         const int rows,
 						 const int src_whole_cols,
 						 //const int src_whole_rows,
-                         const int src_step_in_pixel, 
-                         const int src_offset_x, 
-                         const int src_offset_y, 
+                         const int src_step_in_pixel,
+                         const int src_offset_x,
+                         const int src_offset_y,
                          const int dst_step_in_pixel,
                          const int dst_offset_in_pixel,
                          __constant float * mat_kernel __attribute__((max_constant_size(4*(2*RADIUS+1)))))
@@ -168,7 +168,7 @@ __kernel __attribute__((reqd_work_group_size(LSIZE0,LSIZE1,1))) void row_filter_
 	temp[1].y = ELEM(x+LSIZE0*4+align+1,0,src_whole_cols,0,temp[1].y);
 	temp[1].z = ELEM(x+LSIZE0*4+align+2,0,src_whole_cols,0,temp[1].z);
 	temp[1].w = ELEM(x+LSIZE0*4+align+3,0,src_whole_cols,0,temp[1].w);
-	#else	
+	#else
 	int not_all_in_range = (x+offset_x-RADIUS<0) | (x+LSIZE0*4+align+4>src_whole_cols);
 	int4 index[2];
 	if(not_all_in_range)
@@ -219,7 +219,7 @@ __kernel __attribute__((reqd_work_group_size(LSIZE0,LSIZE1,1))) void row_filter_
 	}
 
 	if((x+3< cols) & (y < rows))
-	{	
+	{
 		vstore4(sum,0,dst+baseindex);
 	}
 	else if((x< cols) & (y < rows))
@@ -237,12 +237,12 @@ __kernel __attribute__((reqd_work_group_size(LSIZE0,LSIZE1,1))) void row_filter_
 
 
 __kernel __attribute__((reqd_work_group_size(LSIZE0,LSIZE1,1))) void row_filter_C2_D0
-						(__global const uchar * restrict src, 
+						(__global const uchar * restrict src,
 						 __global float * dst,
                          const int src_cols,
-                         const int src_rows, 
-                         const int src_pix_per_row, 
-                         const int dst_cols, 
+                         const int src_rows,
+                         const int src_pix_per_row,
+                         const int dst_cols,
                          const int dst_rows,
                          const int dst_pix_per_row,
                          __constant float * mat_kernel __attribute__((max_constant_size(4*(2*RADIUS+1)))))
@@ -265,7 +265,7 @@ __kernel __attribute__((reqd_work_group_size(LSIZE0,LSIZE1,1))) void row_filter_
 	temp[0].zw = ELEM(x-ALIGN+1,0,src_cols,0,temp[0].zw);
 	temp[1].xy = ELEM(x+LSIZE0*2-ALIGN,0,src_cols,0,temp[1].xy);
 	temp[1].zw = ELEM(x+LSIZE0*2-ALIGN+1,0,src_cols,0,temp[1].zw);
-	#else	
+	#else
 	int not_all_in_range = (x-RADIUS<0) | (x+LSIZE0*2-ALIGN+2>src_cols);
 	if(not_all_in_range)
 	{
@@ -298,7 +298,7 @@ __kernel __attribute__((reqd_work_group_size(LSIZE0,LSIZE1,1))) void row_filter_
 		prefetch_LDS[0]=convert_float2(vload2(0,(__local uchar*)&LDS_DAT[l_y][l_x]+ALIGN*2+RADIUS*2-2*i));
 		prefetch_LDS[1]=convert_float2(vload2(0,(__local uchar*)&LDS_DAT[l_y][l_x]+ALIGN*2+RADIUS*2+2-2*i));
 		prefetch_LDS[2]=convert_float2(vload2(0,(__local uchar*)&LDS_DAT[l_y][l_x]+ALIGN*2+RADIUS*2+2*i));
-		prefetch_LDS[3]=convert_float2(vload2(0,(__local uchar*)&LDS_DAT[l_y][l_x]+ALIGN*2+RADIUS*2+2+2*i));		
+		prefetch_LDS[3]=convert_float2(vload2(0,(__local uchar*)&LDS_DAT[l_y][l_x]+ALIGN*2+RADIUS*2+2+2*i));
 		sum.xy += prefetch_LDS[0]*mat_kernel[RADIUS-i]+prefetch_LDS[2]*mat_kernel[RADIUS+i];
 		sum.zw += prefetch_LDS[1]*mat_kernel[RADIUS-i]+prefetch_LDS[3]*mat_kernel[RADIUS+i];
 	}
@@ -311,12 +311,12 @@ __kernel __attribute__((reqd_work_group_size(LSIZE0,LSIZE1,1))) void row_filter_
 
 
 __kernel __attribute__((reqd_work_group_size(LSIZE0,LSIZE1,1))) void row_filter_C3_D0
-						(__global const uchar * restrict src, 
+						(__global const uchar * restrict src,
 						 __global float * dst,
                          const int src_cols,
-                         const int src_rows, 
-                         const int src_pix_per_row, 
-                         const int dst_cols, 
+                         const int src_rows,
+                         const int src_pix_per_row,
+                         const int dst_cols,
                          const int dst_rows,
                          const int dst_pix_per_row,
                          __constant float * mat_kernel __attribute__((max_constant_size(4*(2*RADIUS+1)))))
@@ -364,7 +364,7 @@ __kernel __attribute__((reqd_work_group_size(LSIZE0,LSIZE1,1))) void row_filter_
 	temp[5].y = ELEM(x+LSIZE0*4-ALIGN+3,0,src_cols,0,temp[5].y);
 	temp[5].z = ELEM(x+LSIZE0*4-ALIGN+3,0,src_cols,0,temp[5].z);
 	temp[5].w = ELEM(x+LSIZE0*4-ALIGN+3,0,src_cols,0,temp[5].w);
-	#else	
+	#else
 	int not_all_in_range = (x-RADIUS<0) | (x+LSIZE0*4-ALIGN+4>src_cols);
 	if(not_all_in_range)
 	{
@@ -438,7 +438,7 @@ __kernel __attribute__((reqd_work_group_size(LSIZE0,LSIZE1,1))) void row_filter_
 		prefetch_LDS[1]=convert_float3(vload3(0,(__local uchar*)&LDS_DAT[l_y][l_x]+ALIGN*3-RADIUS*3+3+3*i));
 		prefetch_LDS[2]=convert_float3(vload3(0,(__local uchar*)&LDS_DAT[l_y][l_x]+ALIGN*3-RADIUS*3+6+3*i));
 		prefetch_LDS[3]=convert_float3(vload3(0,(__local uchar*)&LDS_DAT[l_y][l_x]+ALIGN*3-RADIUS*3+9+3*i));
-	
+
 		sum[0].xyz += prefetch_LDS[0]*mat_kernel[i];
 		sum[0].w += prefetch_LDS[1].x*mat_kernel[i];
 		sum[1].xy += prefetch_LDS[1].yz*mat_kernel[i];
@@ -458,12 +458,12 @@ __kernel __attribute__((reqd_work_group_size(LSIZE0,LSIZE1,1))) void row_filter_
 
 
 __kernel __attribute__((reqd_work_group_size(LSIZE0,LSIZE1,1))) void row_filter_C4_D0
-						(__global const uchar * restrict src, 
+						(__global const uchar * restrict src,
 						 __global float * dst,
                          const int src_cols,
-                         const int src_rows, 
-                         const int src_pix_per_row, 
-                         const int dst_cols, 
+                         const int src_rows,
+                         const int src_pix_per_row,
+                         const int dst_cols,
                          const int dst_rows,
                          const int dst_pix_per_row,
                          __constant float * mat_kernel __attribute__((max_constant_size(4*(2*RADIUS+1)))))
@@ -488,7 +488,7 @@ __kernel __attribute__((reqd_work_group_size(LSIZE0,LSIZE1,1))) void row_filter_
 	{
 		temp[j] = ELEM(x+j*LSIZE0-ALIGN,0,src_cols,0,temp[j]);
 	}
-	#else	
+	#else
 	int not_all_in_range = (x-RADIUS<0) | (x+READ_TIMES_ROW*LSIZE0-ALIGN>src_cols);
 	if(not_all_in_range)
 	{
@@ -513,7 +513,7 @@ __kernel __attribute__((reqd_work_group_size(LSIZE0,LSIZE1,1))) void row_filter_
 	for(int j=0;j<READ_TIMES_ROW;j++)
 	{
 		LDS_DAT[l_y][l_x+j*LSIZE0] = temp[j];
-	}	
+	}
 	barrier(CLK_LOCAL_MEM_FENCE);
 	sum = convert_float4(LDS_DAT[l_y][l_x+RADIUS])*mat_kernel[RADIUS];
 	for(i=1;i<=RADIUS;i++)
@@ -532,12 +532,12 @@ __kernel __attribute__((reqd_work_group_size(LSIZE0,LSIZE1,1))) void row_filter_
 
 /*
 __kernel __attribute__((reqd_work_group_size(LSIZE0,LSIZE1,1))) void row_filter_C1_D5
-						(__global const float * restrict src, 
+						(__global const float * restrict src,
 						 __global float * dst,
                          const int src_cols,
-                         const int src_rows, 
-                         const int src_pix_per_row, 
-                         const int dst_cols, 
+                         const int src_rows,
+                         const int src_pix_per_row,
+                         const int dst_cols,
                          const int dst_rows,
                          const int dst_pix_per_row,
                          __constant float * mat_kernel __attribute__((max_constant_size(4*(2*RADIUS+1)))))
@@ -558,7 +558,7 @@ __kernel __attribute__((reqd_work_group_size(LSIZE0,LSIZE1,1))) void row_filter_
 	temp[1] = src[baseindex+LSIZE0-RADIUS];
 	temp[0] = ELEM(x-RADIUS,0,src_cols,0.0f,temp[0]);
 	temp[1] = ELEM(x+LSIZE0-RADIUS,0,src_cols,0.0f,temp[1]);
-	#else	
+	#else
 	int index[2];
 	index[0] = ADDR_L(x-RADIUS,0,src_cols);
 	index[0] = ADDR_R(x-RADIUS,src_cols,index[0]);
@@ -587,15 +587,15 @@ __kernel __attribute__((reqd_work_group_size(LSIZE0,LSIZE1,1))) void row_filter_
 }
 
 __kernel __attribute__((reqd_work_group_size(LSIZE0,LSIZE1,1))) void row_filter_C1_D0
-						(__global const uchar * restrict src, 
+						(__global const uchar * restrict src,
 						 __global float * dst,
                          const int dst_cols,
-                         const int dst_rows, 
+                         const int dst_rows,
 						 const int src_whole_cols,
 						 const int src_whole_rows,
-                         const int src_step_in_pixel, 
-                         const int src_offset_x, 
-                         const int src_offset_y, 
+                         const int src_step_in_pixel,
+                         const int src_offset_x,
+                         const int src_offset_y,
                          const int dst_step_in_pixel,
                          const int radiusy,
                          __constant float * mat_kernel __attribute__((max_constant_size(4*(2*RADIUSX+1)))))
@@ -638,7 +638,7 @@ __kernel __attribute__((reqd_work_group_size(LSIZE0,LSIZE1,1))) void row_filter_
 	for(i = 0;i<READ_TIMES_ROW;i++)
 	{
 		temp[i] = src[start_addr+i*LSIZE0];
-	}	
+	}
 	#endif
 
 	//save pixels to lds
@@ -663,73 +663,79 @@ __kernel __attribute__((reqd_work_group_size(LSIZE0,LSIZE1,1))) void row_filter_
 		dst[start_addr] = sum;
 	}
 }*/
-__kernel __attribute__((reqd_work_group_size(LSIZE0,LSIZE1,1))) void row_filter_C1_D0
-						(__global const uchar * restrict src, 
-						 __global float * dst,
-                         const int dst_cols,
-                         const int dst_rows, 
-						 const int src_whole_cols,
-						 const int src_whole_rows,
-                         const int src_step_in_pixel, 
-                         const int src_offset_x, 
-                         const int src_offset_y, 
-                         const int dst_step_in_pixel,
-                         const int radiusy,
-                         __constant float * mat_kernel __attribute__((max_constant_size(4*(2*RADIUSX+1)))))
+__kernel __attribute__((reqd_work_group_size(LSIZE0, LSIZE1, 1))) void row_filter_C1_D0
+(__global const uchar *restrict src,
+ __global float *dst,
+ const int dst_cols,
+ const int dst_rows,
+ const int src_whole_cols,
+ const int src_whole_rows,
+ const int src_step_in_pixel,
+ const int src_offset_x,
+ const int src_offset_y,
+ const int dst_step_in_pixel,
+ const int radiusy,
+ __constant float *mat_kernel __attribute__((max_constant_size(4 * (2 * RADIUSX + 1)))))
 {
-	int x = get_global_id(0)<<2;
+	int x = get_global_id(0) << 2;
 	int y = get_global_id(1);
 	int l_x = get_local_id(0);
 	int l_y = get_local_id(1);
-	int start_x = x+src_offset_x-RADIUSX & 0xfffffffc;
-	int offset = src_offset_x-RADIUSX & 3;
-	int start_y = y+src_offset_y-radiusy;
-	int start_addr = mad24(start_y,src_step_in_pixel,start_x);
+	int start_x = x + src_offset_x - RADIUSX & 0xfffffffc;
+	int offset = src_offset_x - RADIUSX & 3;
+	int start_y = y + src_offset_y - radiusy;
+	int start_addr = mad24(start_y, src_step_in_pixel, start_x);
 	int i;
 	float4 sum;
 	uchar4 temp[READ_TIMES_ROW];
-
-	__local uchar4 LDS_DAT[LSIZE1][READ_TIMES_ROW*LSIZE0+1];
-	#ifdef BORDER_CONSTANT
+	
+	__local uchar4 LDS_DAT[LSIZE1][READ_TIMES_ROW * LSIZE0 + 1];
+#ifdef BORDER_CONSTANT
+	
 	//read pixels from src
-	for(i = 0;i<READ_TIMES_ROW;i++)
+	for (i = 0; i < READ_TIMES_ROW; i++)
 	{
-		temp[i] = *(__global uchar4*)&src[start_addr+i*LSIZE0*4];
+		temp[i] = *(__global uchar4 *)&src[start_addr + i * LSIZE0 * 4];
 	}
+	
 	//judge if read out of boundary
-	for(i = 0;i<READ_TIMES_ROW;i++)
+	for (i = 0; i < READ_TIMES_ROW; i++)
 	{
-		temp[i].x= ELEM(start_x+i*LSIZE0*4,0,src_whole_cols,0,temp[i].x);
-		temp[i].y= ELEM(start_x+i*LSIZE0*4+1,0,src_whole_cols,0,temp[i].y);
-		temp[i].z= ELEM(start_x+i*LSIZE0*4+2,0,src_whole_cols,0,temp[i].z);
-		temp[i].w= ELEM(start_x+i*LSIZE0*4+3,0,src_whole_cols,0,temp[i].w);
-		temp[i]= ELEM(start_y,0,src_whole_rows,0,temp[i]);
+		temp[i].x = ELEM(start_x + i * LSIZE0 * 4, 0, src_whole_cols, 0, temp[i].x);
+		temp[i].y = ELEM(start_x + i * LSIZE0 * 4 + 1, 0, src_whole_cols, 0, temp[i].y);
+		temp[i].z = ELEM(start_x + i * LSIZE0 * 4 + 2, 0, src_whole_cols, 0, temp[i].z);
+		temp[i].w = ELEM(start_x + i * LSIZE0 * 4 + 3, 0, src_whole_cols, 0, temp[i].w);
+		temp[i] = ELEM(start_y, 0, src_whole_rows, 0, temp[i]);
 	}
-	#else
-	int not_all_in_range = (start_x<0) | (start_x + READ_TIMES_ROW*LSIZE0*4+4>src_whole_cols)| (start_y<0) | (start_y >= src_whole_rows);
+	
+#else
+	int not_all_in_range = (start_x < 0) | (start_x + READ_TIMES_ROW * LSIZE0 * 4 + 4 > src_whole_cols) | (start_y < 0) | (start_y >= src_whole_rows);
 	int4 index[READ_TIMES_ROW];
 	int4 addr;
 	int s_y;
-	if(not_all_in_range)
+	
+	if (not_all_in_range)
 	{
 		//judge if read out of boundary
-		for(i = 0;i<READ_TIMES_ROW;i++)
+		for (i = 0; i < READ_TIMES_ROW; i++)
 		{
-			index[i].x= ADDR_L(start_x+i*LSIZE0*4,0,src_whole_cols,start_x+i*LSIZE0*4);
-			index[i].x= ADDR_R(start_x+i*LSIZE0*4,src_whole_cols,index[i].x);
-			index[i].y= ADDR_L(start_x+i*LSIZE0*4+1,0,src_whole_cols,start_x+i*LSIZE0*4+1);
-			index[i].y= ADDR_R(start_x+i*LSIZE0*4+1,src_whole_cols,index[i].y);
-			index[i].z= ADDR_L(start_x+i*LSIZE0*4+2,0,src_whole_cols,start_x+i*LSIZE0*4+2);
-			index[i].z= ADDR_R(start_x+i*LSIZE0*4+2,src_whole_cols,index[i].z);
-			index[i].w= ADDR_L(start_x+i*LSIZE0*4+3,0,src_whole_cols,start_x+i*LSIZE0*4+3);
-			index[i].w= ADDR_R(start_x+i*LSIZE0*4+3,src_whole_cols,index[i].w);
+			index[i].x = ADDR_L(start_x + i * LSIZE0 * 4, 0, src_whole_cols, start_x + i * LSIZE0 * 4);
+			index[i].x = ADDR_R(start_x + i * LSIZE0 * 4, src_whole_cols, index[i].x);
+			index[i].y = ADDR_L(start_x + i * LSIZE0 * 4 + 1, 0, src_whole_cols, start_x + i * LSIZE0 * 4 + 1);
+			index[i].y = ADDR_R(start_x + i * LSIZE0 * 4 + 1, src_whole_cols, index[i].y);
+			index[i].z = ADDR_L(start_x + i * LSIZE0 * 4 + 2, 0, src_whole_cols, start_x + i * LSIZE0 * 4 + 2);
+			index[i].z = ADDR_R(start_x + i * LSIZE0 * 4 + 2, src_whole_cols, index[i].z);
+			index[i].w = ADDR_L(start_x + i * LSIZE0 * 4 + 3, 0, src_whole_cols, start_x + i * LSIZE0 * 4 + 3);
+			index[i].w = ADDR_R(start_x + i * LSIZE0 * 4 + 3, src_whole_cols, index[i].w);
 		}
-		s_y= ADDR_L(start_y,0,src_whole_rows,start_y);
-		s_y= ADDR_R(start_y,src_whole_rows,s_y);
+	
+		s_y = ADDR_L(start_y, 0, src_whole_rows, start_y);
+		s_y = ADDR_R(start_y, src_whole_rows, s_y);
+	
 		//read pixels from src
-		for(i = 0;i<READ_TIMES_ROW;i++)
+		for (i = 0; i < READ_TIMES_ROW; i++)
 		{
-			addr = mad24((int4)s_y,(int4)src_step_in_pixel,index[i]);
+			addr = mad24((int4)s_y, (int4)src_step_in_pixel, index[i]);
 			temp[i].x = src[addr.x];
 			temp[i].y = src[addr.y];
 			temp[i].z = src[addr.z];
@@ -739,286 +745,318 @@ __kernel __attribute__((reqd_work_group_size(LSIZE0,LSIZE1,1))) void row_filter_
 	else
 	{
 		//read pixels from src
-		for(i = 0;i<READ_TIMES_ROW;i++)
+		for (i = 0; i < READ_TIMES_ROW; i++)
 		{
-			temp[i] = *(__global uchar4*)&src[start_addr+i*LSIZE0*4];
-		}	
-	}	
-	#endif
-
+			temp[i] = *(__global uchar4 *)&src[start_addr + i * LSIZE0 * 4];
+		}
+	}
+	
+#endif
+	
 	//save pixels to lds
-	for(i = 0;i<READ_TIMES_ROW;i++)
+	for (i = 0; i < READ_TIMES_ROW; i++)
 	{
-		LDS_DAT[l_y][l_x+i*LSIZE0]=temp[i];
+		LDS_DAT[l_y][l_x + i * LSIZE0] = temp[i];
 	}
+	
 	barrier(CLK_LOCAL_MEM_FENCE);
-
+	
 	//read pixels from lds and calculate the result
-	sum =convert_float4(vload4(0,(__local uchar*)&LDS_DAT[l_y][l_x]+RADIUSX+offset))*mat_kernel[RADIUSX];
-	for(i=1;i<=RADIUSX;i++)
+	sum = convert_float4(vload4(0, (__local uchar *)&LDS_DAT[l_y][l_x] + RADIUSX + offset)) * mat_kernel[RADIUSX];
+	
+	for (i = 1; i <= RADIUSX; i++)
 	{
-		temp[0]=vload4(0,(__local uchar*)&LDS_DAT[l_y][l_x]+RADIUSX+offset-i);
-		temp[1]=vload4(0,(__local uchar*)&LDS_DAT[l_y][l_x]+RADIUSX+offset+i);
-		sum += convert_float4(temp[0])*mat_kernel[RADIUSX-i]+convert_float4(temp[1])*mat_kernel[RADIUSX+i];
+		temp[0] = vload4(0, (__local uchar *)&LDS_DAT[l_y][l_x] + RADIUSX + offset - i);
+		temp[1] = vload4(0, (__local uchar *)&LDS_DAT[l_y][l_x] + RADIUSX + offset + i);
+		sum += convert_float4(temp[0]) * mat_kernel[RADIUSX - i] + convert_float4(temp[1]) * mat_kernel[RADIUSX + i];
 	}
-	start_addr = mad24(y,dst_step_in_pixel,x);
+	
+	start_addr = mad24(y, dst_step_in_pixel, x);
+	
 	//write the result to dst
-	if((x+3<dst_cols) & y<(dst_rows))
+	if ((x + 3 < dst_cols) & y < (dst_rows))
 	{
-		*(__global float4*)&dst[start_addr] = sum;
+		*(__global float4 *)&dst[start_addr] = sum;
 	}
-	else if((x+2<dst_cols) & y<(dst_rows))
-	{
-		dst[start_addr] = sum.x;
-		dst[start_addr+1] = sum.y;
-		dst[start_addr+2] = sum.z;
-	}
-	else if((x+1<dst_cols) & y<(dst_rows))
+	else if ((x + 2 < dst_cols) & y < (dst_rows))
 	{
 		dst[start_addr] = sum.x;
-		dst[start_addr+1] = sum.y;
+		dst[start_addr + 1] = sum.y;
+		dst[start_addr + 2] = sum.z;
 	}
-	else if((x<dst_cols) & y<(dst_rows))
+	else if ((x + 1 < dst_cols) & y < (dst_rows))
+	{
+		dst[start_addr] = sum.x;
+		dst[start_addr + 1] = sum.y;
+	}
+	else if ((x < dst_cols) & y < (dst_rows))
 	{
 		dst[start_addr] = sum.x;
 	}
 }
-__kernel __attribute__((reqd_work_group_size(LSIZE0,LSIZE1,1))) void row_filter_C4_D0
-						(__global const uchar4 * restrict src, 
-						 __global float4 * dst,
-                         const int dst_cols,
-                         const int dst_rows, 
-						 const int src_whole_cols,
-						 const int src_whole_rows,
-                         const int src_step_in_pixel, 
-                         const int src_offset_x, 
-                         const int src_offset_y, 
-                         const int dst_step_in_pixel,
-                         const int radiusy,
-                         __constant float * mat_kernel __attribute__((max_constant_size(4*(2*RADIUSX+1)))))
+__kernel __attribute__((reqd_work_group_size(LSIZE0, LSIZE1, 1))) void row_filter_C4_D0
+(__global const uchar4 *restrict src,
+ __global float4 *dst,
+ const int dst_cols,
+ const int dst_rows,
+ const int src_whole_cols,
+ const int src_whole_rows,
+ const int src_step_in_pixel,
+ const int src_offset_x,
+ const int src_offset_y,
+ const int dst_step_in_pixel,
+ const int radiusy,
+ __constant float *mat_kernel __attribute__((max_constant_size(4 * (2 * RADIUSX + 1)))))
 {
 	int x = get_global_id(0);
 	int y = get_global_id(1);
 	int l_x = get_local_id(0);
 	int l_y = get_local_id(1);
-	int start_x = x+src_offset_x-RADIUSX;
-	int start_y = y+src_offset_y-radiusy;
-	int start_addr = mad24(start_y,src_step_in_pixel,start_x);
+	int start_x = x + src_offset_x - RADIUSX;
+	int start_y = y + src_offset_y - radiusy;
+	int start_addr = mad24(start_y, src_step_in_pixel, start_x);
 	int i;
 	float4 sum;
 	uchar4 temp[READ_TIMES_ROW];
-
-	__local uchar4 LDS_DAT[LSIZE1][READ_TIMES_ROW*LSIZE0+1];
-	#ifdef BORDER_CONSTANT
+	
+	__local uchar4 LDS_DAT[LSIZE1][READ_TIMES_ROW * LSIZE0 + 1];
+#ifdef BORDER_CONSTANT
+	
 	//read pixels from src
-	for(i = 0;i<READ_TIMES_ROW;i++)
+	for (i = 0; i < READ_TIMES_ROW; i++)
 	{
-		temp[i] = src[start_addr+i*LSIZE0];
+		temp[i] = src[start_addr + i * LSIZE0];
 	}
+	
 	//judge if read out of boundary
-	for(i = 0;i<READ_TIMES_ROW;i++)
+	for (i = 0; i < READ_TIMES_ROW; i++)
 	{
-		temp[i]= ELEM(start_x+i*LSIZE0,0,src_whole_cols,0,temp[i]);
-		temp[i]= ELEM(start_y,0,src_whole_rows,0,temp[i]);
+		temp[i] = ELEM(start_x + i * LSIZE0, 0, src_whole_cols, 0, temp[i]);
+		temp[i] = ELEM(start_y, 0, src_whole_rows, 0, temp[i]);
 	}
-	#else
+	
+#else
 	int index[READ_TIMES_ROW];
-	int s_x,s_y;
+	int s_x, s_y;
+	
 	//judge if read out of boundary
-	for(i = 0;i<READ_TIMES_ROW;i++)
+	for (i = 0; i < READ_TIMES_ROW; i++)
 	{
-		s_x= ADDR_L(start_x+i*LSIZE0,0,src_whole_cols,start_x+i*LSIZE0);
-		s_x= ADDR_R(start_x+i*LSIZE0,src_whole_cols,s_x);
-		s_y= ADDR_L(start_y,0,src_whole_rows,start_y);
-		s_y= ADDR_R(start_y,src_whole_rows,s_y);
-		index[i]=mad24(s_y,src_step_in_pixel,s_x);
+		s_x = ADDR_L(start_x + i * LSIZE0, 0, src_whole_cols, start_x + i * LSIZE0);
+		s_x = ADDR_R(start_x + i * LSIZE0, src_whole_cols, s_x);
+		s_y = ADDR_L(start_y, 0, src_whole_rows, start_y);
+		s_y = ADDR_R(start_y, src_whole_rows, s_y);
+		index[i] = mad24(s_y, src_step_in_pixel, s_x);
 	}
+	
 	//read pixels from src
-	for(i = 0;i<READ_TIMES_ROW;i++)
+	for (i = 0; i < READ_TIMES_ROW; i++)
 	{
 		temp[i] = src[index[i]];
-	}	
-	#endif
-
+	}
+	
+#endif
+	
 	//save pixels to lds
-	for(i = 0;i<READ_TIMES_ROW;i++)
+	for (i = 0; i < READ_TIMES_ROW; i++)
 	{
-		LDS_DAT[l_y][l_x+i*LSIZE0]=temp[i];
+		LDS_DAT[l_y][l_x + i * LSIZE0] = temp[i];
 	}
+	
 	barrier(CLK_LOCAL_MEM_FENCE);
-
+	
 	//read pixels from lds and calculate the result
-	sum =convert_float4(LDS_DAT[l_y][l_x+RADIUSX])*mat_kernel[RADIUSX];
-	for(i=1;i<=RADIUSX;i++)
+	sum = convert_float4(LDS_DAT[l_y][l_x + RADIUSX]) * mat_kernel[RADIUSX];
+	
+	for (i = 1; i <= RADIUSX; i++)
 	{
-		temp[0]=LDS_DAT[l_y][l_x+RADIUSX-i];
-		temp[1]=LDS_DAT[l_y][l_x+RADIUSX+i];
-		sum += convert_float4(temp[0])*mat_kernel[RADIUSX-i]+convert_float4(temp[1])*mat_kernel[RADIUSX+i];
+		temp[0] = LDS_DAT[l_y][l_x + RADIUSX - i];
+		temp[1] = LDS_DAT[l_y][l_x + RADIUSX + i];
+		sum += convert_float4(temp[0]) * mat_kernel[RADIUSX - i] + convert_float4(temp[1]) * mat_kernel[RADIUSX + i];
 	}
+	
 	//write the result to dst
-	if((x<dst_cols) & y<(dst_rows))
+	if ((x < dst_cols) & y < (dst_rows))
 	{
-		start_addr = mad24(y,dst_step_in_pixel,x);
+		start_addr = mad24(y, dst_step_in_pixel, x);
 		dst[start_addr] = sum;
 	}
 }
 
-__kernel __attribute__((reqd_work_group_size(LSIZE0,LSIZE1,1))) void row_filter_C1_D5
-						(__global const float * restrict src, 
-						 __global float * dst,
-                         const int dst_cols,
-                         const int dst_rows, 
-						 const int src_whole_cols,
-						 const int src_whole_rows,
-                         const int src_step_in_pixel, 
-                         const int src_offset_x, 
-                         const int src_offset_y, 
-                         const int dst_step_in_pixel,
-                         const int radiusy,
-                         __constant float * mat_kernel __attribute__((max_constant_size(4*(2*RADIUSX+1)))))
+__kernel __attribute__((reqd_work_group_size(LSIZE0, LSIZE1, 1))) void row_filter_C1_D5
+(__global const float *restrict src,
+ __global float *dst,
+ const int dst_cols,
+ const int dst_rows,
+ const int src_whole_cols,
+ const int src_whole_rows,
+ const int src_step_in_pixel,
+ const int src_offset_x,
+ const int src_offset_y,
+ const int dst_step_in_pixel,
+ const int radiusy,
+ __constant float *mat_kernel __attribute__((max_constant_size(4 * (2 * RADIUSX + 1)))))
 {
 	int x = get_global_id(0);
 	int y = get_global_id(1);
 	int l_x = get_local_id(0);
 	int l_y = get_local_id(1);
-	int start_x = x+src_offset_x-RADIUSX;
-	int start_y = y+src_offset_y-radiusy;
-	int start_addr = mad24(start_y,src_step_in_pixel,start_x);
+	int start_x = x + src_offset_x - RADIUSX;
+	int start_y = y + src_offset_y - radiusy;
+	int start_addr = mad24(start_y, src_step_in_pixel, start_x);
 	int i;
 	float sum;
 	float temp[READ_TIMES_ROW];
-
-	__local float LDS_DAT[LSIZE1][READ_TIMES_ROW*LSIZE0+1];
-	#ifdef BORDER_CONSTANT
+	
+	__local float LDS_DAT[LSIZE1][READ_TIMES_ROW * LSIZE0 + 1];
+#ifdef BORDER_CONSTANT
+	
 	//read pixels from src
-	for(i = 0;i<READ_TIMES_ROW;i++)
+	for (i = 0; i < READ_TIMES_ROW; i++)
 	{
-		temp[i] = src[start_addr+i*LSIZE0];
+		temp[i] = src[start_addr + i * LSIZE0];
 	}
+	
 	//judge if read out of boundary
-	for(i = 0;i<READ_TIMES_ROW;i++)
+	for (i = 0; i < READ_TIMES_ROW; i++)
 	{
-		temp[i]= ELEM(start_x+i*LSIZE0,0,src_whole_cols,0,temp[i]);
-		temp[i]= ELEM(start_y,0,src_whole_rows,0,temp[i]);
+		temp[i] = ELEM(start_x + i * LSIZE0, 0, src_whole_cols, 0, temp[i]);
+		temp[i] = ELEM(start_y, 0, src_whole_rows, 0, temp[i]);
 	}
-	#else
+	
+#else
 	int index[READ_TIMES_ROW];
-	int s_x,s_y;
+	int s_x, s_y;
+	
 	//judge if read out of boundary
-	for(i = 0;i<READ_TIMES_ROW;i++)
+	for (i = 0; i < READ_TIMES_ROW; i++)
 	{
-		s_x= ADDR_L(start_x+i*LSIZE0,0,src_whole_cols,start_x+i*LSIZE0);
-		s_x= ADDR_R(start_x+i*LSIZE0,src_whole_cols,s_x);
-		s_y= ADDR_L(start_y,0,src_whole_rows,start_y);
-		s_y= ADDR_R(start_y,src_whole_rows,s_y);
-		index[i]=mad24(s_y,src_step_in_pixel,s_x);
+		s_x = ADDR_L(start_x + i * LSIZE0, 0, src_whole_cols, start_x + i * LSIZE0);
+		s_x = ADDR_R(start_x + i * LSIZE0, src_whole_cols, s_x);
+		s_y = ADDR_L(start_y, 0, src_whole_rows, start_y);
+		s_y = ADDR_R(start_y, src_whole_rows, s_y);
+		index[i] = mad24(s_y, src_step_in_pixel, s_x);
 	}
+	
 	//read pixels from src
-	for(i = 0;i<READ_TIMES_ROW;i++)
+	for (i = 0; i < READ_TIMES_ROW; i++)
 	{
 		temp[i] = src[index[i]];
-	}	
-	#endif
-
+	}
+	
+#endif
+	
 	//save pixels to lds
-	for(i = 0;i<READ_TIMES_ROW;i++)
+	for (i = 0; i < READ_TIMES_ROW; i++)
 	{
-		LDS_DAT[l_y][l_x+i*LSIZE0]=temp[i];
+		LDS_DAT[l_y][l_x + i * LSIZE0] = temp[i];
 	}
+	
 	barrier(CLK_LOCAL_MEM_FENCE);
-
+	
 	//read pixels from lds and calculate the result
-	sum =LDS_DAT[l_y][l_x+RADIUSX]*mat_kernel[RADIUSX];
-	for(i=1;i<=RADIUSX;i++)
+	sum = LDS_DAT[l_y][l_x + RADIUSX] * mat_kernel[RADIUSX];
+	
+	for (i = 1; i <= RADIUSX; i++)
 	{
-		temp[0]=LDS_DAT[l_y][l_x+RADIUSX-i];
-		temp[1]=LDS_DAT[l_y][l_x+RADIUSX+i];
-		sum += temp[0]*mat_kernel[RADIUSX-i]+temp[1]*mat_kernel[RADIUSX+i];
+		temp[0] = LDS_DAT[l_y][l_x + RADIUSX - i];
+		temp[1] = LDS_DAT[l_y][l_x + RADIUSX + i];
+		sum += temp[0] * mat_kernel[RADIUSX - i] + temp[1] * mat_kernel[RADIUSX + i];
 	}
+	
 	//write the result to dst
-	if((x<dst_cols) & y<(dst_rows))
+	if ((x < dst_cols) & y < (dst_rows))
 	{
-		start_addr = mad24(y,dst_step_in_pixel,x);
+		start_addr = mad24(y, dst_step_in_pixel, x);
 		dst[start_addr] = sum;
 	}
 }
 
-__kernel __attribute__((reqd_work_group_size(LSIZE0,LSIZE1,1))) void row_filter_C4_D5
-						(__global const float4 * restrict src, 
-						 __global float4 * dst,
-                         const int dst_cols,
-                         const int dst_rows, 
-						 const int src_whole_cols,
-						 const int src_whole_rows,
-                         const int src_step_in_pixel, 
-                         const int src_offset_x, 
-                         const int src_offset_y, 
-                         const int dst_step_in_pixel,
-                         const int radiusy,
-                         __constant float * mat_kernel __attribute__((max_constant_size(4*(2*RADIUSX+1)))))
+__kernel __attribute__((reqd_work_group_size(LSIZE0, LSIZE1, 1))) void row_filter_C4_D5
+(__global const float4 *restrict src,
+ __global float4 *dst,
+ const int dst_cols,
+ const int dst_rows,
+ const int src_whole_cols,
+ const int src_whole_rows,
+ const int src_step_in_pixel,
+ const int src_offset_x,
+ const int src_offset_y,
+ const int dst_step_in_pixel,
+ const int radiusy,
+ __constant float *mat_kernel __attribute__((max_constant_size(4 * (2 * RADIUSX + 1)))))
 {
 	int x = get_global_id(0);
 	int y = get_global_id(1);
 	int l_x = get_local_id(0);
 	int l_y = get_local_id(1);
-	int start_x = x+src_offset_x-RADIUSX;
-	int start_y = y+src_offset_y-radiusy;
-	int start_addr = mad24(start_y,src_step_in_pixel,start_x);
+	int start_x = x + src_offset_x - RADIUSX;
+	int start_y = y + src_offset_y - radiusy;
+	int start_addr = mad24(start_y, src_step_in_pixel, start_x);
 	int i;
 	float4 sum;
 	float4 temp[READ_TIMES_ROW];
-
-	__local float4 LDS_DAT[LSIZE1][READ_TIMES_ROW*LSIZE0+1];
-	#ifdef BORDER_CONSTANT
+	
+	__local float4 LDS_DAT[LSIZE1][READ_TIMES_ROW * LSIZE0 + 1];
+#ifdef BORDER_CONSTANT
+	
 	//read pixels from src
-	for(i = 0;i<READ_TIMES_ROW;i++)
+	for (i = 0; i < READ_TIMES_ROW; i++)
 	{
-		temp[i] = src[start_addr+i*LSIZE0];
+		temp[i] = src[start_addr + i * LSIZE0];
 	}
+	
 	//judge if read out of boundary
-	for(i = 0;i<READ_TIMES_ROW;i++)
+	for (i = 0; i < READ_TIMES_ROW; i++)
 	{
-		temp[i]= ELEM(start_x+i*LSIZE0,0,src_whole_cols,0,temp[i]);
-		temp[i]= ELEM(start_y,0,src_whole_rows,0,temp[i]);
+		temp[i] = ELEM(start_x + i * LSIZE0, 0, src_whole_cols, 0, temp[i]);
+		temp[i] = ELEM(start_y, 0, src_whole_rows, 0, temp[i]);
 	}
-	#else
+	
+#else
 	int index[READ_TIMES_ROW];
-	int s_x,s_y;
+	int s_x, s_y;
+	
 	//judge if read out of boundary
-	for(i = 0;i<READ_TIMES_ROW;i++)
+	for (i = 0; i < READ_TIMES_ROW; i++)
 	{
-		s_x= ADDR_L(start_x+i*LSIZE0,0,src_whole_cols,start_x+i*LSIZE0);
-		s_x= ADDR_R(start_x+i*LSIZE0,src_whole_cols,s_x);
-		s_y= ADDR_L(start_y,0,src_whole_rows,start_y);
-		s_y= ADDR_R(start_y,src_whole_rows,s_y);
-		index[i]=mad24(s_y,src_step_in_pixel,s_x);
+		s_x = ADDR_L(start_x + i * LSIZE0, 0, src_whole_cols, start_x + i * LSIZE0);
+		s_x = ADDR_R(start_x + i * LSIZE0, src_whole_cols, s_x);
+		s_y = ADDR_L(start_y, 0, src_whole_rows, start_y);
+		s_y = ADDR_R(start_y, src_whole_rows, s_y);
+		index[i] = mad24(s_y, src_step_in_pixel, s_x);
 	}
+	
 	//read pixels from src
-	for(i = 0;i<READ_TIMES_ROW;i++)
+	for (i = 0; i < READ_TIMES_ROW; i++)
 	{
 		temp[i] = src[index[i]];
-	}	
-	#endif
-
+	}
+	
+#endif
+	
 	//save pixels to lds
-	for(i = 0;i<READ_TIMES_ROW;i++)
+	for (i = 0; i < READ_TIMES_ROW; i++)
 	{
-		LDS_DAT[l_y][l_x+i*LSIZE0]=temp[i];
+		LDS_DAT[l_y][l_x + i * LSIZE0] = temp[i];
 	}
+	
 	barrier(CLK_LOCAL_MEM_FENCE);
-
+	
 	//read pixels from lds and calculate the result
-	sum =LDS_DAT[l_y][l_x+RADIUSX]*mat_kernel[RADIUSX];
-	for(i=1;i<=RADIUSX;i++)
+	sum = LDS_DAT[l_y][l_x + RADIUSX] * mat_kernel[RADIUSX];
+	
+	for (i = 1; i <= RADIUSX; i++)
 	{
-		temp[0]=LDS_DAT[l_y][l_x+RADIUSX-i];
-		temp[1]=LDS_DAT[l_y][l_x+RADIUSX+i];
-		sum += temp[0]*mat_kernel[RADIUSX-i]+temp[1]*mat_kernel[RADIUSX+i];
+		temp[0] = LDS_DAT[l_y][l_x + RADIUSX - i];
+		temp[1] = LDS_DAT[l_y][l_x + RADIUSX + i];
+		sum += temp[0] * mat_kernel[RADIUSX - i] + temp[1] * mat_kernel[RADIUSX + i];
 	}
+	
 	//write the result to dst
-	if((x<dst_cols) & y<(dst_rows))
+	if ((x < dst_cols) & y < (dst_rows))
 	{
-		start_addr = mad24(y,dst_step_in_pixel,x);
+		start_addr = mad24(y, dst_step_in_pixel, x);
 		dst[start_addr] = sum;
 	}
 }

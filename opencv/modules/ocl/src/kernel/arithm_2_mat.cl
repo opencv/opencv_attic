@@ -54,107 +54,146 @@
 #pragma OPENCL EXTENSION cl_khr_global_int32_extended_atomics:enable
 #define CV_PI   3.1415926535897932384626433832795
 
-char round_char(double v){
-    char v1=(char)v;
-    return convert_char_sat(v+(v>=0 ? 0.5 : -0.5));
+char round_char(double v)
+{
+	char v1 = (char)v;
+	return convert_char_sat(v + (v >= 0 ? 0.5 : -0.5));
 }
-unsigned char round_uchar(double v){
-    unsigned char v1=(unsigned char)v;
-    return convert_uchar_sat(v+(v>=0 ? 0.5 : -0.5));
+unsigned char round_uchar(double v)
+{
+	unsigned char v1 = (unsigned char)v;
+	return convert_uchar_sat(v + (v >= 0 ? 0.5 : -0.5));
 }
-short round_short(double v){
-    short v1=(short)v;
-    return convert_short_sat(v+(v>=0 ? 0.5 : -0.5));
+short round_short(double v)
+{
+	short v1 = (short)v;
+	return convert_short_sat(v + (v >= 0 ? 0.5 : -0.5));
 }
-unsigned short round_ushort(double v){
-    unsigned short v1=(unsigned short)v;
-    return convert_ushort_sat(v+(v>=0 ? 0.5 : -0.5));
+unsigned short round_ushort(double v)
+{
+	unsigned short v1 = (unsigned short)v;
+	return convert_ushort_sat(v + (v >= 0 ? 0.5 : -0.5));
 }
-int round_int(double v){
-    int v1=(int)v;
-    return convert_int_sat(v+(v>=0 ? 0.5 : -0.5));
+int round_int(double v)
+{
+	int v1 = (int)v;
+	return convert_int_sat(v + (v >= 0 ? 0.5 : -0.5));
 }
 
-char round2_char(double v){
-    char v1=(char)v;
-    if((v-v1)==0.5&&v1%2==0)
-        return v1;
-    else
-        return convert_char_sat(v+(v>=0 ? 0.5 : -0.5));
+char round2_char(double v)
+{
+	char v1 = (char)v;
+	
+	if ((v - v1) == 0.5 && v1 % 2 == 0)
+	{
+		return v1;
+	}
+	else
+	{
+		return convert_char_sat(v + (v >= 0 ? 0.5 : -0.5));
+	}
 }
-unsigned char round2_uchar(double v){
-    unsigned char v1=(unsigned char)v;
-    if((v-v1)==0.5&&v1%2==0)
-        return v1;
-    else
-        return convert_uchar_sat(v+(v>=0 ? 0.5 : -0.5));
+unsigned char round2_uchar(double v)
+{
+	unsigned char v1 = (unsigned char)v;
+	
+	if ((v - v1) == 0.5 && v1 % 2 == 0)
+	{
+		return v1;
+	}
+	else
+	{
+		return convert_uchar_sat(v + (v >= 0 ? 0.5 : -0.5));
+	}
 }
-short round2_short(double v){
-    short v1=(short)v;
-    if((v-v1)==0.5&&v1%2==0)
-        return v1;
-    else
-        return convert_short_sat(v+(v>=0 ? 0.5 : -0.5));
+short round2_short(double v)
+{
+	short v1 = (short)v;
+	
+	if ((v - v1) == 0.5 && v1 % 2 == 0)
+	{
+		return v1;
+	}
+	else
+	{
+		return convert_short_sat(v + (v >= 0 ? 0.5 : -0.5));
+	}
 }
-unsigned short round2_ushort(double v){
-    unsigned short v1=(unsigned short)v;
-    if((v-v1)==0.5&&v1%2==0)
-        return v1;
-    else
-        return convert_ushort_sat(v+(v>=0 ? 0.5 : -0.5));
+unsigned short round2_ushort(double v)
+{
+	unsigned short v1 = (unsigned short)v;
+	
+	if ((v - v1) == 0.5 && v1 % 2 == 0)
+	{
+		return v1;
+	}
+	else
+	{
+		return convert_ushort_sat(v + (v >= 0 ? 0.5 : -0.5));
+	}
 }
-int round2_int(double v){
-    int v1=(int)v;
-    if((v-v1)==0.5&&v1%2==0)
-        return v1;
-    else
-        return convert_int_sat(v+(v>=0 ? 0.5 : -0.5));
+int round2_int(double v)
+{
+	int v1 = (int)v;
+	
+	if ((v - v1) == 0.5 && v1 % 2 == 0)
+	{
+		return v1;
+	}
+	else
+	{
+		return convert_int_sat(v + (v >= 0 ? 0.5 : -0.5));
+	}
 }
 
 /*****************************************EXP***************************************/
-__kernel void arithm_op_exp_5 (int rows,int cols,int srcStep,__global float *src1Mat,
-                             __global float * dstMat,int channels)
+__kernel void arithm_op_exp_5(int rows, int cols, int srcStep, __global float *src1Mat,
+                              __global float *dstMat, int channels)
 {
-    size_t x = get_global_id(0);
-    size_t y = get_global_id(1);
-    if (x < cols && y < rows)
-    {
-        size_t idx = y * ( srcStep >> 2 ) + x;
-        dstMat[idx] = (float)exp((float)src1Mat[idx]);
-    }
+	size_t x = get_global_id(0);
+	size_t y = get_global_id(1);
+	
+	if (x < cols && y < rows)
+	{
+		size_t idx = y * (srcStep >> 2) + x;
+		dstMat[idx] = (float)exp((float)src1Mat[idx]);
+	}
 }
-__kernel void arithm_op_exp_6 (int rows,int cols,int srcStep,__global double *src1Mat,
-                             __global double * dstMat,int channels)
+__kernel void arithm_op_exp_6(int rows, int cols, int srcStep, __global double *src1Mat,
+                              __global double *dstMat, int channels)
 {
-    size_t x = get_global_id(0);
-    size_t y = get_global_id(1);
-    if (x < cols && y < rows)
-    {
-        size_t idx = y * ( srcStep >> 3 ) + x;
-        dstMat[idx] = exp(src1Mat[idx]);
-    }
+	size_t x = get_global_id(0);
+	size_t y = get_global_id(1);
+	
+	if (x < cols && y < rows)
+	{
+		size_t idx = y * (srcStep >> 3) + x;
+		dstMat[idx] = exp(src1Mat[idx]);
+	}
 }
 
 /*****************************************LOG***************************************/
-__kernel void arithm_op_log_5 (int rows,int cols,int srcStep,__global float *src1Mat,
-                             __global float * dstMat,int channels)
+__kernel void arithm_op_log_5(int rows, int cols, int srcStep, __global float *src1Mat,
+                              __global float *dstMat, int channels)
 {
-    size_t x = get_global_id(0);
-    size_t y = get_global_id(1);
-    if (x < cols && y < rows)
-    {
-        size_t idx = y * ( srcStep >> 2 ) + x;
-        dstMat[idx] =(float) log((float)src1Mat[idx]);
-    }
+	size_t x = get_global_id(0);
+	size_t y = get_global_id(1);
+	
+	if (x < cols && y < rows)
+	{
+		size_t idx = y * (srcStep >> 2) + x;
+		dstMat[idx] = (float) log((float)src1Mat[idx]);
+	}
 }
-__kernel void arithm_op_log_6 (int rows,int cols,int srcStep,__global double *src1Mat,
-                             __global double * dstMat,int channels)
+__kernel void arithm_op_log_6(int rows, int cols, int srcStep, __global double *src1Mat,
+                              __global double *dstMat, int channels)
 {
-    size_t x = get_global_id(0);
-    size_t y = get_global_id(1);
-    if (x < cols && y < rows)
-    {
-        size_t idx = y * ( srcStep >> 3 ) + x;
-        dstMat[idx] = log(src1Mat[idx]);
-    }
+	size_t x = get_global_id(0);
+	size_t y = get_global_id(1);
+	
+	if (x < cols && y < rows)
+	{
+		size_t idx = y * (srcStep >> 3) + x;
+		dstMat[idx] = log(src1Mat[idx]);
+	}
 }

@@ -33,65 +33,73 @@
 //
 //
 
-__kernel void convertC3C4_D0(__global const char4 * restrict src, __global char4 *dst, int cols, int rows, 
-					int srcStep, int dstStep)
+__kernel void convertC3C4_D0(__global const char4 *restrict src, __global char4 *dst, int cols, int rows,
+                             int srcStep, int dstStep)
 {
 	int id = get_global_id(0);
 	int y = id / cols;
 	int x = id % cols;
-
+	
 	int d = y * srcStep + x * 3;
-	char8 data = (char8)(src[d>>2], src[(d>>2) + 1]);
+	char8 data = (char8)(src[d >> 2], src[(d >> 2) + 1]);
 	char temp[8] = {data.s0, data.s1, data.s2, data.s3, data.s4, data.s5, data.s6, data.s7};
 	
 	int start = d & 3;
 	char4 ndata = (char4)(temp[start], temp[start + 1], temp[start + 2], 0);
-	if(y < rows)
+	
+	if (y < rows)
+	{
 		dst[y * dstStep + x] = ndata;
+	}
 }
 
-__kernel void convertC3C4_D1(__global const short* restrict src, __global short4 *dst, int cols, int rows, 
-					int srcStep, int dstStep)
+__kernel void convertC3C4_D1(__global const short *restrict src, __global short4 *dst, int cols, int rows,
+                             int srcStep, int dstStep)
 {
 	int id = get_global_id(0);
 	int y = id / cols;
 	int x = id % cols;
-
-	int d = (y * srcStep + x * 6)>>1;
-	short4 data = *(__global short4 *)(src + ((d>>1)<<1));
+	
+	int d = (y * srcStep + x * 6) >> 1;
+	short4 data = *(__global short4 *)(src + ((d >> 1) << 1));
 	short temp[4] = {data.s0, data.s1, data.s2, data.s3};
 	
 	int start = d & 1;
 	short4 ndata = (short4)(temp[start], temp[start + 1], temp[start + 2], 0);
-	if(y < rows)
+	
+	if (y < rows)
+	{
 		dst[y * dstStep + x] = ndata;
+	}
 }
 
-__kernel void convertC3C4_D2(__global const int * restrict src, __global int4 *dst, int cols, int rows, 
-					int srcStep, int dstStep)
+__kernel void convertC3C4_D2(__global const int *restrict src, __global int4 *dst, int cols, int rows,
+                             int srcStep, int dstStep)
 {
 	int id = get_global_id(0);
 	int y = id / cols;
 	int x = id % cols;
-
-	int d = (y * srcStep + x * 12)>>2;
+	
+	int d = (y * srcStep + x * 12) >> 2;
 	int4 data = *(__global int4 *)(src + d);
 	data.z = 0;
 	
-	if(y < rows)
+	if (y < rows)
+	{
 		dst[y * dstStep + x] = data;
+	}
 }
 
-__kernel void convertC4C3_D2(__global const int4 * restrict src, __global int *dst, int cols, int rows, 
-					int srcStep, int dstStep)
+__kernel void convertC4C3_D2(__global const int4 *restrict src, __global int *dst, int cols, int rows,
+                             int srcStep, int dstStep)
 {
 	int id = get_global_id(0);
 	int y = id / cols;
 	int x = id % cols;
-
+	
 	int4 data = src[y * srcStep + x];
 	
-	if(y < rows)
+	if (y < rows)
 	{
 		int d = y * dstStep + x * 3;
 		dst[d] = data.x;
@@ -100,16 +108,16 @@ __kernel void convertC4C3_D2(__global const int4 * restrict src, __global int *d
 	}
 }
 
-__kernel void convertC4C3_D1(__global const short4 * restrict src, __global short *dst, int cols, int rows, 
-					int srcStep, int dstStep)
+__kernel void convertC4C3_D1(__global const short4 *restrict src, __global short *dst, int cols, int rows,
+                             int srcStep, int dstStep)
 {
 	int id = get_global_id(0);
 	int y = id / cols;
 	int x = id % cols;
-
+	
 	short4 data = src[y * srcStep + x];
 	
-	if(y < rows)
+	if (y < rows)
 	{
 		int d = y * dstStep + x * 3;
 		dst[d] = data.x;
@@ -118,16 +126,16 @@ __kernel void convertC4C3_D1(__global const short4 * restrict src, __global shor
 	}
 }
 
-__kernel void convertC4C3_D0(__global const char4 * restrict src, __global char *dst, int cols, int rows, 
-					int srcStep, int dstStep)
+__kernel void convertC4C3_D0(__global const char4 *restrict src, __global char *dst, int cols, int rows,
+                             int srcStep, int dstStep)
 {
 	int id = get_global_id(0);
 	int y = id / cols;
 	int x = id % cols;
-
+	
 	char4 data = src[y * srcStep + x];
 	
-	if(y < rows)
+	if (y < rows)
 	{
 		int d = y * dstStep + x * 3;
 		dst[d] = data.x;

@@ -60,24 +60,24 @@
 #define CV_DESCALE(x,n) (((x) + (1 << ((n)-1))) >> (n))
 enum
 {
-    yuv_shift  = 14,
-    xyz_shift  = 12,
-    R2Y        = 4899,
-    G2Y        = 9617,
-    B2Y        = 1868,
-    BLOCK_SIZE = 256
+	yuv_shift  = 14,
+	xyz_shift  = 12,
+	R2Y        = 4899,
+	G2Y        = 9617,
+	B2Y        = 1868,
+	BLOCK_SIZE = 256
 };
 
-__kernel void RGB2Gray(int cols,int rows,int src_step,int dst_step,int channels,
-                       int bidx, __global const DATA_TYPE* src, __global DATA_TYPE* dst)
+__kernel void RGB2Gray(int cols, int rows, int src_step, int dst_step, int channels,
+                       int bidx, __global const DATA_TYPE *src, __global DATA_TYPE *dst)
 {
-    const int x = get_global_id(0);
-    const int y = get_global_id(1);
-
-    if (y < rows && x < cols)
-    {
-        int src_idx = y * src_step + x * channels * sizeof(DATA_TYPE);
-        int dst_idx = y * dst_step + x * sizeof(DATA_TYPE);
-        dst[dst_idx] = (DATA_TYPE)CV_DESCALE((src[src_idx + bidx] * B2Y + src[src_idx + 1] * G2Y + src[src_idx + (bidx^2)] * R2Y), yuv_shift);
-    }
-}   
+	const int x = get_global_id(0);
+	const int y = get_global_id(1);
+	
+	if (y < rows && x < cols)
+	{
+		int src_idx = y * src_step + x * channels * sizeof(DATA_TYPE);
+		int dst_idx = y * dst_step + x * sizeof(DATA_TYPE);
+		dst[dst_idx] = (DATA_TYPE)CV_DESCALE((src[src_idx + bidx] * B2Y + src[src_idx + 1] * G2Y + src[src_idx + (bidx ^ 2)] * R2Y), yuv_shift);
+	}
+}

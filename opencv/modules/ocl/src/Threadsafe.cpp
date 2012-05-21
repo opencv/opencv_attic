@@ -46,15 +46,17 @@
 #include "opencv2/ocl/Threadsafe.h"
 
 
-CriticalSection::CriticalSection() {
+CriticalSection::CriticalSection()
+{
 #if defined WIN32 || defined _WIN32
-	InitializeCriticalSection(&m_CritSec); 
+	InitializeCriticalSection(&m_CritSec);
 #else
 	pthread_mutex_init(&m_CritSec, NULL);
 #endif
 }
 
-CriticalSection::~CriticalSection() {
+CriticalSection::~CriticalSection()
+{
 #if defined WIN32 || defined _WIN32
 	DeleteCriticalSection(&m_CritSec);
 #else
@@ -62,7 +64,8 @@ CriticalSection::~CriticalSection() {
 #endif
 }
 
-void CriticalSection::Lock() {
+void CriticalSection::Lock()
+{
 #if defined WIN32 || defined _WIN32
 	EnterCriticalSection(&m_CritSec);
 #else
@@ -70,7 +73,8 @@ void CriticalSection::Lock() {
 #endif
 }
 
-void CriticalSection::Unlock() {
+void CriticalSection::Unlock()
+{
 #if defined WIN32 || defined _WIN32
 	LeaveCriticalSection(&m_CritSec);
 #else
