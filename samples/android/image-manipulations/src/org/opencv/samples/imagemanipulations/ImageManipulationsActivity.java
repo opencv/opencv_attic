@@ -72,7 +72,7 @@ public class ImageManipulationsActivity extends Activity {
         Log.i(TAG, "onCreate");
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
-        if (!OpenCVLoader.initStatic())
+        if (OpenCVLoader.initStatic())
         {
         	 mView = new ImageManipulationsView(this);
         	 setContentView(mView);
