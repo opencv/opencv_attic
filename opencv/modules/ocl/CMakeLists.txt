@@ -31,20 +31,13 @@ install(FILES ${lib_hdrs}
     COMPONENT main)
 
 ocv_add_precompiled_headers(${the_module})
-if(UNIX)
-add_custom_command(TARGET ${the_module}
-PRE_BUILD
-COMMAND ../../../modules/ocl/streamlineCL
-)
-else()
+if(WIN32)
 add_custom_command(TARGET ${the_module}
 PRE_BUILD
 COMMAND  cd ../../../modules/ocl
 COMMAND streamlineCL
 )
 endif()
-
-
 ################################################################################################################
 ################################      OpenCL Module Tests     ##################################################
 ################################################################################################################
@@ -53,3 +46,11 @@ file(GLOB test_hdrs "test/*.hpp" "test/*.h")
 
 ocv_add_accuracy_tests(FILES "Include" ${test_hdrs}
                        FILES "Src" ${test_srcs})
+################################################################################################################
+################################   OpenCL Module Performance  ##################################################
+################################################################################################################
+file(GLOB perf_srcs "perf/*.cpp")
+file(GLOB perf_hdrs "perf/*.hpp" "perf/*.h")
+
+ocv_add_perf_tests(FILES "Include" ${perf_hdrs}
+                       FILES "Src" ${perf_srcs})

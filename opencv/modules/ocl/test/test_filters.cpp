@@ -843,7 +843,7 @@ INSTANTIATE_TEST_CASE_P(Filter, Dilate, Combine(Values(CV_8UC1, CV_8UC4, CV_32FC
 
 
 INSTANTIATE_TEST_CASE_P(Filter, Sobel, Combine(Values(CV_8UC1, CV_8UC4, CV_32FC1, CV_32FC4),
-                        Values(0, 1), Values(0, 1), Values(3, 5, 7), Values((MatType)cv::BORDER_CONSTANT,
+                        Values(1, 2), Values(0, 1), Values(3, 5, 7), Values((MatType)cv::BORDER_CONSTANT,
                                 (MatType)cv::BORDER_REPLICATE, (MatType)cv::BORDER_REFLECT, (MatType)cv::BORDER_REFLECT_101)));
 
 
