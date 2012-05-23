@@ -1,11 +1,11 @@
 package org.opencv.samples.puzzle15;
 
+import org.opencv.android.InstallCallbackInterface;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.LocalActivityManager;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.os.Bundle;
@@ -169,6 +169,32 @@ public class puzzle15Activity extends Activity implements LoaderCallbackInterfac
 		}
 	}
 
+	public void onLibraryInstall(final InstallCallbackInterface Callback)
+	{
+        AlertDialog InstallMessage = new AlertDialog.Builder(this).create();
+        InstallMessage.setTitle("OpenCV library not found");
+        InstallMessage.setMessage("OpenCV library package was not found! Try to install it?");
+        InstallMessage.setButton("Yes", new OnClickListener()
+        {
+            public void onClick(DialogInterface dialog, int which)
+            {
+            	Callback.install();
+            }
+        }
+        );
+
+        InstallMessage.setButton2("No", new OnClickListener() {
+
+        	public void onClick(DialogInterface dialog, int which)
+        	{
+        		Callback.cancel();
+            }
+        });
+
+        InstallMessage.show();
+
+	}
+	
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         Log.i(TAG, "onCreateOptionsMenu");

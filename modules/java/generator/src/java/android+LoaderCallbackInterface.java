@@ -5,9 +5,9 @@ package org.opencv.android;
  */
 public interface LoaderCallbackInterface
 {
-	/**
-	 * OpenCV initialization finished successfully
-	 */
+    /**
+     * OpenCV initialization finished successfully
+     */
     static final int SUCCESS = 0;
     /**
      * OpenCV Engine service is not installed on the device. App need to notify user about it
@@ -39,4 +39,6 @@ public interface LoaderCallbackInterface
      * @param status Status of initialization. See Initialization status constants
      */
     public void onEngineConnected(int status);
+    
+    public void onLibraryInstall(InstallCallbackInterface Callback);
 };

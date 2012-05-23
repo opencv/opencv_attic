@@ -36,6 +36,6 @@ public class OpenCVLoader
     public static boolean initAsync(String Version, Context AppContext,
             LoaderCallbackInterface Callback)
     {
-    	return AsyncServiceHelper.initOpenCV(Version, AppContext, Callback);
+        return AsyncServiceHelper.initOpenCV(Version, AppContext, Callback);
     }
 }
