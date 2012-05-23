@@ -2,6 +2,7 @@
 #include "ProcReader.h"
 #include "TegraDetector.h"
 #include "HardwareDetector.h"
+#include "StringUtils.h"
 
 using namespace std;
 

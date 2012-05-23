@@ -21,7 +21,7 @@ public:
     ServiceStarter()
     {
 	PackageManager = new PackageManagerStub();
-	PackageInfo info(PackOpenCVersion(2,3), PLATFORM_TEGRA3, 0);
+	PackageInfo info("2.3", PLATFORM_TEGRA3, 0);
 	PackageManager->InstalledPackages.push_back(info);
 	
 	Engine = new OpenCVEngine(PackageManager);
@@ -71,7 +71,7 @@ TEST(OpenCVEngineTest, InstallVersion)
 {
     sp<IOpenCVEngine> Engine = InitConnect();
     EXPECT_FALSE(NULL == Engine.get());
-    bool result = Engine->InstallVersion(PackOpenCVersion(2,4));
+    bool result = Engine->InstallVersion(String16("2.4"));
     EXPECT_EQ(true, result);
 }
 
@@ -79,7 +79,7 @@ TEST(OpenCVEngineTest, GetPathForExistVersion)
 {
     sp<IOpenCVEngine> Engine = InitConnect();
     EXPECT_FALSE(NULL == Engine.get());
-    String16 result = Engine->GetLibPathByVersion(PackOpenCVersion(2,3));
+    String16 result = Engine->GetLibPathByVersion(String16("2.3"));
     EXPECT_STREQ("/data/data/org.opencv.lib_v23_tegra3/lib",String8(result).string());
 }
 
@@ -87,7 +87,7 @@ TEST(OpenCVEngineTest, GetPathForUnExistVersion)
 {
     sp<IOpenCVEngine> Engine = InitConnect();
     EXPECT_FALSE(NULL == Engine.get());
-    String16 result = Engine->GetLibPathByVersion(PackOpenCVersion(2,5));
+    String16 result = Engine->GetLibPathByVersion(String16("2.5"));
     EXPECT_EQ(0, result.size());
 }
 
@@ -95,7 +95,7 @@ TEST(OpenCVEngineTest, InstallAndGetVersion)
 {
     sp<IOpenCVEngine> Engine = InitConnect();
     EXPECT_FALSE(NULL == Engine.get());
-    EXPECT_TRUE(Engine->InstallVersion(PackOpenCVersion(2,5)));
-    String16 result = Engine->GetLibPathByVersion(PackOpenCVersion(2,5));
+    EXPECT_TRUE(Engine->InstallVersion(String16("2.5")));
+    String16 result = Engine->GetLibPathByVersion(String16("2.5"));
     EXPECT_STREQ("/data/data/org.opencv.lib_v25_tegra3/lib", String8(result).string());
 }
