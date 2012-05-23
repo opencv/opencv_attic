@@ -9,14 +9,15 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.net.Uri;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
 
 public class AsyncServiceHelper
 {
-    public static boolean initOpenCV(String Version, Context AppContext,
-            LoaderCallbackInterface Callback)
+    public static boolean initOpenCV(String Version, final Context AppContext,
+            final LoaderCallbackInterface Callback)
     {
         AsyncServiceHelper helper = new AsyncServiceHelper(Version, AppContext, Callback);
         if (AppContext.bindService(new Intent("org.opencv.engine.BIND"),
@@ -27,7 +28,57 @@ public class AsyncServiceHelper
         else
         {
             AppContext.unbindService(helper.mServiceConnection);
-            Callback.onEngineConnected(LoaderCallbackInterface.NO_SERVICE);
+            
+            InstallCallbackInterface InstallQuery = new InstallCallbackInterface() {
+            	public String getPackageName()
+            	{
+            		return "OpenCV Engine Service";
+            	}
+            	public void install() {
+                    Log.d(TAG, "Trying to install OpenCV Engine via Google Play");
+
+			        boolean result = true;
+			        try
+	                {
+			        	Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(OPEN_CV_SERVICE_URL));
+			        	intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+			        	AppContext.startActivity(intent);
+	                }
+	                catch(Exception e)
+	                {
+	                	result = false;
+	                }
+                    
+                	if (result)
+                    {
+                        int Status = LoaderCallbackInterface.RESTART_REQUIRED;
+                        Log.d(TAG, "Init finished with status " + Status);
+                        Log.d(TAG, "Calling using callback");
+                        Callback.onEngineConnected(Status);
+                    }
+                    else
+                    {
+                        Log.d(TAG, "OpenCV package was not installed!");
+                        int Status = LoaderCallbackInterface.MARKET_ERROR;
+                        Log.d(TAG, "Init finished with status " + Status);
+                        Log.d(TAG, "Unbind from service");
+                        Log.d(TAG, "Calling using callback");
+                        Callback.onEngineConnected(Status);
+                    }
+                }
+
+                public void cancel()
+                {
+                    Log.d(TAG, "OpenCV library installation was canceled");
+                    int Status = LoaderCallbackInterface.INSTALL_CANCELED;
+                    Log.d(TAG, "Init finished with status " + Status);
+                    Log.d(TAG, "Calling using callback");
+                    Callback.onEngineConnected(Status);
+                }
+            };
+
+            Callback.onPackageInstall(InstallQuery);
+            
             return false;
         }
     }
@@ -47,6 +98,11 @@ public class AsyncServiceHelper
     protected String mOpenCVersion;
     protected Context mAppContext;
     protected int mStatus = LoaderCallbackInterface.SUCCESS;
+    
+    /**
+     * Url for OpenCV Engine on Google Play (Android Market)
+     */
+    protected static final String OPEN_CV_SERVICE_URL = "market://details?id=org.opencv.engine";
 
     protected ServiceConnection mServiceConnection = new ServiceConnection()
     {
@@ -79,46 +135,48 @@ public class AsyncServiceHelper
                     if ((null == path) || (path.length() == 0))
                     {
                         InstallCallbackInterface InstallQuery = new InstallCallbackInterface() {
-							
-							public void install() {
-				                Log.d(TAG, "Trying to install OpenCV lib via Google Play");
+                        	public String getPackageName()
+                        	{
+                        		return "OpenCV library";
+                        	}
+                        	public void install() {
+                                Log.d(TAG, "Trying to install OpenCV lib via Google Play");
+                                try
+                                {
+                                    if (mEngineService.installVersion(mOpenCVersion))
+                                    {
+                                        mStatus = LoaderCallbackInterface.RESTART_REQUIRED;
+                                    }
+                                    else
+                                    {
+                                        Log.d(TAG, "OpenCV package was not installed!");
+                                        mStatus = LoaderCallbackInterface.MARKET_ERROR;
+                                    }
+                                } catch (RemoteException e) {
+                                    e.printStackTrace();
+                                    mStatus = LoaderCallbackInterface.INIT_FAILED;
+                                }
 
-				                try
-				                {
-				                    if (mEngineService.installVersion(mOpenCVersion))
-				                    {
-				                        mStatus = LoaderCallbackInterface.RESTART_REQUIRED;
-				                    }
-				                    else
-				                    {
-				                        Log.d(TAG, "OpenCV package was not installed!");
-				                        mStatus = LoaderCallbackInterface.MARKET_ERROR;
-				                    }
-				                } catch (RemoteException e) {
-				                    e.printStackTrace();
-				                    mStatus = LoaderCallbackInterface.INIT_FAILED;
-				                }
+                                Log.d(TAG, "Init finished with status " + mStatus);
+                                Log.d(TAG, "Unbind from service");
+                                mAppContext.unbindService(mServiceConnection);
+                                Log.d(TAG, "Calling using callback");
+                                mUserAppCallback.onEngineConnected(mStatus);
+                            }
 
-				                Log.d(TAG, "Init finished with status " + mStatus);
-				                Log.d(TAG, "Unbind from service");
-				                mAppContext.unbindService(mServiceConnection);
-				                Log.d(TAG, "Calling using callback");
-				                mUserAppCallback.onEngineConnected(mStatus);								
-							}
-							
-							public void cancel() {
-				                Log.d(TAG, "OpenCV library installation was canceled");
-				                mStatus = LoaderCallbackInterface.INSTALL_CANCELED;
-				                Log.d(TAG, "Init finished with status " + mStatus);
-				                Log.d(TAG, "Unbind from service");
-				                mAppContext.unbindService(mServiceConnection);
-				                Log.d(TAG, "Calling using callback");
-				                mUserAppCallback.onEngineConnected(mStatus);	
-							}
-						};
-						
-						mUserAppCallback.onLibraryInstall(InstallQuery);
-						return;
+                            public void cancel() {
+                                Log.d(TAG, "OpenCV library installation was canceled");
+                                mStatus = LoaderCallbackInterface.INSTALL_CANCELED;
+                                Log.d(TAG, "Init finished with status " + mStatus);
+                                Log.d(TAG, "Unbind from service");
+                                mAppContext.unbindService(mServiceConnection);
+                                Log.d(TAG, "Calling using callback");
+                                mUserAppCallback.onEngineConnected(mStatus);
+                            }
+                        };
+
+                        mUserAppCallback.onPackageInstall(InstallQuery);
+                        return;
                     }
                     else
                     {

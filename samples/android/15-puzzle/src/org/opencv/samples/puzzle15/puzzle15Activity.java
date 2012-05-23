@@ -8,6 +8,8 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -97,8 +99,8 @@ public class puzzle15Activity extends Activity implements LoaderCallbackInterfac
 			{
 				Log.d(TAG, "OpenCV downloading. App restart is needed!");
 				AlertDialog ResartMessage = new AlertDialog.Builder(this).create();
-				ResartMessage.setTitle("App restart is needed");
-				ResartMessage.setMessage("Application will be closed now. Start it when installtion of OpenCV library will be finished!");
+				ResartMessage.setTitle("App restart is required");
+				ResartMessage.setMessage("Application will be closed now. Start it when installtion will be finished!");
 				ResartMessage.setButton("OK", new OnClickListener() {	
 					public void onClick(DialogInterface dialog, int which) {
 						finish();
@@ -112,8 +114,16 @@ public class puzzle15Activity extends Activity implements LoaderCallbackInterfac
 				Log.d(TAG, "OpenCVEngine Service is not installed!");
 				AlertDialog NoServiceMessage = new AlertDialog.Builder(this).create();
 				NoServiceMessage.setTitle("OpenCV Engine");
-				NoServiceMessage.setMessage("OpenCV Engine service was not found. Install it using Google Play!");
-				NoServiceMessage.setButton("OK", new OnClickListener() {	
+				NoServiceMessage.setMessage("OpenCV Engine service was not found. Install it?");
+				NoServiceMessage.setButton("Install", new OnClickListener() {
+					
+					public void onClick(DialogInterface dialog, int which) {
+
+				        finish();
+					}
+				});
+				
+				NoServiceMessage.setButton2("Exit", new OnClickListener() {	
 					public void onClick(DialogInterface dialog, int which) {
 						finish();
 					}
@@ -122,10 +132,10 @@ public class puzzle15Activity extends Activity implements LoaderCallbackInterfac
 			} break;
 			case LoaderCallbackInterface.MARKET_ERROR:
 			{
-				Log.d(TAG, "OpenCVEngine Service is not installed! \n Get it here: " + OpenCVLoader.OPEN_CV_SERVICE_URL);
+				Log.d(TAG, "Google Play service is not installed! You can get it here");
 				AlertDialog MarketErrorMessage = new AlertDialog.Builder(this).create();
 				MarketErrorMessage.setTitle("OpenCV Engine");
-				MarketErrorMessage.setMessage("OpenCV Library package instalation failed!");
+				MarketErrorMessage.setMessage("Package instalation failed!");
 				MarketErrorMessage.setButton("OK", new OnClickListener() {
 					public void onClick(DialogInterface dialog, int which) {
 						finish();
@@ -169,19 +179,18 @@ public class puzzle15Activity extends Activity implements LoaderCallbackInterfac
 		}
 	}
 
-	public void onLibraryInstall(final InstallCallbackInterface Callback)
+	public void onPackageInstall(final InstallCallbackInterface Callback)
 	{
         AlertDialog InstallMessage = new AlertDialog.Builder(this).create();
-        InstallMessage.setTitle("OpenCV library not found");
-        InstallMessage.setMessage("OpenCV library package was not found! Try to install it?");
+        InstallMessage.setTitle("Package not found");
+        InstallMessage.setMessage(Callback.getPackageName() + " package was not found! Try to install it?");
         InstallMessage.setButton("Yes", new OnClickListener()
         {
             public void onClick(DialogInterface dialog, int which)
             {
             	Callback.install();
             }
-        }
-        );
+        });
 
         InstallMessage.setButton2("No", new OnClickListener() {
 
@@ -192,7 +201,6 @@ public class puzzle15Activity extends Activity implements LoaderCallbackInterfac
         });
 
         InstallMessage.show();
-
 	}
 	
     @Override

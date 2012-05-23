@@ -39,6 +39,6 @@ public interface LoaderCallbackInterface
      * @param status Status of initialization. See Initialization status constants
      */
     public void onEngineConnected(int status);
-    
-    public void onLibraryInstall(InstallCallbackInterface Callback);
+
+    public void onPackageInstall(InstallCallbackInterface Callback);
 };
