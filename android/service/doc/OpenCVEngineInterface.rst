@@ -8,7 +8,9 @@ Java OpenCV OpenCVEngineInterface
     :synopsis: Defines OpenCV Engine interface for Android.
 .. Class:: OpenCVEngineInterface
 
-OpenCVEngineInterface class provides Java interface to OpenCV Engine Service. Is synchronious with native OpenCVEngine class.
+OpenCVEngineInterface class provides Java interface to OpenCV Engine Service. Is synchronious with native OpenCVEngine class
+
+.. note:: Do not use this class directly. Use OpenCVLoader instead!
 
 int getEngineVersion()
 ----------------------

@@ -13,7 +13,7 @@ Helper class provides common initialization methods for OpenCV library
 boolean initStatic()
 --------------------
 
-.. method:: boolean initStatic()
+.. method:: static boolean initStatic()
     
     Load and initialize OpenCV library from current application package. Roughly it is analog of system.loadLibrary("opencv_java")
 
@@ -25,7 +25,7 @@ boolean initStatic()
 boolean initAsync()
 -------------------
 
-.. method:: int initAsync(String Version, Context AppContext, LoaderCallbackInterface Callback)
+.. method:: static boolean initAsync(String Version, Context AppContext, LoaderCallbackInterface Callback)
 
     Load and initialize OpenCV library using OpenCV Engine service.
 

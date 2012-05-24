@@ -11,6 +11,7 @@ Contents:
    UseCases
    JavaHelper
    OpenCVEngineInterface
+   StaticHelper
    AsyncServiceHelper
    NativeHelper
    IOpenCVEngine
