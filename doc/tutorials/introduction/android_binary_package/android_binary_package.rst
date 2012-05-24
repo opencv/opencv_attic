@@ -319,7 +319,7 @@ To use OpenCV functionality you need to add OpenCV library initialization before
    :linenos:
 
     static {
-        if (!Helper.InitOpenCVStatic()) {
+        if (!OpenCVLoader.initStatic()) {
             // Report initialisation error
         }
     }
@@ -330,7 +330,7 @@ If you application includes other OpenCV-dependent native libraries you need to 
     :linenos:
 
     static {
-        if (Helper.InitOpenCVStatic()) {
+        if (OpenCVLoader.initStatic()) {
             System.loadLibrary("my_super_lib1");
             System.loadLibrary("my_super_lib2");
         } else {
@@ -380,60 +380,139 @@ There is a very base code snippet for Async init. It shows only basis principles
 	    }
 	}
 
-	public void OnEngineConnected(int status)
+	/** LoaderCallbackInterface method. Called when OpenCV initialization will be finished **/
+	public void onEngineConnected(int status)
 	{
-	    switch (status)
-	    {
-		case Helper.Success:
-	    {
-		    Log.i(TAG, "OpenCV loaded successfully!");
-		    mView = new MyView(this);
-		    setContentView(mView);
-		} break;
-		case Helper.RestartRequired:
+		switch (status)
 		{
-		    Log.d(TAG, "OpenCV downloading. App restart is needed!");
-		    AlertDialog ResartMessage = new AlertDialog.Builder(this).create();
-		    ResartMessage.setTitle("App restart is needed");
-		    ResartMessage.setMessage("Application will be closed now. Start it when installtion of OpenCV library will be finished!");
-		    ResartMessage.setButton("OK", new OnClickListener() {	
-			    public void onClick(DialogInterface dialog, int which) {
-					finish();
+			/** OpenCV initialization was successful. **/
+			case LoaderCallbackInterface.SUCCESS:
+			{
+				Log.i(TAG, "OpenCV loaded successfully");
+				// Create and set View
+				mView = new puzzle15View(this);
+				setContentView(mView);
+				// Check native OpenCV camera
+				if( !mView.openCamera() ) {
+					AlertDialog ad = new AlertDialog.Builder(this).create();  
+					ad.setCancelable(false); // This blocks the 'BACK' button  
+					ad.setMessage("Fatal error: can't open camera!");  
+					ad.setButton("OK", new DialogInterface.OnClickListener() {  
+					    public void onClick(DialogInterface dialog, int which) {  
+					        dialog.dismiss();                      
+							finish();
+					    }  
+					});  
+					ad.show();
 				}
-			});
-		} break;
-		case LoaderCallbackInterface.NO_SERVICE:
-		{
-		    Log.d(TAG, "OpenCVEngine Service is not installed!");
-		    AlertDialog NoServiceMessage = new AlertDialog.Builder(this).create();
-		    NoServiceMessage.setTitle("OpenCV Engine");
-		    NoServiceMessage.setMessage("OpenCV Engine service was not found. Install it using Google Play!");
-		    NoServiceMessage.setButton("OK", new OnClickListener() {	
-			public void onClick(DialogInterface dialog, int which) {
-					finish();
-				}
-			});
-			NoServiceMessage.show();
-		} break;
-		case LoaderCallbackInterface.MARKET_ERROR:
-		{
-		    Log.d(TAG, "OpenCVEngine Service is not installed! \n Get it here: " + OpenCVLoader.OPEN_CV_SERVICE_URL);
-		    AlertDialog MarketErrorMessage = new AlertDialog.Builder(this).create();
-		    MarketErrorMessage.setTitle("OpenCV Engine");
-		    MarketErrorMessage.setMessage("OpenCV Library package instalation failed!");
-		    MarketErrorMessage.setButton("OK", new OnClickListener() {
-			public void onClick(DialogInterface dialog, int which) {
+
+			} break;
+			/** OpenCV engine or library package installation is in progress. Restart of application is required **/
+			case LoaderCallbackInterface.RESTART_REQUIRED:
+			{
+				Log.d(TAG, "OpenCV downloading. App restart is needed!");
+				AlertDialog ResartMessage = new AlertDialog.Builder(this).create();
+				ResartMessage.setTitle("App restart is required");
+				ResartMessage.setMessage("Application will be closed now. Start it when installtion will be finished!");
+				ResartMessage.setButton("OK", new OnClickListener() {	
+					public void onClick(DialogInterface dialog, int which) {
+						finish();
+					}
+				});
+
+				ResartMessage.show();
+			} break;
+			/** OpenCV loader cannot find OpenCV Engine Service on the device **/
+			case LoaderCallbackInterface.NO_SERVICE:
+			{
+				Log.d(TAG, "OpenCVEngine Service is not installed!");
+				AlertDialog NoServiceMessage = new AlertDialog.Builder(this).create();
+				NoServiceMessage.setTitle("OpenCV Engine");
+				NoServiceMessage.setMessage("OpenCV Engine service was not found");
+				NoServiceMessage.setButton("Ok", new OnClickListener() {
+					
+					public void onClick(DialogInterface dialog, int which) {
+				        finish();
+					}
+				});				
+				NoServiceMessage.show();
+			} break;
+			/** OpenCV loader cannot start Google Play **/
+			case LoaderCallbackInterface.MARKET_ERROR:
+			{
+				Log.d(TAG, "Google Play service is not installed! You can get it here");
+				AlertDialog MarketErrorMessage = new AlertDialog.Builder(this).create();
+				MarketErrorMessage.setTitle("OpenCV Engine");
+				MarketErrorMessage.setMessage("Package instalation failed!");
+				MarketErrorMessage.setButton("OK", new OnClickListener() {
+					public void onClick(DialogInterface dialog, int which) {
+						finish();
+					}
+				});
+				MarketErrorMessage.show();
+			} break;
+			/** Package installation was canceled **/
+			case LoaderCallbackInterface.INSTALL_CANCELED:
+			{
+				Log.d(TAG, "OpenCV library instalation was canceled by user");
 				finish();
+			} break;
+			/** Application is incompatible with OpenCV Engine. Possible Service update is needed **/
+			case LoaderCallbackInterface.INCOMPATIBLE_ENGINE_VERSION:
+			{
+				Log.d(TAG, "OpenCVEngine Service is uncompatible with this app!");
+				AlertDialog IncomatibilityMessage = new AlertDialog.Builder(this).create();
+				IncomatibilityMessage.setTitle("OpenCV Engine");
+				IncomatibilityMessage.setMessage("OpenCV Eingine service is incompatible with this app. Update it!");
+				IncomatibilityMessage.setButton("OK", new OnClickListener() {
+					public void onClick(DialogInterface dialog, int which) {
+						finish();
+					}
+				});
+				IncomatibilityMessage.show();				
 			}
-		    });
-		    MarketErrorMessage.show();
-		} break;
-		default:
-		{
-		    Log.e(TAG, "OpenCV loading failed!");
-		    finish();
-		} break;
-	    }
+			/** Other status, i.e. INIT_FAILED **/
+			default:
+			{
+				Log.e(TAG, "OpenCV loading failed!");
+				AlertDialog InitFailedDialog = new AlertDialog.Builder(this).create();
+				InitFailedDialog.setTitle("OpenCV error");
+				InitFailedDialog.setMessage("OpenCV was not initialised correctly. Application will be shut down");
+				InitFailedDialog.setButton("OK", new OnClickListener() {
+					
+					public void onClick(DialogInterface dialog, int which) {
+						finish();
+					}
+				});
+
+				InitFailedDialog.show();
+			} break;
+		}
+	}
+
+	/** LoaderCallbackInterface method. Called when package installation approve is required **/
+	public void onPackageInstall(final InstallCallbackInterface Callback)
+	{
+        AlertDialog InstallMessage = new AlertDialog.Builder(this).create();
+        InstallMessage.setTitle("Package not found");
+        InstallMessage.setMessage(Callback.getPackageName() + " package was not found! Try to install it?");
+        InstallMessage.setButton("Yes", new OnClickListener()
+        {
+            public void onClick(DialogInterface dialog, int which)
+            {
+            	Callback.install();
+            }
+        });
+
+        InstallMessage.setButton2("No", new OnClickListener() {
+
+        	public void onClick(DialogInterface dialog, int which)
+        	{
+        		Callback.cancel();
+            }
+        });
+
+        InstallMessage.show();
 	}
     }
 

@@ -35,10 +35,14 @@ public interface LoaderCallbackInterface
     static final int INIT_FAILED = 0xff;
 
     /**
-     * Callback method for Async OpenCV initialization
+     * Callback method that is called after OpenCV library initialization
      * @param status Status of initialization. See Initialization status constants
      */
     public void onEngineConnected(int status);
 
-    public void onPackageInstall(InstallCallbackInterface Callback);
+    /**
+     * Callback method that is called in case when package installation is needed
+     * @param callback Answer object with approve and cancel methods and package description
+     */
+    public void onPackageInstall(InstallCallbackInterface callback);
 };

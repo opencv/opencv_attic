@@ -44,9 +44,37 @@ Loader callback interface
 
 .. method:: void onEngineConnected(int status)
 
-    Callback method for Async OpenCV initialization
+    Callback method that is called after OpenCV library initialization
  
     :param status: Status of initialization. See Initialization status constants
+
+.. method:: void onPackageInstall(InstallCallbackInterface Callback)
+
+    Callback method that is called in case when package installation is needed
+
+    @param callback Answer object with approve and cancel methods and package description
+
+Install callback interface
+--------------------------
+
+.. class:: InstallCallbackInterface
+
+    Callback interface for package installation managment 
+
+.. method:: String getPackageName()
+
+    Get name of a package to be installed
+
+    :rtype: String
+    :return: Return package name, i.e. "OpenCV Engine Service" or "OpenCV library"
+
+.. method:: void install()
+
+    Installation of package is approved
+
+.. method:: void cancel()
+
+    Installation canceled
 
 Initialisation status constants
 -------------------------------

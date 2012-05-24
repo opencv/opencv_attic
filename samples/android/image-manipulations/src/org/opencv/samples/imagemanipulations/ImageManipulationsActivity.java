@@ -15,14 +15,14 @@ public class ImageManipulationsActivity extends Activity {
 
 	private static final String TAG = "Sample-ImageManipulations::Activity";
 
-    public static final int     VIEW_MODE_RGBA  = 0;
-    public static final int     VIEW_MODE_HIST  = 1;
-    public static final int     VIEW_MODE_CANNY = 2;
-    public static final int     VIEW_MODE_SEPIA = 3;
-    public static final int     VIEW_MODE_SOBEL = 4;
-    public static final int     VIEW_MODE_ZOOM  = 5;
+    public static final int     VIEW_MODE_RGBA      = 0;
+    public static final int     VIEW_MODE_HIST      = 1;
+    public static final int     VIEW_MODE_CANNY     = 2;
+    public static final int     VIEW_MODE_SEPIA     = 3;
+    public static final int     VIEW_MODE_SOBEL     = 4;
+    public static final int     VIEW_MODE_ZOOM      = 5;
     public static final int     VIEW_MODE_PIXELIZE  = 6;
-    public static final int     VIEW_MODE_POSTERIZE  = 7;
+    public static final int     VIEW_MODE_POSTERIZE = 7;
 
     private MenuItem            mItemPreviewRGBA;
     private MenuItem            mItemPreviewHist;
@@ -72,6 +72,7 @@ public class ImageManipulationsActivity extends Activity {
         Log.i(TAG, "onCreate");
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
+        /** Try to load OpenCV library **/
         if (OpenCVLoader.initStatic())
         {
         	 mView = new ImageManipulationsView(this);
