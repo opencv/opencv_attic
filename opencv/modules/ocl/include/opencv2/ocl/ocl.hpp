@@ -45,7 +45,7 @@
 
 #include <memory>
 #include <vector>
-#include <CL/cl.h>
+
 #include "opencv2/core/core.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/objdetect/objdetect.hpp"
@@ -55,37 +55,34 @@ namespace cv
 {
     namespace ocl
     {
+		#define CVCL_DEVICE_TYPE_DEFAULT                      (1 << 0)
+		#define CVCL_DEVICE_TYPE_CPU                          (1 << 1)
+		#define CVCL_DEVICE_TYPE_GPU                          (1 << 2)
+		#define CVCL_DEVICE_TYPE_ACCELERATOR                  (1 << 3)
+		//#define CVCL_DEVICE_TYPE_CUSTOM                       (1 << 4)
+		#define CVCL_DEVICE_TYPE_ALL                          0xFFFFFFFF
         //this class contains ocl runtime information
-        class CV_EXPORTS OCLInfo
+        class CV_EXPORTS Info
         {
         public:
-            cl_platform_id oclplatform;
-            std::vector<cl_device_id> devices;
-            std::vector<std::string> devName;
-            //cl::Device ocldevice;
-            cl_context oclcontext;
-            cl_command_queue clCmdQueue;
-            int devnum;
-            cl_uint maxDimensions;
-            size_t maxWorkGroupSize;
-            size_t *maxWorkItemSizes;
-            cl_uint maxComputeUnits;
-            char extra_options[512];
-            OCLInfo();
-            OCLInfo(const OCLInfo &m);
-            ~OCLInfo();
+			struct Impl;
+			Impl *impl;
+
+            Info();
+            Info(const Info &m);
+            ~Info();
             void release();
-            OCLInfo &operator = (const OCLInfo &m);
+            Info &operator = (const Info &m);
         };
         //////////////////////////////// Initialization & Info ////////////////////////
         //this function may be obsoleted
-        CV_EXPORTS cl_device_id getDevice();
+        //CV_EXPORTS cl_device_id getDevice();
         //the function must be called before any other cv::ocl::functions, it initialize ocl runtime
-        CV_EXPORTS int getDevice(std::vector<OCLInfo>& oclinfo, cl_device_type devicetype = CL_DEVICE_TYPE_GPU);
+        CV_EXPORTS int getDevice(std::vector<Info>& oclinfo, int devicetype = CVCL_DEVICE_TYPE_GPU);
         //set device you want to use, optional function after getDevice be called
-        CV_EXPORTS void setDevice(OCLInfo &oclinfo, int devnum = 0);
+        CV_EXPORTS void setDevice(Info &oclinfo, int devnum = 0);
 		//this function is not ready yet
-        CV_EXPORTS void getComputeCapability(cl_device_id device, int &major, int &minor);
+        //CV_EXPORTS void getComputeCapability(cl_device_id device, int &major, int &minor);
 
 
         //////////////////////////////// Error handling ////////////////////////
@@ -93,29 +90,20 @@ namespace cv
 
         //////////////////////////////// OpenCL context ////////////////////////
         //This is a global singleton class used to represent a OpenCL context.
-        class ClContext
+        class Context
         {
         protected:
-            ClContext();
-            friend class auto_ptr<ClContext>;
-            static auto_ptr<ClContext> clCxt;
+            Context();
+            friend class auto_ptr<Context>;
+            static auto_ptr<Context> clCxt;
 
         public:
-            ~ClContext();
+            ~Context();
             static int val;
-            static ClContext *getContext();
-            static void setContext(OCLInfo &oclinfo);
-
-            //Information of the OpenCL context
-            cl_context clContext;
-            cl_command_queue clCmdQueue;
-            cl_device_id *devices;
-            cl_uint maxDimensions;
-            size_t maxWorkGroupSize;
-            size_t *maxWorkItemSizes;
-            cl_uint maxComputeUnits;
-            //extra options to recognize vendor specific fp64 extensions
-            char *extra_options;
+            static Context *getContext();
+            static void setContext(Info &oclinfo);
+			struct Impl;
+			Impl *impl;
         };
 
         //////////////////////////////// oclMat ////////////////////////////////
@@ -293,7 +281,7 @@ namespace cv
             uchar *dataend;
 
             //! OpenCL context associated with the oclMat object.
-            ClContext *clCxt;
+            Context *clCxt;
             //add offset for handle ROI, calculated in byte
             int offset;
             //add wholerows and wholecols for the whole matrix, datastart and dataend are no longer used

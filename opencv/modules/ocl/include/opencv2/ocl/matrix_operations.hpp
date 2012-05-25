@@ -194,7 +194,7 @@ namespace cv
         inline oclMat::oclMat(const Mat &m)
             : flags(0), rows(0), cols(0), step(0), data(0), refcount(0), datastart(0), dataend(0) , offset(0), wholerows(0), wholecols(0)
         {
-            //clCxt = ClContext::getContext();
+            //clCxt = Context::getContext();
             upload(m);
         }
 
@@ -228,7 +228,7 @@ namespace cv
 
         inline oclMat &oclMat::operator = (const Mat &m)
         {
-            //clCxt = ClContext::getContext();
+            //clCxt = Context::getContext();
             upload(m);
             return *this;
         }

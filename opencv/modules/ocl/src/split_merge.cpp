@@ -114,7 +114,7 @@ namespace cv
             ////////////////////////////////////////////////////////////////////////////
             void merge_vector_run_no_roi(const oclMat *mat_src, size_t n, oclMat &mat_dst)
             {
-                ClContext  *clCxt = mat_dst.clCxt;
+                Context  *clCxt = mat_dst.clCxt;
                 int channels = mat_dst.channels();
                 int depth = mat_dst.depth();
 
@@ -159,7 +159,7 @@ namespace cv
 
             void merge_vector_run(const oclMat *mat_src, size_t n, oclMat &mat_dst)
             {
-                ClContext  *clCxt = mat_dst.clCxt;
+                Context  *clCxt = mat_dst.clCxt;
                 int channels = mat_dst.channels();
                 int depth = mat_dst.depth();
 
@@ -247,7 +247,7 @@ namespace cv
             //////////////////////////////////////////////////////////////////////////////////////////////////
             void split_vector_run_no_roi(const oclMat &mat_src, oclMat *mat_dst)
             {
-                ClContext  *clCxt = mat_src.clCxt;
+                Context  *clCxt = mat_src.clCxt;
                 int channels = mat_src.channels();
                 int depth = mat_src.depth();
 
@@ -291,7 +291,7 @@ namespace cv
             }
             void split_vector_run(const oclMat &mat_src, oclMat *mat_dst)
             {
-                ClContext  *clCxt = mat_src.clCxt;
+                Context  *clCxt = mat_src.clCxt;
                 int channels = mat_src.channels();
                 int depth = mat_src.depth();
 

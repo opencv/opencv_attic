@@ -313,7 +313,7 @@ void arithmetic_run(const oclMat &src1, const oclMat &src2, oclMat &dst, string 
     CV_Assert(src1.type() == src2.type() && src1.type() == dst.type());
     CV_Assert(src1.depth() != CV_8S);
 
-    ClContext  *clCxt = src1.clCxt;
+    Context  *clCxt = src1.clCxt;
     int channels = dst.channels();
     int depth = dst.depth();
 
@@ -372,7 +372,7 @@ void arithmetic_run(const oclMat &src1, const oclMat &src2, oclMat &dst, const o
     CV_Assert(src1.depth() != CV_8S);
     CV_Assert(mask.type() == CV_8U);
 
-    ClContext  *clCxt = src1.clCxt;
+    Context  *clCxt = src1.clCxt;
     int channels = dst.channels();
     int depth = dst.depth();
 
@@ -459,7 +459,7 @@ void arithmetic_scalar_run(const oclMat &src1, const Scalar &src2, oclMat &dst, 
     if(mask.data)
         CV_Assert(mask.type() == CV_8U && src1.rows == mask.rows && src1.cols == mask.cols);
 
-    ClContext  *clCxt = src1.clCxt;
+    Context  *clCxt = src1.clCxt;
     int channels = dst.channels();
     int depth = dst.depth();
 
@@ -469,7 +469,7 @@ void arithmetic_scalar_run(const oclMat &src1, const Scalar &src2, oclMat &dst, 
 
     cl_int status;
     cl_mem mem;
-    mem = clCreateBuffer(clCxt->clContext, CL_MEM_READ_ONLY, sizeof(WT) * 4, NULL, &status);
+    mem = clCreateBuffer(clCxt->impl->clContext, CL_MEM_READ_ONLY, sizeof(WT) * 4, NULL, &status);
     openCLVerifyCall(status);
     openCLMemcpy2D(clCxt, mem, 4 * sizeof(WT), s , 4 * sizeof(WT), 4 * sizeof(WT), 1, clMemcpyHostToDevice);
 
@@ -526,7 +526,7 @@ void arithmetic_scalar_run(const oclMat &src, oclMat &dst, string kernelName, co
     CV_Assert(src.type() == dst.type());
     CV_Assert(src.depth() != CV_8S);
 
-    ClContext  *clCxt = src.clCxt;
+    Context  *clCxt = src.clCxt;
     int channels = dst.channels();
     int depth = dst.depth();
 
@@ -634,7 +634,7 @@ void compare_run(const oclMat &src1, const oclMat &src2, oclMat &dst, string ker
     dst.create(src1.size(), CV_8UC1);
     CV_Assert(src1.channels() == 1);
     CV_Assert(src1.type() == src2.type());
-    ClContext  *clCxt = src1.clCxt;
+    Context  *clCxt = src1.clCxt;
     int depth = src1.depth();
     int vector_lengths[7] = {4, 0, 4, 4, 4, 4, 4};
     size_t vector_length = vector_lengths[depth];
@@ -733,15 +733,13 @@ void arithmetic_sum_buffer_run(const oclMat &src, cl_mem &dst, int vlen , int gr
 
 Scalar cv::ocl::sum(const oclMat &src)
 {
-    size_t groupnum = 0;
-    openCLSafeCall(clGetDeviceInfo(getDevice(), CL_DEVICE_MAX_COMPUTE_UNITS,
-                                   sizeof(size_t), (void *)&groupnum, NULL));
+    size_t groupnum = src.clCxt->impl->maxComputeUnits;
     CV_Assert(groupnum != 0);
     int vlen = src.channels() == 3 ? 12 : 8, dbsize = groupnum * vlen, status;
     cl_ulong start, end;
-    ClContext *clCxt = src.clCxt;
+    Context *clCxt = src.clCxt;
     double *p = new double[dbsize];
-    cl_mem dstBuffer = clCreateBuffer(clCxt->clContext, CL_MEM_WRITE_ONLY, dbsize * sizeof(double), NULL, &status);
+    cl_mem dstBuffer = clCreateBuffer(clCxt->impl->clContext, CL_MEM_WRITE_ONLY, dbsize * sizeof(double), NULL, &status);
     openCLVerifyCall(status);
     Scalar s;
     s.val[0] = 0.0;
@@ -751,7 +749,7 @@ Scalar cv::ocl::sum(const oclMat &src)
     arithmetic_sum_buffer_run(src, dstBuffer, vlen, groupnum);
 
     memset(p, 0, dbsize * sizeof(double));
-    status = clEnqueueReadBuffer(clCxt->clCmdQueue, (cl_mem)dstBuffer, CL_TRUE, 0,
+    status = clEnqueueReadBuffer(clCxt->impl->clCmdQueue, (cl_mem)dstBuffer, CL_TRUE, 0,
                                  dbsize * sizeof(double), (void *)p, 0, NULL, NULL);
     start = getTickCount();
     for(int i = 0; i < dbsize;)
@@ -861,15 +859,13 @@ void arithmetic_minMax_mask_run(const oclMat &src, const oclMat &mask, cl_mem &d
 
 template <typename T> void arithmetic_minMax(const oclMat &src, double *minVal, double *maxVal, const oclMat &mask)
 {
-    size_t groupnum = 0;
-    openCLSafeCall(clGetDeviceInfo(getDevice(), CL_DEVICE_MAX_COMPUTE_UNITS,
-                                   sizeof(size_t), (void *)&groupnum, NULL));
+    size_t groupnum = src.clCxt->impl->maxComputeUnits;
     CV_Assert(groupnum != 0);
     groupnum = groupnum * 2;
     int vlen = 8;
     int dbsize = groupnum * 2 * vlen * sizeof(T) , status;
-    ClContext *clCxt = src.clCxt;
-    cl_mem dstBuffer = clCreateBuffer(clCxt->clContext, CL_MEM_WRITE_ONLY, dbsize, NULL, &status);
+    Context *clCxt = src.clCxt;
+    cl_mem dstBuffer = clCreateBuffer(clCxt->impl->clContext, CL_MEM_WRITE_ONLY, dbsize, NULL, &status);
     openCLVerifyCall(status);
     *minVal = std::numeric_limits<double>::max() , *maxVal = -std::numeric_limits<double>::max();
     if (mask.empty())
@@ -882,7 +878,7 @@ template <typename T> void arithmetic_minMax(const oclMat &src, double *minVal, 
     }
     T *p = new T[groupnum * vlen * 2];
     memset(p, 0, groupnum * 2 * vlen * sizeof(T));
-    status = clEnqueueReadBuffer(clCxt->clCmdQueue, (cl_mem)dstBuffer, CL_TRUE, 0, dbsize, (void *)p, 0, NULL, NULL);
+    status = clEnqueueReadBuffer(clCxt->impl->clCmdQueue, (cl_mem)dstBuffer, CL_TRUE, 0, dbsize, (void *)p, 0, NULL, NULL);
     for(int i = 0; i < vlen * groupnum; i++)
     {
         *minVal = *minVal < p[i] ? *minVal : p[i];
@@ -983,7 +979,7 @@ void arithmetic_flip_rows_run(const oclMat &src, oclMat &dst, string kernelName)
 
     CV_Assert(src.type() == dst.type());
 
-    ClContext  *clCxt = src.clCxt;
+    Context  *clCxt = src.clCxt;
     int channels = dst.channels();
     int depth = dst.depth();
 
@@ -1025,7 +1021,7 @@ void arithmetic_flip_cols_run(const oclMat &src, oclMat &dst, string kernelName,
     CV_Assert(src.cols == dst.cols && src.rows == dst.rows);
     CV_Assert(src.type() == dst.type());
 
-    ClContext  *clCxt = src.clCxt;
+    Context  *clCxt = src.clCxt;
     int channels = dst.channels();
     int depth = dst.depth();
 
@@ -1087,7 +1083,7 @@ void cv::ocl::flip(const oclMat &src, oclMat &dst, int flipCode)
 //////////////////////////////////////////////////////////////////////////////
 void arithmetic_lut_run(const oclMat &src1, const oclMat &src2, oclMat &dst, string kernelName)
 {
-    ClContext *clCxt = src1.clCxt;
+    Context *clCxt = src1.clCxt;
     int channels = src1.channels();
     int rows = src1.rows;
     int cols = src1.cols;
@@ -1195,7 +1191,7 @@ void arithmetic_exp_log_run(const oclMat &src, oclMat &dst, string kernelName, c
     CV_Assert(src.type() == dst.type());
     CV_Assert( src.type() == CV_32F || src.type() == CV_64F);
 
-    ClContext  *clCxt = src.clCxt;
+    Context  *clCxt = src.clCxt;
 
     //int channels = dst.channels();
     int depth = dst.depth();
@@ -1233,7 +1229,7 @@ void cv::ocl::log(const oclMat &src, oclMat &dst)
 //////////////////////////////////////////////////////////////////////////////
 void arithmetic_magnitude_phase_run(const oclMat &src1, const oclMat &src2, oclMat &dst, string kernelName)
 {
-    ClContext  *clCxt = src1.clCxt;
+    Context  *clCxt = src1.clCxt;
     int channels = dst.channels();
     int depth = dst.depth();
 
@@ -1278,7 +1274,7 @@ void arithmetic_phase_run(const oclMat &src1, const oclMat &src2, oclMat &dst, s
     CV_Assert(src1.cols == src2.cols && src2.cols == dst.cols && src1.rows == src2.rows && src2.rows == dst.rows);
     CV_Assert(src1.type() == src2.type() && src1.type() == dst.type());
 
-    ClContext  *clCxt = src1.clCxt;
+    Context  *clCxt = src1.clCxt;
     int channels = dst.channels();
     int depth = dst.depth();
 
@@ -1333,7 +1329,7 @@ void cv::ocl::phase(const oclMat &x, const oclMat &y, oclMat &Angle , bool angle
 void arithmetic_cartToPolar_run(const oclMat &src1, const oclMat &src2, oclMat &dst_mag, oclMat &dst_cart,
                                 string kernelName, bool angleInDegrees)
 {
-    ClContext  *clCxt = src1.clCxt;
+    Context  *clCxt = src1.clCxt;
     int channels = src1.channels();
     int depth = src1.depth();
 
@@ -1382,7 +1378,7 @@ void cv::ocl::cartToPolar(const oclMat &x, const oclMat &y, oclMat &mag, oclMat 
 void arithmetic_ptc_run(const oclMat &src1, const oclMat &src2, oclMat &dst1, oclMat &dst2, bool angleInDegrees,
                         string kernelName)
 {
-    ClContext  *clCxt = src2.clCxt;
+    Context  *clCxt = src2.clCxt;
     int channels = src2.channels();
     int depth = src2.depth();
 
@@ -1497,14 +1493,12 @@ void cv::ocl::minMaxLoc(const oclMat &src, double *minVal, double *maxVal,
                         Point *minLoc, Point *maxLoc, const oclMat &mask)
 {
     CV_Assert(src.channels() == 1);
-    size_t groupnum = 0;
-    openCLSafeCall(clGetDeviceInfo(getDevice(), CL_DEVICE_MAX_COMPUTE_UNITS,
-                                   sizeof(size_t), (void *)&groupnum, NULL));
+	size_t groupnum = src.clCxt->impl->maxComputeUnits;
     CV_Assert(groupnum != 0);
     int minloc = -1 , maxloc = -1;
     int vlen = 8, dbsize = groupnum * vlen * 4 * sizeof(double) , status;
-    ClContext *clCxt = src.clCxt;
-    cl_mem dstBuffer = clCreateBuffer(clCxt->clContext, CL_MEM_WRITE_ONLY, dbsize, NULL, &status);
+    Context *clCxt = src.clCxt;
+    cl_mem dstBuffer = clCreateBuffer(clCxt->impl->clContext, CL_MEM_WRITE_ONLY, dbsize, NULL, &status);
     openCLVerifyCall(status);
     *minVal = std::numeric_limits<double>::max() , *maxVal = -std::numeric_limits<double>::max();
     if (mask.empty())
@@ -1517,7 +1511,7 @@ void cv::ocl::minMaxLoc(const oclMat &src, double *minVal, double *maxVal,
     }
     double *p = new double[groupnum * vlen * 4];
     memset(p, 0, groupnum * vlen * 4 * sizeof(double));
-    status = clEnqueueReadBuffer(clCxt->clCmdQueue, (cl_mem)dstBuffer, CL_TRUE, 0, dbsize, (void *)p, 0, NULL, NULL);
+    status = clEnqueueReadBuffer(clCxt->impl->clCmdQueue, (cl_mem)dstBuffer, CL_TRUE, 0, dbsize, (void *)p, 0, NULL, NULL);
     for(int i = 0; i < vlen * groupnum; i++)
     {
         *minVal = (*minVal < p[i] || p[i + 2 * vlen *groupnum] == -1) ? *minVal : p[i];
@@ -1586,22 +1580,20 @@ void arithmetic_countNonZero_run(const oclMat &src, cl_mem &dst, int vlen , int 
 
 int cv::ocl::countNonZero(const oclMat &src)
 {
-    size_t groupnum = 0;
-    openCLSafeCall(clGetDeviceInfo(getDevice(), CL_DEVICE_MAX_COMPUTE_UNITS,
-                                   sizeof(size_t), (void *)&groupnum, NULL));
+    size_t groupnum = src.clCxt->impl->maxComputeUnits;
     CV_Assert(groupnum != 0);
     groupnum = groupnum * 2;
     int vlen = 8 , dbsize = groupnum * vlen, status;
     //cl_ulong start, end;
-    ClContext *clCxt = src.clCxt;
+    Context *clCxt = src.clCxt;
     string kernelName = "arithm_op_nonzero";
     int *p = new int[dbsize], nonzero = 0;
-    cl_mem dstBuffer = clCreateBuffer(clCxt->clContext, CL_MEM_WRITE_ONLY, dbsize * sizeof(int), NULL, &status);
+    cl_mem dstBuffer = clCreateBuffer(clCxt->impl->clContext, CL_MEM_WRITE_ONLY, dbsize * sizeof(int), NULL, &status);
     openCLVerifyCall(status);
     arithmetic_countNonZero_run(src, dstBuffer, vlen, groupnum, kernelName);
 
     memset(p, 0, dbsize * sizeof(int));
-    status = clEnqueueReadBuffer(clCxt->clCmdQueue, (cl_mem)dstBuffer, CL_TRUE, 0,
+    status = clEnqueueReadBuffer(clCxt->impl->clCmdQueue, (cl_mem)dstBuffer, CL_TRUE, 0,
                                  dbsize * sizeof(int), (void *)p, 0, NULL, NULL);
     for(int i = 0; i < dbsize; i++)
     {
@@ -1620,7 +1612,7 @@ void bitwise_run(const oclMat &src1, oclMat &dst, string kernelName, const char 
     dst.create(src1.size(), src1.type());
 
 
-    ClContext  *clCxt = src1.clCxt;
+    Context  *clCxt = src1.clCxt;
     int channels = dst.channels();
     int depth = dst.depth();
 
@@ -1665,7 +1657,7 @@ void bitwise_run(const oclMat &src1, const oclMat &src2, oclMat &dst, string ker
 
     CV_Assert(src1.type() == src2.type() && src1.type() == dst.type());
 
-    ClContext  *clCxt = src1.clCxt;
+    Context  *clCxt = src1.clCxt;
     int channels = dst.channels();
     int depth = dst.depth();
 
@@ -1723,7 +1715,7 @@ void bitwise_run(const oclMat &src1, const oclMat &src2, oclMat &dst, const oclM
     CV_Assert(src1.type() == src2.type() && src1.type() == dst.type());
     CV_Assert(mask.type() == CV_8U);
 
-    ClContext  *clCxt = src1.clCxt;
+    Context  *clCxt = src1.clCxt;
     int channels = dst.channels();
     int depth = dst.depth();
 
@@ -1777,7 +1769,7 @@ void bitwise_scalar_run(const oclMat &src1, const Scalar &src2, oclMat &dst, con
     if(mask.data)
         CV_Assert(mask.type() == CV_8U && src1.rows == mask.rows && src1.cols == mask.cols);
 
-    ClContext  *clCxt = src1.clCxt;
+    Context  *clCxt = src1.clCxt;
     int channels = dst.channels();
     int depth = dst.depth();
 
@@ -1787,7 +1779,7 @@ void bitwise_scalar_run(const oclMat &src1, const Scalar &src2, oclMat &dst, con
 
     cl_int status;
     cl_mem mem;
-    mem = clCreateBuffer(clCxt->clContext, CL_MEM_READ_ONLY, sizeof(WT) * 4, NULL, &status);
+    mem = clCreateBuffer(clCxt->impl->clContext, CL_MEM_READ_ONLY, sizeof(WT) * 4, NULL, &status);
     openCLVerifyCall(status);
     openCLMemcpy2D(clCxt, mem, 4 * sizeof(WT), s , 4 * sizeof(WT), 4 * sizeof(WT), 1, clMemcpyHostToDevice);
 
@@ -1985,7 +1977,7 @@ void transpose_run(const oclMat &src, oclMat &dst, string kernelName)
 {
     CV_Assert(src.cols == dst.rows && src.rows == dst.cols);
 
-    ClContext  *clCxt = src.clCxt;
+    Context  *clCxt = src.clCxt;
     int channels = src.channels();
     int depth = src.depth();
 
@@ -2042,7 +2034,7 @@ void cv::ocl::addWeighted(const oclMat &src1, double alpha, const oclMat &src2, 
               src1.rows ==  src2.rows && src2.rows == dst.rows);
     CV_Assert(src1.type() == src2.type() && src1.type() == dst.type());
 
-    ClContext *clCxt = src1.clCxt;
+    Context *clCxt = src1.clCxt;
     int channels = dst.channels();
     int depth = dst.depth();
 
@@ -2114,7 +2106,7 @@ void cv::ocl::magnitudeSqr(const oclMat &src1, const oclMat &src2, oclMat &dst)
     dst.create(src1.size(), src1.type());
 
 
-    ClContext *clCxt = src1.clCxt;
+    Context *clCxt = src1.clCxt;
     int channels = dst.channels();
     int depth = dst.depth();
 
@@ -2162,7 +2154,7 @@ void cv::ocl::magnitudeSqr(const oclMat &src1, oclMat &dst)
     dst.create(src1.size(), CV_32FC1);
 
 
-    ClContext *clCxt = src1.clCxt;
+    Context *clCxt = src1.clCxt;
     int channels = dst.channels();
     int depth = dst.depth();
 
@@ -2205,7 +2197,7 @@ void arithmetic_pow_run(const oclMat &src1, double p, oclMat &dst, string kernel
     CV_Assert(src1.cols == dst.cols && src1.rows == dst.rows);
     CV_Assert(src1.type() == dst.type());
 
-    ClContext  *clCxt = src1.clCxt;
+    Context  *clCxt = src1.clCxt;
     int channels = dst.channels();
     int depth = dst.depth();
 

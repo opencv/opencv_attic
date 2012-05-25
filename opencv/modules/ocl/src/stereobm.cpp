@@ -104,7 +104,7 @@ namespace cv
             ////////////////////////////////////////////////////////////////////////
             void prefilter_xsobel(const oclMat &input, oclMat &output, int prefilterCap)
             {
-                ClContext *clCxt = input.clCxt;
+                Context *clCxt = input.clCxt;
 
                 string kernelName = "prefilter_xsobel";
                 cl_kernel kernel = openCLGetKernelFromSource(clCxt, &stereobm, kernelName);
@@ -120,10 +120,10 @@ namespace cv
                 openCLSafeCall(clSetKernelArg(kernel, 3, sizeof(cl_int), (void *)&input.cols));
                 openCLSafeCall(clSetKernelArg(kernel, 4, sizeof(cl_int), (void *)&prefilterCap));
 
-                openCLSafeCall(clEnqueueNDRangeKernel(clCxt->clCmdQueue, kernel, 3, NULL,
+                openCLSafeCall(clEnqueueNDRangeKernel(clCxt->impl->clCmdQueue, kernel, 3, NULL,
                                                       globalThreads, localThreads, 0, NULL, NULL));
 
-                clFinish(clCxt->clCmdQueue);
+                clFinish(clCxt->impl->clCmdQueue);
                 openCLSafeCall(clReleaseKernel(kernel));
 
             }
@@ -148,7 +148,7 @@ namespace cv
                 //if(winsz2 == 0 || winsz2 >= calles_num)
                 //cv::ocl:error("Unsupported window size", __FILE__, __LINE__, __FUNCTION__);
 
-                ClContext *clCxt = left.clCxt;
+                Context *clCxt = left.clCxt;
 
                 string kernelName = "stereoKernel";
                 cl_kernel kernel = openCLGetKernelFromSource(clCxt, &stereobm, kernelName);
@@ -179,11 +179,11 @@ namespace cv
                 openCLSafeCall(clSetKernelArg(kernel, 10, sizeof(cl_int), (void *)&winsz2));
                 openCLSafeCall(clSetKernelArg(kernel, 11, local_mem_size, (void *)NULL));
 
-                openCLSafeCall(clEnqueueNDRangeKernel(clCxt->clCmdQueue, kernel, 2, NULL,
+                openCLSafeCall(clEnqueueNDRangeKernel(clCxt->impl->clCmdQueue, kernel, 2, NULL,
                                                       globalThreads, localThreads, 0, NULL, NULL));
 
 
-                clFinish(clCxt->clCmdQueue);
+                clFinish(clCxt->impl->clCmdQueue);
                 openCLSafeCall(clReleaseKernel(kernel));
             }
             ////////////////////////////////////////////////////////////////////////////
@@ -192,7 +192,7 @@ namespace cv
             void postfilter_textureness(oclMat &left, int winSize,
                                         float avergeTexThreshold, oclMat &disparity)
             {
-                ClContext *clCxt = left.clCxt;
+                Context *clCxt = left.clCxt;
 
                 string kernelName = "textureness_kernel";
                 cl_kernel kernel = openCLGetKernelFromSource(clCxt, &stereobm, kernelName);
@@ -216,10 +216,10 @@ namespace cv
                 openCLSafeCall(clSetKernelArg(kernel, 7, sizeof(cl_int), (void *)&winSize));
                 openCLSafeCall(clSetKernelArg(kernel, 8, sizeof(cl_float), (void *)&avergeTexThreshold));
                 openCLSafeCall(clSetKernelArg(kernel, 9, local_mem_size, NULL));
-                openCLSafeCall(clEnqueueNDRangeKernel(clCxt->clCmdQueue, kernel, 2, NULL,
+                openCLSafeCall(clEnqueueNDRangeKernel(clCxt->impl->clCmdQueue, kernel, 2, NULL,
                                                       globalThreads, localThreads, 0, NULL, NULL));
 
-                clFinish(clCxt->clCmdQueue);
+                clFinish(clCxt->impl->clCmdQueue);
                 openCLSafeCall(clReleaseKernel(kernel));
             }
             //////////////////////////////////////////////////////////////////////////////

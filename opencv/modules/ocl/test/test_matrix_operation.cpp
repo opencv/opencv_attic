@@ -72,7 +72,7 @@ PARAM_TEST_CASE(ConvertToTestBase, MatType, MatType)
     //src mat with roi
     cv::Mat mat_roi;
     cv::Mat dst_roi;
-    std::vector<cv::ocl::OCLInfo> oclinfo;
+    std::vector<cv::ocl::Info> oclinfo;
     //ocl dst mat for testing
     cv::ocl::oclMat gdst_whole;
 
@@ -90,7 +90,7 @@ PARAM_TEST_CASE(ConvertToTestBase, MatType, MatType)
 
         mat = randomMat(rng, size, type, 5, 16, false);
         dst  = randomMat(rng, size, type, 5, 16, false);
-        //std::vector<cv::ocl::OCLInfo> oclinfo;
+        //std::vector<cv::ocl::Info> oclinfo;
         int devnums = getDevice(oclinfo);
         CV_Assert(devnums > 0);
         //if you want to use undefault device, set it here
@@ -98,10 +98,10 @@ PARAM_TEST_CASE(ConvertToTestBase, MatType, MatType)
     }
 
     void random_roi()
-    {
-        cv::RNG &rng = TS::ptr()->get_rng();
+    {        
 #ifdef RANDOMROI
         //randomize ROI
+		cv::RNG &rng = TS::ptr()->get_rng();
         roicols = rng.uniform(1, mat.cols);
         roirows = rng.uniform(1, mat.rows);
         srcx   = rng.uniform(0, mat.cols - roicols);
@@ -175,7 +175,7 @@ PARAM_TEST_CASE(CopyToTestBase, MatType, bool)
     cv::Mat mat_roi;
     cv::Mat mask_roi;
     cv::Mat dst_roi;
-    std::vector<cv::ocl::OCLInfo> oclinfo;
+    std::vector<cv::ocl::Info> oclinfo;
     //ocl dst mat for testing
     cv::ocl::oclMat gdst_whole;
 
@@ -204,10 +204,10 @@ PARAM_TEST_CASE(CopyToTestBase, MatType, bool)
     }
 
     void random_roi()
-    {
-        cv::RNG &rng = TS::ptr()->get_rng();
+    {       
 #ifdef RANDOMROI
         //randomize ROI
+		cv::RNG &rng = TS::ptr()->get_rng();
         roicols = rng.uniform(1, mat.cols);
         roirows = rng.uniform(1, mat.rows);
         srcx   = rng.uniform(0, mat.cols - roicols);
@@ -301,7 +301,7 @@ PARAM_TEST_CASE(SetToTestBase, MatType, bool)
     //src mat with roi
     cv::Mat mat_roi;
     cv::Mat mask_roi;
-    std::vector<cv::ocl::OCLInfo> oclinfo;
+    std::vector<cv::ocl::Info> oclinfo;
     //ocl dst mat for testing
     cv::ocl::oclMat gmat_whole;
 
@@ -329,10 +329,10 @@ PARAM_TEST_CASE(SetToTestBase, MatType, bool)
     }
 
     void random_roi()
-    {
-        cv::RNG &rng = TS::ptr()->get_rng();
+    {        
 #ifdef RANDOMROI
         //randomize ROI
+		cv::RNG &rng = TS::ptr()->get_rng();
         roicols = rng.uniform(1, mat.cols);
         roirows = rng.uniform(1, mat.rows);
         srcx   = rng.uniform(0, mat.cols - roicols);

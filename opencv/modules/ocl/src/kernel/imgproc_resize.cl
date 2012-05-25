@@ -59,11 +59,6 @@ typedef double F ;
 typedef float F;
 #endif
 
-inline int getPoint(__global unsigned char const * data, int offset, int x, int y, int step)
-{
-    return (data[offset+ y * step + x]);
-}
-
 inline uint4 getPoint_8uc4(__global uchar4 * data, int offset, int x, int y, int step)
 {
     return convert_uint4(data[(offset>>2)+ y * (step>>2) + x]);
@@ -74,10 +69,6 @@ inline float getPoint_32fc1(__global float * data, int offset, int x, int y, int
     return data[(offset>>2)+ y * (step>>2) + x];
 }
 
-inline float4 getPoint_32fc4(__global float4 * data, int offset, int x, int y, int step)
-{
-    return data[(offset>>4)+ y * (step>>4) + x];
-}
 
 #define INTER_RESIZE_COEF_BITS 11
 #define INTER_RESIZE_COEF_SCALE (1 << INTER_RESIZE_COEF_BITS)

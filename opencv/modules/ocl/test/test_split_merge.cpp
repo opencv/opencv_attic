@@ -87,7 +87,7 @@ PARAM_TEST_CASE(MergeTestBase, MatType, int)
 
     //dst mat with roi
     cv::Mat dst_roi;
-    std::vector<cv::ocl::OCLInfo> oclinfo;
+    std::vector<cv::ocl::Info> oclinfo;
     //ocl dst mat for testing
     cv::ocl::oclMat gdst_whole;
 
@@ -119,10 +119,10 @@ PARAM_TEST_CASE(MergeTestBase, MatType, int)
     }
 
     void random_roi()
-    {
-        cv::RNG &rng = TS::ptr()->get_rng();
+    {        
 #ifdef RANDOMROI
         //randomize ROI
+		cv::RNG &rng = TS::ptr()->get_rng();
         roicols = rng.uniform(1, mat1.cols);
         roirows = rng.uniform(1, mat1.rows);
         src1x   = rng.uniform(0, mat1.cols - roicols);
@@ -240,7 +240,7 @@ PARAM_TEST_CASE(SplitTestBase, MatType, int)
     cv::Mat dst2_roi;
     cv::Mat dst3_roi;
     cv::Mat dst4_roi;
-    std::vector<cv::ocl::OCLInfo> oclinfo;
+    std::vector<cv::ocl::Info> oclinfo;
     //ocl dst mat for testing
     cv::ocl::oclMat gdst1_whole;
     cv::ocl::oclMat gdst2_whole;
@@ -275,10 +275,10 @@ PARAM_TEST_CASE(SplitTestBase, MatType, int)
     }
 
     void random_roi()
-    {
-        cv::RNG &rng = TS::ptr()->get_rng();
+    {        
 #ifdef RANDOMROI
         //randomize ROI
+		cv::RNG &rng = TS::ptr()->get_rng();
         roicols = rng.uniform(1, mat.cols);
         roirows = rng.uniform(1, mat.rows);
         srcx    = rng.uniform(0, mat.cols - roicols);

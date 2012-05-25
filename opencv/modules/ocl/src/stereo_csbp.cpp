@@ -121,7 +121,7 @@ namespace cv
                                               StereoConstantSpaceBP &rthis,
                                               int msg_step, int h, int w, int level)
             {
-                ClContext  *clCxt = left.clCxt;
+                Context  *clCxt = left.clCxt;
                 int data_type = rthis.msg_type;
                 int channels = left.channels();
 
@@ -151,10 +151,10 @@ namespace cv
                 openCLSafeCall(clSetKernelArg(kernel, 11, sizeof(cl_int), (void *)&rthis.min_disp_th));
                 openCLSafeCall(clSetKernelArg(kernel, 12, sizeof(cl_int), (void *)&left.step));
                 openCLSafeCall(clSetKernelArg(kernel, 13, sizeof(cl_int), (void *)&rthis.ndisp));
-                openCLSafeCall(clEnqueueNDRangeKernel(clCxt->clCmdQueue, kernel, 2, NULL,
+                openCLSafeCall(clEnqueueNDRangeKernel(clCxt->impl->clCmdQueue, kernel, 2, NULL,
                                                       globalThreads, localThreads, 0, NULL, NULL));
 
-                clFinish(clCxt->clCmdQueue);
+                clFinish(clCxt->impl->clCmdQueue);
                 openCLSafeCall(clReleaseKernel(kernel));
             }
 
@@ -162,7 +162,7 @@ namespace cv
                     StereoConstantSpaceBP &rthis,
                     int msg_step, int h, int w, int level)
             {
-                ClContext  *clCxt = left.clCxt;
+                Context  *clCxt = left.clCxt;
                 int data_type = rthis.msg_type;
                 int channels = left.channels();
                 int win_size = (int)std::pow(2.f, level);
@@ -199,10 +199,10 @@ namespace cv
                 openCLSafeCall(clSetKernelArg(kernel, 14, sizeof(cl_int),  (void *)&rthis.min_disp_th));
                 openCLSafeCall(clSetKernelArg(kernel, 15, sizeof(cl_int),  (void *)&cdisp_step1));
                 openCLSafeCall(clSetKernelArg(kernel, 16, sizeof(cl_int),  (void *)&msg_step));
-                openCLSafeCall(clEnqueueNDRangeKernel(clCxt->clCmdQueue, kernel, 3, NULL,
+                openCLSafeCall(clEnqueueNDRangeKernel(clCxt->impl->clCmdQueue, kernel, 3, NULL,
                                                       globalThreads, localThreads, 0, NULL, NULL));
 
-                clFinish(clCxt->clCmdQueue);
+                clFinish(clCxt->impl->clCmdQueue);
                 openCLSafeCall(clReleaseKernel(kernel));
 
             }
@@ -211,7 +211,7 @@ namespace cv
                     oclMat &temp, StereoConstantSpaceBP &rthis,
                     int h, int w, int nr_plane, int msg_step)
             {
-                ClContext  *clCxt = temp.clCxt;
+                Context  *clCxt = temp.clCxt;
                 int data_type = rthis.msg_type;
 
                 string kernelName = get_kernel_name("get_first_k_initial_local_", data_type);
@@ -235,17 +235,17 @@ namespace cv
                 openCLSafeCall(clSetKernelArg(kernel, 6, sizeof(cl_int), (void *)&msg_step));
                 openCLSafeCall(clSetKernelArg(kernel, 7, sizeof(cl_int), (void *)&disp_step));
                 openCLSafeCall(clSetKernelArg(kernel, 8, sizeof(cl_int), (void *)&rthis.ndisp));
-                openCLSafeCall(clEnqueueNDRangeKernel(clCxt->clCmdQueue, kernel, 2, NULL,
+                openCLSafeCall(clEnqueueNDRangeKernel(clCxt->impl->clCmdQueue, kernel, 2, NULL,
                                                       globalThreads, localThreads, 0, NULL, NULL));
 
-                clFinish(clCxt->clCmdQueue);
+                clFinish(clCxt->impl->clCmdQueue);
                 openCLSafeCall(clReleaseKernel(kernel));
             }
             static void get_first_initial_global_caller(uchar *data_cost_selected, uchar *disp_selected_pyr,
                     oclMat &temp, StereoConstantSpaceBP &rthis,
                     int h, int w, int nr_plane, int msg_step)
             {
-                ClContext  *clCxt = temp.clCxt;
+                Context  *clCxt = temp.clCxt;
                 int data_type = rthis.msg_type;
 
                 string kernelName = get_kernel_name("get_first_k_initial_global_", data_type);
@@ -269,10 +269,10 @@ namespace cv
                 openCLSafeCall(clSetKernelArg(kernel, 6, sizeof(cl_int), (void *)&msg_step));
                 openCLSafeCall(clSetKernelArg(kernel, 7, sizeof(cl_int), (void *)&disp_step));
                 openCLSafeCall(clSetKernelArg(kernel, 8, sizeof(cl_int), (void *)&rthis.ndisp));
-                openCLSafeCall(clEnqueueNDRangeKernel(clCxt->clCmdQueue, kernel, 2, NULL,
+                openCLSafeCall(clEnqueueNDRangeKernel(clCxt->impl->clCmdQueue, kernel, 2, NULL,
                                                       globalThreads, localThreads, 0, NULL, NULL));
 
-                clFinish(clCxt->clCmdQueue);
+                clFinish(clCxt->impl->clCmdQueue);
                 openCLSafeCall(clReleaseKernel(kernel));
             }
 
@@ -302,7 +302,7 @@ namespace cv
                                                  int msg_step2, const oclMat &left, const oclMat &right, int h,
                                                  int w, int h2, int level, int nr_plane)
             {
-                ClContext  *clCxt = left.clCxt;
+                Context  *clCxt = left.clCxt;
                 int channels = left.channels();
                 int data_type = rthis.msg_type;
 
@@ -336,10 +336,10 @@ namespace cv
                 openCLSafeCall(clSetKernelArg(kernel, 14, sizeof(cl_float), (void *)&rthis.max_data_term));
                 openCLSafeCall(clSetKernelArg(kernel, 15, sizeof(cl_int),  (void *)&left.step));
                 openCLSafeCall(clSetKernelArg(kernel, 16, sizeof(cl_int),  (void *)&rthis.min_disp_th));
-                openCLSafeCall(clEnqueueNDRangeKernel(clCxt->clCmdQueue, kernel, 2, NULL,
+                openCLSafeCall(clEnqueueNDRangeKernel(clCxt->impl->clCmdQueue, kernel, 2, NULL,
                                                       globalThreads, localThreads, 0, NULL, NULL));
 
-                clFinish(clCxt->clCmdQueue);
+                clFinish(clCxt->impl->clCmdQueue);
                 openCLSafeCall(clReleaseKernel(kernel));
             }
             static void compute_data_cost_reduce_caller(uchar *disp_selected_pyr, uchar *data_cost,
@@ -347,7 +347,7 @@ namespace cv
                     int msg_step2, const oclMat &left, const oclMat &right, int h,
                     int w, int h2, int level, int nr_plane)
             {
-                ClContext  *clCxt = left.clCxt;
+                Context  *clCxt = left.clCxt;
                 int data_type = rthis.msg_type;
                 int channels = left.channels();
                 int win_size = (int)std::pow(2.f, level);
@@ -387,10 +387,10 @@ namespace cv
                 openCLSafeCall(clSetKernelArg(kernel, 17, sizeof(cl_float), (void *)&rthis.max_data_term));
                 openCLSafeCall(clSetKernelArg(kernel, 18, sizeof(cl_int),  (void *)&left.step));
                 openCLSafeCall(clSetKernelArg(kernel, 19, sizeof(cl_int),  (void *)&rthis.min_disp_th));
-                openCLSafeCall(clEnqueueNDRangeKernel(clCxt->clCmdQueue, kernel, 3, NULL,
+                openCLSafeCall(clEnqueueNDRangeKernel(clCxt->impl->clCmdQueue, kernel, 3, NULL,
                                                       globalThreads, localThreads, 0, NULL, NULL));
 
-                clFinish(clCxt->clCmdQueue);
+                clFinish(clCxt->impl->clCmdQueue);
                 openCLSafeCall(clReleaseKernel(kernel));
             }
             void compute_data_cost(uchar *disp_selected_pyr, uchar *data_cost, StereoConstantSpaceBP &rthis,
@@ -414,7 +414,7 @@ namespace cv
                               size_t msg_step1, size_t msg_step2, int h, int w, int nr_plane,
                               int h2, int w2, int nr_plane2)
             {
-                ClContext  *clCxt = temp.clCxt;
+                Context  *clCxt = temp.clCxt;
                 int data_type = rthis.msg_type;
 
                 string kernelName = get_kernel_name("init_message_", data_type);
@@ -453,10 +453,10 @@ namespace cv
                 openCLSafeCall(clSetKernelArg(kernel, 20, sizeof(cl_int), (void *)&disp_step2));
                 openCLSafeCall(clSetKernelArg(kernel, 21, sizeof(cl_int), (void *)&msg_step1));
                 openCLSafeCall(clSetKernelArg(kernel, 22, sizeof(cl_int), (void *)&msg_step2));
-                openCLSafeCall(clEnqueueNDRangeKernel(clCxt->clCmdQueue, kernel, 2, NULL,
+                openCLSafeCall(clEnqueueNDRangeKernel(clCxt->impl->clCmdQueue, kernel, 2, NULL,
                                                       globalThreads, localThreads, 0, NULL, NULL));
 
-                clFinish(clCxt->clCmdQueue);
+                clFinish(clCxt->impl->clCmdQueue);
                 openCLSafeCall(clReleaseKernel(kernel));
             }
             ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -466,7 +466,7 @@ namespace cv
                                             uchar *disp_selected_pyr, oclMat &temp, StereoConstantSpaceBP rthis,
                                             int msg_step, int h, int w, int nr_plane, int i)
             {
-                ClContext  *clCxt = temp.clCxt;
+                Context  *clCxt = temp.clCxt;
                 int data_type = rthis.msg_type;
 
                 string kernelName = get_kernel_name("compute_message_", data_type);
@@ -496,10 +496,10 @@ namespace cv
                 openCLSafeCall(clSetKernelArg(kernel, 12, sizeof(cl_int),  (void *)&disp_step));
                 openCLSafeCall(clSetKernelArg(kernel, 13, sizeof(cl_int),  (void *)&msg_step));
                 openCLSafeCall(clSetKernelArg(kernel, 14, sizeof(cl_float), (void *)&rthis.disc_single_jump));
-                openCLSafeCall(clEnqueueNDRangeKernel(clCxt->clCmdQueue, kernel, 2, NULL,
+                openCLSafeCall(clEnqueueNDRangeKernel(clCxt->impl->clCmdQueue, kernel, 2, NULL,
                                                       globalThreads, localThreads, 0, NULL, NULL));
 
-                clFinish(clCxt->clCmdQueue);
+                clFinish(clCxt->impl->clCmdQueue);
                 openCLSafeCall(clReleaseKernel(kernel));
             }
             void calc_all_iterations(uchar *u, uchar *d, uchar *l, uchar *r, uchar *data_cost_selected,
@@ -518,7 +518,7 @@ namespace cv
                               uchar *disp_selected_pyr, StereoConstantSpaceBP &rthis, size_t msg_step,
                               oclMat &disp, int nr_plane)
             {
-                ClContext  *clCxt = disp.clCxt;
+                Context  *clCxt = disp.clCxt;
                 int data_type = rthis.msg_type;
 
                 string kernelName = get_kernel_name("compute_disp_", data_type);
@@ -547,10 +547,10 @@ namespace cv
                 openCLSafeCall(clSetKernelArg(kernel, 10, sizeof(cl_int), (void *)&nr_plane));
                 openCLSafeCall(clSetKernelArg(kernel, 11, sizeof(cl_int), (void *)&msg_step));
                 openCLSafeCall(clSetKernelArg(kernel, 12, sizeof(cl_int), (void *)&disp_step));
-                openCLSafeCall(clEnqueueNDRangeKernel(clCxt->clCmdQueue, kernel, 2, NULL,
+                openCLSafeCall(clEnqueueNDRangeKernel(clCxt->impl->clCmdQueue, kernel, 2, NULL,
                                                       globalThreads, localThreads, 0, NULL, NULL));
 
-                clFinish(clCxt->clCmdQueue);
+                clFinish(clCxt->impl->clCmdQueue);
                 openCLSafeCall(clReleaseKernel(kernel));
             }
         }
@@ -567,8 +567,8 @@ namespace
     void print_gpu_mat(const oclMat &mat)
     {
         T *data_1 = new T[mat.rows * mat.cols * mat.channels()];
-        ClContext  *clCxt = mat.clCxt;
-        int status = clEnqueueReadBuffer(clCxt -> clCmdQueue, (cl_mem)mat.data, CL_TRUE, 0,
+        Context  *clCxt = mat.clCxt;
+        int status = clEnqueueReadBuffer(clCxt -> impl->clCmdQueue, (cl_mem)mat.data, CL_TRUE, 0,
                                          mat.rows * mat.cols * mat.channels() * sizeof(T), data_1, 0, NULL, NULL);
 
         if(status != CL_SUCCESS)

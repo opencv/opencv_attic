@@ -9,7 +9,7 @@ ocv_add_module(ocl opencv_core  opencv_imgproc opencv_calib3d opencv_objdetect o
 ocv_module_include_directories()
 
 file(GLOB lib_hdrs     "include/opencv2/${name}/*.hpp" "include/opencv2/${name}/*.h")
-file(GLOB lib_srcs     "src/*.cpp" "src/kernel/*.cpp")
+file(GLOB lib_srcs     "src/*.cpp" "src/kernel/*.cpp" "${CMAKE_CURRENT_BINARY_DIR}/kernels.cpp")
 file(GLOB lib_int_hdrs "src/*.h*" "src/kernel/*.h*")
 
 source_group("Include"   FILES ${lib_hdrs})
@@ -31,13 +31,11 @@ install(FILES ${lib_hdrs}
     COMPONENT main)
 
 ocv_add_precompiled_headers(${the_module})
-if(WIN32)
-add_custom_command(TARGET ${the_module}
-PRE_BUILD
-COMMAND  cd ../../../modules/ocl
-COMMAND streamlineCL
-)
-endif()
+
+#ADD_CUSTOM_COMMAND(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/kernels.cpp
+#     COMMAND ${CMAKE_BINARY_DIR}/bin/streamlineCL ${CMAKE_CURRENT_SOURCE_DIR}/src/kernel > ${CMAKE_CURRENT_BINARY_DIR}/kernels.cpp
+#)
+
 ################################################################################################################
 ################################      OpenCL Module Tests     ##################################################
 ################################################################################################################

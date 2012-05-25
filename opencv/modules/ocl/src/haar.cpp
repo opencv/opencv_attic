@@ -985,7 +985,7 @@ CvSeq *cv::ocl::OclCascadeClassifier::oclHaarDetectObjects( oclMat &gimg, CvMemS
 
         size_t blocksize = 8;
         size_t localThreads[3] = { blocksize, blocksize , 1 };
-        size_t globalThreads[3] = { grp_per_CU *gsum.clCxt->maxComputeUnits *localThreads[0],
+        size_t globalThreads[3] = { grp_per_CU * ((gsum.clCxt)->impl->maxComputeUnits) *localThreads[0],
                                     localThreads[1], 1
                                   };
         int outputsz = 256 * globalThreads[0] / localThreads[0];
@@ -1060,24 +1060,24 @@ CvSeq *cv::ocl::OclCascadeClassifier::oclHaarDetectObjects( oclMat &gimg, CvMemS
         //openCLVerifyCall(status);
         //openCLSafeCall(clEnqueueWriteBuffer(gsum.clCxt->clCmdQueue,cascadebuffer,1,0,sizeof(GpuHidHaarClassifierCascade),gcascade,0,NULL,NULL));
 
-        stagebuffer = clCreateBuffer(gsum.clCxt->clContext, CL_MEM_READ_ONLY, sizeof(GpuHidHaarStageClassifier) * gcascade->count, NULL, &status);
+        stagebuffer = clCreateBuffer(gsum.clCxt->impl->clContext, CL_MEM_READ_ONLY, sizeof(GpuHidHaarStageClassifier) * gcascade->count, NULL, &status);
         openCLVerifyCall(status);
-        openCLSafeCall(clEnqueueWriteBuffer(gsum.clCxt->clCmdQueue, stagebuffer, 1, 0, sizeof(GpuHidHaarStageClassifier)*gcascade->count, stage, 0, NULL, NULL));
+        openCLSafeCall(clEnqueueWriteBuffer(gsum.clCxt->impl->clCmdQueue, stagebuffer, 1, 0, sizeof(GpuHidHaarStageClassifier)*gcascade->count, stage, 0, NULL, NULL));
 
         //classifierbuffer = clCreateBuffer(gsum.clCxt->clContext,CL_MEM_READ_ONLY,sizeof(GpuHidHaarClassifier)*totalclassifier,NULL,&status);
         //status = clEnqueueWriteBuffer(gsum.clCxt->clCmdQueue,classifierbuffer,1,0,sizeof(GpuHidHaarClassifier)*totalclassifier,classifier,0,NULL,NULL);
 
-        nodebuffer = clCreateBuffer(gsum.clCxt->clContext, CL_MEM_READ_ONLY,
+        nodebuffer = clCreateBuffer(gsum.clCxt->impl->clContext, CL_MEM_READ_ONLY,
                                     nodenum * sizeof(GpuHidHaarTreeNode), NULL, &status);
         openCLVerifyCall(status);
-        openCLSafeCall(clEnqueueWriteBuffer(gsum.clCxt->clCmdQueue, nodebuffer, 1, 0,
+        openCLSafeCall(clEnqueueWriteBuffer(gsum.clCxt->impl->clCmdQueue, nodebuffer, 1, 0,
                                             nodenum * sizeof(GpuHidHaarTreeNode),
                                             node, 0, NULL, NULL));
-        candidatebuffer = clCreateBuffer(gsum.clCxt->clContext, CL_MEM_WRITE_ONLY, 4 * sizeof(int) * outputsz, NULL, &status);
+        candidatebuffer = clCreateBuffer(gsum.clCxt->impl->clContext, CL_MEM_WRITE_ONLY, 4 * sizeof(int) * outputsz, NULL, &status);
         openCLVerifyCall(status);
-        scaleinfobuffer = clCreateBuffer(gsum.clCxt->clContext, CL_MEM_READ_ONLY, sizeof(detect_piramid_info) * loopcount, NULL, &status);
+        scaleinfobuffer = clCreateBuffer(gsum.clCxt->impl->clContext, CL_MEM_READ_ONLY, sizeof(detect_piramid_info) * loopcount, NULL, &status);
         openCLVerifyCall(status);
-        openCLSafeCall(clEnqueueWriteBuffer(gsum.clCxt->clCmdQueue, scaleinfobuffer, 1, 0, sizeof(detect_piramid_info)*loopcount, scaleinfo, 0, NULL, NULL));
+        openCLSafeCall(clEnqueueWriteBuffer(gsum.clCxt->impl->clCmdQueue, scaleinfobuffer, 1, 0, sizeof(detect_piramid_info)*loopcount, scaleinfo, 0, NULL, NULL));
         //flag  = 1;
         //}
 
@@ -1127,13 +1127,13 @@ CvSeq *cv::ocl::OclCascadeClassifier::oclHaarDetectObjects( oclMat &gimg, CvMemS
         //openCLSafeCall(clSetKernelArg(kernel,argcount++,sizeof(cl_int),(void*)&grpnumperline));
         //openCLSafeCall(clSetKernelArg(kernel,argcount++,sizeof(cl_int),(void*)&totalgrp));
 
-        openCLSafeCall(clEnqueueNDRangeKernel(gsum.clCxt->clCmdQueue, kernel, 2, NULL, globalThreads, localThreads, 0, NULL, NULL));
+        openCLSafeCall(clEnqueueNDRangeKernel(gsum.clCxt->impl->clCmdQueue, kernel, 2, NULL, globalThreads, localThreads, 0, NULL, NULL));
 
-        openCLSafeCall(clFinish(gsum.clCxt->clCmdQueue));
+        openCLSafeCall(clFinish(gsum.clCxt->impl->clCmdQueue));
         //t = (double)cvGetTickCount() - t;
         //printf( "detection time = %g ms\n", t/((double)cvGetTickFrequency()*1000.) );
         //t = (double)cvGetTickCount();
-        openCLSafeCall(clEnqueueReadBuffer(gsum.clCxt->clCmdQueue, candidatebuffer, 1, 0, 4 * sizeof(int)*outputsz, candidate, 0, NULL, NULL));
+        openCLSafeCall(clEnqueueReadBuffer(gsum.clCxt->impl->clCmdQueue, candidatebuffer, 1, 0, 4 * sizeof(int)*outputsz, candidate, 0, NULL, NULL));
 
 
         for(int i = 0; i < outputsz; i++)
@@ -1206,19 +1206,19 @@ CvSeq *cv::ocl::OclCascadeClassifier::oclHaarDetectObjects( oclMat &gimg, CvMemS
         int grp_per_CU = 12;
         size_t blocksize = 8;
         size_t localThreads[3] = { blocksize, blocksize , 1 };
-        size_t globalThreads[3] = { grp_per_CU *gsum.clCxt->maxComputeUnits *localThreads[0],
+        size_t globalThreads[3] = { grp_per_CU *gsum.clCxt->impl->maxComputeUnits *localThreads[0],
                                     localThreads[1], 1
                                   };
         int outputsz = 256 * globalThreads[0] / localThreads[0];
         int nodenum = (datasize - sizeof(GpuHidHaarClassifierCascade) -
                        sizeof(GpuHidHaarStageClassifier) * gcascade->count - sizeof(GpuHidHaarClassifier) * totalclassifier) / sizeof(GpuHidHaarTreeNode);
-        nodebuffer = clCreateBuffer(gsum.clCxt->clContext, CL_MEM_READ_ONLY,
+        nodebuffer = clCreateBuffer(gsum.clCxt->impl->clContext, CL_MEM_READ_ONLY,
                                     nodenum * sizeof(GpuHidHaarTreeNode), NULL, &status);
         openCLVerifyCall(status);
-        openCLSafeCall(clEnqueueWriteBuffer(gsum.clCxt->clCmdQueue, nodebuffer, 1, 0,
+        openCLSafeCall(clEnqueueWriteBuffer(gsum.clCxt->impl->clCmdQueue, nodebuffer, 1, 0,
                                             nodenum * sizeof(GpuHidHaarTreeNode),
                                             node, 0, NULL, NULL));
-        cl_mem newnodebuffer = clCreateBuffer(gsum.clCxt->clContext, CL_MEM_READ_WRITE,
+        cl_mem newnodebuffer = clCreateBuffer(gsum.clCxt->impl->clContext, CL_MEM_READ_WRITE,
                                               loopcount * nodenum * sizeof(GpuHidHaarTreeNode), NULL, &status);
         int startstage = 0;
         int endstage = gcascade->count;
@@ -1257,26 +1257,26 @@ CvSeq *cv::ocl::OclCascadeClassifier::oclHaarDetectObjects( oclMat &gimg, CvMemS
             openCLSafeCall(clSetKernelArg(kernel2, argcounts++, sizeof(cl_float), (void *)&correction[i]));
             openCLSafeCall(clSetKernelArg(kernel2, argcounts++, sizeof(cl_int), (void *)&startnodenum));
             size_t globalThreads2[1] = {nodenum};
-            clEnqueueNDRangeKernel(gsum.clCxt->clCmdQueue, kernel2, 1, NULL, globalThreads2, 0, 0, NULL, NULL);
-            clFinish(gsum.clCxt->clCmdQueue);
+            clEnqueueNDRangeKernel(gsum.clCxt->impl->clCmdQueue, kernel2, 1, NULL, globalThreads2, 0, 0, NULL, NULL);
+            clFinish(gsum.clCxt->impl->clCmdQueue);
         }
         clReleaseKernel(kernel2);
         int step = gsum.step / 4;
         int startnode = 0;
         int splitstage = 3;
         int splitnode = stage[0].count + stage[1].count + stage[2].count;
-        stagebuffer = clCreateBuffer(gsum.clCxt->clContext, CL_MEM_READ_ONLY, sizeof(GpuHidHaarStageClassifier) * gcascade->count, NULL, &status);
+        stagebuffer = clCreateBuffer(gsum.clCxt->impl->clContext, CL_MEM_READ_ONLY, sizeof(GpuHidHaarStageClassifier) * gcascade->count, NULL, &status);
         openCLVerifyCall(status);
-        openCLSafeCall(clEnqueueWriteBuffer(gsum.clCxt->clCmdQueue, stagebuffer, 1, 0, sizeof(GpuHidHaarStageClassifier)*gcascade->count, stage, 0, NULL, NULL));
-        candidatebuffer = clCreateBuffer(gsum.clCxt->clContext, CL_MEM_WRITE_ONLY | CL_MEM_ALLOC_HOST_PTR, 4 * sizeof(int) * outputsz, NULL, &status);
+        openCLSafeCall(clEnqueueWriteBuffer(gsum.clCxt->impl->clCmdQueue, stagebuffer, 1, 0, sizeof(GpuHidHaarStageClassifier)*gcascade->count, stage, 0, NULL, NULL));
+        candidatebuffer = clCreateBuffer(gsum.clCxt->impl->clContext, CL_MEM_WRITE_ONLY | CL_MEM_ALLOC_HOST_PTR, 4 * sizeof(int) * outputsz, NULL, &status);
         openCLVerifyCall(status);
-        scaleinfobuffer = clCreateBuffer(gsum.clCxt->clContext, CL_MEM_READ_ONLY, sizeof(detect_piramid_info) * loopcount, NULL, &status);
+        scaleinfobuffer = clCreateBuffer(gsum.clCxt->impl->clContext, CL_MEM_READ_ONLY, sizeof(detect_piramid_info) * loopcount, NULL, &status);
         openCLVerifyCall(status);
-        openCLSafeCall(clEnqueueWriteBuffer(gsum.clCxt->clCmdQueue, scaleinfobuffer, 1, 0, sizeof(detect_piramid_info)*loopcount, scaleinfo, 0, NULL, NULL));
-        pbuffer = clCreateBuffer(gsum.clCxt->clContext, CL_MEM_READ_ONLY, sizeof(cl_int4) * loopcount, NULL, &status);
-        openCLSafeCall(clEnqueueWriteBuffer(gsum.clCxt->clCmdQueue, pbuffer, 1, 0, sizeof(cl_int4)*loopcount, p, 0, NULL, NULL));
-        correctionbuffer = clCreateBuffer(gsum.clCxt->clContext, CL_MEM_READ_ONLY, sizeof(cl_float) * loopcount, NULL, &status);
-        openCLSafeCall(clEnqueueWriteBuffer(gsum.clCxt->clCmdQueue, correctionbuffer, 1, 0, sizeof(cl_float)*loopcount, correction, 0, NULL, NULL));
+        openCLSafeCall(clEnqueueWriteBuffer(gsum.clCxt->impl->clCmdQueue, scaleinfobuffer, 1, 0, sizeof(detect_piramid_info)*loopcount, scaleinfo, 0, NULL, NULL));
+        pbuffer = clCreateBuffer(gsum.clCxt->impl->clContext, CL_MEM_READ_ONLY, sizeof(cl_int4) * loopcount, NULL, &status);
+        openCLSafeCall(clEnqueueWriteBuffer(gsum.clCxt->impl->clCmdQueue, pbuffer, 1, 0, sizeof(cl_int4)*loopcount, p, 0, NULL, NULL));
+        correctionbuffer = clCreateBuffer(gsum.clCxt->impl->clContext, CL_MEM_READ_ONLY, sizeof(cl_float) * loopcount, NULL, &status);
+        openCLSafeCall(clEnqueueWriteBuffer(gsum.clCxt->impl->clCmdQueue, correctionbuffer, 1, 0, sizeof(cl_float)*loopcount, correction, 0, NULL, NULL));
         int argcount = 0;
         openCLSafeCall(clSetKernelArg(kernel, argcount++, sizeof(cl_mem), (void *)&stagebuffer));
         openCLSafeCall(clSetKernelArg(kernel, argcount++, sizeof(cl_mem), (void *)&scaleinfobuffer));
@@ -1294,12 +1294,12 @@ CvSeq *cv::ocl::OclCascadeClassifier::oclHaarDetectObjects( oclMat &gimg, CvMemS
         openCLSafeCall(clSetKernelArg(kernel, argcount++, sizeof(cl_mem), (void *)&pbuffer));
         openCLSafeCall(clSetKernelArg(kernel, argcount++, sizeof(cl_mem), (void *)&correctionbuffer));
         openCLSafeCall(clSetKernelArg(kernel, argcount++, sizeof(cl_int), (void *)&nodenum));
-        openCLSafeCall(clEnqueueNDRangeKernel(gsum.clCxt->clCmdQueue, kernel, 2, NULL, globalThreads, localThreads, 0, NULL, NULL));
+        openCLSafeCall(clEnqueueNDRangeKernel(gsum.clCxt->impl->clCmdQueue, kernel, 2, NULL, globalThreads, localThreads, 0, NULL, NULL));
 
-        openCLSafeCall(clFinish(gsum.clCxt->clCmdQueue));
+        openCLSafeCall(clFinish(gsum.clCxt->impl->clCmdQueue));
 
         //openCLSafeCall(clEnqueueReadBuffer(gsum.clCxt->clCmdQueue,candidatebuffer,1,0,4*sizeof(int)*outputsz,candidate,0,NULL,NULL));
-        candidate = (int *)clEnqueueMapBuffer(gsum.clCxt->clCmdQueue, candidatebuffer, 1, CL_MAP_READ, 0, 4 * sizeof(int), 0, 0, 0, &status);
+        candidate = (int *)clEnqueueMapBuffer(gsum.clCxt->impl->clCmdQueue, candidatebuffer, 1, CL_MAP_READ, 0, 4 * sizeof(int), 0, 0, 0, &status);
 
         for(int i = 0; i < outputsz; i++)
         {
@@ -1310,7 +1310,7 @@ CvSeq *cv::ocl::OclCascadeClassifier::oclHaarDetectObjects( oclMat &gimg, CvMemS
         free(scaleinfo);
         free(p);
         free(correction);
-        clEnqueueUnmapMemObject(gsum.clCxt->clCmdQueue, candidatebuffer, candidate, 0, 0, 0);
+        clEnqueueUnmapMemObject(gsum.clCxt->impl->clCmdQueue, candidatebuffer, candidate, 0, 0, 0);
         openCLSafeCall(clReleaseMemObject(stagebuffer));
         openCLSafeCall(clReleaseMemObject(scaleinfobuffer));
         openCLSafeCall(clReleaseMemObject(nodebuffer));

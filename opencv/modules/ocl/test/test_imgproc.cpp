@@ -334,7 +334,7 @@ PARAM_TEST_CASE(ImgprocTestBase, MatType, MatType, MatType, MatType, MatType, bo
     cv::Mat mask_roi;
     cv::Mat dst_roi;
     cv::Mat dst1_roi; //bak
-    std::vector<cv::ocl::OCLInfo> oclinfo;
+    std::vector<cv::ocl::Info> oclinfo;
     //ocl mat
     cv::ocl::oclMat clmat1;
     cv::ocl::oclMat clmat2;
@@ -359,11 +359,11 @@ PARAM_TEST_CASE(ImgprocTestBase, MatType, MatType, MatType, MatType, MatType, bo
         cv::RNG &rng = TS::ptr()->get_rng();
         cv::Size size(MWIDTH, MHEIGHT);
         double min = 1, max = 20;
-
         int devnums = getDevice(oclinfo);
         CV_Assert(devnums > 0);
         //if you want to use undefault device, set it here
         //setDevice(oclinfo[0]);
+
         if(type1 != nulltype)
         {
             mat1 = randomMat(rng, size, type1, min, max, false);
@@ -394,10 +394,10 @@ PARAM_TEST_CASE(ImgprocTestBase, MatType, MatType, MatType, MatType, MatType, bo
     }
 
     void random_roi()
-    {
-        cv::RNG &rng = TS::ptr()->get_rng();
+    {     
 #ifdef RANDOMROI
         //randomize ROI
+		cv::RNG &rng = TS::ptr()->get_rng();
         roicols = rng.uniform(1, mat1.cols);
         roirows = rng.uniform(1, mat1.rows);
         src1x   = rng.uniform(0, mat1.cols - roicols);
@@ -667,7 +667,7 @@ PARAM_TEST_CASE(WarpTestBase, MatType, cv::Size, int)
     //src mat with roi
     cv::Mat mat1_roi;
     cv::Mat dst_roi;
-    std::vector<cv::ocl::OCLInfo> oclinfo;
+    std::vector<cv::ocl::Info> oclinfo;
     //ocl dst mat for testing
     cv::ocl::oclMat gdst_whole;
 
@@ -694,10 +694,10 @@ PARAM_TEST_CASE(WarpTestBase, MatType, cv::Size, int)
     }
 
     void random_roi()
-    {
-        cv::RNG &rng = TS::ptr()->get_rng();
+    {       
 #ifdef RANDOMROI
         //randomize ROI
+		cv::RNG &rng = TS::ptr()->get_rng();
         src_roicols = rng.uniform(1, mat1.cols);
         src_roirows = rng.uniform(1, mat1.rows);
         dst_roicols = rng.uniform(1, dst.cols);
@@ -817,7 +817,7 @@ PARAM_TEST_CASE(Resize, MatType, cv::Size, double, double, int)
     int dstx;
     int dsty;
 
-    std::vector<cv::ocl::OCLInfo> oclinfo;
+    std::vector<cv::ocl::Info> oclinfo;
     //src mat with roi
     cv::Mat mat1_roi;
     cv::Mat dst_roi;
@@ -863,10 +863,10 @@ PARAM_TEST_CASE(Resize, MatType, cv::Size, double, double, int)
     }
 
     void random_roi()
-    {
-        cv::RNG &rng = TS::ptr()->get_rng();
+    {        
 #ifdef RANDOMROI
         //randomize ROI
+		cv::RNG &rng = TS::ptr()->get_rng();
         src_roicols = rng.uniform(1, mat1.cols);
         src_roirows = rng.uniform(1, mat1.rows);
         dst_roicols = rng.uniform(1, dst.cols);
@@ -944,7 +944,7 @@ PARAM_TEST_CASE(Threshold, MatType, ThreshOp)
     //src mat with roi
     cv::Mat mat1_roi;
     cv::Mat dst_roi;
-    std::vector<cv::ocl::OCLInfo> oclinfo;
+    std::vector<cv::ocl::Info> oclinfo;
     //ocl dst mat for testing
     cv::ocl::oclMat gdst_whole;
 
@@ -970,10 +970,10 @@ PARAM_TEST_CASE(Threshold, MatType, ThreshOp)
     }
 
     void random_roi()
-    {
-        cv::RNG &rng = TS::ptr()->get_rng();
+    {       
 #ifdef RANDOMROI
         //randomize ROI
+		cv::RNG &rng = TS::ptr()->get_rng();
         roicols = rng.uniform(1, mat1.cols);
         roirows = rng.uniform(1, mat1.rows);
         src1x   = rng.uniform(0, mat1.cols - roicols);
@@ -1051,7 +1051,7 @@ PARAM_TEST_CASE(meanShiftTestBase, MatType, MatType, int, int, cv::TermCriteria)
     cv::ocl::oclMat gdst;
     cv::ocl::oclMat gdstCoor;
 
-    std::vector<cv::ocl::OCLInfo> oclinfo;
+    std::vector<cv::ocl::Info> oclinfo;
     //ocl mat with roi
     cv::ocl::oclMat gsrc_roi;
     cv::ocl::oclMat gdst_roi;

@@ -63,7 +63,7 @@ struct getRect
 
 PARAM_TEST_CASE(HaarTestBase, int, int)
 {
-
+	std::vector<cv::ocl::Info> oclinfo;
     cv::ocl::OclCascadeClassifier cascade, nestedCascade;
     cv::CascadeClassifier cpucascade, cpunestedCascade;
     //    Mat img;
@@ -91,6 +91,11 @@ PARAM_TEST_CASE(HaarTestBase, int, int)
 
             return;
         }
+    int devnums = getDevice(oclinfo);
+    CV_Assert(devnums > 0);
+    //if you want to use undefault device, set it here
+    //setDevice(oclinfo[0]);
+    cv::ocl::setBinpath("E:\\");
     }
 };
 
@@ -100,12 +105,7 @@ struct Haar : HaarTestBase {};
 
 TEST_P(Haar, FaceDetect)
 {
-    std::vector<cv::ocl::OCLInfo> oclinfo;
-    int devnums = getDevice(oclinfo);
-    CV_Assert(devnums > 0);
-    //if you want to use undefault device, set it here
-    //setDevice(oclinfo[0]);
-    cv::ocl::setBinpath("E:\\");
+   
     for(int index = 1; index < 2; index++)
     {
         Mat img;

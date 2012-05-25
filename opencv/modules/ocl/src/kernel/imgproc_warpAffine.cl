@@ -47,13 +47,22 @@
 //warpAffine kernel
 //support data types: CV_8UC1, CV_8UC4, CV_32FC1, CV_32FC4, and three interpolation methods: NN, Linear, Cubic.
 
+#if defined DOUBLE_SUPPORT
 #if defined (__ATI__)
 #pragma OPENCL EXTENSION cl_amd_fp64:enable
 #elif defined (__NVIDIA__)
 #pragma OPENCL EXTENSION cl_khr_fp64:enable
 #endif
+typedef double F;
+typedef double4 F4;
+#define convert_F4 convert_double4
+#else 
+typedef float F;
+typedef float4 F4;
+#define convert_F4 convert_float4
+#endif
 
-#define F double 
+
 #define INTER_BITS 5
 #define INTER_TAB_SIZE (1 << INTER_BITS)
 #define INTER_SCALE 1.f/INTER_TAB_SIZE 
@@ -89,9 +98,9 @@ __kernel void warpAffineNN_C1_D0(__global uchar const * restrict src, __global u
     int4 sx, sy;
     int4 DX = (int4)(dx, dx+1, dx+2, dx+3);
     DX = (DX << AB_BITS);
-    double4 M0DX, M3DX;
-    M0DX = M[0] * convert_double4(DX);
-    M3DX = M[3] * convert_double4(DX);
+    F4 M0DX, M3DX;
+    M0DX = M[0] * convert_F4(DX);
+    M3DX = M[3] * convert_F4(DX);
     X = convert_int4(rint(M0DX));
     Y = convert_int4(rint(M3DX));
     int tmp1, tmp2;
@@ -134,9 +143,9 @@ __kernel void warpAffineLinear_C1_D0(__global const uchar * restrict src, __glob
     int4 sx, sy;
     int4 DX = (int4)(dx, dx+1, dx+2, dx+3);
     DX = (DX << AB_BITS);
-    double4 M0DX, M3DX;
-    M0DX = M[0] * convert_double4(DX);
-    M3DX = M[3] * convert_double4(DX);
+    F4 M0DX, M3DX;
+    M0DX = M[0] * convert_F4(DX);
+    M3DX = M[3] * convert_F4(DX);
     X = convert_int4(rint(M0DX));
     Y = convert_int4(rint(M3DX));
     
@@ -258,7 +267,7 @@ __kernel void warpAffineCubic_C1_D0(__global uchar * src, __global uchar * dst, 
 #pragma unroll 16
     for( i=0; i<16; i++ )
     {
-        double v = tab1y[(i>>2)] * tab1x[(i&3)];
+        F v = tab1y[(i>>2)] * tab1x[(i&3)];
         isum += itab[i] = convert_short_sat( rint( v * INTER_REMAP_COEF_SCALE ) );
     }
     

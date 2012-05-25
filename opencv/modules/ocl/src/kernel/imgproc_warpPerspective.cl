@@ -47,13 +47,20 @@
 //wrapPerspective kernel
 //support data types: CV_8UC1, CV_8UC4, CV_32FC1, CV_32FC4, and three interpolation methods: NN, Linear, Cubic.
 
+#if defined DOUBLE_SUPPORT
 #if defined (__ATI__)
 #pragma OPENCL EXTENSION cl_amd_fp64:enable
 #elif defined (__NVIDIA__)
 #pragma OPENCL EXTENSION cl_khr_fp64:enable
 #endif
-
 typedef double F;
+typedef double4 F4;
+#else 
+typedef float F;
+typedef float4 F4;
+#endif
+
+
 #define INTER_BITS 5
 #define INTER_TAB_SIZE (1 << INTER_BITS)
 #define INTER_SCALE 1.f/INTER_TAB_SIZE 
@@ -83,10 +90,10 @@ __kernel void warpPerspectiveNN_C1_D0(__global uchar const * restrict src, __glo
     int dy = get_global_id(1);
     dx = (dx<<2) - (dst_offset&3);
     
-    double4 DX = (double4)(dx, dx+1, dx+2, dx+3);
-    double4 X0 = M[0]*DX + M[1]*dy + M[2];
-    double4 Y0 = M[3]*DX + M[4]*dy + M[5];
-    double4 W = M[6]*DX + M[7]*dy + M[8];
+    F4 DX = (F4)(dx, dx+1, dx+2, dx+3);
+    F4 X0 = M[0]*DX + M[1]*dy + M[2];
+    F4 Y0 = M[3]*DX + M[4]*dy + M[5];
+    F4 W = M[6]*DX + M[7]*dy + M[8];
     W = (W!=0) ? 1./W : 0;
     short4 X = convert_short4(rint(X0*W));
     short4 Y = convert_short4(rint(Y0*W));
@@ -200,7 +207,7 @@ __kernel void warpPerspectiveCubic_C1_D0(__global uchar * src, __global uchar * 
 #pragma unroll 16
     for( i=0; i<16; i++ )
     {
-        double v = tab1y[(i>>2)] * tab1x[(i&3)];
+        F v = tab1y[(i>>2)] * tab1x[(i&3)];
         isum += itab[i] = convert_short_sat( rint( v * INTER_REMAP_COEF_SCALE ) );
     }
     if( isum != INTER_REMAP_COEF_SCALE )
@@ -241,9 +248,9 @@ __kernel void warpPerspectiveNN_C4_D0(__global uchar4 const * restrict src, __gl
     int dx = get_global_id(0);
     int dy = get_global_id(1);
   
-    double X0 = M[0]*dx + M[1]*dy + M[2];
-    double Y0 = M[3]*dx + M[4]*dy + M[5];
-    double W = M[6]*dx + M[7]*dy + M[8];
+    F X0 = M[0]*dx + M[1]*dy + M[2];
+    F Y0 = M[3]*dx + M[4]*dy + M[5];
+    F W = M[6]*dx + M[7]*dy + M[8];
     W = W ? 1./W : 0;
     int X = rint(X0*W);
     int Y = rint(Y0*W);
@@ -264,9 +271,9 @@ __kernel void warpPerspectiveLinear_C4_D0(__global uchar4 const * restrict src, 
     src_offset = (src_offset>>2);
     srcStep = (srcStep>>2); 
  
-    double X0 = M[0]*dx + M[1]*dy + M[2];
-    double Y0 = M[3]*dx + M[4]*dy + M[5];
-    double W = M[6]*dx + M[7]*dy + M[8];
+    F X0 = M[0]*dx + M[1]*dy + M[2];
+    F Y0 = M[3]*dx + M[4]*dy + M[5];
+    F W = M[6]*dx + M[7]*dy + M[8];
     W = W ? INTER_TAB_SIZE/W : 0;
     int X = rint(X0*W);
     int Y = rint(Y0*W);
@@ -313,9 +320,9 @@ __kernel void warpPerspectiveCubic_C4_D0(__global uchar4 const * restrict src, _
     dst_offset = (dst_offset>>2);
     dstStep = (dstStep>>2); 
     
-    double X0 = M[0]*dx + M[1]*dy + M[2];
-    double Y0 = M[3]*dx + M[4]*dy + M[5];
-    double W = M[6]*dx + M[7]*dy + M[8];
+    F X0 = M[0]*dx + M[1]*dy + M[2];
+    F Y0 = M[3]*dx + M[4]*dy + M[5];
+    F W = M[6]*dx + M[7]*dy + M[8];
     W = W ? INTER_TAB_SIZE/W : 0;
     int X = rint(X0*W);
     int Y = rint(Y0*W);
@@ -393,9 +400,9 @@ __kernel void warpPerspectiveNN_C1_D5(__global float * src, __global float * dst
     int dx = get_global_id(0);
     int dy = get_global_id(1);
      
-    double X0 = M[0]*dx + M[1]*dy + M[2];
-    double Y0 = M[3]*dx + M[4]*dy + M[5];
-    double W = M[6]*dx + M[7]*dy + M[8];
+    F X0 = M[0]*dx + M[1]*dy + M[2];
+    F Y0 = M[3]*dx + M[4]*dy + M[5];
+    F W = M[6]*dx + M[7]*dy + M[8];
     W = W ? 1./W : 0;
     int X = rint(X0*W);
     int Y = rint(Y0*W);
@@ -415,9 +422,9 @@ __kernel void warpPerspectiveLinear_C1_D5(__global float * src, __global float *
     
     src_offset = (src_offset>>2);
      
-    double X0 = M[0]*dx + M[1]*dy + M[2];
-    double Y0 = M[3]*dx + M[4]*dy + M[5];
-    double W = M[6]*dx + M[7]*dy + M[8];
+    F X0 = M[0]*dx + M[1]*dy + M[2];
+    F Y0 = M[3]*dx + M[4]*dy + M[5];
+    F W = M[6]*dx + M[7]*dy + M[8];
     W = W ? INTER_TAB_SIZE/W : 0;
     int X = rint(X0*W);
     int Y = rint(Y0*W);
@@ -462,9 +469,9 @@ __kernel void warpPerspectiveCubic_C1_D5(__global float * src, __global float * 
     src_offset = (src_offset>>2);
     dst_offset = (dst_offset>>2);
      
-    double X0 = M[0]*dx + M[1]*dy + M[2];
-    double Y0 = M[3]*dx + M[4]*dy + M[5];
-    double W = M[6]*dx + M[7]*dy + M[8];
+    F X0 = M[0]*dx + M[1]*dy + M[2];
+    F Y0 = M[3]*dx + M[4]*dy + M[5];
+    F W = M[6]*dx + M[7]*dy + M[8];
     W = W ? INTER_TAB_SIZE/W : 0;
     int X = rint(X0*W);
     int Y = rint(Y0*W);
@@ -519,9 +526,9 @@ __kernel void warpPerspectiveNN_C4_D5(__global float4 * src, __global float4 * d
     int dx = get_global_id(0);
     int dy = get_global_id(1);
         
-    double X0 = M[0]*dx + M[1]*dy + M[2];
-    double Y0 = M[3]*dx + M[4]*dy + M[5];
-    double W = M[6]*dx + M[7]*dy + M[8];
+    F X0 = M[0]*dx + M[1]*dy + M[2];
+    F Y0 = M[3]*dx + M[4]*dy + M[5];
+    F W = M[6]*dx + M[7]*dy + M[8];
     W = W ? 1./W : 0;
     int X = rint(X0*W);
     int Y = rint(Y0*W);
@@ -544,9 +551,9 @@ __kernel void warpPerspectiveLinear_C4_D5(__global float4 * src, __global float4
     srcStep = (srcStep>>2);
     dstStep = (dstStep>>2);
         
-    double X0 = M[0]*dx + M[1]*dy + M[2];
-    double Y0 = M[3]*dx + M[4]*dy + M[5];
-    double W = M[6]*dx + M[7]*dy + M[8];
+    F X0 = M[0]*dx + M[1]*dy + M[2];
+    F Y0 = M[3]*dx + M[4]*dy + M[5];
+    F W = M[6]*dx + M[7]*dy + M[8];
     W = W ? INTER_TAB_SIZE/W : 0;
     int X = rint(X0*W);
     int Y = rint(Y0*W);
@@ -594,9 +601,9 @@ __kernel void warpPerspectiveCubic_C4_D5(__global float4 * src, __global float4 
     srcStep = (srcStep>>2);
     dstStep = (dstStep>>2);
         
-    double X0 = M[0]*dx + M[1]*dy + M[2];
-    double Y0 = M[3]*dx + M[4]*dy + M[5];
-    double W = M[6]*dx + M[7]*dy + M[8];
+    F X0 = M[0]*dx + M[1]*dy + M[2];
+    F Y0 = M[3]*dx + M[4]*dy + M[5];
+    F W = M[6]*dx + M[7]*dy + M[8];
     W = W ? INTER_TAB_SIZE/W : 0;
     int X = rint(X0*W);
     int Y = rint(Y0*W);

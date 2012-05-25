@@ -56,6 +56,7 @@ using namespace cv::ocl;
 
 #if !defined (HAVE_OPENCL)
 
+
 void cv::ocl::meanShiftFiltering(const oclMat &, oclMat &, int, int, TermCriteria)
 {
     throw_nogpu();
@@ -160,9 +161,9 @@ namespace cv
         void threshold_8u(const oclMat &src, oclMat &dst, double thresh, double maxVal, int type)
         {
             CV_Assert( (src.cols == dst.cols) && (src.rows == dst.rows) );
-            ClContext *clCxt = src.clCxt;
+            Context *clCxt = src.clCxt;
 
-            uchar thresh_uchar = cvRound(thresh);
+            uchar thresh_uchar = cvFloor(thresh);
             uchar max_val = cvRound(maxVal);
             string kernelName = "threshold";
 
@@ -191,7 +192,7 @@ namespace cv
         void threshold_32f(const oclMat &src, oclMat &dst, double thresh, double maxVal, int type)
         {
             CV_Assert( (src.cols == dst.cols) && (src.rows == dst.rows) );
-            ClContext *clCxt = src.clCxt;
+            Context *clCxt = src.clCxt;
 
             float thresh_f = thresh;
             float max_val = maxVal;
@@ -248,7 +249,7 @@ namespace cv
         void resize_gpu( const oclMat &src, oclMat &dst, double fx, double fy, int interpolation)
         {
             CV_Assert( (src.channels() == dst.channels()) );
-            ClContext *clCxt = src.clCxt;
+            Context *clCxt = src.clCxt;
             float ifx = 1. / fx;
             float ify = 1. / fy;
             double ifx_d = 1. / fx;
@@ -369,7 +370,7 @@ namespace cv
             int srcOffset = src.offset / src.channels() / src.elemSize1();
             int dstOffset = dst.offset / dst.channels() / dst.elemSize1();
 
-            ClContext *clCxt = src.clCxt;
+            Context *clCxt = src.clCxt;
             string kernelName = "medianFilter";
 
 
@@ -437,7 +438,7 @@ namespace cv
                 D = 4;
             }
 
-            ClContext *clCxt = src.clCxt;
+            Context *clCxt = src.clCxt;
             string kernelName = "copyConstBorder";
             if(boardtype == BORDER_REPLICATE)
                 kernelName = "copyReplicateBorder";
@@ -570,14 +571,14 @@ namespace cv
                 int srcStep = src.step1();
                 int dstStep = dst.step1();
 
-                ClContext *clCxt = src.clCxt;
+                Context *clCxt = src.clCxt;
                 string s[3] = {"NN", "Linear", "Cubic"};
                 string kernelName = "warpAffine" + s[interpolation];
 
                 cl_int st;
-                cl_mem coeffs_cm = clCreateBuffer( clCxt->clContext, CL_MEM_READ_WRITE, sizeof(F) * 2 * 3, NULL, &st );
+				cl_mem coeffs_cm = clCreateBuffer( clCxt->impl->clContext, CL_MEM_READ_WRITE, sizeof(F) * 2 * 3, NULL, &st );
                 openCLVerifyCall(st);
-                openCLSafeCall(clEnqueueWriteBuffer(clCxt->clCmdQueue, (cl_mem)coeffs_cm, 1, 0, sizeof(F) * 2 * 3, coeffs, 0, 0, 0));
+                openCLSafeCall(clEnqueueWriteBuffer(clCxt->impl->clCmdQueue, (cl_mem)coeffs_cm, 1, 0, sizeof(F) * 2 * 3, coeffs, 0, 0, 0));
 
                 //TODO: improve this kernel
                 size_t blkSizeX = 16, blkSizeY = 16;
@@ -621,14 +622,14 @@ namespace cv
                 int srcStep = src.step1();
                 int dstStep = dst.step1();
 
-                ClContext *clCxt = src.clCxt;
+                Context *clCxt = src.clCxt;
                 string s[3] = {"NN", "Linear", "Cubic"};
                 string kernelName = "warpPerspective" + s[interpolation];
 
                 cl_int st;
-                cl_mem coeffs_cm = clCreateBuffer( clCxt->clContext, CL_MEM_READ_WRITE, sizeof(double) * 3 * 3, NULL, &st );
+                cl_mem coeffs_cm = clCreateBuffer( clCxt->impl->clContext, CL_MEM_READ_WRITE, sizeof(double) * 3 * 3, NULL, &st );
                 openCLVerifyCall(st);
-                openCLSafeCall(clEnqueueWriteBuffer(clCxt->clCmdQueue, (cl_mem)coeffs_cm, 1, 0, sizeof(double) * 3 * 3, coeffs, 0, 0, 0));
+                openCLSafeCall(clEnqueueWriteBuffer(clCxt->impl->clCmdQueue, (cl_mem)coeffs_cm, 1, 0, sizeof(double) * 3 * 3, coeffs, 0, 0, 0));
 
                 //TODO: improve this kernel
                 size_t blkSizeX = 16, blkSizeY = 16;
@@ -807,23 +808,36 @@ namespace cv
         {
             CV_Assert(src.type() == CV_8UC1 || src.type() == CV_32FC1);
             double scale = static_cast<double>(1 << ((ksize > 0 ? ksize : 3) - 1)) * blockSize;
-
+            oclMat temp;
             if (ksize < 0)
                 scale *= 2.;
 
-            if (src.depth() == CV_8U)
+            if (src.depth() == CV_8U){
+                src.convertTo(temp, (int)CV_32FC1);
                 scale *= 255.;
-
-            scale = 1. / scale;
-            if (ksize > 0)
-            {
-                Sobel(src, Dx, CV_32F, 1, 0, ksize, scale, 0, borderType);
-                Sobel(src, Dy, CV_32F, 0, 1, ksize, scale, 0, borderType);
-            }
-            else
-            {
-                Scharr(src, Dx, CV_32F, 1, 0, scale, 0, borderType);
-                Scharr(src, Dy, CV_32F, 0, 1, scale, 0, borderType);
+                scale = 1. / scale;
+                if (ksize > 0)
+                {
+                    Sobel(temp, Dx, CV_32F, 1, 0, ksize, scale, 0, borderType);
+                    Sobel(temp, Dy, CV_32F, 0, 1, ksize, scale, 0, borderType);
+                }
+                else
+                {
+                    Scharr(temp, Dx, CV_32F, 1, 0, scale, 0, borderType);
+                    Scharr(temp, Dy, CV_32F, 0, 1, scale, 0, borderType);
+                }
+            }else{
+                scale = 1. / scale;
+                if (ksize > 0)
+                {
+                    Sobel(src, Dx, CV_32F, 1, 0, ksize, scale, 0, borderType);
+                    Sobel(src, Dy, CV_32F, 0, 1, ksize, scale, 0, borderType);
+                }
+                else
+                {
+                    Scharr(src, Dx, CV_32F, 1, 0, scale, 0, borderType);
+                    Scharr(src, Dy, CV_32F, 0, 1, scale, 0, borderType);
+                }
             }
         }
 
@@ -905,7 +919,7 @@ namespace cv
         {
             CV_Assert( (src.cols == dst.cols) && (src.rows == dst.rows) );
             CV_Assert( !(dst.step & 0x3) );
-            ClContext *clCxt = src.clCxt;
+            Context *clCxt = src.clCxt;
 
             //#define IMG_BUFFER
 #ifdef IMG_BUFFER
@@ -1034,7 +1048,7 @@ openCLExecuteKernel(clCxt, &meanShift, "meanshift_kernel", globalThreads, localT
             CV_Assert( (src.cols == dstr.cols) && (src.rows == dstr.rows) &&
                        (src.rows == dstsp.rows) && (src.cols == dstsp.cols));
             CV_Assert( !(dstsp.step & 0x3) );
-            ClContext *clCxt = src.clCxt;
+            Context *clCxt = src.clCxt;
 
             //Arrange the NDRange
             int col = src.cols, row = src.rows;
@@ -1104,7 +1118,7 @@ openCLExecuteKernel(clCxt, &meanShift, "meanshift_kernel", globalThreads, localT
         {
             using namespace histograms;
 
-            ClContext  *clCxt = mat_src.clCxt;
+            Context  *clCxt = mat_src.clCxt;
             int depth = mat_src.depth();
 
             string kernelName = "calc_sub_hist";
@@ -1181,7 +1195,7 @@ openCLExecuteKernel(clCxt, &meanShift, "meanshift_kernel", globalThreads, localT
         {
             using namespace histograms;
 
-            ClContext  *clCxt = sub_hist.clCxt;
+            Context  *clCxt = sub_hist.clCxt;
             string kernelName = "merge_hist";
 
             size_t localThreads[3]  = { 256, 1, 1 };
@@ -1213,7 +1227,7 @@ openCLExecuteKernel(clCxt, &meanShift, "meanshift_kernel", globalThreads, localT
             //mat_hist.setTo(0);
             calcHist(mat_src, mat_hist);
 
-            ClContext *clCxt = mat_src.clCxt;
+            Context *clCxt = mat_src.clCxt;
             string kernelName = "calLUT";
             size_t localThreads[3] = { 256, 1, 1};
             size_t globalThreads[3] = { 256, 1, 1};
@@ -1232,7 +1246,7 @@ openCLExecuteKernel(clCxt, &meanShift, "meanshift_kernel", globalThreads, localT
             double sigmacolor = -0.5 / (sigmaclr * sigmaclr);
             double sigmaspace = -0.5 / (sigmaspc * sigmaspc);
             dst.create(src.size(), src.type());
-            ClContext *clCxt = src.clCxt;
+            Context *clCxt = src.clCxt;
             int r = radius;
             int d = 2 * r + 1;
 
@@ -1280,8 +1294,8 @@ openCLExecuteKernel(clCxt, &meanShift, "meanshift_kernel", globalThreads, localT
 
             CV_Assert(src.channels() == dst.channels());
 
-            cl_mem sigClr = clCreateBuffer(clCxt->clContext, CL_MEM_USE_HOST_PTR, size_color, sigClrH, &errcode_ret);
-            cl_mem sigSpc = clCreateBuffer(clCxt->clContext, CL_MEM_USE_HOST_PTR, size_space, sigSpcH, &errcode_ret);
+            cl_mem sigClr = clCreateBuffer(clCxt->impl->clContext, CL_MEM_USE_HOST_PTR, size_color, sigClrH, &errcode_ret);
+            cl_mem sigSpc = clCreateBuffer(clCxt->impl->clContext, CL_MEM_USE_HOST_PTR, size_space, sigSpcH, &errcode_ret);
             if(errcode_ret != CL_SUCCESS) printf("create buffer error\n");
             openCLSafeCall(clSetKernelArg(kernel, 0, sizeof(void *), (void *)&dst.data));
             openCLSafeCall(clSetKernelArg(kernel, 1, sizeof(void *), (void *)&tmp.data));
@@ -1298,14 +1312,14 @@ openCLExecuteKernel(clCxt, &meanShift, "meanshift_kernel", globalThreads, localT
             openCLSafeCall(clSetKernelArg(kernel, 12, sizeof(cl_mem), (void *)&sigClr));
             openCLSafeCall(clSetKernelArg(kernel, 13, sizeof(cl_mem), (void *)&sigSpc));
 
-            openCLSafeCall(clEnqueueWriteBuffer(clCxt->clCmdQueue, sigClr, CL_TRUE, 0, size_color, sigClrH, 0, NULL, NULL));
-            openCLSafeCall(clEnqueueWriteBuffer(clCxt->clCmdQueue, sigSpc, CL_TRUE, 0, size_space, sigSpcH, 0, NULL, NULL));
+            openCLSafeCall(clEnqueueWriteBuffer(clCxt->impl->clCmdQueue, sigClr, CL_TRUE, 0, size_color, sigClrH, 0, NULL, NULL));
+            openCLSafeCall(clEnqueueWriteBuffer(clCxt->impl->clCmdQueue, sigSpc, CL_TRUE, 0, size_space, sigSpcH, 0, NULL, NULL));
 
             size_t localSize[] = {16, 16};
             size_t globalSize[] = {(cols / 16 + 1) * 16, (rows / 16 + 1) * 16};
-            openCLSafeCall(clEnqueueNDRangeKernel(clCxt->clCmdQueue, kernel, 2, NULL, globalSize, localSize, 0, NULL, NULL));
+            openCLSafeCall(clEnqueueNDRangeKernel(clCxt->impl->clCmdQueue, kernel, 2, NULL, globalSize, localSize, 0, NULL, NULL));
 
-            clFinish(clCxt->clCmdQueue);
+            clFinish(clCxt->impl->clCmdQueue);
             openCLSafeCall(clReleaseKernel(kernel));
             free(sigClrH);
             free(sigSpcH);

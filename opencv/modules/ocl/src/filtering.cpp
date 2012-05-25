@@ -337,7 +337,7 @@ void GPUErode(const oclMat &src, oclMat &dst, oclMat &mat_kernel, Size &ksize, c
 
     //int D=src.depth();
 
-    ClContext *clCxt = src.clCxt;
+    Context *clCxt = src.clCxt;
 
     string kernelName = "erode";
 
@@ -392,7 +392,7 @@ void GPUDilate(const oclMat &src, oclMat &dst, oclMat &mat_kernel, Size &ksize, 
     int maxrows = src.wholerows + minrows - 1;
 
 
-    ClContext *clCxt = src.clCxt;
+    Context *clCxt = src.clCxt;
 
     string kernelName = "dilate";
     vector< pair<size_t, const void *> > args;
@@ -654,7 +654,7 @@ int dstOffset = dst.offset/dst.channels()/dst.elemSize1();
 
 int D=src.depth();
 
-ClContext *clCxt = src.clCxt;
+Context *clCxt = src.clCxt;
 
 string kernelName = "filter2D";
 
@@ -689,7 +689,7 @@ void GPUFilter2D(const oclMat &src, oclMat &dst, oclMat &mat_kernel,
     CV_Assert( (borderType != 0) );
     CV_Assert(ksize.height > 0 && ksize.width > 0 && ((ksize.height & 1) == 1) && ((ksize.width & 1) == 1));
     CV_Assert((anchor.x == -1 && anchor.y == -1) || (anchor.x == ksize.width >> 1 && anchor.y == ksize.height >> 1));
-    ClContext *clCxt = src.clCxt;
+    Context *clCxt = src.clCxt;
     int cn =  src.channels();
     int depth = src.depth();
 
@@ -845,7 +845,7 @@ void GPUFilterBox_8u_C1R(const oclMat &src, oclMat &dst,
     CV_Assert(src.clCxt == dst.clCxt);
     CV_Assert((src.cols == dst.cols) &&
               (src.rows == dst.rows) );
-    ClContext *clCxt = src.clCxt;
+    Context *clCxt = src.clCxt;
 
     string kernelName = "boxFilter_C1_D0";
 
@@ -906,7 +906,7 @@ void GPUFilterBox_8u_C4R(const oclMat &src, oclMat &dst,
     CV_Assert(src.clCxt == dst.clCxt);
     CV_Assert((src.cols == dst.cols) &&
               (src.rows == dst.rows) );
-    ClContext *clCxt = src.clCxt;
+    Context *clCxt = src.clCxt;
 
     string kernelName = "boxFilter_C4_D0";
 
@@ -967,7 +967,7 @@ void GPUFilterBox_32F_C1R(const oclMat &src, oclMat &dst,
     CV_Assert(src.clCxt == dst.clCxt);
     CV_Assert((src.cols == dst.cols) &&
               (src.rows == dst.rows) );
-    ClContext *clCxt = src.clCxt;
+    Context *clCxt = src.clCxt;
 
     string kernelName = "boxFilter_C1_D5";
 
@@ -1029,7 +1029,7 @@ void GPUFilterBox_32F_C4R(const oclMat &src, oclMat &dst,
     CV_Assert(src.clCxt == dst.clCxt);
     CV_Assert((src.cols == dst.cols) &&
               (src.rows == dst.rows) );
-    ClContext *clCxt = src.clCxt;
+    Context *clCxt = src.clCxt;
 
     string kernelName = "boxFilter_C4_D5";
 
@@ -1169,7 +1169,7 @@ template <> struct index_and_sizeof<float>
 template <typename T>
 void linearRowFilter_gpu(const oclMat &src, const oclMat &dst, oclMat mat_kernel, int ksize, int anchor, int bordertype)
 {
-    ClContext *clCxt = src.clCxt;
+    Context *clCxt = src.clCxt;
     int channels = src.channels();
     //size_t blockSize = 16;
     size_t localThreads[3] = {16, 16, 1};
@@ -1419,7 +1419,7 @@ namespace
 template <typename T>
 void linearColumnFilter_gpu(const oclMat &src, const oclMat &dst, oclMat mat_kernel, int ksize, int anchor, int bordertype)
 {
-    ClContext *clCxt = src.clCxt;
+    Context *clCxt = src.clCxt;
     int channels = src.channels();
     //size_t blockSize = 16;
     size_t localThreads[3] = {16, 16, 1};

@@ -94,7 +94,7 @@ PARAM_TEST_CASE(ArithmTestBase, MatType, bool)
     cv::Mat mask_roi;
     cv::Mat dst_roi;
     cv::Mat dst1_roi; //bak
-    std::vector<cv::ocl::OCLInfo> oclinfo;
+    std::vector<cv::ocl::Info> oclinfo;
     //ocl dst mat for testing
     cv::ocl::oclMat gdst_whole;
     cv::ocl::oclMat gdst1_whole; //bak
@@ -112,7 +112,7 @@ PARAM_TEST_CASE(ArithmTestBase, MatType, bool)
 
         cv::RNG &rng = TS::ptr()->get_rng();
 
-        cv::Size size(2560, 2560);
+        cv::Size size(MWIDTH, MHEIGHT);
 
         mat1 = randomMat(rng, size, type, 5, 16, false);
         mat2 = randomMat(rng, size, type, 5, 16, false);
@@ -1568,7 +1568,8 @@ INSTANTIATE_TEST_CASE_P(Arithm, Transpose, Combine(
                             Values(false))); // Values(false) is the reserved parameter
 
 INSTANTIATE_TEST_CASE_P(Arithm, Flip, Combine(
-                            ALL_TYPES, Values(false))); // Values(false) is the reserved parameter
+                            Values(CV_8UC1, CV_8UC4, CV_32SC1, CV_32SC4, CV_32FC1, CV_32FC4),
+                            Values(false))); // Values(false) is the reserved parameter
 
 INSTANTIATE_TEST_CASE_P(Arithm, MinMax, Combine(
                             Values(CV_8U, CV_32S, CV_32F),

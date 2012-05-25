@@ -119,7 +119,7 @@ namespace cv
             } con_struct_t;
 
             cl_mem cl_con_struct =  NULL;
-            void load_constants(ClContext *clCxt, int ndisp, float max_data_term, float data_weight,
+            void load_constants(Context *clCxt, int ndisp, float max_data_term, float data_weight,
                                 float max_disc_term, float disc_single_jump)
             {
                 con_struct_t *con_struct = new con_struct_t;
@@ -129,7 +129,7 @@ namespace cv
                 con_struct -> cmax_disc_term    = max_data_term;
                 con_struct -> cdisc_single_jump = disc_single_jump;
 
-                cl_con_struct = load_constant(clCxt->clContext, clCxt->clCmdQueue, (void *)con_struct,
+                cl_con_struct = load_constant(clCxt->impl->clContext, clCxt->impl->clCmdQueue, (void *)con_struct,
                                               sizeof(con_struct_t));
 
                 delete con_struct;
@@ -147,7 +147,7 @@ namespace cv
             /////////////////////////////////////////////////////////////////////////
             void  comp_data_call(const oclMat &left, const oclMat &right, oclMat &data, int disp,                                float cmax_data_term, float cdata_weight)
             {
-                ClContext  *clCxt = left.clCxt;
+                Context  *clCxt = left.clCxt;
                 int channels = left.channels();
                 int data_type = data.type();
 
@@ -183,10 +183,10 @@ namespace cv
                 //openCLSafeCall(clSetKernelArg(kernel,14,sizeof(cl_float),(void*)&cdata_weight));
                 openCLSafeCall(clSetKernelArg(kernel, 10, sizeof(cl_int), (void *)&channels));
 
-                openCLSafeCall(clEnqueueNDRangeKernel(clCxt->clCmdQueue, kernel, 2, NULL,
+                openCLSafeCall(clEnqueueNDRangeKernel(clCxt->impl->clCmdQueue, kernel, 2, NULL,
                                                       globalThreads, localThreads, 0, NULL, NULL));
 
-                clFinish(clCxt->clCmdQueue);
+                clFinish(clCxt->impl->clCmdQueue);
                 openCLSafeCall(clReleaseKernel(kernel));
             }
             ///////////////////////////////////////////////////////////////////////////////////
@@ -195,7 +195,7 @@ namespace cv
             void data_step_down_call(int dst_cols, int dst_rows, int src_rows,
                                      const oclMat &src, oclMat &dst, int disp)
             {
-                ClContext  *clCxt = src.clCxt;
+                Context  *clCxt = src.clCxt;
                 int data_type = src.type();
 
                 string kernelName = "data_step_down_";
@@ -224,10 +224,10 @@ namespace cv
                 openCLSafeCall(clSetKernelArg(kernel, 6, sizeof(cl_int), (void *)&dst.cols));
                 openCLSafeCall(clSetKernelArg(kernel, 7, sizeof(cl_int), (void *)&disp));
 
-                openCLSafeCall(clEnqueueNDRangeKernel(clCxt->clCmdQueue, kernel, 2, NULL,
+                openCLSafeCall(clEnqueueNDRangeKernel(clCxt->impl->clCmdQueue, kernel, 2, NULL,
                                                       globalThreads, localThreads, 0, NULL, NULL));
 
-                clFinish(clCxt->clCmdQueue);
+                clFinish(clCxt->impl->clCmdQueue);
                 openCLSafeCall(clReleaseKernel(kernel));
             }
             /////////////////////////////////////////////////////////////////////////////////
@@ -236,7 +236,7 @@ namespace cv
             void level_up_message_call(int dst_idx, int dst_cols, int dst_rows, int src_rows,
                                        oclMat &src, oclMat &dst, int ndisp)
             {
-                ClContext  *clCxt = src.clCxt;
+                Context  *clCxt = src.clCxt;
                 int data_type = src.type();
 
                 string kernelName = "level_up_message_";
@@ -265,10 +265,10 @@ namespace cv
                 openCLSafeCall(clSetKernelArg(kernel, 6, sizeof(cl_int), (void *)&dst.step));
                 openCLSafeCall(clSetKernelArg(kernel, 7, sizeof(cl_int), (void *)&ndisp));
 
-                openCLSafeCall(clEnqueueNDRangeKernel(clCxt->clCmdQueue, kernel, 2, NULL,
+                openCLSafeCall(clEnqueueNDRangeKernel(clCxt->impl->clCmdQueue, kernel, 2, NULL,
                                                       globalThreads, localThreads, 0, NULL, NULL));
 
-                clFinish(clCxt->clCmdQueue);
+                clFinish(clCxt->impl->clCmdQueue);
                 openCLSafeCall(clReleaseKernel(kernel));
             }
             void level_up_messages_calls(int dst_idx, int dst_cols, int dst_rows, int src_rows,
@@ -297,7 +297,7 @@ namespace cv
                                           int t, int cndisp, float cmax_disc_term,
                                           float cdisc_single_jump)
             {
-                ClContext  *clCxt = l.clCxt;
+                Context  *clCxt = l.clCxt;
                 int data_type = u.type();
 
                 string kernelName = "one_iteration_";
@@ -333,10 +333,10 @@ namespace cv
                 openCLSafeCall(clSetKernelArg(kernel, 13, sizeof(cl_float), (void *)&cmax_disc_term));
                 openCLSafeCall(clSetKernelArg(kernel, 14, sizeof(cl_float), (void *)&cdisc_single_jump));
 
-                openCLSafeCall(clEnqueueNDRangeKernel(clCxt->clCmdQueue, kernel, 2, NULL,
+                openCLSafeCall(clEnqueueNDRangeKernel(clCxt->impl->clCmdQueue, kernel, 2, NULL,
                                                       globalThreads, localThreads, 0, NULL, NULL));
 
-                clFinish(clCxt->clCmdQueue);
+                clFinish(clCxt->impl->clCmdQueue);
                 openCLSafeCall(clReleaseKernel(kernel));
             }
 
@@ -355,7 +355,7 @@ namespace cv
             void output_call(const oclMat &u, const oclMat &d, const oclMat l, const oclMat &r,
                              const oclMat &data, oclMat &disp, int ndisp)
             {
-                ClContext  *clCxt = u.clCxt;
+                Context  *clCxt = u.clCxt;
                 int data_type = u.type();
 
                 string kernelName = "output_";
@@ -388,10 +388,10 @@ namespace cv
                 openCLSafeCall(clSetKernelArg(kernel, 10, sizeof(cl_int), (void *)&disp.step));
                 openCLSafeCall(clSetKernelArg(kernel, 11, sizeof(cl_int), (void *)&ndisp));
 
-                openCLSafeCall(clEnqueueNDRangeKernel(clCxt->clCmdQueue, kernel, 2, NULL,
+                openCLSafeCall(clEnqueueNDRangeKernel(clCxt->impl->clCmdQueue, kernel, 2, NULL,
                                                       globalThreads, localThreads, 0, NULL, NULL));
 
-                clFinish(clCxt->clCmdQueue);
+                clFinish(clCxt->impl->clCmdQueue);
                 openCLSafeCall(clReleaseKernel(kernel));
 
             }
@@ -409,8 +409,8 @@ namespace
     void print_gpu_mat(const oclMat &mat)
     {
         T *data_1 = new T[mat.rows * mat.cols * mat.channels()];
-        ClContext  *clCxt = mat.clCxt;
-        int status = clEnqueueReadBuffer(clCxt -> clCmdQueue, (cl_mem)mat.data, CL_TRUE, 0,
+        Context  *clCxt = mat.clCxt;
+        int status = clEnqueueReadBuffer(clCxt -> impl-> clCmdQueue, (cl_mem)mat.data, CL_TRUE, 0,
                                          mat.rows * mat.cols * mat.channels() * sizeof(T), data_1, 0, NULL, NULL);
 
         if(status != CL_SUCCESS)

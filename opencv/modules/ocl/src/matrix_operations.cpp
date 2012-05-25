@@ -128,7 +128,7 @@ namespace cv
 void convert_C3C4(const cl_mem &src, oclMat &dst, int srcStep)
 {
     int dstStep = dst.step1() / dst.channels();
-    ClContext *clCxt = dst.clCxt;
+    Context *clCxt = dst.clCxt;
     string kernelName = "convertC3C4";
 
     vector< pair<size_t, const void *> > args;
@@ -149,7 +149,7 @@ void convert_C3C4(const cl_mem &src, oclMat &dst, int srcStep)
 void convert_C4C3(const oclMat &src, cl_mem &dst, int dstStep)
 {
     int srcStep = src.step1() / src.channels();
-    ClContext *clCxt = src.clCxt;
+    Context *clCxt = src.clCxt;
     string kernelName = "convertC4C3";
 
     vector< pair<size_t, const void *> > args;
@@ -463,7 +463,7 @@ oclMat cv::ocl::oclMat::reshape(int /*new_cn*/, int /*new_rows*/) const
 
 void cv::ocl::oclMat::create(int _rows, int _cols, int _type)
 {
-    clCxt = ClContext::getContext();
+    clCxt = Context::getContext();
     //cout << "cv::ocl::oclMat::create()." << endl;
 
     /* core logic */
