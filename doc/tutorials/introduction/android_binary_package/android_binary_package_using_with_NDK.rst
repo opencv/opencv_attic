@@ -91,7 +91,7 @@ Here is the standard way to compile C++ part of an Android application:
 
 #. Open console and go to the root folder of Android application
 
-   .. code-block:: bash
+   .. code-block:: sh
 
         cd <root folder of the project>/
 
@@ -99,13 +99,13 @@ Here is the standard way to compile C++ part of an Android application:
 
 #. Run the following command
 
-   .. code-block:: bash
+   .. code-block:: sh
 
         <path_where_NDK_is_placed>/ndk-build
 
    .. note:: If you are working in *cygwin* shell and encounter an error saying that NDK does not find some *cygwin*\ 's path then you might need to define the following environment variable:
 
-       .. code-block:: bash
+       .. code-block:: sh
 
             export NDK_USE_CYGPATH=1
 
@@ -117,13 +117,13 @@ After that the Java part of the application can be (re)compiled (using either *E
 
     **Example 1**: Verbose compilation
 
-    .. code-block:: bash
+    .. code-block:: sh
 
         <path_where_NDK_is_placed>/ndk-build V=1
 
     **Example 2**: Rebuild all
 
-    .. code-block:: bash
+    .. code-block:: sh
 
         <path_where_NDK_is_placed>/ndk-build -B
 
@@ -293,7 +293,7 @@ To build your own Android application, which uses OpenCV from native part, the f
 
    As an example, on *UNIX* you can add add the following line into the hidden file :file:`.bashrc` placed in your home folder: 
    
-   .. code-block:: bash
+   .. code-block:: sh
 
         export OPENCV_PACKAGE_DIR = <path to the extracted OpenCV package>
         
