@@ -36,7 +36,7 @@ bool JavaBasedPackageManager::InstallPackage(const PackageInfo& package)
     }
 
     LOGD("GetMethodID call\n");
-    jmethodID jmethod = jenv->GetMethodID(jclazz, "InstallAppFormMarket", "(Ljava/lang/String;)Z");
+    jmethodID jmethod = jenv->GetMethodID(jclazz, "InstallAppFromMarket", "(Ljava/lang/String;)Z");
     if (!jmethod)
     {
 	LOGE("MarketConnector::GetAppFormMarket method was not found!");

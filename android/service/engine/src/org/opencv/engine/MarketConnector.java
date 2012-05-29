@@ -20,7 +20,7 @@ public class MarketConnector
 		mContext = context;
 	}
 
-	public boolean InstallAppFormMarket(String AppID)
+	public boolean InstallAppFromMarket(String AppID)
 	{
         boolean result = true;
 		try
@@ -40,7 +40,7 @@ public class MarketConnector
 		return result;
 	}
 
-	public boolean RemoveAppFormMarket(String AppID)
+	public boolean RemoveAppFromMarket(String AppID)
 	{
         boolean result = true;
 		try

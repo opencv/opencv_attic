@@ -21,12 +21,9 @@ import android.os.IBinder;
 import android.os.RemoteException;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.view.View.OnFocusChangeListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.ExpandableListView;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
@@ -114,7 +111,7 @@ public class ManagerActivity extends Activity
 			
 			@Override
 			public void onClick(View v) {
-				if (!mMarket.InstallAppFormMarket("org.opencv.engine"))
+				if (!mMarket.InstallAppFromMarket("org.opencv.engine"))
 				{
 					Toast toast = Toast.makeText(getApplicationContext(), "Google Play is not avaliable", Toast.LENGTH_SHORT);
 					toast.show();
@@ -130,7 +127,7 @@ public class ManagerActivity extends Activity
 			
 			public void onClick(DialogInterface dialog, int which) {
 				int index = (Integer)mInstalledPackageView.getTag();
-				if (!mMarket.InstallAppFormMarket(mInstalledPackageInfo[index].packageName))
+				if (!mMarket.InstallAppFromMarket(mInstalledPackageInfo[index].packageName))
 				{
 					Toast toast = Toast.makeText(getApplicationContext(), "Google Play is not avaliable", Toast.LENGTH_SHORT);
 					toast.show();
