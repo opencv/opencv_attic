@@ -21,7 +21,7 @@ public:
     ServiceStarter()
     {
 	PackageManager = new PackageManagerStub();
-	PackageInfo info("2.3", PLATFORM_TEGRA3, 0);
+	PackageInfo info("230", PLATFORM_UNKNOWN, ARCH_ARMv7);
 	PackageManager->InstalledPackages.push_back(info);
 	
 	Engine = new OpenCVEngine(PackageManager);
@@ -80,7 +80,7 @@ TEST(OpenCVEngineTest, GetPathForExistVersion)
     sp<IOpenCVEngine> Engine = InitConnect();
     EXPECT_FALSE(NULL == Engine.get());
     String16 result = Engine->GetLibPathByVersion(String16("2.3"));
-    EXPECT_STREQ("/data/data/org.opencv.lib_v23_tegra3/lib",String8(result).string());
+    EXPECT_STREQ("/data/data/org.opencv.lib_v23_armv7/lib",String8(result).string());
 }
 
 TEST(OpenCVEngineTest, GetPathForUnExistVersion)
