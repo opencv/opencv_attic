@@ -36,7 +36,7 @@ bool JavaBasedPackageManager::InstallPackage(const PackageInfo& package)
     }
 
     LOGD("GetMethodID call\n");
-    jmethodID jmethod = jenv->GetMethodID(jclazz, "GetAppFormMarket", "(Ljava/lang/String;)Z");
+    jmethodID jmethod = jenv->GetMethodID(jclazz, "InstallAppFormMarket", "(Ljava/lang/String;)Z");
     if (!jmethod)
     {
 	LOGE("MarketConnector::GetAppFormMarket method was not found!");
@@ -120,7 +120,12 @@ PackageInfo JavaBasedPackageManager::ConvertPackageFromJava(jobject package, JNI
     jstring jnameobj = static_cast<jstring>(jenv->GetObjectField(package, jfield));
     const char* jnamestr = jenv->GetStringUTFChars(jnameobj, NULL);
     string name(jnamestr);
-
+    
+    jfield = jenv->GetFieldID(jclazz, "versionName", "Ljava/lang/String;");
+    jstring jversionobj = static_cast<jstring>(jenv->GetObjectField(package, jfield));
+    const char* jversionstr = jenv->GetStringUTFChars(jversionobj, NULL);
+    string verison(jversionstr);
+    
     string path;
     jclazz = jenv->FindClass("android/os/Build$VERSION");
     jfield = jenv->GetStaticFieldID(jclazz, "SDK_INT", "I");
@@ -144,7 +149,7 @@ PackageInfo JavaBasedPackageManager::ConvertPackageFromJava(jobject package, JNI
 	path = "/data/data/" + name + "/lib";
     }
     
-    return PackageInfo(name, path);
+    return PackageInfo(name, path, verison);
 }
 
 JavaBasedPackageManager::~JavaBasedPackageManager()

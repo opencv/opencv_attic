@@ -118,13 +118,14 @@ inline int SplitIntelFeatures(const vector<string>& features)
     return result;
 }
 
-inline string SplitVersion(const vector<string>& features)
+inline string SplitVersion(const vector<string>& features, const string& package_version)
 {
     string result;
     
     if ((features.size() > 1) && ('v' == features[1][0]))
     {
 	result = features[1].substr(1);
+	result += SplitStringVector(package_version, '.')[0];
     }
     else
     {
@@ -187,7 +188,7 @@ PackageInfo::PackageInfo(const string& version, int platform, int cpu_id):
     CpuID(cpu_id),
     InstallPath("")
 {
-    FullName = BasePackageName + "_v" + Version;
+    FullName = BasePackageName + "_v" + Version.substr(0, Version.size()-1);
     // NOTE: Platfroms temporary are not supported
     Platform = PLATFORM_UNKNOWN;
     if (PLATFORM_UNKNOWN != Platform)
@@ -280,7 +281,7 @@ PackageInfo::PackageInfo(const string& version, int platform, int cpu_id):
     }
 }
 
-PackageInfo::PackageInfo(const string& fullname, const string& install_path):
+PackageInfo::PackageInfo(const string& fullname, const string& install_path, const string& package_version):
     FullName(fullname),
     InstallPath(install_path)
 {
@@ -293,7 +294,7 @@ PackageInfo::PackageInfo(const string& fullname, const string& install_path):
     
     if (!features.empty() && (BasePackageName == features[0])) 
     {
-	Version = SplitVersion(features);
+	Version = SplitVersion(features, package_version);
 	if (Version.empty())
 	{
 	    CpuID = ARCH_UNKNOWN;
@@ -338,7 +339,7 @@ PackageInfo::PackageInfo(const string& fullname, const string& install_path):
 	    }
 	    else
 	    {
-		LOGD("PIt is not OpenCV library package for this platform");
+		LOGD("It is not OpenCV library package for this platform");
 		Version.clear();
 		CpuID = ARCH_UNKNOWN;
 		Platform = PLATFORM_UNKNOWN;

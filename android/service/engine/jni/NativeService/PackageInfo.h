@@ -29,7 +29,7 @@ class PackageInfo
 { 
 public:
     PackageInfo(const std::string& version, int platform, int cpu_id);
-    PackageInfo(const std::string& fullname, const std::string& install_path);
+    PackageInfo(const std::string& fullname, const std::string& install_path, const std::string& package_version = "0.0");
     std::string GetFullName() const;
     std::string GetVersion() const;
     int GetPlatform() const;

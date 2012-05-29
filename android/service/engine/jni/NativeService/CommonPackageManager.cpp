@@ -62,9 +62,11 @@ string CommonPackageManager::GetPackagePathByVersion(const std::string& version,
     
     if (!packages.empty())
     {
+	printf("Target package: %s\nFirst package: %s\n", target_package.GetFullName().c_str(), packages[0].GetFullName().c_str());
 	vector<PackageInfo>::iterator it = find(packages.begin(), packages.end(), target_package);
 	if (packages.end() != it)
 	{
+	    printf("Package found!\n");
 	    result = it->GetInstalationPath();
 	}
     }
