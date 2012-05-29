@@ -19,14 +19,14 @@ public class MarketConnector
 	{
 		mContext = context;
 	}
-	
-	public boolean GetAppFormMarket(String AppID)
+
+	public boolean InstallAppFormMarket(String AppID)
 	{
         boolean result = true;
 		try
         {
         	Intent intent = new Intent(
-        		Intent.ACTION_VIEW, 
+        		Intent.ACTION_VIEW,
         		Uri.parse("market://details?id=" + AppID)
         		);
         	intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -36,10 +36,31 @@ public class MarketConnector
         {
         	result = false;
         }
-		
+
 		return result;
 	}
-	
+
+	public boolean RemoveAppFormMarket(String AppID)
+	{
+        boolean result = true;
+		try
+        {
+        	Intent intent = new Intent(
+        		Intent.ACTION_DELETE,
+        		Uri.parse("market://details?id=" + AppID)
+        		);
+        	intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        	mContext.startActivity(intent);
+        }
+        catch(Exception e)
+        {
+        	result = false;
+        }
+
+		return result;
+	}
+
+
 	public boolean CheckPackageInstalled(String AppID)
 	{
 		List<PackageInfo> Packages = mContext.getPackageManager().getInstalledPackages(PackageManager.GET_CONFIGURATIONS);
@@ -49,13 +70,13 @@ public class MarketConnector
 			PackageInfo CurrentPack = it.next();
 			if (CurrentPack.packageName == AppID)
 			{
-				return true;				
+				return true;
 			}
 		}
-		
+
 		return false;
 	}
-	
+
 	public PackageInfo[] GetInstalledOpenCVPackages()
 	{
 		List<PackageInfo> AllPackages = mContext.getPackageManager().getInstalledPackages(PackageManager.GET_CONFIGURATIONS);
@@ -66,12 +87,12 @@ public class MarketConnector
 			PackageInfo CurrentPack = it.next();
 			if (CurrentPack.packageName.contains(OpenCVPackageNamePreffix))
 			{
-				OpenCVPackages.add(CurrentPack);				
+				OpenCVPackages.add(CurrentPack);
 			}
 		}
-		
+
 		PackageInfo[] OpenCVPackagesArray = new PackageInfo[OpenCVPackages.size()];
-		
+
 		it = OpenCVPackages.iterator();
 		int idx = 0;
 		while(it.hasNext())
@@ -79,7 +100,7 @@ public class MarketConnector
 			OpenCVPackagesArray[idx] = it.next();
 			idx++;
 		}
-	
-		return OpenCVPackagesArray;		
+
+		return OpenCVPackagesArray;
 	}
 }
