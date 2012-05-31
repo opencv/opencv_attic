@@ -58,21 +58,128 @@ string CommonPackageManager::GetPackagePathByVersion(const std::string& version,
 {
     string result;
     PackageInfo target_package(version, platform, cpu_id);
-    vector<PackageInfo> packages = GetInstalledPackages();
+    vector<PackageInfo> all_packages = GetInstalledPackages();
+    vector<PackageInfo> packages;
+    
+    for (vector<PackageInfo>::iterator it = all_packages.begin(); it != all_packages.end(); ++it)
+    {
+	if (IsVersionCompatible(version, it->GetVersion()))
+	{
+	    packages.push_back(*it);
+	}
+    }
     
     if (!packages.empty())
     {
-	printf("Target package: %s\nFirst package: %s\n", target_package.GetFullName().c_str(), packages[0].GetFullName().c_str());
-	vector<PackageInfo>::iterator it = find(packages.begin(), packages.end(), target_package);
-	if (packages.end() != it)
+	vector<PackageInfo>::iterator found = find(packages.begin(), packages.end(), target_package);
+	if (packages.end() != found)
 	{
-	    printf("Package found!\n");
-	    result = it->GetInstalationPath();
+	    result = found->GetInstalationPath();
+	}
+	else
+	{
+	    int OptRating = -1;
+	    std::vector<std::pair<int, int> >& group = CommonPackageManager::ArmRating;
+	    
+	    if ((cpu_id & ARCH_X86) || (cpu_id & ARCH_X64))
+		group = CommonPackageManager::IntelRating;
+	    
+	    int HardwareRating = GetHardwareRating(platform, cpu_id, group);
+	    
+	    if (-1 == HardwareRating)
+	    {
+		LOGE("Cannot calculate rating for current hardware platfrom!");
+	    }
+	    else
+	    {
+		for (vector<PackageInfo>::iterator it = packages.begin(); it != packages.end(); ++it)
+		{
+		    int PackageRating = GetHardwareRating(it->GetPlatform(), it->GetCpuID(), group);
+		    if (PackageRating >= 0)
+		    {
+			if ((PackageRating <= HardwareRating) && (PackageRating > OptRating))
+			{
+			    OptRating = PackageRating;
+			    found = it;
+			}
+		    }
+		}
+		
+		if ((-1 != OptRating) && (packages.end() != found))
+		{
+		    result = found->GetInstalationPath();
+		}
+	    }
 	}
     }
     
     return result;
 }
+
+bool CommonPackageManager::IsVersionCompatible(const std::string& target_version, const std::string& package_version)
+{
+    assert (target_version.size() == 3);
+    assert (package_version.size() == 3);
+    
+    bool result = false;
+    
+    // major version is the same and minor package version is above or the same as target.
+    if ((package_version[0] == target_version[0]) && (package_version[1] == target_version[1]) && (package_version[2] >= target_version[2]))
+    {
+	result = true;    
+    }
+	
+    return result;
+}
+
+int CommonPackageManager::GetHardwareRating(int platform, int cpu_id, const std::vector<std::pair<int, int> >& group)
+{
+    int result = -1;
+    
+    for (size_t i = 0; i < group.size(); i++)
+    {
+	if (group[i] == std::pair<int, int>(platform, cpu_id))
+	{
+	    result = i;
+	    break;
+	}
+    }
+
+    return result;
+}
+
+std::vector<std::pair<int, int> > CommonPackageManager::InitArmRating()
+{
+    std::vector<std::pair<int, int> > result;
+    
+    result.push_back(std::pair<int, int>(PLATFORM_UNKNOWN, ARCH_ARMv5));
+    result.push_back(std::pair<int, int>(PLATFORM_UNKNOWN, ARCH_ARMv6));
+    result.push_back(std::pair<int, int>(PLATFORM_UNKNOWN, ARCH_ARMv6 | FEATURES_HAS_VFPv3d16));
+    result.push_back(std::pair<int, int>(PLATFORM_UNKNOWN, ARCH_ARMv6 | FEATURES_HAS_VFPv3));
+    result.push_back(std::pair<int, int>(PLATFORM_UNKNOWN, ARCH_ARMv7));
+    result.push_back(std::pair<int, int>(PLATFORM_UNKNOWN, ARCH_ARMv7 | FEATURES_HAS_VFPv3));
+    result.push_back(std::pair<int, int>(PLATFORM_UNKNOWN, ARCH_ARMv7 | FEATURES_HAS_VFPv3 | FEATURES_HAS_NEON));
+    result.push_back(std::pair<int, int>(PLATFORM_TEGRA2, ARCH_ARMv7 | FEATURES_HAS_VFPv3));
+    result.push_back(std::pair<int, int>(PLATFORM_TEGRA3, ARCH_ARMv7 | FEATURES_HAS_VFPv3 | FEATURES_HAS_NEON));
+    
+    return result;
+}
+
+std::vector<std::pair<int, int> > CommonPackageManager::InitIntelRating()
+{
+    std::vector<std::pair<int, int> > result;
+    
+    result.push_back(std::pair<int, int>(PLATFORM_UNKNOWN, ARCH_X64));
+    result.push_back(std::pair<int, int>(PLATFORM_UNKNOWN, ARCH_X86 | FEATURES_HAS_SSSE3));
+    result.push_back(std::pair<int, int>(PLATFORM_UNKNOWN, ARCH_X86 | FEATURES_HAS_SSE2));
+    result.push_back(std::pair<int, int>(PLATFORM_UNKNOWN, ARCH_X86 | FEATURES_HAS_SSE));
+    result.push_back(std::pair<int, int>(PLATFORM_UNKNOWN, ARCH_X86));
+    
+    return result;
+}
+
+std::vector<std::pair<int, int> > CommonPackageManager::IntelRating = CommonPackageManager::InitIntelRating();
+std::vector<std::pair<int, int> > CommonPackageManager::ArmRating = InitArmRating();
 
 CommonPackageManager::~CommonPackageManager()
 {
