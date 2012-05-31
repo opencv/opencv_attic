@@ -30,6 +30,9 @@ protected:
     bool ValidateVersionString(const std::string& version);
     std::string NormalizeVersionString(std::string version);
     bool FixPermissions(const std::string& path);
+    
+    static const int Platform;
+    static const int CpuID;
 };
 
 #endif

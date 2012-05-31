@@ -13,13 +13,15 @@
 
 using namespace android;
 
+const int OpenCVEngine::Platform = DetectKnownPlatforms();
+const int OpenCVEngine::CpuID = GetCpuID();
+
 std::set<std::string> OpenCVEngine::InitKnownOpenCVersions()
 {
     std::set<std::string> result;
     
-    result.insert("230");
     result.insert("240");
-    result.insert("250");
+    result.insert("241");
     
     return result;
 }
@@ -91,10 +93,7 @@ String16 OpenCVEngine::GetLibPathByVersion(android::String16 version)
     
     if (!norm_version.empty())
     {
-	int platform = DetectKnownPlatforms();
-	int cpu_id = GetCpuID();
-
-	path = PackageManager->GetPackagePathByVersion(norm_version, platform, cpu_id);
+	path = PackageManager->GetPackagePathByVersion(norm_version, Platform, CpuID);
 	if (path.empty())
 	{
 	    LOGI("Package OpenCV of version %s is not installed. Try to install it :)", norm_version.c_str());
@@ -121,11 +120,8 @@ android::String16 OpenCVEngine::GetLibraryList(android::String16 version)
     norm_version = NormalizeVersionString(std_version);
     
     if (!norm_version.empty())
-    {
-	int platform = DetectKnownPlatforms();
-	int cpu_id = GetCpuID();
-	
-	std::string tmp = PackageManager->GetPackagePathByVersion(norm_version, platform, cpu_id);
+    {	
+	std::string tmp = PackageManager->GetPackagePathByVersion(norm_version, Platform, CpuID);
 	if (!tmp.empty())
 	{
 	    tmp += "/libopencvinfo.so";
@@ -179,16 +175,13 @@ bool OpenCVEngine::InstallVersion(android::String16 version)
     norm_version = NormalizeVersionString(std_version);
     
     if (!norm_version.empty())
-    {
-	int platform = DetectKnownPlatforms();
-	int cpu_id = GetCpuID();
-	
+    {	
 	LOGD("OpenCVEngine::InstallVersion() begin");
 	
-	if (!PackageManager->CheckVersionInstalled(norm_version, platform, cpu_id))
+	if (!PackageManager->CheckVersionInstalled(norm_version, Platform, CpuID))
 	{
 	    LOGD("PackageManager->InstallVersion call");
-	    result = PackageManager->InstallVersion(norm_version, platform, cpu_id);
+	    result = PackageManager->InstallVersion(norm_version, Platform, CpuID);
 	}
 	else
 	{
