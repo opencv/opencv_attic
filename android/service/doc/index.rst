@@ -10,6 +10,9 @@ Contents:
    Intro
    UseCases
    JavaHelper
+   BaseLoaderCallback
+   LoaderCallbackInterface
+   InstallCallbackInterface
    OpenCVEngineInterface
    StaticHelper
    AsyncServiceHelper

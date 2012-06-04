@@ -1,0 +1,74 @@
+*************************
+Loader Callback Interface
+*************************
+
+.. highlight:: java
+.. module:: org.opencv.android
+    :platform: Android
+    :synopsis: Defines OpenCV initialization callback interface.
+.. class:: LoaderCallbackInterface
+
+    Interface for callback object in case of asynchronous initialization of OpenCV
+
+void onEngineConnected()
+------------------------
+
+.. method:: void onEngineConnected(int status)
+
+    Callback method that is called after OpenCV library initialization
+ 
+    :param status: Status of initialization. See Initialization status constants
+
+void onPackageInstall()
+-----------------------
+
+.. method:: void onPackageInstall(InstallCallbackInterface Callback)
+
+    Callback method that is called in case when package installation is needed
+
+    @param callback Answer object with approve and cancel methods and package description
+
+Initialization status constants
+-------------------------------
+
+.. data:: SUCCESS
+
+    OpenCV initialization finished successfully
+
+.. data:: NO_SERVICE
+
+    OpenCV Engine service is not installed on the device. App need to notify user about it
+
+.. data:: RESTART_REQUIRED
+
+    OpenCV library installation via Google Play service was initialized. Application restart is required
+
+.. data:: MARKET_ERROR
+
+    Google Play (Android Market) cannot be invoked
+
+.. data:: INSTALL_CANCELED
+
+    OpenCV library installation was canceled by user
+
+.. data:: INCOMPATIBLE_ENGINE_VERSION
+
+    Version of OpenCV Engine Service is incompatible with this app. Service update is needed
+
+.. data:: INIT_FAILED
+
+    OpenCV library initialization failed
+
+OpenCV version constatnts
+-------------------------
+
+.. data:: OPEN_CV_VERSION_2_4
+
+    OpenCV Library version 2.4.x
+
+Other constatnts
+----------------
+
+.. data:: OPEN_CV_SERVICE_URL
+
+    Url for OpenCV Engine on Google Play (Android Market)
