@@ -28,16 +28,17 @@ public abstract class BaseLoaderCallback implements LoaderCallbackInterface {
 			case LoaderCallbackInterface.RESTART_REQUIRED:
 			{
 				Log.d(TAG, "OpenCV downloading. App restart is needed!");
-				AlertDialog ResartMessage = new AlertDialog.Builder(mAppContext).create();
-				ResartMessage.setTitle("App restart is required");
-				ResartMessage.setMessage("Application will be closed now. Start it when installtion will be finished!");
-				ResartMessage.setButton("OK", new OnClickListener() {	
+				AlertDialog RestartMessage = new AlertDialog.Builder(mAppContext).create();
+				RestartMessage.setTitle("App restart is required");
+				RestartMessage.setMessage("Application will be closed now. Start it when installtion will be finished!");
+				RestartMessage.setCancelable(false); // This blocks the 'BACK' button
+				RestartMessage.setButton("OK", new OnClickListener() {	
 					public void onClick(DialogInterface dialog, int which) {
 						mAppContext.finish();
 					}
 				});
 
-				ResartMessage.show();
+				RestartMessage.show();
 			} break;
 			/** OpenCV loader cannot find OpenCV Engine Service on the device **/
 			case LoaderCallbackInterface.NO_SERVICE:
@@ -46,6 +47,7 @@ public abstract class BaseLoaderCallback implements LoaderCallbackInterface {
 				AlertDialog NoServiceMessage = new AlertDialog.Builder(mAppContext).create();
 				NoServiceMessage.setTitle("OpenCV Engine");
 				NoServiceMessage.setMessage("OpenCV Engine service was not found");
+				NoServiceMessage.setCancelable(false); // This blocks the 'BACK' button
 				NoServiceMessage.setButton("Ok", new OnClickListener() {
 					
 					public void onClick(DialogInterface dialog, int which) {
@@ -61,6 +63,7 @@ public abstract class BaseLoaderCallback implements LoaderCallbackInterface {
 				AlertDialog MarketErrorMessage = new AlertDialog.Builder(mAppContext).create();
 				MarketErrorMessage.setTitle("OpenCV Engine");
 				MarketErrorMessage.setMessage("Package instalation failed!");
+				MarketErrorMessage.setCancelable(false); // This blocks the 'BACK' button
 				MarketErrorMessage.setButton("OK", new OnClickListener() {
 					public void onClick(DialogInterface dialog, int which) {
 						mAppContext.finish();
@@ -81,6 +84,7 @@ public abstract class BaseLoaderCallback implements LoaderCallbackInterface {
 				AlertDialog IncomatibilityMessage = new AlertDialog.Builder(mAppContext).create();
 				IncomatibilityMessage.setTitle("OpenCV Engine");
 				IncomatibilityMessage.setMessage("OpenCV Eingine service is incompatible with this app. Update it!");
+				IncomatibilityMessage.setCancelable(false); // This blocks the 'BACK' button
 				IncomatibilityMessage.setButton("OK", new OnClickListener() {
 					public void onClick(DialogInterface dialog, int which) {
 						mAppContext.finish();
@@ -95,6 +99,7 @@ public abstract class BaseLoaderCallback implements LoaderCallbackInterface {
 				AlertDialog InitFailedDialog = new AlertDialog.Builder(mAppContext).create();
 				InitFailedDialog.setTitle("OpenCV error");
 				InitFailedDialog.setMessage("OpenCV was not initialised correctly. Application will be shut down");
+				InitFailedDialog.setCancelable(false); // This blocks the 'BACK' button
 				InitFailedDialog.setButton("OK", new OnClickListener() {
 					
 					public void onClick(DialogInterface dialog, int which) {
@@ -112,6 +117,7 @@ public abstract class BaseLoaderCallback implements LoaderCallbackInterface {
         AlertDialog InstallMessage = new AlertDialog.Builder(mAppContext).create();
         InstallMessage.setTitle("Package not found");
         InstallMessage.setMessage(callback.getPackageName() + " package was not found! Try to install it?");
+        InstallMessage.setCancelable(false); // This blocks the 'BACK' button
         InstallMessage.setButton("Yes", new OnClickListener()
         {
             public void onClick(DialogInterface dialog, int which)
