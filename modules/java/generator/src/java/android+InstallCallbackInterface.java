@@ -5,11 +5,11 @@ package org.opencv.android;
  */
 public interface InstallCallbackInterface
 {
-	/**
-	 * Target package name
-	 * @return Return target package name
-	 */
-	public String getPackageName();
+    /**
+     * Target package name
+     * @return Return target package name
+     */
+    public String getPackageName();
     /**
      * Installation of package is approved
      */

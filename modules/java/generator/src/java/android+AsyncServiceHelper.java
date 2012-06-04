@@ -28,28 +28,28 @@ public class AsyncServiceHelper
         else
         {
             AppContext.unbindService(helper.mServiceConnection);
-            
+
             InstallCallbackInterface InstallQuery = new InstallCallbackInterface() {
-            	public String getPackageName()
-            	{
-            		return "OpenCV Engine Service";
-            	}
-            	public void install() {
+                public String getPackageName()
+                {
+                    return "OpenCV Engine Service";
+                }
+                public void install() {
                     Log.d(TAG, "Trying to install OpenCV Engine via Google Play");
 
-			        boolean result = true;
-			        try
-	                {
-			        	Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(OPEN_CV_SERVICE_URL));
-			        	intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-			        	AppContext.startActivity(intent);
-	                }
-	                catch(Exception e)
-	                {
-	                	result = false;
-	                }
-                    
-                	if (result)
+                    boolean result = true;
+                    try
+                    {
+                        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(OPEN_CV_SERVICE_URL));
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        AppContext.startActivity(intent);
+                    }
+                    catch(Exception e)
+                    {
+                        result = false;
+                    }
+
+                    if (result)
                     {
                         int Status = LoaderCallbackInterface.RESTART_REQUIRED;
                         Log.d(TAG, "Init finished with status " + Status);
@@ -78,7 +78,7 @@ public class AsyncServiceHelper
             };
 
             Callback.onPackageInstall(InstallQuery);
-            
+
             return false;
         }
     }
@@ -98,7 +98,7 @@ public class AsyncServiceHelper
     protected String mOpenCVersion;
     protected Context mAppContext;
     protected int mStatus = LoaderCallbackInterface.SUCCESS;
-    
+
     /**
      * Url for OpenCV Engine on Google Play (Android Market)
      */
@@ -135,11 +135,11 @@ public class AsyncServiceHelper
                     if ((null == path) || (path.length() == 0))
                     {
                         InstallCallbackInterface InstallQuery = new InstallCallbackInterface() {
-                        	public String getPackageName()
-                        	{
-                        		return "OpenCV library";
-                        	}
-                        	public void install() {
+                            public String getPackageName()
+                            {
+                                return "OpenCV library";
+                            }
+                            public void install() {
                                 Log.d(TAG, "Trying to install OpenCV lib via Google Play");
                                 try
                                 {
