@@ -16,11 +16,11 @@
 \end{center}
 
 \begin{center}
-v2.3
+v2.4
 \end{center}
 
 \begin{center}
-December, 2011
+June, 2012
 \end{center}
 
 \newpage
@@ -36,133 +36,88 @@ December, 2011
 \end{center}
 \end{table}
 
-\textbf{Contents}
 
-\underline {1 core. The Core Functionality }1
+\section { General Information }
+The OpenCV OCL module is a set of classes and functions to utilize OpenCL compatible device. In theroy, it supports any OpenCL 1.1 compatible device, but we only test it on AMD's and NVIDIA's GPU at this stage. The OpenCV OCL module includes utility functions, low-level vision primitives, and high-level algorithms. The utility functions and low-level primitives provide a powerful infrastructure for developing fast vision algorithms taking advangtage of OCL whereas the high-level functionality includes some state-of-the-art algorithms(such as stereo correspondence, face detector) ready to be used by the application developers.
 
-\underline {1.1 Basic Structures }1
+The OpenCV OCL module is designed as a host-level API plus device-level kernels. The device-level kernels are collected as strings at OpenCV compile time and are compiled at runtime, so it need OpenCL runtime support. To correctly run the OpenCV OCL module, make sure you have OpenCL runtime provided by your device vendor, which is device driver normally.
 
-\underline {cv::ocl::convertTo(补充数据类型) }1
+The OpenCV OCL module is designed for ease of use and does not require any knowledge of OpenCL. Though, such a knowledge will certainly be useful to handle non-trivial cases or achieve the highest performance. It is helpful to understand the cost of various operations, what the OCL does, what the preferred data formats are, and so on. Since there is data transfer between OpenCL host and OpenCL device, the recommanded operation is transfer data from host -> ocl::func1 -> ocl::func2 -> .... -> ocl::funcN -> transfer data to host if needed, not transfer data from host -> ocl::func1 -> transfer data to host -> transfer data from host -> ocl::func2 .....
 
-\underline {cv::ocl::copyTo(补充数据类型) }2
+To enable OCL support, configure OpenCV using CMake with WIHT\_OPENCL=ON. When the flag is set and if OpenCL SDK is installed, the full-featured OpenCV OCL module is built. Otherwis, the module may be not built.
 
-\underline {cv::ocl::setTo(补充数据类型) }3
+Right now, the user should define the cv::ocl::Info class in the application and call cv::ocl::getDevice before any cv::ocl::func. This operation initialize OpenCL runtime and set the first found device as computing device. If there are more than one device and you want to use undefault device, you can call cv::ocl::setDevice then.
 
-\underline {1.2 operations on Arrays }4
+In the current version, all the thread share the same context and device so the multi-devices are not supported. We will add this feature soon.
 
-\underline {cv::ocl::absdiff }4
+\section{utility functions}
 
-\underline {cv::ocl::add }5
+\subsection{Info}
+class CV\_EXPORTS Info
 
-\underline {cv::ocl::bitwise{\_}and }6
+\{
 
-\underline {cv::ocl::bitwise{\_}not }7
+public:
 
-\underline {cv::ocl::bitwise{\_}or }8
+	struct Impl;
 
-\underline {cv::ocl::bitwise{\_}xor }9
+	Impl *impl;
 
-\underline {cv::ocl::cartToPolar }10
+	Info();
 
-\underline {cv::ocl::compare }11
+	Info(const Info \&m);
 
-\underline {cv::ocl::countNonZero }12
+	~Info();
 
-\underline {cv::ocl::divide }13
+	void release();
 
-\underline {cv::ocl::exp }14
+	Info \&operator = (const Info \&m);
 
-\underline {cv::ocl:: flip }15
+\};
 
-\underline {cv::ocl::log }16
+this class sould be maintained by the user and be passed to getDevice
 
-\underline {cv::ocl::LUT (补充数据类型) }17
+\subsection{int getDevice}
 
-\underline {cv::ocl::magnitude }18
 
-\underline {cv::ocl::meanStdDev }19
+parameters: 
 
-\underline {cv::ocl::merge }20
+std::vector<Info>\& oclinfo  it must not be NULL
 
-\underline {cv::ocl:: minMax }21
+int devicetype = CVCL\_DEVICE\_TYPE\_GPU The device type you want to use, the default value is GPU, other alternatives are CVCL\_DEVICE\_TYPE\_DEFAULT, CVCL\_DEVICE\_TYPE\_CPU, CVCL\_DEVICE\_TYPE\_ACCELERATOR, CVCL\_DEVICE\_TYPE\_ALL
 
-\underline {cv::ocl:: minMaxLoc }22
+return value: the number of devices found, must be greater than 0.
 
-\underline {cv::ocl::multiply }23
+the function must be called before any other cv::ocl::functions, it initialize ocl runtime
 
-\underline {cv::ocl:: norm }24
+\subsection{void setDevice}
 
-\underline {cv::ocl::phase }25
 
-\underline {cv::ocl::polarToCart }26
+parameters:
 
-\underline {cv::ocl::split }27
+Info \&oclinfo  the selected OpenCL platform
 
-\underline {cv::ocl::subtract }28
+int devnum = 0 the selected OpenCL device under this platform
 
-\underline {cv::ocl::transpose }29
+\subsection{void setBinpath}
 
-\underline {2 imgproc. Image Processing }30
 
-\underline {2.1 Histograms }30
+parameters:
 
-\underline {cv::ocl::calcHist }30
+const char *path the path of OpenCL kernel binaries
 
-\underline {2.2 Image Filtering }31
+If you call this function and set a valid path, the OCL module will save the compiled kernel to the address in the first time and reload the binary since that. It can save compilation time at the runtime.
 
-\underline {cv::ocl::bilateralFilter }31
-
-\underline {cv::ocl::blur }32
-
-\underline {cv::ocl::boxFilter }33
-
-\underline {cv::ocl::copyMakeBorder }34
-
-\underline {cv::ocl::dilate }35
-
-\underline {cv::ocl::erode }36
-
-\underline {cv::ocl::filter2D （补充数据类型） }37
-
-\underline {cv::ocl::GaussianBlur（补充数据类型） }39
-
-\underline {cv::ocl::Laplacian }40
-
-\underline {cv::ocl:: medianFilter (补充数据类型)(pdf) }41
-
-\underline {cv::ocl::morphologyEx (补充数据类型) }42
-
-\underline {cv::ocl::Scharr (补充数据类型) }43
-
-\underline {cv::ocl::sepFilter2D（补充数据类型） }44
-
-\underline {cv::ocl::Sobel（补充数据类型） }45
-
-\underline {2.3 Geometric Image Transformations }47
-
-\underline {cv::ocl::resize }47
-
-\underline {cv::ocl::warpAffine }49
-
-\underline {cv::ocl::warpPerspective }50
-
-\underline {2.4 Miscellaneous Image Transformations }51
-
-\underline {cv::ocl::cvtColor (补充数据类型) }51
-
-\underline {cv::ocl::integral }56
-
-\underline {cv::ocl::threshold }58
 
 \section{1 core. The Core Functionality}
 \label{sec:mylabel1}
 \subsection{1.1 Basic Structures}
 \label{subsec:mylabel1}
-\subsubsection{cv::ocl::convertTo(补充数据类型)}
+\subsubsection{cv::ocl::convertTo}
 \label{subsubsec:mylabel1}
 Converts array to another datatype with optional scaling.
 
-Supports (补充数据类型).
+Supports CV{\_}8UC1,CV{\_}8UC4,CV{\_}32SC1,CV{\_}32SC4,CV{\_}32FC1,CV{\_}32FC4.
 
 \textbf{m }The destination matrix. If it does not have a proper size or type
 before the operation, it will be reallocated
@@ -183,11 +138,11 @@ m(x,y)=saturate\_cast<rType>(\alpha (\ast this)(x,y)+\beta )
 \]
 \newpage
 
-\subsubsection{cv::ocl::copyTo(补充数据类型)}
+\subsubsection{cv::ocl::copyTo}
 \label{subsubsec:mylabel2}
 Copies the matrix to another one.
 
-Supports(补充数据类型).
+Supports CV{\_}8UC1,CV{\_}8UC4,CV{\_}32SC1,CV{\_}32SC4,CV{\_}32FC1,CV{\_}32FC4.
 
 \textbf{m }The destination matrix. If it does not have a proper size or type
 before the operation, it will bereallocated
@@ -209,11 +164,11 @@ reallocated the matrix, the newly allocated matrix is initialized with all
 
 \newpage
 
-\subsubsection{cv::ocl::setTo(补充数据类型)}
+\subsubsection{cv::ocl::setTo}
 \label{subsubsec:mylabel3}
 Sets all or some of the array elements to the specified value.
 
-Supports(补充数据类型).
+Supports CV{\_}8UC1,CV{\_}8UC4,CV{\_}32SC1,CV{\_}32SC4,CV{\_}32FC1,CV{\_}32FC4.
 
 \textbf{s }Assigned scalar, which is converted to the actual array type
 
@@ -669,11 +624,11 @@ input. Special values (NaN, $\pm \infty )$ are not handled.
 
 \newpage
 
-\subsubsection{cv::ocl::LUT (补充数据类型)}
+\subsubsection{cv::ocl::LUT}
 \label{subsubsec:mylabel17}
 Performs a look-up table transform of an array.
 
-Supports(补充数据类型)
+Supports only CV{\_}8UC1,CV{\_}8UC4
 
 \textbf{src }Source array of 8-bit elements
 
@@ -934,7 +889,7 @@ formed from the corresponding elements of x and y:
 \mbox{angle}\left( I \right)=\mbox{atan}2\left( {y\left( I \right),x\left( I
 \right)} \right)
 \]
-The angle estimation accuracy is～0.3\r{ }, when x(I)=y(I)=0, the
+The angle estimation accuracy is 0.3\r{ }, when x(I)=y(I)=0, the
 corresponding angle(I) is set to 0.
 
 \newpage
@@ -971,7 +926,7 @@ vector represented by the corresponding elements of magnitude and angle:
 {\mbox{angle}\left( I \right)} \right) \\
  \end{array}
 \]
-The relative accuracy of the estimated coordinates is ～10$^{-6}$.
+The relative accuracy of the estimated coordinates is 10$^{-6}$.
 
 \newpage
 
@@ -1300,11 +1255,11 @@ processed independently.
 
 \newpage
 
-\subsubsection{cv::ocl::filter2D （补充数据类型）}
+\subsubsection{cv::ocl::filter2D }
 \label{subsubsec:mylabel37}
 Convolves an image with the kernel
 
-Supports （补充数据类型）
+Supports CV{\_}8UC1,CV{\_}8UC4,CV{\_}32SC1,CV{\_}32SC4,CV{\_}32FC1,CV{\_}32FC4
 
 \textbf{src }The source image
 
@@ -1357,11 +1312,11 @@ The function uses DFT-based algorithm in case of sufficiently large kernels
 
 \newpage
 
-\subsubsection{cv::ocl::GaussianBlur（补充数据类型）}
+\subsubsection{cv::ocl::GaussianBlur}
 \label{subsubsec:mylabel38}
 Smoothes image using a Gaussian filter
 
-Supports （补充数据类型）
+Supports CV{\_}8UC1,CV{\_}8UC4,CV{\_}32SC1,CV{\_}32SC4,CV{\_}32FC1,CV{\_}32FC4
 
 \textbf{src }The source image
 
@@ -1430,14 +1385,14 @@ filtering the image with the following 3$\times $3 aperture:
 \]
 \newpage
 
-\subsubsection{cv::ocl:: medianFilter (补充数据类型)(pdf)}
+\subsubsection{cv::ocl:: medianFilter}
 \label{subsubsec:mylabel40}
 Smoothes image using median filter
 
-Supports (补充数据类型).
+Supports CV{\_}8UC1,CV{\_}8UC4,CV{\_}32FC1,CV{\_}32FC4.
 
 \textbf{src }The source 1-, 3- or 4-channel image. When ksize is 3 or 5, the
-image depth should be CV 8U, CV 16U or CV 32F. For larger aperture sizes it
+image depth should be CV 8U or CV 32F. For larger aperture sizes it
 can only be CV 8U
 
 \textbf{dst }The destination array; will have the same size and the same
@@ -1452,11 +1407,11 @@ In-place operation is supported.
 
 \newpage
 
-\subsubsection{cv::ocl::morphologyEx (补充数据类型)}
+\subsubsection{cv::ocl::morphologyEx}
 \label{subsubsec:mylabel41}
 Performs advanced morphological transformations.
 
-Supports(补充数据类型)
+Supports CV{\_}8UC1,CV{\_}8UC4,CV{\_}32SC1,CV{\_}32SC4,CV{\_}32FC1,CV{\_}32FC4
 
 \textbf{src }Source image
 
@@ -1517,11 +1472,11 @@ Any of the operations can be done in-place.
 
 \newpage
 
-\subsubsection{cv::ocl::Scharr (补充数据类型)}
+\subsubsection{cv::ocl::Scharr}
 \label{subsubsec:mylabel42}
 Calculates the first x- or y- image derivative using Scharr operator
 
-Supports(补充数据类型).
+Supports CV{\_}8UC1,CV{\_}8UC4,CV{\_}32SC1,CV{\_}32SC4,CV{\_}32FC1,CV{\_}32FC4.
 
 \textbf{src }The source image
 
@@ -1567,11 +1522,11 @@ borderType).
 
 \newpage
 
-\subsubsection{cv::ocl::sepFilter2D（补充数据类型）}
+\subsubsection{cv::ocl::sepFilter2D}
 \label{subsubsec:mylabel43}
 Applies separable linear filter to an image
 
-Supports （补充数据类型）.
+Supports CV{\_}8UC1,CV{\_}8UC4,CV{\_}32SC1,CV{\_}32SC4,CV{\_}32FC1,CV{\_}32FC4
 
 \textbf{src }The source image
 
@@ -1607,12 +1562,12 @@ shifted by delta is stored in dst.
 
 \newpage
 
-\subsubsection{cv::ocl::Sobel（补充数据类型）}
+\subsubsection{cv::ocl::Sobel}
 \label{subsubsec:mylabel44}
 Calculates the first, second, third or mixed image derivatives using an
 extended Sobel operator
 
-Supports （补充数据类型）.
+Supports CV{\_}8UC1,CV{\_}8UC4,CV{\_}32SC1,CV{\_}32SC4,CV{\_}32FC1,CV{\_}32FC4
 
 \textbf{src }The source image
 
@@ -1811,11 +1766,11 @@ M. The function can not operate in-place.
 
 \subsection{2.4 Miscellaneous Image Transformations}
 \label{subsec:mylabel6}
-\subsubsection{cv::ocl::cvtColor (补充数据类型)}
+\subsubsection{cv::ocl::cvtColor}
 \label{subsubsec:mylabel48}
 Converts image from one color space to another.
 
-Supports.（补充数据类型）
+Supports.CV{\_}8UC1,CV{\_}8UC4,CV{\_}32SC1,CV{\_}32SC4,CV{\_}32FC1,CV{\_}32FC4
 
 \textbf{src }The source image, 8-bit unsigned, 16-bit unsigned (CV 16UC...)
 or single-precision floatingpoint
