@@ -189,8 +189,6 @@ PackageInfo::PackageInfo(const string& version, int platform, int cpu_id):
     InstallPath("")
 {
     FullName = BasePackageName + "_v" + Version.substr(0, Version.size()-1);
-    // NOTE: Platfroms temporary are not supported
-    Platform = PLATFORM_UNKNOWN;
     if (PLATFORM_UNKNOWN != Platform)
     {
 	FullName += string("_") + JoinPlatform(platform);

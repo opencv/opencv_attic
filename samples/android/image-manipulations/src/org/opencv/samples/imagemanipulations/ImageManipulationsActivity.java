@@ -73,7 +73,7 @@ public class ImageManipulationsActivity extends Activity {
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         /** Try to load OpenCV library **/
-        if (OpenCVLoader.initStatic())
+        if (OpenCVLoader.initDebug())
         {
         	 mView = new ImageManipulationsView(this);
         	 setContentView(mView);

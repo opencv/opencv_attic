@@ -6,11 +6,11 @@ Java Static OpenCV Helper (internal)
 .. module:: org.opencv.android
     :platform: Android
     :synopsis: Implements Android dependent Java classes
-.. Class:: AsyncServiceHelper
+.. Class:: StaticHelper
 
 Helper class provides implementation of static OpenCV initialization. All OpenCV libraries must be included to application package.
 
-.. note:: This is imternal class. Does not use it directly. Use OpenCVLoader.initStatic() instead!
+.. note:: This is imternal class. Does not use it directly. Use OpenCVLoader.initDebug() instead!
 
 int initOpenCV()
 ----------------

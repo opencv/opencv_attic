@@ -307,11 +307,15 @@ Application development with async initialisation
 
 Using async initialization is a preferred way for application Development. It uses OpenCV Engine service to get OpenCV libraries.
 
-#. Add OpenCV binary package to your Eclipse workspace as in the previous chapters;
-#. Create new Android project or use an existing project from the workspace;
-#. In application project add library reference to OpenCV in :guilabel:`Project --> Properties --> Android --> Library --> Add.
+#. In application project add reference to OpenCV Java API JAR in :guilabel:`Project –> Properties –> Java build path –> Libraries –> Add External JARs...` select OpenCV-2.4.1/bin/opencv-2.4.1.jar;
 
-.. image:: images/eclipse_opencv_dependency.png
+.. image:: images/eclipse_opencv_dependency1.png
+     :alt: Add dependency from OpenCV library
+     :align: center
+
+#. Add OpenCV Java API JAR to Export list by selecting in in :guilabel:`Project –> Properties –> Java build path –> Order and Export list`.
+
+.. image:: images/eclipse_opencv_dependency2.png
      :alt: Add dependency from OpenCV library
      :align: center
 
@@ -376,10 +380,19 @@ Application development with static initialisation
 In this way of using OpenCV all OpenCV binaries a linked and put to your application package. It is designed for experimantal and local development purposes only. 
 This way is depricated for production code. If you want to publish your app use aproach with async initialisation.
 
-#. Extract Binary pack for you platfrom and copy libs folder from package to OpenCV SDK root directory;
-#. Add OpenCV binary package to your Eclipse workspace as in the previous chapters;
-#. Create new Android project or use an existing project from the workspace;
-#. In application project add library reference to OpenCV in :guilabel:`Project --> Properties --> Android --> Library --> Add.
+#. In application project add reference to OpenCV Java API JAR in :guilabel:`Project –> Properties –> Java build path –> Libraries –> Add External JARs...` select OpenCV-2.4.1/bin/opencv-2.4.1.jar;
+
+.. image:: images/eclipse_opencv_dependency1.png
+     :alt: Add dependency from OpenCV library
+     :align: center
+
+#. Add OpenCV Java API JAR to Export list by selecting in in :guilabel:`Project –> Properties –> Java build path –> Order and Export list`.
+
+.. image:: images/eclipse_opencv_dependency2.png
+     :alt: Add dependency from OpenCV library
+     :align: center
+
+#. Copy native libs to your project directory to folder libs/trget_arch/
 
 After adding depedency from OpenCV library project Android toolchain add all needed libraries to Application package.
 To use OpenCV functionality you need to add OpenCV library initialization before using any OpenCV specific code, for example, in static section of Activity class.

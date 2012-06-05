@@ -10,10 +10,10 @@ Java OpenCV Loader
 
 Helper class provides common initialization methods for OpenCV library
 
-boolean initStatic()
---------------------
+boolean initDebug()
+-------------------
 
-.. method:: static boolean initStatic()
+.. method:: static boolean initDebug()
     
     Load and initialize OpenCV library from current application package. Roughly it is analog of system.loadLibrary("opencv_java")
 

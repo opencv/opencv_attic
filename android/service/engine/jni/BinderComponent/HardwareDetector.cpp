@@ -157,12 +157,23 @@ int GetProcessorCount()
 int DetectKnownPlatforms()
 {
     int tegra_status = DetectTegra();
-    if (tegra_status > 0)
+    
+    if (3 == tegra_status)
+    {
+	return PLATFORM_TEGRA3;
+    }
+    else
+    {
+	return PLATFORM_UNKNOWN;
+    }
+    
+    // NOTE: Uncomment when all Tegras will be supported
+    /*if (tegra_status > 0)
     {
 	return PLATFORM_TEGRA + tegra_status - 1;
     }
     else
     {
 	return PLATFORM_UNKNOWN;
-    }
+    }*/
 }
