@@ -12,7 +12,7 @@ import android.net.Uri;
 
 public class MarketConnector
 {
-	protected static final String OpenCVPackageNamePreffix = "org.opencv";
+	protected static final String OpenCVPackageNamePreffix = "org.opencv.lib";
 	protected Context mContext;
 	
 	public MarketConnector(Context context)

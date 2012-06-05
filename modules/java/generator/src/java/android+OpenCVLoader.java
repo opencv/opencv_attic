@@ -16,7 +16,7 @@ public class OpenCVLoader
      * Load and initialize OpenCV library from current application package. Roughly it is analog of system.loadLibrary("opencv_java")
      * @return Return true is initialization of OpenCV was successful
      */
-    public static boolean initStatic()
+    public static boolean initDebug()
     {
         return StaticHelper.initOpenCV();
     }
