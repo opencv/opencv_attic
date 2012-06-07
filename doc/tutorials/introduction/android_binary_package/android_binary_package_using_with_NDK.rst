@@ -324,7 +324,7 @@ To build your own Android application, which uses OpenCV from native part, the f
 
    .. code-block:: make
 
-           include $(OPENCV_PACKAGE_DIR)/share/OpenCV/OpenCV.mk
+           include $(OPENCV_PACKAGE_DIR)/sdk/native/jni/OpenCV.mk
 
    should be inserted into the :file:`jni/Android.mk` file right after the line
 

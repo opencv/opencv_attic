@@ -297,8 +297,6 @@ Well, running samples from Eclipse is very simple:
      :alt: Tutorial 1 Basic - 1. Add OpenCV - running Canny
      :align: center
 
-
-
 How to use OpenCV library project in your application
 =====================================================
 
@@ -307,24 +305,15 @@ Application development with async initialisation
 
 Using async initialization is a preferred way for application Development. It uses OpenCV Manager service to get OpenCV libraries.
 
-#. Create "libs" folder in your project;
-
-#. Add OpenCV jar library to your project. Go to :guilabel:`File –> Import –> File System`, push Browse button and select OpenCV jar file from sdk/OpenCV-2.4.2a.jar. 
-    Then in box :guilabel:`Into folder` push button Browse and select "libs" folder. Set check box on the OpenCV jar file name.
+#. Add OpenCV library project to your workspace. Go to :guilabel:`File –> Import –> Existing project in your workspace`, push Browse button and select OpenCV SDK path. 
 
 .. image:: images/eclipse_opencv_dependency0.png
      :alt: Add dependency from OpenCV library
      :align: center
 
-#. In application project add reference to OpenCV Java API JAR in :guilabel:`Project –> Properties –> Java build path –> Libraries –> Add JARs...` select libs/opencv-2.4.2.jar;
+#. In application project add reference to OpenCV Java SDK in :guilabel:`Project –> Properties –> Android –> Library –> Add` select OpenCV-2.4.2;
 
 .. image:: images/eclipse_opencv_dependency1.png
-     :alt: Add dependency from OpenCV library
-     :align: center
-
-#. Add OpenCV Java API JAR to Export list by selecting in in :guilabel:`Project –> Properties –> Java build path –> Order and Export list`.
-
-.. image:: images/eclipse_opencv_dependency2.png
      :alt: Add dependency from OpenCV library
      :align: center
 
@@ -345,7 +334,7 @@ There is a very base code snippet for Async init. It shows only basis principles
     {
 	private BaseLoaderCallback mOpenCVCallBack = new BaseLoaderCallback(this) {
 	@Override
-	public void onEngineConnected(int status) {
+	public void onManagerConnected(int status) {
 		switch (status) {
 		    case LoaderCallbackInterface.SUCCESS:
 		    {
@@ -356,7 +345,7 @@ There is a very base code snippet for Async init. It shows only basis principles
 		    } break;
 		    default:
 		    {
-			super.onEngineConnected(status);	
+			super.onManagerConnected(status);	
 		    } break;
 		}
 	    }
@@ -370,9 +359,9 @@ There is a very base code snippet for Async init. It shows only basis principles
 	    super.onCreate(savedInstanceState);
         
 	    Log.i(TAG, "Trying to load OpenCV library");
-	    if (!OpenCVLoader.initAsync(OpenCVLoader.OPEN_CV_VERSION_2_4, this, mOpenCVCallBack))
+	    if (!OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_0, this, mOpenCVCallBack))
 	    {
-        	Log.e(TAG, "Cannot connect to OpenCVEngine");
+        	Log.e(TAG, "Cannot connect to OpenCV Manager");
         	//finish();
 	    }
 	}
@@ -389,24 +378,15 @@ Application development with static initialisation
 In this way of using OpenCV all OpenCV binaries a linked and put to your application package. It is designed for experimantal and local development purposes only. 
 This way is depricated for production code. If you want to publish your app use aproach with async initialisation.
 
-#. Create "libs" folder in your project;
-
-#. Add OpenCV jar library to your project. Go to :guilabel:`File –> Import –> File System`, push Browse button and select OpenCV jar file from sdk/OpenCV-2.4.2a.jar. 
-    Then in box :guilabel:`Into folder` push button Browse and select "libs" folder. Set check box on the OpenCV jar file name.
+#. Add OpenCV library project to your workspace. Go to :guilabel:`File –> Import –> Existing project in your workspace`, push Browse button and select OpenCV SDK path. 
 
 .. image:: images/eclipse_opencv_dependency0.png
      :alt: Add dependency from OpenCV library
      :align: center
 
-#. In application project add reference to OpenCV Java API JAR in :guilabel:`Project –> Properties –> Java build path –> Libraries –> Add External JARs...` select OpenCV-2.4.1/bin/opencv-2.4.1.jar;
+#. In application project add reference to OpenCV Java SDK in :guilabel:`Project –> Properties –> Android –> Library –> Add` select OpenCV-2.4.2;
 
 .. image:: images/eclipse_opencv_dependency1.png
-     :alt: Add dependency from OpenCV library
-     :align: center
-
-#. Add OpenCV Java API JAR to Export list by selecting in in :guilabel:`Project –> Properties –> Java build path –> Order and Export list`.
-
-.. image:: images/eclipse_opencv_dependency2.png
      :alt: Add dependency from OpenCV library
      :align: center
 

@@ -32,4 +32,4 @@ void cancel()
 
 .. method:: void cancel()
 
-    Installation canceled
+    Installation if package was canceled
