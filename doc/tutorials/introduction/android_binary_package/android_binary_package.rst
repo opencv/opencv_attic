@@ -305,9 +305,18 @@ How to use OpenCV library project in your application
 Application development with async initialisation
 -------------------------------------------------
 
-Using async initialization is a preferred way for application Development. It uses OpenCV Engine service to get OpenCV libraries.
+Using async initialization is a preferred way for application Development. It uses OpenCV Manager service to get OpenCV libraries.
 
-#. In application project add reference to OpenCV Java API JAR in :guilabel:`Project –> Properties –> Java build path –> Libraries –> Add External JARs...` select OpenCV-2.4.1/bin/opencv-2.4.1.jar;
+#. Create "libs" folder in your project;
+
+#. Add OpenCV jar library to your project. Go to :guilabel:`File –> Import –> File System`, push Browse button and select OpenCV jar file from sdk/OpenCV-2.4.2a.jar. 
+    Then in box :guilabel:`Into folder` push button Browse and select "libs" folder. Set check box on the OpenCV jar file name.
+
+.. image:: images/eclipse_opencv_dependency0.png
+     :alt: Add dependency from OpenCV library
+     :align: center
+
+#. In application project add reference to OpenCV Java API JAR in :guilabel:`Project –> Properties –> Java build path –> Libraries –> Add JARs...` select libs/opencv-2.4.2.jar;
 
 .. image:: images/eclipse_opencv_dependency1.png
      :alt: Add dependency from OpenCV library
@@ -319,13 +328,13 @@ Using async initialization is a preferred way for application Development. It us
      :alt: Add dependency from OpenCV library
      :align: center
 
-If you want to use engine-based aproach you need to install packages with the Service and OpenCV package for you platform. You can do it using Google Play service or manualy with adb tool:
+If you want to use OpenCV Manager-based aproach you need to install packages with the Service and OpenCV package for you platform. You can do it using Google Play service or manualy with adb tool:
 
 .. code-block:: sh
     :linenos:
 
     adb install ./org.opencv.engine.apk
-    adb install ./org.opencv.lib_v240_<hardware version>.apk
+    adb install ./org.opencv.lib_v24_<hardware version>.apk
 
 There is a very base code snippet for Async init. It shows only basis principles of library Initialisation. See 15-puzzle example for details.
 
@@ -334,7 +343,7 @@ There is a very base code snippet for Async init. It shows only basis principles
     
     public class MyActivity extends Activity implements HelperCallbackInterface
     {
-	private BaseLoaderCallback  mOpenCVCallBack = new BaseLoaderCallback(this) {
+	private BaseLoaderCallback mOpenCVCallBack = new BaseLoaderCallback(this) {
 	@Override
 	public void onEngineConnected(int status) {
 		switch (status) {
@@ -371,7 +380,7 @@ There is a very base code snippet for Async init. It shows only basis principles
 	// ...
     }
 
-It this case application works with OpenCV Engine in asynchronious fashion. OnEngineConnected callback will be called in UI thread, when initialisation finishes. 
+It this case application works with OpenCV Manager in asynchronious fashion. OnEngineConnected callback will be called in UI thread, when initialisation finishes. 
 Attension, It is not allowed to use CV calls or load OpenCV-dependent native libs before invoking this callback. Load your own native libraries after OpenCV initialization.
 
 Application development with static initialisation
@@ -379,6 +388,15 @@ Application development with static initialisation
 
 In this way of using OpenCV all OpenCV binaries a linked and put to your application package. It is designed for experimantal and local development purposes only. 
 This way is depricated for production code. If you want to publish your app use aproach with async initialisation.
+
+#. Create "libs" folder in your project;
+
+#. Add OpenCV jar library to your project. Go to :guilabel:`File –> Import –> File System`, push Browse button and select OpenCV jar file from sdk/OpenCV-2.4.2a.jar. 
+    Then in box :guilabel:`Into folder` push button Browse and select "libs" folder. Set check box on the OpenCV jar file name.
+
+.. image:: images/eclipse_opencv_dependency0.png
+     :alt: Add dependency from OpenCV library
+     :align: center
 
 #. In application project add reference to OpenCV Java API JAR in :guilabel:`Project –> Properties –> Java build path –> Libraries –> Add External JARs...` select OpenCV-2.4.1/bin/opencv-2.4.1.jar;
 
@@ -401,7 +419,7 @@ To use OpenCV functionality you need to add OpenCV library initialization before
    :linenos:
 
     static {
-        if (!OpenCVLoader.initStatic()) {
+        if (!OpenCVLoader.initDebug()) {
             // Report initialisation error
         }
     }
@@ -412,7 +430,7 @@ If you application includes other OpenCV-dependent native libraries you need to 
     :linenos:
 
     static {
-        if (OpenCVLoader.initStatic()) {
+        if (OpenCVLoader.initDebug()) {
             System.loadLibrary("my_super_lib1");
             System.loadLibrary("my_super_lib2");
         } else {

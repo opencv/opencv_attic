@@ -37,7 +37,7 @@ Initialization status constants
 
 .. data:: NO_SERVICE
 
-    OpenCV Engine service is not installed on the device. App need to notify user about it
+    OpenCV Manager service is not installed on the device. App need to notify user about it
 
 .. data:: RESTART_REQUIRED
 
@@ -53,7 +53,7 @@ Initialization status constants
 
 .. data:: INCOMPATIBLE_ENGINE_VERSION
 
-    Version of OpenCV Engine Service is incompatible with this app. Service update is needed
+    Version of OpenCV Manager Service is incompatible with this app. Service update is needed
 
 .. data:: INIT_FAILED
 
@@ -71,4 +71,4 @@ Other constatnts
 
 .. data:: OPEN_CV_SERVICE_URL
 
-    Url for OpenCV Engine on Google Play (Android Market)
+    Url for OpenCV Manager on Google Play (Android Market)

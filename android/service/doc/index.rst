@@ -13,8 +13,3 @@ Contents:
    BaseLoaderCallback
    LoaderCallbackInterface
    InstallCallbackInterface
-   OpenCVEngineInterface
-   StaticHelper
-   AsyncServiceHelper
-   NativeHelper
-   IOpenCVEngine

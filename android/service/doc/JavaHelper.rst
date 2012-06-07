@@ -27,7 +27,7 @@ boolean initAsync()
 
 .. method:: static boolean initAsync(String Version, Context AppContext, LoaderCallbackInterface Callback)
 
-    Load and initialize OpenCV library using OpenCV Engine service.
+    Load and initialize OpenCV library using OpenCV Manager service.
 
     :param Version: OpenCV Library version
     :param AppContext: Application context for connecting to service

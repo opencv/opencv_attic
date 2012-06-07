@@ -5,10 +5,10 @@ Java OpenCV OpenCVEngineInterface
 .. highlight:: java
 .. module:: org.opencv.engine
     :platform: Android
-    :synopsis: Defines OpenCV Engine interface for Android.
+    :synopsis: Defines OpenCV Manager interface for Android.
 .. Class:: OpenCVEngineInterface
 
-OpenCVEngineInterface class provides Java interface to OpenCV Engine Service. Is synchronious with native OpenCVEngine class
+OpenCVEngineInterface class provides Java interface to OpenCV Manager Service. Is synchronious with native OpenCVEngine class
 
 .. note:: Do not use this class directly. Use OpenCVLoader instead!
 
@@ -17,10 +17,10 @@ int getEngineVersion()
 
 .. method:: int GetEngineVersion()
 
-    Get OpenCV Engine version
+    Get OpenCV Manager version
 
     :rtype: int
-    :return: Return OpenCV Engine version
+    :return: Return OpenCV Manager version
 
 String getLibPathByVersion()
 ----------------------------

@@ -18,7 +18,7 @@ String getPackageName()
     Get name of a package to be installed
 
     :rtype: String
-    :return: Return package name, i.e. "OpenCV Engine Service" or "OpenCV library"
+    :return: Return package name, i.e. "OpenCV Manager Service" or "OpenCV library"
 
 void install()
 --------------
