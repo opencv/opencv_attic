@@ -1,6 +1,6 @@
-*******************************************
-Base LoaderCallbackInterface implementation
-*******************************************
+*********************************************
+Base Loader Callback Interface implementation
+*********************************************
 
 .. highlight:: java
 .. module:: org.opencv.android

@@ -32,10 +32,10 @@ public class AsyncServiceHelper
             InstallCallbackInterface InstallQuery = new InstallCallbackInterface() {
                 public String getPackageName()
                 {
-                    return "OpenCV Engine Service";
+                    return "OpenCV Manager Service";
                 }
                 public void install() {
-                    Log.d(TAG, "Trying to install OpenCV Engine via Google Play");
+                    Log.d(TAG, "Trying to install OpenCV Manager via Google Play");
 
                     boolean result = true;
                     try
@@ -54,7 +54,7 @@ public class AsyncServiceHelper
                         int Status = LoaderCallbackInterface.RESTART_REQUIRED;
                         Log.d(TAG, "Init finished with status " + Status);
                         Log.d(TAG, "Calling using callback");
-                        Callback.onEngineConnected(Status);
+                        Callback.onManagerConnected(Status);
                     }
                     else
                     {
@@ -63,7 +63,7 @@ public class AsyncServiceHelper
                         Log.d(TAG, "Init finished with status " + Status);
                         Log.d(TAG, "Unbind from service");
                         Log.d(TAG, "Calling using callback");
-                        Callback.onEngineConnected(Status);
+                        Callback.onManagerConnected(Status);
                     }
                 }
 
@@ -73,7 +73,7 @@ public class AsyncServiceHelper
                     int Status = LoaderCallbackInterface.INSTALL_CANCELED;
                     Log.d(TAG, "Init finished with status " + Status);
                     Log.d(TAG, "Calling using callback");
-                    Callback.onEngineConnected(Status);
+                    Callback.onManagerConnected(Status);
                 }
             };
 
@@ -91,7 +91,7 @@ public class AsyncServiceHelper
         mAppContext = AppContext;
     }
 
-    protected static final String TAG = "OpenCvEngine/Helper";
+    protected static final String TAG = "OpenCVManager/Helper";
     protected static final int MINIMUM_ENGINE_VERSION = 1;
     protected OpenCVEngineInterface mEngineService;
     protected LoaderCallbackInterface mUserAppCallback;
@@ -100,7 +100,7 @@ public class AsyncServiceHelper
     protected int mStatus = LoaderCallbackInterface.SUCCESS;
 
     /**
-     * Url for OpenCV Engine on Google Play (Android Market)
+     * Url for OpenCV Manager on Google Play (Android Market)
      */
     protected static final String OPEN_CV_SERVICE_URL = "market://details?id=org.opencv.engine";
 
@@ -112,7 +112,7 @@ public class AsyncServiceHelper
             mEngineService = OpenCVEngineInterface.Stub.asInterface(service);
             if (null == mEngineService)
             {
-                Log.d(TAG, "Engine connection fails. May be service was not installed?");
+                Log.d(TAG, "OpenCV Manager Service connection fails. May be service was not installed?");
                 mStatus = LoaderCallbackInterface.NO_SERVICE;
             }
             else
@@ -121,12 +121,12 @@ public class AsyncServiceHelper
                 {
                     if (mEngineService.getEngineVersion() < MINIMUM_ENGINE_VERSION)
                     {
-                        mStatus = LoaderCallbackInterface.INCOMPATIBLE_ENGINE_VERSION;
+                        mStatus = LoaderCallbackInterface.INCOMPATIBLE_MANAGER_VERSION;
                         Log.d(TAG, "Init finished with status " + mStatus);
                         Log.d(TAG, "Unbind from service");
                         mAppContext.unbindService(mServiceConnection);
                         Log.d(TAG, "Calling using callback");
-                        mUserAppCallback.onEngineConnected(mStatus);
+                        mUserAppCallback.onManagerConnected(mStatus);
                         return;
                     }
 
@@ -161,7 +161,7 @@ public class AsyncServiceHelper
                                 Log.d(TAG, "Unbind from service");
                                 mAppContext.unbindService(mServiceConnection);
                                 Log.d(TAG, "Calling using callback");
-                                mUserAppCallback.onEngineConnected(mStatus);
+                                mUserAppCallback.onManagerConnected(mStatus);
                             }
 
                             public void cancel() {
@@ -171,7 +171,7 @@ public class AsyncServiceHelper
                                 Log.d(TAG, "Unbind from service");
                                 mAppContext.unbindService(mServiceConnection);
                                 Log.d(TAG, "Calling using callback");
-                                mUserAppCallback.onEngineConnected(mStatus);
+                                mUserAppCallback.onManagerConnected(mStatus);
                             }
                         };
 
@@ -199,7 +199,7 @@ public class AsyncServiceHelper
                         Log.d(TAG, "Unbind from service");
                         mAppContext.unbindService(mServiceConnection);
                         Log.d(TAG, "Calling using callback");
-                        mUserAppCallback.onEngineConnected(mStatus);
+                        mUserAppCallback.onManagerConnected(mStatus);
                     }
                 }
                 catch (RemoteException e)
@@ -210,7 +210,7 @@ public class AsyncServiceHelper
                     Log.d(TAG, "Unbind from service");
                     mAppContext.unbindService(mServiceConnection);
                     Log.d(TAG, "Calling using callback");
-                    mUserAppCallback.onEngineConnected(mStatus);
+                    mUserAppCallback.onManagerConnected(mStatus);
                 }
 
             }

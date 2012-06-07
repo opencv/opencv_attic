@@ -23,7 +23,7 @@ public class puzzle15Activity extends Activity
     private puzzle15View        mView = null;
     private BaseLoaderCallback  mOpenCVCallBack = new BaseLoaderCallback(this) {
     	@Override
-    	public void onEngineConnected(int status) {
+    	public void onManagerConnected(int status) {
     		switch (status) {
 				case LoaderCallbackInterface.SUCCESS:
 				{
@@ -33,21 +33,21 @@ public class puzzle15Activity extends Activity
 					setContentView(mView);
 					// Check native OpenCV camera
 					if( !mView.openCamera() ) {
-						AlertDialog ad = new AlertDialog.Builder(mAppContext).create();  
-						ad.setCancelable(false); // This blocks the 'BACK' button  
-						ad.setMessage("Fatal error: can't open camera!");  
-						ad.setButton("OK", new DialogInterface.OnClickListener() {  
-						    public void onClick(DialogInterface dialog, int which) {  
-						        dialog.dismiss();                      
-								finish();
-						    }  
-						});  
+						AlertDialog ad = new AlertDialog.Builder(mAppContext).create();
+						ad.setCancelable(false); // This blocks the 'BACK' button
+						ad.setMessage("Fatal error: can't open camera!");
+						ad.setButton("OK", new DialogInterface.OnClickListener() {
+						    public void onClick(DialogInterface dialog, int which) {
+							dialog.dismiss();
+							finish();
+						    }
+						});
 						ad.show();
 					}
 				} break;
 				default:
 				{
-					super.onEngineConnected(status);	
+					super.onManagerConnected(status);
 				} break;
 			}
     	}
@@ -71,15 +71,15 @@ public class puzzle15Activity extends Activity
         Log.i(TAG, "onResume");
 		super.onResume();
 		if( mView!=null && !mView.openCamera() ) {
-			AlertDialog ad = new AlertDialog.Builder(this).create();  
-			ad.setCancelable(false); // This blocks the 'BACK' button  
-			ad.setMessage("Fatal error: can't open camera!");  
-			ad.setButton("OK", new DialogInterface.OnClickListener() {  
-			    public void onClick(DialogInterface dialog, int which) {  
-			        dialog.dismiss();                      
-					finish();
-			    }  
-			});  
+			AlertDialog ad = new AlertDialog.Builder(this).create();
+			ad.setCancelable(false); // This blocks the 'BACK' button
+			ad.setMessage("Fatal error: can't open camera!");
+			ad.setButton("OK", new DialogInterface.OnClickListener() {
+			    public void onClick(DialogInterface dialog, int which) {
+				dialog.dismiss();
+				finish();
+			    }
+			});
 			ad.show();
 		}
 	}
@@ -92,15 +92,15 @@ public class puzzle15Activity extends Activity
         super.onCreate(savedInstanceState);
 
         requestWindowFeature(Window.FEATURE_NO_TITLE);
-        
+
         Log.i(TAG, "Trying to load OpenCV library");
-        if (!OpenCVLoader.initAsync(OpenCVLoader.OPEN_CV_VERSION_2_4, this, mOpenCVCallBack))
+        if (!OpenCVLoader.initAsync(OpenCVLoader.OPEN_CV_VERSION_2_4_0, this, mOpenCVCallBack))
         {
         	Log.e(TAG, "Cannot connect to OpenCVEngine");
         	//finish();
         }
     }
-	
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         Log.i(TAG, "onCreateOptionsMenu");

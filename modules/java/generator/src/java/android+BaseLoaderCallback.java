@@ -15,7 +15,7 @@ public abstract class BaseLoaderCallback implements LoaderCallbackInterface {
 		mAppContext = AppContext;
 	}
 	
-	public void onEngineConnected(int status)
+	public void onManagerConnected(int status)
 	{
 		switch (status)
 		{
@@ -24,7 +24,7 @@ public abstract class BaseLoaderCallback implements LoaderCallbackInterface {
 			{
 				/** Application must override this method to handle successful library initialization **/
 			} break;
-			/** OpenCV engine or library package installation is in progress. Restart of application is required **/
+			/** OpenCV Manager or library package installation is in progress. Restart of application is required **/
 			case LoaderCallbackInterface.RESTART_REQUIRED:
 			{
 				Log.d(TAG, "OpenCV downloading. App restart is needed!");
@@ -40,13 +40,13 @@ public abstract class BaseLoaderCallback implements LoaderCallbackInterface {
 
 				RestartMessage.show();
 			} break;
-			/** OpenCV loader cannot find OpenCV Engine Service on the device **/
+			/** OpenCV loader cannot find OpenCV Manager Service on the device **/
 			case LoaderCallbackInterface.NO_SERVICE:
 			{
-				Log.d(TAG, "OpenCVEngine Service is not installed!");
+				Log.d(TAG, "OpenCV Manager Service is not installed!");
 				AlertDialog NoServiceMessage = new AlertDialog.Builder(mAppContext).create();
-				NoServiceMessage.setTitle("OpenCV Engine");
-				NoServiceMessage.setMessage("OpenCV Engine service was not found");
+				NoServiceMessage.setTitle("OpenCV Manager");
+				NoServiceMessage.setMessage("OpenCV Manager service was not found");
 				NoServiceMessage.setCancelable(false); // This blocks the 'BACK' button
 				NoServiceMessage.setButton("Ok", new OnClickListener() {
 					
@@ -61,7 +61,7 @@ public abstract class BaseLoaderCallback implements LoaderCallbackInterface {
 			{
 				Log.d(TAG, "Google Play service is not installed! You can get it here");
 				AlertDialog MarketErrorMessage = new AlertDialog.Builder(mAppContext).create();
-				MarketErrorMessage.setTitle("OpenCV Engine");
+				MarketErrorMessage.setTitle("OpenCV Manager");
 				MarketErrorMessage.setMessage("Package instalation failed!");
 				MarketErrorMessage.setCancelable(false); // This blocks the 'BACK' button
 				MarketErrorMessage.setButton("OK", new OnClickListener() {
@@ -77,20 +77,20 @@ public abstract class BaseLoaderCallback implements LoaderCallbackInterface {
 				Log.d(TAG, "OpenCV library instalation was canceled by user");
 				mAppContext.finish();
 			} break;
-			/** Application is incompatible with OpenCV Engine. Possible Service update is needed **/
-			case LoaderCallbackInterface.INCOMPATIBLE_ENGINE_VERSION:
+			/** Application is incompatible with this version of OpenCV Manager. Possible Service update is needed **/
+			case LoaderCallbackInterface.INCOMPATIBLE_MANAGER_VERSION:
 			{
-				Log.d(TAG, "OpenCVEngine Service is uncompatible with this app!");
+				Log.d(TAG, "OpenCV Manager Service is uncompatible with this app!");
 				AlertDialog IncomatibilityMessage = new AlertDialog.Builder(mAppContext).create();
-				IncomatibilityMessage.setTitle("OpenCV Engine");
-				IncomatibilityMessage.setMessage("OpenCV Eingine service is incompatible with this app. Update it!");
+				IncomatibilityMessage.setTitle("OpenCV Manager");
+				IncomatibilityMessage.setMessage("OpenCV Manager service is incompatible with this app. Update it!");
 				IncomatibilityMessage.setCancelable(false); // This blocks the 'BACK' button
 				IncomatibilityMessage.setButton("OK", new OnClickListener() {
 					public void onClick(DialogInterface dialog, int which) {
 						mAppContext.finish();
 					}
 				});
-				IncomatibilityMessage.show();				
+				IncomatibilityMessage.show();
 			}
 			/** Other status, i.e. INIT_FAILED **/
 			default:

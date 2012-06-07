@@ -34,3 +34,21 @@ boolean initAsync()
     :param Callback: Object, that implements LoaderCallbackInterface for handling Connection status. See BaseLoaderCallback.
     :rtype: boolean
     :return: Return true if initialization of OpenCV starts successfully
+
+OpenCV version constatnts
+-------------------------
+
+.. data:: OPENCV_VERSION_2_4_0
+
+    OpenCV Library version 2.4.0
+
+.. data:: OPENCV_VERSION_2_4_2
+
+    OpenCV Library version 2.4.2
+
+Other constatnts
+----------------
+
+.. data:: OPEN_CV_SERVICE_URL
+
+    Url for OpenCV Manager on Google Play (Android Market)

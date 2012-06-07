@@ -10,7 +10,7 @@ public interface LoaderCallbackInterface
      */
     static final int SUCCESS = 0;
     /**
-     * OpenCV Engine service is not installed on the device. App need to notify user about it
+     * OpenCV Manager Service is not installed on the device. App need to notify user about it
      */
     static final int NO_SERVICE = 1;
     /**
@@ -26,9 +26,9 @@ public interface LoaderCallbackInterface
      */
     static final int INSTALL_CANCELED = 4;
     /**
-     * Version of OpenCV Engine Service is incompatible with this app. Service update is needed
+     * Version of OpenCV Manager Service is incompatible with this app. Service update is needed
      */
-    static final int INCOMPATIBLE_ENGINE_VERSION = 5;
+    static final int INCOMPATIBLE_MANAGER_VERSION = 5;
     /**
      * OpenCV library initialization failed
      */
@@ -38,7 +38,7 @@ public interface LoaderCallbackInterface
      * Callback method that is called after OpenCV library initialization
      * @param status Status of initialization. See Initialization status constants
      */
-    public void onEngineConnected(int status);
+    public void onManagerConnected(int status);
 
     /**
      * Callback method that is called in case when package installation is needed

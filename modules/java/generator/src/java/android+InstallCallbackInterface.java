@@ -15,7 +15,7 @@ public interface InstallCallbackInterface
      */
     public void install();
     /**
-     * Installation canceled;
+     * Installation canceled
      */
     public void cancel();
 };

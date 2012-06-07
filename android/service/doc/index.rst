@@ -1,5 +1,5 @@
 *************************************************
-OpenCV Engine. Android service for OpenCV
+OpenCV Manager. Android service for OpenCV
 *************************************************
 
 Contents:

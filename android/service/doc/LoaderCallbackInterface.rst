@@ -10,10 +10,10 @@ Loader Callback Interface
 
     Interface for callback object in case of asynchronous initialization of OpenCV
 
-void onEngineConnected()
+void onManagerConnected()
 ------------------------
 
-.. method:: void onEngineConnected(int status)
+.. method:: void onManagerConnected(int status)
 
     Callback method that is called after OpenCV library initialization
  
@@ -51,24 +51,10 @@ Initialization status constants
 
     OpenCV library installation was canceled by user
 
-.. data:: INCOMPATIBLE_ENGINE_VERSION
+.. data:: INCOMPATIBLE_MANAGER_VERSION
 
     Version of OpenCV Manager Service is incompatible with this app. Service update is needed
 
 .. data:: INIT_FAILED
 
     OpenCV library initialization failed
-
-OpenCV version constatnts
--------------------------
-
-.. data:: OPEN_CV_VERSION_2_4
-
-    OpenCV Library version 2.4.x
-
-Other constatnts
-----------------
-
-.. data:: OPEN_CV_SERVICE_URL
-
-    Url for OpenCV Manager on Google Play (Android Market)
