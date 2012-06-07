@@ -4,7 +4,7 @@ import java.util.StringTokenizer;
 
 import android.util.Log;
 
-public class StaticHelper {
+class StaticHelper {
 
     public static boolean initOpenCV()
     {
