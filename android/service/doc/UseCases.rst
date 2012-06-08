@@ -13,7 +13,7 @@ Second application start
 ------------------------
 
 There is OpenCV Manager service, but there is no OpenCV library.
-If OpenCV library installation aproved\:
+If OpenCV library installation approved\:
 
 .. image:: img/LibInstallAproved.dia.png
 

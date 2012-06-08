@@ -16,7 +16,7 @@ If you are making a clean environment installation then you can try **T**\ egra 
 
 It will cover all of the environment set up automatically and you can go to the next step :ref:`Get_the_OpenCV_package_for_Android_development` right after automatic setup.
 
-If you are a beginner in Android development then we recommentd you to start with TADP.
+If you are a beginner in Android development then we recommend you to start with TADP.
 
 .. note:: *NVIDIA*\ 's Tegra Android Development Pack includes some special features for |Nvidia_Tegra_Platform|_ but it is not just for *Tegra* devices
   
@@ -109,7 +109,7 @@ You need the following tools to be installed:
 #. **ADT plugin for Eclipse**
 
    This instruction is copied from http://developer.android.com/sdk/eclipse-adt.html#downloading
-   . Please, visit that page if you have any troubles with ADT plugin installation.
+   . Please, visit that page if you have any troubles with ADT plug-in installation.
 
    Assuming that you have Eclipse IDE installed, as described above, follow these steps to download and install the ADT plugin:
 
@@ -121,7 +121,7 @@ You need the following tools to be installed:
 
    #. Click :guilabel:`OK`
 
-      .. note:: If you have trouble acquiring the plugin, try using "http" in the Location URL, instead of "https" (https is preferred for security reasons).
+      .. note:: If you have trouble acquiring the plug-in, try using "http" in the Location URL, instead of "https" (https is preferred for security reasons).
    
    #. In the :guilabel:`Available Software` dialog, select the checkbox next to :guilabel:`Developer Tools` and click :guilabel:`Next`.
    #. In the next window, you'll see a list of the tools to be downloaded. Click :guilabel:`Next`.
@@ -179,7 +179,7 @@ Open OpenCV library and samples in Eclipse
 
    .. important:: ADT plugin settings are workspace-dependent. So you have to repeat this step each time when you create a new workspace.
 
-   Once you have created a new workspace, you have to point the ADT plugin to the Android SDK directory. This setting is stored in workspace metadata, as result this step is required each time when you are creating new workspace for Android development. See `Configuring the ADT Plugin
+   Once you have created a new workspace, you have to point the ADT plugin to the Android SDK directory. This setting is stored in workspace meta-data, as result this step is required each time when you are creating new workspace for Android development. See `Configuring the ADT Plugin
    <http://developer.android.com/sdk/eclipse-adt.html#configuring>`_ document for the original instructions from *Google*.
    
    * Select :menuselection:`Window --> Preferences...` to open the Preferences panel (Mac OS X: :menuselection:`Eclipse --> Preferences`):
@@ -300,7 +300,7 @@ Well, running samples from Eclipse is very simple:
 How to use OpenCV library project in your application
 =====================================================
 
-Application development with async initialisation
+Application development with async initialization
 -------------------------------------------------
 
 Using async initialization is a preferred way for application Development. It uses OpenCV Manager service to get OpenCV libraries.
@@ -317,7 +317,7 @@ Using async initialization is a preferred way for application Development. It us
      :alt: Add dependency from OpenCV library
      :align: center
 
-If you want to use OpenCV Manager-based aproach you need to install packages with the Service and OpenCV package for you platform. You can do it using Google Play service or manualy with adb tool:
+If you want to use OpenCV Manager-based approach you need to install packages with the Service and OpenCV package for you platform. You can do it using Google Play service or manually with adb tool:
 
 .. code-block:: sh
     :linenos:
@@ -325,7 +325,7 @@ If you want to use OpenCV Manager-based aproach you need to install packages wit
     adb install ./org.opencv.engine.apk
     adb install ./org.opencv.lib_v24_<hardware version>.apk
 
-There is a very base code snippet for Async init. It shows only basis principles of library Initialisation. See 15-puzzle example for details.
+There is a very base code snippet for Async init. It shows only basis principles of library Initiation. See 15-puzzle example for details.
 
 .. code-block:: java
     :linenos:
@@ -362,21 +362,21 @@ There is a very base code snippet for Async init. It shows only basis principles
 	    if (!OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_0, this, mOpenCVCallBack))
 	    {
         	Log.e(TAG, "Cannot connect to OpenCV Manager");
-        	//finish();
+        	finish();
 	    }
 	}
 
 	// ...
     }
 
-It this case application works with OpenCV Manager in asynchronious fashion. OnEngineConnected callback will be called in UI thread, when initialisation finishes. 
-Attension, It is not allowed to use CV calls or load OpenCV-dependent native libs before invoking this callback. Load your own native libraries after OpenCV initialization.
+It this case application works with OpenCV Manager in asynchronous fashion. OnManagerConnected callback will be called in UI thread, when initialization finishes. 
+Attention, It is not allowed to use CV calls or load OpenCV-dependent native libs before invoking this callback. Load your own native libraries after OpenCV initialization.
 
-Application development with static initialisation
+Application development with static initialization
 --------------------------------------------------
 
-In this way of using OpenCV all OpenCV binaries a linked and put to your application package. It is designed for experimantal and local development purposes only. 
-This way is depricated for production code. If you want to publish your app use aproach with async initialisation.
+In this way of using OpenCV all OpenCV binaries a linked and put to your application package. It is designed for experimental and local development purposes only. 
+This way is depricated for production code. If you want to publish your app use approach with async initialization.
 
 #. Add OpenCV library project to your workspace. Go to :guilabel:`File –> Import –> Existing project in your workspace`, push Browse button and select OpenCV SDK path. 
 
@@ -400,7 +400,7 @@ To use OpenCV functionality you need to add OpenCV library initialization before
 
     static {
         if (!OpenCVLoader.initDebug()) {
-            // Report initialisation error
+            // Report initialization error
         }
     }
 
@@ -414,7 +414,7 @@ If you application includes other OpenCV-dependent native libraries you need to 
             System.loadLibrary("my_super_lib1");
             System.loadLibrary("my_super_lib2");
         } else {
-            // Report initialisation error
+            // Report initialization error
         }
     }
 

@@ -40,7 +40,7 @@ android::String16 getLibraryList()
 
     :param version: OpenCV Library version
     :rtype: String;
-    :return: Returns OpenCV libraries names seporated by semicolumn symbol in loading order
+    :return: Returns OpenCV libraries names separated by semicolon symbol in loading order
 
 boolean installVersion()
 ------------------------
@@ -51,4 +51,4 @@ boolean installVersion()
 
     :param version: OpenCV Library version
     :rtype: String
-    :return: Returns true if installation successfull or package has been already installed
+    :return: Returns true if installation successful or package has been already installed

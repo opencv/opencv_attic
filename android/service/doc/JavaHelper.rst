@@ -20,7 +20,7 @@ boolean initDebug()
     :rtype: boolean
     :return: Return true if initialization of OpenCV was successful
 
-.. note:: This way is depricated for production code. It is designed for experimantal and local development purposes only. If you want to publish your app use aproach with async initialisation
+.. note:: This way is deprecated for production code. It is designed for experimantal and local development purposes only. If you want to publish your app use approach with async initialization
 
 boolean initAsync()
 -------------------
@@ -35,7 +35,7 @@ boolean initAsync()
     :rtype: boolean
     :return: Return true if initialization of OpenCV starts successfully
 
-OpenCV version constatnts
+OpenCV version constants
 -------------------------
 
 .. data:: OPENCV_VERSION_2_4_0

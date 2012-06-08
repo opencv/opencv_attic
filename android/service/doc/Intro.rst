@@ -4,11 +4,11 @@ Introduction
 
 .. highlight:: java
 
-OpenCV Manager is an Android service targeted to manage OpenCV library binaries on end users devices. It allows sharing the OpenCV dynamic libraries of different versions between applications on the same device. The Engine provides the following benefits\:
+OpenCV Manager is an Android service targeted to manage OpenCV library binaries on end users devices. It allows sharing the OpenCV dynamic libraries of different versions between applications on the same device. The Manager provides the following benefits\:
 
-#. Less memory usage. All apps use the same binaries from service and do not keep native libs inside themself;
-#. Hardware specific optimisations for all supported platfroms;
-#. Trusted OpenCV library source. All packages with OpenCV are publiched on Google Play service;
+#. Less memory usage. All apps use the same binaries from service and do not keep native libs inside them self;
+#. Hardware specific optimizations for all supported platforms;
+#. Trusted OpenCV library source. All packages with OpenCV are published on Google Play service;
 #. Regular updates and bug fixes;
 
 Usage model for target user
@@ -28,7 +28,7 @@ Next OpenCV app\:
 
 #. User downloads app dependent from OpenCV from Google Play or installs it manually;
 #. User starts application.
-#. If selected version is not installed Engine asks user to install OpenCV library package and runs Google Play;
+#. If selected version is not installed Manager asks user to install OpenCV library package and runs Google Play;
 #. User runs app in the second time and gets what he or she wants.
 
 OpenCV Manager structure

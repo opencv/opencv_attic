@@ -6,7 +6,7 @@
 Using C++ OpenCV code with Android binary package
 *************************************************
 
-The Android way is writing all your code in Java. But somethimes it is not enough and you need to go to a native level and write part of your application in C/C++.
+The Android way is writing all your code in Java. But sometimes it is not enough and you need to go to a native level and write part of your application in C/C++.
 This is important when you already have some computer vision functionality which is written in C++ and uses OpenCV, and you want to use it in your Android application,
 but do not want to rewrite the C++ code to Java. 
 In this case the only way is to use JNI mechanism. 

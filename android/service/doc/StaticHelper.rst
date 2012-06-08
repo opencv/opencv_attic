@@ -10,7 +10,7 @@ Java Static OpenCV Helper (internal)
 
 Helper class provides implementation of static OpenCV initialization. All OpenCV libraries must be included to application package.
 
-.. note:: This is imternal class. Does not use it directly. Use OpenCVLoader.initDebug() instead!
+.. note:: This is internal class. Does not use it directly. Use OpenCVLoader.initDebug() instead!
 
 int initOpenCV()
 ----------------
