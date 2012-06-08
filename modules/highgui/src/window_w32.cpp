@@ -43,9 +43,29 @@
 
 #if defined WIN32 || defined _WIN32
 
-#if _MSC_VER >= 1200
+#if defined _MSC_VER && _MSC_VER >= 1200
 #pragma warning( disable: 4710 )
 #endif
+
+#define COMPILE_MULTIMON_STUBS // Required for multi-monitor support
+#ifndef _MULTIMON_USE_SECURE_CRT
+#  define _MULTIMON_USE_SECURE_CRT 0 // some MinGW platforms have no strncpy_s
+#endif
+
+#if defined SM_CMONITORS && !defined MONITOR_DEFAULTTONEAREST
+#  define MONITOR_DEFAULTTONULL       0x00000000
+#  define MONITOR_DEFAULTTOPRIMARY    0x00000001
+#  define MONITOR_DEFAULTTONEAREST    0x00000002
+#  define MONITORINFOF_PRIMARY        0x00000001
+#endif
+#ifndef __inout
+#  define __inout
+#endif
+
+#ifdef __GNUC__
+#  pragma GCC diagnostic ignored "-Wmissing-declarations"
+#endif
+#include <MultiMon.h>
 
 #include <commctrl.h>
 #include <winuser.h>
@@ -53,9 +73,6 @@
 #include <string.h>
 #include <stdio.h>
 #include <assert.h>
-
-#define COMPILE_MULTIMON_STUBS // Required for multi-monitor support
-#include <multimon.h>
 
 #ifdef HAVE_OPENGL
 #include <memory>
@@ -153,7 +170,7 @@ typedef struct CvWindow
     HGDIOBJ image;
     int last_key;
     int flags;
-	int status;//0 normal, 1 fullscreen (YV)
+    int status;//0 normal, 1 fullscreen (YV)
 
     CvMouseCallback on_mouse;
     void* on_mouse_param;
@@ -347,7 +364,7 @@ icvSaveWindowPos( const char* name, CvRect rect )
     char rootKey[1024];
     strcpy( szKey, icvWindowPosRootKey );
     strcat( szKey, name );
-    
+
     if( RegOpenKeyEx( HKEY_CURRENT_USER,szKey,0,KEY_READ,&hkey) != ERROR_SUCCESS )
     {
         HKEY hroot;
@@ -392,7 +409,7 @@ icvSaveWindowPos( const char* name, CvRect rect )
         if( RegOpenKeyEx( HKEY_CURRENT_USER,szKey,0,KEY_WRITE,&hkey) != ERROR_SUCCESS )
             return;
     }
-    
+
     RegSetValueEx(hkey, "Left", 0, REG_DWORD, (BYTE*)&rect.x, sizeof(rect.x));
     RegSetValueEx(hkey, "Top", 0, REG_DWORD, (BYTE*)&rect.y, sizeof(rect.y));
     RegSetValueEx(hkey, "Width", 0, REG_DWORD, (BYTE*)&rect.width, sizeof(rect.width));
@@ -402,9 +419,9 @@ icvSaveWindowPos( const char* name, CvRect rect )
 
 double cvGetModeWindow_W32(const char* name)//YV
 {
-	double result = -1;
-	
-	CV_FUNCNAME( "cvGetModeWindow_W32" );
+    double result = -1;
+
+    CV_FUNCNAME( "cvGetModeWindow_W32" );
 
     __BEGIN__;
 
@@ -416,82 +433,76 @@ double cvGetModeWindow_W32(const char* name)//YV
     window = icvFindWindowByName( name );
     if (!window)
         EXIT; // keep silence here
-        
+
     result = window->status;
-        
+
     __END__;
-    return result;   
+    return result;
 }
 
-#ifdef MONITOR_DEFAULTTONEAREST
 void cvSetModeWindow_W32( const char* name, double prop_value)//Yannick Verdie
 {
-	CV_FUNCNAME( "cvSetModeWindow_W32" );
+    CV_FUNCNAME( "cvSetModeWindow_W32" );
 
-	__BEGIN__;
+    __BEGIN__;
 
-	CvWindow* window;
+    CvWindow* window;
 
-	if(!name)
-		CV_ERROR( CV_StsNullPtr, "NULL name string" );
+    if(!name)
+        CV_ERROR( CV_StsNullPtr, "NULL name string" );
 
-	window = icvFindWindowByName( name );
-	if( !window )
-		CV_ERROR( CV_StsNullPtr, "NULL window" );
+    window = icvFindWindowByName( name );
+    if( !window )
+        CV_ERROR( CV_StsNullPtr, "NULL window" );
 
-	if(window->flags & CV_WINDOW_AUTOSIZE)//if the flag CV_WINDOW_AUTOSIZE is set
-		EXIT;
+    if(window->flags & CV_WINDOW_AUTOSIZE)//if the flag CV_WINDOW_AUTOSIZE is set
+        EXIT;
 
-	{
-		DWORD dwStyle = (DWORD)GetWindowLongPtr(window->frame, GWL_STYLE);
-		CvRect position;
+    {
+        DWORD dwStyle = (DWORD)GetWindowLongPtr(window->frame, GWL_STYLE);
+        CvRect position;
 
-		if (window->status==CV_WINDOW_FULLSCREEN && prop_value==CV_WINDOW_NORMAL)
-		{
-			icvLoadWindowPos(window->name,position );
-			SetWindowLongPtr(window->frame, GWL_STYLE, dwStyle | WS_CAPTION | WS_THICKFRAME);
+        if (window->status==CV_WINDOW_FULLSCREEN && prop_value==CV_WINDOW_NORMAL)
+        {
+            icvLoadWindowPos(window->name,position );
+            SetWindowLongPtr(window->frame, GWL_STYLE, dwStyle | WS_CAPTION | WS_THICKFRAME);
 
-			SetWindowPos(window->frame, HWND_TOP, position.x, position.y , position.width,position.height, SWP_NOZORDER | SWP_FRAMECHANGED);
-			window->status=CV_WINDOW_NORMAL;
+            SetWindowPos(window->frame, HWND_TOP, position.x, position.y , position.width,position.height, SWP_NOZORDER | SWP_FRAMECHANGED);
+            window->status=CV_WINDOW_NORMAL;
 
-			EXIT;
-		}
+            EXIT;
+        }
 
-		if (window->status==CV_WINDOW_NORMAL && prop_value==CV_WINDOW_FULLSCREEN)
-		{
-			//save dimension
-			RECT rect;
-			GetWindowRect(window->frame, &rect);
-			CvRect RectCV = cvRect(rect.left, rect.top,rect.right - rect.left, rect.bottom - rect.top);
-			icvSaveWindowPos(window->name,RectCV );
+        if (window->status==CV_WINDOW_NORMAL && prop_value==CV_WINDOW_FULLSCREEN)
+        {
+            //save dimension
+            RECT rect;
+            GetWindowRect(window->frame, &rect);
+            CvRect RectCV = cvRect(rect.left, rect.top,rect.right - rect.left, rect.bottom - rect.top);
+            icvSaveWindowPos(window->name,RectCV );
 
-			//Look at coordinate for fullscreen
-			HMONITOR hMonitor;
-			MONITORINFO mi;
-			hMonitor = MonitorFromRect(&rect, MONITOR_DEFAULTTONEAREST);
+            //Look at coordinate for fullscreen
+            HMONITOR hMonitor;
+            MONITORINFO mi;
+            hMonitor = MonitorFromRect(&rect, MONITOR_DEFAULTTONEAREST);
 
-			mi.cbSize = sizeof(mi);
-			GetMonitorInfo(hMonitor, &mi);
+            mi.cbSize = sizeof(mi);
+            GetMonitorInfo(hMonitor, &mi);
 
-			//fullscreen
-			position.x=mi.rcMonitor.left;position.y=mi.rcMonitor.top;
-			position.width=mi.rcMonitor.right - mi.rcMonitor.left;position.height=mi.rcMonitor.bottom - mi.rcMonitor.top;
-			SetWindowLongPtr(window->frame, GWL_STYLE, dwStyle & ~WS_CAPTION & ~WS_THICKFRAME);
+            //fullscreen
+            position.x=mi.rcMonitor.left;position.y=mi.rcMonitor.top;
+            position.width=mi.rcMonitor.right - mi.rcMonitor.left;position.height=mi.rcMonitor.bottom - mi.rcMonitor.top;
+            SetWindowLongPtr(window->frame, GWL_STYLE, dwStyle & ~WS_CAPTION & ~WS_THICKFRAME);
 
-			SetWindowPos(window->frame, HWND_TOP, position.x, position.y , position.width,position.height, SWP_NOZORDER | SWP_FRAMECHANGED);
-			window->status=CV_WINDOW_FULLSCREEN;
+            SetWindowPos(window->frame, HWND_TOP, position.x, position.y , position.width,position.height, SWP_NOZORDER | SWP_FRAMECHANGED);
+            window->status=CV_WINDOW_FULLSCREEN;
 
-			EXIT;
-		}
-	}
+            EXIT;
+        }
+    }
 
-	__END__;
+    __END__;
 }
-#else
-void cvSetModeWindow_W32( const char*, double)
-{
-}
-#endif
 
 double cvGetPropWindowAutoSize_W32(const char* name)
 {
@@ -519,9 +530,9 @@ double cvGetPropWindowAutoSize_W32(const char* name)
 
 double cvGetRatioWindow_W32(const char* name)
 {
-	double result = -1;
-	
-	CV_FUNCNAME( "cvGetRatioWindow_W32" );
+    double result = -1;
+
+    CV_FUNCNAME( "cvGetRatioWindow_W32" );
 
     __BEGIN__;
 
@@ -533,20 +544,20 @@ double cvGetRatioWindow_W32(const char* name)
     window = icvFindWindowByName( name );
     if (!window)
         EXIT; // keep silence here
-        
+
     result = static_cast<double>(window->width) / window->height;
-        
+
     __END__;
 
-    return result;   
+    return result;
 }
 
 double cvGetOpenGlProp_W32(const char* name)
 {
-	double result = -1;
+    double result = -1;
 
-#ifdef HAVE_OPENGL	
-	CV_FUNCNAME( "cvGetOpenGlProp_W32" );
+#ifdef HAVE_OPENGL
+    CV_FUNCNAME( "cvGetOpenGlProp_W32" );
 
     __BEGIN__;
 
@@ -558,14 +569,14 @@ double cvGetOpenGlProp_W32(const char* name)
     window = icvFindWindowByName( name );
     if (!window)
         EXIT; // keep silence here
-        
+
     result = window->useGl;
-        
+
     __END__;
 #endif
-	(void)name;
+    (void)name;
 
-    return result;   
+    return result;
 }
 
 
@@ -619,7 +630,7 @@ namespace
         void generateBitmapFont(const std::string& family, int height, int weight, bool italic, bool underline, int start, int count, int base) const;
 
         bool isGlContextInitialized() const;
-            
+
         PFNGLGENBUFFERSPROC    glGenBuffersExt;
         PFNGLDELETEBUFFERSPROC glDeleteBuffersExt;
 
@@ -780,8 +791,8 @@ namespace
             weight,                      // font weight
             italic ? TRUE : FALSE,       // Italic
             underline ? TRUE : FALSE,    // Underline
-            FALSE,                       // StrikeOut  
-            ANSI_CHARSET,                // CharSet  
+            FALSE,                       // StrikeOut
+            ANSI_CHARSET,                // CharSet
             OUT_TT_PRECIS,               // OutPrecision
             CLIP_DEFAULT_PRECIS,         // ClipPrecision
             ANTIALIASED_QUALITY,         // Quality
@@ -863,12 +874,12 @@ namespace
             0,                             // Shift Bit Ignored
             0,                             // No Accumulation Buffer
             0, 0, 0, 0,                    // Accumulation Bits Ignored
-            32,                            // 32 Bit Z-Buffer (Depth Buffer)  
+            32,                            // 32 Bit Z-Buffer (Depth Buffer)
             0,                             // No Stencil Buffer
             0,                             // No Auxiliary Buffer
             PFD_MAIN_PLANE,                // Main Drawing Layer
             0,                             // Reserved
-            0, 0, 0	                       // Layer Masks Ignored
+            0, 0, 0                        // Layer Masks Ignored
         };
 
         hGLDC = GetDC(hWnd);
@@ -908,7 +919,7 @@ namespace
             window->hGLRC = NULL;
         }
 
-        if (window->dc)	
+        if (window->dc)
         {
             ReleaseDC(window->hwnd, window->dc);
             window->dc = NULL;
@@ -928,7 +939,7 @@ namespace
         if (!wglMakeCurrent(window->dc, window->hGLRC))
             CV_ERROR( CV_OpenGlApiCallError, "Can't Activate The GL Rendering Context" );
 
-	    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         if (window->glDrawCallback)
             window->glDrawCallback(window->glDrawData);
@@ -971,6 +982,11 @@ CV_IMPL int cvNamedWindow( const char* name, int flags )
     DWORD defStyle = WS_VISIBLE | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_SYSMENU;
     int len;
     CvRect rect;
+#ifdef HAVE_OPENGL
+    bool useGl;
+    HDC hGLDC;
+    HGLRC hGLRC;
+#endif
 
     cvInitSystem(0,0);
 
@@ -997,7 +1013,7 @@ CV_IMPL int cvNamedWindow( const char* name, int flags )
 
     ShowWindow(mainhWnd, SW_SHOW);
 
-	//YV- remove one border by changing the style
+    //YV- remove one border by changing the style
     hWnd = CreateWindow("HighGUI class", "", (defStyle & ~WS_SIZEBOX) | WS_CHILD, CW_USEDEFAULT, 0, rect.width, rect.height, mainhWnd, 0, hg_hinstance, 0);
     if( !hWnd )
         CV_ERROR( CV_StsError, "Frame window can not be created" );
@@ -1006,9 +1022,9 @@ CV_IMPL int cvNamedWindow( const char* name, int flags )
     if (flags & CV_WINDOW_OPENGL)
         CV_ERROR( CV_OpenGlNotSupported, "Library was built without OpenGL support" );
 #else
-    bool useGl = false;
-    HDC hGLDC = 0;
-    HGLRC hGLRC = 0;
+    useGl = false;
+    hGLDC = 0;
+    hGLRC = 0;
 
     if (flags & CV_WINDOW_OPENGL)
         createGlContext(hWnd, hGLDC, hGLRC, useGl);
@@ -1388,16 +1404,16 @@ cvShowImage( const char* name, const CvArr* arr )
         CV_ERROR( CV_StsNullPtr, "NULL name" );
 
     window = icvFindWindowByName(name);
-	if(!window)
-	{
+    if(!window)
+    {
         #ifndef HAVE_OPENGL
-		    cvNamedWindow(name, CV_WINDOW_AUTOSIZE);
+            cvNamedWindow(name, CV_WINDOW_AUTOSIZE);
         #else
-		    cvNamedWindow(name, CV_WINDOW_AUTOSIZE | CV_WINDOW_OPENGL);
+            cvNamedWindow(name, CV_WINDOW_AUTOSIZE | CV_WINDOW_OPENGL);
         #endif
 
-		window = icvFindWindowByName(name);
-	}
+        window = icvFindWindowByName(name);
+    }
 
     if( !window || !arr )
         EXIT; // keep silence here.
@@ -1455,6 +1471,7 @@ cvShowImage( const char* name, const CvArr* arr )
     __END__;
 }
 
+#if 0
 CV_IMPL void
 cvShowImageHWND(HWND w_hWnd, const CvArr* arr)
 {
@@ -1482,7 +1499,7 @@ cvShowImageHWND(HWND w_hWnd, const CvArr* arr)
     if( CV_IS_IMAGE_HDR( arr ) )
         origin = ((IplImage*)arr)->origin;
 
-	CV_CALL( image = cvGetMat( arr, &stub ) );
+    CV_CALL( image = cvGetMat( arr, &stub ) );
 
     if ( hdc )
     {
@@ -1500,7 +1517,7 @@ cvShowImageHWND(HWND w_hWnd, const CvArr* arr)
             dst_ptr = bmp.bmBits;
      }
 
-	if( size.cx != image->width || size.cy != image->height || channels != channels0 )
+    if( size.cx != image->width || size.cy != image->height || channels != channels0 )
     {
         changed_size = true;
 
@@ -1532,6 +1549,7 @@ cvShowImageHWND(HWND w_hWnd, const CvArr* arr)
 
     __END__;
 }
+#endif
 
 CV_IMPL void cvResizeWindow(const char* name, int width, int height )
 {
@@ -1654,7 +1672,7 @@ MainWindowProc( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
        {
           // Snap window to screen edges with multi-monitor support. // Adi Shavit
           LPWINDOWPOS pos = (LPWINDOWPOS)lParam;
-          
+
           RECT rect;
           GetWindowRect(window->frame, &rect);
 
@@ -1667,15 +1685,15 @@ MainWindowProc( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
 
           const int SNAP_DISTANCE = 15;
 
-          if (abs(pos->x - mi.rcMonitor.left) <= SNAP_DISTANCE) 
+          if (abs(pos->x - mi.rcMonitor.left) <= SNAP_DISTANCE)
              pos->x = mi.rcMonitor.left;               // snap to left edge
-          else 
+          else
              if (abs(pos->x + pos->cx - mi.rcMonitor.right) <= SNAP_DISTANCE)
                 pos->x = mi.rcMonitor.right - pos->cx; // snap to right edge
 
           if (abs(pos->y - mi.rcMonitor.top) <= SNAP_DISTANCE)
              pos->y = mi.rcMonitor.top;                 // snap to top edge
-          else 
+          else
              if (abs(pos->y + pos->cy - mi.rcMonitor.bottom) <= SNAP_DISTANCE)
                 pos->y = mi.rcMonitor.bottom - pos->cy; // snap to bottom edge
        }
@@ -1836,9 +1854,9 @@ static LRESULT CALLBACK HighGUIProc( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
             EndPaint(hwnd, &paint);
         }
 #ifdef HAVE_OPENGL
-        else if(window->useGl) 
+        else if(window->useGl)
         {
-            drawGl(window);            
+            drawGl(window);
             return DefWindowProc(hwnd, uMsg, wParam, lParam);
         }
 #endif

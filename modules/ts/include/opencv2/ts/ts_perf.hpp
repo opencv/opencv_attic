@@ -41,6 +41,8 @@ const cv::Size sznHD = cv::Size(640, 360);
 const cv::Size szqHD = cv::Size(960, 540);
 const cv::Size sz720p = cv::Size(1280, 720);
 const cv::Size sz1080p = cv::Size(1920, 1080);
+const cv::Size sz2160p = cv::Size(3840, 2160);//UHDTV1 4K
+const cv::Size sz4320p = cv::Size(7680, 4320);//UHDTV2 8K
 
 const cv::Size sz2K = cv::Size(2048, 2048);
 
@@ -279,6 +281,7 @@ private:
 
     unsigned int nIters;
     unsigned int currentIter;
+    unsigned int runsPerIteration;
 
     performance_metrics metrics;
     void validateMetrics();
@@ -307,6 +310,7 @@ private:
         _declareHelper& iterations(unsigned int n);
         _declareHelper& time(double timeLimitSecs);
         _declareHelper& tbb_threads(int n = -1);
+        _declareHelper& runs(unsigned int runsNumber);
     private:
         TestBase* test;
         _declareHelper(TestBase* t);
@@ -460,6 +464,7 @@ int main(int argc, char **argv)\
 
 #define TEST_CYCLE_N(n) for(declare.iterations(n); startTimer(), next(); stopTimer())
 #define TEST_CYCLE() for(; startTimer(), next(); stopTimer())
+#define TEST_CYCLE_MULTIRUN(runsNum) for(declare.runs(runsNum); startTimer(), next(); stopTimer()) for(int r = 0; r < runsNum; ++r)
 
 //flags
 namespace perf

@@ -2,13 +2,14 @@
 #include "opencv2/calib3d/calib3d.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/features2d/features2d.hpp"
+#include "opencv2/nonfree/nonfree.hpp"
 
 #include <iostream>
 
 using namespace cv;
 using namespace std;
 
-void help(char** argv)
+static void help(char** argv)
 {
     cout << "\nThis program demonstrats keypoint finding and matching between 2 images using features2d framework.\n"
      << "   In one case, the 2nd image is synthesized by homography from the first, in the second case, there are 2 images\n"
@@ -38,7 +39,7 @@ const string winName = "correspondences";
 
 enum { NONE_FILTER = 0, CROSS_CHECK_FILTER = 1 };
 
-int getMatcherFilterType( const string& str )
+static int getMatcherFilterType( const string& str )
 {
     if( str == "NoneFilter" )
         return NONE_FILTER;
@@ -48,7 +49,7 @@ int getMatcherFilterType( const string& str )
     return -1;
 }
 
-void simpleMatching( Ptr<DescriptorMatcher>& descriptorMatcher,
+static void simpleMatching( Ptr<DescriptorMatcher>& descriptorMatcher,
                      const Mat& descriptors1, const Mat& descriptors2,
                      vector<DMatch>& matches12 )
 {
@@ -56,7 +57,7 @@ void simpleMatching( Ptr<DescriptorMatcher>& descriptorMatcher,
     descriptorMatcher->match( descriptors1, descriptors2, matches12 );
 }
 
-void crossCheckMatching( Ptr<DescriptorMatcher>& descriptorMatcher,
+static void crossCheckMatching( Ptr<DescriptorMatcher>& descriptorMatcher,
                          const Mat& descriptors1, const Mat& descriptors2,
                          vector<DMatch>& filteredMatches12, int knn=1 )
 {
@@ -86,7 +87,7 @@ void crossCheckMatching( Ptr<DescriptorMatcher>& descriptorMatcher,
     }
 }
 
-void warpPerspectiveRand( const Mat& src, Mat& dst, Mat& H, RNG& rng )
+static void warpPerspectiveRand( const Mat& src, Mat& dst, Mat& H, RNG& rng )
 {
     H.create(3, 3, CV_32FC1);
     H.at<float>(0,0) = rng.uniform( 0.8f, 1.2f);
@@ -102,7 +103,7 @@ void warpPerspectiveRand( const Mat& src, Mat& dst, Mat& H, RNG& rng )
     warpPerspective( src, dst, H, src.size() );
 }
 
-void doIteration( const Mat& img1, Mat& img2, bool isWarpPerspective,
+static void doIteration( const Mat& img1, Mat& img2, bool isWarpPerspective,
                   vector<KeyPoint>& keypoints1, const Mat& descriptors1,
                   Ptr<FeatureDetector>& detector, Ptr<DescriptorExtractor>& descriptorExtractor,
                   Ptr<DescriptorMatcher>& descriptorMatcher, int matcherFilter, bool eval,
@@ -235,6 +236,9 @@ int main(int argc, char** argv)
     	help(argv);
         return -1;
     }
+
+    cv::initModule_nonfree();
+
     bool isWarpPerspective = argc == 7;
     double ransacReprojThreshold = -1;
     if( !isWarpPerspective )

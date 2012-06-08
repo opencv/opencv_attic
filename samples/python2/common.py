@@ -2,6 +2,7 @@ import numpy as np
 import cv2
 import os
 from contextlib import contextmanager
+import itertools as it
 
 image_extensions = ['.bmp', '.jpg', '.jpeg', '.png', '.tif', '.tiff', '.pbm', '.pgm', '.ppm']
 
@@ -56,8 +57,8 @@ def mtx2rvec(R):
     return axis * np.arctan2(s, c)
 
 def draw_str(dst, (x, y), s):
-    cv2.putText(dst, s, (x+1, y+1), cv2.FONT_HERSHEY_PLAIN, 1.0, (0, 0, 0), thickness = 2, linetype=cv2.CV_AA)
-    cv2.putText(dst, s, (x, y), cv2.FONT_HERSHEY_PLAIN, 1.0, (255, 255, 255), linetype=cv2.CV_AA)
+    cv2.putText(dst, s, (x+1, y+1), cv2.FONT_HERSHEY_PLAIN, 1.0, (0, 0, 0), thickness = 2, lineType=cv2.CV_AA)
+    cv2.putText(dst, s, (x, y), cv2.FONT_HERSHEY_PLAIN, 1.0, (255, 255, 255), lineType=cv2.CV_AA)
 
 class Sketcher:
     def __init__(self, windowname, dests, colors_func):
@@ -126,6 +127,17 @@ def Timer(msg):
     finally:
         print "%.2f ms" % ((clock()-start)*1000)
 
+class StatValue:
+    def __init__(self, smooth_coef = 0.5):
+        self.value = None
+        self.smooth_coef = smooth_coef
+    def update(self, v):
+        if self.value is None:
+            self.value = v
+        else:
+            c = self.smooth_coef
+            self.value = c * self.value + (1.0-c) * v
+
 class RectSelector:
     def __init__(self, win, callback):
         self.win = win
@@ -159,3 +171,22 @@ class RectSelector:
             return
         x0, y0, x1, y1 = self.drag_rect
         cv2.rectangle(vis, (x0, y0), (x1, y1), (0, 255, 0), 2)
+
+
+def grouper(n, iterable, fillvalue=None):
+    '''grouper(3, 'ABCDEFG', 'x') --> ABC DEF Gxx'''
+    args = [iter(iterable)] * n
+    return it.izip_longest(fillvalue=fillvalue, *args)
+
+def mosaic(w, imgs):
+    '''Make a grid from images. 
+
+    w    -- number of grid columns
+    imgs -- images (must have same size and format)
+    '''
+    imgs = iter(imgs)
+    img0 = imgs.next()
+    pad = np.zeros_like(img0)
+    imgs = it.chain([img0], imgs)
+    rows = grouper(w, imgs, pad)
+    return np.vstack(map(np.hstack, rows))

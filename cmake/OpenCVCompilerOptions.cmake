@@ -1,4 +1,4 @@
-if (WIN32)
+if(MINGW)
   # mingw compiler is known to produce unstable SSE code with -O3 hence we are trying to use -O2 instead
   if(CMAKE_COMPILER_IS_GNUCXX)
     foreach(flags CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_RELEASE CMAKE_CXX_FLAGS_DEBUG)
@@ -28,9 +28,27 @@ set(OPENCV_EXTRA_EXE_LINKER_FLAGS "")
 set(OPENCV_EXTRA_EXE_LINKER_FLAGS_RELEASE "")
 set(OPENCV_EXTRA_EXE_LINKER_FLAGS_DEBUG "")
 
+if(MINGW)
+  # http://gcc.gnu.org/bugzilla/show_bug.cgi?id=40838
+  # here we are trying to workaround the problem
+  include(CheckCXXCompilerFlag)
+  CHECK_CXX_COMPILER_FLAG(-mstackrealign HAVE_STACKREALIGN_FLAG)
+  if(HAVE_STACKREALIGN_FLAG)
+    set(OPENCV_EXTRA_C_FLAGS "${OPENCV_EXTRA_C_FLAGS} -mstackrealign")
+  else()
+    CHECK_CXX_COMPILER_FLAG(-mpreferred-stack-boundary=2 HAVE_PREFERRED_STACKBOUNDARY_FLAG)
+    if(HAVE_PREFERRED_STACKBOUNDARY_FLAG)
+      set(OPENCV_EXTRA_C_FLAGS "${OPENCV_EXTRA_C_FLAGS} -mstackrealign")
+    endif()
+  endif()
+endif()
+
 if(CMAKE_COMPILER_IS_GNUCXX)
   # High level of warnings.
   set(OPENCV_EXTRA_C_FLAGS "${OPENCV_EXTRA_C_FLAGS} -Wall")
+
+  set(OPENCV_EXTRA_C_FLAGS "${OPENCV_EXTRA_C_FLAGS} -Werror=return-type -Werror=non-virtual-dtor -Werror=address -Werror=sequence-point -Werror=format-security")
+  set(OPENCV_EXTRA_C_FLAGS "${OPENCV_EXTRA_C_FLAGS} -Wmissing-declarations -Wcast-align -Wundef -Winit-self -Wpointer-arith") #-Wstrict-aliasing=2
 
   # The -Wno-long-long is required in 64bit systems when including sytem headers.
   if(X86_64)
@@ -156,18 +174,18 @@ if(MSVC)
       set(OPENCV_EXTRA_C_FLAGS "${OPENCV_EXTRA_C_FLAGS} /arch:SSE2")
     endif()
   endif()
-  
+
   if(ENABLE_SSE3)
     set(OPENCV_EXTRA_C_FLAGS "${OPENCV_EXTRA_C_FLAGS} /arch:SSE3")
   endif()
   if(ENABLE_SSE4_1)
     set(OPENCV_EXTRA_C_FLAGS "${OPENCV_EXTRA_C_FLAGS} /arch:SSE4.1")
   endif()
-  
+
   if(ENABLE_SSE OR ENABLE_SSE2 OR ENABLE_SSE3 OR ENABLE_SSE4_1)
     set(OPENCV_EXTRA_C_FLAGS "${OPENCV_EXTRA_C_FLAGS} /Oi")
   endif()
-  
+
   if(X86 OR X86_64)
     if(CMAKE_SIZEOF_VOID_P EQUAL 4 AND ENABLE_SSE2)
       set(OPENCV_EXTRA_C_FLAGS "${OPENCV_EXTRA_C_FLAGS} /fp:fast")# !! important - be on the same wave with x64 compilers
@@ -202,6 +220,10 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OPENCV_EXTRA_EXE_LINKER_
 set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} ${OPENCV_EXTRA_EXE_LINKER_FLAGS_RELEASE}")
 set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} ${OPENCV_EXTRA_EXE_LINKER_FLAGS_DEBUG}")
 
+if(CMAKE_COMPILER_IS_GNUCXX)
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wmissing-prototypes -Wstrict-prototypes")
+endif()
+
 if(MSVC)
   # avoid warnings from MSVC about overriding the /W* option
   # we replace /W3 with /W4 only for C++ files,
@@ -210,12 +232,12 @@ if(MSVC)
   string(REPLACE "/W3" "/W4" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
   string(REPLACE "/W3" "/W4" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
   string(REPLACE "/W3" "/W4" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
-  
+
   # allow extern "C" functions throw exceptions
   foreach(flags CMAKE_C_FLAGS CMAKE_C_FLAGS_RELEASE CMAKE_C_FLAGS_RELEASE CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_RELEASE CMAKE_CXX_FLAGS_DEBUG)
     string(REPLACE "/EHsc-" "/EHs" ${flags} "${${flags}}")
     string(REPLACE "/EHsc" "/EHs" ${flags} "${${flags}}")
-    
+
     string(REPLACE "/Zm1000" "" ${flags} "${${flags}}")
   endforeach()
 

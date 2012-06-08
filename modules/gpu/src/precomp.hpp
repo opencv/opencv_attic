@@ -43,7 +43,7 @@
 #ifndef __OPENCV_PRECOMP_H__
 #define __OPENCV_PRECOMP_H__
 
-#if _MSC_VER >= 1200
+#if defined _MSC_VER && _MSC_VER >= 1200
     #pragma warning( disable: 4251 4710 4711 4514 4996 )
 #endif
 
@@ -68,6 +68,7 @@
 
 #include "opencv2/gpu/gpu.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
+#include "opencv2/imgproc/imgproc_c.h"
 #include "opencv2/calib3d/calib3d.hpp"
 #include "opencv2/core/internal.hpp"
 #include "opencv2/video/video.hpp"

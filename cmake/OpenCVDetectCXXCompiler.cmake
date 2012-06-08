@@ -8,11 +8,11 @@ endif()
 if(NOT APPLE)
   if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     set(CMAKE_COMPILER_IS_GNUCXX 1)
-    unset(ENABLE_PRECOMPILED_HEADERS CACHE)
+    set(ENABLE_PRECOMPILED_HEADERS OFF CACHE BOOL "" FORCE)
   endif()
   if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     set(CMAKE_COMPILER_IS_GNUCC 1)
-    unset(ENABLE_PRECOMPILED_HEADERS CACHE)
+    set(ENABLE_PRECOMPILED_HEADERS OFF CACHE BOOL "" FORCE)
   endif()
 endif()
 
@@ -42,6 +42,12 @@ endif()
 
 if(MSVC AND CMAKE_C_COMPILER MATCHES "icc")
     set(CV_ICC   __INTEL_COMPILER_FOR_WINDOWS)
+endif()
+
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR (UNIX AND CV_ICC))
+  set(CV_COMPILER_IS_GNU TRUE)
+else()
+  set(CV_COMPILER_IS_GNU FALSE)
 endif()
 
 # ----------------------------------------------------------------------------

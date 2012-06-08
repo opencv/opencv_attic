@@ -22,11 +22,47 @@ import android.util.Log;
 import android.view.SurfaceHolder;
 
 class FdView extends SampleCvViewBase {
-    private static final String TAG = "Sample::FdView";
-    private Mat                 mRgba;
-    private Mat                 mGray;
+    private static final String   TAG = "Sample::FdView";
+    private Mat                   mRgba;
+    private Mat                   mGray;
+    private File                  mCascadeFile;
+    private CascadeClassifier     mJavaDetector;
+    private DetectionBasedTracker mNativeDetector;
 
-    private CascadeClassifier   mCascade;
+    private static final Scalar   FACE_RECT_COLOR = new Scalar(0, 255, 0, 255);
+    
+    public static final int       JAVA_DETECTOR     = 0;
+    public static final int       NATIVE_DETECTOR   = 1;
+    
+    private int                   mDetectorType     = JAVA_DETECTOR;
+
+    private float                 mRelativeFaceSize = 0;
+    private int					  mAbsoluteFaceSize = 0;
+    
+    public void setMinFaceSize(float faceSize)
+    {
+		mRelativeFaceSize = faceSize;
+		mAbsoluteFaceSize = 0;
+    }
+    
+    public void setDetectorType(int type)
+    {
+    	if (mDetectorType != type)
+    	{
+    		mDetectorType = type;
+    		
+    		if (type == NATIVE_DETECTOR)
+    		{
+    			Log.i(TAG, "Detection Based Tracker enabled");
+    			mNativeDetector.start();
+    		}
+    		else
+    		{
+    			Log.i(TAG, "Cascade detector enabled");
+    			mNativeDetector.stop();
+    		}
+    	}
+    }
 
     public FdView(Context context) {
         super(context);
@@ -34,8 +70,8 @@ class FdView extends SampleCvViewBase {
         try {
             InputStream is = context.getResources().openRawResource(R.raw.lbpcascade_frontalface);
             File cascadeDir = context.getDir("cascade", Context.MODE_PRIVATE);
-            File cascadeFile = new File(cascadeDir, "lbpcascade_frontalface.xml");
-            FileOutputStream os = new FileOutputStream(cascadeFile);
+            mCascadeFile = new File(cascadeDir, "lbpcascade_frontalface.xml");
+            FileOutputStream os = new FileOutputStream(mCascadeFile);
 
             byte[] buffer = new byte[4096];
             int bytesRead;
@@ -45,14 +81,15 @@ class FdView extends SampleCvViewBase {
             is.close();
             os.close();
 
-            mCascade = new CascadeClassifier(cascadeFile.getAbsolutePath());
-            if (mCascade.empty()) {
+            mJavaDetector = new CascadeClassifier(mCascadeFile.getAbsolutePath());
+            if (mJavaDetector.empty()) {
                 Log.e(TAG, "Failed to load cascade classifier");
-                mCascade = null;
+                mJavaDetector = null;
             } else
-                Log.i(TAG, "Loaded cascade classifier from " + cascadeFile.getAbsolutePath());
+                Log.i(TAG, "Loaded cascade classifier from " + mCascadeFile.getAbsolutePath());
 
-            cascadeFile.delete();
+            mNativeDetector = new DetectionBasedTracker(mCascadeFile.getAbsolutePath(), 0);
+            
             cascadeDir.delete();
 
         } catch (IOException e) {
@@ -77,27 +114,49 @@ class FdView extends SampleCvViewBase {
         capture.retrieve(mRgba, Highgui.CV_CAP_ANDROID_COLOR_FRAME_RGBA);
         capture.retrieve(mGray, Highgui.CV_CAP_ANDROID_GREY_FRAME);
 
-        if (mCascade != null) {
-            int height = mGray.rows();
-            int faceSize = Math.round(height * FdActivity.minFaceSize);
-            MatOfRect faces = new MatOfRect();
-            mCascade.detectMultiScale(mGray, faces, 1.1, 2, 2 // TODO: objdetect.CV_HAAR_SCALE_IMAGE
-                    , new Size(faceSize, faceSize), new Size());
-
-            for (Rect r : faces.toArray())
-                Core.rectangle(mRgba, r.tl(), r.br(), new Scalar(0, 255, 0, 255), 3);
+        if (mAbsoluteFaceSize == 0)
+        {
+        	int height = mGray.rows();
+        	if (Math.round(height * mRelativeFaceSize) > 0);
+        	{
+        		mAbsoluteFaceSize = Math.round(height * mRelativeFaceSize);
+        	}
+        	mNativeDetector.setMinFaceSize(mAbsoluteFaceSize);
         }
+        
+        MatOfRect faces = new MatOfRect();
+        
+        if (mDetectorType == JAVA_DETECTOR)
+        {
+        	if (mJavaDetector != null)
+                mJavaDetector.detectMultiScale(mGray, faces, 1.1, 2, 2 // TODO: objdetect.CV_HAAR_SCALE_IMAGE
+                        , new Size(mAbsoluteFaceSize, mAbsoluteFaceSize), new Size());
+        }
+        else if (mDetectorType == NATIVE_DETECTOR)
+        {
+        	if (mNativeDetector != null)
+        		mNativeDetector.detect(mGray, faces);
+        }
+        else
+        {
+        	Log.e(TAG, "Detection method is not selected!");
+        }
+        
+        Rect[] facesArray = faces.toArray();
+        for (int i = 0; i < facesArray.length; i++)
+            Core.rectangle(mRgba, facesArray[i].tl(), facesArray[i].br(), FACE_RECT_COLOR, 3);
 
-        Bitmap bmp = Bitmap.createBitmap(mRgba.cols(), mRgba.rows(), Bitmap.Config.RGB_565/*.ARGB_8888*/);
+        Bitmap bmp = Bitmap.createBitmap(mRgba.cols(), mRgba.rows(), Bitmap.Config.ARGB_8888);
 
         try {
         	Utils.matToBitmap(mRgba, bmp);
-            return bmp;
         } catch(Exception e) {
-        	Log.e("org.opencv.samples.puzzle15", "Utils.matToBitmap() throws an exception: " + e.getMessage());
+        	Log.e(TAG, "Utils.matToBitmap() throws an exception: " + e.getMessage());
             bmp.recycle();
-            return null;
+            bmp = null;
         }
+        
+        return bmp;
     }
 
     @Override
@@ -110,9 +169,14 @@ class FdView extends SampleCvViewBase {
                 mRgba.release();
             if (mGray != null)
                 mGray.release();
+            if (mCascadeFile != null)
+            	mCascadeFile.delete();
+            if (mNativeDetector != null)
+            	mNativeDetector.release();
 
             mRgba = null;
             mGray = null;
+            mCascadeFile = null;
         }
     }
 }

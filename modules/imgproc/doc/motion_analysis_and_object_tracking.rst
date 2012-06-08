@@ -11,8 +11,9 @@ Adds an image to the accumulator.
 
 .. ocv:pyfunction:: cv2.accumulate(src, dst[, mask]) -> None
 
-.. ocv:cfunction:: void cvAcc( const CvArr* src, CvArr* dst, const CvArr* mask=NULL )
-.. ocv:pyoldfunction:: cv.Acc(src, dst, mask=None)-> None
+.. ocv:cfunction:: void cvAcc( const CvArr* image, CvArr* sum, const CvArr* mask=NULL )
+
+.. ocv:pyoldfunction:: cv.Acc(image, sum, mask=None) -> None
 
     :param src: Input image as 1- or 3-channel, 8-bit or 32-bit floating point.
 
@@ -46,8 +47,9 @@ Adds the square of a source image to the accumulator.
 
 .. ocv:pyfunction:: cv2.accumulateSquare(src, dst[, mask]) -> None
 
-.. ocv:cfunction:: void cvSquareAcc( const CvArr* src, CvArr* dst, const CvArr* mask=NULL )
-.. ocv:pyoldfunction:: cv.SquareAcc(src, dst, mask=None)-> None
+.. ocv:cfunction:: void cvSquareAcc( const CvArr* image, CvArr* sqsum, const CvArr* mask=NULL )
+
+.. ocv:pyoldfunction:: cv.SquareAcc(image, sqsum, mask=None) -> None
 
     :param src: Input image as 1- or 3-channel, 8-bit or 32-bit floating point.
 
@@ -79,13 +81,14 @@ Adds the per-element product of two input images to the accumulator.
 
 .. ocv:pyfunction:: cv2.accumulateProduct(src1, src2, dst[, mask]) -> None
 
-.. ocv:cfunction:: void cvMultiplyAcc( const CvArr* src1, const CvArr* src2, CvArr* dst, const CvArr* mask=NULL )
-.. ocv:pyoldfunction:: cv.MultiplyAcc(src1, src2, dst, mask=None)-> None
+.. ocv:cfunction:: void cvMultiplyAcc( const CvArr* image1, const CvArr* image2, CvArr* acc, const CvArr* mask=NULL )
+
+.. ocv:pyoldfunction:: cv.MultiplyAcc(image1, image2, acc, mask=None)-> None
 
     :param src1: First input image, 1- or 3-channel, 8-bit or 32-bit floating point.
 
     :param src2: Second input image of the same type and the same size as  ``src1`` .
-    
+
     :param dst: Accumulator with the same number of channels as input images, 32-bit or 64-bit floating-point.
 
     :param mask: Optional operation mask.
@@ -114,8 +117,8 @@ Updates a running average.
 
 .. ocv:pyfunction:: cv2.accumulateWeighted(src, dst, alpha[, mask]) -> None
 
-.. ocv:cfunction:: void cvRunningAvg( const CvArr* src, CvArr* dst, double alpha, const CvArr* mask=NULL )
-.. ocv:pyoldfunction:: cv.RunningAvg(src, dst, alpha, mask=None)-> None
+.. ocv:cfunction:: void cvRunningAvg( const CvArr* image, CvArr* acc, double alpha, const CvArr* mask=NULL )
+.. ocv:pyoldfunction:: cv.RunningAvg(image, acc, alpha, mask=None)-> None
 
     :param src: Input image as 1- or 3-channel, 8-bit or 32-bit floating point.
 
@@ -138,7 +141,7 @@ The function supports multi-channel images. Each channel is processed independen
 
     :ocv:func:`accumulate`,
     :ocv:func:`accumulateSquare`,
-    :ocv:func:`accumulateProduct` 
+    :ocv:func:`accumulateProduct`
 
 
 
@@ -158,34 +161,34 @@ Return value: detected phase shift (sub-pixel) between the two arrays.
 
 The function performs the following equations
 
-*
-    First it applies a Hanning window (see http://en.wikipedia.org/wiki/Hann\_function) to each image to remove possible edge effects. This window is cached until the array size changes to speed up processing time.
+* First it applies a Hanning window (see http://en.wikipedia.org/wiki/Hann\_function) to each image to remove possible edge effects. This window is cached until the array size changes to speed up processing time.
 
-*
-    Next it computes the forward DFTs of each source array:
-    .. math::
+* Next it computes the forward DFTs of each source array:
+
+     .. math::
 
         \mathbf{G}_a = \mathcal{F}\{src_1\}, \; \mathbf{G}_b = \mathcal{F}\{src_2\}
 
-    where
-    :math:`\mathcal{F}` is the forward DFT.
+  where
+  :math:`\mathcal{F}` is the forward DFT.
 
-*
-    It then computes the cross-power spectrum of each frequency domain array:
+* It then computes the cross-power spectrum of each frequency domain array:
+
     .. math::
 
-        R = \frac{ \mathbf{G}_a \mathbf{G}_b^*}{|\mathbf{G}_a \mathbf{G}_b^*|}
+          R = \frac{ \mathbf{G}_a \mathbf{G}_b^*}{|\mathbf{G}_a \mathbf{G}_b^*|}
 
-*
-    Next the cross-correlation is converted back into the time domain via the inverse DFT:
+* Next the cross-correlation is converted back into the time domain via the inverse DFT:
+
     .. math::
 
-        r = \mathcal{F}^{-1}\{R\}
-*
-    Finally, it computes the peak location and computes a 5x5 weighted centroid around the peak to achieve sub-pixel accuracy.
+          r = \mathcal{F}^{-1}\{R\}
+
+* Finally, it computes the peak location and computes a 5x5 weighted centroid around the peak to achieve sub-pixel accuracy.
+
     .. math::
 
-       (\Delta x, \Delta y) = \texttt{weighted_centroid}\{\arg \max_{(x, y)}\{r\}\}
+         (\Delta x, \Delta y) = \texttt{weightedCentroid} \{\arg \max_{(x, y)}\{r\}\}
 
 .. seealso::
     :ocv:func:`dft`,
@@ -206,7 +209,7 @@ This function computes a Hanning window coefficients in two dimensions. See http
 
 An example is shown below: ::
 
-    // create hanning window of size 100x100 and type CV_32F 
+    // create hanning window of size 100x100 and type CV_32F
     Mat hann;
     createHanningWindow(hann, Size(100, 100), CV_32F);
 

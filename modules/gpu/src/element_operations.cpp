@@ -658,7 +658,11 @@ void cv::gpu::multiply(const GpuMat& src1, const GpuMat& src2, GpuMat& dst, doub
 
         dst.create(src1.size(), CV_MAKE_TYPE(CV_MAT_DEPTH(dtype), src1.channels()));
 
+#if (CUDA_VERSION <= 4020)
         if (scale == 1 && dst.type() == src1.type() && src1.depth() <= CV_32F)
+#else
+        if (scale == 1 && dst.type() == src1.type() && src1.depth() <= CV_32F && src1.depth() > CV_8U)
+#endif
         {
             npp_funcs[src1.depth()](src1.reshape(1), src2.reshape(1), dst.reshape(1), stream);
             return;
@@ -998,7 +1002,11 @@ namespace
         typedef NppTypeTraits<CV_16U>::npp_t npp_t;
         typedef Npp32u scalar_t;
 
+#if (CUDA_VERSION <= 4020)
         typedef NppStatus (*func_t)(const Npp16u* pSrc1, int nSrc1Step, Npp16u* pDst, int nDstStep, NppiSize oSizeROI, Npp32u nConstant);
+#else
+        typedef NppStatus (*func_t)(const Npp16u * pSrc1, int nSrc1Step, Npp16u * pDst,  int nDstStep,  NppiSize oSizeROI, Npp16u nConstant);
+#endif
     };
 
     template <int DEPTH, typename NppAbsDiffCFunc<DEPTH>::func_t func> struct NppAbsDiffC

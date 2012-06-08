@@ -433,11 +433,11 @@ CV_EXPORTS void split(const GpuMat& src, vector<GpuMat>& dst, Stream& stream = S
 
 //! computes magnitude of complex (x(i).re, x(i).im) vector
 //! supports only CV_32FC2 type
-CV_EXPORTS void magnitude(const GpuMat& x, GpuMat& magnitude, Stream& stream = Stream::Null());
+CV_EXPORTS void magnitude(const GpuMat& xy, GpuMat& magnitude, Stream& stream = Stream::Null());
 
 //! computes squared magnitude of complex (x(i).re, x(i).im) vector
 //! supports only CV_32FC2 type
-CV_EXPORTS void magnitudeSqr(const GpuMat& x, GpuMat& magnitude, Stream& stream = Stream::Null());
+CV_EXPORTS void magnitudeSqr(const GpuMat& xy, GpuMat& magnitude, Stream& stream = Stream::Null());
 
 //! computes magnitude of each (x(i), y(i)) vector
 //! supports only floating-point source
@@ -482,7 +482,7 @@ CV_EXPORTS void divide(const GpuMat& a, const GpuMat& b, GpuMat& c, double scale
 //! computes element-wise weighted quotient of matrix and scalar (c = a / s)
 CV_EXPORTS void divide(const GpuMat& a, const Scalar& sc, GpuMat& c, double scale = 1, int dtype = -1, Stream& stream = Stream::Null());
 //! computes element-wise weighted reciprocal of an array (dst = scale/src2)
-CV_EXPORTS void divide(double scale, const GpuMat& src2, GpuMat& dst, int dtype = -1, Stream& stream = Stream::Null());
+CV_EXPORTS void divide(double scale, const GpuMat& b, GpuMat& c, int dtype = -1, Stream& stream = Stream::Null());
 
 //! computes the weighted sum of two arrays (dst = alpha*src1 + beta*src2 + gamma)
 CV_EXPORTS void addWeighted(const GpuMat& src1, double alpha, const GpuMat& src2, double beta, double gamma, GpuMat& dst,
@@ -527,7 +527,7 @@ CV_EXPORTS void pow(const GpuMat& src, double power, GpuMat& dst, Stream& stream
 
 //! compares elements of two arrays (c = a <cmpop> b)
 CV_EXPORTS void compare(const GpuMat& a, const GpuMat& b, GpuMat& c, int cmpop, Stream& stream = Stream::Null());
-CV_EXPORTS void compare(const GpuMat& a, Scalar sc, GpuMat& dst, int cmpop, Stream& stream = Stream::Null());
+CV_EXPORTS void compare(const GpuMat& a, Scalar sc, GpuMat& c, int cmpop, Stream& stream = Stream::Null());
 
 //! performs per-elements bit-wise inversion
 CV_EXPORTS void bitwise_not(const GpuMat& src, GpuMat& dst, const GpuMat& mask=GpuMat(), Stream& stream = Stream::Null());
@@ -1449,12 +1449,12 @@ public:
     int descriptorSize() const;
 
     //! upload host keypoints to device memory
-    void uploadKeypoints(const vector<KeyPoint>& keypoints, GpuMat& keypointsGPU);
+    static void uploadKeypoints(const vector<KeyPoint>& keypoints, GpuMat& keypointsGPU);
     //! download keypoints from device to host memory
-    void downloadKeypoints(const GpuMat& keypointsGPU, vector<KeyPoint>& keypoints);
+    static void downloadKeypoints(const GpuMat& keypointsGPU, vector<KeyPoint>& keypoints);
 
     //! download descriptors from device to host memory
-    void downloadDescriptors(const GpuMat& descriptorsGPU, vector<float>& descriptors);
+    static void downloadDescriptors(const GpuMat& descriptorsGPU, vector<float>& descriptors);
 
     //! finds the keypoints using fast hessian detector used in SURF
     //! supports CV_8UC1 images
@@ -1521,10 +1521,10 @@ public:
     void operator ()(const GpuMat& image, const GpuMat& mask, std::vector<KeyPoint>& keypoints);
 
     //! download keypoints from device to host memory
-    void downloadKeypoints(const GpuMat& d_keypoints, std::vector<KeyPoint>& keypoints);
+    static void downloadKeypoints(const GpuMat& d_keypoints, std::vector<KeyPoint>& keypoints);
 
     //! convert keypoints to KeyPoint vector
-    void convertKeypoints(const Mat& h_keypoints, std::vector<KeyPoint>& keypoints);
+    static void convertKeypoints(const Mat& h_keypoints, std::vector<KeyPoint>& keypoints);
 
     //! release temporary buffer's memory
     void release();
@@ -1595,10 +1595,9 @@ public:
     void operator()(const GpuMat& image, const GpuMat& mask, GpuMat& keypoints, GpuMat& descriptors);
 
     //! download keypoints from device to host memory
-    void downloadKeyPoints(GpuMat& d_keypoints, std::vector<KeyPoint>& keypoints);
-
+    static void downloadKeyPoints(GpuMat& d_keypoints, std::vector<KeyPoint>& keypoints);
     //! convert keypoints to KeyPoint vector
-    void convertKeyPoints(Mat& d_keypoints, std::vector<KeyPoint>& keypoints);
+    static void convertKeyPoints(Mat& d_keypoints, std::vector<KeyPoint>& keypoints);
 
     //! returns the descriptor size in bytes
     inline int descriptorSize() const { return kBytes; }
@@ -1698,15 +1697,15 @@ public:
 class CV_EXPORTS GoodFeaturesToTrackDetector_GPU
 {
 public:
-    explicit GoodFeaturesToTrackDetector_GPU(int maxCorners_ = 1000, double qualityLevel_ = 0.01, double minDistance_ = 0.0,
-        int blockSize_ = 3, bool useHarrisDetector_ = false, double harrisK_ = 0.04)
+    explicit GoodFeaturesToTrackDetector_GPU(int maxCorners = 1000, double qualityLevel = 0.01, double minDistance = 0.0,
+        int blockSize = 3, bool useHarrisDetector = false, double harrisK = 0.04)
     {
-        maxCorners = maxCorners_;
-        qualityLevel = qualityLevel_;
-        minDistance = minDistance_;
-        blockSize = blockSize_;
-        useHarrisDetector = useHarrisDetector_;
-        harrisK = harrisK_;
+        this->maxCorners = maxCorners;
+        this->qualityLevel = qualityLevel;
+        this->minDistance = minDistance;
+        this->blockSize = blockSize;
+        this->useHarrisDetector = useHarrisDetector;
+        this->harrisK = harrisK;
     }
 
     //! return 1 rows matrix with CV_32FC2 type
@@ -1892,7 +1891,71 @@ CV_EXPORTS void interpolateFrames(const GpuMat& frame0, const GpuMat& frame1,
 CV_EXPORTS void createOpticalFlowNeedleMap(const GpuMat& u, const GpuMat& v, GpuMat& vertex, GpuMat& colors);
 
 
-////////////////////////////////// Video Encoding //////////////////////////////////////////
+//////////////////////// Background/foreground segmentation ////////////////////////
+
+// Foreground Object Detection from Videos Containing Complex Background.
+// Liyuan Li, Weimin Huang, Irene Y.H. Gu, and Qi Tian.
+// ACM MM2003 9p
+class CV_EXPORTS FGDStatModel
+{
+public:
+    struct CV_EXPORTS Params
+    {
+        int Lc;  // Quantized levels per 'color' component. Power of two, typically 32, 64 or 128.
+        int N1c; // Number of color vectors used to model normal background color variation at a given pixel.
+        int N2c; // Number of color vectors retained at given pixel.  Must be > N1c, typically ~ 5/3 of N1c.
+        // Used to allow the first N1c vectors to adapt over time to changing background.
+
+        int Lcc;  // Quantized levels per 'color co-occurrence' component.  Power of two, typically 16, 32 or 64.
+        int N1cc; // Number of color co-occurrence vectors used to model normal background color variation at a given pixel.
+        int N2cc; // Number of color co-occurrence vectors retained at given pixel.  Must be > N1cc, typically ~ 5/3 of N1cc.
+        // Used to allow the first N1cc vectors to adapt over time to changing background.
+
+        bool is_obj_without_holes; // If TRUE we ignore holes within foreground blobs. Defaults to TRUE.
+        int perform_morphing;     // Number of erode-dilate-erode foreground-blob cleanup iterations.
+        // These erase one-pixel junk blobs and merge almost-touching blobs. Default value is 1.
+
+        float alpha1; // How quickly we forget old background pixel values seen. Typically set to 0.1.
+        float alpha2; // "Controls speed of feature learning". Depends on T. Typical value circa 0.005.
+        float alpha3; // Alternate to alpha2, used (e.g.) for quicker initial convergence. Typical value 0.1.
+
+        float delta;   // Affects color and color co-occurrence quantization, typically set to 2.
+        float T;       // A percentage value which determines when new features can be recognized as new background. (Typically 0.9).
+        float minArea; // Discard foreground blobs whose bounding box is smaller than this threshold.
+
+        // default Params
+        Params();
+    };
+
+    // out_cn - channels count in output result (can be 3 or 4)
+    // 4-channels require more memory, but a bit faster
+    explicit FGDStatModel(int out_cn = 3);
+    explicit FGDStatModel(const cv::gpu::GpuMat& firstFrame, const Params& params = Params(), int out_cn = 3);
+
+    ~FGDStatModel();
+
+    void create(const cv::gpu::GpuMat& firstFrame, const Params& params = Params());
+    void release();
+
+    int update(const cv::gpu::GpuMat& curFrame);
+
+    //8UC3 or 8UC4 reference background image
+    cv::gpu::GpuMat background;
+
+    //8UC1 foreground image
+    cv::gpu::GpuMat foreground;
+
+    std::vector< std::vector<cv::Point> > foreground_regions;
+
+private:
+    FGDStatModel(const FGDStatModel&);
+    FGDStatModel& operator=(const FGDStatModel&);
+
+    class Impl;
+    std::auto_ptr<Impl> impl_;
+};
+
+////////////////////////////////// Video Encoding //////////////////////////////////
 
 // Works only under Windows
 // Supports olny H264 video codec and AVI files
@@ -1978,7 +2041,7 @@ public:
 
         // callback function to signal the start of bitstream that is to be encoded
         // must return pointer to buffer
-        virtual unsigned char* acquireBitStream(int* bufferSize) = 0;
+        virtual uchar* acquireBitStream(int* bufferSize) = 0;
 
         // callback function to signal that the encoded bitstream is ready to be written to file
         virtual void releaseBitStream(unsigned char* data, int size) = 0;
@@ -2079,7 +2142,7 @@ public:
         void setVideoParser(detail::VideoParser* videoParser) { videoParser_ = videoParser; }
 
     protected:
-        bool parseVideoData(const unsigned char* data, size_t size, bool endOfStream = false);
+        bool parseVideoData(const uchar* data, size_t size, bool endOfStream = false);
 
     private:
         VideoSource(const VideoSource&);

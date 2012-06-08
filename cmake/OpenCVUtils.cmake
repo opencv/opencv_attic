@@ -11,7 +11,7 @@ if(NOT COMMAND find_host_program)
   endmacro()
 endif()
 
-#added include directories in such way that directories from the OpenCV source tree go first
+# adds include directories in such way that directories from the OpenCV source tree go first
 function(ocv_include_directories)
   set(__add_before "")
   foreach(dir ${ARGN})
@@ -25,6 +25,52 @@ function(ocv_include_directories)
   include_directories(BEFORE ${__add_before})
 endfunction()
 
+# clears all passed variables
+macro(ocv_clear_vars)
+  foreach(_var ${ARGN})
+    unset(${_var} CACHE)
+  endforeach()
+endmacro()
+
+# turns off warnings
+macro(ocv_warnings_disable)
+  if(NOT ENABLE_NOISY_WARNINGS)
+    set(_flag_vars "")
+    set(_msvc_warnings "")
+    set(_gxx_warnings "")
+    foreach(arg ${ARGN})
+      if(arg MATCHES "^CMAKE_")
+        list(APPEND _flag_vars ${arg})
+      elseif(arg MATCHES "^/wd")
+        list(APPEND _msvc_warnings ${arg})
+      elseif(arg MATCHES "^-W")
+        list(APPEND _gxx_warnings ${arg})
+      endif()
+    endforeach()
+    if(MSVC AND _msvc_warnings AND _flag_vars)
+      foreach(var ${_flag_vars})
+        foreach(warning ${_msvc_warnings})
+          set(${var} "${${var}} ${warning}")
+        endforeach()
+      endforeach()
+    elseif(CV_COMPILER_IS_GNU AND _gxx_warnings AND _flag_vars)
+      foreach(var ${_flag_vars})
+        foreach(warning ${_gxx_warnings})
+          if(warning MATCHES "^-Wno-")
+            set(${var} "${${var}} ${warning}")
+          else()
+            string(REPLACE "${warning}" "" ${var} "${${var}}")
+            string(REPLACE "-W" "-Wno-" warning "${warning}")
+            set(${var} "${${var}} ${warning}")
+          endif()
+        endforeach()
+      endforeach()
+    endif()
+    unset(_flag_vars)
+    unset(_msvc_warnings)
+    unset(_gxx_warnings)
+  endif(NOT ENABLE_NOISY_WARNINGS)
+endmacro()
 
 # Provides an option that the user can optionally select.
 # Can accept condition to control when option is available for user.
@@ -352,10 +398,11 @@ macro(ocv_parse_header2 LIBNAME HDR_PATH VARNAME SCOPE)
       set(${LIBNAME}_VERSION_STRING "${${LIBNAME}_VERSION_STRING}.${${LIBNAME}_VERSION_TWEAK}" ${SCOPE})
     endif()
   else()
-    unset(${LIBNAME}_VERSION_MAJOR CACHE)
-    unset(${LIBNAME}_VERSION_MINOR CACHE)
-    unset(${LIBNAME}_VERSION_PATCH CACHE)
-    unset(${LIBNAME}_VERSION_TWEAK CACHE)
-    unset(${LIBNAME}_VERSION_STRING CACHE)
+    ocv_clear_vars(${LIBNAME}_VERSION_MAJOR
+                   ${LIBNAME}_VERSION_MAJOR
+                   ${LIBNAME}_VERSION_MINOR
+                   ${LIBNAME}_VERSION_PATCH
+                   ${LIBNAME}_VERSION_TWEAK
+                   ${LIBNAME}_VERSION_STRING)
   endif()
 endmacro()

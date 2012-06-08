@@ -1,6 +1,6 @@
 #include "precomp.hpp"
 
-#if ANDROID
+#ifdef ANDROID
 # include <sys/time.h>
 #endif
 
@@ -18,7 +18,7 @@ const char *command_line_keys =
     "{   |perf_seed           |809564   |seed for random numbers generator}"
     "{   |perf_tbb_nthreads   |-1       |if TBB is enabled, the number of TBB threads}"
     "{   |perf_write_sanity   |false    |allow to create new records for sanity checks}"
-    #if ANDROID
+    #ifdef ANDROID
     "{   |perf_time_limit     |6.0      |default time limit for a single test (in seconds)}"
     "{   |perf_affinity_mask  |0        |set affinity mask for the main thread}"
     "{   |perf_log_power_checkpoints  |false    |additional xml logging for power measurement}"
@@ -37,7 +37,7 @@ static uint64       param_seed;
 static double       param_time_limit;
 static int          param_tbb_nthreads;
 static bool         param_write_sanity;
-#if ANDROID
+#ifdef ANDROID
 static int          param_affinity_mask;
 static bool         log_power_checkpoints;
 
@@ -57,7 +57,7 @@ static void setCurrentThreadAffinityMask(int mask)
 
 #endif
 
-void randu(cv::Mat& m)
+static void randu(cv::Mat& m)
 {
     const int bigValue = 0x00000FFF;
     if (m.depth() < CV_32F)
@@ -151,7 +151,7 @@ void Regression::init(const std::string& testSuitName, const std::string& ext)
     {
         LOGE("Failed to open sanity data for reading: %s", storageInPath.c_str());
     }
-    
+
     if(!storageIn.isOpened())
         storageOutPath = storageInPath;
 }
@@ -534,7 +534,7 @@ void TestBase::Init(int argc, const char* const argv[])
     param_force_samples = args.get<unsigned int>("perf_force_samples");
     param_write_sanity = args.get<bool>("perf_write_sanity");
     param_tbb_nthreads  = args.get<int>("perf_tbb_nthreads");
-#if ANDROID
+#ifdef ANDROID
     param_affinity_mask = args.get<int>("perf_affinity_mask");
     log_power_checkpoints = args.get<bool>("perf_log_power_checkpoints");
 #endif
@@ -636,17 +636,17 @@ cv::Size TestBase::getSize(cv::InputArray a)
 bool TestBase::next()
 {
     bool has_next = ++currentIter < nIters && totalTime < timeLimit;
-#if ANDROID
+#ifdef ANDROID
     if (log_power_checkpoints)
     {
         timeval tim;
         gettimeofday(&tim, NULL);
         unsigned long long t1 = tim.tv_sec * 1000LLU + (unsigned long long)(tim.tv_usec / 1000.f);
-        
+
         if (currentIter == 1) RecordProperty("test_start", cv::format("%llu",t1).c_str());
         if (!has_next) RecordProperty("test_complete", cv::format("%llu",t1).c_str());
     }
-#endif    
+#endif
     return has_next;
 }
 
@@ -731,7 +731,7 @@ performance_metrics& TestBase::calcMetrics()
     int n = 0;
     for(TimeVector::const_iterator i = times.begin(); i != times.end(); ++i)
     {
-        double x = (double)*i;
+        double x = static_cast<double>(*i)/runsPerIteration;
         if (x < DBL_EPSILON) continue;
         double lx = log(x);
 
@@ -751,14 +751,14 @@ performance_metrics& TestBase::calcMetrics()
     int offset = 0;
     if (gstddev > DBL_EPSILON)
     {
-        double minout = exp(gmean - 3 * gstddev);
-        double maxout = exp(gmean + 3 * gstddev);
+        double minout = exp(gmean - 3 * gstddev) * runsPerIteration;
+        double maxout = exp(gmean + 3 * gstddev) * runsPerIteration;
         while(*start < minout) ++start, ++metrics.outliers, ++offset;
         do --end, ++metrics.outliers; while(*end > maxout);
         ++end, --metrics.outliers;
     }
 
-    metrics.min = (double)*start;
+    metrics.min = static_cast<double>(*start)/runsPerIteration;
     //calc final metrics
     n = 0;
     gmean = 0;
@@ -768,7 +768,7 @@ performance_metrics& TestBase::calcMetrics()
     int m = 0;
     for(; start != end; ++start)
     {
-        double x = (double)*start;
+        double x = static_cast<double>(*start)/runsPerIteration;
         if (x > DBL_EPSILON)
         {
             double lx = log(x);
@@ -790,6 +790,8 @@ performance_metrics& TestBase::calcMetrics()
     metrics.median = n % 2
             ? (double)times[offset + n / 2]
             : 0.5 * (times[offset + n / 2] + times[offset + n / 2 - 1]);
+
+    metrics.median /= runsPerIteration;
 
     return metrics;
 }
@@ -896,12 +898,13 @@ void TestBase::SetUp()
         p_tbb_initializer=new tbb::task_scheduler_init(param_tbb_nthreads);
     }
 #endif
-#if ANDROID
+#ifdef ANDROID
     if (param_affinity_mask)
         setCurrentThreadAffinityMask(param_affinity_mask);
 #endif
     lastTime = 0;
     totalTime = 0;
+    runsPerIteration = 1;
     nIters = iterationsLimitDefault;
     currentIter = (unsigned int)-1;
     timeLimit = timeLimitDefault;
@@ -1020,6 +1023,12 @@ TestBase::_declareHelper& TestBase::_declareHelper::tbb_threads(int n)
         test->p_tbb_initializer=new tbb::task_scheduler_init(n);
 #endif
     (void)n;
+    return *this;
+}
+
+TestBase::_declareHelper& TestBase::_declareHelper::runs(unsigned int runsNumber)
+{
+    test->runsPerIteration = runsNumber;
     return *this;
 }
 

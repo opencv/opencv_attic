@@ -493,23 +493,6 @@ private:
     CV_DescriptorExtractorTest& operator=(const CV_DescriptorExtractorTest&) { return *this; }
 };
 
-/*template<typename T, typename Distance>
-class CV_CalonderDescriptorExtractorTest : public CV_DescriptorExtractorTest<Distance>
-{
-public:
-    CV_CalonderDescriptorExtractorTest( const char* testName, float _normDif, float _prevTime ) :
-            CV_DescriptorExtractorTest<Distance>( testName, _normDif, Ptr<DescriptorExtractor>(), _prevTime )
-    {}
-
-protected:
-    virtual void createDescriptorExtractor()
-    {
-        CV_DescriptorExtractorTest<Distance>::dextractor =
-                new CalonderDescriptorExtractor<T>( string(CV_DescriptorExtractorTest<Distance>::ts->get_data_path()) +
-                                                    FEATURES2D_DIR + "/calonder_classifier.rtc");
-    }
-};*/
-
 /****************************************************************************************\
 *                       Algorithmic tests for descriptor matchers                        *
 \****************************************************************************************/
@@ -928,7 +911,7 @@ void CV_DescriptorMatcherTest::radiusMatchTest( const Mat& query, const Mat& tra
 
         dmatcher->radiusMatch( query, matches, radius, masks );
 
-        int curRes = cvtest::TS::OK;
+        //int curRes = cvtest::TS::OK;
         if( (int)matches.size() != queryDescCount )
         {
             ts->printf(cvtest::TS::LOG, "Incorrect matches count while test radiusMatch() function (1).\n");
@@ -968,7 +951,7 @@ void CV_DescriptorMatcherTest::radiusMatchTest( const Mat& query, const Mat& tra
         }
         if( (float)badCount > (float)queryDescCount*badPart )
         {
-            curRes = cvtest::TS::FAIL_INVALID_OUTPUT;
+            //curRes = cvtest::TS::FAIL_INVALID_OUTPUT;
             ts->printf( cvtest::TS::LOG, "%f - too large bad matches part while test radiusMatch() function (2).\n",
                         (float)badCount/(float)queryDescCount );
             ts->set_failed_test_info( cvtest::TS::FAIL_BAD_ACCURACY );
@@ -1059,24 +1042,6 @@ TEST( Features2d_DescriptorExtractor_BRIEF, regression )
     test.safe_run();
 }
 
-#if CV_SSE2
-TEST( Features2d_DescriptorExtractor_Calonder_uchar, regression )
-{
-    CV_CalonderDescriptorExtractorTest<uchar, L2<uchar> > test( "descriptor-calonder-uchar",
-                                                                std::numeric_limits<float>::epsilon() + 1,
-                                                                0.0132175f );
-    test.safe_run();
-}
-
-TEST( Features2d_DescriptorExtractor_Calonder_float, regression )
-{
-    CV_CalonderDescriptorExtractorTest<float, L2<float> > test( "descriptor-calonder-float",
-                                                                std::numeric_limits<float>::epsilon(),
-                                                                0.0221308f );
-    test.safe_run();
-}
-#endif // CV_SSE2
-
 /*
  * Matchers
  */
@@ -1090,4 +1055,52 @@ TEST( Features2d_DescriptorMatcher_FlannBased, regression )
 {
     CV_DescriptorMatcherTest test( "descriptor-matcher-flann-based", new FlannBasedMatcher, 0.04f );
     test.safe_run();
+}
+
+
+TEST(Features2D_ORB, _1996)
+{
+    cv::Ptr<cv::FeatureDetector> fd = cv::FeatureDetector::create("ORB");
+    cv::Ptr<cv::DescriptorExtractor> de = cv::DescriptorExtractor::create("ORB");
+
+    Mat image = cv::imread(string(cvtest::TS::ptr()->get_data_path()) + "shared/lena.jpg");
+    ASSERT_FALSE(image.empty());
+
+    Mat roi(image.size(), CV_8UC1, Scalar(0));
+
+    Point poly[] = {Point(100, 20), Point(300, 50), Point(400, 200), Point(10, 500)};
+    fillConvexPoly(roi, poly, int(sizeof(poly) / sizeof(poly[0])), Scalar(255));
+
+    std::vector<cv::KeyPoint> keypoints;
+    fd->detect(image, keypoints, roi);
+    cv::Mat descriptors;
+    de->compute(image, keypoints, descriptors);
+
+    //image.setTo(Scalar(255,255,255), roi);
+
+    int roiViolations = 0;
+    for(std::vector<cv::KeyPoint>::const_iterator kp = keypoints.begin(); kp != keypoints.end(); ++kp)
+    {
+        int x = cvRound(kp->pt.x);
+        int y = cvRound(kp->pt.y);
+
+        ASSERT_LE(0, x);
+        ASSERT_LE(0, y);
+        ASSERT_GT(image.cols, x);
+        ASSERT_GT(image.rows, y);
+
+        // if (!roi.at<uchar>(y,x))
+        // {
+        //     roiViolations++;
+        //     circle(image, kp->pt, 3, Scalar(0,0,255));
+        // }
+    }
+
+    // if(roiViolations)
+    // {
+    //     imshow("img", image);
+    //     waitKey();
+    // }
+
+    ASSERT_EQ(0, roiViolations);
 }

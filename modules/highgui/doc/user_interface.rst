@@ -9,7 +9,8 @@ Creates a trackbar and attaches it to the specified window.
 
 .. ocv:function:: int createTrackbar( const string& trackbarname, const string& winname, int* value, int count, TrackbarCallback onChange=0, void* userdata=0)
 
-.. ocv:cfunction:: int cvCreateTrackbar( const char* trackbarName, const char* windowName, int* value, int count, CvTrackbarCallback onChange )
+.. ocv:cfunction:: int cvCreateTrackbar( const char* trackbar_name, const char* window_name, int* value, int count, CvTrackbarCallback on_change=NULL )
+
 .. ocv:pyoldfunction:: cv.CreateTrackbar(trackbarName, windowName, value, count, onChange) -> None
 
     :param trackbarname: Name of the created trackbar.
@@ -27,7 +28,7 @@ Creates a trackbar and attaches it to the specified window.
 The function ``createTrackbar`` creates a trackbar (a slider or range control) with the specified name and range, assigns a variable ``value`` to be a position synchronized with the trackbar and specifies the callback function ``onChange`` to be called on the trackbar position change. The created trackbar is displayed in the specified window ``winname``.
 
 .. note::
-    
+
     **[Qt Backend Only]** ``winname`` can be empty (or NULL) if the trackbar should be attached to the control panel.
 
 Clicking the label of each trackbar enables editing the trackbar values manually.
@@ -40,8 +41,9 @@ Returns the trackbar position.
 
 .. ocv:pyfunction:: cv2.getTrackbarPos(trackbarname, winname) -> retval
 
-.. ocv:cfunction:: int cvGetTrackbarPos( const char* trackbarName, const char* windowName )
-.. ocv:pyoldfunction:: cv.GetTrackbarPos(trackbarName, windowName)-> None
+.. ocv:cfunction:: int cvGetTrackbarPos( const char* trackbar_name, const char* window_name )
+
+.. ocv:pyoldfunction:: cv.GetTrackbarPos(trackbarName, windowName) -> retval
 
     :param trackbarname: Name of the trackbar.
 
@@ -57,12 +59,13 @@ imshow
 ----------
 Displays an image in the specified window.
 
-.. ocv:function:: void imshow( const string& winname, InputArray image )
+.. ocv:function:: void imshow( const string& winname, InputArray mat )
 
-.. ocv:pyfunction:: cv2.imshow(winname, image) -> None
+.. ocv:pyfunction:: cv2.imshow(winname, mat) -> None
 
-.. ocv:cfunction:: void cvShowImage( const char* winname, const CvArr* image )
-.. ocv:pyoldfunction:: cv.ShowImage(winname, image)-> None
+.. ocv:cfunction:: void cvShowImage( const char* name, const CvArr* image )
+
+.. ocv:pyoldfunction:: cv.ShowImage(name, image) -> None
 
     :param winname: Name of the window.
 
@@ -81,11 +84,12 @@ namedWindow
 ---------------
 Creates a window.
 
-.. ocv:function:: void namedWindow( const string& winname, int flags )
+.. ocv:function:: void namedWindow( const string& winname, int flags=WINDOW_AUTOSIZE )
 
 .. ocv:pyfunction:: cv2.namedWindow(winname[, flags]) -> None
 
-.. ocv:cfunction:: int cvNamedWindow( const char* name, int flags )
+.. ocv:cfunction:: int cvNamedWindow( const char* name, int flags=CV_WINDOW_AUTOSIZE )
+
 .. ocv:pyoldfunction:: cv.NamedWindow(name, flags=CV_WINDOW_AUTOSIZE)-> None
 
     :param name: Name of the window in the window caption that may be used as a window identifier.
@@ -115,15 +119,16 @@ destroyWindow
 -------------
 Destroys a window.
 
-.. ocv:function:: void destroyWindow( const string &winname )
-            
+.. ocv:function:: void destroyWindow( const string& winname )
+
 .. ocv:pyfunction:: cv2.destroyWindow(winname) -> None
 
 .. ocv:cfunction:: void cvDestroyWindow( const char* name )
+
 .. ocv:pyoldfunction:: cv.DestroyWindow(name)-> None
 
-    :param winname: Name of the window to be destroyed. 
-                                           
+    :param winname: Name of the window to be destroyed.
+
 The function ``destroyWindow`` destroys the window with the given name.
 
 
@@ -136,6 +141,7 @@ Destroys all of the HighGUI windows.
 .. ocv:pyfunction:: cv2.destroyAllWindows() -> None
 
 .. ocv:cfunction:: void cvDestroyAllWindows()
+
 .. ocv:pyoldfunction:: cv.DestroyAllWindows()-> None
 
 The function ``destroyAllWindows`` destroys all of the opened HighGUI windows.
@@ -145,13 +151,18 @@ MoveWindow
 ----------
 Moves window to the specified position
 
+.. ocv:function:: void moveWindow( const string& winname, int x, int y )
+
+.. ocv:pyfunction:: cv2.moveWindow(winname, x, y) -> None
+
 .. ocv:cfunction:: void cvMoveWindow( const char* name, int x, int y )
+
 .. ocv:pyoldfunction:: cv.MoveWindow(name, x, y)-> None
 
-    :param name: Window name
-    
+    :param winname: Window name
+
     :param x: The new x-coordinate of the window
-    
+
     :param y: The new y-coordinate of the window
 
 
@@ -159,10 +170,15 @@ ResizeWindow
 ------------
 Resizes window to the specified size
 
+.. ocv:function:: void resizeWindow( const string& winname, int width, int height )
+
+.. ocv:pyfunction:: cv2.resizeWindow(winname, width, height) -> None
+
 .. ocv:cfunction:: void cvResizeWindow( const char* name, int width, int height )
+
 .. ocv:pyoldfunction:: cv.ResizeWindow(name, width, height)-> None
 
-    :param name: Window name
+    :param winname: Window name
 
     :param width: The new window width
 
@@ -171,7 +187,7 @@ Resizes window to the specified size
 .. note::
 
    * The specified window size is for the image area. Toolbars are not counted.
-   
+
    * Only windows created without CV_WINDOW_AUTOSIZE flag can be resized.
 
 
@@ -179,14 +195,17 @@ SetMouseCallback
 ----------------
 Sets mouse handler for the specified window
 
-.. ocv:cfunction:: void cvSetMouseCallback( const char* name, CvMouseCallback onMouse, void* param=NULL )
-.. ocv:pyoldfunction:: cv.SetMouseCallback(name, onMouse, param) -> None
+.. ocv:function:: void setMouseCallback( const string& winname, MouseCallback onMouse, void* userdata=0 )
 
-    :param name: Window name
-    
+.. ocv:cfunction:: void cvSetMouseCallback( const char* window_name, CvMouseCallback on_mouse, void* param=NULL )
+
+.. ocv:pyoldfunction:: cv.SetMouseCallback(windowName, onMouse, param=None) -> None
+
+    :param winname: Window name
+
     :param onMouse: Mouse callback. See OpenCV samples, such as  http://code.opencv.org/svn/opencv/trunk/opencv/samples/cpp/ffilldemo.cpp, on how to specify and use the callback.
-    
-    :param param: The optional parameter passed to the callback.
+
+    :param userdata: The optional parameter passed to the callback.
 
 
 setTrackbarPos
@@ -197,7 +216,8 @@ Sets the trackbar position.
 
 .. ocv:pyfunction:: cv2.setTrackbarPos(trackbarname, winname, pos) -> None
 
-.. ocv:cfunction:: void cvSetTrackbarPos( const char* trackbarName, const char* windowName, int pos )
+.. ocv:cfunction:: void cvSetTrackbarPos( const char* trackbar_name, const char* window_name, int pos )
+
 .. ocv:pyoldfunction:: cv.SetTrackbarPos(trackbarName, windowName, pos)-> None
 
     :param trackbarname: Name of the trackbar.
@@ -209,7 +229,7 @@ Sets the trackbar position.
 The function sets the position of the specified trackbar in the specified window.
 
 .. note::
-    
+
     **[Qt Backend Only]** ``winname`` can be empty (or NULL) if the trackbar is attached to the control panel.
 
 waitKey
@@ -218,9 +238,10 @@ Waits for a pressed key.
 
 .. ocv:function:: int waitKey(int delay=0)
 
-.. ocv:pyfunction:: cv2.waitKey([, delay]) -> retval
+.. ocv:pyfunction:: cv2.waitKey([delay]) -> retval
 
 .. ocv:cfunction:: int cvWaitKey( int delay=0 )
+
 .. ocv:pyoldfunction:: cv.WaitKey(delay=0)-> int
 
     :param delay: Delay in milliseconds. 0 is the special value that means "forever".
@@ -233,5 +254,5 @@ The function ``waitKey`` waits for a key event infinitely (when
     This function is the only method in HighGUI that can fetch and handle events, so it needs to be called periodically for normal event processing unless HighGUI is used within an environment that takes care of event processing.
 
 .. note::
-    
+
     The function only works if there is at least one HighGUI window created and the window is active. If there are several HighGUI windows, any of them can be active.
