@@ -32,6 +32,32 @@ macro(ocv_clear_vars)
   endforeach()
 endmacro()
 
+
+include(CheckCXXCompilerFlag)
+include(CheckCCompilerFlag)
+
+macro(ocv_check_flag_support lang flag varname)
+  if("_${lang}_" MATCHES "_CXX_")
+    set(_lang CXX)
+  elseif("_${lang}_" MATCHES ".*_C_.*")
+    set(_lang C)
+  else()
+    set(_lang ${lang})
+  endif()
+
+  string(TOUPPER "${flag}" ${varname})
+  string(REGEX REPLACE "^(/|-)" "HAVE_${_lang}_" ${varname} "${${varname}}")
+  string(REGEX REPLACE " -|-|=| |\\." "_" ${varname} "${${varname}}")
+
+  if(_lang STREQUAL "CXX")
+    CHECK_CXX_COMPILER_FLAG("${ARGN} ${flag}" ${${varname}})
+  elseif(_lang STREQUAL "C")
+    CHECK_C_COMPILER_FLAG("${ARGN} ${flag}" ${${varname}})
+  else()
+    set(${varname} FALSE)
+  endif()
+endmacro()
+
 # turns off warnings
 macro(ocv_warnings_disable)
   if(NOT ENABLE_NOISY_WARNINGS)
