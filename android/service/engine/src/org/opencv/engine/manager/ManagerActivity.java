@@ -109,7 +109,6 @@ public class ManagerActivity extends Activity
         mUpdateEngineButton = (Button)findViewById(R.id.CheckEngineUpdate);
         mUpdateEngineButton.setOnClickListener(new OnClickListener() {
 			
-			@Override
 			public void onClick(View v) {
 				if (!mMarket.InstallAppFromMarket("org.opencv.engine"))
 				{
@@ -156,9 +155,7 @@ public class ManagerActivity extends Activity
         
         mInstalledPackageView.setOnItemClickListener(new OnItemClickListener() {
 
-			@Override
-			public void onItemClick(AdapterView<?> arg0, View arg1, int arg2,
-					long id) {
+			public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long id) {
 				
 		        mInstalledPackageView.setTag(new Integer((int)id));
 		        mActionDialog.show();
@@ -181,13 +178,11 @@ public class ManagerActivity extends Activity
     
     protected ServiceConnection mServiceConnection = new ServiceConnection() {
 		
-		@Override
 		public void onServiceDisconnected(ComponentName name) {
 			// TODO Auto-generated method stub
 			
 		}
 		
-		@Override
 		public void onServiceConnected(ComponentName name, IBinder service) {
 			TextView EngineVersionView = (TextView)findViewById(R.id.EngineVersionValue);
 			OpenCVEngineInterface EngineService = OpenCVEngineInterface.Stub.asInterface(service);
@@ -210,7 +205,7 @@ public class ManagerActivity extends Activity
         {
         	// Convert to Items for package list view
         	HashMap<String,String> temp = new HashMap<String,String>();
-        	temp.put("Name", mInstalledPackageInfo[i].packageName);
+        	temp.put("Name", mMarket.GetApplicationName(mInstalledPackageInfo[i].applicationInfo));
 
             int idx = 0;
             String OpenCVersion = "unknown";

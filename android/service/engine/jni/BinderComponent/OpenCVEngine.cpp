@@ -19,10 +19,11 @@ const int OpenCVEngine::CpuID = GetCpuID();
 std::set<std::string> OpenCVEngine::InitKnownOpenCVersions()
 {
     std::set<std::string> result;
-    
+
     result.insert("240");
     result.insert("241");
-    
+    result.insert("242");
+
     return result;
 }
 
@@ -37,20 +38,20 @@ std::string OpenCVEngine::NormalizeVersionString(std::string version)
 {
     std::string result = "";
     std::string suffix = "";
-    
+
     if (version.empty())
     {
 	return result;
     }
-    
+
     if (('a' == version[version.size()-1]) || ('b' == version[version.size()-1]))
     {
 	suffix = version[version.size()-1];
-	version.erase(version.size()-1);	
+	version.erase(version.size()-1);
     }
-    
+
     std::vector<std::string> parts = SplitStringVector(version, '.');
-    
+
     if (parts.size() >= 2)
     {
 	if (parts.size() >= 3)
@@ -66,7 +67,7 @@ std::string OpenCVEngine::NormalizeVersionString(std::string version)
 		result = "";
 	}
     }
-        
+
     return result;
 }
 
@@ -82,15 +83,15 @@ int32_t OpenCVEngine::GetVersion()
 }
 
 String16 OpenCVEngine::GetLibPathByVersion(android::String16 version)
-{    
+{
     std::string std_version(String8(version).string());
     std::string norm_version;
     std::string path;
- 
+
     LOGD("OpenCVEngine::GetLibPathByVersion(%s) impl", String8(version).string());
-    
+
     norm_version = NormalizeVersionString(std_version);
-    
+
     if (!norm_version.empty())
     {
 	path = PackageManager->GetPackagePathByVersion(norm_version, Platform, CpuID);
@@ -107,7 +108,7 @@ String16 OpenCVEngine::GetLibPathByVersion(android::String16 version)
     {
 	LOGE("OpenCV version \"%s\" is not supported", norm_version.c_str());
     }
-    
+
     return String16(path.c_str());
 }
 
@@ -116,11 +117,10 @@ android::String16 OpenCVEngine::GetLibraryList(android::String16 version)
     std::string std_version = String8(version).string();
     std::string norm_version;
     String16 result;
-    
     norm_version = NormalizeVersionString(std_version);
-    
+
     if (!norm_version.empty())
-    {	
+    {
 	std::string tmp = PackageManager->GetPackagePathByVersion(norm_version, Platform, CpuID);
 	if (!tmp.empty())
 	{
@@ -151,7 +151,7 @@ android::String16 OpenCVEngine::GetLibraryList(android::String16 version)
 	    else
 	    {
 		LOGI("Info library not found in package");
-	    } 
+	    }
 	}
 	else
 	{
@@ -171,11 +171,11 @@ bool OpenCVEngine::InstallVersion(android::String16 version)
     std::string std_version = String8(version).string();
     std::string norm_version;
     bool result = false;
-    
+
     norm_version = NormalizeVersionString(std_version);
-    
+
     if (!norm_version.empty())
-    {	
+    {
 	LOGD("OpenCVEngine::InstallVersion() begin");
 	
 	if (!PackageManager->CheckVersionInstalled(norm_version, Platform, CpuID))
@@ -193,24 +193,24 @@ bool OpenCVEngine::InstallVersion(android::String16 version)
     {
 	LOGE("OpenCV version \"%s\" is not supported", norm_version.c_str());
     }
-    
+
     LOGD("OpenCVEngine::InstallVersion() end");
 
     return result;
 }
 
 bool OpenCVEngine::FixPermissions(const std::string& path)
-{    
+{
     LOGD("Fixing permissions for folder: \"%s\"", path.c_str());
     chmod(path.c_str(), S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
-    
+
     DIR* dir = opendir(path.c_str());
     if (!dir)
     {
 	LOGD("Fixing permissions error");
 	return false;
     }
-    
+
     dirent* files = readdir(dir);
     while (files)
     {
@@ -218,8 +218,8 @@ bool OpenCVEngine::FixPermissions(const std::string& path)
 	chmod((path + std::string("/") + std::string(files->d_name)).c_str(), S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
 	files = readdir(dir);
     }
-    
+
     closedir(dir);
-    
+
     return true;
 }
