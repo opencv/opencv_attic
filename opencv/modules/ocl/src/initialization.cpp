@@ -217,6 +217,10 @@ namespace cv
             size_t *maxWorkItemSizes;
             cl_uint maxComputeUnits;
             char extra_options[512];
+			Impl()
+			{
+				memset(extra_options,0,512);
+			}
 		};
 
         inline int divUp(int total, int grain)
@@ -551,7 +555,8 @@ namespace cv
                 //config build programs
                 char all_build_options[1024];
                 memset(all_build_options, 0, 1024);
-                if(clCxt -> impl->extra_options)
+				char zeromem[512]={0};
+                if(0!=memcmp(clCxt -> impl->extra_options, zeromem,512))
                     strcat(all_build_options, clCxt -> impl->extra_options);
                 strcat(all_build_options, " ");
                 if(build_options != NULL)
