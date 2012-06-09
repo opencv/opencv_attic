@@ -9,16 +9,19 @@ import org.opencv.engine.OpenCVEngineInterface;
 import org.opencv.engine.R;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.pm.PackageInfo;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.AdapterView;
@@ -43,9 +46,8 @@ public class ManagerActivity extends Activity
         mInstalledPackageView = (ListView)findViewById(R.id.InstalledPackageList);
         
         mMarket = new MarketConnector(this);
-        FillPackageList();
         
-        SimpleAdapter adapter = new SimpleAdapter(
+        mInstalledPacksAdapter = new SimpleAdapter(
         	    this,
         	    mListViewItems,
         	    R.layout.info,
@@ -53,7 +55,7 @@ public class ManagerActivity extends Activity
         	    new int[] {R.id.InfoName,R.id.InfoVersion, R.id.InfoHardware}
         	    );
         
-        mInstalledPackageView.setAdapter(adapter);
+        mInstalledPackageView.setAdapter(mInstalledPacksAdapter);
         
         TextView HardwarePlatformView = (TextView)findViewById(R.id.HardwareValue);
         int Platfrom = HardwareDetector.DetectKnownPlatforms();
@@ -121,7 +123,6 @@ public class ManagerActivity extends Activity
         mActionDialog = new AlertDialog.Builder(this).create();
         
         mActionDialog.setTitle("Choose action");
-        mActionDialog.setMessage("Choose what you want to do:");
         mActionDialog.setButton("Update", new DialogInterface.OnClickListener() {
 			
 			public void onClick(DialogInterface dialog, int which) {
@@ -138,7 +139,7 @@ public class ManagerActivity extends Activity
 			
 			public void onClick(DialogInterface dialog, int which) {
 				int index = (Integer)mInstalledPackageView.getTag();
-				if (!mMarket.RemoveAppFromMarket(mInstalledPackageInfo[index].packageName))
+				if (!mMarket.RemoveAppFromMarket(mInstalledPackageInfo[index].packageName, true))
 				{
 					Toast toast = Toast.makeText(getApplicationContext(), "Google Play is not avaliable", Toast.LENGTH_SHORT);
 					toast.show();
@@ -146,7 +147,7 @@ public class ManagerActivity extends Activity
 			}
 		});
         
-        mActionDialog.setButton2("Cancel", new DialogInterface.OnClickListener() {
+        mActionDialog.setButton2("Return", new DialogInterface.OnClickListener() {
 			
 			public void onClick(DialogInterface dialog, int which) {
 				// nothing
@@ -167,14 +168,45 @@ public class ManagerActivity extends Activity
         	TextView EngineVersionView = (TextView)findViewById(R.id.EngineVersionValue);
         	EngineVersionView.setText("not avaliable");
         }
+        
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(Intent.ACTION_PACKAGE_ADDED);
+        filter.addAction(Intent.ACTION_PACKAGE_CHANGED);
+        filter.addAction(Intent.ACTION_PACKAGE_INSTALL);
+        filter.addAction(Intent.ACTION_PACKAGE_REMOVED);
+        filter.addAction(Intent.ACTION_PACKAGE_REPLACED);
+        
+        registerReceiver(mPackageChangeReciever, filter);
     }
     
+    @Override
+    protected void onDestroy() {
+    	super.onDestroy();
+    	unregisterReceiver(mPackageChangeReciever);
+    }
+    
+    @Override
+    protected void onResume() {
+    	super.onResume();
+    	FillPackageList();
+    }
+    
+    protected SimpleAdapter mInstalledPacksAdapter;
     protected ListView mInstalledPackageView;
     protected Button mUpdateEngineButton;
     protected PackageInfo[] mInstalledPackageInfo;
     protected static final ArrayList<HashMap<String,String>> mListViewItems = new ArrayList<HashMap<String,String>>();
     protected MarketConnector mMarket;
     AlertDialog mActionDialog;
+    
+    protected BroadcastReceiver mPackageChangeReciever = new BroadcastReceiver() {
+		
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			Log.d("OpenCV Manager/Reciever", "Bradcast message " + intent.getAction() + " reciever");
+			FillPackageList();
+		}
+	};
     
     protected ServiceConnection mServiceConnection = new ServiceConnection() {
 		
@@ -234,6 +266,8 @@ public class ManagerActivity extends Activity
         	temp.put("Hardware", HardwareName);
         	mListViewItems.add(temp);
         }
+        
+        mInstalledPacksAdapter.notifyDataSetChanged();
 	}
     
 	protected String NormalizeVersion(String OpenCVersion, String PackageVersion)

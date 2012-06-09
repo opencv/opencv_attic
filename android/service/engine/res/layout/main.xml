@@ -64,7 +64,7 @@
             android:id="@+id/EngineVersionCaption"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Engine version: "
+            android:text="Manager version: "
             android:textAppearance="?android:attr/textAppearanceMedium" />
 
         <TextView
@@ -86,6 +86,6 @@
         android:id="@+id/CheckEngineUpdate"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Check Engine update" />
+        android:text="Check Manager update" />
 
 </LinearLayout>

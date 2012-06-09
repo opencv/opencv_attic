@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
@@ -46,20 +47,28 @@ public class MarketConnector
 		return result;
 	}
 
-	public boolean RemoveAppFromMarket(String AppID)
+	public boolean RemoveAppFromMarket(String AppID, boolean wait)
 	{
         boolean result = true;
 		try
         {
         	Intent intent = new Intent(
         		Intent.ACTION_DELETE,
-        		Uri.parse("market://details?id=" + AppID)
+        		Uri.parse("package:" + AppID)
         		);
         	intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        	mContext.startActivity(intent);
+        	if (wait)
+        	{
+        		((Activity)mContext).startActivityForResult(intent, 0);
+        	}
+        	else
+        	{
+        		mContext.startActivity(intent);
+        	}
         }
         catch(Exception e)
         {
+        	e.printStackTrace();
         	result = false;
         }
 
