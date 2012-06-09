@@ -33,7 +33,7 @@ public class HardwareDetector
 	public static final int PLATFORM_TEGRA2 = 2;
 	public static final int PLATFORM_TEGRA3 = 3;
 	
-	public static final int PLATFORM_UNKNOWN = -1;
+	public static final int PLATFORM_UNKNOWN = 0;
 	
 	// Return CPU arch and list of supported features
 	public static native int GetCpuID();

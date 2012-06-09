@@ -251,13 +251,28 @@ public class ManagerActivity extends Activity
     
     protected String JoinIntelFeatures(int features)
     {
-    	// TODO: implement if package will be published
+    	// TODO: update if package will be published
     	return "";
     }
     
     protected String JoinArmFeatures(int features)
     {
-    	// TODO: implement if package will be published
-    	return "";
+    	// TODO: update if package will be published
+    	if ((features & HardwareDetector.FEATURES_HAS_NEON) == HardwareDetector.FEATURES_HAS_NEON)
+    	{
+    		return "with Neon";
+    	}
+    	else if ((features & HardwareDetector.FEATURES_HAS_VFPv3) == HardwareDetector.FEATURES_HAS_VFPv3)
+    	{
+    		return "with VFP v3";
+    	}
+    	else if ((features & HardwareDetector.FEATURES_HAS_VFPv3d16) == HardwareDetector.FEATURES_HAS_VFPv3d16)
+    	{
+    		return "with VFP v3d16";
+    	}
+    	else
+    	{
+    		return "";
+    	}
     }
 }
