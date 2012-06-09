@@ -248,7 +248,7 @@ public class ManagerActivity extends Activity
             	if (idx == 1)
             	{
             		// version of OpenCV
-            		OpenCVersion = tokenizer.nextToken();
+            		OpenCVersion = tokenizer.nextToken().substring(1);
             	}
             	else if (idx >= 2)
             	{
