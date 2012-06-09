@@ -30,7 +30,7 @@ public abstract class BaseLoaderCallback implements LoaderCallbackInterface {
 				Log.d(TAG, "OpenCV downloading. App restart is needed!");
 				AlertDialog RestartMessage = new AlertDialog.Builder(mAppContext).create();
 				RestartMessage.setTitle("App restart is required");
-				RestartMessage.setMessage("Application will be closed now. Start it when installtion will be finished!");
+				RestartMessage.setMessage("Application will be closed now. Start it when installation will be finished!");
 				RestartMessage.setCancelable(false); // This blocks the 'BACK' button
 				RestartMessage.setButton("OK", new OnClickListener() {	
 					public void onClick(DialogInterface dialog, int which) {
@@ -62,7 +62,7 @@ public abstract class BaseLoaderCallback implements LoaderCallbackInterface {
 				Log.d(TAG, "Google Play service is not installed! You can get it here");
 				AlertDialog MarketErrorMessage = new AlertDialog.Builder(mAppContext).create();
 				MarketErrorMessage.setTitle("OpenCV Manager");
-				MarketErrorMessage.setMessage("Package instalation failed!");
+				MarketErrorMessage.setMessage("Package installation failed!");
 				MarketErrorMessage.setCancelable(false); // This blocks the 'BACK' button
 				MarketErrorMessage.setButton("OK", new OnClickListener() {
 					public void onClick(DialogInterface dialog, int which) {

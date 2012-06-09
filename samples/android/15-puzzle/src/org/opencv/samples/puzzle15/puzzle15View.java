@@ -18,7 +18,7 @@ import android.view.View;
 import android.view.View.OnTouchListener;
 
 public class puzzle15View extends SampleCvViewBase implements OnTouchListener {
-	private Mat     mRgba;
+    private Mat     mRgba;
     private Mat     mRgba15;
     private Mat[]   mCells;
     private Mat[]   mCells15;

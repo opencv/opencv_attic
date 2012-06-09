@@ -96,7 +96,7 @@ public class puzzle15Activity extends Activity
         Log.i(TAG, "Trying to load OpenCV library");
         if (!OpenCVLoader.initAsync(OpenCVLoader.OPEN_CV_VERSION_2_4_0, this, mOpenCVCallBack))
         {
-        	Log.e(TAG, "Cannot connect to OpenCVEngine");
+        	Log.e(TAG, "Cannot connect to OpenCV Manager");
         	finish();
         }
     }
