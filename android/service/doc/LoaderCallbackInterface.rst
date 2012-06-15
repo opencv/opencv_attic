@@ -35,10 +35,6 @@ Initialization status constants
 
     OpenCV initialization finished successfully
 
-.. data:: NO_SERVICE
-
-    OpenCV Manager service is not installed on the device. App need to notify user about it
-
 .. data:: RESTART_REQUIRED
 
     OpenCV library installation via Google Play service was initialized. Application restart is required
