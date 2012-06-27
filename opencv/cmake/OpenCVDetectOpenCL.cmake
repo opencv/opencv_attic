@@ -1,4 +1,4 @@
-find_package(OpenCL REQUIRED)
+find_package(OpenCL)
 
 
 if (OPENCL_FOUND)
