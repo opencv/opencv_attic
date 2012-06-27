@@ -5,12 +5,13 @@
 #include "opencv2/video/video.hpp"
 #include "opencv2/gpu/gpu.hpp"
 #include "opencv2/nonfree/nonfree.hpp"
+#include "opencv2/legacy/legacy.hpp"
 #include "performance.h"
 
 using namespace std;
 using namespace cv;
 
-void InitMatchTemplate()
+static void InitMatchTemplate()
 {
     Mat src; gen(src, 500, 500, CV_32F, 0, 1);
     Mat templ; gen(templ, 500, 500, CV_32F, 0, 1);
@@ -268,8 +269,8 @@ TEST(meanShift)
 
 TEST(SURF)
 {
-    Mat src = imread(abspath("stereo_matching/aloeL.jpg"), CV_LOAD_IMAGE_GRAYSCALE);
-    if (src.empty()) throw runtime_error("can't open aloeL.jpg");
+    Mat src = imread(abspath("stereo_matching/aloeL.png"), CV_LOAD_IMAGE_GRAYSCALE);
+    if (src.empty()) throw runtime_error("can't open aloeL.png");
 
     SURF surf;
     vector<KeyPoint> keypoints;
@@ -296,8 +297,8 @@ TEST(SURF)
 
 TEST(FAST)
 {
-    Mat src = imread(abspath("stereo_matching/aloeL.jpg"), CV_LOAD_IMAGE_GRAYSCALE);
-    if (src.empty()) throw runtime_error("can't open aloeL.jpg");
+    Mat src = imread(abspath("stereo_matching/aloeL.png"), CV_LOAD_IMAGE_GRAYSCALE);
+    if (src.empty()) throw runtime_error("can't open aloeL.png");
 
     vector<KeyPoint> keypoints;
 
@@ -321,8 +322,8 @@ TEST(FAST)
 
 TEST(ORB)
 {
-    Mat src = imread(abspath("stereo_matching/aloeL.jpg"), CV_LOAD_IMAGE_GRAYSCALE);
-    if (src.empty()) throw runtime_error("can't open aloeL.jpg");
+    Mat src = imread(abspath("stereo_matching/aloeL.png"), CV_LOAD_IMAGE_GRAYSCALE);
+    if (src.empty()) throw runtime_error("can't open aloeL.png");
 
     ORB orb(4000);
     vector<KeyPoint> keypoints;
@@ -857,7 +858,7 @@ TEST(projectPoints)
 }
 
 
-void InitSolvePnpRansac()
+static void InitSolvePnpRansac()
 {
     Mat object; gen(object, 1, 4, CV_32FC3, Scalar::all(0), Scalar::all(100));
     Mat image; gen(image, 1, 4, CV_32FC2, Scalar::all(0), Scalar::all(100));
@@ -1046,9 +1047,8 @@ TEST(equalizeHist)
 
 TEST(Canny)
 {
-    Mat img = imread(abspath("stereo_matching/aloeL.jpg"), CV_LOAD_IMAGE_GRAYSCALE);
-
-    if (img.empty()) throw runtime_error("can't open aloeL.jpg");
+    Mat img = imread(abspath("stereo_matching/aloeL.png"), CV_LOAD_IMAGE_GRAYSCALE);
+    if (img.empty()) throw runtime_error("can't open aloeL.png");
 
     Mat edges(img.size(), CV_8UC1);
 
@@ -1146,8 +1146,8 @@ TEST(gemm)
 
 TEST(GoodFeaturesToTrack)
 {
-    Mat src = imread(abspath("stereo_matching/aloeL.jpg"), IMREAD_GRAYSCALE);
-    if (src.empty()) throw runtime_error("can't open aloeL.jpg");
+    Mat src = imread(abspath("stereo_matching/aloeL.png"), IMREAD_GRAYSCALE);
+    if (src.empty()) throw runtime_error("can't open aloeL.png");
 
     vector<Point2f> pts;
 
@@ -1171,11 +1171,11 @@ TEST(GoodFeaturesToTrack)
 
 TEST(PyrLKOpticalFlow)
 {
-    Mat frame0 = imread(abspath("optical_flow/rubberwhale1.png"));
-    if (frame0.empty()) throw runtime_error("can't open rubberwhale1.png");
+    Mat frame0 = imread(abspath("optical_flow/army1.png"));
+    if (frame0.empty()) throw runtime_error("can't open army1.png");
 
-    Mat frame1 = imread(abspath("optical_flow/rubberwhale2.png"));
-    if (frame1.empty()) throw runtime_error("can't open rubberwhale2.png");
+    Mat frame1 = imread(abspath("optical_flow/army2.png"));
+    if (frame1.empty()) throw runtime_error("can't open army2.png");
 
     Mat gray_frame;
     cvtColor(frame0, gray_frame, COLOR_BGR2GRAY);
@@ -1222,7 +1222,7 @@ TEST(PyrLKOpticalFlow)
 
 TEST(FarnebackOpticalFlow)
 {
-    const string datasets[] = {"rubberwhale", "basketball"};
+    const string datasets[] = {"army", "basketball"};
     for (size_t i = 0; i < sizeof(datasets)/sizeof(*datasets); ++i) {
     for (int fastPyramids = 0; fastPyramids < 2; ++fastPyramids) {
     for (int useGaussianBlur = 0; useGaussianBlur < 2; ++useGaussianBlur) {
@@ -1248,4 +1248,167 @@ TEST(FarnebackOpticalFlow)
     CPU_OFF;
 
     }}}
+}
+
+namespace cv
+{
+    template<> void Ptr<CvBGStatModel>::delete_obj()
+    {
+        cvReleaseBGStatModel(&obj);
+    }
+}
+
+TEST(FGDStatModel)
+{
+    const std::string inputFile = abspath("pedestrian_detect/mitsubishi.avi");
+
+    cv::VideoCapture cap(inputFile);
+    if (!cap.isOpened()) throw runtime_error("can't open pedestrian_detect/mitsubishi.avi");
+
+    cv::Mat frame;
+    cap >> frame;
+
+    IplImage ipl_frame = frame;
+    cv::Ptr<CvBGStatModel> model(cvCreateFGDStatModel(&ipl_frame));
+
+    while (!TestSystem::instance().stop())
+    {
+        cap >> frame;
+        ipl_frame = frame;
+
+        TestSystem::instance().cpuOn();
+
+        cvUpdateBGStatModel(&ipl_frame, model);
+
+        TestSystem::instance().cpuOff();
+    }
+    TestSystem::instance().cpuComplete();
+
+    cap.open(inputFile);
+
+    cap >> frame;
+
+    cv::gpu::GpuMat d_frame(frame);
+    cv::gpu::FGDStatModel d_model(d_frame);
+
+    while (!TestSystem::instance().stop())
+    {
+        cap >> frame;
+        d_frame.upload(frame);
+
+        TestSystem::instance().gpuOn();
+
+        d_model.update(d_frame);
+
+        TestSystem::instance().gpuOff();
+    }
+    TestSystem::instance().gpuComplete();
+}
+
+TEST(MOG)
+{
+    const std::string inputFile = abspath("pedestrian_detect/mitsubishi.avi");
+
+    cv::VideoCapture cap(inputFile);
+    if (!cap.isOpened()) throw runtime_error("can't open pedestrian_detect/mitsubishi.avi");
+
+    cv::Mat frame;
+    cap >> frame;
+
+    cv::BackgroundSubtractorMOG mog;
+    cv::Mat foreground;
+
+    mog(frame, foreground, 0.01);
+
+    while (!TestSystem::instance().stop())
+    {
+        cap >> frame;
+
+        TestSystem::instance().cpuOn();
+
+        mog(frame, foreground, 0.01);
+
+        TestSystem::instance().cpuOff();
+    }
+    TestSystem::instance().cpuComplete();
+
+    cap.open(inputFile);
+
+    cap >> frame;
+
+    cv::gpu::GpuMat d_frame(frame);
+    cv::gpu::MOG_GPU d_mog;
+    cv::gpu::GpuMat d_foreground;
+
+    d_mog(d_frame, d_foreground, 0.01);
+
+    while (!TestSystem::instance().stop())
+    {
+        cap >> frame;
+        d_frame.upload(frame);
+
+        TestSystem::instance().gpuOn();
+
+        d_mog(d_frame, d_foreground, 0.01);
+
+        TestSystem::instance().gpuOff();
+    }
+    TestSystem::instance().gpuComplete();
+}
+
+TEST(MOG2)
+{
+    const std::string inputFile = abspath("pedestrian_detect/mitsubishi.avi");
+
+    cv::VideoCapture cap(inputFile);
+    if (!cap.isOpened()) throw runtime_error("can't open pedestrian_detect/mitsubishi.avi");
+
+    cv::Mat frame;
+    cap >> frame;
+
+    cv::BackgroundSubtractorMOG2 mog2;
+    cv::Mat foreground;
+    cv::Mat background;
+
+    mog2(frame, foreground);
+    mog2.getBackgroundImage(background);
+
+    while (!TestSystem::instance().stop())
+    {
+        cap >> frame;
+
+        TestSystem::instance().cpuOn();
+
+        mog2(frame, foreground);
+        mog2.getBackgroundImage(background);
+
+        TestSystem::instance().cpuOff();
+    }
+    TestSystem::instance().cpuComplete();
+
+    cap.open(inputFile);
+
+    cap >> frame;
+
+    cv::gpu::GpuMat d_frame(frame);
+    cv::gpu::MOG2_GPU d_mog2;
+    cv::gpu::GpuMat d_foreground;
+    cv::gpu::GpuMat d_background;
+
+    d_mog2(d_frame, d_foreground);
+    d_mog2.getBackgroundImage(d_background);
+
+    while (!TestSystem::instance().stop())
+    {
+        cap >> frame;
+        d_frame.upload(frame);
+
+        TestSystem::instance().gpuOn();
+
+        d_mog2(d_frame, d_foreground);
+        d_mog2.getBackgroundImage(d_background);
+
+        TestSystem::instance().gpuOff();
+    }
+    TestSystem::instance().gpuComplete();
 }
