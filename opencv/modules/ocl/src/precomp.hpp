@@ -78,7 +78,12 @@
 
 #if defined (HAVE_OPENCL)
 
-#include <CL/cl.h>
+#if defined __APPLE__
+  #include <OpenCL/OpenCL.h>
+#else
+  #include <CL/cl.h>
+#endif
+
 #include "safe_call.hpp"
 
 using namespace std;
