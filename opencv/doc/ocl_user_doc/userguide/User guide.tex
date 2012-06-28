@@ -16,11 +16,11 @@
 \end{center}
 
 \begin{center}
-v2.4
+v2.3
 \end{center}
 
 \begin{center}
-June, 2012
+December, 2011
 \end{center}
 
 \newpage
@@ -36,88 +36,429 @@ June, 2012
 \end{center}
 \end{table}
 
+\textbf{Contents}
 
-\section { General Information }
-The OpenCV OCL module is a set of classes and functions to utilize OpenCL compatible device. In theroy, it supports any OpenCL 1.1 compatible device, but we only test it on AMD's and NVIDIA's GPU at this stage. The OpenCV OCL module includes utility functions, low-level vision primitives, and high-level algorithms. The utility functions and low-level primitives provide a powerful infrastructure for developing fast vision algorithms taking advangtage of OCL whereas the high-level functionality includes some state-of-the-art algorithms(such as stereo correspondence, face detector) ready to be used by the application developers.
+\underline {1 core. The Core Functionality }1
 
-The OpenCV OCL module is designed as a host-level API plus device-level kernels. The device-level kernels are collected as strings at OpenCV compile time and are compiled at runtime, so it need OpenCL runtime support. To correctly run the OpenCV OCL module, make sure you have OpenCL runtime provided by your device vendor, which is device driver normally.
+\underline {1.1 Basic Structures }1
 
-The OpenCV OCL module is designed for ease of use and does not require any knowledge of OpenCL. Though, such a knowledge will certainly be useful to handle non-trivial cases or achieve the highest performance. It is helpful to understand the cost of various operations, what the OCL does, what the preferred data formats are, and so on. Since there is data transfer between OpenCL host and OpenCL device, the recommanded operation is transfer data from host -> ocl::func1 -> ocl::func2 -> .... -> ocl::funcN -> transfer data to host if needed, not transfer data from host -> ocl::func1 -> transfer data to host -> transfer data from host -> ocl::func2 .....
+\underline {cv::ocl::oclMat }1
 
-To enable OCL support, configure OpenCV using CMake with WIHT\_OPENCL=ON. When the flag is set and if OpenCL SDK is installed, the full-featured OpenCV OCL module is built. Otherwis, the module may be not built.
+\underline {cv::ocl::convertTo(补充数据类型) }1
 
-Right now, the user should define the cv::ocl::Info class in the application and call cv::ocl::getDevice before any cv::ocl::func. This operation initialize OpenCL runtime and set the first found device as computing device. If there are more than one device and you want to use undefault device, you can call cv::ocl::setDevice then.
+\underline {cv::ocl::copyTo(补充数据类型) }2
 
-In the current version, all the thread share the same context and device so the multi-devices are not supported. We will add this feature soon.
+\underline {cv::ocl::setTo(补充数据类型) }3
 
-\section{utility functions}
+\underline {1.2 operations on Arrays }4
 
-\subsection{Info}
-class CV\_EXPORTS Info
+\underline {cv::ocl::absdiff }4
 
-\{
+\underline {cv::ocl::add }5
 
-public:
+\underline {cv::ocl::bitwise{\_}and }6
 
-	struct Impl;
+\underline {cv::ocl::bitwise{\_}not }7
 
-	Impl *impl;
+\underline {cv::ocl::bitwise{\_}or }8
 
-	Info();
+\underline {cv::ocl::bitwise{\_}xor }9
 
-	Info(const Info \&m);
+\underline {cv::ocl::cartToPolar }10
 
-	~Info();
+\underline {cv::ocl::compare }11
 
-	void release();
+\underline {cv::ocl::countNonZero }12
 
-	Info \&operator = (const Info \&m);
+\underline {cv::ocl::divide }13
 
-\};
+\underline {cv::ocl::exp }14
 
-this class sould be maintained by the user and be passed to getDevice
+\underline {cv::ocl:: flip }15
 
-\subsection{int getDevice}
+\underline {cv::ocl::log }16
 
+\underline {cv::ocl::LUT (补充数据类型) }17
 
-parameters: 
+\underline {cv::ocl::magnitude }18
 
-std::vector<Info>\& oclinfo  it must not be NULL
+\underline {cv::ocl::meanStdDev }19
 
-int devicetype = CVCL\_DEVICE\_TYPE\_GPU The device type you want to use, the default value is GPU, other alternatives are CVCL\_DEVICE\_TYPE\_DEFAULT, CVCL\_DEVICE\_TYPE\_CPU, CVCL\_DEVICE\_TYPE\_ACCELERATOR, CVCL\_DEVICE\_TYPE\_ALL
+\underline {cv::ocl::merge }20
 
-return value: the number of devices found, must be greater than 0.
+\underline {cv::ocl:: minMax }21
 
-the function must be called before any other cv::ocl::functions, it initialize ocl runtime
+\underline {cv::ocl:: minMaxLoc }22
 
-\subsection{void setDevice}
+\underline {cv::ocl::multiply }23
 
+\underline {cv::ocl:: norm }24
 
-parameters:
+\underline {cv::ocl::phase }25
 
-Info \&oclinfo  the selected OpenCL platform
+\underline {cv::ocl::polarToCart }26
 
-int devnum = 0 the selected OpenCL device under this platform
+\underline {cv::ocl::split }27
 
-\subsection{void setBinpath}
+\underline {cv::ocl::subtract }28
 
+\underline {cv::ocl::transpose }29
 
-parameters:
+\underline {2 imgproc. Image Processing }30
 
-const char *path the path of OpenCL kernel binaries
+\underline {2.1 Histograms }30
 
-If you call this function and set a valid path, the OCL module will save the compiled kernel to the address in the first time and reload the binary since that. It can save compilation time at the runtime.
+\underline {cv::ocl::calcHist }30
 
+\underline {2.2 Image Filtering }31
+
+\underline {cv::ocl::bilateralFilter }31
+
+\underline {cv::ocl::blur }32
+
+\underline {cv::ocl::boxFilter }33
+
+\underline {cv::ocl::copyMakeBorder }34
+
+\underline {cv::ocl::dilate }35
+
+\underline {cv::ocl::erode }36
+
+\underline {cv::ocl::filter2D （补充数据类型） }37
+
+\underline {cv::ocl::GaussianBlur（补充数据类型） }39
+
+\underline {cv::ocl::Laplacian }40
+
+\underline {cv::ocl:: medianFilter (补充数据类型)(pdf) }41
+
+\underline {cv::ocl::morphologyEx (补充数据类型) }42
+
+\underline {cv::ocl::Scharr (补充数据类型) }43
+
+\underline {cv::ocl::sepFilter2D（补充数据类型） }44
+
+\underline {cv::ocl::Sobel（补充数据类型） }45
+
+\underline {2.3 Geometric Image Transformations }47
+
+\underline {cv::ocl::resize }47
+
+\underline {cv::ocl::warpAffine }49
+
+\underline {cv::ocl::warpPerspective }50
+
+\underline {2.4 Miscellaneous Image Transformations }51
+
+\underline {cv::ocl::cvtColor (补充数据类型) }51
+
+\underline {cv::ocl::integral }56
+
+\underline {cv::ocl::threshold }58
 
 \section{1 core. The Core Functionality}
 \label{sec:mylabel1}
 \subsection{1.1 Basic Structures}
 \label{subsec:mylabel1}
-\subsubsection{cv::ocl::convertTo}
+\subsubsection{cv::ocl::oclMat}
+\label{subsec:mylabel1}
+class oclMat
+
+\{
+
+  public:
+
+    //default constructor
+
+    oclMat();
+
+    oclMat(int rows,int cols,int type);
+
+    oclMat(Size size,int type);
+
+    oclMat(int rows,int cols,int type,const Scalar \& s);
+
+    //copy constructor
+
+    oclMat(const oclMat \& m);
+
+    //constructor for oclMatrix headers pointing to user-allocated data
+
+    oclMat(int rows, int cols, int type, void *data, size\_t step = Mat::AUTO\_STEP);
+
+    oclMat(Size size, int type, void *data, size\_t step = Mat::AUTO\_STEP);
+
+    // creates a matrix header for a part of the bigger matrix
+
+    oclMat(const oclMat \&m, const Range \&rowRange, const Range \&colRange);
+
+    oclMat(const oclMat \&m, const Rect \&roi);
+
+    // builds oclMat from Mat. Perfom blocking upload to device.
+
+    explicit oclMat (const Mat \&m);
+
+
+    // destructor - calls release()
+
+    ~oclMat();
+
+    // assignment operators
+
+    oclMat \&operator = (const oclMat \&m);
+
+    // assignment operator. Perfom blocking upload to device.
+
+    oclMat \&operator = (const Mat \&m);
+
+
+
+    // pefroms blocking upload data to oclMat.
+
+    void upload(const cv::Mat \&m);
+
+
+    // downloads data from device to host memory. Blocking calls.
+
+    operator Mat() const;
+
+    void download(cv::Mat \&m) const;
+
+
+
+    // returns a new oclMatrix header for the specified row
+
+     oclMat row(int y) const;
+
+     // returns a new oclMatrix header for the specified column
+
+     oclMat col(int x) const;
+
+     // ... for the specified row span
+
+     oclMat rowRange(int startrow, int endrow) const;
+
+     oclMat rowRange(const Range \&r) const;
+
+     // ... for the specified column span
+
+     oclMat colRange(int startcol, int endcol) const;
+
+     oclMat colRange(const Range \&r) const;
+
+
+     // returns deep copy of the oclMatrix, i.e. the data is copied
+
+     oclMat clone() const;
+
+
+      // copies the oclMatrix content to "m".
+
+     // It calls m.create(this-\textgreater size(), this-\textgreater type()).
+
+     // It supports any data type
+
+     void copyTo( oclMat \&m ) const;
+
+     // copies those oclMatrix elements to "m" that are marked with non-zero mask elements.
+
+     //It supports 8UC1 8UC4 32SC1 32SC4 32FC1 32FC4
+
+     void copyTo( oclMat \&m, const oclMat \&mask ) const;
+
+     // converts oclMatrix to another datatype with optional scalng. See cvConvertScale.
+
+     //It supports 8UC1 8UC4 32SC1 32SC4 32FC1 32FC4
+
+     void convertTo( oclMat \&m, int rtype, double alpha = 1, double beta = 0 ) const;
+
+
+     void assignTo( oclMat \&m, int type = -1 ) const;
+
+
+     // sets every oclMatrix element to s
+
+     //It supports 8UC1 8UC4 32SC1 32SC4 32FC1 32FC4
+
+     clMat \&operator = (const Scalar \&s);
+
+     // sets some of the oclMatrix elements to s, according to the mask
+
+     //It supports 8UC1 8UC4 32SC1 32SC4 32FC1 32FC4
+
+     oclMat \&setTo(const Scalar \&s, const oclMat \&mask = oclMat());
+
+     // creates alternative oclMatrix header for the same data, with different
+
+     // number of channels and/or different number of rows. see cvReshape.
+
+     oclMat reshape(int cn, int rows = 0) const;
+
+
+     // allocates new oclMatrix data unless the oclMatrix already has specified size and type.
+
+     // previous data is unreferenced if needed.
+
+     void create(int rows, int cols, int type);
+
+     void create(Size size, int type);
+
+     // decreases reference counter;
+
+     // deallocate the data when reference counter reaches 0.
+
+     void release();
+
+
+     // swaps with other smart pointer
+
+     void swap(oclMat \&mat);
+
+
+     // locates oclMatrix header within a parent oclMatrix. See below
+
+     void locateROI( Size \&wholeSize, Point \&ofs ) const;
+
+     // moves/resizes the current oclMatrix ROI inside the parent oclMatrix.
+
+     oclMat \&adjustROI( int dtop, int dbottom, int dleft, int dright );
+
+     // extracts a rectangular sub-oclMatrix
+
+     // (this is a generalized form of row, rowRange etc.)
+
+     oclMat operator()( Range rowRange, Range colRange ) const;
+
+     oclMat operator()( const Rect \&roi ) const;
+
+
+     // returns true if the oclMatrix data is continuous
+
+     // (i.e. when there are no gaps between successive rows).
+
+     // similar to CV\_IS\_oclMat\_CONT(cvoclMat-\textgreater type)
+
+     bool isContinuous() const;
+
+     // returns element size in bytes,
+
+     // similar to CV\_ELEM\_SIZE(cvMat-\textgreater type)
+
+     size\_t elemSize() const;
+
+     // returns the size of element channel in bytes.
+
+     size\_t elemSize1() const;
+
+     // returns element type, similar to CV\_MAT\_TYPE(cvMat-\textgreater type)
+
+     int type() const;
+
+     // returns element type, similar to CV\_MAT\_DEPTH(cvMat-\textgreater type)
+
+     int depth() const;
+
+     // returns element type, similar to CV\_MAT\_CN(cvMat-\textgreater type)
+
+     int channels() const;
+
+     // returns step/elemSize1()
+
+     size\_t step1() const;
+
+     // returns oclMatrix size:
+
+     // width == number of columns, height == number of rows
+
+     Size size() const;
+
+     // returns true if oclMatrix data is NULL
+
+     bool empty() const;
+
+
+     // returns pointer to y-th row
+
+     uchar *ptr(int y = 0);
+
+     const uchar *ptr(int y = 0) const;
+
+
+
+
+
+     // matrix transposition
+
+     oclMat t() const;
+
+
+     /*! includes several bit-fields:
+
+        - the magic signature
+
+        - continuity flag
+
+        - depth
+
+        - number of channels
+
+     */
+
+     int flags;
+
+     // the number of rows and columns
+
+     int rows, cols;
+
+     // a distance between successive rows in bytes; includes the gap if any
+
+     size\_t step;
+
+     // pointer to the data(OCL memory object)
+
+     uchar *data;
+
+
+     // pointer to the reference counter;
+
+     // when oclMatrix points to user-allocated data, the pointer is NULL
+
+     int *refcount;
+
+
+     // helper fields used in locateROI and adjustROI
+
+     //datastart and dataend are not used in current version
+
+     uchar *datastart;
+
+     uchar *dataend;
+
+
+     // OpenCL context associated with the oclMat object.
+
+     Context *clCxt;
+
+     //add offset for handle ROI, calculated in byte
+
+     int offset;
+
+     //add wholerows and wholecols for the whole matrix, datastart and dataend are no longer used
+
+     int wholerows;
+
+     int wholecols;
+
+     //add download\_channels for 3 channels to 4 channels
+
+     int download\_channels;
+
+\}
+\subsubsection{cv::ocl::convertTo(补充数据类型)}
 \label{subsubsec:mylabel1}
 Converts array to another datatype with optional scaling.
 
-Supports CV{\_}8UC1,CV{\_}8UC4,CV{\_}32SC1,CV{\_}32SC4,CV{\_}32FC1,CV{\_}32FC4.
+Supports (补充数据类型).
 
 \textbf{m }The destination matrix. If it does not have a proper size or type
 before the operation, it will be reallocated
@@ -138,11 +479,11 @@ m(x,y)=saturate\_cast<rType>(\alpha (\ast this)(x,y)+\beta )
 \]
 \newpage
 
-\subsubsection{cv::ocl::copyTo}
+\subsubsection{cv::ocl::copyTo(补充数据类型)}
 \label{subsubsec:mylabel2}
 Copies the matrix to another one.
 
-Supports CV{\_}8UC1,CV{\_}8UC4,CV{\_}32SC1,CV{\_}32SC4,CV{\_}32FC1,CV{\_}32FC4.
+Supports(补充数据类型).
 
 \textbf{m }The destination matrix. If it does not have a proper size or type
 before the operation, it will bereallocated
@@ -164,11 +505,11 @@ reallocated the matrix, the newly allocated matrix is initialized with all
 
 \newpage
 
-\subsubsection{cv::ocl::setTo}
+\subsubsection{cv::ocl::setTo(补充数据类型)}
 \label{subsubsec:mylabel3}
 Sets all or some of the array elements to the specified value.
 
-Supports CV{\_}8UC1,CV{\_}8UC4,CV{\_}32SC1,CV{\_}32SC4,CV{\_}32FC1,CV{\_}32FC4.
+Supports(补充数据类型).
 
 \textbf{s }Assigned scalar, which is converted to the actual array type
 
@@ -624,11 +965,11 @@ input. Special values (NaN, $\pm \infty )$ are not handled.
 
 \newpage
 
-\subsubsection{cv::ocl::LUT}
+\subsubsection{cv::ocl::LUT (补充数据类型)}
 \label{subsubsec:mylabel17}
 Performs a look-up table transform of an array.
 
-Supports only CV{\_}8UC1,CV{\_}8UC4
+Supports(补充数据类型)
 
 \textbf{src }Source array of 8-bit elements
 
@@ -889,7 +1230,7 @@ formed from the corresponding elements of x and y:
 \mbox{angle}\left( I \right)=\mbox{atan}2\left( {y\left( I \right),x\left( I
 \right)} \right)
 \]
-The angle estimation accuracy is 0.3\r{ }, when x(I)=y(I)=0, the
+The angle estimation accuracy is～0.3\r{ }, when x(I)=y(I)=0, the
 corresponding angle(I) is set to 0.
 
 \newpage
@@ -926,7 +1267,7 @@ vector represented by the corresponding elements of magnitude and angle:
 {\mbox{angle}\left( I \right)} \right) \\
  \end{array}
 \]
-The relative accuracy of the estimated coordinates is 10$^{-6}$.
+The relative accuracy of the estimated coordinates is ～10$^{-6}$.
 
 \newpage
 
@@ -1255,11 +1596,11 @@ processed independently.
 
 \newpage
 
-\subsubsection{cv::ocl::filter2D }
+\subsubsection{cv::ocl::filter2D （补充数据类型）}
 \label{subsubsec:mylabel37}
 Convolves an image with the kernel
 
-Supports CV{\_}8UC1,CV{\_}8UC4,CV{\_}32SC1,CV{\_}32SC4,CV{\_}32FC1,CV{\_}32FC4
+Supports （补充数据类型）
 
 \textbf{src }The source image
 
@@ -1312,11 +1653,11 @@ The function uses DFT-based algorithm in case of sufficiently large kernels
 
 \newpage
 
-\subsubsection{cv::ocl::GaussianBlur}
+\subsubsection{cv::ocl::GaussianBlur（补充数据类型）}
 \label{subsubsec:mylabel38}
 Smoothes image using a Gaussian filter
 
-Supports CV{\_}8UC1,CV{\_}8UC4,CV{\_}32SC1,CV{\_}32SC4,CV{\_}32FC1,CV{\_}32FC4
+Supports （补充数据类型）
 
 \textbf{src }The source image
 
@@ -1385,14 +1726,14 @@ filtering the image with the following 3$\times $3 aperture:
 \]
 \newpage
 
-\subsubsection{cv::ocl:: medianFilter}
+\subsubsection{cv::ocl:: medianFilter (补充数据类型)(pdf)}
 \label{subsubsec:mylabel40}
 Smoothes image using median filter
 
-Supports CV{\_}8UC1,CV{\_}8UC4,CV{\_}32FC1,CV{\_}32FC4.
+Supports (补充数据类型).
 
 \textbf{src }The source 1-, 3- or 4-channel image. When ksize is 3 or 5, the
-image depth should be CV 8U or CV 32F. For larger aperture sizes it
+image depth should be CV 8U, CV 16U or CV 32F. For larger aperture sizes it
 can only be CV 8U
 
 \textbf{dst }The destination array; will have the same size and the same
@@ -1407,11 +1748,11 @@ In-place operation is supported.
 
 \newpage
 
-\subsubsection{cv::ocl::morphologyEx}
+\subsubsection{cv::ocl::morphologyEx (补充数据类型)}
 \label{subsubsec:mylabel41}
 Performs advanced morphological transformations.
 
-Supports CV{\_}8UC1,CV{\_}8UC4,CV{\_}32SC1,CV{\_}32SC4,CV{\_}32FC1,CV{\_}32FC4
+Supports(补充数据类型)
 
 \textbf{src }Source image
 
@@ -1472,11 +1813,11 @@ Any of the operations can be done in-place.
 
 \newpage
 
-\subsubsection{cv::ocl::Scharr}
+\subsubsection{cv::ocl::Scharr (补充数据类型)}
 \label{subsubsec:mylabel42}
 Calculates the first x- or y- image derivative using Scharr operator
 
-Supports CV{\_}8UC1,CV{\_}8UC4,CV{\_}32SC1,CV{\_}32SC4,CV{\_}32FC1,CV{\_}32FC4.
+Supports(补充数据类型).
 
 \textbf{src }The source image
 
@@ -1522,11 +1863,11 @@ borderType).
 
 \newpage
 
-\subsubsection{cv::ocl::sepFilter2D}
+\subsubsection{cv::ocl::sepFilter2D（补充数据类型）}
 \label{subsubsec:mylabel43}
 Applies separable linear filter to an image
 
-Supports CV{\_}8UC1,CV{\_}8UC4,CV{\_}32SC1,CV{\_}32SC4,CV{\_}32FC1,CV{\_}32FC4
+Supports （补充数据类型）.
 
 \textbf{src }The source image
 
@@ -1562,12 +1903,12 @@ shifted by delta is stored in dst.
 
 \newpage
 
-\subsubsection{cv::ocl::Sobel}
+\subsubsection{cv::ocl::Sobel（补充数据类型）}
 \label{subsubsec:mylabel44}
 Calculates the first, second, third or mixed image derivatives using an
 extended Sobel operator
 
-Supports CV{\_}8UC1,CV{\_}8UC4,CV{\_}32SC1,CV{\_}32SC4,CV{\_}32FC1,CV{\_}32FC4
+Supports （补充数据类型）.
 
 \textbf{src }The source image
 
@@ -1766,11 +2107,11 @@ M. The function can not operate in-place.
 
 \subsection{2.4 Miscellaneous Image Transformations}
 \label{subsec:mylabel6}
-\subsubsection{cv::ocl::cvtColor}
+\subsubsection{cv::ocl::cvtColor (补充数据类型)}
 \label{subsubsec:mylabel48}
 Converts image from one color space to another.
 
-Supports.CV{\_}8UC1,CV{\_}8UC4,CV{\_}32SC1,CV{\_}32SC4,CV{\_}32FC1,CV{\_}32FC4
+Supports.（补充数据类型）
 
 \textbf{src }The source image, 8-bit unsigned, 16-bit unsigned (CV 16UC...)
 or single-precision floatingpoint
@@ -2034,10 +2375,9 @@ taken from multiple sources on Web, primarily from the Charles Poynton site
 \item Bayer$\to $RGB (CV{\_}BayerBG2BGR, CV{\_}BayerGB2BGR, CV{\_}BayerRG2BGR, CV{\_}BayerGR2BGR, CV{\_}BayerBG2RGB, CV{\_}BayerGB2RGB, CV{\_}BayerRG2RGB, CV{\_}BayerGR2RGB) The Bayer pattern is widely used in CCD and CMOS cameras. It allows one to get color pictures from a single plane where R,G and B pixels (sensors of a particular component) are interleaved like this:
 \end{itemize}
 \begin{figure}[htbp]
-\centerline{\includegraphics[width=1.89in,height=1.61in]{User1.pdf}}
+\centerline{\includegraphics[width=1.89in,height=1.61in]{User1.eps}}
 \label{fig1}
 \end{figure}
-
 The output RGB components of a pixel are interpolated from 1, 2 or 4
 neighbors of the pixel having the same color. There are several
 modifications of the above pattern that can be achieved by shifting the
@@ -2093,12 +2433,12 @@ Rect(5,1,2,3). The selected pixels in the original image are shown, as well
 as the relative pixels in the integral images sum and tilted.
 
 \begin{figure}[htbp]
-\centerline{\includegraphics[width=7.15in,height=5.94in]{User2.pdf}}
+\centerline{\includegraphics[width=7.15in,height=5.94in]{User2.eps}}
 \label{fig2}
 \end{figure}
 
 \begin{figure}[htbp]
-\centerline{\includegraphics[width=2.38in,height=1.95in]{User3.pdf}}
+\centerline{\includegraphics[width=2.38in,height=1.95in]{User3.eps}}
 \label{fig3}
 \end{figure}
 $\begin{array}{l}
@@ -2183,7 +2523,7 @@ function returns the computed threshold value. Currently, Otsu's method is
 implemented only for 8-bit images.
 
 \begin{figure}[htbp]
-\centerline{\includegraphics[width=5.55in,height=7.32in]{User4.pdf}}
+\centerline{\includegraphics[width=5.55in,height=7.32in]{User4.eps}}
 \label{fig4}
 \end{figure}
 

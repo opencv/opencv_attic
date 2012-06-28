@@ -1,0 +1,715 @@
+This is pdfTeX, Version 3.1415926-2.3-1.40.12 (MiKTeX 2.9) (preloaded format=latex 2012.6.27)  27 JUN 2012 19:34
+entering extended mode
+**User*guide.tex
+("C:\Documents and Settings\Administrator\Ê°åÈù¢\userguide\User guide.tex"
+LaTeX2e <2011/06/27>
+Babel <v3.8m> and hyphenation patterns for loaded.
+(D:\CTEX\MiKTeX\tex\latex\base\article.cls
+Document Class: article 2007/10/19 v1.4h Standard LaTeX document class
+(D:\CTEX\MiKTeX\tex\latex\base\size10.clo
+File: size10.clo 2007/10/19 v1.4h Standard LaTeX file (size option)
+)
+\c@part=\count79
+\c@section=\count80
+\c@subsection=\count81
+\c@subsubsection=\count82
+\c@paragraph=\count83
+\c@subparagraph=\count84
+\c@figure=\count85
+\c@table=\count86
+\abovecaptionskip=\skip41
+\belowcaptionskip=\skip42
+\bibindent=\dimen102
+)
+(D:\CTEX\MiKTeX\tex\latex\base\latexsym.sty
+Package: latexsym 1998/08/17 v2.2e Standard LaTeX package (lasy symbols)
+\symlasy=\mathgroup4
+LaTeX Font Info:    Overwriting symbol font `lasy' in version `bold'
+(Font)                  U/lasy/m/n --> U/lasy/b/n on input line 47.
+)
+(D:\CTEX\MiKTeX\tex\latex\graphics\graphicx.sty
+Package: graphicx 1999/02/16 v1.0f Enhanced LaTeX Graphics (DPC,SPQR)
+
+(D:\CTEX\MiKTeX\tex\latex\graphics\keyval.sty
+Package: keyval 1999/03/16 v1.13 key=value parser (DPC)
+\KV@toks@=\toks14
+)
+(D:\CTEX\MiKTeX\tex\latex\graphics\graphics.sty
+Package: graphics 2009/02/05 v1.0o Standard LaTeX Graphics (DPC,SPQR)
+
+(D:\CTEX\MiKTeX\tex\latex\graphics\trig.sty
+Package: trig 1999/03/16 v1.09 sin cos tan (DPC)
+)
+(D:\CTEX\MiKTeX\tex\latex\00miktex\graphics.cfg
+File: graphics.cfg 2007/01/18 v1.5 graphics configuration of teTeX/TeXLive
+)
+Package graphics Info: Driver file: dvips.def on input line 91.
+
+(D:\CTEX\MiKTeX\tex\latex\graphics\dvips.def
+File: dvips.def 1999/02/16 v3.0i Driver-dependant file (DPC,SPQR)
+))
+\Gin@req@height=\dimen103
+\Gin@req@width=\dimen104
+)
+("C:\Documents and Settings\Administrator\Ê°åÈù¢\userguide\User guide.aux"
+
+LaTeX Warning: Label `subsec:mylabel1' multiply defined.
+
+)
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 12.
+LaTeX Font Info:    ... okay on input line 12.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 12.
+LaTeX Font Info:    ... okay on input line 12.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 12.
+LaTeX Font Info:    ... okay on input line 12.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 12.
+LaTeX Font Info:    ... okay on input line 12.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 12.
+LaTeX Font Info:    ... okay on input line 12.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 12.
+LaTeX Font Info:    ... okay on input line 12.
+ [1
+
+]
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <7> on input line 30.
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <5> on input line 30.
+LaTeX Font Info:    Try loading font information for U+lasy on input line 30.
+ (D:\CTEX\MiKTeX\tex\latex\base\ulasy.fd
+File: ulasy.fd 1998/08/17 v2.2e LaTeX symbol font definitions
+)
+Overfull \hbox (93.0pt too wide) in paragraph at lines 30--36
+ [][] 
+ []
+
+Missing character: There is no ≤ in font cmr10!
+Missing character: There is no π in font cmr10!
+Missing character: There is no ≥ in font cmr10!
+Missing character: There is no ‰ in font cmr10!
+Missing character: There is no   in font cmr10!
+Missing character: There is no ˝ in font cmr10!
+Missing character: There is no æ in font cmr10!
+Missing character: There is no › in font cmr10!
+Missing character: There is no ¿ in font cmr10!
+Missing character: There is no ‡ in font cmr10!
+Missing character: There is no – in font cmr10!
+Missing character: There is no Õ in font cmr10!
+Missing character: There is no ≤ in font cmr10!
+Missing character: There is no π in font cmr10!
+Missing character: There is no ≥ in font cmr10!
+Missing character: There is no ‰ in font cmr10!
+Missing character: There is no   in font cmr10!
+Missing character: There is no ˝ in font cmr10!
+Missing character: There is no æ in font cmr10!
+Missing character: There is no › in font cmr10!
+Missing character: There is no ¿ in font cmr10!
+Missing character: There is no ‡ in font cmr10!
+Missing character: There is no – in font cmr10!
+Missing character: There is no Õ in font cmr10!
+Missing character: There is no ≤ in font cmr10!
+Missing character: There is no π in font cmr10!
+Missing character: There is no ≥ in font cmr10!
+Missing character: There is no ‰ in font cmr10!
+Missing character: There is no   in font cmr10!
+Missing character: There is no ˝ in font cmr10!
+Missing character: There is no æ in font cmr10!
+Missing character: There is no › in font cmr10!
+Missing character: There is no ¿ in font cmr10!
+Missing character: There is no ‡ in font cmr10!
+Missing character: There is no – in font cmr10!
+Missing character: There is no Õ in font cmr10!
+Missing character: There is no ≤ in font cmr10!
+Missing character: There is no π in font cmr10!
+Missing character: There is no ≥ in font cmr10!
+Missing character: There is no ‰ in font cmr10!
+Missing character: There is no   in font cmr10!
+Missing character: There is no ˝ in font cmr10!
+Missing character: There is no æ in font cmr10!
+Missing character: There is no › in font cmr10!
+Missing character: There is no ¿ in font cmr10!
+Missing character: There is no ‡ in font cmr10!
+Missing character: There is no – in font cmr10!
+Missing character: There is no Õ in font cmr10!
+[2]
+Missing character: There is no £ in font cmr10!
+Missing character: There is no ® in font cmr10!
+Missing character: There is no ≤ in font cmr10!
+Missing character: There is no π in font cmr10!
+Missing character: There is no ≥ in font cmr10!
+Missing character: There is no ‰ in font cmr10!
+Missing character: There is no   in font cmr10!
+Missing character: There is no ˝ in font cmr10!
+Missing character: There is no æ in font cmr10!
+Missing character: There is no › in font cmr10!
+Missing character: There is no ¿ in font cmr10!
+Missing character: There is no ‡ in font cmr10!
+Missing character: There is no – in font cmr10!
+Missing character: There is no Õ in font cmr10!
+Missing character: There is no £ in font cmr10!
+Missing character: There is no © in font cmr10!
+Missing character: There is no £ in font cmr10!
+Missing character: There is no ® in font cmr10!
+Missing character: There is no ≤ in font cmr10!
+Missing character: There is no π in font cmr10!
+Missing character: There is no ≥ in font cmr10!
+Missing character: There is no ‰ in font cmr10!
+Missing character: There is no   in font cmr10!
+Missing character: There is no ˝ in font cmr10!
+Missing character: There is no æ in font cmr10!
+Missing character: There is no › in font cmr10!
+Missing character: There is no ¿ in font cmr10!
+Missing character: There is no ‡ in font cmr10!
+Missing character: There is no – in font cmr10!
+Missing character: There is no Õ in font cmr10!
+Missing character: There is no £ in font cmr10!
+Missing character: There is no © in font cmr10!
+Missing character: There is no ≤ in font cmr10!
+Missing character: There is no π in font cmr10!
+Missing character: There is no ≥ in font cmr10!
+Missing character: There is no ‰ in font cmr10!
+Missing character: There is no   in font cmr10!
+Missing character: There is no ˝ in font cmr10!
+Missing character: There is no æ in font cmr10!
+Missing character: There is no › in font cmr10!
+Missing character: There is no ¿ in font cmr10!
+Missing character: There is no ‡ in font cmr10!
+Missing character: There is no – in font cmr10!
+Missing character: There is no Õ in font cmr10!
+Missing character: There is no ≤ in font cmr10!
+Missing character: There is no π in font cmr10!
+Missing character: There is no ≥ in font cmr10!
+Missing character: There is no ‰ in font cmr10!
+Missing character: There is no   in font cmr10!
+Missing character: There is no ˝ in font cmr10!
+Missing character: There is no æ in font cmr10!
+Missing character: There is no › in font cmr10!
+Missing character: There is no ¿ in font cmr10!
+Missing character: There is no ‡ in font cmr10!
+Missing character: There is no – in font cmr10!
+Missing character: There is no Õ in font cmr10!
+Missing character: There is no ≤ in font cmr10!
+Missing character: There is no π in font cmr10!
+Missing character: There is no ≥ in font cmr10!
+Missing character: There is no ‰ in font cmr10!
+Missing character: There is no   in font cmr10!
+Missing character: There is no ˝ in font cmr10!
+Missing character: There is no æ in font cmr10!
+Missing character: There is no › in font cmr10!
+Missing character: There is no ¿ in font cmr10!
+Missing character: There is no ‡ in font cmr10!
+Missing character: There is no – in font cmr10!
+Missing character: There is no Õ in font cmr10!
+Missing character: There is no £ in font cmr10!
+Missing character: There is no ® in font cmr10!
+Missing character: There is no ≤ in font cmr10!
+Missing character: There is no π in font cmr10!
+Missing character: There is no ≥ in font cmr10!
+Missing character: There is no ‰ in font cmr10!
+Missing character: There is no   in font cmr10!
+Missing character: There is no ˝ in font cmr10!
+Missing character: There is no æ in font cmr10!
+Missing character: There is no › in font cmr10!
+Missing character: There is no ¿ in font cmr10!
+Missing character: There is no ‡ in font cmr10!
+Missing character: There is no – in font cmr10!
+Missing character: There is no Õ in font cmr10!
+Missing character: There is no £ in font cmr10!
+Missing character: There is no © in font cmr10!
+Missing character: There is no £ in font cmr10!
+Missing character: There is no ® in font cmr10!
+Missing character: There is no ≤ in font cmr10!
+Missing character: There is no π in font cmr10!
+Missing character: There is no ≥ in font cmr10!
+Missing character: There is no ‰ in font cmr10!
+Missing character: There is no   in font cmr10!
+Missing character: There is no ˝ in font cmr10!
+Missing character: There is no æ in font cmr10!
+Missing character: There is no › in font cmr10!
+Missing character: There is no ¿ in font cmr10!
+Missing character: There is no ‡ in font cmr10!
+Missing character: There is no – in font cmr10!
+Missing character: There is no Õ in font cmr10!
+Missing character: There is no £ in font cmr10!
+Missing character: There is no © in font cmr10!
+Missing character: There is no ≤ in font cmr10!
+Missing character: There is no π in font cmr10!
+Missing character: There is no ≥ in font cmr10!
+Missing character: There is no ‰ in font cmr10!
+Missing character: There is no   in font cmr10!
+Missing character: There is no ˝ in font cmr10!
+Missing character: There is no æ in font cmr10!
+Missing character: There is no › in font cmr10!
+Missing character: There is no ¿ in font cmr10!
+Missing character: There is no ‡ in font cmr10!
+Missing character: There is no – in font cmr10!
+Missing character: There is no Õ in font cmr10!
+LaTeX Font Info:    Try loading font information for OMS+cmr on input line 167.
+
+ (D:\CTEX\MiKTeX\tex\latex\base\omscmr.fd
+File: omscmr.fd 1999/05/25 v2.5h Standard LaTeX font definitions
+)
+LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <10> not available
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 167.
+
+Overfull \hbox (13.33952pt too wide) in paragraph at lines 187--188
+[][]\OT1/cmr/m/n/10 oclMat(int rows, in-t col-s, in-t type, void *da-ta, size[]
+t step = Mat::AUTO[]STEP); 
+ []
+
+
+Overfull \hbox (3.1395pt too wide) in paragraph at lines 193--194
+[][]\OT1/cmr/m/n/10 oclMat(const o-clMat &m, con-st Range &rowRange, con-st Ran
+ge &col-Range); 
+ []
+
+[3]
+LaTeX Font Info:    Try loading font information for OML+cmr on input line 257.
+
+ (D:\CTEX\MiKTeX\tex\latex\base\omlcmr.fd
+File: omlcmr.fd 1999/05/25 v2.5h Standard LaTeX font definitions
+)
+LaTeX Font Info:    Font shape `OML/cmr/m/n' in size <10> not available
+(Font)              Font shape `OML/cmm/m/it' tried instead on input line 257.
+ [4] [5]
+Missing character: There is no ≤ in font cmbx10!
+Missing character: There is no π in font cmbx10!
+Missing character: There is no ≥ in font cmbx10!
+Missing character: There is no ‰ in font cmbx10!
+Missing character: There is no   in font cmbx10!
+Missing character: There is no ˝ in font cmbx10!
+Missing character: There is no æ in font cmbx10!
+Missing character: There is no › in font cmbx10!
+Missing character: There is no ¿ in font cmbx10!
+Missing character: There is no ‡ in font cmbx10!
+Missing character: There is no – in font cmbx10!
+Missing character: There is no Õ in font cmbx10!
+Missing character: There is no ≤ in font cmr10!
+Missing character: There is no π in font cmr10!
+Missing character: There is no ≥ in font cmr10!
+Missing character: There is no ‰ in font cmr10!
+Missing character: There is no   in font cmr10!
+Missing character: There is no ˝ in font cmr10!
+Missing character: There is no æ in font cmr10!
+Missing character: There is no › in font cmr10!
+Missing character: There is no ¿ in font cmr10!
+Missing character: There is no ‡ in font cmr10!
+Missing character: There is no – in font cmr10!
+Missing character: There is no Õ in font cmr10!
+ [6]
+Missing character: There is no ≤ in font cmbx10!
+Missing character: There is no π in font cmbx10!
+Missing character: There is no ≥ in font cmbx10!
+Missing character: There is no ‰ in font cmbx10!
+Missing character: There is no   in font cmbx10!
+Missing character: There is no ˝ in font cmbx10!
+Missing character: There is no æ in font cmbx10!
+Missing character: There is no › in font cmbx10!
+Missing character: There is no ¿ in font cmbx10!
+Missing character: There is no ‡ in font cmbx10!
+Missing character: There is no – in font cmbx10!
+Missing character: There is no Õ in font cmbx10!
+Missing character: There is no ≤ in font cmr10!
+Missing character: There is no π in font cmr10!
+Missing character: There is no ≥ in font cmr10!
+Missing character: There is no ‰ in font cmr10!
+Missing character: There is no   in font cmr10!
+Missing character: There is no ˝ in font cmr10!
+Missing character: There is no æ in font cmr10!
+Missing character: There is no › in font cmr10!
+Missing character: There is no ¿ in font cmr10!
+Missing character: There is no ‡ in font cmr10!
+Missing character: There is no – in font cmr10!
+Missing character: There is no Õ in font cmr10!
+ [7]
+Missing character: There is no ≤ in font cmbx10!
+Missing character: There is no π in font cmbx10!
+Missing character: There is no ≥ in font cmbx10!
+Missing character: There is no ‰ in font cmbx10!
+Missing character: There is no   in font cmbx10!
+Missing character: There is no ˝ in font cmbx10!
+Missing character: There is no æ in font cmbx10!
+Missing character: There is no › in font cmbx10!
+Missing character: There is no ¿ in font cmbx10!
+Missing character: There is no ‡ in font cmbx10!
+Missing character: There is no – in font cmbx10!
+Missing character: There is no Õ in font cmbx10!
+Missing character: There is no ≤ in font cmr10!
+Missing character: There is no π in font cmr10!
+Missing character: There is no ≥ in font cmr10!
+Missing character: There is no ‰ in font cmr10!
+Missing character: There is no   in font cmr10!
+Missing character: There is no ˝ in font cmr10!
+Missing character: There is no æ in font cmr10!
+Missing character: There is no › in font cmr10!
+Missing character: There is no ¿ in font cmr10!
+Missing character: There is no ‡ in font cmr10!
+Missing character: There is no – in font cmr10!
+Missing character: There is no Õ in font cmr10!
+ [8] [9] [10]
+Overfull \hbox (18.88402pt too wide) in paragraph at lines 605--607
+[][]\OT1/cmr/m/n/10 Supports al-l da-ta type-s ex-cep-t CV[]64FC1, CV[]64FC2, C
+V64FC3 and CV[]64FC4. 
+ []
+
+[11] [12]
+Overfull \hbox (13.99513pt too wide) in paragraph at lines 674--676
+[][]\OT1/cmr/m/n/10 Supports al-l da-ta type-s ex-cep-t CV[]64FC1,CV[]64FC2,CV6
+4FC3 and CV[]64FC4. 
+ []
+
+[13]
+Overfull \hbox (13.99513pt too wide) in paragraph at lines 717--719
+[][]\OT1/cmr/m/n/10 Supports al-l da-ta type-s ex-cep-t CV[]64FC1,CV[]64FC2,CV6
+4FC3 and CV[]64FC4. 
+ []
+
+[14] [15] [16] [17] [18] [19] [20] [21]
+Missing character: There is no ≤ in font cmbx10!
+Missing character: There is no π in font cmbx10!
+Missing character: There is no ≥ in font cmbx10!
+Missing character: There is no ‰ in font cmbx10!
+Missing character: There is no   in font cmbx10!
+Missing character: There is no ˝ in font cmbx10!
+Missing character: There is no æ in font cmbx10!
+Missing character: There is no › in font cmbx10!
+Missing character: There is no ¿ in font cmbx10!
+Missing character: There is no ‡ in font cmbx10!
+Missing character: There is no – in font cmbx10!
+Missing character: There is no Õ in font cmbx10!
+Missing character: There is no ≤ in font cmr10!
+Missing character: There is no π in font cmr10!
+Missing character: There is no ≥ in font cmr10!
+Missing character: There is no ‰ in font cmr10!
+Missing character: There is no   in font cmr10!
+Missing character: There is no ˝ in font cmr10!
+Missing character: There is no æ in font cmr10!
+Missing character: There is no › in font cmr10!
+Missing character: There is no ¿ in font cmr10!
+Missing character: There is no ‡ in font cmr10!
+Missing character: There is no – in font cmr10!
+Missing character: There is no Õ in font cmr10!
+ [22] [23] [24] [25] [26] [27] [28]
+Overfull \hbox (48.09448pt too wide) in paragraph at lines 1181--1189
+[][]$\OML/cmm/m/it/10 norm \OT1/cmr/m/n/10 = []$
+ []
+
+[29]
+Missing character: There is no ° in font cmr10!
+Missing character: There is no ´ in font cmr10!
+ [30]
+Missing character: There is no ° in font cmr10!
+Missing character: There is no ´ in font cmr10!
+ [31] [32] [33] [34] [35] [36] [37] [38] [39] [40] [41]
+Missing character: There is no £ in font cmbx10!
+Missing character: There is no ® in font cmbx10!
+Missing character: There is no ≤ in font cmbx10!
+Missing character: There is no π in font cmbx10!
+Missing character: There is no ≥ in font cmbx10!
+Missing character: There is no ‰ in font cmbx10!
+Missing character: There is no   in font cmbx10!
+Missing character: There is no ˝ in font cmbx10!
+Missing character: There is no æ in font cmbx10!
+Missing character: There is no › in font cmbx10!
+Missing character: There is no ¿ in font cmbx10!
+Missing character: There is no ‡ in font cmbx10!
+Missing character: There is no – in font cmbx10!
+Missing character: There is no Õ in font cmbx10!
+Missing character: There is no £ in font cmbx10!
+Missing character: There is no © in font cmbx10!
+Missing character: There is no £ in font cmr10!
+Missing character: There is no ® in font cmr10!
+Missing character: There is no ≤ in font cmr10!
+Missing character: There is no π in font cmr10!
+Missing character: There is no ≥ in font cmr10!
+Missing character: There is no ‰ in font cmr10!
+Missing character: There is no   in font cmr10!
+Missing character: There is no ˝ in font cmr10!
+Missing character: There is no æ in font cmr10!
+Missing character: There is no › in font cmr10!
+Missing character: There is no ¿ in font cmr10!
+Missing character: There is no ‡ in font cmr10!
+Missing character: There is no – in font cmr10!
+Missing character: There is no Õ in font cmr10!
+Missing character: There is no £ in font cmr10!
+Missing character: There is no © in font cmr10!
+
+Overfull \hbox (44.91858pt too wide) detected at line 1646
+[]\OT1/cmr/m/n/10 (\OML/cmm/m/it/10 x; y\OT1/cmr/m/n/10 ) = [] []
+ []
+
+[42]
+Missing character: There is no £ in font cmbx10!
+Missing character: There is no ® in font cmbx10!
+Missing character: There is no ≤ in font cmbx10!
+Missing character: There is no π in font cmbx10!
+Missing character: There is no ≥ in font cmbx10!
+Missing character: There is no ‰ in font cmbx10!
+Missing character: There is no   in font cmbx10!
+Missing character: There is no ˝ in font cmbx10!
+Missing character: There is no æ in font cmbx10!
+Missing character: There is no › in font cmbx10!
+Missing character: There is no ¿ in font cmbx10!
+Missing character: There is no ‡ in font cmbx10!
+Missing character: There is no – in font cmbx10!
+Missing character: There is no Õ in font cmbx10!
+Missing character: There is no £ in font cmbx10!
+Missing character: There is no © in font cmbx10!
+Missing character: There is no £ in font cmr10!
+Missing character: There is no ® in font cmr10!
+Missing character: There is no ≤ in font cmr10!
+Missing character: There is no π in font cmr10!
+Missing character: There is no ≥ in font cmr10!
+Missing character: There is no ‰ in font cmr10!
+Missing character: There is no   in font cmr10!
+Missing character: There is no ˝ in font cmr10!
+Missing character: There is no æ in font cmr10!
+Missing character: There is no › in font cmr10!
+Missing character: There is no ¿ in font cmr10!
+Missing character: There is no ‡ in font cmr10!
+Missing character: There is no – in font cmr10!
+Missing character: There is no Õ in font cmr10!
+Missing character: There is no £ in font cmr10!
+Missing character: There is no © in font cmr10!
+ [43] [44]
+Missing character: There is no ≤ in font cmbx10!
+Missing character: There is no π in font cmbx10!
+Missing character: There is no ≥ in font cmbx10!
+Missing character: There is no ‰ in font cmbx10!
+Missing character: There is no   in font cmbx10!
+Missing character: There is no ˝ in font cmbx10!
+Missing character: There is no æ in font cmbx10!
+Missing character: There is no › in font cmbx10!
+Missing character: There is no ¿ in font cmbx10!
+Missing character: There is no ‡ in font cmbx10!
+Missing character: There is no – in font cmbx10!
+Missing character: There is no Õ in font cmbx10!
+Missing character: There is no ≤ in font cmr10!
+Missing character: There is no π in font cmr10!
+Missing character: There is no ≥ in font cmr10!
+Missing character: There is no ‰ in font cmr10!
+Missing character: There is no   in font cmr10!
+Missing character: There is no ˝ in font cmr10!
+Missing character: There is no æ in font cmr10!
+Missing character: There is no › in font cmr10!
+Missing character: There is no ¿ in font cmr10!
+Missing character: There is no ‡ in font cmr10!
+Missing character: There is no – in font cmr10!
+Missing character: There is no Õ in font cmr10!
+ [45]
+Missing character: There is no ≤ in font cmbx10!
+Missing character: There is no π in font cmbx10!
+Missing character: There is no ≥ in font cmbx10!
+Missing character: There is no ‰ in font cmbx10!
+Missing character: There is no   in font cmbx10!
+Missing character: There is no ˝ in font cmbx10!
+Missing character: There is no æ in font cmbx10!
+Missing character: There is no › in font cmbx10!
+Missing character: There is no ¿ in font cmbx10!
+Missing character: There is no ‡ in font cmbx10!
+Missing character: There is no – in font cmbx10!
+Missing character: There is no Õ in font cmbx10!
+Missing character: There is no ≤ in font cmr10!
+Missing character: There is no π in font cmr10!
+Missing character: There is no ≥ in font cmr10!
+Missing character: There is no ‰ in font cmr10!
+Missing character: There is no   in font cmr10!
+Missing character: There is no ˝ in font cmr10!
+Missing character: There is no æ in font cmr10!
+Missing character: There is no › in font cmr10!
+Missing character: There is no ¿ in font cmr10!
+Missing character: There is no ‡ in font cmr10!
+Missing character: There is no – in font cmr10!
+Missing character: There is no Õ in font cmr10!
+ [46]
+Missing character: There is no ≤ in font cmbx10!
+Missing character: There is no π in font cmbx10!
+Missing character: There is no ≥ in font cmbx10!
+Missing character: There is no ‰ in font cmbx10!
+Missing character: There is no   in font cmbx10!
+Missing character: There is no ˝ in font cmbx10!
+Missing character: There is no æ in font cmbx10!
+Missing character: There is no › in font cmbx10!
+Missing character: There is no ¿ in font cmbx10!
+Missing character: There is no ‡ in font cmbx10!
+Missing character: There is no – in font cmbx10!
+Missing character: There is no Õ in font cmbx10!
+Missing character: There is no ≤ in font cmr10!
+Missing character: There is no π in font cmr10!
+Missing character: There is no ≥ in font cmr10!
+Missing character: There is no ‰ in font cmr10!
+Missing character: There is no   in font cmr10!
+Missing character: There is no ˝ in font cmr10!
+Missing character: There is no æ in font cmr10!
+Missing character: There is no › in font cmr10!
+Missing character: There is no ¿ in font cmr10!
+Missing character: There is no ‡ in font cmr10!
+Missing character: There is no – in font cmr10!
+Missing character: There is no Õ in font cmr10!
+ [47]
+Missing character: There is no £ in font cmbx10!
+Missing character: There is no ® in font cmbx10!
+Missing character: There is no ≤ in font cmbx10!
+Missing character: There is no π in font cmbx10!
+Missing character: There is no ≥ in font cmbx10!
+Missing character: There is no ‰ in font cmbx10!
+Missing character: There is no   in font cmbx10!
+Missing character: There is no ˝ in font cmbx10!
+Missing character: There is no æ in font cmbx10!
+Missing character: There is no › in font cmbx10!
+Missing character: There is no ¿ in font cmbx10!
+Missing character: There is no ‡ in font cmbx10!
+Missing character: There is no – in font cmbx10!
+Missing character: There is no Õ in font cmbx10!
+Missing character: There is no £ in font cmbx10!
+Missing character: There is no © in font cmbx10!
+Missing character: There is no £ in font cmr10!
+Missing character: There is no ® in font cmr10!
+Missing character: There is no ≤ in font cmr10!
+Missing character: There is no π in font cmr10!
+Missing character: There is no ≥ in font cmr10!
+Missing character: There is no ‰ in font cmr10!
+Missing character: There is no   in font cmr10!
+Missing character: There is no ˝ in font cmr10!
+Missing character: There is no æ in font cmr10!
+Missing character: There is no › in font cmr10!
+Missing character: There is no ¿ in font cmr10!
+Missing character: There is no ‡ in font cmr10!
+Missing character: There is no – in font cmr10!
+Missing character: There is no Õ in font cmr10!
+Missing character: There is no £ in font cmr10!
+Missing character: There is no © in font cmr10!
+ [48]
+Missing character: There is no £ in font cmbx10!
+Missing character: There is no ® in font cmbx10!
+Missing character: There is no ≤ in font cmbx10!
+Missing character: There is no π in font cmbx10!
+Missing character: There is no ≥ in font cmbx10!
+Missing character: There is no ‰ in font cmbx10!
+Missing character: There is no   in font cmbx10!
+Missing character: There is no ˝ in font cmbx10!
+Missing character: There is no æ in font cmbx10!
+Missing character: There is no › in font cmbx10!
+Missing character: There is no ¿ in font cmbx10!
+Missing character: There is no ‡ in font cmbx10!
+Missing character: There is no – in font cmbx10!
+Missing character: There is no Õ in font cmbx10!
+Missing character: There is no £ in font cmbx10!
+Missing character: There is no © in font cmbx10!
+Missing character: There is no £ in font cmr10!
+Missing character: There is no ® in font cmr10!
+Missing character: There is no ≤ in font cmr10!
+Missing character: There is no π in font cmr10!
+Missing character: There is no ≥ in font cmr10!
+Missing character: There is no ‰ in font cmr10!
+Missing character: There is no   in font cmr10!
+Missing character: There is no ˝ in font cmr10!
+Missing character: There is no æ in font cmr10!
+Missing character: There is no › in font cmr10!
+Missing character: There is no ¿ in font cmr10!
+Missing character: There is no ‡ in font cmr10!
+Missing character: There is no – in font cmr10!
+Missing character: There is no Õ in font cmr10!
+Missing character: There is no £ in font cmr10!
+Missing character: There is no © in font cmr10!
+ [49] [50] [51] [52] [53]
+Missing character: There is no ≤ in font cmbx10!
+Missing character: There is no π in font cmbx10!
+Missing character: There is no ≥ in font cmbx10!
+Missing character: There is no ‰ in font cmbx10!
+Missing character: There is no   in font cmbx10!
+Missing character: There is no ˝ in font cmbx10!
+Missing character: There is no æ in font cmbx10!
+Missing character: There is no › in font cmbx10!
+Missing character: There is no ¿ in font cmbx10!
+Missing character: There is no ‡ in font cmbx10!
+Missing character: There is no – in font cmbx10!
+Missing character: There is no Õ in font cmbx10!
+Missing character: There is no £ in font cmr10!
+Missing character: There is no ® in font cmr10!
+Missing character: There is no ≤ in font cmr10!
+Missing character: There is no π in font cmr10!
+Missing character: There is no ≥ in font cmr10!
+Missing character: There is no ‰ in font cmr10!
+Missing character: There is no   in font cmr10!
+Missing character: There is no ˝ in font cmr10!
+Missing character: There is no æ in font cmr10!
+Missing character: There is no › in font cmr10!
+Missing character: There is no ¿ in font cmr10!
+Missing character: There is no ‡ in font cmr10!
+Missing character: There is no – in font cmr10!
+Missing character: There is no Õ in font cmr10!
+Missing character: There is no £ in font cmr10!
+Missing character: There is no © in font cmr10!
+
+Overfull \hbox (36.71338pt too wide) in paragraph at lines 2165--2166
+[][]\OT1/cmr/m/n/10 RGB$\OMS/cmsy/m/n/10  !$\OT1/cmr/m/n/10 CIE XYZ.Rec709 with
+ D65 white point (CV[]BGR2XYZ, CV[]RGB2XYZ,
+ []
+
+[54]
+Overfull \hbox (9.77246pt too wide) in paragraph at lines 2201--2202
+[][]\OT1/cmr/m/n/10 RGB$\OMS/cmsy/m/n/10  !$\OT1/cmr/m/n/10 YCrCb JPEG (a.k.a. 
+Y-C-C) (CV[]BGR2YCrCb, CV[]RGB2YCrCb,
+ []
+
+
+Overfull \hbox (31.69121pt too wide) in paragraph at lines 2228--2229
+[][]\OT1/cmr/m/n/10 RGB$\OMS/cmsy/m/n/10  !$\OT1/cmr/m/n/10 HSV (CV[]BGR2HSV, C
+V[]RGB2HSV, CV[]HSV2BGR, CV[]HSV2RGB)
+ []
+
+
+Overfull \hbox (48.24684pt too wide) in paragraph at lines 2263--2264
+[][]\OT1/cmr/m/n/10 RGB$\OMS/cmsy/m/n/10  !$\OT1/cmr/m/n/10 CIE L*a*b* (CV[]BGR
+2Lab, CV[]RGB2Lab, CV[]Lab2BGR, CV[]Lab2RGB)
+ []
+
+[55]
+Overfull \hbox (49.63577pt too wide) in paragraph at lines 2322--2323
+[][]\OT1/cmr/m/n/10 RGB$\OMS/cmsy/m/n/10  !$\OT1/cmr/m/n/10 CIE L*u*v* (CV[]BGR
+2Luv, CV[]RGB2Luv, CV[]Luv2BGR, CV[]Luv2RGB)
+ []
+
+[56]
+Overfull \hbox (13.20227pt too wide) in paragraph at lines 2375--2376
+[][]\OT1/cmr/m/n/10 Bayer$\OMS/cmsy/m/n/10 !$\OT1/cmr/m/n/10 RGB (CV[]BayerBG2B
+GR, CV[]BayerGB2BGR, CV[]BayerRG2BGR,
+ []
+
+
+Overfull \hbox (40.06728pt too wide) in paragraph at lines 2375--2376
+\OT1/cmr/m/n/10 CV[]BayerGR2BGR, CV[]BayerBG2RGB, CV[]BayerGB2RGB, CV[]BayerRG2
+RGB,
+ []
+
+File: User1.eps Graphic file (type eps)
+<User1.eps> [57]
+Overfull \hbox (9.68019pt too wide) detected at line 2425
+[] [] \OT1/cmr/m/n/10 = [](\OML/cmm/m/it/10 x[]; y[]\OT1/cmr/m/n/10 ) \OMS/cmsy
+/m/n/10   []\OT1/cmr/m/n/10 (\OML/cmm/m/it/10 x[]; y[]\OT1/cmr/m/n/10 ) \OMS/cm
+sy/m/n/10   []\OT1/cmr/m/n/10 (\OML/cmm/m/it/10 x[]; y[]\OT1/cmr/m/n/10 ) + [](
+\OML/cmm/m/it/10 x[]; y[]\OT1/cmr/m/n/10 )
+ []
+
+File: User2.eps Graphic file (type eps)
+<User2.eps>
+File: User3.eps Graphic file (type eps)
+ <User3.eps> [58] [59] [60]
+File: User4.eps Graphic file (type eps)
+ <User4.eps> [61] [62]
+("C:\Documents and Settings\Administrator\Ê°åÈù¢\userguide\User guide.aux")
+
+LaTeX Warning: There were multiply-defined labels.
+
+ ) 
+Here is how much of TeX's memory you used:
+ 655 strings out of 495355
+ 8675 string characters out of 3183882
+ 61392 words of memory out of 3000000
+ 3868 multiletter control sequences out of 15000+200000
+ 5822 words of font info for 23 fonts, out of 3000000 for 9000
+ 14 hyphenation exceptions out of 8191
+ 25i,13n,19p,409b,253s stack positions out of 5000i,500n,10000p,200000b,50000s
+
+Output written on "User guide.dvi" (62 pages, 163548 bytes).
