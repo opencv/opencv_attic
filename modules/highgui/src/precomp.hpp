@@ -168,6 +168,10 @@ CvCapture * cvCreateCameraCapture_PvAPI  (const int     index);
 CvVideoWriter* cvCreateVideoWriter_GStreamer( const char* filename, int fourcc,
                                             double fps, CvSize frameSize, int is_color );
 
+CvVideoWriter* cvCreateVideoWriter_Android( const char* filename, int fourcc,
+                                            double fps, CvSize frameSize, int is_color );
+
+
 //Yannick Verdie 2010
 void cvSetModeWindow_W32(const char* name, double prop_value);
 void cvSetModeWindow_GTK(const char* name, double prop_value);

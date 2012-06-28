@@ -404,6 +404,9 @@ CV_IMPL CvVideoWriter* cvCreateVideoWriter( const char* filename, int fourcc,
         result = cvCreateVideoWriter_GStreamer(filename, fourcc, fps, frameSize, is_color);
 #endif
 
+    if (!result)
+        result = cvCreateVideoWriter_Android(filename, fourcc, fps, frameSize, is_color);
+
     if(!result)
         result = cvCreateVideoWriter_Images(filename);
 

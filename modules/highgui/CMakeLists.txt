@@ -146,6 +146,9 @@ if(HAVE_opencv_androidcamera)
   add_definitions(-DHAVE_ANDROID_NATIVE_CAMERA)#TODO: remove this line
 endif(HAVE_opencv_androidcamera)
 
+#TODO: need define
+list(APPEND highgui_srcs src/cap_android_video_capture.cpp)
+
 if(HAVE_XIMEA)
   list(APPEND highgui_srcs src/cap_ximea.cpp)
   ocv_include_directories(${XIMEA_PATH})
