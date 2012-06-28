@@ -1,0 +1,264 @@
+%!PS-Adobe-3.0 EPSF-3.0
+%%Creator: (Word2TeX)
+%Title: (C:\Documents and Settings\Administrator\My Documents\test\User1.eps)
+%%CreationDate: (Mon May 14 22:10:20 2012)
+%%BoundingBox: 0 0 135 115
+%%LanguageLevel: 2
+%%Pages: 0
+%%EndComments
+
+%%BeginDefaults
+%%PageOrientation: Portrait
+%%EndDefaults
+
+%%BeginProlog
+%
+% Display a color image.  The image is displayed in color on
+% Postscript viewers or printers that support color, otherwise
+% it is displayed as grayscale.
+%
+/buffer 512 string def
+/pixel_stream currentfile /ASCII85Decode filter def
+
+/DirectClassImage
+{
+  %
+  % Display a DirectClass image.
+  %
+  colorspace 0 eq
+  {
+    /DeviceRGB setcolorspace
+    <<
+      /ImageType 1
+      /Width columns
+      /Height rows
+      /BitsPerComponent 8
+      /Decode [0 1 0 1 0 1]
+      /ImageMatrix [columns 0 0 rows neg 0 rows]
+      compression 0 gt
+      { /DataSource pixel_stream }
+      { /DataSource pixel_stream /RunLengthDecode filter } ifelse
+    >> image
+  }
+  {
+    /DeviceCMYK setcolorspace
+    <<
+      /ImageType 1
+      /Width columns
+      /Height rows
+      /BitsPerComponent 8
+      /Decode [0 1 0 1 0 1 0 1]
+      /ImageMatrix [columns 0 0 rows neg 0 rows]
+      compression 0 gt
+      { /DataSource pixel_stream }
+      { /DataSource pixel_stream /RunLengthDecode filter } ifelse
+    >> image
+  } ifelse
+} bind def
+
+/PseudoClassImage
+{
+  %
+  % Display a PseudoClass image.
+  %
+  % Parameters:
+  %   colors: number of colors in the colormap.
+  %
+  currentfile buffer readline pop
+  token pop /colors exch def pop
+  colors 0 eq
+  {
+    %
+    % Image is grayscale.
+    %
+    /DeviceGray setcolorspace
+    <<
+      /ImageType 1
+      /Width columns
+      /Height rows
+      /BitsPerComponent 1
+      /Decode [0 1]
+      /ImageMatrix [columns 0 0 rows neg 0 rows]
+      compression 0 gt
+      { /DataSource pixel_stream }
+      {
+        /DataSource pixel_stream
+        <<
+           /K 0
+           /Columns columns
+           /Rows rows
+        >> /CCITTFaxDecode filter
+      } ifelse
+    >> image
+  }
+  {
+    %
+    % Parameters:
+    %   colormap: red, green, blue color packets.
+    %
+    /colormap colors 3 mul string def
+    currentfile colormap readhexstring pop pop
+    [ /Indexed /DeviceRGB colors 1 sub colormap ] setcolorspace
+    <<
+      /ImageType 1
+      /Width columns
+      /Height rows
+      /BitsPerComponent 8
+      /Decode [0 255]
+      /ImageMatrix [columns 0 0 rows neg 0 rows]
+      compression 0 gt
+      { /DataSource pixel_stream }
+      { /DataSource pixel_stream /RunLengthDecode filter } ifelse
+    >> image
+  } ifelse
+} bind def
+
+/DisplayImage
+{
+  %
+  % Display a DirectClass or PseudoClass image.
+  %
+  % Parameters:
+  %   x & y translation.
+  %   x & y scale.
+  %   label pointsize.
+  %   image label.
+  %   image columns & rows.
+  %   class: 0-DirectClass or 1-PseudoClass.
+  %   colorspace: 0-RGB or 1-CMYK.
+  %   compression: 0-RunlengthEncodedCompression or 1-NoCompression.
+  %   hex color packets.
+  %
+  gsave
+  currentfile buffer readline pop
+  token pop /x exch def
+  token pop /y exch def pop
+  x y translate
+  currentfile buffer readline pop
+  token pop /x exch def
+  token pop /y exch def pop
+  currentfile buffer readline pop
+  token pop /pointsize exch def pop
+  /Helvetica findfont pointsize scalefont setfont
+  x y scale
+  currentfile buffer readline pop
+  token pop /columns exch def
+  token pop /rows exch def pop
+  currentfile buffer readline pop
+  token pop /class exch def pop
+  currentfile buffer readline pop
+  token pop /colorspace exch def pop
+  currentfile buffer readline pop
+  token pop /compression exch def pop
+  class 0 gt { PseudoClassImage } { DirectClassImage } ifelse
+  grestore
+} bind def
+%%EndProlog
+%%Page:  1 1
+%%PageBoundingBox: 0 0 135 115
+userdict begin
+%%BeginData:
+DisplayImage
+0 0
+136 116
+12.000000
+136 116
+0
+0
+0
+K)^H&K)^H&K)^H&K)^H&K)^H&K)^H&K)^H&K)^H&K)^H&K)^H&K)^H&K)^H&K)^H&K)^H&K)
+a^-'*&%4!!*$!!<3$!rr<'!!!*$!!6+sJ!<3$!rr<'!!!*$!!<3&urrN3#!7:`Z!!*$!!<3$!
+rr<'!!!*$!!<3$!`W$DJrr<'!!!*$!!<3$!rrE&u!W`6#d/OaZ!<3$!rr<'!!!*$!!<3$!rr<
+%rrr`<%rr<&nrr`<%rr<&Ers/W)!!*$!!<3&ors/W)!!*$!!<3&Drr`<%rr<&nrr`<%rr<&Er
+s/W)!!*$!!<3&ors/W)!!*$!!<3&Drr`<%rr<&nrr`<%rr<&#rr`<%rr<&krr`<%rr<&Hrs/W
+)!!*$!!<3&irrN3#!6tNH!!*$!!;-9o!!*$!!7CfP!<3$!rr<'!!:p-k!<3&Drr`<%rr<&krr
+`<%rr<&#rr`<%rr<&krr`<%rr<&HrriE&!!*$!\Gl[3!<3$!o`#$o!<3$!dJj@Mrr<'!!4`%3
+!!*$!!;-9o!!*$!!3H2'!!*$!!;HKr!!*$!!7CfM!<3$!rrBJ,"98H%!!)cn"98H%!!(FH"T\
+Q&!<3&,rr`<%rr<&nrr`<%rr<&#rt>A4rr<'!!!*$!!<3$!rr<'!!!(=E"T\Q&!<3&lrsJi,!
+!*$!!<3$!rrCFG'*&%4!!*$!!<3$!rr<'!!!*$!!7(TJ!<3$!rrD`l$NU2,!<3$!rr<'!!7:`
+Z!!*$!!<3$!rr<'!!!*$!!<3$!WW*)$!<3$!qYpZu!<3$!bPq_Grr<'!!:p-n!<3$!rrC=D"9
+8H%!!)lq"98H%!!(4B"T\Q&!<3&irriE&!!*$!c2RnH!<3$!qYpZu!<3$!VZ-c!!<3$!p\t?r
+!<3$!cMn%Jrr<'!!:p-n!<3$!rrC=D"98H%!!)cn"98H%!!(=E"T\Q&!<3&irriE&!!*$!c2R
+nH!<3$!p\t?r!<3$!XT&D'!<3$!o`#$o!<3$!bPq_Grr<'!!;QQt!<3$!rrC=D"98H%!!)Zk"
+98H%!!(4B"T\Q&!<3&orriE&!!*$!c2RnH!<3$!o`#$o!<3$!YQ"q0!<3$!rr<'!!!)cn$31)
++!!*$!!<3$!cMnIVrr<'!!!*$!!<3$!rr<'!!7:`Q!!*$!!<3$!rr<&nrsA`+rr<'!!!*$!!7
+(TV!<3$!rr<'!!!*$!!<3$!rrCFG$31)+!!*$!!<3$!p\tR#!<3$!rr<'!!!%WNK)^H&K)^H&
+K)^H&K)^H&K)^H&K)^H&K)^H&K)^H&K)^H&K)^H&K)^H&K)^H&K)^H&K)^H&K)^H&K)^H&k5W
+`Ol2T/UK)_&7%KQM/!<3$!rr<'!!!*$!rr3$"rrD3]p!"BT!<3$!rr<'!!!*$!!<3$!rr<'!<
+)idMLA(;bl2U+p'U\HY<;]\qrr>:_5FD#/_Vr?3rrDr@dJjaX!<3$!rr<'!!!*$!!<3$!_>au
+Frr<'!!!*$!!<3$!rrE&u!W`6#Yl=t/rr<'!!!*$!q#:U"rr<'!!!*$!k5Y"s#f=I;!!*$!!<
+;r@$bO%4I=:kj!<7%Yq=r5!s6n2<LA$?dr]d=KVu+^EVs^HIr]^D_!;k$drr`<%rr<&qrr`<%
+rr<&Ars/W)!!*$!!<3&ors/W)!!*$!!<3&*rs/W)!!*$!!<3&irrN3#!9=+Jbln(Irr<'!p!!
+X?!<3$!s7jk's74D?Vs^G_rrAGWR.\]-[HY(!rrDr@dJj=L!<3$!p\t?r!<3$!c2S%Lrr<'!!
+!*$!o)AakrrB;'"T\Q&!<3&Es6n29!!*$!!<;r@$amD,I=:lT5Q7RYmeG&ks74D?AG]m;rrB[
+m]BRSfrr`<%rr<&qrr`<%rr<&ArriE&!!*$!T)Srorr<'!!6bE2bnL-Xrr<'!!!*$!!<3$!rr
+<'!TV1fIc0>9!bln+I!!*$!k0;<R$31)+!!*$!!<3$!a8Z;Crr<'!!1Wul!<3$!rrD`l$NU2,
+!<3$!rr<'!!9=+Jbln(Irr<'!qooMOY3TV/qZ$Wr]=[2"c0>9!bln+I!!*$!k0;EU"98H%!!)
+cn"98H%!!(:D"T\Q&!<3&lrsJi,!!*$!!<3$!rrBD*"T\Q&!<3&irriE&!!*$!i;`8j"TSQ&!
+!*&obm;2'i;`lX5<o/Bc0>9!bm7kWA,uW0_VrB,bmOOO!!*$!!<3$!rrE&CeGfXO!<3$!p\t?
+r!<3$!c2RqIrr<'!!:p-n!<3$!rrB;'"T\Q&!<3&irriE&!!*$!i;`8j"TSQ&!!*&lbln(Is$
+&aIps&('o$%H<m\^'b!2/hSp!!X?rr<'!!;k$jrr`<%rr<&nrr`<%rr<&DrriE&!!*$!o)Ajn
+rr<'!!3Q8)!<3$!rrDio"T\Q&!<3&Ts74DB_SY73!<3$!s2)Y3rlkhRY3TV/qZ$WrOHB,0c0>
+8sbm9'tL-PZ%T^\WObm;2F_>sT95Q3nEc.Dsu!!*$!!;HKr!!*$!!6>*C!<3$!rrDio"T\Q&!
+<3%srt,82!!*$!!<3$!rr<'!!!*$!h>d/m)?9d;!!*$!!<3$!rr<'!!!*$!!<7%Yq5:.Yp!)b
+$m*-6Bm\aUmA,uW0!<3$ur)AdMOM]tnqp!jp'*&%4!!*$!!<3$!rr<'!!!*$!!5\[I!<3$!rr
+<'!!!*$!!<3$!rr@ZNnGgeYl2T/UK)^H&ir@<Kl2T/UK)^H&ir@<Kl2T/UK)^H&K)^H&K)^H&
+K)^H&K)^H&K)^H&K)^H&K)^H&K)^H&K)^H&K)^H&K)^H&K)^H&K)`Rb'*&%4!!*$!!<3$!rr<
+'!!!*$!!6+sJ!<3$!rr<'!!!*$!!<3&urrN3#!7:`Z!!*$!!<3$!rr<'!!!*$!!<3$!`W$DJr
+r<'!!!*$!!<3$!rrE&u!W`6#d/OaZ!<3$!rr<'!!!*$!!<3$!rr<%rrr`<%rr<&nrr`<%rr<&
+Ers/W)!!*$!!<3&ors/W)!!*$!!<3&Drr`<%rr<&nrr`<%rr<&Ers/W)!!*$!!<3&ors/W)!!
+*$!!<3&Drr`<%rr<&nrr`<%rr<&#rr`<%rr<&krr`<%rr<&Hrs/W)!!*$!!<3&irrN3#!6tNH
+!!*$!!;-9o!!*$!!7CfP!<3$!rr<'!!:p-k!<3&Drr`<%rr<&krr`<%rr<&#rr`<%rr<&krr`<
+%rr<&HrriE&!!*$!\Gl[3!<3$!o`#$o!<3$!dJj@Mrr<'!!4`%3!!*$!!;-9o!!*$!!3H2'!!
+*$!!;HKr!!*$!!7CfM!<3$!rrBJ,"98H%!!)cn"98H%!!(FH"T\Q&!<3&,rr`<%rr<&nrr`<%
+rr<&#rt>A4rr<'!!!*$!!<3$!rr<'!!!(=E"T\Q&!<3&lrsJi,!!*$!!<3$!rrCFG'*&%4!!*
+$!!<3$!rr<'!!!*$!!7(TJ!<3$!rrD`l$NU2,!<3$!rr<'!!7:`Z!!*$!!<3$!rr<'!!!*$!!
+<3$!WW*)$!<3$!qYpZu!<3$!bPq_Grr<'!!:p-n!<3$!rrC=D"98H%!!)lq"98H%!!(4B"T\Q
+&!<3&irriE&!!*$!c2RnH!<3$!qYpZu!<3$!VZ-c!!<3$!p\t?r!<3$!cMn%Jrr<'!!:p-n!<
+3$!rrC=D"98H%!!)cn"98H%!!(=E"T\Q&!<3&irriE&!!*$!c2RnH!<3$!p\t?r!<3$!XT&D'
+!<3$!o`#$o!<3$!bPq_Grr<'!!;QQt!<3$!rrC=D"98H%!!)Zk"98H%!!(4B"T\Q&!<3&orri
+E&!!*$!c2RnH!<3$!o`#$o!<3$!YQ"q0!<3$!rr<'!!!)cn$31)+!!*$!!<3$!cMnIVrr<'!!
+!*$!!<3$!rr<'!!7:`Q!!*$!!<3$!rr<&nrsA`+rr<'!!!*$!!7(TV!<3$!rr<'!!!*$!!<3$
+!rrCFG$31)+!!*$!!<3$!p\tR#!<3$!rr<'!!!%WNK)^H&K)^H&K)^H&K)^H&K)^H&K)^H&K)
+^H&K)^H&K)^H&K)^H&K)^H&K)^H&K)^H&K)^H&K)^H&K)^H&K)^H&K)b`J%KQM/!<3$!rr<'!
+!!*$!rr3$"rrCIH&-)_1!!*$!!<3$!rr<'!!!'k8%KQM/!<3$!rr<'!!!*$!rr3$"rrCIH&-)
+_1!!*$!!<3$!rr<'!!!'k8%KQM/!<3$!rr<'!!!*$!rr3$"rrB;'#QXl)!<3$!rrDio#QXl)!
+<3$!rrC@E"98H%!!)lq"98H%!!(1A#QXl)!<3$!rrDio#QXl)!<3$!rrC@E"98H%!!)lq"98H
+%!!(1A#QXl)!<3$!rrDio#QXl)!<3$!rrBD*#QXl)!<3$!rrDWi!W`6#cMn"I!<3$!p\t?r!<
+3$!c2S%Lrr<'!!!*$!o)AakrrC@E"98H%!!)cn"98H%!!(:D#QXl)!<3$!rrDWi!W`6#Yl=k,
+rr<'!!4i+4!!*$!!;c]u!!*$!!6Y<F!<3$!rrBV0"98H%!!)lq"98H%!!(1A"T\Q&!<3%jrri
+E&!!*$![f6[7!<3$!rr<'!!!((>"T\Q&!<3&-rsA`+rr<'!!!*$!!6>*C!<3$!rrAPg"T\Q&!
+<3&lrsJi,!!*$!!<3$!rrCIH"98H%!!)cn"98H%!!(:D"T\Q&!<3&lrsJi,!!*$!!<3$!rrCI
+H"98H%!!)cn"98H%!!(:D"T\Q&!<3&lrsJi,!!*$!!<3$!rrBD*"T\Q&!<3&irriE&!!*$!cM
+n"I!<3$!p\t?r!<3$!c2RqIrr<'!!:p-n!<3$!rrC@E"98H%!!)cn"98H%!!(:D"T\Q&!<3&i
+rriE&!!*$!Yl=k,rr<'!!:p-n!<3$!rrC@E"98H%!!)cn"98H%!!(:D"T\Q&!<3&irriE&!!*
+$!cMn"I!<3$!p\t?r!<3$!c2RqIrr<'!!:p-n!<3$!rrB2$"T\Q&!<3&orriE&!!*$!cMn"I!
+<3$!p\t?r!<3$!a8Z;Crr<'!!;QQt!<3$!rrC@E"98H%!!)cn"98H%!!((>"T\Q&!<3&orriE
+&!!*$!VuI>/rr<'!!!*$!!<3$!rr<'!!7Cf[!!*$!!<3$!rr<'!!!*$!!<3$!_>b)Irr<'!!!
+*$!!<3$!rr<'!!7Cf[!!*$!!<3$!rr<'!!!*$!!<3$!_>b)Irr<'!!!*$!!<3$!rr<'!!.t6&
+s+:9&s+:9&s+:9&s+:9&s+:9&s+:9&s+:9&s+:9&s+:9&s+:9&s+:9&s+:9&s+:9&s+:9&s+:
+9&s+:9&s+:9&s8)a/!!*$!!<3$!rr<'!!!*$!!<3$!`W$DJrr<'!!!*$!!<3$!rrE&u!W`6#d
+/OaZ!<3$!rr<'!!!*$!!<3$!rr<&<rsf&/!!*$!!<3$!rr<'!!<3!"!<3&Grt>A4rr<'!!!*$
+!!<3$!rr<'!!!&nr"98H%!!)cn"98H%!!(=E#QXl)!<3$!rrDio#QXl)!<3$!rrC=D"98H%!!
+)cn"98H%!!(=E#QXl)!<3$!rrDio#QXl)!<3$!rrC=D"98H%!!)cn"98H%!!',#"98H%!!)Zk
+"98H%!!(FH#QXl)!<3$!rrDWi!W`6#c2RnH!<3$!o`#$o!<3$!dJjIPrr<'!!!*$!o)AakrrC
+=D"98H%!!)Zk"98H%!!',#"98H%!!)Zk"98H%!!(FH"T\Q&!<3&/rr`<%rr<&krr`<%rr<&Hr
+riE&!!*$!\Gl[3!<3$!o`#$o!<3$!XT&D'!<3$!p\t?r!<3$!dJj@Mrr<'!!4Dh0!!*$!!;HK
+r!!*$!!7CfM!<3$!rrBJ,"98H%!!)cn"98H%!!',#'*&%4!!*$!!<3$!rr<'!!!*$!!7(TJ!<
+3$!rrD`l$NU2,!<3$!rr<'!!7:`Z!!*$!!<3$!rr<'!!!*$!!<3$!cMn%Jrr<'!!;6@"!<3$!
+rr<'!!!*$!d/OaZ!<3$!rr<'!!!*$!!<3$!rr<%urr`<%rr<&qrr`<%rr<&BrriE&!!*$!o)A
+jnrr<'!!6tNH!!*$!!;c]u!!*$!!6bBG!<3$!rrDWi"T\Q&!<3&Drr`<%rr<&qrr`<%rr<%rr
+r`<%rr<&nrr`<%rr<&ErriE&!!*$!o)Ajnrr<'!!6tNH!!*$!!;HKr!!*$!!7(TJ!<3$!rrDW
+i"T\Q&!<3&Drr`<%rr<&nrr`<%rr<&#rr`<%rr<&krr`<%rr<&BrriE&!!*$!q#:Ktrr<'!!6
+tNH!!*$!!;-9o!!*$!!6bBG!<3$!rrDio"T\Q&!<3&Drr`<%rr<&krr`<%rr<&&rsA`+rr<'!
+!!*$!!;HL#!!*$!!<3$!rr<&Ert,82!!*$!!<3$!rr<'!!!*$!d/OFQ!<3$!rr<'!!!)cn$31
+)+!!*$!!<3$!cMnIVrr<'!!!*$!!<3$!rr<'!!7:`Q!!*$!!<3$!rr<&nrsA`+rr<'!!!*$!!
+.t6&s+:9&s+:9&s+:9&s+:9&s+:9&s+:9&s+:9&s+:9&s+:9&s+:9&s+:9&s+:9&s+:9&s+:9
+&s+:9&s+:9&s+:9&s+:9&s-3Nb<Y)!Xs+:9&s69Q6~>
+
+%%EndData
+end
+%%PageTrailer
+%%Trailer
+%%BoundingBox: 0 0 135 115
+%%EOF
