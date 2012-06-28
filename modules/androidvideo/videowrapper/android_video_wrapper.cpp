@@ -13,7 +13,7 @@
 #include <binder/IServiceManager.h>
 #include <media/IMediaPlayerService.h>
 #include <media/IMediaRecorder.h>
-#include <media/MediaRecorder.h>
+#include <media/mediarecorder.h>
 
 #include <gui/ISurfaceTexture.h>
 #include <gui/SurfaceTextureClient.h>

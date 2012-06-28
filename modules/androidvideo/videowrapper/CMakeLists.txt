@@ -10,6 +10,7 @@ INCLUDE_DIRECTORIES(BEFORE
 	${ANDROID_SOURCE_TREE}/system/core/include
 	${ANDROID_SOURCE_TREE}/hardware/libhardware/include
 	${ANDROID_SOURCE_TREE}/frameworks/base/native/include
+	${ANDROID_SOURCE_TREE}/frameworks/base/opengl/include
 	)
 
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH FALSE)
@@ -28,9 +29,9 @@ SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-z,noexecstack")
 
 ADD_LIBRARY(${the_target} SHARED android_video_wrapper.cpp )
 
-string(REGEX REPLACE "[.]" "_" LIBRARY_DEF ${ANDROID_VERSION})
+#string(REGEX REPLACE "[.]" "_" LIBRARY_DEF ${ANDROID_VERSION})
 
-target_link_libraries(${the_target} c m dl utils camera_client binder media log)
+target_link_libraries(${the_target} c m dl utils camera_client binder media log android)
 
 if(NOT ANDROID_VERSION VERSION_LESS "3.0.0")
     target_link_libraries(${the_target} gui )
