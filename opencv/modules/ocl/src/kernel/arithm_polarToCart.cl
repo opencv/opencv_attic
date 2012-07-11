@@ -43,9 +43,7 @@
 //
 //M*/
 
-#if defined (__ATI__)
-#pragma OPENCL EXTENSION cl_amd_fp64:enable
-#elif defined (__NVIDIA__)
+#if defined (DOUBLE_SUPPORT)
 #pragma OPENCL EXTENSION cl_khr_fp64:enable
 #endif
 
@@ -83,6 +81,8 @@ __kernel void arithm_polarToCart_mag_D5 (__global float *src1, int src1_step, in
         *((__global float *)((__global char *)dst2 + dst2_index)) = b;
     }
 }
+
+#if defined (DOUBLE_SUPPORT)
 __kernel void arithm_polarToCart_mag_D6 (__global double *src1, int src1_step, int src1_offset,//magnitue
                                          __global double *src2, int src2_step, int src2_offset,//angle
                                          __global double *dst1, int dst1_step, int dst1_offset, 
@@ -112,6 +112,7 @@ __kernel void arithm_polarToCart_mag_D6 (__global double *src1, int src1_step, i
         *((__global double *)((__global char *)dst2 + dst2_index)) = b;
     }
 }
+#endif
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////polarToCart without magnitude//////////////////////////////
@@ -142,6 +143,8 @@ __kernel void arithm_polarToCart_D5 (__global float *src,  int src_step,  int sr
         *((__global float *)((__global char *)dst2 + dst2_index)) = b;
     }
 }
+
+#if defined (DOUBLE_SUPPORT)
 __kernel void arithm_polarToCart_D6 (__global float *src,  int src_step,  int src_offset,//angle
                                      __global float *dst1, int dst1_step, int dst1_offset, 
                                      __global float *dst2, int dst2_step, int dst2_offset, 
@@ -168,3 +171,4 @@ __kernel void arithm_polarToCart_D6 (__global float *src,  int src_step,  int sr
         *((__global double *)((__global char *)dst2 + dst2_index)) = b;
     }
 }
+#endif

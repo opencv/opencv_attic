@@ -43,7 +43,7 @@
 //
 //M*/
 
-#include "opencv2/ocl/Threadsafe.h"
+#include "Threadsafe.h"
 
 
 CriticalSection::CriticalSection()

@@ -200,7 +200,7 @@ TEST_P(Haar, FaceDetect)
 
 
 //INSTANTIATE_TEST_CASE_P(HaarTestBase, Haar, Combine(Values(1),
-//            Values(1)));
+  //          Values(1)));
 
 
 #endif // HAVE_OPENCL

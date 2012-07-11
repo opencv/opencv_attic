@@ -1488,8 +1488,6 @@ TEST_P(MagnitudeSqr, Mat)
 }
 
 
-
-
 struct AddWeighted : ArithmTestBase {};
 
 TEST_P(AddWeighted, Mat)
@@ -1522,6 +1520,7 @@ TEST_P(AddWeighted, Mat)
 
 
 //********test****************
+
 INSTANTIATE_TEST_CASE_P(Arithm, Lut, Combine(
                             Values(CV_8UC1, CV_8UC4),
                             Values(false))); // Values(false) is the reserved parameter
@@ -1572,7 +1571,7 @@ INSTANTIATE_TEST_CASE_P(Arithm, Flip, Combine(
                             Values(false))); // Values(false) is the reserved parameter
 
 INSTANTIATE_TEST_CASE_P(Arithm, MinMax, Combine(
-                            Values(CV_8U, CV_32S, CV_32F),
+                            Values(CV_8UC1, CV_32SC1, CV_32FC1),
                             Values(false)));
 
 INSTANTIATE_TEST_CASE_P(Arithm, MinMaxLoc, Combine(
@@ -1621,7 +1620,6 @@ INSTANTIATE_TEST_CASE_P(Arithm, MagnitudeSqr, Combine(
 INSTANTIATE_TEST_CASE_P(Arithm, AddWeighted, Combine(
                             Values(CV_8UC1, CV_32SC1, CV_32FC1),
                             Values(false))); // Values(false) is the reserved parameter
-
 
 
 

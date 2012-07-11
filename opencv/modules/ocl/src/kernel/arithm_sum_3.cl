@@ -44,10 +44,13 @@
 //M*/
 
 /**************************************PUBLICFUNC*************************************/
-#if defined (__ATI__)
-#pragma OPENCL EXTENSION cl_amd_fp64:enable
-#elif defined (__NVIDIA__)
+#if defined (DOUBLE_SUPPORT)
 #pragma OPENCL EXTENSION cl_khr_fp64:enable
+#define RES_TYPE double4
+#define CONVERT_RES_TYPE convert_double4
+#else
+#define RES_TYPE float4
+#define CONVERT_RES_TYPE convert_float4
 #endif
 
 #if defined (DEPTH_0)
@@ -157,22 +160,22 @@
 #endif
 
 __kernel void arithm_op_sum_3 (int cols,int invalid_cols,int offset,int elemnum,int groupnum,  
-                                __global VEC_TYPE *src, __global double4 *dst)
+                                __global VEC_TYPE *src, __global RES_TYPE *dst)
 {
    unsigned int lid = get_local_id(0);
    unsigned int gid = get_group_id(0);
    unsigned int id = get_global_id(0);
    unsigned int idx = offset + id + (id  / cols) * invalid_cols;
    idx = idx * 3;
-   __local double4 localmem_sum1[128];
-   __local double4 localmem_sum2[128];
-   __local double4 localmem_sum3[128];
-   double4 sum1 = 0,sum2 = 0,sum3 = 0,temp1,temp2,temp3;
+   __local RES_TYPE localmem_sum1[128];
+   __local RES_TYPE localmem_sum2[128];
+   __local RES_TYPE localmem_sum3[128];
+   RES_TYPE sum1 = 0,sum2 = 0,sum3 = 0,temp1,temp2,temp3;
    if(id < elemnum)
    {
-       temp1 = convert_double4(src[idx]);
-       temp2 = convert_double4(src[idx+1]);
-       temp3 = convert_double4(src[idx+2]);
+       temp1 = CONVERT_RES_TYPE(src[idx]);
+       temp2 = CONVERT_RES_TYPE(src[idx+1]);
+       temp3 = CONVERT_RES_TYPE(src[idx+2]);
        if(id % cols == 0 ) 
        {
            repeat_s(temp1,temp2,temp3);
@@ -195,9 +198,9 @@ __kernel void arithm_op_sum_3 (int cols,int invalid_cols,int offset,int elemnum,
    {
        idx = offset + id + (id / cols) * invalid_cols;
        idx = idx * 3;
-       temp1 = convert_double4(src[idx]);
-       temp2 = convert_double4(src[idx+1]);
-       temp3 = convert_double4(src[idx+2]);
+       temp1 = CONVERT_RES_TYPE(src[idx]);
+       temp2 = CONVERT_RES_TYPE(src[idx+1]);
+       temp3 = CONVERT_RES_TYPE(src[idx+2]);
        if(id % cols == 0 ) 
        {
                repeat_s(temp1,temp2,temp3);

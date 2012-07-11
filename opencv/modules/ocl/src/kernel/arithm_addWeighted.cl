@@ -43,11 +43,7 @@
 //
 //M*/
 #if defined DOUBLE_SUPPORT
-#if defined (__ATI__)
-#pragma OPENCL EXTENSION cl_amd_fp64:enable
-#elif defined (__NVIDIA__)
 #pragma OPENCL EXTENSION cl_khr_fp64:enable
-#endif
 typedef double F;
 #else
 typedef float F;
@@ -224,7 +220,7 @@ __kernel void addWeighted_D4 (__global int *src1, F alpha,int src1_step,int src1
         int4 src2_data = vload4(0, (__global int *)((__global char *)src2 + src2_index));
         int4 dst_data = *((__global int4 *)((__global char *)dst + dst_index));
        // double4   tmp = convert_double4(src1_data) * alpha + convert_double4(src2_data) * beta + gama ;
-         double4 tmp;
+         float4 tmp;
         tmp.x = src1_data.x * alpha + src2_data.x * beta + gama;
         tmp.y = src1_data.y * alpha + src2_data.y * beta + gama;
         tmp.z = src1_data.z * alpha + src2_data.z * beta + gama;
@@ -289,7 +285,7 @@ __kernel void addWeighted_D5 (__global float *src1, F alpha,int src1_step,int sr
 
 }
 
-
+#if defined (DOUBLE_SUPPORT)
 __kernel void addWeighted_D6 (__global double *src1, F alpha,int src1_step,int src1_offset,
                               __global double *src2, F beta, int src2_step,int src2_offset,
                               F gama,
@@ -333,3 +329,4 @@ __kernel void addWeighted_D6 (__global double *src1, F alpha,int src1_step,int s
     }
 
 }
+#endif

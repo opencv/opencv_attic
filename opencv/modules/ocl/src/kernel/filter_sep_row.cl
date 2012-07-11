@@ -52,42 +52,6 @@
 #ifdef BORDER_CONSTANT
 //BORDER_CONSTANT:      iiiiii|abcdefgh|iiiiiii
 #define ELEM(i,l_edge,r_edge,elem1,elem2) (i)<(l_edge) | (i) >= (r_edge) ? (elem1) : (elem2)
-//                           License Agreement
-//                For Open Source Computer Vision Library
-//
-// Copyright (C) 2010-2012, Institute Of Software Chinese Academy Of Science, all rights reserved.
-// Copyright (C) 2010-2012, Advanced Micro Devices, Inc., all rights reserved.
-// Third party copyrights are property of their respective owners.
-//
-// @Authors
-//    Niko Li, Niko.li@amd.com
-//
-// Redistribution and use in source and binary forms, with or without modification,
-// are permitted provided that the following conditions are met:
-//
-//   * Redistribution's of source code must retain the above copyright notice,
-//     this list of conditions and the following disclaimer.
-//
-//   * Redistribution's in binary form must reproduce the above copyright notice,
-//     this list of conditions and the following disclaimer in the documentation
-//     and/or other oclMaterials provided with the distribution.
-//
-//   * The name of the copyright holders may not be used to endorse or promote products
-//     derived from this software without specific prior written permission.
-//
-// This software is provided by the copyright holders and contributors as is and
-// any express or implied warranties, including, but not limited to, the implied
-// warranties of merchantability and fitness for a particular purpose are disclaimed.
-// In no event shall the Intel Corporation or contributors be liable for any direct,
-// indirect, incidental, special, exemplary, or consequential damages
-// (including, but not limited to, procurement of substitute goods or services;
-// loss of use, data, or profits; or business interruption) however caused
-// and on any theory of liability, whether in contract, strict liability,
-// or tort (including negligence or otherwise) arising in any way out of
-// the use of this software, even if advised of the possibility of such damage.
-//
-//
-
 #endif
 
 #ifdef BORDER_REPLICATE
@@ -158,10 +122,13 @@ __kernel __attribute__((reqd_work_group_size(LSIZE0,LSIZE1,1))) void row_filter_
 
 	__local uchar4 LDS_DAT[LSIZE1][READ_TIMES_ROW*LSIZE0+1];
 	#ifdef BORDER_CONSTANT
+	int end_addr = mad24(src_whole_rows - 1,src_step_in_pixel,src_whole_cols);
 	//read pixels from src
 	for(i = 0;i<READ_TIMES_ROW;i++)
 	{
-		temp[i] = *(__global uchar4*)&src[start_addr+i*LSIZE0*4];
+		int current_addr = start_addr+i*LSIZE0*4;
+		current_addr = ((current_addr < end_addr) && (current_addr > 0)) ? current_addr : 0;
+		temp[i] = *(__global uchar4*)&src[current_addr];
 	}
 	//judge if read out of boundary
 	for(i = 0;i<READ_TIMES_ROW;i++)
@@ -277,10 +244,13 @@ __kernel __attribute__((reqd_work_group_size(LSIZE0,LSIZE1,1))) void row_filter_
 
 	__local uchar4 LDS_DAT[LSIZE1][READ_TIMES_ROW*LSIZE0+1];
 	#ifdef BORDER_CONSTANT
+	int end_addr = mad24(src_whole_rows - 1,src_step_in_pixel,src_whole_cols);
 	//read pixels from src
 	for(i = 0;i<READ_TIMES_ROW;i++)
 	{
-		temp[i] = src[start_addr+i*LSIZE0];
+		int current_addr = start_addr+i*LSIZE0;
+		current_addr = ((current_addr < end_addr) && (current_addr > 0)) ? current_addr : 0;
+		temp[i] = src[current_addr];
 	}
 	//judge if read out of boundary
 	for(i = 0;i<READ_TIMES_ROW;i++)
@@ -357,10 +327,13 @@ __kernel __attribute__((reqd_work_group_size(LSIZE0,LSIZE1,1))) void row_filter_
 
 	__local float LDS_DAT[LSIZE1][READ_TIMES_ROW*LSIZE0+1];
 	#ifdef BORDER_CONSTANT
+	int end_addr = mad24(src_whole_rows - 1,src_step_in_pixel,src_whole_cols);
 	//read pixels from src
 	for(i = 0;i<READ_TIMES_ROW;i++)
 	{
-		temp[i] = src[start_addr+i*LSIZE0];
+		int current_addr = start_addr+i*LSIZE0;
+		current_addr = ((current_addr < end_addr) && (current_addr > 0)) ? current_addr : 0;
+		temp[i] = src[current_addr];
 	}
 	//judge if read out of boundary
 	for(i = 0;i<READ_TIMES_ROW;i++)
@@ -437,10 +410,13 @@ __kernel __attribute__((reqd_work_group_size(LSIZE0,LSIZE1,1))) void row_filter_
 
 	__local float4 LDS_DAT[LSIZE1][READ_TIMES_ROW*LSIZE0+1];
 	#ifdef BORDER_CONSTANT
+	int end_addr = mad24(src_whole_rows - 1,src_step_in_pixel,src_whole_cols);
 	//read pixels from src
 	for(i = 0;i<READ_TIMES_ROW;i++)
 	{
-		temp[i] = src[start_addr+i*LSIZE0];
+		int current_addr = start_addr+i*LSIZE0;
+		current_addr = ((current_addr < end_addr) && (current_addr > 0)) ? current_addr : 0;
+		temp[i] = src[current_addr];
 	}
 	//judge if read out of boundary
 	for(i = 0;i<READ_TIMES_ROW;i++)

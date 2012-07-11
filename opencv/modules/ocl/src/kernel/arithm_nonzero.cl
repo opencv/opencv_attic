@@ -1,4 +1,4 @@
-/*M///////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////
 //
 //  IMPORTANT: READ BEFORE DOWNLOADING, COPYING, INSTALLING OR USING.
 //
@@ -41,12 +41,10 @@
 // or tort (including negligence or otherwise) arising in any way out of
 // the use of this software, even if advised of the possibility of such damage.
 //
-//M*/
+///
 
 /**************************************PUBLICFUNC*************************************/
-#if defined (__ATI__)
-#pragma OPENCL EXTENSION cl_amd_fp64:enable
-#elif defined (__NVIDIA__)
+#if defined (DOUBLE_SUPPORT)
 #pragma OPENCL EXTENSION cl_khr_fp64:enable
 #endif
 

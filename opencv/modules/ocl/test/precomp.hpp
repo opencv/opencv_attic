@@ -67,7 +67,5 @@
 #include "interpolation.hpp"
 //#include "add_test_info.h"
 
-//#define  PERF_TEST_OCL 1
-
 #endif
 

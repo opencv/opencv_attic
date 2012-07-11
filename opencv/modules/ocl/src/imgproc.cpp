@@ -22,6 +22,7 @@
 //    Zero Lin, Zero.Lin@amd.com
 //    Zhang Ying, zhangying913@gmail.com
 //    Xu Pang, pangxu010@163.com
+//    Wu Zailong, bullet@yeah.net
 //
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -50,9 +51,11 @@
 //M*/
 
 #include "precomp.hpp"
+#include <iomanip>
 
 using namespace cv;
 using namespace cv::ocl;
+using namespace std;
 
 #if !defined (HAVE_OPENCL)
 
@@ -74,6 +77,8 @@ void cv::ocl::resize(const oclMat &, oclMat &, Size, double, double, int)
 {
     throw_nogpu();
 }
+void cv::ocl::remap(const oclMat&, oclMat&, oclMat&, oclMat&, int, int ,const Scalar&) { throw_nogpu(); }
+
 void cv::ocl::copyMakeBorder(const oclMat &, oclMat &, int, int, int, int, const Scalar &)
 {
     throw_nogpu();
@@ -86,7 +91,7 @@ void cv::ocl::warpPerspective(const oclMat &, oclMat &, const Mat &, Size, int)
 {
     throw_nogpu();
 }
-void cv::ocl::integral(oclMat &, oclMat &, oclMat &)
+void cv::ocl::integral(const oclMat &, oclMat &, oclMat &)
 {
     throw_nogpu();
 }
@@ -107,12 +112,12 @@ namespace cv
 
         ////////////////////////////////////OpenCL kernel strings//////////////////////////
         extern const char *meanShift;
-        extern const char *ms_image_opt;
         extern const char *img_proc;
         extern const char *imgproc_copymakeboder;
         extern const char *imgproc_median;
         extern const char *imgproc_threshold;
         extern const char *imgproc_resize;
+        extern const char *imgproc_remap;
         extern const char *imgproc_warpAffine;
         extern const char *imgproc_warpPerspective;
         extern const char *imgproc_integral_sum;
@@ -242,7 +247,81 @@ namespace cv
 
             return thresh;
         }
+    ////////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////   remap   //////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////
 
+        void remap( const oclMat& src, oclMat& dst, oclMat& map1, oclMat& map2, int interpolation, int borderType, const Scalar& borderValue )
+        {
+            Context *clCxt = src.clCxt;
+            CV_Assert(interpolation == INTER_LINEAR || interpolation == INTER_NEAREST 
+                    || interpolation == INTER_CUBIC || interpolation== INTER_LANCZOS4);
+            CV_Assert((map1.type() == CV_16SC2)&&(!map2.data) || (map1.type()== CV_32FC2)&&!map2.data);//more
+            CV_Assert((!map2.data || map2.size()== map1.size()));
+
+            dst.create(map1.size(), src.type());
+            int depth = src.depth(), map_depth = map1.depth();
+
+            string kernelName;
+
+            if( map1.type() == CV_32FC2 && !map2.data )
+            {
+                if(interpolation == INTER_LINEAR && borderType == BORDER_CONSTANT)
+                    kernelName = "remapLNFConstant";
+                else if(interpolation == INTER_NEAREST && borderType == BORDER_CONSTANT)
+                    kernelName = "remapNNFConstant";
+            }
+            else if(map1.type() == CV_16SC2 && !map2.data)
+            {
+                if(interpolation == INTER_LINEAR && borderType == BORDER_CONSTANT)
+                    kernelName = "remapLNSConstant";
+                else if(interpolation == INTER_NEAREST && borderType == BORDER_CONSTANT)
+                    kernelName = "remapNNSConstant";
+
+            }
+            int type = src.type();
+            size_t blkSizeX = 16, blkSizeY = 16;
+            size_t glbSizeX;
+
+            if(src.type() == CV_8UC1 || src.type() == CV_8UC2 || src.type() == CV_8UC4) 
+            {
+                size_t cols = (dst.cols + dst.offset%4 + 3)/4;
+                glbSizeX = cols %blkSizeX==0 ? cols : (cols/blkSizeX+1)*blkSizeX;
+            }
+            else
+            {
+                glbSizeX = dst.cols%blkSizeX==0 ? dst.cols : (dst.cols/blkSizeX+1)*blkSizeX;
+            }
+            size_t glbSizeY = dst.rows%blkSizeY==0 ? dst.rows : (dst.rows/blkSizeY+1)*blkSizeY;
+            size_t globalThreads[3] = {glbSizeX,glbSizeY,1};
+            size_t localThreads[3] = {blkSizeX,blkSizeY,1};
+
+            vector< pair<size_t, const void *> > args;
+            if(map1.channels() == 2)
+            {
+                args.push_back( make_pair(sizeof(cl_mem),(void*)&dst.data));
+                args.push_back( make_pair(sizeof(cl_mem),(void*)&src.data));
+                args.push_back( make_pair(sizeof(cl_mem),(void*)&map1.data));
+                args.push_back( make_pair(sizeof(cl_int),(void*)&dst.offset));
+                args.push_back( make_pair(sizeof(cl_int),(void*)&src.offset));
+                args.push_back( make_pair(sizeof(cl_int),(void*)&map1.offset));
+                args.push_back( make_pair(sizeof(cl_int),(void*)&dst.step));
+                args.push_back( make_pair(sizeof(cl_int),(void*)&src.step));
+                args.push_back( make_pair(sizeof(cl_int),(void*)&map1.step));
+                args.push_back( make_pair(sizeof(cl_int),(void*)&src.cols));
+                args.push_back( make_pair(sizeof(cl_int),(void*)&src.rows));
+                args.push_back( make_pair(sizeof(cl_int),(void*)&dst.cols));
+                args.push_back( make_pair(sizeof(cl_int),(void*)&dst.rows));
+                args.push_back( make_pair(sizeof(cl_int),(void*)&map1.cols));
+                args.push_back( make_pair(sizeof(cl_int),(void*)&map1.rows));
+                args.push_back( make_pair(sizeof(cl_double4),(void*)&borderValue));
+            }
+            openCLExecuteKernel(clCxt,&imgproc_remap,kernelName,globalThreads,localThreads,args,src.channels(),src.depth());
+
+        
+
+    }	
+    
         ////////////////////////////////////////////////////////////////////////////////////////////
         // resize
 
@@ -718,9 +797,13 @@ namespace cv
         ////////////////////////////////////////////////////////////////////////
         // integral
 
-        void integral(oclMat &src, oclMat &sum, oclMat &sqsum)
+        void integral(const oclMat &src, oclMat &sum, oclMat &sqsum)
         {
             CV_Assert(src.type() == CV_8UC1);
+            if(src.clCxt->impl->double_support == 0 && src.depth() ==CV_64F)
+            {
+                CV_Error(-217,"select device don't support double");
+            }
             int vlen = 4;
             int offset = src.offset / vlen;
             int pre_invalid = src.offset % vlen;
@@ -763,7 +846,7 @@ namespace cv
             openCLExecuteKernel(src.clCxt, &imgproc_integral, "integral_rows", gt2, lt2, args, -1, -1);
             //cout << "tested" << endl;
         }
-        void integral(oclMat &src, oclMat &sum)
+        void integral(const oclMat &src, oclMat &sum)
         {
             CV_Assert(src.type() == CV_8UC1);
             int vlen = 4;
@@ -899,6 +982,10 @@ namespace cv
         void cornerHarris(const oclMat &src, oclMat &dst, int blockSize, int ksize,
                           double k, int borderType)
         {
+            if(src.clCxt->impl->double_support == 0 && src.depth() ==CV_64F)
+            {
+                CV_Error(-217,"select device don't support double");
+            }
             oclMat Dx, Dy;
             CV_Assert(borderType == cv::BORDER_REFLECT101 || borderType == cv::BORDER_REPLICATE || borderType == cv::BORDER_REFLECT);
             extractCovData(src, Dx, Dy, blockSize, ksize, borderType);
@@ -908,6 +995,10 @@ namespace cv
 
         void cornerMinEigenVal(const oclMat &src, oclMat &dst, int blockSize, int ksize, int borderType)
         {
+            if(src.clCxt->impl->double_support == 0 && src.depth() ==CV_64F)
+            {
+                CV_Error(-217,"select device don't support double");
+            }
             oclMat Dx, Dy;
             CV_Assert(borderType == cv::BORDER_REFLECT101 || borderType == cv::BORDER_REPLICATE || borderType == cv::BORDER_REFLECT);
             extractCovData(src, Dx, Dy, blockSize, ksize, borderType);
@@ -920,46 +1011,6 @@ namespace cv
             CV_Assert( (src.cols == dst.cols) && (src.rows == dst.rows) );
             CV_Assert( !(dst.step & 0x3) );
             Context *clCxt = src.clCxt;
-
-            //#define IMG_BUFFER
-#ifdef IMG_BUFFER
-            cl_int status;
-            const cl_image_format image_format = { CL_RGBA, CL_UNSIGNED_INT8 };
-
-            //create src image buffer
-            cl_mem src_img = clCreateImage2D( clCxt->clGpuContext, CL_MEM_READ_ONLY, &image_format,
-                                              src.cols, src.rows, 0, NULL, &status );
-            if(status != CL_SUCCESS)
-            {
-                printf("Error: Creating image failure!(%d)\n", status);
-                return;
-            }
-
-            //create dst image buffer
-            cl_mem dst_img = clCreateImage2D( clCxt->clGpuContext, CL_MEM_WRITE_ONLY, &image_format,
-                                              src.cols, src.rows, 0, NULL, &status );
-            if(status != CL_SUCCESS)
-            {
-                printf("Error: Creating image failure!(%d)\n", status);
-                return;
-            }
-
-            //copy src data to src image buffer
-            size_t src_origin[3] = {0, 0, 0};
-            size_t src_region[3] = {src.cols, 1, 1};
-
-            for(int i = 0; i < src.rows; i++)
-            {
-                src_origin[1] = i;
-                status = clEnqueueCopyBufferToImage( clCxt->clGpuCmdQueue, (cl_mem)src.data, src_img,
-                                                     src.offset + i * src.step, src_origin, src_region, 0, NULL, NULL );
-                if(status != CL_SUCCESS)
-                {
-                    printf("Error: Copying buffer to image fails!(%d)\n", status);
-                    return;
-                }
-            }
-#endif
 
             //Arrange the NDRange
             int col = src.cols, row = src.rows;
@@ -974,17 +1025,9 @@ namespace cv
 
             //set args
             vector<pair<size_t , const void *> > args;
-#ifdef IMG_BUFFER
-            args.push_back( make_pair( sizeof(cl_mem) , (void *)&dst_img ));
-#else
-args.push_back( make_pair( sizeof(cl_mem) , (void *)&dst.data ));
-#endif
+            args.push_back( make_pair( sizeof(cl_mem) , (void *)&dst.data ));
             args.push_back( make_pair( sizeof(cl_int) , (void *)&dst.step ));
-#ifdef IMG_BUFFER
-            args.push_back( make_pair( sizeof(cl_mem) , (void *)&src_img ));
-#else
-args.push_back( make_pair( sizeof(cl_mem) , (void *)&src.data ));
-#endif
+            args.push_back( make_pair( sizeof(cl_mem) , (void *)&src.data ));
             args.push_back( make_pair( sizeof(cl_int) , (void *)&src.step ));
             args.push_back( make_pair( sizeof(cl_int) , (void *)&dst.offset ));
             args.push_back( make_pair( sizeof(cl_int) , (void *)&src.offset ));
@@ -994,28 +1037,7 @@ args.push_back( make_pair( sizeof(cl_mem) , (void *)&src.data ));
             args.push_back( make_pair( sizeof(cl_int) , (void *)&sr ));
             args.push_back( make_pair( sizeof(cl_int) , (void *)&maxIter ));
             args.push_back( make_pair( sizeof(cl_float) , (void *)&eps ));
-            //               args.push_back( make_pair( sizeof(int)*ltx*lty , (void *)NULL));
-#ifdef IMG_BUFFER
-            openCLExecuteKernel(clCxt, &ms_image_opt, "meanshift_kernel", globalThreads, localThreads, args, -1, -1);
-#else
-openCLExecuteKernel(clCxt, &meanShift, "meanshift_kernel", globalThreads, localThreads, args, -1, -1);
-#endif
-#ifdef IMG_BUFFER
-            //copy the dst image to the dst buffer
-            size_t dst_origin[3] = {0, 0, 0};
-            size_t dst_region[3] = {src.cols, 1, 1};
-            for(int i = 0; i < src.rows; i++)
-            {
-                dst_origin[1] = i;
-                status = clEnqueueCopyImageToBuffer( clCxt->clGpuCmdQueue, dst_img, (cl_mem)dst.data,
-                                                     dst_origin, dst_region, dst.offset + i * dst.step, 0, NULL, NULL );
-                if(status != CL_SUCCESS)
-                {
-                    printf("Error: Copying image to buffer fails!(%d)\n", status);
-                    return;
-                }
-            }
-#endif
+            openCLExecuteKernel(clCxt, &meanShift, "meanshift_kernel", globalThreads, localThreads, args, -1, -1);
         }
 
         void meanShiftFiltering(const oclMat &src, oclMat &dst, int sp, int sr, TermCriteria criteria)

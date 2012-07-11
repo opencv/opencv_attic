@@ -55,24 +55,24 @@ namespace cv
 {
     namespace ocl
     {
-		#define CVCL_DEVICE_TYPE_DEFAULT                      (1 << 0)
-		#define CVCL_DEVICE_TYPE_CPU                          (1 << 1)
-		#define CVCL_DEVICE_TYPE_GPU                          (1 << 2)
-		#define CVCL_DEVICE_TYPE_ACCELERATOR                  (1 << 3)
-		//#define CVCL_DEVICE_TYPE_CUSTOM                       (1 << 4)
-		#define CVCL_DEVICE_TYPE_ALL                          0xFFFFFFFF
+#define CVCL_DEVICE_TYPE_DEFAULT                      (1 << 0)
+#define CVCL_DEVICE_TYPE_CPU                          (1 << 1)
+#define CVCL_DEVICE_TYPE_GPU                          (1 << 2)
+#define CVCL_DEVICE_TYPE_ACCELERATOR                  (1 << 3)
+        //#define CVCL_DEVICE_TYPE_CUSTOM                       (1 << 4)
+#define CVCL_DEVICE_TYPE_ALL                          0xFFFFFFFF
         //this class contains ocl runtime information
         class CV_EXPORTS Info
         {
-        public:
-			struct Impl;
-			Impl *impl;
+            public:
+                struct Impl;
+                    Impl *impl;
 
-            Info();
-            Info(const Info &m);
-            ~Info();
-            void release();
-            Info &operator = (const Info &m);
+                Info();
+                Info(const Info &m);
+                ~Info();
+                void release();
+                Info &operator = (const Info &m);
         };
         //////////////////////////////// Initialization & Info ////////////////////////
         //this function may be obsoleted
@@ -81,9 +81,10 @@ namespace cv
         CV_EXPORTS int getDevice(std::vector<Info>& oclinfo, int devicetype = CVCL_DEVICE_TYPE_GPU);
         //set device you want to use, optional function after getDevice be called
         CV_EXPORTS void setDevice(Info &oclinfo, int devnum = 0);
-		//this function is not ready yet
+        //this function is not ready yet
         //CV_EXPORTS void getComputeCapability(cl_device_id device, int &major, int &minor);
-
+        //optional function, if you want save opencl binary kernel to the file, set its path
+        CV_EXPORTS  void setBinpath(const char *path);
 
         //////////////////////////////// Error handling ////////////////////////
         CV_EXPORTS void error(const char *error_string, const char *file, const int line, const char *func);
@@ -92,203 +93,203 @@ namespace cv
         //This is a global singleton class used to represent a OpenCL context.
         class Context
         {
-        protected:
-            Context();
-            friend class auto_ptr<Context>;
-            static auto_ptr<Context> clCxt;
+            protected:
+                Context();
+                friend class auto_ptr<Context>;
+                static auto_ptr<Context> clCxt;
 
-        public:
-            ~Context();
-            static int val;
-            static Context *getContext();
-            static void setContext(Info &oclinfo);
-			struct Impl;
-			Impl *impl;
+            public:
+                ~Context();
+                static int val;
+                static Context *getContext();
+                static void setContext(Info &oclinfo);
+                struct Impl;
+                    Impl *impl;
         };
 
         //////////////////////////////// oclMat ////////////////////////////////
         class CV_EXPORTS oclMat
         {
-        public:
-            //! default constructor
-            oclMat();
-            //! constructs oclMatrix of the specified size and type (_type is CV_8UC1, CV_64FC3, CV_32SC(12) etc.)
-            oclMat(int rows, int cols, int type);
-            oclMat(Size size, int type);
-            //! constucts oclMatrix and fills it with the specified value _s.
-            oclMat(int rows, int cols, int type, const Scalar &s);
-            oclMat(Size size, int type, const Scalar &s);
-            //! copy constructor
-            oclMat(const oclMat &m);
+            public:
+                //! default constructor
+                oclMat();
+                //! constructs oclMatrix of the specified size and type (_type is CV_8UC1, CV_64FC3, CV_32SC(12) etc.)
+                oclMat(int rows, int cols, int type);
+                oclMat(Size size, int type);
+                //! constucts oclMatrix and fills it with the specified value _s.
+                oclMat(int rows, int cols, int type, const Scalar &s);
+                oclMat(Size size, int type, const Scalar &s);
+                //! copy constructor
+                oclMat(const oclMat &m);
 
-            //! constructor for oclMatrix headers pointing to user-allocated data
-            oclMat(int rows, int cols, int type, void *data, size_t step = Mat::AUTO_STEP);
-            oclMat(Size size, int type, void *data, size_t step = Mat::AUTO_STEP);
+                //! constructor for oclMatrix headers pointing to user-allocated data
+                oclMat(int rows, int cols, int type, void *data, size_t step = Mat::AUTO_STEP);
+                oclMat(Size size, int type, void *data, size_t step = Mat::AUTO_STEP);
 
-            //! creates a matrix header for a part of the bigger matrix
-            oclMat(const oclMat &m, const Range &rowRange, const Range &colRange);
-            oclMat(const oclMat &m, const Rect &roi);
+                //! creates a matrix header for a part of the bigger matrix
+                oclMat(const oclMat &m, const Range &rowRange, const Range &colRange);
+                oclMat(const oclMat &m, const Rect &roi);
 
-            //! builds oclMat from Mat. Perfom blocking upload to device.
-            explicit oclMat (const Mat &m);
+                //! builds oclMat from Mat. Perfom blocking upload to device.
+                explicit oclMat (const Mat &m);
 
-            //! destructor - calls release()
-            ~oclMat();
+                //! destructor - calls release()
+                ~oclMat();
 
-            //! assignment operators
-            oclMat &operator = (const oclMat &m);
-            //! assignment operator. Perfom blocking upload to device.
-            oclMat &operator = (const Mat &m);
+                //! assignment operators
+                oclMat &operator = (const oclMat &m);
+                //! assignment operator. Perfom blocking upload to device.
+                oclMat &operator = (const Mat &m);
 
-            /* Fixme! To be supported in OpenCL later. */
+                /* Fixme! To be supported in OpenCL later. */
 #if 0
-            //! returns lightweight DevMem2D_ structure for passing to nvcc-compiled code.
-            // Contains just image size, data ptr and step.
-            template <class T> operator DevMem2D_<T>() const;
-            template <class T> operator PtrStep_<T>() const;
+                //! returns lightweight DevMem2D_ structure for passing to nvcc-compiled code.
+                // Contains just image size, data ptr and step.
+                template <class T> operator DevMem2D_<T>() const;
+                template <class T> operator PtrStep_<T>() const;
 #endif
 
-            //! pefroms blocking upload data to oclMat.
-            void upload(const cv::Mat &m);
+                //! pefroms blocking upload data to oclMat.
+                void upload(const cv::Mat &m);
 
-            /* Fixme! To be supported in OpenCL later. */
+                /* Fixme! To be supported in OpenCL later. */
 #if 0
-            //! upload async
-            void upload(const CudaMem &m, Stream &stream);
+                //! upload async
+                void upload(const CudaMem &m, Stream &stream);
 #endif
 
-            //! downloads data from device to host memory. Blocking calls.
-            operator Mat() const;
-            void download(cv::Mat &m) const;
+                //! downloads data from device to host memory. Blocking calls.
+                operator Mat() const;
+                void download(cv::Mat &m) const;
 
-            /* Fixme! To be supported in OpenCL later. */
+                /* Fixme! To be supported in OpenCL later. */
 #if 0
-            //! download async
-            void download(CudaMem &m, Stream &stream) const;
+                //! download async
+                void download(CudaMem &m, Stream &stream) const;
 #endif
 
-            //! returns a new oclMatrix header for the specified row
-            oclMat row(int y) const;
-            //! returns a new oclMatrix header for the specified column
-            oclMat col(int x) const;
-            //! ... for the specified row span
-            oclMat rowRange(int startrow, int endrow) const;
-            oclMat rowRange(const Range &r) const;
-            //! ... for the specified column span
-            oclMat colRange(int startcol, int endcol) const;
-            oclMat colRange(const Range &r) const;
+                //! returns a new oclMatrix header for the specified row
+                oclMat row(int y) const;
+                //! returns a new oclMatrix header for the specified column
+                oclMat col(int x) const;
+                //! ... for the specified row span
+                oclMat rowRange(int startrow, int endrow) const;
+                oclMat rowRange(const Range &r) const;
+                //! ... for the specified column span
+                oclMat colRange(int startcol, int endcol) const;
+                oclMat colRange(const Range &r) const;
 
-            //! returns deep copy of the oclMatrix, i.e. the data is copied
-            oclMat clone() const;
-            //! copies the oclMatrix content to "m".
-            // It calls m.create(this->size(), this->type()).
-            // It supports any data type
-            void copyTo( oclMat &m ) const;
-            //! copies those oclMatrix elements to "m" that are marked with non-zero mask elements.
-            //It supports 8UC1 8UC4 32SC1 32SC4 32FC1 32FC4
-            void copyTo( oclMat &m, const oclMat &mask ) const;
-            //! converts oclMatrix to another datatype with optional scalng. See cvConvertScale.
-            //It supports 8UC1 8UC4 32SC1 32SC4 32FC1 32FC4
-            void convertTo( oclMat &m, int rtype, double alpha = 1, double beta = 0 ) const;
+                //! returns deep copy of the oclMatrix, i.e. the data is copied
+                oclMat clone() const;
+                //! copies the oclMatrix content to "m".
+                // It calls m.create(this->size(), this->type()).
+                // It supports any data type
+                void copyTo( oclMat &m ) const;
+                //! copies those oclMatrix elements to "m" that are marked with non-zero mask elements.
+                //It supports 8UC1 8UC4 32SC1 32SC4 32FC1 32FC4
+                void copyTo( oclMat &m, const oclMat &mask ) const;
+                //! converts oclMatrix to another datatype with optional scalng. See cvConvertScale.
+                //It supports 8UC1 8UC4 32SC1 32SC4 32FC1 32FC4
+                void convertTo( oclMat &m, int rtype, double alpha = 1, double beta = 0 ) const;
 
-            void assignTo( oclMat &m, int type = -1 ) const;
+                void assignTo( oclMat &m, int type = -1 ) const;
 
-            //! sets every oclMatrix element to s
-            //It supports 8UC1 8UC4 32SC1 32SC4 32FC1 32FC4
-            oclMat &operator = (const Scalar &s);
-            //! sets some of the oclMatrix elements to s, according to the mask
-            //It supports 8UC1 8UC4 32SC1 32SC4 32FC1 32FC4
-            oclMat &setTo(const Scalar &s, const oclMat &mask = oclMat());
-            //! creates alternative oclMatrix header for the same data, with different
-            // number of channels and/or different number of rows. see cvReshape.
-            oclMat reshape(int cn, int rows = 0) const;
+                //! sets every oclMatrix element to s
+                //It supports 8UC1 8UC4 32SC1 32SC4 32FC1 32FC4
+                oclMat &operator = (const Scalar &s);
+                //! sets some of the oclMatrix elements to s, according to the mask
+                //It supports 8UC1 8UC4 32SC1 32SC4 32FC1 32FC4
+                oclMat &setTo(const Scalar &s, const oclMat &mask = oclMat());
+                //! creates alternative oclMatrix header for the same data, with different
+                // number of channels and/or different number of rows. see cvReshape.
+                oclMat reshape(int cn, int rows = 0) const;
 
-            //! allocates new oclMatrix data unless the oclMatrix already has specified size and type.
-            // previous data is unreferenced if needed.
-            void create(int rows, int cols, int type);
-            void create(Size size, int type);
-            //! decreases reference counter;
-            // deallocate the data when reference counter reaches 0.
-            void release();
+                //! allocates new oclMatrix data unless the oclMatrix already has specified size and type.
+                // previous data is unreferenced if needed.
+                void create(int rows, int cols, int type);
+                void create(Size size, int type);
+                //! decreases reference counter;
+                // deallocate the data when reference counter reaches 0.
+                void release();
 
-            //! swaps with other smart pointer
-            void swap(oclMat &mat);
+                //! swaps with other smart pointer
+                void swap(oclMat &mat);
 
-            //! locates oclMatrix header within a parent oclMatrix. See below
-            void locateROI( Size &wholeSize, Point &ofs ) const;
-            //! moves/resizes the current oclMatrix ROI inside the parent oclMatrix.
-            oclMat &adjustROI( int dtop, int dbottom, int dleft, int dright );
-            //! extracts a rectangular sub-oclMatrix
-            // (this is a generalized form of row, rowRange etc.)
-            oclMat operator()( Range rowRange, Range colRange ) const;
-            oclMat operator()( const Rect &roi ) const;
+                //! locates oclMatrix header within a parent oclMatrix. See below
+                void locateROI( Size &wholeSize, Point &ofs ) const;
+                //! moves/resizes the current oclMatrix ROI inside the parent oclMatrix.
+                oclMat &adjustROI( int dtop, int dbottom, int dleft, int dright );
+                //! extracts a rectangular sub-oclMatrix
+                // (this is a generalized form of row, rowRange etc.)
+                oclMat operator()( Range rowRange, Range colRange ) const;
+                oclMat operator()( const Rect &roi ) const;
 
-            //! returns true if the oclMatrix data is continuous
-            // (i.e. when there are no gaps between successive rows).
-            // similar to CV_IS_oclMat_CONT(cvoclMat->type)
-            bool isContinuous() const;
-            //! returns element size in bytes,
-            // similar to CV_ELEM_SIZE(cvMat->type)
-            size_t elemSize() const;
-            //! returns the size of element channel in bytes.
-            size_t elemSize1() const;
-            //! returns element type, similar to CV_MAT_TYPE(cvMat->type)
-            int type() const;
-            //! returns element type, similar to CV_MAT_DEPTH(cvMat->type)
-            int depth() const;
-            //! returns element type, similar to CV_MAT_CN(cvMat->type)
-            int channels() const;
-            //! returns step/elemSize1()
-            size_t step1() const;
-            //! returns oclMatrix size:
-            // width == number of columns, height == number of rows
-            Size size() const;
-            //! returns true if oclMatrix data is NULL
-            bool empty() const;
+                //! returns true if the oclMatrix data is continuous
+                // (i.e. when there are no gaps between successive rows).
+                // similar to CV_IS_oclMat_CONT(cvoclMat->type)
+                bool isContinuous() const;
+                //! returns element size in bytes,
+                // similar to CV_ELEM_SIZE(cvMat->type)
+                size_t elemSize() const;
+                //! returns the size of element channel in bytes.
+                size_t elemSize1() const;
+                //! returns element type, similar to CV_MAT_TYPE(cvMat->type)
+                int type() const;
+                //! returns element type, similar to CV_MAT_DEPTH(cvMat->type)
+                int depth() const;
+                //! returns element type, similar to CV_MAT_CN(cvMat->type)
+                int channels() const;
+                //! returns step/elemSize1()
+                size_t step1() const;
+                //! returns oclMatrix size:
+                // width == number of columns, height == number of rows
+                Size size() const;
+                //! returns true if oclMatrix data is NULL
+                bool empty() const;
 
-            //! returns pointer to y-th row
-            uchar *ptr(int y = 0);
-            const uchar *ptr(int y = 0) const;
+                //! returns pointer to y-th row
+                uchar *ptr(int y = 0);
+                const uchar *ptr(int y = 0) const;
 
-            //! template version of the above method
-            template<typename _Tp> _Tp *ptr(int y = 0);
-            template<typename _Tp> const _Tp *ptr(int y = 0) const;
+                //! template version of the above method
+                template<typename _Tp> _Tp *ptr(int y = 0);
+                template<typename _Tp> const _Tp *ptr(int y = 0) const;
 
-            //! matrix transposition
-            oclMat t() const;
+                //! matrix transposition
+                oclMat t() const;
 
-            /*! includes several bit-fields:
-            - the magic signature
-            - continuity flag
-            - depth
-            - number of channels
-            */
-            int flags;
-            //! the number of rows and columns
-            int rows, cols;
-            //! a distance between successive rows in bytes; includes the gap if any
-            size_t step;
-            //! pointer to the data(OCL memory object)
-            uchar *data;
+                /*! includes several bit-fields:
+                  - the magic signature
+                  - continuity flag
+                  - depth
+                  - number of channels
+                  */
+                int flags;
+                //! the number of rows and columns
+                int rows, cols;
+                //! a distance between successive rows in bytes; includes the gap if any
+                size_t step;
+                //! pointer to the data(OCL memory object)
+                uchar *data;
 
-            //! pointer to the reference counter;
-            // when oclMatrix points to user-allocated data, the pointer is NULL
-            int *refcount;
+                //! pointer to the reference counter;
+                // when oclMatrix points to user-allocated data, the pointer is NULL
+                int *refcount;
 
-            //! helper fields used in locateROI and adjustROI
-            //datastart and dataend are not used in current version
-            uchar *datastart;
-            uchar *dataend;
+                //! helper fields used in locateROI and adjustROI
+                //datastart and dataend are not used in current version
+                uchar *datastart;
+                uchar *dataend;
 
-            //! OpenCL context associated with the oclMat object.
-            Context *clCxt;
-            //add offset for handle ROI, calculated in byte
-            int offset;
-            //add wholerows and wholecols for the whole matrix, datastart and dataend are no longer used
-            int wholerows;
-            int wholecols;
-            //add download_channels for 3 channels to 4 channels
-            int download_channels;
+                //! OpenCL context associated with the oclMat object.
+                Context *clCxt;
+                //add offset for handle ROI, calculated in byte
+                int offset;
+                //add wholerows and wholecols for the whole matrix, datastart and dataend are no longer used
+                int wholerows;
+                int wholecols;
+                //add download_channels for 3 channels to 4 channels
+                int download_channels;
         };
 
 
@@ -388,7 +389,7 @@ namespace cv
         //! finds global minimum and maximum array elements and returns their values with locations
         // support all types
         CV_EXPORTS void minMaxLoc(const oclMat &src, double *minVal, double *maxVal = 0, Point *minLoc = 0, Point *maxLoc = 0,
-                                  const oclMat &mask = oclMat());
+                const oclMat &mask = oclMat());
 
         //! counts non-zero array elements
         // support all types
@@ -463,64 +464,64 @@ namespace cv
         //////////////////////////////// Filter Engine ////////////////////////////////
 
         /*!
-        The Base Class for 1D or Row-wise Filters
+          The Base Class for 1D or Row-wise Filters
 
-        This is the base class for linear or non-linear filters that process 1D data.
-        In particular, such filters are used for the "horizontal" filtering parts in separable filters.
-        */
+          This is the base class for linear or non-linear filters that process 1D data.
+          In particular, such filters are used for the "horizontal" filtering parts in separable filters.
+          */
         class CV_EXPORTS BaseRowFilter_GPU
         {
-        public:
-            BaseRowFilter_GPU(int ksize_, int anchor_, int bordertype_) : ksize(ksize_), anchor(anchor_), bordertype(bordertype_) {}
-            virtual ~BaseRowFilter_GPU() {}
-            virtual void operator()(const oclMat &src, oclMat &dst) = 0;
-            int ksize, anchor, bordertype;
+            public:
+                BaseRowFilter_GPU(int ksize_, int anchor_, int bordertype_) : ksize(ksize_), anchor(anchor_), bordertype(bordertype_) {}
+                virtual ~BaseRowFilter_GPU() {}
+                virtual void operator()(const oclMat &src, oclMat &dst) = 0;
+                int ksize, anchor, bordertype;
         };
 
         /*!
-        The Base Class for Column-wise Filters
+          The Base Class for Column-wise Filters
 
-        This is the base class for linear or non-linear filters that process columns of 2D arrays.
-        Such filters are used for the "vertical" filtering parts in separable filters.
-        */
+          This is the base class for linear or non-linear filters that process columns of 2D arrays.
+          Such filters are used for the "vertical" filtering parts in separable filters.
+          */
         class CV_EXPORTS BaseColumnFilter_GPU
         {
-        public:
-            BaseColumnFilter_GPU(int ksize_, int anchor_, int bordertype_) : ksize(ksize_), anchor(anchor_), bordertype(bordertype_) {}
-            virtual ~BaseColumnFilter_GPU() {}
-            virtual void operator()(const oclMat &src, oclMat &dst) = 0;
-            int ksize, anchor, bordertype;
+            public:
+                BaseColumnFilter_GPU(int ksize_, int anchor_, int bordertype_) : ksize(ksize_), anchor(anchor_), bordertype(bordertype_) {}
+                virtual ~BaseColumnFilter_GPU() {}
+                virtual void operator()(const oclMat &src, oclMat &dst) = 0;
+                int ksize, anchor, bordertype;
         };
 
         /*!
-        The Base Class for Non-Separable 2D Filters.
+          The Base Class for Non-Separable 2D Filters.
 
-        This is the base class for linear or non-linear 2D filters.
-        */
+          This is the base class for linear or non-linear 2D filters.
+          */
         class CV_EXPORTS BaseFilter_GPU
         {
-        public:
-            BaseFilter_GPU(const Size &ksize_, const Point &anchor_, const int &borderType_)
-                : ksize(ksize_), anchor(anchor_), borderType(borderType_) {}
-            virtual ~BaseFilter_GPU() {}
-            virtual void operator()(const oclMat &src, oclMat &dst) = 0;
-            Size ksize;
-            Point anchor;
-            int borderType;
+            public:
+                BaseFilter_GPU(const Size &ksize_, const Point &anchor_, const int &borderType_)
+                    : ksize(ksize_), anchor(anchor_), borderType(borderType_) {}
+                virtual ~BaseFilter_GPU() {}
+                virtual void operator()(const oclMat &src, oclMat &dst) = 0;
+                Size ksize;
+                Point anchor;
+                int borderType;
         };
 
         /*!
-        The Base Class for Filter Engine.
+          The Base Class for Filter Engine.
 
-        The class can be used to apply an arbitrary filtering operation to an image.
-        It contains all the necessary intermediate buffers.
-        */
+          The class can be used to apply an arbitrary filtering operation to an image.
+          It contains all the necessary intermediate buffers.
+          */
         class CV_EXPORTS FilterEngine_GPU
         {
-        public:
-            virtual ~FilterEngine_GPU() {}
+            public:
+                virtual ~FilterEngine_GPU() {}
 
-            virtual void apply(const oclMat &src, oclMat &dst, Rect roi = Rect(0, 0, -1, -1)) = 0;
+                virtual void apply(const oclMat &src, oclMat &dst, Rect roi = Rect(0, 0, -1, -1)) = 0;
         };
 
         //! returns the non-separable filter engine with the specified filter
@@ -544,6 +545,9 @@ namespace cv
 
         //! returns the Gaussian filter engine
         CV_EXPORTS Ptr<FilterEngine_GPU> createGaussianFilter_GPU(int type, Size ksize, double sigma1, double sigma2 = 0, int bordertype = BORDER_DEFAULT);
+
+		//! returns filter engine for the generalized Sobel operator
+		CV_EXPORTS Ptr<FilterEngine_GPU> createDerivFilter_GPU( int srcType, int dstType, int dx, int dy, int ksize, int borderType=BORDER_DEFAULT );
 
         //! applies Laplacian operator to the image
         // supports only ksize = 1 and ksize = 3 8UC1 8UC4 32FC1 32FC4 data type
@@ -571,7 +575,7 @@ namespace cv
         // supports data type: CV_8UC1, CV_8UC4, CV_32FC1 and CV_32FC4
         // supports border type: BORDER_CONSTANT, BORDER_REPLICATE, BORDER_REFLECT,BORDER_REFLECT_101,BORDER_WRAP
         CV_EXPORTS void boxFilter(const oclMat &src, oclMat &dst, int ddepth, Size ksize,
-                                  Point anchor = Point(-1, -1), int borderType = BORDER_DEFAULT);
+                Point anchor = Point(-1, -1), int borderType = BORDER_DEFAULT);
 
         //! returns 2D morphological filter
         //! only MORPH_ERODE and MORPH_DILATE are supported
@@ -588,18 +592,18 @@ namespace cv
         // supports data type: CV_8UC1, CV_8UC4, CV_32FC1 and CV_32FC4
         // supports border type: BORDER_CONSTANT, BORDER_REPLICATE, BORDER_REFLECT,BORDER_REFLECT_101
         static inline void blur(const oclMat &src, oclMat &dst, Size ksize, Point anchor = Point(-1, -1),
-                                int borderType = BORDER_CONSTANT)
+                int borderType = BORDER_CONSTANT)
         {
             boxFilter(src, dst, -1, ksize, anchor, borderType);
         }
 
         //! applies non-separable 2D linear filter to the image
         CV_EXPORTS void filter2D(const oclMat &src, oclMat &dst, int ddepth, const Mat &kernel,
-                                 Point anchor = Point(-1, -1), int borderType = BORDER_DEFAULT);
+                Point anchor = Point(-1, -1), int borderType = BORDER_DEFAULT);
 
         //! applies separable 2D linear filter to the image
         CV_EXPORTS void sepFilter2D(const oclMat &src, oclMat &dst, int ddepth, const Mat &kernelX, const Mat &kernelY,
-                                    Point anchor = Point(-1, -1), double delta = 0.0, int bordertype = BORDER_DEFAULT);
+                Point anchor = Point(-1, -1), double delta = 0.0, int bordertype = BORDER_DEFAULT);
 
         //! applies generalized Sobel operator to the image
         // dst.type must equalize src.type
@@ -633,15 +637,15 @@ namespace cv
         ////////////////////////////// Image processing //////////////////////////////
         //! Does mean shift filtering on GPU.
         CV_EXPORTS void meanShiftFiltering(const oclMat &src, oclMat &dst, int sp, int sr,
-                                           TermCriteria criteria = TermCriteria(TermCriteria::MAX_ITER + TermCriteria::EPS, 5, 1));
+                TermCriteria criteria = TermCriteria(TermCriteria::MAX_ITER + TermCriteria::EPS, 5, 1));
 
         //! Does mean shift procedure on GPU.
         CV_EXPORTS void meanShiftProc(const oclMat &src, oclMat &dstr, oclMat &dstsp, int sp, int sr,
-                                      TermCriteria criteria = TermCriteria(TermCriteria::MAX_ITER + TermCriteria::EPS, 5, 1));
+                TermCriteria criteria = TermCriteria(TermCriteria::MAX_ITER + TermCriteria::EPS, 5, 1));
 
         //! Does mean shift segmentation with elimiation of small regions.
         CV_EXPORTS void meanShiftSegmentation(const oclMat &src, Mat &dst, int sp, int sr, int minsize,
-                                              TermCriteria criteria = TermCriteria(TermCriteria::MAX_ITER + TermCriteria::EPS, 5, 1));
+                TermCriteria criteria = TermCriteria(TermCriteria::MAX_ITER + TermCriteria::EPS, 5, 1));
 
         //! applies fixed threshold to the image.
         // supports CV_8UC1 and CV_32FC1 data type
@@ -653,6 +657,11 @@ namespace cv
         // supports CV_8UC1, CV_8UC4, CV_32FC1 and CV_32FC4 types
         CV_EXPORTS void resize(const oclMat &src, oclMat &dst, Size dsize, double fx = 0, double fy = 0, int interpolation = INTER_LINEAR);
 
+    //! Applies a generic geometrical transformation to an image.
+		// Supports INTER_NEAREST, INTER_LINEAR.
+		// Map1 supports CV_16SC2, CV_32FC2  types.
+    // Src supports CV_8UC1, CV_8UC2, CV_8UC4.
+    CV_EXPORTS void remap(const oclMat& src, oclMat& dst, oclMat& map1, oclMat& map2, int interpolation, int bordertype, const Scalar& value = Scalar());
         //! copies 2D array to a larger destination array and pads borders with user-specifiable constant
         // supports CV_8UC1, CV_8UC4, CV_32SC1 types
         CV_EXPORTS void copyMakeBorder(const oclMat &src, oclMat &dst, int top, int bottom, int left, int right, int boardtype, const Scalar &value = Scalar());
@@ -674,44 +683,46 @@ namespace cv
         //! computes the integral image and integral for the squared image
         // sum will have CV_32S type, sqsum - CV32F type
         // supports only CV_8UC1 source type
-        CV_EXPORTS void integral(oclMat &src, oclMat &sum, oclMat &sqsum);
-        CV_EXPORTS void integral(oclMat &src, oclMat &sum);
+        CV_EXPORTS void integral(const oclMat &src, oclMat &sum, oclMat &sqsum);
+        CV_EXPORTS void integral(const oclMat &src, oclMat &sum);
         CV_EXPORTS void cornerHarris(const oclMat &src, oclMat &dst, int blockSize, int ksize, double k, int bordertype = cv::BORDER_DEFAULT);
         CV_EXPORTS void cornerMinEigenVal(const oclMat &src, oclMat &dst, int blockSize, int ksize, int bordertype = cv::BORDER_DEFAULT);
+
+
         //////////////////////////////// StereoBM_GPU ////////////////////////////////
 
         class CV_EXPORTS StereoBM_GPU
         {
-        public:
-            enum { BASIC_PRESET = 0, PREFILTER_XSOBEL = 1 };
+            public:
+                enum { BASIC_PRESET = 0, PREFILTER_XSOBEL = 1 };
 
-            enum { DEFAULT_NDISP = 64, DEFAULT_WINSZ = 19 };
+                enum { DEFAULT_NDISP = 64, DEFAULT_WINSZ = 19 };
 
-            //! the default constructor
-            StereoBM_GPU();
-            //! the full constructor taking the camera-specific preset, number of disparities and the SAD window size. ndisparities must be multiple of 8.
-            StereoBM_GPU(int preset, int ndisparities = DEFAULT_NDISP, int winSize = DEFAULT_WINSZ);
+                //! the default constructor
+                StereoBM_GPU();
+                //! the full constructor taking the camera-specific preset, number of disparities and the SAD window size. ndisparities must be multiple of 8.
+                StereoBM_GPU(int preset, int ndisparities = DEFAULT_NDISP, int winSize = DEFAULT_WINSZ);
 
-            //! the stereo correspondence operator. Finds the disparity for the specified rectified stereo pair
-            //! Output disparity has CV_8U type.
-            void operator() ( const oclMat &left, const oclMat &right, oclMat &disparity);
+                //! the stereo correspondence operator. Finds the disparity for the specified rectified stereo pair
+                //! Output disparity has CV_8U type.
+                void operator() ( const oclMat &left, const oclMat &right, oclMat &disparity);
 
-            //! Some heuristics that tries to estmate
-            // if current GPU will be faster then CPU in this algorithm.
-            // It queries current active device.
-            static bool checkIfGpuCallReasonable();
+                //! Some heuristics that tries to estmate
+                // if current GPU will be faster then CPU in this algorithm.
+                // It queries current active device.
+                static bool checkIfGpuCallReasonable();
 
-            int preset;
-            int ndisp;
-            int winSize;
+                int preset;
+                int ndisp;
+                int winSize;
 
-            // If avergeTexThreshold  == 0 => post procesing is disabled
-            // If avergeTexThreshold != 0 then disparity is set 0 in each point (x,y) where for left image
-            // SumOfHorizontalGradiensInWindow(x, y, winSize) < (winSize * winSize) * avergeTexThreshold
-            // i.e. input left image is low textured.
-            float avergeTexThreshold;
-        private:
-            oclMat minSSD, leBuf, riBuf;
+                // If avergeTexThreshold  == 0 => post procesing is disabled
+                // If avergeTexThreshold != 0 then disparity is set 0 in each point (x,y) where for left image
+                // SumOfHorizontalGradiensInWindow(x, y, winSize) < (winSize * winSize) * avergeTexThreshold
+                // i.e. input left image is low textured.
+                float avergeTexThreshold;
+            private:
+                oclMat minSSD, leBuf, riBuf;
         };
 
         ////////////////////////// StereoBeliefPropagation ///////////////////////////
@@ -720,115 +731,115 @@ namespace cv
 
         class CV_EXPORTS StereoBeliefPropagation
         {
-        public:
-            enum { DEFAULT_NDISP  = 64 };
-            enum { DEFAULT_ITERS  = 5  };
-            enum { DEFAULT_LEVELS = 5  };
+            public:
+                enum { DEFAULT_NDISP  = 64 };
+                enum { DEFAULT_ITERS  = 5  };
+                enum { DEFAULT_LEVELS = 5  };
 
-            static void estimateRecommendedParams(int width, int height, int &ndisp, int &iters, int &levels);
+                static void estimateRecommendedParams(int width, int height, int &ndisp, int &iters, int &levels);
 
-            //! the default constructor
-            explicit StereoBeliefPropagation(int ndisp  = DEFAULT_NDISP,
-                                             int iters  = DEFAULT_ITERS,
-                                             int levels = DEFAULT_LEVELS,
-                                             int msg_type = CV_16S);
+                //! the default constructor
+                explicit StereoBeliefPropagation(int ndisp  = DEFAULT_NDISP,
+                        int iters  = DEFAULT_ITERS,
+                        int levels = DEFAULT_LEVELS,
+                        int msg_type = CV_16S);
 
-            //! the full constructor taking the number of disparities, number of BP iterations on each level,
-            //! number of levels, truncation of data cost, data weight,
-            //! truncation of discontinuity cost and discontinuity single jump
-            //! DataTerm = data_weight * min(fabs(I2-I1), max_data_term)
-            //! DiscTerm = min(disc_single_jump * fabs(f1-f2), max_disc_term)
-            //! please see paper for more details
-            StereoBeliefPropagation(int ndisp, int iters, int levels,
-                                    float max_data_term, float data_weight,
-                                    float max_disc_term, float disc_single_jump,
-                                    int msg_type = CV_32F);
+                //! the full constructor taking the number of disparities, number of BP iterations on each level,
+                //! number of levels, truncation of data cost, data weight,
+                //! truncation of discontinuity cost and discontinuity single jump
+                //! DataTerm = data_weight * min(fabs(I2-I1), max_data_term)
+                //! DiscTerm = min(disc_single_jump * fabs(f1-f2), max_disc_term)
+                //! please see paper for more details
+                StereoBeliefPropagation(int ndisp, int iters, int levels,
+                        float max_data_term, float data_weight,
+                        float max_disc_term, float disc_single_jump,
+                        int msg_type = CV_32F);
 
-            //! the stereo correspondence operator. Finds the disparity for the specified rectified stereo pair,
-            //! if disparity is empty output type will be CV_16S else output type will be disparity.type().
-            void operator()(const oclMat &left, const oclMat &right, oclMat &disparity);
+                //! the stereo correspondence operator. Finds the disparity for the specified rectified stereo pair,
+                //! if disparity is empty output type will be CV_16S else output type will be disparity.type().
+                void operator()(const oclMat &left, const oclMat &right, oclMat &disparity);
 
-            //! version for user specified data term
-            void operator()(const oclMat &data, oclMat &disparity);
+                //! version for user specified data term
+                void operator()(const oclMat &data, oclMat &disparity);
 
-            int ndisp;
+                int ndisp;
 
-            int iters;
-            int levels;
+                int iters;
+                int levels;
 
-            float max_data_term;
-            float data_weight;
-            float max_disc_term;
-            float disc_single_jump;
+                float max_data_term;
+                float data_weight;
+                float max_disc_term;
+                float disc_single_jump;
 
-            int msg_type;
-        private:
-            oclMat u, d, l, r, u2, d2, l2, r2;
-            std::vector<oclMat> datas;
-            oclMat out;
+                int msg_type;
+            private:
+                oclMat u, d, l, r, u2, d2, l2, r2;
+                std::vector<oclMat> datas;
+                oclMat out;
         };
 
         /////////////////////////// StereoConstantSpaceBP ///////////////////////////
         // "A Constant-Space Belief Propagation Algorithm for Stereo Matching"
-        // Qingxiong Yang, Liang Wangï¿½, Narendra Ahuja
+        // Qingxiong Yang, Liang Wangï¿? Narendra Ahuja
         // http://vision.ai.uiuc.edu/~qyang6/
 
         class CV_EXPORTS StereoConstantSpaceBP
         {
-        public:
-            enum { DEFAULT_NDISP    = 128 };
-            enum { DEFAULT_ITERS    = 8   };
-            enum { DEFAULT_LEVELS   = 4   };
-            enum { DEFAULT_NR_PLANE = 4   };
+            public:
+                enum { DEFAULT_NDISP    = 128 };
+                enum { DEFAULT_ITERS    = 8   };
+                enum { DEFAULT_LEVELS   = 4   };
+                enum { DEFAULT_NR_PLANE = 4   };
 
-            static void estimateRecommendedParams(int width, int height, int &ndisp, int &iters, int &levels, int &nr_plane);
+                static void estimateRecommendedParams(int width, int height, int &ndisp, int &iters, int &levels, int &nr_plane);
 
-            //! the default constructor
-            explicit StereoConstantSpaceBP(int ndisp    = DEFAULT_NDISP,
-                                           int iters    = DEFAULT_ITERS,
-                                           int levels   = DEFAULT_LEVELS,
-                                           int nr_plane = DEFAULT_NR_PLANE,
-                                           int msg_type = CV_32F);
+                //! the default constructor
+                explicit StereoConstantSpaceBP(int ndisp    = DEFAULT_NDISP,
+                        int iters    = DEFAULT_ITERS,
+                        int levels   = DEFAULT_LEVELS,
+                        int nr_plane = DEFAULT_NR_PLANE,
+                        int msg_type = CV_32F);
 
-            //! the full constructor taking the number of disparities, number of BP iterations on each level,
-            //! number of levels, number of active disparity on the first level, truncation of data cost, data weight,
-            //! truncation of discontinuity cost, discontinuity single jump and minimum disparity threshold
-            StereoConstantSpaceBP(int ndisp, int iters, int levels, int nr_plane,
-                                  float max_data_term, float data_weight, float max_disc_term, float disc_single_jump,
-                                  int min_disp_th = 0,
-                                  int msg_type = CV_32F);
+                //! the full constructor taking the number of disparities, number of BP iterations on each level,
+                //! number of levels, number of active disparity on the first level, truncation of data cost, data weight,
+                //! truncation of discontinuity cost, discontinuity single jump and minimum disparity threshold
+                StereoConstantSpaceBP(int ndisp, int iters, int levels, int nr_plane,
+                        float max_data_term, float data_weight, float max_disc_term, float disc_single_jump,
+                        int min_disp_th = 0,
+                        int msg_type = CV_32F);
 
-            //! the stereo correspondence operator. Finds the disparity for the specified rectified stereo pair,
-            //! if disparity is empty output type will be CV_16S else output type will be disparity.type().
-            void operator()(const oclMat &left, const oclMat &right, oclMat &disparity);
+                //! the stereo correspondence operator. Finds the disparity for the specified rectified stereo pair,
+                //! if disparity is empty output type will be CV_16S else output type will be disparity.type().
+                void operator()(const oclMat &left, const oclMat &right, oclMat &disparity);
 
-            int ndisp;
+                int ndisp;
 
-            int iters;
-            int levels;
+                int iters;
+                int levels;
 
-            int nr_plane;
+                int nr_plane;
 
-            float max_data_term;
-            float data_weight;
-            float max_disc_term;
-            float disc_single_jump;
+                float max_data_term;
+                float data_weight;
+                float max_disc_term;
+                float disc_single_jump;
 
-            int min_disp_th;
+                int min_disp_th;
 
-            int msg_type;
+                int msg_type;
 
-            bool use_local_init_data_cost;
-        private:
-            oclMat u[2], d[2], l[2], r[2];
-            oclMat disp_selected_pyr[2];
+                bool use_local_init_data_cost;
+            private:
+                oclMat u[2], d[2], l[2], r[2];
+                oclMat disp_selected_pyr[2];
 
-            oclMat data_cost;
-            oclMat data_cost_selected;
+                oclMat data_cost;
+                oclMat data_cost_selected;
 
-            oclMat temp;
+                oclMat temp;
 
-            oclMat out;
+                oclMat out;
         };
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         ///////////////////////////////////////////CascadeClassifier//////////////////////////////////////////////////////////////////
@@ -836,23 +847,20 @@ namespace cv
 
         class CV_EXPORTS_W OclCascadeClassifier : public  cv::CascadeClassifier
         {
-        public:
-            OclCascadeClassifier() {};
-            ~OclCascadeClassifier() {};
+            public:
+                OclCascadeClassifier() {};
+                ~OclCascadeClassifier() {};
 
 
-            CvSeq *oclHaarDetectObjects(oclMat &gimg, CvMemStorage *storage, double scaleFactor,
-                                        int minNeighbors, int flags, CvSize minSize = cvSize(0, 0), CvSize maxSize = cvSize(0, 0));
+                CvSeq *oclHaarDetectObjects(oclMat &gimg, CvMemStorage *storage, double scaleFactor,
+                        int minNeighbors, int flags, CvSize minSize = cvSize(0, 0), CvSize maxSize = cvSize(0, 0));
         };
-
-
-        CV_EXPORTS  void setBinpath(const char *path);
-
 
         ///////////////////////////////////////////////////////jhp_benchmark////////////////////////////////////////////////////
         void benchmark_copy_vectorize(const oclMat &src, oclMat &dst);
         void benchmark_copy_offset_stride(const oclMat &src, oclMat &dst);
         void benchmark_ILP();
+		
     }
 }
 #include "opencv2/ocl/matrix_operations.hpp"

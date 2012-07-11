@@ -44,10 +44,13 @@
 //M*/
 
 /**************************************PUBLICFUNC*************************************/
-#if defined (__ATI__)
-#pragma OPENCL EXTENSION cl_amd_fp64:enable
-#elif defined (__NVIDIA__)
+#if defined (DOUBLE_SUPPORT)
 #pragma OPENCL EXTENSION cl_khr_fp64:enable
+#define RES_TYPE double8
+#define CONVERT_RES_TYPE convert_double8
+#else
+#define RES_TYPE float8
+#define CONVERT_RES_TYPE convert_float8
 #endif
 
 #if defined (DEPTH_0)
@@ -164,9 +167,9 @@
 #define repeat_me(a) a.s7 = 0;a.s6 = 0;a.s5 = 0;a.s4 = 0;a.s3 = 0;a.s2 = 0;a.s1 = 0;
 #endif
 
-/**************************************Array minMax mask**************************************/
+/**************************************Array minMaxLoc mask**************************************/
 __kernel void arithm_op_minMaxLoc_mask (int cols,int invalid_cols,int offset,int elemnum,int groupnum,__global TYPE *src,
-                                        int minvalid_cols,int moffset,__global uchar *mask,__global double8  *dst)
+                                        int minvalid_cols,int moffset,__global uchar *mask,__global RES_TYPE  *dst)
 {
    unsigned int lid = get_local_id(0);
    unsigned int gid = get_group_id(0);
@@ -255,10 +258,10 @@ __kernel void arithm_op_minMaxLoc_mask (int cols,int invalid_cols,int offset,int
    }
    if( lid == 0)
    {
-       dst[gid] = convert_double8(lm_min[0]);
-       dst[gid + groupnum] = convert_double8(lm_max[0]);
-       dst[gid + 2 * groupnum] = convert_double8(lm_minloc[0]);
-       dst[gid + 3 * groupnum] = convert_double8(lm_maxloc[0]);
+       dst[gid] = CONVERT_RES_TYPE(lm_min[0]);
+       dst[gid + groupnum] = CONVERT_RES_TYPE(lm_max[0]);
+       dst[gid + 2 * groupnum] = CONVERT_RES_TYPE(lm_minloc[0]);
+       dst[gid + 3 * groupnum] = CONVERT_RES_TYPE(lm_maxloc[0]);
    }
 }
 

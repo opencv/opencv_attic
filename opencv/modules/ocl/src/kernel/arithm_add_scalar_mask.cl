@@ -43,9 +43,7 @@
 //
 //M*/
 
-#if defined (__ATI__)
-#pragma OPENCL EXTENSION cl_amd_fp64:enable
-#elif defined (__NVIDIA__)
+#if defined (DOUBLE_SUPPORT)
 #pragma OPENCL EXTENSION cl_khr_fp64:enable
 #endif
 
@@ -53,8 +51,7 @@
 __kernel void arithm_s_add_with_mask_C1_D0 (__global   uchar *src1, int src1_step, int src1_offset,
                                             __global   uchar *dst,  int dst_step,  int dst_offset,
                                             __global   uchar *mask, int mask_step, int mask_offset,
-                                            __constant int *src2 __attribute__((max_constant_size (16384))),
-                                            int rows, int cols, int dst_step1)
+                                            int4 src2, int rows, int cols, int dst_step1)
 {
 
     int x = get_global_id(0);
@@ -73,7 +70,7 @@ __kernel void arithm_s_add_with_mask_C1_D0 (__global   uchar *src1, int src1_ste
         int dst_index  = mad24(y, dst_step, dst_offset + x & (int)0xfffffffc);
 
         uchar4 src1_data = vload4(0, src1 + src1_index);
-        int4 src2_data = (int4)(*src2, *src2, *src2, *src2);
+        int4 src2_data = (int4)(src2.x, src2.x, src2.x, src2.x);
         uchar4 mask_data = vload4(0, mask + mask_index);
 
         uchar4 data = *((__global uchar4 *)(dst + dst_index));
@@ -91,8 +88,7 @@ __kernel void arithm_s_add_with_mask_C1_D0 (__global   uchar *src1, int src1_ste
 __kernel void arithm_s_add_with_mask_C1_D2 (__global   ushort *src1, int src1_step, int src1_offset,
                                             __global   ushort *dst,  int dst_step,  int dst_offset,
                                             __global   uchar  *mask, int mask_step, int mask_offset,
-                                            __constant int *src2 __attribute__((max_constant_size (16384))),
-                                            int rows, int cols, int dst_step1)
+                                            int4 src2, int rows, int cols, int dst_step1)
 {
 
     int x = get_global_id(0);
@@ -111,7 +107,7 @@ __kernel void arithm_s_add_with_mask_C1_D2 (__global   ushort *src1, int src1_st
         int dst_index  = mad24(y, dst_step, dst_offset + (x << 1) & (int)0xfffffffc);
 
         ushort2 src1_data = vload2(0, (__global ushort *)((__global char *)src1 + src1_index));
-        int2 src2_data = (int2)(*src2, *src2);
+        int2 src2_data = (int2)(src2.x, src2.x);
         uchar2  mask_data = vload2(0, mask + mask_index);
 
         ushort2 data = *((__global ushort2 *)((__global uchar *)dst + dst_index));
@@ -127,8 +123,7 @@ __kernel void arithm_s_add_with_mask_C1_D2 (__global   ushort *src1, int src1_st
 __kernel void arithm_s_add_with_mask_C1_D3 (__global   short *src1, int src1_step, int src1_offset,
                                             __global   short *dst,  int dst_step,  int dst_offset,
                                             __global   uchar *mask, int mask_step, int mask_offset,
-                                            __constant int *src2 __attribute__((max_constant_size (16384))),
-                                            int rows, int cols, int dst_step1)
+                                            int4 src2, int rows, int cols, int dst_step1)
 {
 
     int x = get_global_id(0);
@@ -147,7 +142,7 @@ __kernel void arithm_s_add_with_mask_C1_D3 (__global   short *src1, int src1_ste
         int dst_index  = mad24(y, dst_step, dst_offset + (x << 1) & (int)0xfffffffc);
 
         short2 src1_data = vload2(0, (__global short *)((__global char *)src1 + src1_index));
-        int2 src2_data = (int2)(*src2, *src2);
+        int2 src2_data = (int2)(src2.x, src2.x);
         uchar2  mask_data = vload2(0, mask + mask_index);
 
         short2 data = *((__global short2 *)((__global uchar *)dst + dst_index));
@@ -163,8 +158,7 @@ __kernel void arithm_s_add_with_mask_C1_D3 (__global   short *src1, int src1_ste
 __kernel void arithm_s_add_with_mask_C1_D4 (__global   int   *src1, int src1_step, int src1_offset,
                                             __global   int   *dst,  int dst_step,  int dst_offset,
                                             __global   uchar *mask, int mask_step, int mask_offset,
-                                            __constant int   *src2 __attribute__((max_constant_size (16384))),
-                                            int rows, int cols, int dst_step1)
+                                            int4 src2, int rows, int cols, int dst_step1)
 {
 
     int x = get_global_id(0);
@@ -179,7 +173,7 @@ __kernel void arithm_s_add_with_mask_C1_D4 (__global   int   *src1, int src1_ste
         uchar mask_data = *(mask + mask_index);
 
         int src_data1 = *((__global int *)((__global char *)src1 + src1_index));
-        int src_data2 = *src2;
+        int src_data2 = src2.x;
         int dst_data  = *((__global int *)((__global char *)dst  + dst_index));
 
         int data = convert_int_sat((long)src_data1 + (long)src_data2);
@@ -192,8 +186,7 @@ __kernel void arithm_s_add_with_mask_C1_D4 (__global   int   *src1, int src1_ste
 __kernel void arithm_s_add_with_mask_C1_D5 (__global   float   *src1, int src1_step, int src1_offset,
                                             __global   float   *dst,  int dst_step,  int dst_offset,
                                             __global   uchar *mask, int mask_step, int mask_offset,
-                                            __constant float   *src2 __attribute__((max_constant_size (16384))),
-                                            int rows, int cols, int dst_step1)
+                                            float4 src2, int rows, int cols, int dst_step1)
 {
 
     int x = get_global_id(0);
@@ -208,7 +201,7 @@ __kernel void arithm_s_add_with_mask_C1_D5 (__global   float   *src1, int src1_s
         uchar mask_data = *(mask + mask_index);
 
         float src_data1 = *((__global float *)((__global char *)src1 + src1_index));
-        float src_data2 = *src2;
+        float src_data2 = src2.x;
         float dst_data  = *((__global float *)((__global char *)dst  + dst_index));
 
         float data = src_data1 + src_data2;
@@ -218,11 +211,12 @@ __kernel void arithm_s_add_with_mask_C1_D5 (__global   float   *src1, int src1_s
     }
 }
 
+
+#if defined (DOUBLE_SUPPORT)
 __kernel void arithm_s_add_with_mask_C1_D6 (__global   double   *src1, int src1_step, int src1_offset,
                                             __global   double   *dst,  int dst_step,  int dst_offset,
                                             __global   uchar *mask, int mask_step, int mask_offset,
-                                            __constant double   *src2 __attribute__((max_constant_size (16384))),
-                                            int rows, int cols, int dst_step1)
+                                            double4 src2, int rows, int cols, int dst_step1)
 {
 
     int x = get_global_id(0);
@@ -237,7 +231,7 @@ __kernel void arithm_s_add_with_mask_C1_D6 (__global   double   *src1, int src1_
         uchar mask_data = *(mask + mask_index);
 
         double src_data1 = *((__global double *)((__global char *)src1 + src1_index));
-        double src_data2 = *src2;
+        double src_data2 = src2.x;
         double dst_data  = *((__global double *)((__global char *)dst  + dst_index));
 
         double data = src_data1 + src_data2;
@@ -246,11 +240,11 @@ __kernel void arithm_s_add_with_mask_C1_D6 (__global   double   *src1, int src1_
         *((__global double *)((__global char *)dst + dst_index)) = data;
     }
 }
+#endif
 __kernel void arithm_s_add_with_mask_C2_D0 (__global   uchar *src1, int src1_step, int src1_offset,
                                             __global   uchar *dst,  int dst_step,  int dst_offset,
                                             __global   uchar *mask, int mask_step, int mask_offset,
-                                            __constant int *src2 __attribute__((max_constant_size (16384))),
-                                            int rows, int cols, int dst_step1)
+                                            int4 src2, int rows, int cols, int dst_step1)
 {
 
     int x = get_global_id(0);
@@ -269,7 +263,7 @@ __kernel void arithm_s_add_with_mask_C2_D0 (__global   uchar *src1, int src1_ste
         int dst_index  = mad24(y, dst_step, dst_offset + (x << 1) & (int)0xfffffffc);
 
         uchar4 src1_data = vload4(0, src1 + src1_index);
-        int4   src2_data = (int4)(*src2, *(src2 + 1), *src2, *(src2 + 1));
+        int4   src2_data = (int4)(src2.x, src2.y, src2.x, src2.y);
         uchar2 mask_data = vload2(0, mask + mask_index);
 
         uchar4 data = *((__global uchar4 *)(dst + dst_index));
@@ -285,8 +279,7 @@ __kernel void arithm_s_add_with_mask_C2_D0 (__global   uchar *src1, int src1_ste
 __kernel void arithm_s_add_with_mask_C2_D2 (__global   ushort *src1, int src1_step, int src1_offset,
                                             __global   ushort *dst,  int dst_step,  int dst_offset,
                                             __global   uchar *mask, int mask_step, int mask_offset,
-                                            __constant int *src2 __attribute__((max_constant_size (16384))),
-                                            int rows, int cols, int dst_step1)
+                                            int4 src2, int rows, int cols, int dst_step1)
 {
 
     int x = get_global_id(0);
@@ -301,7 +294,7 @@ __kernel void arithm_s_add_with_mask_C2_D2 (__global   ushort *src1, int src1_st
         uchar mask_data = *(mask + mask_index);
 
         ushort2 src_data1 = *((__global ushort2 *)((__global char *)src1 + src1_index));
-        int2 src_data2 = (int2)(*src2, *(src2 + 1)); 
+        int2 src_data2 = (int2)(src2.x, src2.y); 
         ushort2 dst_data  = *((__global ushort2 *)((__global char *)dst  + dst_index));
 
         int2    tmp = convert_int2_sat(src_data1) + src_data2;
@@ -314,8 +307,7 @@ __kernel void arithm_s_add_with_mask_C2_D2 (__global   ushort *src1, int src1_st
 __kernel void arithm_s_add_with_mask_C2_D3 (__global   short *src1, int src1_step, int src1_offset,
                                             __global   short *dst,  int dst_step,  int dst_offset,
                                             __global   uchar *mask, int mask_step, int mask_offset,
-                                            __constant int *src2 __attribute__((max_constant_size (16384))),
-                                            int rows, int cols, int dst_step1)
+                                            int4 src2, int rows, int cols, int dst_step1)
 {
 
     int x = get_global_id(0);
@@ -330,7 +322,7 @@ __kernel void arithm_s_add_with_mask_C2_D3 (__global   short *src1, int src1_ste
         uchar mask_data = *(mask + mask_index);
 
         short2 src_data1 = *((__global short2 *)((__global char *)src1 + src1_index));
-        int2 src_data2 = (int2)(*src2, *(src2 + 1)); 
+        int2 src_data2 = (int2)(src2.x, src2.y); 
         short2 dst_data  = *((__global short2 *)((__global char *)dst  + dst_index));
 
         int2    tmp = convert_int2_sat(src_data1) + src_data2;
@@ -343,8 +335,7 @@ __kernel void arithm_s_add_with_mask_C2_D3 (__global   short *src1, int src1_ste
 __kernel void arithm_s_add_with_mask_C2_D4 (__global   int *src1, int src1_step, int src1_offset,
                                             __global   int *dst,  int dst_step,  int dst_offset,
                                             __global   uchar *mask, int mask_step, int mask_offset,
-                                            __constant int *src2 __attribute__((max_constant_size (16384))),
-                                            int rows, int cols, int dst_step1)
+                                            int4 src2, int rows, int cols, int dst_step1)
 {
 
     int x = get_global_id(0);
@@ -359,7 +350,7 @@ __kernel void arithm_s_add_with_mask_C2_D4 (__global   int *src1, int src1_step,
         uchar mask_data = *(mask + mask_index);
 
         int2 src_data1 = *((__global int2 *)((__global char *)src1 + src1_index));
-        int2 src_data2 = (int2)(*src2, *(src2 + 1)); 
+        int2 src_data2 = (int2)(src2.x, src2.y); 
         int2 dst_data  = *((__global int2 *)((__global char *)dst  + dst_index));
 
         int2 data = convert_int2_sat(convert_long2_sat(src_data1) + convert_long2_sat(src_data2));
@@ -371,8 +362,7 @@ __kernel void arithm_s_add_with_mask_C2_D4 (__global   int *src1, int src1_step,
 __kernel void arithm_s_add_with_mask_C2_D5 (__global   float *src1, int src1_step, int src1_offset,
                                             __global   float *dst,  int dst_step,  int dst_offset,
                                             __global   uchar *mask, int mask_step, int mask_offset,
-                                            __constant float *src2 __attribute__((max_constant_size (16384))),
-                                            int rows, int cols, int dst_step1)
+                                            float4 src2, int rows, int cols, int dst_step1)
 {
 
     int x = get_global_id(0);
@@ -387,7 +377,7 @@ __kernel void arithm_s_add_with_mask_C2_D5 (__global   float *src1, int src1_ste
         uchar mask_data = *(mask + mask_index);
 
         float2 src_data1 = *((__global float2 *)((__global char *)src1 + src1_index));
-        float2 src_data2 = (float2)(*src2, *(src2 + 1)); 
+        float2 src_data2 = (float2)(src2.x, src2.y); 
         float2 dst_data  = *((__global float2 *)((__global char *)dst  + dst_index));
 
         float2 data = src_data1 + src_data2;
@@ -396,11 +386,12 @@ __kernel void arithm_s_add_with_mask_C2_D5 (__global   float *src1, int src1_ste
         *((__global float2 *)((__global char *)dst + dst_index)) = data;
     }
 }
+
+#if defined (DOUBLE_SUPPORT)
 __kernel void arithm_s_add_with_mask_C2_D6 (__global   double *src1, int src1_step, int src1_offset,
                                             __global   double *dst,  int dst_step,  int dst_offset,
                                             __global   uchar *mask, int mask_step, int mask_offset,
-                                            __constant double *src2 __attribute__((max_constant_size (16384))),
-                                            int rows, int cols, int dst_step1)
+                                            double4 src2, int rows, int cols, int dst_step1)
 {
 
     int x = get_global_id(0);
@@ -415,7 +406,7 @@ __kernel void arithm_s_add_with_mask_C2_D6 (__global   double *src1, int src1_st
         uchar mask_data = *(mask + mask_index);
 
         double2 src_data1 = *((__global double2 *)((__global char *)src1 + src1_index));
-        double2 src_data2 = (double2)(*src2, *(src2 + 1)); 
+        double2 src_data2 = (double2)(src2.x, src2.y); 
         double2 dst_data  = *((__global double2 *)((__global char *)dst  + dst_index));
 
         double2 data = src_data1 + src_data2;
@@ -424,11 +415,12 @@ __kernel void arithm_s_add_with_mask_C2_D6 (__global   double *src1, int src1_st
         *((__global double2 *)((__global char *)dst + dst_index)) = data;
     }
 }
+#endif
+
 __kernel void arithm_s_add_with_mask_C3_D0 (__global   uchar *src1, int src1_step, int src1_offset,
                                             __global   uchar *dst,  int dst_step,  int dst_offset,
                                             __global   uchar *mask, int mask_step, int mask_offset,
-                                            __constant int *src2 __attribute__((max_constant_size (16384))),
-                                            int rows, int cols, int dst_step1)
+                                            int4 src2, int rows, int cols, int dst_step1)
 {
 
     int x = get_global_id(0);
@@ -450,9 +442,9 @@ __kernel void arithm_s_add_with_mask_C3_D0 (__global   uchar *src1, int src1_ste
         uchar4 src1_data_1 = vload4(0, src1 + src1_index + 4);
         uchar4 src1_data_2 = vload4(0, src1 + src1_index + 8);
 
-        int4 src2_data_0 = (int4)(*(src2 + 0), *(src2 + 1), *(src2 + 2), *(src2 + 0));
-        int4 src2_data_1 = (int4)(*(src2 + 1), *(src2 + 2), *(src2 + 0), *(src2 + 1));
-        int4 src2_data_2 = (int4)(*(src2 + 2), *(src2 + 0), *(src2 + 1), *(src2 + 2));
+        int4 src2_data_0 = (int4)(src2.x, src2.y, src2.z, src2.x);
+        int4 src2_data_1 = (int4)(src2.y, src2.z, src2.x, src2.y);
+        int4 src2_data_2 = (int4)(src2.z, src2.x, src2.y, src2.z);
 
         uchar4 mask_data = vload4(0, mask + mask_index);
 
@@ -486,8 +478,7 @@ __kernel void arithm_s_add_with_mask_C3_D0 (__global   uchar *src1, int src1_ste
 __kernel void arithm_s_add_with_mask_C3_D2 (__global   ushort *src1, int src1_step, int src1_offset,
                                             __global   ushort *dst,  int dst_step,  int dst_offset,
                                             __global   uchar *mask, int mask_step, int mask_offset,
-                                            __constant int *src2 __attribute__((max_constant_size (16384))),
-                                            int rows, int cols, int dst_step1)
+                                            int4 src2, int rows, int cols, int dst_step1)
 {
 
     int x = get_global_id(0);
@@ -509,9 +500,9 @@ __kernel void arithm_s_add_with_mask_C3_D2 (__global   ushort *src1, int src1_st
         ushort2 src1_data_1 = vload2(0, (__global ushort *)((__global char *)src1 + src1_index + 4));
         ushort2 src1_data_2 = vload2(0, (__global ushort *)((__global char *)src1 + src1_index + 8));
 
-        int2 src2_data_0 = (int2)(*(src2 + 0), *(src2 + 1)); 
-        int2 src2_data_1 = (int2)(*(src2 + 2), *(src2 + 0)); 
-        int2 src2_data_2 = (int2)(*(src2 + 1), *(src2 + 2)); 
+        int2 src2_data_0 = (int2)(src2.x, src2.y); 
+        int2 src2_data_1 = (int2)(src2.z, src2.x); 
+        int2 src2_data_2 = (int2)(src2.y, src2.z); 
 
         uchar2 mask_data = vload2(0, mask + mask_index);
 
@@ -541,8 +532,7 @@ __kernel void arithm_s_add_with_mask_C3_D2 (__global   ushort *src1, int src1_st
 __kernel void arithm_s_add_with_mask_C3_D3 (__global   short *src1, int src1_step, int src1_offset,
                                             __global   short *dst,  int dst_step,  int dst_offset,
                                             __global   uchar *mask, int mask_step, int mask_offset,
-                                            __constant int *src2 __attribute__((max_constant_size (16384))),
-                                            int rows, int cols, int dst_step1)
+                                            int4 src2, int rows, int cols, int dst_step1)
 {
 
     int x = get_global_id(0);
@@ -564,9 +554,9 @@ __kernel void arithm_s_add_with_mask_C3_D3 (__global   short *src1, int src1_ste
         short2 src1_data_1 = vload2(0, (__global short *)((__global char *)src1 + src1_index + 4));
         short2 src1_data_2 = vload2(0, (__global short *)((__global char *)src1 + src1_index + 8));
 
-        int2 src2_data_0 = (int2)(*(src2 + 0), *(src2 + 1)); 
-        int2 src2_data_1 = (int2)(*(src2 + 2), *(src2 + 0)); 
-        int2 src2_data_2 = (int2)(*(src2 + 1), *(src2 + 2)); 
+        int2 src2_data_0 = (int2)(src2.x, src2.y); 
+        int2 src2_data_1 = (int2)(src2.z, src2.x); 
+        int2 src2_data_2 = (int2)(src2.y, src2.z); 
 
         uchar2 mask_data = vload2(0, mask + mask_index);
 
@@ -596,8 +586,7 @@ __kernel void arithm_s_add_with_mask_C3_D3 (__global   short *src1, int src1_ste
 __kernel void arithm_s_add_with_mask_C3_D4 (__global   int *src1, int src1_step, int src1_offset,
                                             __global   int *dst,  int dst_step,  int dst_offset,
                                             __global   uchar *mask, int mask_step, int mask_offset,
-                                            __constant int *src2 __attribute__((max_constant_size (16384))),
-                                            int rows, int cols, int dst_step1)
+                                            int4 src2, int rows, int cols, int dst_step1)
 {
 
     int x = get_global_id(0);
@@ -613,9 +602,9 @@ __kernel void arithm_s_add_with_mask_C3_D4 (__global   int *src1, int src1_step,
         int src1_data_1 = *((__global int *)((__global char *)src1 + src1_index + 4));
         int src1_data_2 = *((__global int *)((__global char *)src1 + src1_index + 8));
 
-        int src2_data_0 = *src2; 
-        int src2_data_1 = *(src2 + 1);
-        int src2_data_2 = *(src2 + 2); 
+        int src2_data_0 = src2.x; 
+        int src2_data_1 = src2.y;
+        int src2_data_2 = src2.z; 
 
         uchar mask_data = * (mask + mask_index);
 
@@ -639,8 +628,7 @@ __kernel void arithm_s_add_with_mask_C3_D4 (__global   int *src1, int src1_step,
 __kernel void arithm_s_add_with_mask_C3_D5 (__global   float *src1, int src1_step, int src1_offset,
                                             __global   float *dst,  int dst_step,  int dst_offset,
                                             __global   uchar *mask, int mask_step, int mask_offset,
-                                            __constant float *src2 __attribute__((max_constant_size (16384))),
-                                            int rows, int cols, int dst_step1)
+                                            float4 src2, int rows, int cols, int dst_step1)
 {
 
     int x = get_global_id(0);
@@ -656,9 +644,9 @@ __kernel void arithm_s_add_with_mask_C3_D5 (__global   float *src1, int src1_ste
         float src1_data_1 = *((__global float *)((__global char *)src1 + src1_index + 4));
         float src1_data_2 = *((__global float *)((__global char *)src1 + src1_index + 8));
                                              
-        float src2_data_0 = *src2; 
-        float src2_data_1 = *(src2 + 1);
-        float src2_data_2 = *(src2 + 2); 
+        float src2_data_0 = src2.x; 
+        float src2_data_1 = src2.y;
+        float src2_data_2 = src2.z; 
 
         uchar mask_data = * (mask + mask_index);
 
@@ -679,11 +667,12 @@ __kernel void arithm_s_add_with_mask_C3_D5 (__global   float *src1, int src1_ste
        *((__global float *)((__global char *)dst + dst_index + 8))= data_2;
     }
 }
+
+#if defined (DOUBLE_SUPPORT)
 __kernel void arithm_s_add_with_mask_C3_D6 (__global   double *src1, int src1_step, int src1_offset,
                                             __global   double *dst,  int dst_step,  int dst_offset,
                                             __global   uchar  *mask, int mask_step, int mask_offset,
-                                            __constant double *src2 __attribute__((max_constant_size (16384))),
-                                            int rows, int cols, int dst_step1)
+                                            double4 src2, int rows, int cols, int dst_step1)
 {
 
     int x = get_global_id(0);
@@ -699,9 +688,9 @@ __kernel void arithm_s_add_with_mask_C3_D6 (__global   double *src1, int src1_st
         double src1_data_1 = *((__global double *)((__global char *)src1 + src1_index + 8 ));
         double src1_data_2 = *((__global double *)((__global char *)src1 + src1_index + 16));
                                                
-        double src2_data_0 = *src2; 
-        double src2_data_1 = *(src2 + 1);
-        double src2_data_2 = *(src2 + 2); 
+        double src2_data_0 = src2.x; 
+        double src2_data_1 = src2.y;
+        double src2_data_2 = src2.z; 
 
         uchar mask_data = * (mask + mask_index);
 
@@ -722,11 +711,12 @@ __kernel void arithm_s_add_with_mask_C3_D6 (__global   double *src1, int src1_st
        *((__global double *)((__global char *)dst + dst_index + 16))= data_2;
     }
 }
+#endif
+
 __kernel void arithm_s_add_with_mask_C4_D0 (__global   uchar *src1, int src1_step, int src1_offset,
                                             __global   uchar *dst,  int dst_step,  int dst_offset,
                                             __global   uchar *mask, int mask_step, int mask_offset,
-                                            __constant int *src2 __attribute__((max_constant_size (16384))),
-                                            int rows, int cols, int dst_step1)
+                                            int4 src2, int rows, int cols, int dst_step1)
 {
 
     int x = get_global_id(0);
@@ -741,10 +731,9 @@ __kernel void arithm_s_add_with_mask_C4_D0 (__global   uchar *src1, int src1_ste
         uchar mask_data = *(mask + mask_index);
 
         uchar4 src_data1 = *((__global uchar4 *)(src1 + src1_index));
-        int4 src_data2 = *((__constant int4 *)src2);
         uchar4 dst_data  = *((__global uchar4 *)(dst  + dst_index));
 
-        uchar4 data = convert_uchar4_sat(convert_int4_sat(src_data1) + src_data2);
+        uchar4 data = convert_uchar4_sat(convert_int4_sat(src_data1) + src2);
         data = mask_data ? data : dst_data; 
 
         *((__global uchar4 *)(dst + dst_index)) = data;
@@ -753,8 +742,7 @@ __kernel void arithm_s_add_with_mask_C4_D0 (__global   uchar *src1, int src1_ste
 __kernel void arithm_s_add_with_mask_C4_D2 (__global   ushort *src1, int src1_step, int src1_offset,
                                             __global   ushort *dst,  int dst_step,  int dst_offset,
                                             __global   uchar *mask, int mask_step, int mask_offset,
-                                            __constant int *src2 __attribute__((max_constant_size (16384))),
-                                            int rows, int cols, int dst_step1)
+                                            int4 src2, int rows, int cols, int dst_step1)
 {
 
     int x = get_global_id(0);
@@ -769,10 +757,9 @@ __kernel void arithm_s_add_with_mask_C4_D2 (__global   ushort *src1, int src1_st
         uchar mask_data = *(mask + mask_index);
 
         ushort4 src_data1 = *((__global ushort4 *)((__global char *)src1 + src1_index));
-        int4 src_data2 = *((__constant int4 *)src2); 
         ushort4 dst_data  = *((__global ushort4 *)((__global char *)dst  + dst_index));
 
-        ushort4 data = convert_ushort4_sat(convert_int4_sat(src_data1) + src_data2);
+        ushort4 data = convert_ushort4_sat(convert_int4_sat(src_data1) + src2);
         data = mask_data ? data : dst_data; 
 
         *((__global ushort4 *)((__global char *)dst + dst_index)) = data;
@@ -781,8 +768,7 @@ __kernel void arithm_s_add_with_mask_C4_D2 (__global   ushort *src1, int src1_st
 __kernel void arithm_s_add_with_mask_C4_D3 (__global   short *src1, int src1_step, int src1_offset,
                                             __global   short *dst,  int dst_step,  int dst_offset,
                                             __global   uchar *mask, int mask_step, int mask_offset,
-                                            __constant int *src2 __attribute__((max_constant_size (16384))),
-                                            int rows, int cols, int dst_step1)
+                                            int4 src2, int rows, int cols, int dst_step1)
 {
 
     int x = get_global_id(0);
@@ -797,10 +783,9 @@ __kernel void arithm_s_add_with_mask_C4_D3 (__global   short *src1, int src1_ste
         uchar mask_data = *(mask + mask_index);
 
         short4 src_data1 = *((__global short4 *)((__global char *)src1 + src1_index));
-        int4 src_data2 = *((__constant int4 *)src2);
         short4 dst_data  = *((__global short4 *)((__global char *)dst  + dst_index));
 
-        short4 data = convert_short4_sat(convert_int4_sat(src_data1) + src_data2);
+        short4 data = convert_short4_sat(convert_int4_sat(src_data1) + src2);
         data = mask_data ? data : dst_data; 
 
         *((__global short4 *)((__global char *)dst + dst_index)) = data;
@@ -809,8 +794,7 @@ __kernel void arithm_s_add_with_mask_C4_D3 (__global   short *src1, int src1_ste
 __kernel void arithm_s_add_with_mask_C4_D4 (__global   int *src1, int src1_step, int src1_offset,
                                             __global   int *dst,  int dst_step,  int dst_offset,
                                             __global   uchar *mask, int mask_step, int mask_offset,
-                                            __constant int *src2 __attribute__((max_constant_size (16384))),
-                                            int rows, int cols, int dst_step1)
+                                            int4 src2, int rows, int cols, int dst_step1)
 {
 
     int x = get_global_id(0);
@@ -825,10 +809,9 @@ __kernel void arithm_s_add_with_mask_C4_D4 (__global   int *src1, int src1_step,
         uchar mask_data = *(mask + mask_index);
 
         int4 src_data1 = *((__global int4 *)((__global char *)src1 + src1_index));
-        int4 src_data2 = *((__constant int4 *)src2);
         int4 dst_data  = *((__global int4 *)((__global char *)dst  + dst_index));
 
-        int4 data = convert_int4_sat(convert_long4_sat(src_data1) + convert_long4_sat(src_data2));
+        int4 data = convert_int4_sat(convert_long4_sat(src_data1) + convert_long4_sat(src2));
         data = mask_data ? data : dst_data; 
 
         *((__global int4 *)((__global char *)dst + dst_index)) = data;
@@ -837,8 +820,7 @@ __kernel void arithm_s_add_with_mask_C4_D4 (__global   int *src1, int src1_step,
 __kernel void arithm_s_add_with_mask_C4_D5 (__global   float *src1, int src1_step, int src1_offset,
                                             __global   float *dst,  int dst_step,  int dst_offset,
                                             __global   uchar *mask, int mask_step, int mask_offset,
-                                            __constant float *src2 __attribute__((max_constant_size (16384))),
-                                            int rows, int cols, int dst_step1)
+                                            float4 src2, int rows, int cols, int dst_step1)
 {
 
     int x = get_global_id(0);
@@ -853,20 +835,20 @@ __kernel void arithm_s_add_with_mask_C4_D5 (__global   float *src1, int src1_ste
         uchar mask_data = *(mask + mask_index);
 
         float4 src_data1 = *((__global float4 *)((__global char *)src1 + src1_index));
-        float4 src_data2 = *((__constant float4 *)src2);
         float4 dst_data  = *((__global float4 *)((__global char *)dst  + dst_index));
 
-        float4 data = src_data1 + src_data2;
+        float4 data = src_data1 + src2;
         data = mask_data ? data : dst_data; 
 
         *((__global float4 *)((__global char *)dst + dst_index)) = data;
     }
 }
+
+#if defined (DOUBLE_SUPPORT)
 __kernel void arithm_s_add_with_mask_C4_D6 (__global   double *src1, int src1_step, int src1_offset,
                                             __global   double *dst,  int dst_step,  int dst_offset,
                                             __global   uchar *mask, int mask_step, int mask_offset,
-                                            __constant double *src2 __attribute__((max_constant_size (16384))),
-                                            int rows, int cols, int dst_step1)
+                                            double4 src2, int rows, int cols, int dst_step1)
 {
 
     int x = get_global_id(0);
@@ -881,12 +863,12 @@ __kernel void arithm_s_add_with_mask_C4_D6 (__global   double *src1, int src1_st
         uchar mask_data = *(mask + mask_index);
 
         double4 src_data1 = *((__global double4 *)((__global char *)src1 + src1_index));
-        double4 src_data2 = *((__constant double4 *)src2);
         double4 dst_data  = *((__global double4 *)((__global char *)dst  + dst_index));
 
-        double4 data = src_data1 + src_data2;
+        double4 data = src_data1 + src2;
         data = mask_data ? data : dst_data; 
 
         *((__global double4 *)((__global char *)dst + dst_index)) = data;
     }
 }
+#endif

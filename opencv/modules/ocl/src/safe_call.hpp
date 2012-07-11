@@ -47,9 +47,9 @@
 #define __OPENCV_OPENCL_SAFE_CALL_HPP__
 
 #if defined __APPLE__
-  #include <OpenCL/OpenCL.h>
+#include <OpenCL/OpenCL.h>
 #else
-  #include <CL/cl.h>
+#include <CL/cl.h>
 #endif
 
 #if defined(__GNUC__)

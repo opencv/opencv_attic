@@ -43,12 +43,11 @@
 //
 //M*/
 
-#if defined (__ATI__)
-#pragma OPENCL EXTENSION cl_amd_fp64:enable
-#elif defined (__NVIDIA__)
+#if defined (DOUBLE_SUPPORT)
 #pragma OPENCL EXTENSION cl_khr_fp64:enable
 #endif
 /************************************** pow **************************************/
+#if defined (DOUBLE_SUPPORT)
 __kernel void arithm_pow_D5 (__global float *src1, int src1_step, int src1_offset,
                              __global float *dst,  int dst_step,  int dst_offset,
                              int rows, int cols, int dst_step1,
@@ -70,6 +69,7 @@ __kernel void arithm_pow_D5 (__global float *src1, int src1_step, int src1_offse
     }
 
 }
+#endif
 
 
 #if defined (DOUBLE_SUPPORT)

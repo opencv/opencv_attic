@@ -1,4 +1,4 @@
-/*M///////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////
 //
 //  IMPORTANT: READ BEFORE DOWNLOADING, COPYING, INSTALLING OR USING.
 //
@@ -42,13 +42,11 @@
 // or tort (including negligence or otherwise) arising in any way out of
 // the use of this software, even if advised of the possibility of such damage.
 //
-//M*/
+//
 
-#if defined (__ATI__)
-#pragma OPENCL EXTENSION cl_amd_fp64:enable
-#elif defined (__NVIDIA__)
+#if defined (DOUBLE_SUPPORT)
 #pragma OPENCL EXTENSION cl_khr_fp64:enable
-endif
+#endif
 #define CV_PI 3.1415926535898
 /**************************************phase inradians**************************************/
 __kernel void arithm_phase_inradians_D5 (__global float *src1, int src1_step, int src1_offset,

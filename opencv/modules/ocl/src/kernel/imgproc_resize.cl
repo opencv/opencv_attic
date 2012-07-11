@@ -49,11 +49,7 @@
 // We shall support other types later if necessary.
 
 #if defined DOUBLE_SUPPORT
-#if defined (__ATI__)
-#pragma OPENCL EXTENSION cl_amd_fp64:enable
-#elif defined (__NVIDIA__)
 #pragma OPENCL EXTENSION cl_khr_fp64:enable
-#endif
 typedef double F ;
 #else 
 typedef float F;

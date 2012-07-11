@@ -95,8 +95,8 @@ __kernel __attribute__((reqd_work_group_size(LSIZE0,LSIZE1,1))) void col_filter_
 						 __global uchar * dst,
                          const int dst_cols,
                          const int dst_rows, 
-						 //const int src_whole_cols,
-						 //const int src_whole_rows,
+						 const int src_whole_cols,
+						 const int src_whole_rows,
                          const int src_step_in_pixel, 
                          //const int src_offset_x, 
                          //const int src_offset_y, 
@@ -109,6 +109,7 @@ __kernel __attribute__((reqd_work_group_size(LSIZE0,LSIZE1,1))) void col_filter_
 	int l_x = get_local_id(0);
 	int l_y = get_local_id(1);
 	int start_addr = mad24(y,src_step_in_pixel,x);
+	int end_addr = mad24(src_whole_rows - 1,src_step_in_pixel,src_whole_cols);
 	int i;
 	float sum;
 	float temp[READ_TIMES_COL];
@@ -118,7 +119,9 @@ __kernel __attribute__((reqd_work_group_size(LSIZE0,LSIZE1,1))) void col_filter_
 	//read pixels from src
 	for(i = 0;i<READ_TIMES_COL;i++)
 	{
-		temp[i] = src[start_addr+i*LSIZE1*src_step_in_pixel];
+		int current_addr = start_addr+i*LSIZE1*src_step_in_pixel;
+		current_addr = current_addr < end_addr ? current_addr : 0;
+		temp[i] = src[current_addr];
 	}
 	//save pixels to lds
 	for(i = 0;i<READ_TIMES_COL;i++)
@@ -147,8 +150,8 @@ __kernel __attribute__((reqd_work_group_size(LSIZE0,LSIZE1,1))) void col_filter_
 						 __global uchar4 * dst,
                          const int dst_cols,
                          const int dst_rows, 
-						 //const int src_whole_cols,
-						 //const int src_whole_rows,
+						 const int src_whole_cols,
+						 const int src_whole_rows,
                          const int src_step_in_pixel, 
                          //const int src_offset_x, 
                          //const int src_offset_y, 
@@ -161,6 +164,7 @@ __kernel __attribute__((reqd_work_group_size(LSIZE0,LSIZE1,1))) void col_filter_
 	int l_x = get_local_id(0);
 	int l_y = get_local_id(1);
 	int start_addr = mad24(y,src_step_in_pixel,x);
+	int end_addr = mad24(src_whole_rows - 1,src_step_in_pixel,src_whole_cols);
 	int i;
 	float4 sum;
 	float4 temp[READ_TIMES_COL];
@@ -170,7 +174,9 @@ __kernel __attribute__((reqd_work_group_size(LSIZE0,LSIZE1,1))) void col_filter_
 	//read pixels from src
 	for(i = 0;i<READ_TIMES_COL;i++)
 	{
-		temp[i] = src[start_addr+i*LSIZE1*src_step_in_pixel];
+		int current_addr = start_addr+i*LSIZE1*src_step_in_pixel;
+		current_addr = current_addr < end_addr ? current_addr : 0;
+		temp[i] = src[current_addr];
 	}
 	//save pixels to lds
 	for(i = 0;i<READ_TIMES_COL;i++)
@@ -199,8 +205,8 @@ __kernel __attribute__((reqd_work_group_size(LSIZE0,LSIZE1,1))) void col_filter_
 						 __global float * dst,
                          const int dst_cols,
                          const int dst_rows, 
-						 //const int src_whole_cols,
-						 //const int src_whole_rows,
+						 const int src_whole_cols,
+						 const int src_whole_rows,
                          const int src_step_in_pixel, 
                          //const int src_offset_x, 
                          //const int src_offset_y, 
@@ -213,6 +219,7 @@ __kernel __attribute__((reqd_work_group_size(LSIZE0,LSIZE1,1))) void col_filter_
 	int l_x = get_local_id(0);
 	int l_y = get_local_id(1);
 	int start_addr = mad24(y,src_step_in_pixel,x);
+	int end_addr = mad24(src_whole_rows - 1,src_step_in_pixel,src_whole_cols);
 	int i;
 	float sum;
 	float temp[READ_TIMES_COL];
@@ -222,7 +229,9 @@ __kernel __attribute__((reqd_work_group_size(LSIZE0,LSIZE1,1))) void col_filter_
 	//read pixels from src
 	for(i = 0;i<READ_TIMES_COL;i++)
 	{
-		temp[i] = src[start_addr+i*LSIZE1*src_step_in_pixel];
+		int current_addr = start_addr+i*LSIZE1*src_step_in_pixel;
+		current_addr = current_addr < end_addr ? current_addr : 0;
+		temp[i] = src[current_addr];
 	}
 	//save pixels to lds
 	for(i = 0;i<READ_TIMES_COL;i++)
@@ -250,8 +259,8 @@ __kernel __attribute__((reqd_work_group_size(LSIZE0,LSIZE1,1))) void col_filter_
 						 __global float4 * dst,
                          const int dst_cols,
                          const int dst_rows, 
-						 //const int src_whole_cols,
-						 //const int src_whole_rows,
+						 const int src_whole_cols,
+						 const int src_whole_rows,
                          const int src_step_in_pixel, 
                          //const int src_offset_x, 
                          //const int src_offset_y, 
@@ -264,6 +273,7 @@ __kernel __attribute__((reqd_work_group_size(LSIZE0,LSIZE1,1))) void col_filter_
 	int l_x = get_local_id(0);
 	int l_y = get_local_id(1);
 	int start_addr = mad24(y,src_step_in_pixel,x);
+	int end_addr = mad24(src_whole_rows - 1,src_step_in_pixel,src_whole_cols);
 	int i;
 	float4 sum;
 	float4 temp[READ_TIMES_COL];
@@ -273,7 +283,9 @@ __kernel __attribute__((reqd_work_group_size(LSIZE0,LSIZE1,1))) void col_filter_
 	//read pixels from src
 	for(i = 0;i<READ_TIMES_COL;i++)
 	{
-		temp[i] = src[start_addr+i*LSIZE1*src_step_in_pixel];
+		int current_addr = start_addr+i*LSIZE1*src_step_in_pixel;
+		current_addr = current_addr < end_addr ? current_addr : 0;
+		temp[i] = src[current_addr];
 	}
 	//save pixels to lds
 	for(i = 0;i<READ_TIMES_COL;i++)

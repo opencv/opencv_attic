@@ -43,9 +43,7 @@
 //
 //M*/
 
-#if defined (__ATI__)
-#pragma OPENCL EXTENSION cl_amd_fp64:enable
-#elif defined (__NVIDIA__)
+#if defined (DOUBLE_SUPPORT)
 #pragma OPENCL EXTENSION cl_khr_fp64:enable
 #endif
 
@@ -202,6 +200,8 @@ __kernel void arithm_sub_D5 (__global float *src1, int src1_step, int src1_offse
     }
 }
 
+
+#if defined (DOUBLE_SUPPORT)
 __kernel void arithm_sub_D6 (__global double *src1, int src1_step, int src1_offset,
                              __global double *src2, int src2_step, int src2_offset,
                              __global double *dst,  int dst_step,  int dst_offset,
@@ -222,6 +222,7 @@ __kernel void arithm_sub_D6 (__global double *src1, int src1_step, int src1_offs
         *((__global double *)((__global char *)dst + dst_index)) = data1 - data2;
     }
 }
+#endif
 
 /**************************************sub with mask**************************************/
 __kernel void arithm_sub_with_mask_C1_D0 (__global uchar *src1, int src1_step, int src1_offset,
@@ -397,6 +398,8 @@ __kernel void arithm_sub_with_mask_C1_D5 (__global float *src1, int src1_step, i
     }
 }
 
+
+#if defined (DOUBLE_SUPPORT)
 __kernel void arithm_sub_with_mask_C1_D6 (__global double *src1, int src1_step, int src1_offset,
                                           __global double *src2, int src2_step, int src2_offset,
                                           __global uchar *mask, int mask_step, int mask_offset,
@@ -426,6 +429,7 @@ __kernel void arithm_sub_with_mask_C1_D6 (__global double *src1, int src1_step, 
         *((__global double *)((__global char *)dst + dst_index)) = data;
     }
 }
+#endif
 
 __kernel void arithm_sub_with_mask_C2_D0 (__global uchar *src1, int src1_step, int src1_offset,
                                           __global uchar *src2, int src2_step, int src2_offset,
@@ -582,6 +586,8 @@ __kernel void arithm_sub_with_mask_C2_D5 (__global float *src1, int src1_step, i
         *((__global float2 *)((__global char *)dst + dst_index)) = data;
     }
 }
+
+#if defined (DOUBLE_SUPPORT)
 __kernel void arithm_sub_with_mask_C2_D6 (__global double *src1, int src1_step, int src1_offset,
                                           __global double *src2, int src2_step, int src2_offset,
                                           __global uchar *mask, int mask_step, int mask_offset,
@@ -611,6 +617,7 @@ __kernel void arithm_sub_with_mask_C2_D6 (__global double *src1, int src1_step, 
         *((__global double2 *)((__global char *)dst + dst_index)) = data;
     }
 }
+#endif
 __kernel void arithm_sub_with_mask_C3_D0 (__global uchar *src1, int src1_step, int src1_offset,
                                           __global uchar *src2, int src2_step, int src2_offset,
                                           __global uchar *mask, int mask_step, int mask_offset,
@@ -871,6 +878,8 @@ __kernel void arithm_sub_with_mask_C3_D5 (__global float *src1, int src1_step, i
        *((__global float *)((__global char *)dst + dst_index + 8))= data_2;
     }
 }
+
+#if defined (DOUBLE_SUPPORT)
 __kernel void arithm_sub_with_mask_C3_D6 (__global double *src1, int src1_step, int src1_offset,
                                           __global double *src2, int src2_step, int src2_offset,
                                           __global uchar  *mask, int mask_step, int mask_offset,
@@ -915,6 +924,7 @@ __kernel void arithm_sub_with_mask_C3_D6 (__global double *src1, int src1_step, 
        *((__global double *)((__global char *)dst + dst_index + 16))= data_2;
     }
 }
+#endif
 __kernel void arithm_sub_with_mask_C4_D0 (__global uchar *src1, int src1_step, int src1_offset,
                                           __global uchar *src2, int src2_step, int src2_offset,
                                           __global uchar *mask, int mask_step, int mask_offset,
@@ -1060,6 +1070,8 @@ __kernel void arithm_sub_with_mask_C4_D5 (__global float *src1, int src1_step, i
         *((__global float4 *)((__global char *)dst + dst_index)) = data;
     }
 }
+
+#if defined (DOUBLE_SUPPORT)
 __kernel void arithm_sub_with_mask_C4_D6 (__global double *src1, int src1_step, int src1_offset,
                                           __global double *src2, int src2_step, int src2_offset,
                                           __global uchar  *mask, int mask_step, int mask_offset,
@@ -1089,3 +1101,4 @@ __kernel void arithm_sub_with_mask_C4_D6 (__global double *src1, int src1_step, 
         *((__global double4 *)((__global char *)dst + dst_index)) = data;
     }
 }
+#endif

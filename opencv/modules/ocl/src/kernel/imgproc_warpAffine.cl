@@ -48,11 +48,7 @@
 //support data types: CV_8UC1, CV_8UC4, CV_32FC1, CV_32FC4, and three interpolation methods: NN, Linear, Cubic.
 
 #if defined DOUBLE_SUPPORT
-#if defined (__ATI__)
-#pragma OPENCL EXTENSION cl_amd_fp64:enable
-#elif defined (__NVIDIA__)
 #pragma OPENCL EXTENSION cl_khr_fp64:enable
-#endif
 typedef double F;
 typedef double4 F4;
 #define convert_F4 convert_double4

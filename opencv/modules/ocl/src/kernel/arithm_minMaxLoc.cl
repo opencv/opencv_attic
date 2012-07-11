@@ -44,10 +44,13 @@
 //M*/
 
 /**************************************PUBLICFUNC*************************************/
-#if defined (__ATI__)
-#pragma OPENCL EXTENSION cl_amd_fp64:enable
-#elif defined (__NVIDIA__)
+#if defined (DOUBLE_SUPPORT)
 #pragma OPENCL EXTENSION cl_khr_fp64:enable
+#define RES_TYPE double8
+#define CONVERT_RES_TYPE convert_double8
+#else
+#define RES_TYPE float8
+#define CONVERT_RES_TYPE convert_float8
 #endif
 
 #if defined (DEPTH_0)
@@ -108,7 +111,7 @@
 #endif
 
 #if defined (REPEAT_S0)
-#define repeat_s(a) a = a;
+#define repeat_s(a) a=a; 
 #endif
 #if defined (REPEAT_S1)
 #define repeat_s(a) a.s0 = a.s1;
@@ -133,7 +136,7 @@
 #endif
 
 #if defined (REPEAT_E0)
-#define repeat_e(a) a = a;
+#define repeat_e(a) a=a; 
 #endif
 #if defined (REPEAT_E1)
 #define repeat_e(a) a.s7 = a.s6;
@@ -162,7 +165,7 @@
 
 /**************************************Array minMax**************************************/
 __kernel void arithm_op_minMaxLoc (int cols,int invalid_cols,int offset,int elemnum,int groupnum,
-                                  __global VEC_TYPE *src, __global double8 *dst)
+                                  __global VEC_TYPE *src, __global RES_TYPE *dst)
 {
    unsigned int lid = get_local_id(0);
    unsigned int gid = get_group_id(0);
@@ -172,10 +175,11 @@ __kernel void arithm_op_minMaxLoc (int cols,int invalid_cols,int offset,int elem
    VEC_TYPE minval,maxval,temp;
    __local VEC_TYPE_LOC localmem_maxloc[128],localmem_minloc[128];
    VEC_TYPE_LOC minloc,maxloc,temploc,negative = -1;
+   int idx_c;
    if(id < elemnum)
    {
        temp = src[idx];
-       int idx_c = idx << 3;
+       idx_c = idx << 3;
        temploc = (VEC_TYPE_LOC)(idx_c,idx_c+1,idx_c+2,idx_c+3,idx_c+4,idx_c+5,idx_c+6,idx_c+7);
        if(id % cols == 0 ) 
        {
@@ -199,11 +203,12 @@ __kernel void arithm_op_minMaxLoc (int cols,int invalid_cols,int offset,int elem
        minloc = negative;
        maxloc = negative;
    }
+   float8 aaa;
    for(id=id + (groupnum << 8); id < elemnum;id = id + (groupnum << 8))
    {
        idx = offset + id + (id / cols) * invalid_cols;
        temp = src[idx];
-       int idx_c = idx << 3;
+       idx_c = idx << 3;
        temploc = (VEC_TYPE_LOC)(idx_c,idx_c+1,idx_c+2,idx_c+3,idx_c+4,idx_c+5,idx_c+6,idx_c+7);
        if(id % cols == 0 ) 
        {
@@ -219,6 +224,8 @@ __kernel void arithm_op_minMaxLoc (int cols,int invalid_cols,int offset,int elem
        maxval = max(maxval,temp);
        minloc = CONDITION_FUNC(minval == temp, temploc , minloc);
        maxloc = CONDITION_FUNC(maxval == temp, temploc , maxloc);
+       aaa= convert_float8(maxval == temp);
+       maxloc = convert_int8(aaa) ? temploc : maxloc;
    }
    if(lid > 127)
    {
@@ -252,10 +259,10 @@ __kernel void arithm_op_minMaxLoc (int cols,int invalid_cols,int offset,int elem
    }
    if( lid == 0)
    {
-       dst[gid] = convert_double8(localmem_min[0]);
-       dst[gid + groupnum] = convert_double8(localmem_max[0]);
-       dst[gid + 2 * groupnum] = convert_double8(localmem_minloc[0]);
-       dst[gid + 3 * groupnum] = convert_double8(localmem_maxloc[0]);
+       dst[gid] = CONVERT_RES_TYPE(localmem_min[0]);
+       dst[gid + groupnum] = CONVERT_RES_TYPE(localmem_max[0]);
+       dst[gid + 2 * groupnum] = CONVERT_RES_TYPE(localmem_minloc[0]);
+       dst[gid + 3 * groupnum] = CONVERT_RES_TYPE(localmem_maxloc[0]);
    }
 }
 
@@ -309,9 +316,9 @@ __kernel void arithm_op_minMaxLoc (int cols,int invalid_cols,int offset,int elem
 #define repeat_me(a) a.s7 = 0;a.s6 = 0;a.s5 = 0;a.s4 = 0;a.s3 = 0;a.s2 = 0;a.s1 = 0;
 #endif
 
-/**************************************Array minMax mask**************************************/
+/**************************************Array minMaxLoc mask**************************************/
 __kernel void arithm_op_minMaxLoc_mask (int cols,int invalid_cols,int offset,int elemnum,int groupnum,__global VEC_TYPE *src,
-                                        int minvalid_cols,int moffset,__global uchar8 *mask,__global double8  *dst)
+                                        int minvalid_cols,int moffset,__global uchar8 *mask,__global RES_TYPE  *dst)
 {
    unsigned int lid = get_local_id(0);
    unsigned int gid = get_group_id(0);
@@ -407,10 +414,10 @@ __kernel void arithm_op_minMaxLoc_mask (int cols,int invalid_cols,int offset,int
    }
    if( lid == 0)
    {
-       dst[gid] = convert_double8(localmem_min[0]);
-       dst[gid + groupnum] = convert_double8(localmem_max[0]);
-       dst[gid + 2 * groupnum] = convert_double8(localmem_minloc[0]);
-       dst[gid + 3 * groupnum] = convert_double8(localmem_maxloc[0]);
+       dst[gid] = CONVERT_RES_TYPE(localmem_min[0]);
+       dst[gid + groupnum] = CONVERT_RES_TYPE(localmem_max[0]);
+       dst[gid + 2 * groupnum] = CONVERT_RES_TYPE(localmem_minloc[0]);
+       dst[gid + 3 * groupnum] = CONVERT_RES_TYPE(localmem_maxloc[0]);
    }
 }
 

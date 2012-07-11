@@ -20,7 +20,7 @@
 //    Shengen Yan, yanshengen@gmail.com
 //    Jiang Liyuan, lyuan001.good@163.com
 //    Rock Li, Rock.Li@amd.com
-//    Zailong Wu, bullet@yeah.net
+//    Wu Zailong, bullet@yeah.net
 //    Xu Pang, pangxu010@163.com
 //
 // Redistribution and use in source and binary forms, with or without modification,
@@ -51,28 +51,16 @@
 
 #include "precomp.hpp"
 
-#define PRINT_CPU_TIME 5
-#define BIG_SIZE
-//#define TEST_POS
-
 #ifdef HAVE_OPENCL
 
 using namespace cvtest;
 using namespace testing;
 using namespace std;
 
-
-typedef struct
-{
-    short x;
-    short y;
-} COOR;
-
 MatType nulltype = -1;
 
 #define ONE_TYPE(type)  testing::ValuesIn(typeVector(type))
 #define NULL_TYPE  testing::ValuesIn(typeVector(nulltype))
-
 
 vector<MatType> typeVector(MatType type)
 {
@@ -80,6 +68,12 @@ vector<MatType> typeVector(MatType type)
     v.push_back(type);
     return v;
 }
+
+typedef struct
+{
+    short x;
+    short y;
+} COOR;
 
 COOR do_meanShift(int x0, int y0, uchar *sptr, uchar *dptr, int sstep, cv::Size size, int sp, int sr, int maxIter, float eps, int *tab)
 {
@@ -643,10 +637,10 @@ TEST_P(integral, Mat)
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // warpAffine  & warpPerspective
 
-PARAM_TEST_CASE(WarpTestBase, MatType, cv::Size, int)
+PARAM_TEST_CASE(WarpTestBase, MatType, int)
 {
     int type;
-    cv::Size dsize;
+    cv::Size size;
     int interpolation;
 
     //src mat
@@ -678,14 +672,14 @@ PARAM_TEST_CASE(WarpTestBase, MatType, cv::Size, int)
     virtual void SetUp()
     {
         type = GET_PARAM(0);
-        dsize = GET_PARAM(1);
-        interpolation = GET_PARAM(2);
+        //dsize = GET_PARAM(1);
+        interpolation = GET_PARAM(1);
 
         cv::RNG &rng = TS::ptr()->get_rng();
-        cv::Size size(MWIDTH, MHEIGHT);
+        size = cv::Size(MWIDTH, MHEIGHT);
 
         mat1 = randomMat(rng, size, type, 5, 16, false);
-        dst  = randomMat(rng, dsize, type, 5, 16, false);
+        dst  = randomMat(rng, size, type, 5, 16, false);
 
         int devnums = getDevice(oclinfo);
         CV_Assert(devnums > 0);
@@ -747,8 +741,8 @@ TEST_P(WarpAffine, Mat)
     {
         random_roi();
 
-        cv::warpAffine(mat1_roi, dst_roi, M, dsize, interpolation);
-        cv::ocl::warpAffine(gmat1, gdst, M, dsize, interpolation);
+        cv::warpAffine(mat1_roi, dst_roi, M, size, interpolation);
+        cv::ocl::warpAffine(gmat1, gdst, M, size, interpolation);
 
         cv::Mat cpu_dst;
         gdst_whole.download(cpu_dst);
@@ -779,8 +773,8 @@ TEST_P(WarpPerspective, Mat)
     {
         random_roi();
 
-        cv::warpPerspective(mat1_roi, dst_roi, M, dsize, interpolation);
-        cv::ocl::warpPerspective(gmat1, gdst, M, dsize, interpolation);
+        cv::warpPerspective(mat1_roi, dst_roi, M, size, interpolation);
+        cv::ocl::warpPerspective(gmat1, gdst, M, size, interpolation);
 
         cv::Mat cpu_dst;
         gdst_whole.download(cpu_dst);
@@ -791,6 +785,203 @@ TEST_P(WarpPerspective, Mat)
     }
 
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+// remap
+//////////////////////////////////////////////////////////////////////////////////////////////////
+
+PARAM_TEST_CASE(Remap, MatType, MatType, MatType, int, int)
+{
+    int srcType;
+    // int dstType;
+    int map1Type;
+    int map2Type;
+    cv::Scalar val;
+
+    int interpolation;
+    int bordertype;
+    //Scalar& borderValue;
+
+    cv::Mat src;
+    cv::Mat dst;
+    cv::Mat map1;
+    cv::Mat map2;
+
+    std::vector<cv::ocl::Info> oclinfo;
+    
+    int src_roicols;
+    int src_roirows;
+    int dst_roicols;
+    int dst_roirows;
+    int map1_roicols;
+    int map1_roirows;
+    int map2_roicols;
+    int map2_roirows;
+    int srcx;
+    int srcy;
+    int dstx;
+    int dsty;
+    int map1x;
+    int map1y;
+    int map2x;
+    int map2y;
+
+    cv::Mat src_roi;
+    cv::Mat dst_roi;
+    cv::Mat map1_roi;
+    cv::Mat map2_roi;
+
+    //ocl mat for testing
+    cv::ocl::oclMat gdst;
+    cv::ocl::oclMat gsrc;
+    cv::ocl::oclMat gmap1;
+    cv::ocl::oclMat gmap2;
+
+    //ocl mat with roi
+    cv::ocl::oclMat gsrc_roi;
+    cv::ocl::oclMat gdst_roi;
+    cv::ocl::oclMat gmap1_roi;
+    cv::ocl::oclMat gmap2_roi;
+
+    virtual void SetUp()
+    {
+        srcType = GET_PARAM(0);
+        //  dstType = GET_PARAM(1);
+        map1Type = GET_PARAM(1);
+        map2Type = GET_PARAM(2);
+        interpolation = GET_PARAM(3);
+        bordertype = GET_PARAM(4);
+        // borderValue = GET_PARAM(6);
+
+        int devnums = getDevice(oclinfo);
+        CV_Assert(devnums > 0);
+
+        cv::RNG& rng = TS::ptr()->get_rng();
+        //cv::Size size = cv::Size(20, 20);
+        cv::Size srcSize = cv::Size(15, 20);
+        cv::Size dstSize = cv::Size(20, 20);
+        cv::Size map1Size = cv::Size(20, 20);
+        double min = 1, max = 20;
+
+        if(srcType != nulltype)
+        {
+            src = randomMat(rng, srcSize, srcType, min, max, false);
+            gsrc = src;
+        }
+        if((map1Type == CV_16SC2 && map2Type == nulltype) || (map1Type == CV_32FC2&& map2Type == nulltype))
+        {
+            map1 = randomMat(rng, map1Size, map1Type, min, max, false);
+            gmap1 = map1;
+
+        }
+        else if (map1Type == CV_32FC1 && map2Type == CV_32FC1)
+        {
+            map1 = randomMat(rng, map1Size, map1Type, min, max, false);
+            map2 = randomMat(rng, map1Size, map1Type, min, max, false);
+            gmap1 = map1;
+            gmap2 = map2;
+        }
+
+        else
+            cout<<"The wrong input type"<<endl;
+
+        dst = randomMat(rng, map1Size, srcType, min, max, false);
+        gdst = dst;
+    }
+    void random_roi()
+    {
+        cv::RNG& rng = TS::ptr()->get_rng();
+
+        dst_roicols = rng.uniform(1, dst.cols);
+        dst_roirows = rng.uniform(1, dst.rows);
+
+        src_roicols = rng.uniform(1, src.cols);
+        src_roirows = rng.uniform(1, src.rows);
+
+        cout << "dst_roicols: " << dst_roicols << "dst_roirows: "<< dst_roirows << endl;
+        cout << "src_roicols: " << src_roicols << "dst_roirows: "<< src_roirows << endl;
+        
+        srcx = rng.uniform(0, src.cols - src_roicols);
+        srcy = rng.uniform(0, src.rows - src_roirows);
+        dstx = rng.uniform(0, dst.cols - dst_roicols);
+        dsty = rng.uniform(0, dst.rows - dst_roirows);
+        cout << "srcx: " << srcx << "srcy: " << srcy << "dstx: " << dstx << "dsty: " << dsty << endl;
+        map1_roicols = dst_roicols;
+        map1_roirows = dst_roirows;
+        map2_roicols = dst_roicols;
+        map2_roirows = dst_roirows;
+        map1x = dstx;
+        map1y = dsty;
+        map2x = dstx;
+        map2y = dsty;
+
+        switch (src.channels())
+        {
+            case 1:
+                val = cv::Scalar(rng.uniform(0.0, 10.0), 0, 0, 0);
+                break;
+            case 2:
+                val = cv::Scalar(rng.uniform(0.0, 10.0), rng.uniform(0.0, 10.0), 0, 0);
+                break;
+            case 3:
+                val = cv::Scalar(rng.uniform(0.0, 10.0), rng.uniform(0.0, 10.0), rng.uniform(0.0, 10.0), 0);
+                break;
+            case 4:
+                val = cv::Scalar(rng.uniform(0.0, 10.0), rng.uniform(0.0, 10.0), rng.uniform(0.0, 10.0), rng.uniform(0.0, 10.0));
+                break;
+        }
+        if(srcType != nulltype)
+        {
+            src_roi = src(Rect(srcx,srcy,src_roicols,src_roirows));
+            gsrc_roi = gsrc(Rect(srcx,srcy,src_roicols,src_roirows));
+            gsrc_roi = src_roi;
+        }
+        if((map1Type == CV_16SC2 && map2Type == nulltype) || (map1Type == CV_32FC2&& map2Type == nulltype))
+        {
+            map1_roi = map1(Rect(map1x,map1y,map1_roicols,map1_roirows));
+            gmap1_roi = map1_roi;
+          //  cv::Mat maptest(gmap1_roi);
+           // cout << "maptest " << endl;
+            //cout << maptest << endl;
+            //gmap1_roi = gmap1(Rect(map1x,map1y,map1_roicols,map1_roirows));
+        }
+
+        else if (map1Type == CV_32FC1 && map2Type == CV_32FC1)
+        {
+            map1_roi = map1(Rect(map1x,map1y,map1_roicols,map1_roirows));
+            gmap1_roi = map1_roi;
+            map2_roi = map2(Rect(map2x,map2y,map2_roicols,map2_roirows));
+            gmap2_roi = map2_roi;
+        }
+        dst_roi = dst(Rect(dstx, dsty, dst_roicols, dst_roirows));
+        gdst_roi = gdst(Rect(dstx,dsty,dst_roicols,dst_roirows));
+
+   
+    }
+};
+
+TEST_P(Remap, Mat)
+{
+    int bordertype[] = {cv::BORDER_CONSTANT,cv::BORDER_REPLICATE/*,BORDER_REFLECT,BORDER_WRAP,BORDER_REFLECT_101*/};
+    const char* borderstr[]={"BORDER_CONSTANT", "BORDER_REPLICATE"/*, "BORDER_REFLECT","BORDER_WRAP","BORDER_REFLECT_101"*/};
+    // for(int i = 0; i < sizeof(bordertype)/sizeof(int); i++)
+    for(int j=0; j<1; j++)
+    {
+        random_roi();
+        cv::remap(src_roi, dst_roi, map1_roi, map2_roi, interpolation, bordertype[0], val);
+        cv::ocl::remap(gsrc_roi, gdst_roi, gmap1_roi, gmap2_roi, interpolation, bordertype[0], val);
+        cv::Mat cpu_dst;
+        gdst_roi.download(cpu_dst);
+
+        char sss[1024];
+        sprintf(sss, "src_roicols=%d,src_roirows=%d,dst_roicols=%d,dst_roirows=%d,src1x =%d,src1y=%d,dstx=%d,dsty=%d", src_roicols, src_roirows, dst_roicols, dst_roirows, srcx, srcy, dstx, dsty);
+
+   
+        EXPECT_MAT_NEAR(dst_roi, cpu_dst, 1.0, sss);
+ 
+    }
+}
+
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1059,24 +1250,17 @@ PARAM_TEST_CASE(meanShiftTestBase, MatType, MatType, int, int, cv::TermCriteria)
 
     virtual void SetUp()
     {
-        type = GET_PARAM(0);
+        type     = GET_PARAM(0);
         typeCoor = GET_PARAM(1);
-        sp = GET_PARAM(2);
-        sr = GET_PARAM(3);
-        crit = GET_PARAM(4);
+        sp       = GET_PARAM(2);
+        sr       = GET_PARAM(3);
+        crit     = GET_PARAM(4);
 
         cv::RNG &rng = TS::ptr()->get_rng();
 
-#ifdef BIG_SIZE
-        cv::Size size = cv::Size(2560, 2560);
-#else
-#ifdef TEST_POS
-        cv::Size size = cv::Size(5, 5);
-#else
         // MWIDTH=256, MHEIGHT=256. defined in utility.hpp
         cv::Size size = cv::Size(MWIDTH, MHEIGHT);
-#endif
-#endif
+
         src = randomMat(rng, size, type, 5, 16, false);
         dst = randomMat(rng, size, type, 5, 16, false);
         dstCoor = randomMat(rng, size, typeCoor, 5, 16, false);
@@ -1089,10 +1273,10 @@ PARAM_TEST_CASE(meanShiftTestBase, MatType, MatType, int, int, cv::TermCriteria)
 
     void random_roi()
     {
+#ifdef RANDOMROI
         cv::RNG &rng = TS::ptr()->get_rng();
 
         //randomize ROI
-#ifndef TEST_POS
         roicols = rng.uniform(1, src.cols);
         roirows = rng.uniform(1, src.rows);
         srcx = rng.uniform(0, src.cols - roicols);
@@ -1100,8 +1284,8 @@ PARAM_TEST_CASE(meanShiftTestBase, MatType, MatType, int, int, cv::TermCriteria)
         dstx = rng.uniform(0, dst.cols - roicols);
         dsty = rng.uniform(0, dst.rows - roirows);
 #else
-        roicols = 3;
-        roirows = 3;
+        roicols = src.cols;
+        roirows = src.rows;
         srcx = 0;
         srcy = 0;
         dstx = 0;
@@ -1130,52 +1314,13 @@ TEST_P(meanShiftFiltering, Mat)
     {
         random_roi();
 
-#ifdef PRINT_CPU_TIME
-        double total_time0 = 0;
-        double total_time1 = 0;
-
-        double t0 = 0;
-        for(int j = 0; j < PRINT_CPU_TIME; j++)
-        {
-            t0 = (double)cvGetTickCount();
-            meanShiftFiltering_(src_roi, dst_roi, sp, sr, crit);
-            t0 = (double)cvGetTickCount() - t0;
-            cout << "cpu runtime is  " << t0 / ((double)cvGetTickFrequency() * 1000.) << "ms" << endl;
-            total_time0 += t0 / ((double)cvGetTickFrequency() * 1000.);
-        }
-
-        double t1 = 0;
-        cv::ocl::meanShiftFiltering(gsrc_roi, gdst_roi, sp, sr, crit);
-        for(int i = 0 ; i < PRINT_CPU_TIME; i++)
-        {
-
-            t1 = (double)cvGetTickCount();
-            cv::ocl::meanShiftFiltering(gsrc_roi, gdst_roi, sp, sr, crit);
-            t1 = (double)cvGetTickCount() - t1;
-            cout << "gpu runtime is  " << t1 / ((double)cvGetTickFrequency() * 1000.) << "ms" << endl;
-            total_time1 += t1 / ((double)cvGetTickFrequency() * 1000.);
-        }
-        cout << endl;
-        cout << "CPU average time is " << total_time0 / PRINT_CPU_TIME << endl;
-        cout << "GPU average time is " << total_time1 / PRINT_CPU_TIME << endl;
-#endif
         cv::Mat cpu_gdst;
         gdst.download(cpu_gdst);
-        //        cout<<"SRC:\n"<<src<<endl;
-        //        cout<<"GPU-RES:\n"<<cpu_gdst<<endl<<endl;
-        //        cout<<"CPU-RES:\n"<<dst<<endl;
-
-        //        cout<<srcy<<","<<srcx<<endl;
-        //        cout<<dsty<<","<<dstx<<endl;
 
         meanShiftFiltering_(src_roi, dst_roi, sp, sr, crit);
         cv::ocl::meanShiftFiltering(gsrc_roi, gdst_roi, sp, sr, crit);
 
         gdst.download(cpu_gdst);
-
-        //        cout<<"SRC:\n"<<src<<endl;
-        //        cout<<"GPU-RES:\n"<<cpu_gdst<<endl<<endl;
-        //        cout<<"CPU-RES:\n"<<dst<<endl;
 
         char sss[1024];
         sprintf(sss, "roicols=%d,roirows=%d,srcx=%d,srcy=%d,dstx=%d,dsty=%d\n", roicols, roirows, srcx, srcy, dstx, dsty);
@@ -1194,35 +1339,6 @@ TEST_P(meanShiftProc, Mat)
     {
         random_roi();
 
-#ifdef PRINT_CPU_TIME
-        double total_time0 = 0;
-        double total_time1 = 0;
-
-        double t0 = 0;
-        for(int j = 0; j < PRINT_CPU_TIME; j++)
-        {
-            t0 = (double)cvGetTickCount();
-            meanShiftProc_(src_roi, dst_roi, dstCoor_roi, sp, sr, crit);
-            t0 = (double)cvGetTickCount() - t0;
-            cout << "cpu runtime is  " << t0 / ((double)cvGetTickFrequency() * 1000.) << "ms" << endl;
-            total_time0 += t0 / ((double)cvGetTickFrequency() * 1000.);
-        }
-
-        double t1 = 0;
-        cv::ocl::meanShiftProc(gsrc_roi, gdst_roi, gdstCoor_roi, sp, sr, crit);
-        for(int i = 0 ; i < PRINT_CPU_TIME; i++)
-        {
-
-            t1 = (double)cvGetTickCount();
-            cv::ocl::meanShiftProc(gsrc_roi, gdst_roi, gdstCoor_roi, sp, sr, crit);
-            t1 = (double)cvGetTickCount() - t1;
-            cout << "gpu runtime is  " << t1 / ((double)cvGetTickFrequency() * 1000.) << "ms" << endl;
-            total_time1 += t1 / ((double)cvGetTickFrequency() * 1000.);
-        }
-        cout << endl;
-        cout << "CPU average time is " << total_time0 / PRINT_CPU_TIME << endl;
-        cout << "GPU average time is " << total_time1 / PRINT_CPU_TIME << endl;
-#endif
         cv::Mat cpu_gdst;
         cv::Mat cpu_gdstCoor;
 
@@ -1291,13 +1407,13 @@ INSTANTIATE_TEST_CASE_P(ImgprocTestBase, integral, Combine(
 
 INSTANTIATE_TEST_CASE_P(Imgproc, WarpAffine, Combine(
                             Values(CV_8UC1, CV_8UC4, CV_32FC1, CV_32FC4),
-                            DIFFERENT_SIZES, Values((MatType)cv::INTER_NEAREST, (MatType)cv::INTER_LINEAR,
+                            Values((MatType)cv::INTER_NEAREST, (MatType)cv::INTER_LINEAR,
                                     (MatType)cv::INTER_CUBIC, (MatType)(cv::INTER_NEAREST | cv::WARP_INVERSE_MAP),
                                     (MatType)(cv::INTER_LINEAR | cv::WARP_INVERSE_MAP), (MatType)(cv::INTER_CUBIC | cv::WARP_INVERSE_MAP))));
 
 
 INSTANTIATE_TEST_CASE_P(Imgproc, WarpPerspective, Combine
-                        (Values(CV_8UC1, CV_8UC4, CV_32FC1, CV_32FC4),  DIFFERENT_SIZES,
+                        (Values(CV_8UC1, CV_8UC4, CV_32FC1, CV_32FC4),
                          Values((MatType)cv::INTER_NEAREST, (MatType)cv::INTER_LINEAR,
                                 (MatType)cv::INTER_CUBIC, (MatType)(cv::INTER_NEAREST | cv::WARP_INVERSE_MAP),
                                 (MatType)(cv::INTER_LINEAR | cv::WARP_INVERSE_MAP), (MatType)(cv::INTER_CUBIC | cv::WARP_INVERSE_MAP))));
@@ -1307,7 +1423,6 @@ INSTANTIATE_TEST_CASE_P(Imgproc, Resize, Combine(
                             Values(CV_8UC1, CV_8UC4, CV_32FC1, CV_32FC4),  Values(cv::Size()),
                             Values(0.5, 1.5, 2), Values(0.5, 1.5, 2), Values((MatType)cv::INTER_NEAREST, (MatType)cv::INTER_LINEAR)));
 
-//INSTANTIATE_TEST_CASE_P(Imgproc, Resize, Combine(ONE_TYPE(CV_8UC1),  Values(cv::Size(3300, 3300)), Values(0.), Values(0.), Values((MatType)cv::INTER_NEAREST, (MatType)cv::INTER_LINEAR)));
 
 INSTANTIATE_TEST_CASE_P(Imgproc, Threshold, Combine(
                             Values(CV_8UC1, CV_32FC1), Values(ThreshOp(cv::THRESH_BINARY),
@@ -1322,13 +1437,19 @@ INSTANTIATE_TEST_CASE_P(Imgproc, meanShiftFiltering, Combine(
                             Values(6),
                             Values(cv::TermCriteria(cv::TermCriteria::COUNT + cv::TermCriteria::EPS, 5, 1))
                         ));
+                        
 
-/*INSTANTIATE_TEST_CASE_P(Imgproc, meanShiftProc, Combine(
+INSTANTIATE_TEST_CASE_P(Imgproc, meanShiftProc, Combine(
        ONE_TYPE(CV_8UC4),
        ONE_TYPE(CV_16SC2),
        Values(5),
        Values(6),
        Values(cv::TermCriteria(cv::TermCriteria::COUNT+cv::TermCriteria::EPS, 5, 1))
-));*/
+));
 
+INSTANTIATE_TEST_CASE_P(Imgproc, Remap, Combine(
+            Values(CV_8UC1, CV_8UC2, CV_8UC4),
+            Values(CV_16SC2, CV_32FC2), NULL_TYPE,
+            Values((int)cv::INTER_NEAREST, (int)cv::INTER_LINEAR), 
+            Values((int)cv::BORDER_CONSTANT)));
 #endif // HAVE_OPENCL

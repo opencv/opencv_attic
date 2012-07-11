@@ -34,8 +34,10 @@
 //
 //
 
+#if defined (DOUBLE_SUPPORT)
+#pragma OPENCL EXTENSION cl_khr_fp64:enable
+#endif
 
-#pragma OPENCL EXTENSION cl_amd_printf : enable
 __kernel
 void LUT_C1_D0( __global uchar *dst,
 	  __global const uchar *src,

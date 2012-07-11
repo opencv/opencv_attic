@@ -45,7 +45,7 @@
 
 #include "precomp.hpp"
 
-#define ALIGN  768
+#define ALIGN 32 
 #define GPU_MATRIX_MALLOC_STEP(step) (((step) + ALIGN - 1) / ALIGN) * ALIGN
 
 using namespace cv;
@@ -456,9 +456,54 @@ oclMat &cv::ocl::oclMat::setTo(const Scalar &scalar, const oclMat &mask)
     return *this;
 }
 
-oclMat cv::ocl::oclMat::reshape(int /*new_cn*/, int /*new_rows*/) const
+oclMat cv::ocl::oclMat::reshape(int new_cn, int new_rows) const
 {
-    return oclMat();
+	if( new_rows != 0 && new_rows != rows)
+	{
+		 CV_Error( CV_StsBadFunc,
+            "oclMat's number of rows can not be changed for current version" );
+	}
+
+	oclMat hdr = *this;
+
+    int cn = channels();
+    if (new_cn == 0)
+        new_cn = cn;
+
+    int total_width = cols * cn;
+
+    if ((new_cn > total_width || total_width % new_cn != 0) && new_rows == 0)
+        new_rows = rows * total_width / new_cn;
+
+    if (new_rows != 0 && new_rows != rows)
+    {
+        int total_size = total_width * rows;
+
+        if (!isContinuous())
+            CV_Error(CV_BadStep, "The matrix is not continuous, thus its number of rows can not be changed");
+
+        if ((unsigned)new_rows > (unsigned)total_size)
+            CV_Error(CV_StsOutOfRange, "Bad new number of rows");
+
+        total_width = total_size / new_rows;
+
+        if (total_width * new_rows != total_size)
+            CV_Error(CV_StsBadArg, "The total number of matrix elements is not divisible by the new number of rows");
+
+        hdr.rows = new_rows;
+        hdr.step = total_width * elemSize1();
+    }
+
+    int new_width = total_width / new_cn;
+
+    if (new_width * new_cn != total_width)
+        CV_Error(CV_BadNumChannels, "The total width is not divisible by the new number of channels");
+
+    hdr.cols = new_width;
+    hdr.flags = (hdr.flags & ~CV_MAT_CN_MASK) | ((new_cn - 1) << CV_CN_SHIFT);
+
+    return hdr;
+
 }
 
 void cv::ocl::oclMat::create(int _rows, int _cols, int _type)

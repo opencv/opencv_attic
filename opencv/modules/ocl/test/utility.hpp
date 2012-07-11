@@ -171,4 +171,72 @@ void  run_perf_test();
 
 #define DIRECT_INVERSE testing::Values(Inverse(false), Inverse(true))
 
+#ifndef ALL_DEPTH
+#define ALL_DEPTH testing::Values(MatDepth(CV_8U), MatDepth(CV_8S), MatDepth(CV_16U), MatDepth(CV_16S), MatDepth(CV_32S), MatDepth(CV_32F), MatDepth(CV_64F))
+#endif
+#define REPEAT   1000
+#define COUNT_U  0 // count the uploading execution time for ocl mat structures
+#define COUNT_D  0
+// the following macro section tests the target function (kernel) performance
+// upload is the code snippet for converting cv::mat to cv::ocl::oclMat
+// downloading is the code snippet for converting cv::ocl::oclMat back to cv::mat
+// change COUNT_U and COUNT_D to take downloading and uploading time into account
+#define P_TEST_FULL( upload, kernel_call, download ) \
+{ \
+    std::cout<< "\n" #kernel_call "\n----------------------"; \
+    {upload;} \
+    R_TEST( kernel_call, 2 ); \
+    double t = (double)cvGetTickCount(); \
+    R_T( { \
+            if( COUNT_U ) {upload;} \
+            kernel_call; \
+            if( COUNT_D ) {download;} \
+            } ); \
+    t = (double)cvGetTickCount() - t; \
+    std::cout << "runtime is  " << t/((double)cvGetTickFrequency()* 1000.) << "ms" << std::endl; \
+}
+
+#define R_T2( test ) \
+{ \
+    std::cout<< "\n" #test "\n----------------------"; \
+    R_TEST( test, 15 ) \
+    clock_t st = clock(); \
+    R_T( test ) \
+    std::cout<< clock() - st << "ms\n"; \
+}
+#define R_T( test ) \
+    R_TEST( test, REPEAT )
+#define R_TEST( test, repeat ) \
+    try{ \
+        for( int i = 0; i < repeat; i ++ ) { test; } \
+    } catch( ... ) { std::cout << "||||| Exception catched! |||||\n"; return; }
+
+//////// Utility
+#ifndef DIFFERENT_SIZES
+#else
+#undef DIFFERENT_SIZES
+#endif
+#define DIFFERENT_SIZES testing::Values(cv::Size(256, 256), cv::Size(3000, 3000))
+
+#define IMAGE_CHANNELS testing::Values(Channels(1), Channels(3), Channels(4))
+#ifndef IMPLEMENT_PARAM_CLASS
+#define IMPLEMENT_PARAM_CLASS(name, type) \
+    class name \
+    { \
+    public: \
+        name ( type arg = type ()) : val_(arg) {} \
+        operator type () const {return val_;} \
+    private: \
+        type val_; \
+    }; \
+    inline void PrintTo( name param, std::ostream* os) \
+    { \
+        *os << #name <<  "(" << testing::PrintToString(static_cast< type >(param)) << ")"; \
+    }
+
+IMPLEMENT_PARAM_CLASS(Channels, int)
+#endif // IMPLEMENT_PARAM_CLASS
+
+	cv::ocl::oclMat createMat(cv::Size size,int type,bool useRoi);
+	cv::ocl::oclMat loadMat(const cv::Mat& m, bool useRoi);
 #endif // __OPENCV_TEST_UTILITY_HPP__

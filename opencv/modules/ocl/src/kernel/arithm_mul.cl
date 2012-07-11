@@ -43,9 +43,7 @@
 //
 //M*/
 
-#if defined (__ATI__)
-#pragma OPENCL EXTENSION cl_amd_fp64:enable
-#elif defined (__NVIDIA__)
+#if defined DOUBLE_SUPPORT
 #pragma OPENCL EXTENSION cl_khr_fp64:enable
 #endif
 
@@ -65,10 +63,10 @@ uint4 round_uint4(float4 v){
 
     return convert_uint4_sat(v);
 }
-long round_long(float v){
+long round_int(float v){
     v = v + (v > 0 ? 0.5 : -0.5); 
 
-    return convert_long_sat(v);
+    return convert_int_sat(v);
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////multiply//////////////////////////////////////////////////
@@ -186,7 +184,7 @@ __kernel void arithm_mul_D3 (__global short *src1, int src1_step, int src1_offse
 __kernel void arithm_mul_D4 (__global int *src1, int src1_step, int src1_offset,
                              __global int *src2, int src2_step, int src2_offset,
                              __global int *dst,  int dst_step,  int dst_offset,
-                             int rows, int cols, int dst_step1, double scalar)
+                             int rows, int cols, int dst_step1, float scalar)
 {
     int x = get_global_id(0);
     int y = get_global_id(1);
@@ -199,8 +197,8 @@ __kernel void arithm_mul_D4 (__global int *src1, int src1_step, int src1_offset,
 
         int data1 = *((__global int *)((__global char *)src1 + src1_index));
         int data2 = *((__global int *)((__global char *)src2 + src2_index));
-        long tmp  = (long)(data1) * (long)(data2);
-        tmp = round_long((double)tmp * scalar);
+        int tmp  = data1 * data2;
+        tmp = round_int((float)tmp * scalar);
 
         *((__global int *)((__global char *)dst + dst_index)) = convert_int_sat(tmp);
     }
@@ -228,6 +226,7 @@ __kernel void arithm_mul_D5 (__global float *src1, int src1_step, int src1_offse
     }
 }
 
+#if defined (DOUBLE_SUPPORT)
 __kernel void arithm_mul_D6 (__global double *src1, int src1_step, int src1_offset,
                              __global double *src2, int src2_step, int src2_offset,
                              __global double *dst,  int dst_step,  int dst_offset,
@@ -251,3 +250,4 @@ __kernel void arithm_mul_D6 (__global double *src1, int src1_step, int src1_offs
         *((__global double *)((__global char *)dst + dst_index)) = tmp;
     }
 }
+#endif

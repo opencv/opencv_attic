@@ -36,19 +36,21 @@
 
 __kernel void erode_C4_D5(__global const float4 * restrict src, __global float4 *dst, int srcOffset, int dstOffset, 
 					int mincols, int maxcols, int minrows, int maxrows, int cols, int rows, 
-					int srcStep, int dstStep, __constant uchar * mat_kernel)
+					int srcStep, int dstStep, __constant uchar * mat_kernel, int src_whole_cols, int src_whole_rows)
 {
     int mX = get_global_id(0);
     int mY = get_global_id(1);
     int kX = mX - anX, kY = mY - anY;
-
+	int end_addr = mad24(src_whole_rows-1,srcStep,src_whole_cols);
     float4 minVal = (float4)(3.4e+38);
 	int k=0;
 	for(int i=0;i<ksY;i++, kY++ , kX = mX - anX)
     {
         for(int j=0;j<ksX; j++, kX++)
         {
-			float4 v = *((__global float4*)(src + srcOffset + kY * srcStep + kX));
+			int current_addr = mad24(kY,srcStep,kX) + srcOffset;
+			current_addr = ((current_addr < end_addr) && (current_addr > 0)) ? current_addr : 0;
+			float4 v = src[current_addr];
 			uchar now = mat_kernel[k++];
 			float4 flag = (kX >= mincols & kX <= maxcols & kY >= minrows & kY <= maxrows & now != 0) ? v : (float4)(3.4e+38);
             minVal = min(minVal , flag);
@@ -61,20 +63,22 @@ __kernel void erode_C4_D5(__global const float4 * restrict src, __global float4 
 
 __kernel void erode_C1_D5(__global float4 * src, __global float *dst, int srcOffset, int dstOffset, 
 					int mincols, int maxcols, int minrows, int maxrows, int cols, int rows, 
-					int srcStep, int dstStep, __constant uchar * mat_kernel)
+					int srcStep, int dstStep, __constant uchar * mat_kernel, int src_whole_cols, int src_whole_rows)
 {
     int mX = (get_global_id(0)<<2) - (dstOffset&3);
     int mY = get_global_id(1);
     int kX = mX - anX, kY = mY - anY;
-
+	int end_addr = mad24(src_whole_rows-1,srcStep,src_whole_cols);
     float4 minVal = (float4)(3.4e+38);
 	int k=0;
 	for(int i=0;i<ksY;i++, kY++ , kX = mX - anX)
     {
         for(int j=0;j<ksX;j++, kX++)
         {
-			int start = srcOffset + kY * srcStep + kX;
-			float8 sVal = (float8)(src[start>>2], src[(start>>2) + 1]);
+			int start = mad24(kY,srcStep,kX) + srcOffset;
+			start = ((start < end_addr) && (start > 0)) ? start : 0;
+			int start2 = ((start + 4 < end_addr) && (start > 0)) ? start + 4 : 0;
+			float8 sVal = (float8)(src[start>>2], src[start2>>2]);
 			
 			float sAry[8]= {sVal.s0, sVal.s1, sVal.s2, sVal.s3, sVal.s4, sVal.s5, sVal.s6, sVal.s7};
 			int det = start & 3;
@@ -105,20 +109,22 @@ __kernel void erode_C1_D5(__global float4 * src, __global float *dst, int srcOff
 
 __kernel void erode_C1_D0(__global const uchar4 * restrict src, __global uchar *dst, int srcOffset, int dstOffset, 
 					int mincols, int maxcols, int minrows, int maxrows, int cols, int rows, 
-					int srcStep, int dstStep, __constant uchar * mat_kernel)
+					int srcStep, int dstStep, __constant uchar * mat_kernel, int src_whole_cols, int src_whole_rows)
 {
     int mX = (get_global_id(0)<<2) - (dstOffset&3);
     int mY = get_global_id(1);
     int kX = mX - anX, kY = mY - anY;
-
+	int end_addr = mad24(src_whole_rows-1,srcStep,src_whole_cols);
     uchar4 minVal = (uchar4)(0xff);
 	int k=0;
 	for(int i=0;i<ksY;i++, kY++ , kX = mX - anX)
     {
         for(int j=0;j<ksX;j++, kX++)
         {
-			int start = srcOffset + kY * srcStep + kX;
-			uchar8 sVal = (uchar8)(src[start>>2], src[(start>>2) + 1]);
+			int start = mad24(kY,srcStep,kX) + srcOffset;
+			start = ((start < end_addr) && (start > 0)) ? start : 0;
+			int start2 = ((start + 4 < end_addr) && (start > 0)) ? start + 4 : 0;
+			uchar8 sVal = (uchar8)(src[start>>2], src[start2>>2]);
 			
 			uchar sAry[8]= {sVal.s0, sVal.s1, sVal.s2, sVal.s3, sVal.s4, sVal.s5, sVal.s6, sVal.s7};
 			int det = start & 3;
@@ -150,19 +156,21 @@ __kernel void erode_C1_D0(__global const uchar4 * restrict src, __global uchar *
 
 __kernel void erode_C4_D0(__global const uchar4 * restrict src, __global uchar4 *dst, int srcOffset, int dstOffset, 
 					int mincols, int maxcols, int minrows, int maxrows, int cols, int rows, 
-					int srcStep, int dstStep, __constant uchar * mat_kernel)
+					int srcStep, int dstStep, __constant uchar * mat_kernel, int src_whole_cols, int src_whole_rows)
 {
     int mX = get_global_id(0);
     int mY = get_global_id(1);
     int kX = mX - anX, kY = mY - anY;
-
+	int end_addr = mad24(src_whole_rows-1,srcStep,src_whole_cols);
     uchar4 minVal = (uchar4)(0xff);
 	int k=0;
 	for(int i=0;i<ksY;i++, kY++ , kX = mX - anX)
     {
         for(int j=0;j<ksX;j++, kX++)
         {
-			uchar4 v = src[kY * srcStep + kX + srcOffset];
+			int current_addr = mad24(kY,srcStep,kX) + srcOffset;
+			current_addr = ((current_addr < end_addr) && (current_addr > 0)) ? current_addr : 0;		
+			uchar4 v = src[current_addr];
 			uchar now = mat_kernel[k++];
 			uchar4 flag = (kX >= mincols & kX <= maxcols & kY >= minrows & kY <= maxrows & now != 0) ? v : (uchar4)(0xff);
             minVal = min(minVal , flag);

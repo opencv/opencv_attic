@@ -43,9 +43,7 @@
 //
 //M*/
 
-#if defined (__ATI__)
-#pragma OPENCL EXTENSION cl_amd_fp64:enable
-#elif defined (__NVIDIA__)
+#if defined (DOUBLE_SUPPORT)
 #pragma OPENCL EXTENSION cl_khr_fp64:enable
 #endif
 
@@ -229,6 +227,8 @@ __kernel void merge_vector_C2_D5(__global float *mat_dst,  int dst_step,  int ds
         *((__global float2 *)((__global uchar *)mat_dst  + dst_index + (x << 4))) = (float2)(src0, src1);
     }
 }
+
+#if defined (DOUBLE_SUPPORT)
 __kernel void merge_vector_C2_D6(__global double *mat_dst,  int dst_step,  int dst_offset,
                                  __global double *mat_src0, int src0_step, int src0_offset,
                                  __global double *mat_src1, int src1_step, int src1_offset,
@@ -249,6 +249,7 @@ __kernel void merge_vector_C2_D6(__global double *mat_dst,  int dst_step,  int d
         *((__global double2 *)((__global uchar *)mat_dst  + dst_index + (x << 4))) = (double2)(src0, src1);
     }
 }
+#endif
 
 __kernel void merge_vector_C3_D0(__global uchar *mat_dst,  int dst_step,  int dst_offset,
                                  __global uchar *mat_src0, int src0_step, int src0_offset,
@@ -550,6 +551,8 @@ __kernel void merge_vector_C3_D5(__global float *mat_dst,  int dst_step,  int ds
         *dist2 = src2_data;
     }
 }
+
+#if defined (DOUBLE_SUPPORT)
 __kernel void merge_vector_C3_D6(__global double *mat_dst,  int dst_step,  int dst_offset,
                                  __global double *mat_src0, int src0_step, int src0_offset,
                                  __global double *mat_src1, int src1_step, int src1_offset,
@@ -584,6 +587,7 @@ __kernel void merge_vector_C3_D6(__global double *mat_dst,  int dst_step,  int d
         *dist2 = src2_data;
     }
 }
+#endif
 __kernel void merge_vector_C4_D0(__global uchar *mat_dst,  int dst_step,  int dst_offset,
                                  __global uchar *mat_src0, int src0_step, int src0_offset,
                                  __global uchar *mat_src1, int src1_step, int src1_offset,
@@ -740,6 +744,8 @@ __kernel void merge_vector_C4_D5(__global float *mat_dst,  int dst_step,  int ds
         *((__global float4 *)((__global uchar *)mat_dst  + dst_index + (x << 4))) = (float4)(src0, src1, src2, src3);
     }
 }
+
+#if defined (DOUBLE_SUPPORT)
 __kernel void merge_vector_C4_D6(__global double *mat_dst,  int dst_step,  int dst_offset,
                                  __global double *mat_src0, int src0_step, int src0_offset,
                                  __global double *mat_src1, int src1_step, int src1_offset,
@@ -766,6 +772,7 @@ __kernel void merge_vector_C4_D6(__global double *mat_dst,  int dst_step,  int d
         *((__global double4 *)((__global uchar *)mat_dst  + dst_index + (x << 5))) = (double4)(src0, src1, src2, src3);
     }
 }
+#endif
 ///////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////optimized code using vector  no roi//////////////////////////
 ////////////vector fuction name format: merge_vector_C(channels number)D_(data type depth)//////
@@ -911,6 +918,8 @@ __kernel void merge_vector_C2_D5_1(int rows, int cols,
         dst_y[x] = (float2)(value1, value2); 
     }
 }
+
+#if defined (DOUBLE_SUPPORT)
 __kernel void merge_vector_C2_D6_1(int rows, int cols,
                                    __global double *mat_dst,  int dst_step,
                                    __global double *mat_src0, int src0_step,
@@ -931,6 +940,7 @@ __kernel void merge_vector_C2_D6_1(int rows, int cols,
         dst_y[x] = (double2)(value1, value2);
     }
 }
+#endif
 
 __kernel void merge_vector_C3_D0_1(int rows, int cols,
                                    __global uchar *mat_dst,  int dst_step,
@@ -1132,6 +1142,8 @@ __kernel void merge_vector_C3_D5_1(int rows, int cols,
         dst_y[3 * x + 2] = value2;
     }
 }
+
+#if defined (DOUBLE_SUPPORT)
 __kernel void merge_vector_C3_D6_1(int rows, int cols,
                                    __global double *mat_dst,  int dst_step,
                                    __global double *mat_src0, int src0_step,
@@ -1158,6 +1170,7 @@ __kernel void merge_vector_C3_D6_1(int rows, int cols,
         dst_y[3 * x + 2] = value2;
     }
 }
+#endif
 __kernel void merge_vector_C4_D0_1(int rows, int cols,
                                    __global uchar *mat_dst,  int dst_step,
                                    __global uchar *mat_src0, int src0_step,
@@ -1329,6 +1342,8 @@ __kernel void merge_vector_C4_D5_1(int rows, int cols,
         dst_y[x] = (float4)(value0, value1, value2, value3);
     }
 }
+
+#if defined (DOUBLE_SUPPORT)
 __kernel void merge_vector_C4_D6_1(int rows, int cols,
                                    __global double *mat_dst,  int dst_step,
                                    __global double *mat_src0, int src0_step,
@@ -1356,3 +1371,4 @@ __kernel void merge_vector_C4_D6_1(int rows, int cols,
         dst_y[x] = (double4)(value0, value1, value2, value3);
     }
 }
+#endif

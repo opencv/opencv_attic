@@ -43,9 +43,7 @@
 //
 //M*/
 
-#if defined (__ATI__)
-#pragma OPENCL EXTENSION cl_amd_fp64:enable
-#elif defined (__NVIDIA__)
+#if defined (DOUBLE_SUPPORT)
 #pragma OPENCL EXTENSION cl_khr_fp64:enable
 #endif
 
@@ -265,6 +263,8 @@ __kernel void arithm_flip_rows_D5 (__global float *src, int src_step, int src_of
         *((__global float *)((__global char *)dst + dst_index_1)) = data0;
     }
 }
+
+#if defined (DOUBLE_SUPPORT)
 __kernel void arithm_flip_rows_D6 (__global double *src, int src_step, int src_offset,
                                    __global double *dst, int dst_step, int dst_offset,
                                    int rows, int cols, int thread_rows, int dst_step1)
@@ -287,6 +287,7 @@ __kernel void arithm_flip_rows_D6 (__global double *src, int src_step, int src_o
         *((__global double *)((__global char *)dst + dst_index_1)) = data0;
     }
 }
+#endif
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////flip cols/////////////////////////////////////////////// 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -422,6 +423,8 @@ __kernel void arithm_flip_cols_C1_D5 (__global float *src, int src_step, int src
         *((__global float *)((__global char *)dst + dst_index_1)) = data0;
     }
 }
+
+#if defined (DOUBLE_SUPPORT)
 __kernel void arithm_flip_cols_C1_D6 (__global double *src, int src_step, int src_offset,
                                       __global double *dst, int dst_step, int dst_offset,
                                       int rows, int cols, int thread_cols, int dst_step1)
@@ -444,6 +447,7 @@ __kernel void arithm_flip_cols_C1_D6 (__global double *src, int src_step, int sr
         *((__global double *)((__global char *)dst + dst_index_1)) = data0;
     }
 }
+#endif
 __kernel void arithm_flip_cols_C2_D0 (__global uchar *src, int src_step, int src_offset,
                                       __global uchar *dst, int dst_step, int dst_offset,
                                       int rows, int cols, int thread_cols, int dst_step1)
@@ -576,6 +580,8 @@ __kernel void arithm_flip_cols_C2_D5 (__global float *src, int src_step, int src
         *((__global float2 *)((__global char *)dst + dst_index_1)) = data0;
     }
 }
+
+#if defined (DOUBLE_SUPPORT)
 __kernel void arithm_flip_cols_C2_D6 (__global double *src, int src_step, int src_offset,
                                       __global double *dst, int dst_step, int dst_offset,
                                       int rows, int cols, int thread_cols, int dst_step1)
@@ -598,6 +604,7 @@ __kernel void arithm_flip_cols_C2_D6 (__global double *src, int src_step, int sr
         *((__global double2 *)((__global char *)dst + dst_index_1)) = data0;
     }
 }
+#endif
 
 __kernel void arithm_flip_cols_C3_D0 (__global uchar *src, int src_step, int src_offset,
                                       __global uchar *dst, int dst_step, int dst_offset,
@@ -791,6 +798,8 @@ __kernel void arithm_flip_cols_C3_D5 (__global float *src, int src_step, int src
         *((__global float *)((__global char *)dst + dst_index_1 + 8)) = data0_2;
     }
 }
+
+#if defined (DOUBLE_SUPPORT)
 __kernel void arithm_flip_cols_C3_D6 (__global double *src, int src_step, int src_offset,
                                       __global double *dst, int dst_step, int dst_offset,
                                       int rows, int cols, int thread_cols, int dst_step1)
@@ -823,6 +832,7 @@ __kernel void arithm_flip_cols_C3_D6 (__global double *src, int src_step, int sr
         *((__global double *)((__global char *)dst + dst_index_1 + 16)) = data0_2;
     }
 }
+#endif
 __kernel void arithm_flip_cols_C4_D0 (__global uchar *src, int src_step, int src_offset,
                                       __global uchar *dst, int dst_step, int dst_offset,
                                       int rows, int cols, int thread_cols, int dst_step1)
@@ -956,6 +966,7 @@ __kernel void arithm_flip_cols_C4_D5 (__global float *src, int src_step, int src
         *((__global float4 *)((__global char *)dst + dst_index_1)) = data0;
     }
 }
+#if defined (DOUBLE_SUPPORT)
 __kernel void arithm_flip_cols_C4_D6 (__global double *src, int src_step, int src_offset,
                                       __global double *dst, int dst_step, int dst_offset,
                                       int rows, int cols, int thread_cols, int dst_step1)
@@ -978,3 +989,4 @@ __kernel void arithm_flip_cols_C4_D6 (__global double *src, int src_step, int sr
         *((__global double4 *)((__global char *)dst + dst_index_1)) = data0;
     }
 }
+#endif

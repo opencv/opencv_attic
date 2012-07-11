@@ -238,7 +238,7 @@ __kernel void boxFilter_C4_D0(__global const uchar4 * restrict src, __global uch
     int startY = (gY << 1) - anY + src_y_off;
     int dst_startX = gX * (THREADS-ksX+1) + dst_x_off;
     int dst_startY = (gY << 1) + dst_y_off;  
-
+	int end_addr = (src_whole_rows-1)*(src_step>>2) + src_whole_cols-4;
     uint4 data[ksY+1];
     __local uint4 temp[2][THREADS];   
 #ifdef BORDER_CONSTANT
@@ -247,7 +247,8 @@ __kernel void boxFilter_C4_D0(__global const uchar4 * restrict src, __global uch
     for(int i=0; i < ksY+1; i++)
     {
         con = startX+col >= 0 && startX+col < src_whole_cols && startY+i >= 0 && startY+i < src_whole_rows;
-        ss = convert_uint4(src[(startY+i)*(src_step>>2)+(startX+col)]); 
+		int cur_addr = clamp((startY+i)*(src_step>>2)+(startX+col),0,end_addr);
+        ss = convert_uint4(src[cur_addr]); 
         data[i] = con ? ss : 0;
     }
 #else
@@ -289,7 +290,7 @@ __kernel void boxFilter_C4_D0(__global const uchar4 * restrict src, __global uch
             }
         for(int i=0; i<2; i++)
         {    
-            if(posX < dst_cols && (posY+i) < dst_rows)
+            if(posX >= 0 && posX < dst_cols && (posY+i) >= 0 && (posY+i) < dst_rows)
                 dst[(dst_startY+i) * (dst_step>>2)+ dst_startX + col - anX] = convert_uchar4(convert_float4(tmp_sum[i])/alpha);
         }
         
@@ -317,7 +318,7 @@ __kernel void boxFilter_C1_D5(__global const float *restrict src, __global float
     int startY = (gY << 1) - anY + src_y_off;
     int dst_startX = gX * (THREADS-ksX+1) + dst_x_off;
     int dst_startY = (gY << 1) + dst_y_off;  
-
+	int end_addr = (src_whole_rows-1)*(src_step>>2) + src_whole_cols-4;
     float data[ksY+1];
     __local float temp[2][THREADS];   
 #ifdef BORDER_CONSTANT
@@ -326,8 +327,9 @@ __kernel void boxFilter_C1_D5(__global const float *restrict src, __global float
     for(int i=0; i < ksY+1; i++)
     {
         con = startX+col >= 0 && startX+col < src_whole_cols && startY+i >= 0 && startY+i < src_whole_rows;
-        ss = src[(startY+i)*(src_step>>2)+(startX+col)]; 
-        data[i] = con ? ss : 0.0;
+		int cur_addr = clamp((startY+i)*(src_step>>2)+(startX+col),0,end_addr);		
+        ss = src[cur_addr]; 
+        data[i] = con ? ss : 0.f;
     }
 #else
    for(int i=0; i < ksY+1; i++)
@@ -368,7 +370,7 @@ __kernel void boxFilter_C1_D5(__global const float *restrict src, __global float
             }
         for(int i=0; i<2; i++)
         {    
-            if(posX < dst_cols && (posY+i) < dst_rows)
+            if(posX >= 0 && posX < dst_cols && (posY+i) >= 0 && (posY+i) < dst_rows)
                 dst[(dst_startY+i) * (dst_step>>2)+ dst_startX + col - anX] = tmp_sum[i]/alpha;
         }
         
@@ -396,7 +398,7 @@ __kernel void boxFilter_C4_D5(__global const float4 *restrict src, __global floa
     int startY = (gY << 1) - anY + src_y_off;
     int dst_startX = gX * (THREADS-ksX+1) + dst_x_off;
     int dst_startY = (gY << 1) + dst_y_off;  
-
+	int end_addr = (src_whole_rows-1)*(src_step>>4) + src_whole_cols-16;
     float4 data[ksY+1];
     __local float4 temp[2][THREADS];   
 #ifdef BORDER_CONSTANT
@@ -405,7 +407,8 @@ __kernel void boxFilter_C4_D5(__global const float4 *restrict src, __global floa
     for(int i=0; i < ksY+1; i++)
     {
         con = startX+col >= 0 && startX+col < src_whole_cols && startY+i >= 0 && startY+i < src_whole_rows;
-        ss = src[(startY+i)*(src_step>>4)+(startX+col)]; 
+		int cur_addr = clamp((startY+i)*(src_step>>4)+(startX+col),0,end_addr);		
+        ss = src[cur_addr]; 
         data[i] = con ? ss : (float4)(0.0,0.0,0.0,0.0);
     }
 #else
@@ -447,7 +450,7 @@ __kernel void boxFilter_C4_D5(__global const float4 *restrict src, __global floa
             }
         for(int i=0; i<2; i++)
         {    
-            if(posX < dst_cols && (posY+i) < dst_rows)
+            if(posX >= 0 && posX < dst_cols && (posY+i) >= 0 && (posY+i) < dst_rows)
                 dst[(dst_startY+i) * (dst_step>>4)+ dst_startX + col - anX] = tmp_sum[i]/alpha;
         }
         

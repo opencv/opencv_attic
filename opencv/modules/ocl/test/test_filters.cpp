@@ -854,5 +854,6 @@ INSTANTIATE_TEST_CASE_P(Filter, GaussianBlur, Combine(
                             Values(cv::Size(3, 3), cv::Size(5, 5), cv::Size(7, 7)),
                             Values((MatType)cv::BORDER_CONSTANT, (MatType)cv::BORDER_REPLICATE, (MatType)cv::BORDER_REFLECT, (MatType)cv::BORDER_REFLECT_101)));
 
+                            
 
 #endif // HAVE_OPENCL

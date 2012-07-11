@@ -43,10 +43,11 @@
 // the use of this software, even if advised of the possibility of such damage.
 //
 //M*/
-#if defined (__ATI__)
-#pragma OPENCL EXTENSION cl_amd_fp64 : enable
-#elif defined (__NVIDIA__)
-#pragma OPENCL EXTENSION cl_khr_fp64 : enable
+#if defined (DOUBLE_SUPPORT)
+#pragma OPENCL EXTENSION cl_khr_fp64:enable
+typedef double F;
+#else
+typedef float F;
 #endif
 
 short2 do_mean_shift(int x0, int y0, __global uchar4* out,int out_step, 
@@ -175,13 +176,15 @@ short2 do_mean_shift(int x0, int y0, __global uchar4* out,int out_step,
             if(rowCount == 0)
                continue;
             count += rowCount;
+            if(y == 0)
+               continue;
             sy += y*rowCount;
         }
 
         if( count == 0 )
             break;
 
-        double  icount = 1.0/count;
+        F  icount = 1.0/count;
         int x1 = convert_int_rtz(sx*icount);
         int y1 = convert_int_rtz(sy*icount);
         s.x = convert_int_rtz(s.x*icount);

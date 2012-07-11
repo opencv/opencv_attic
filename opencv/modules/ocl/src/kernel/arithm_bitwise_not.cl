@@ -42,9 +42,7 @@
 // the use of this software, even if advised of the possibility of such damage.
 //
 //M*/
-#if defined (__ATI__)
-#pragma OPENCL EXTENSION cl_amd_fp64:enable
-#elif defined (__NVIDIA__)
+#if defined (DOUBLE_SUPPORT)
 #pragma OPENCL EXTENSION cl_khr_fp64:enable
 #endif
 
@@ -228,6 +226,7 @@ __kernel void arithm_bitwise_not_D5 (__global char *src, int src_step, int src_o
     }
 }
 
+#if defined (DOUBLE_SUPPORT)
 __kernel void arithm_bitwise_not_D6 (__global char *src, int src_step, int src_offset,
                                      __global char *dst, int dst_step, int dst_offset,
                                      int rows, int cols, int dst_step1)
@@ -248,3 +247,5 @@ __kernel void arithm_bitwise_not_D6 (__global char *src, int src_step, int src_o
         *((__global char8 *)((__global char *)dst + dst_index)) = data;
     }
 }
+#endif
+

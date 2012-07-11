@@ -42,9 +42,7 @@
 // the use of this software, even if advised of the possibility of such damage.
 //
 //M*/
-#if defined (__ATI__)
-#pragma OPENCL EXTENSION cl_amd_fp64:enable
-#elif defined (__NVIDIA__)
+#if defined (DOUBLE_SUPPORT)
 #pragma OPENCL EXTENSION cl_khr_fp64:enable
 #endif
 
@@ -85,13 +83,15 @@ __kernel void split_vector_C4_D0 (__global uchar *mat_src,  int src_step,  int s
         int dst3_end   = mad24(y, dst3_step, dst3_offset + dst_step1);
         int dst3_idx   = mad24(y, dst3_step, dst3_offset + x) & (int)0xfffffffc;
            
-        uchar4 data_0 = *((global uchar4 *)(mat_src + src_idx - 12)); 
-        uchar4 data_1 = *((global uchar4 *)(mat_src + src_idx - 8 )); 
-        uchar4 data_2 = *((global uchar4 *)(mat_src + src_idx - 4 )); 
+        uchar4 data_0 = *((global uchar4 *)(mat_src + (src_idx - 12 >= 0 ? src_idx - 12 : src_idx))); 
+        uchar4 data_1 = *((global uchar4 *)(mat_src + (src_idx - 8  >= 0 ? src_idx - 8  : src_idx))); 
+        uchar4 data_2 = *((global uchar4 *)(mat_src + (src_idx - 4  >= 0 ? src_idx - 4  : src_idx))); 
         uchar4 data_3 = *((global uchar4 *)(mat_src + src_idx + 0 )); 
-        uchar4 data_4 = *((global uchar4 *)(mat_src + src_idx + 4 )); 
-        uchar4 data_5 = *((global uchar4 *)(mat_src + src_idx + 8 )); 
-        uchar4 data_6 = *((global uchar4 *)(mat_src + src_idx + 12)); 
+
+        int total_bytes = src_offset + rows * src_step; 
+        uchar4 data_4 = *((global uchar4 *)(mat_src + (src_idx + 4  < total_bytes ? src_idx + 4  : src_idx))); 
+        uchar4 data_5 = *((global uchar4 *)(mat_src + (src_idx + 8  < total_bytes ? src_idx + 8  : src_idx))); 
+        uchar4 data_6 = *((global uchar4 *)(mat_src + (src_idx + 12 < total_bytes ? src_idx + 12 : src_idx)));  
 
         uchar4 tmp_data0=1, tmp_data1=2, tmp_data2, tmp_data3;
 
@@ -1072,6 +1072,8 @@ __kernel void split_vector_C2_D5 (__global float *mat_src,  int src_step,  int s
         ((__global float *)((__global char *)mat_dst1 + dst1_idx))[x] = src_data.y;
     }
 }
+
+#if defined (DOUBLE_SUPPORT)
 __kernel void split_vector_C4_D6 (__global double *mat_src,  int src_step,  int src_offset,
                                   __global double *mat_dst0, int dst0_step, int dst0_offset,  
                                   __global double *mat_dst1, int dst1_step, int dst1_offset, 
@@ -1126,6 +1128,7 @@ __kernel void split_vector_C3_D6 (__global double *mat_src,  int src_step,  int 
         ((__global double *)((__global char *)mat_dst2 + dst2_idx))[x] = src_data_2;
     }
 }
+
 __kernel void split_vector_C2_D6 (__global double *mat_src,  int src_step,  int src_offset,
                                   __global double *mat_dst0, int dst0_step, int dst0_offset,  
                                   __global double *mat_dst1, int dst1_step, int dst1_offset, 
@@ -1147,3 +1150,4 @@ __kernel void split_vector_C2_D6 (__global double *mat_src,  int src_step,  int 
         ((__global double *)((__global char *)mat_dst1 + dst1_idx))[x] = src_data.y;
     }
 }
+#endif

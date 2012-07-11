@@ -43,9 +43,7 @@
 //
 //M*/
 
-#if defined (__ATI__)
-#pragma OPENCL EXTENSION cl_amd_fp64:enable
-#elif defined (__NVIDIA__)
+#if defined (DOUBLE_SUPPORT)
 #pragma OPENCL EXTENSION cl_khr_fp64:enable
 #endif
 
@@ -74,13 +72,13 @@ __kernel void threshold_C1_D0(__global const uchar * restrict src, __global ucha
         switch (thresh_type)
         {
             case 0:
-                ddata = ((sdata > thresh) ) ? max_val : (uchar)0;
+                ddata = ((sdata > thresh) ) ? (uchar16)(max_val) : (uchar16)(0);
                 break;
             case 1:
-                ddata = ((sdata > thresh)) ? zero  : max_val;
+                ddata = ((sdata > thresh)) ? zero  : (uchar16)(max_val);
                 break;
             case 2:
-                ddata = ((sdata > thresh)) ? thresh : sdata;
+                ddata = ((sdata > thresh)) ? (uchar16)(thresh) : sdata;
                 break;
             case 3:
                 ddata = ((sdata > thresh)) ? sdata : zero;
@@ -125,19 +123,19 @@ __kernel void threshold_C1_D5(__global const float * restrict src, __global floa
         switch (thresh_type)
         {
             case 0:
-                ddata = sdata > thresh ? max_val : 0.f;
+                ddata = sdata > thresh ? (float4)(max_val) : (float4)(0.f);
                 break;
             case 1:
-                ddata = sdata > thresh ? zero : max_val;
+                ddata = sdata > thresh ? zero : (float4)max_val;
                 break;
             case 2:
-                ddata = sdata > thresh ? thresh : sdata;
+                ddata = sdata > thresh ? (float4)thresh : sdata;
                 break;
             case 3:
-                ddata = sdata > thresh ? sdata : 0.f;
+                ddata = sdata > thresh ? sdata : (float4)(0.f);
                 break;
             case 4:
-                ddata = sdata > thresh ? 0.f : sdata;
+                ddata = sdata > thresh ? (float4)(0.f) : sdata;
                 break;
             default:
                 ddata = sdata;

@@ -64,7 +64,7 @@
 #include <stdio.h>
 
 #include "opencv2/ocl/ocl.hpp"
-#include <CL/cl.h>
+
 #include "opencv2/imgproc/imgproc.hpp"
 
 #include "opencv2/objdetect/objdetect.hpp"
@@ -79,9 +79,9 @@
 #if defined (HAVE_OPENCL)
 
 #if defined __APPLE__
-  #include <OpenCL/OpenCL.h>
+#include <OpenCL/OpenCL.h>
 #else
-  #include <CL/cl.h>
+#include <CL/cl.h>
 #endif
 
 #include "safe_call.hpp"
@@ -102,6 +102,8 @@ namespace cv
                                 const void *src, size_t spitch,
                                 size_t width, size_t height, int src_offset, enum openCLMemcpyKind kind);
         void openCLFree(void *devPtr);
+        cl_mem openCLCreateBuffer(Context *clCxt,size_t flag, size_t size);
+        void openCLReadBuffer(Context *clCxt, cl_mem dst_buffer, void* host_buffer, size_t size);
         cl_kernel openCLGetKernelFromSource(const Context *clCxt,
                                             const char **source, string kernelName);
         cl_kernel openCLGetKernelFromSource(const Context *clCxt,
@@ -126,18 +128,22 @@ namespace cv
 
         void openCLMemcpy2DWithNoPadding(cl_command_queue command_queue, cl_mem buffer, size_t size, size_t offset, void *ptr,
                                          enum openCLMemcpyKind kind, cl_bool blocking_write);
+		int savetofile(const Context *clcxt,  cl_program &program, const char *fileName);
 		struct Context::Impl
 		{
             //Information of the OpenCL context
             cl_context clContext;
             cl_command_queue clCmdQueue;
             cl_device_id *devices;
+			string devName;
             cl_uint maxDimensions;
             size_t maxWorkGroupSize;
             size_t *maxWorkItemSizes;
             cl_uint maxComputeUnits;
+            int double_support;
             //extra options to recognize vendor specific fp64 extensions
             char *extra_options;
+			string Binpath;
 		};
     }
 }

@@ -44,10 +44,13 @@
 //M*/
 
 /**************************************PUBLICFUNC*************************************/
-#if defined (__ATI__)
-#pragma OPENCL EXTENSION cl_amd_fp64:enable
-#elif defined (__NVIDIA__)
+#if defined (DOUBLE_SUPPORT)
 #pragma OPENCL EXTENSION cl_khr_fp64:enable
+#define RES_TYPE double8
+#define CONVERT_RES_TYPE convert_double8
+#else
+#define RES_TYPE float8
+#define CONVERT_RES_TYPE convert_float8
 #endif
 
 #if defined (DEPTH_0)
@@ -137,17 +140,17 @@
 
 /**************************************Array buffer SUM**************************************/
 __kernel void arithm_op_sum (int cols,int invalid_cols,int offset,int elemnum,int groupnum,
-                                __global VEC_TYPE *src, __global double8 *dst)
+                                __global VEC_TYPE *src, __global RES_TYPE *dst)
 {
    unsigned int lid = get_local_id(0);
    unsigned int gid = get_group_id(0);
    unsigned int  id = get_global_id(0);
    unsigned int idx = offset + id + (id / cols) * invalid_cols;
-   __local double8 localmem_sum[128];
-   double8 sum = 0,temp;
+   __local RES_TYPE localmem_sum[128];
+   RES_TYPE sum = 0,temp;
    if(id < elemnum)
    {
-       temp = convert_double8(src[idx]);
+       temp = CONVERT_RES_TYPE(src[idx]);
        if(id % cols == 0 ) 
        {
            repeat_s(temp);
@@ -165,7 +168,7 @@ __kernel void arithm_op_sum (int cols,int invalid_cols,int offset,int elemnum,in
    for(id=id + (groupnum << 8); id < elemnum;id = id + (groupnum << 8))
    {
        idx = offset + id + (id / cols) * invalid_cols;
-       temp = convert_double8(src[idx]);
+       temp = CONVERT_RES_TYPE(src[idx]);
        if(id % cols == 0 ) 
        {
                repeat_s(temp);

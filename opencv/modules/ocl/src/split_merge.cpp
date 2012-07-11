@@ -159,6 +159,12 @@ namespace cv
 
             void merge_vector_run(const oclMat *mat_src, size_t n, oclMat &mat_dst)
             {
+                if(mat_dst.clCxt -> impl -> double_support ==0 && mat_dst.type() == CV_64F)
+                {
+                    CV_Error(-217,"Selected device don't support double\r\n");
+                    return;
+                }
+
                 Context  *clCxt = mat_dst.clCxt;
                 int channels = mat_dst.channels();
                 int depth = mat_dst.depth();
@@ -177,9 +183,9 @@ namespace cv
 
                 size_t localThreads[3]  = { 64, 4, 1 };
                 size_t globalThreads[3] = { divUp(cols, localThreads[0]) * localThreads[0],
-                                            divUp(mat_dst.rows, localThreads[1]) * localThreads[1],
-                                            1
-                                          };
+                    divUp(mat_dst.rows, localThreads[1]) * localThreads[1],
+                    1
+                };
 
                 int dst_step1 = mat_dst.cols * mat_dst.elemSize();
                 vector<pair<size_t , const void *> > args;
@@ -291,6 +297,13 @@ namespace cv
             }
             void split_vector_run(const oclMat &mat_src, oclMat *mat_dst)
             {
+
+                if(mat_src.clCxt -> impl -> double_support ==0 && mat_src.type() == CV_64F)
+                {
+                    CV_Error(-217,"Selected device don't support double\r\n");
+                    return;
+                }
+
                 Context  *clCxt = mat_src.clCxt;
                 int channels = mat_src.channels();
                 int depth = mat_src.depth();
