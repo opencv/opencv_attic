@@ -51,9 +51,9 @@ typedef float F;
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////addWeighted//////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
-__kernel void addWeighted_D0 (__global uchar *src1, F alpha,int src1_step,int src1_offset,
-                           __global uchar *src2, F  beta, int src2_step,int src2_offset,
-                           F gama,
+__kernel void addWeighted_D0 (__global uchar *src1,int src1_step,int src1_offset,
+                           __global uchar *src2, int src2_step,int src2_offset,
+                           F alpha,F beta,F gama,
                            __global uchar *dst,  int dst_step,int dst_offset,
                            int rows,  int cols,int dst_step1)
 {
@@ -65,7 +65,6 @@ __kernel void addWeighted_D0 (__global uchar *src1, F alpha,int src1_step,int sr
     {
 
         x = x << 2;
-
         #define dst_align (dst_offset & 3)
         int src1_index = mad24(y, src1_step, x + src1_offset - dst_align); 
         int src2_index = mad24(y, src2_step, x + src2_offset - dst_align); 
@@ -99,9 +98,9 @@ __kernel void addWeighted_D0 (__global uchar *src1, F alpha,int src1_step,int sr
 
 
 
-__kernel void addWeighted_D2 (__global ushort *src1, F alpha,int src1_step,int src1_offset,
-                           __global ushort *src2, F beta, int src2_step,int src2_offset,
-                           F gama,
+__kernel void addWeighted_D2 (__global ushort *src1, int src1_step,int src1_offset,
+                           __global ushort *src2, int src2_step,int src2_offset,
+                           F alpha,F beta,F gama,
                            __global ushort *dst,  int dst_step,int dst_offset,
                            int rows,  int cols,int dst_step1)
 {
@@ -145,9 +144,9 @@ __kernel void addWeighted_D2 (__global ushort *src1, F alpha,int src1_step,int s
 }
 
 
-__kernel void addWeighted_D3 (__global short *src1, F alpha,int src1_step,int src1_offset,
-                              __global short *src2, F beta, int src2_step,int src2_offset,
-                              F gama,
+__kernel void addWeighted_D3 (__global short *src1, int src1_step,int src1_offset,
+                              __global short *src2,  int src2_step,int src2_offset,
+                              F alpha,F beta,F gama,
                               __global short *dst,  int dst_step,int dst_offset,
                               int rows,  int cols,int dst_step1)
 {
@@ -190,9 +189,9 @@ __kernel void addWeighted_D3 (__global short *src1, F alpha,int src1_step,int sr
 }
 
 
-__kernel void addWeighted_D4 (__global int *src1, F alpha,int src1_step,int src1_offset,
-                              __global int *src2, F beta, int src2_step,int src2_offset,
-                              F gama,
+__kernel void addWeighted_D4 (__global int *src1, int src1_step,int src1_offset,
+                              __global int *src2, int src2_step,int src2_offset,
+                             F alpha,F beta, F gama,
                               __global int *dst,  int dst_step,int dst_offset,
                               int rows,  int cols,int dst_step1)
 {
@@ -238,9 +237,9 @@ __kernel void addWeighted_D4 (__global int *src1, F alpha,int src1_step,int src1
 }
 
 
-__kernel void addWeighted_D5 (__global float *src1, F alpha,int src1_step,int src1_offset,
-                              __global float *src2, F beta, int src2_step,int src2_offset,
-                              F gama,
+__kernel void addWeighted_D5 (__global float *src1,int src1_step,int src1_offset,
+                              __global float *src2, int src2_step,int src2_offset,
+                             F alpha,F beta, F gama,
                               __global float *dst,  int dst_step,int dst_offset,
                               int rows,  int cols,int dst_step1)
 {
@@ -286,9 +285,9 @@ __kernel void addWeighted_D5 (__global float *src1, F alpha,int src1_step,int sr
 }
 
 #if defined (DOUBLE_SUPPORT)
-__kernel void addWeighted_D6 (__global double *src1, F alpha,int src1_step,int src1_offset,
-                              __global double *src2, F beta, int src2_step,int src2_offset,
-                              F gama,
+__kernel void addWeighted_D6 (__global double *src1, int src1_step,int src1_offset,
+                              __global double *src2, int src2_step,int src2_offset,
+                             F alpha,F beta, F gama,
                               __global double *dst,  int dst_step,int dst_offset,
                               int rows,  int cols,int dst_step1)
 {

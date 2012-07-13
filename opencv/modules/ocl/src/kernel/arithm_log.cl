@@ -43,6 +43,7 @@
 // the use of this software, even if advised of the possibility of such damage.
 //
 //M*/
+
 #if defined (DOUBLE_SUPPORT)
 #pragma OPENCL EXTENSION cl_khr_fp64:enable
 #endif
@@ -73,7 +74,7 @@ __kernel void arithm_log_D5(int rows, int cols, int srcStep, int dstStep, int sr
     }
 }
 
-
+#if defined (DOUBLE_SUPPORT)
 __kernel void arithm_log_D6(int rows, int cols, int srcStep, int dstStep, int srcOffset, int dstOffset, __global double *src, __global double *dst)
 {
     int x = get_global_id(0);
@@ -91,4 +92,4 @@ __kernel void arithm_log_D6(int rows, int cols, int srcStep, int dstStep, int sr
 
     }
 }
-
+#endif

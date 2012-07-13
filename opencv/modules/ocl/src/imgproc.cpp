@@ -369,8 +369,17 @@ namespace cv
                 args.push_back( make_pair(sizeof(cl_int), (void *)&src.rows));
                 args.push_back( make_pair(sizeof(cl_int), (void *)&dst.cols));
                 args.push_back( make_pair(sizeof(cl_int), (void *)&dst.rows));
+                if(src.clCxt -> impl -> double_support != 0)
+                {
                 args.push_back( make_pair(sizeof(cl_double), (void *)&ifx_d));
                 args.push_back( make_pair(sizeof(cl_double), (void *)&ify_d));
+                }
+                else
+                {
+                args.push_back( make_pair(sizeof(cl_float), (void *)&ifx_d));
+                args.push_back( make_pair(sizeof(cl_float), (void *)&ify_d));
+
+                }
             }
             else
             {
